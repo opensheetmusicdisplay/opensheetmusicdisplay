@@ -1,0 +1,34 @@
+{
+  "name": "opensheetmusicdisplay",
+  "version": "0.0.0",
+  "description": "Open Sheet Music Display library",
+  "main": "build.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
+  },
+  "keywords": [
+    "sheets",
+    "music",
+    "vexflow",
+    "musicxml"
+  ],
+  "author": "PhonicScore",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
+  },
+  "homepage": "http://opensheetmusicdisplay.org",
+  "dependencies": {
+    "browserify": "^8.1.1",
+    "minimist": "^1.1.0",
+    "vexflow": "^1.2.27"
+  }
+}
