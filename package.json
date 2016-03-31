@@ -5,7 +5,7 @@
   "main": "build.js",
   "directories": {
     "doc": "docs",
-    "test": "tests"
+    "test": "test"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -27,8 +27,17 @@
   },
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
-    "browserify": "^8.1.1",
-    "minimist": "^1.1.0",
-    "vexflow": "^1.2.27"
+    "browserify": "",
+    "tsify": "",
+    "tslint": "",
+
+    "grunt": "",
+    "grunt-browserify": "",
+    "grunt-contrib-clean": "",
+    "grunt-contrib-watch": "",
+    "grunt-tslint": "",
+    "grunt-contrib-uglify": "",
+
+    "vexflow": ""
   }
 }
