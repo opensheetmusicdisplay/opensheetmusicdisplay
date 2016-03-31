@@ -37,6 +37,21 @@
     "grunt-contrib-watch": "",
     "grunt-tslint": "",
     "grunt-contrib-uglify": "",
+    "grunt-karma": "",
+    "grunt-typings": "",
+
+    "chai": "",
+    "mocha": "",
+    "typescript": "",
+    "phantomjs-prebuilt": "",
+
+    "karma": "",
+    "karma-chai": "",
+    "karma-chrome-launcher": "",
+    "karma-firefox-launcher": "",
+    "karma-mocha": "",
+    "karma-mocha-reporter": "",
+    "karma-phantomjs-launcher": "",
 
     "vexflow": ""
   }
