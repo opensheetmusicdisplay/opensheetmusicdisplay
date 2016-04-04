@@ -1,4 +1,4 @@
-class XmlAttribute {
+export class XmlAttribute {
   public Name: string;
   public Value: string;
 
@@ -8,7 +8,7 @@ class XmlAttribute {
   };
 }
 
-class XmlElement {
+export class XmlElement {
   public Name: string;
   public Value: string;
   public HasAttributes: boolean = false;
@@ -20,11 +20,20 @@ class XmlElement {
 
   constructor(elem: Element) {
     this._elem = elem;
+    this.Name = elem.nodeName;
+
     if (elem.hasAttributes()) {
       this.HasAttributes = true;
       this.FirstAttribute = new XmlAttribute(elem.attributes[0]);
       }
     this.HasElements = elem.hasChildNodes();
+    // Look for a value
+    if (
+      elem.childNodes.length === 1 &&
+      elem.childNodes[0].nodeType === Node.TEXT_NODE
+    ) {
+      this.Value = elem.childNodes[0].nodeValue;
+    }
   }
 
   public Attribute(attributeName: string): XmlAttribute {
@@ -53,7 +62,8 @@ class XmlElement {
     let nameUnset: boolean = typeof nodeName === "undefined";
     for (let i: number = 0; i < nodes.length; i += 1) {
       let node: Node = nodes[i];
-      if (node.nodeType === 1 && (nameUnset || node.nodeName === nodeName)) {
+      if (node.nodeType === Node.ELEMENT_NODE &&
+        (nameUnset || node.nodeName === nodeName)) {
           ret.push(new XmlElement(<Element> node));
         }
     }

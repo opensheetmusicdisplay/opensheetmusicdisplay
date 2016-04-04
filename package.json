@@ -30,6 +30,10 @@
     "browserify": "",
     "tsify": "",
     "tslint": "",
+    "chai": "",
+    "mocha": "",
+    "typescript": "",
+    "phantomjs-prebuilt": "",
 
     "grunt": "",
     "grunt-browserify": "",
@@ -39,11 +43,6 @@
     "grunt-contrib-uglify": "",
     "grunt-karma": "",
     "grunt-typings": "",
-
-    "chai": "",
-    "mocha": "",
-    "typescript": "",
-    "phantomjs-prebuilt": "",
 
     "karma": "",
     "karma-chai": "",

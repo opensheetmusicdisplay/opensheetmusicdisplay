@@ -128,7 +128,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-tslint');
   grunt.loadNpmTasks('grunt-typings');
 
-  grunt.registerTask('default', ['tslint', 'browserify', 'karma:ci']);
+  grunt.registerTask('default', [/*'tslint',*/ 'browserify', 'karma:ci']);
   //grunt.registerTask('lint', ['tslint', 'jscs']);
   grunt.registerTask('test', ['browserify:debug', 'karma:ci']);
   grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
