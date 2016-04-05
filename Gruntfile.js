@@ -1,6 +1,5 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   'use strict';
-  var L = grunt.log.writeln;
   var BANNER = '/**\n' +
                 ' * Open Sheet Music Display library <%= pkg.version %> built on <%= grunt.template.today("yyyy-mm-dd") %>.\n' +
                 ' * Copyright (c) 2016 PhonicScore\n' +
@@ -18,11 +17,18 @@ module.exports = function(grunt) {
     // Browserify
     browserify: {
         dist: {
-            src: ['typings/browser.d.ts', 'src/**/*.ts'],
+            src: [
+              'typings/browser.d.ts',
+              'typings/vexflow.d.ts',
+              'src/**/*.ts'
+            ],
             dest: '<%= outputDir.build %>/osmd.js'
         },
         debug: {
-            src: ['typings/browser.d.ts', 'src/**/*.ts', 'test/**/*.ts'],
+            src: [
+              'typings/browser.d.ts', 'typings/vexflow.d.ts',
+              'src/**/*.ts', 'test/**/*.ts'
+            ],
             dest: '<%= outputDir.build %>/osmd-debug.js',
             options: {
                 browserifyOptions: {

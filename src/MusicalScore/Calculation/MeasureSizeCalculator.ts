@@ -1,35 +1,11 @@
-interface VexFlowBoundingBox {
-  mergeWith(bb: VexFlowBoundingBox): VexFlowBoundingBox;
-  getX(): number;
-  getY(): number;
-  getW(): number;
-  getH(): number;
-}
-
-interface VexFlowVoice {
-  getBoundingBox(): VexFlowBoundingBox;
-  setStave(stave: VexFlowStave): VexFlowVoice;
-}
-
-interface VexFlowStave {
-  x: number;
-  start_x: number;
-  end_x: number;
-
-  getWidth(): number;
-  setWidth(width: number): VexFlowStave;
-  format(): void;
-  getSpacingBetweenLines(): number;
-  getNumLines(): number;
-  getLineForY(y: number): number;
-}
+import Vex = require("vexflow");
 
 // Usage:
 /// TODO
-class MeasureSizeCalculator {
-  public stave: VexFlowStave;
-  public voices: VexFlowVoice[];
-  public formatter: any;
+export class MeasureSizeCalculator {
+  private stave: Vex.Flow.Stave;
+  private voices: Vex.Flow.Voice[];
+  private formatter: any;
 
   private offsetLeft: number;
   private offsetRight: number;
@@ -37,7 +13,11 @@ class MeasureSizeCalculator {
   private topBorder: number;
   private bottomBorder: number;
 
-  constructor(stave: VexFlowStave, voices: VexFlowVoice[], formatter: any) {
+  constructor(
+    stave: Vex.Flow.Stave,
+    voices: Vex.Flow.Voice[],
+    formatter: Vex.Flow.Formatter
+  ) {
     this.stave = stave;
     this.voices = voices;
     this.formatter = formatter;
@@ -75,15 +55,15 @@ class MeasureSizeCalculator {
   }
 
   private format(): void {
-    let stave: VexFlowStave = this.stave;
-    let voices: VexFlowVoice[] = this.voices;
-    let voicesBoundingBox: VexFlowBoundingBox;
-    let bb: VexFlowBoundingBox;
+    let stave: Vex.Flow.Stave = this.stave;
+    let voices: Vex.Flow.Voice[] = this.voices;
+    let voicesBoundingBox: Vex.Flow.BoundingBox;
+    let bb: Vex.Flow.BoundingBox;
     // Compute widths
     this.voicesWidth = this.formatter.minTotalWidth;
     stave.setWidth(this.voicesWidth);
     stave.format();
-    this.offsetLeft = stave.start_x - stave.x;
+    this.offsetLeft = stave.getNoteStartX() - stave.x;
     this.offsetRight = stave.end_x - stave.getWidth() - stave.start_x;
     // Compute heights
     // Height is:
@@ -98,14 +78,18 @@ class MeasureSizeCalculator {
       }
     }
     // TODO voicesBoundingBox.getW() should be similar to this.voicesWidth?
+    //console.log("this.width", this.voicesWidth);
+    //console.log("voicesBB", voicesBoundingBox.getW());
+
     // FIXME the following: should consider stave modifiers
     //this.height = voicesBoundingBox.getH(); FIXME
     this.topBorder = Math.min(
-      0, stave.getLineForY(voicesBoundingBox.getY())
+      0,
+      Math.floor(stave.getLineForY(voicesBoundingBox.getY()))
     );
     this.bottomBorder = Math.max(
       stave.getNumLines(),
-      stave.getLineForY(voicesBoundingBox.getY() + voicesBoundingBox.getH())
-    )
+      Math.ceil(stave.getLineForY(voicesBoundingBox.getY() + voicesBoundingBox.getH()))
+    );
   }
 }
