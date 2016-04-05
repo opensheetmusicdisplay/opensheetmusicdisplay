@@ -1,7 +1,25 @@
 import Vex = require("vexflow");
 
-// Usage:
-/// TODO
+/* TODO
+ * Take into account StaveModifiers
+ * Take into account Ties and Slurs
+ */
+
+/* Measure Size Calculator
+ *  Given a stave, voices and a formatter, calculates
+ *  through VexFlow the size of a measure.
+ *  !!! before using this, call the methods
+ *  !!! joinVoices and preCalculateMinTotalWidth
+ *  !!! of the formatter!
+ *
+ * Usage:
+ *   let stave: Vex.Flow.Stave = ...;
+ *   let formatter = new Vex.Flow.Formatter()
+ *   let voices: Vex.Flor.Voice[] = ...;
+ *   formatter.preCalculateMinTotalWidth(voices);
+ *   let calc = new MeasureSizeCalculator(stave, voices, formatter);
+ *   calc.???
+ */
 export class MeasureSizeCalculator {
   private stave: Vex.Flow.Stave;
   private voices: Vex.Flow.Voice[];

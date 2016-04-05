@@ -5,7 +5,7 @@ declare namespace VexFlow {
       public hasMinTotalWidth: boolean;
       public minTotalWidth: number;
 
-      //preCalculateMinTotalWidth(voices: Voices[]);
+      preCalculateMinTotalWidth(voices: Voice[]);
       constructor();
     }
 
@@ -40,7 +40,7 @@ declare namespace VexFlow {
       getSpacingBetweenLines(): number;
       getNumLines(): number;
       getLineForY(y: number): number;
-      
+
       constructor(x: number, y: number, width: number);
     }
 
