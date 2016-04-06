@@ -4,4 +4,5 @@
 
 # Open Sheet Music Display library
 
-Website: [opensheetmusicdisplay.org](http://opensheetmusicdisplay.org)
+* Website: [opensheetmusicdisplay.org](http://opensheetmusicdisplay.org)
+* How to build: [wiki/Build-Instructions](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Build-Instructions)
