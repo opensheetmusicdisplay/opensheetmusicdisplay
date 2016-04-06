@@ -8,9 +8,7 @@ describe("Measure Size Calculator Tests", () => {
   // Initialization
   let stave: Vex.Flow.Stave = new Vex.Flow.Stave(0, 0, 0);
   let voices: Vex.Flow.Voice[];
-  //let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
   let formatter: Vex.Flow.Formatter;
-  // Create a voice with a note
   let voice: Vex.Flow.Voice;
   let note: Vex.Flow.StaveNote;
   let calc: MeasureSizeCalculator;
