@@ -4,4 +4,7 @@
 
 # Open Sheet Music Display library
 
-Website: [opensheetmusicdisplay.org](http://opensheetmusicdisplay.org)
+[![Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay)
+
+* Website: [opensheetmusicdisplay.org](http://opensheetmusicdisplay.org)
+* How to build: [wiki/Build-Instructions](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Build-Instructions)
