@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+  <title>Playback &gt; Cursor Experiment</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <style>
+    html, body {
+      padding: 0; margin: 0;
+    }
+    div.big {
+      font-size: 40em;
+      text-align: center;
+    }
+  </style>
+
+<script>(function(){
+var nlines = 5;
+var current = 0;
+var currentWidth = 0;
+var currentX = 0;
+var lines = [];
+var dx = 20;
+var cursor = null;
+var currentHeight = 0;
+var interval = null;
+var heightSum = 0;
+
+function createGradient(width, height, color) {
+  var c = document.createElement("canvas");
+  c.width = width; c.height = height;
+  var ctx = c.getContext("2d");
+  ctx.globalAlpha = 0.5
+
+  var gradient = ctx.createLinearGradient(0, 0, width, 0);
+  gradient.addColorStop(0, "transparent");
+  gradient.addColorStop(0.5, color);
+  gradient.addColorStop(1, "transparent");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+  /*
+  // Add top/bottom lines
+  ctx.beginPath();
+  ctx.moveTo(0,1);
+  ctx.lineTo(width, 1);
+  ctx.stroke();
+  */
+  var img = new Image();
+  img.src = c.toDataURL('image/png');
+  img.width = width; img.height = height;
+  document.body.appendChild(img);
+  return img;
+}
+
+window.onload = function() {
+  lines = [];
+  // fix div colors
+  for (var i = 0; i < nlines; i++) {
+    var div = document.createElement("div");
+    div.className = "big";
+    lines.push(div); document.body.appendChild(div);
+    div.style.background = i % 2 ? "black" : "white";
+    div.style.color = i % 2 ? "white" : "black";
+    div.textContent = i + 1;
+  }
+  // Initialize variabels
+  heightSum = 0;
+  currentX = 0; currentWidth = -1; current = -1;
+  currentHeight = 0;
+  // start animation
+  interval = window.setInterval(step, 100);
+}
+
+function step() {
+  //console.log("step");
+  currentX += dx;
+  if (currentX > currentWidth) {
+    current += 1;
+    heightSum += currentHeight;
+    currentX = 0;
+    if (current == lines.length) {
+      window.clearInterval(interval);
+      return false;
+    }
+    window.setTimeout(function(){scrollToLine(current);}, 0);
+    currentWidth = lines[current].offsetWidth - 20;
+    currentHeight = lines[current].offsetHeight;
+    // Hide cursor
+    if (cursor)
+      cursor.parentElement.removeChild(cursor);
+    // Re-generate cursor
+    cursor = createGradient(20, currentHeight, current % 2 ? "white" : "black");
+    cursor.style.position = "absolute";
+    // Display cursor
+    document.body.appendChild(cursor);
+  }
+  cursor.style.top = heightSum + "px";
+  cursor.style.left = currentX + "px";
+}
+
+function scrollToLine(line) {
+  var height = lines[line].offsetHeight;
+  var windowHeight = window.innerHeight;
+  var top = Math.max(0, (windowHeight - height) >> 1);
+  //window.scrollTo(0, heightSum + top);
+  $('html, body').animate({
+        scrollTop: heightSum - top
+    }, 500);
+}
+
+}());</script>
+</head>
+</html>
