@@ -59,7 +59,7 @@ module.exports = function (grunt) {
             ci: {
                 configFile: 'karma.conf.js',
                 options: {
-                    browsers: ['PhantomJS', 'Chrome', 'Firefox'],
+                    browsers: ['PhantomJS'],
                     files: [
                         '<%= browserify.debug.dest %>'
                     ]
