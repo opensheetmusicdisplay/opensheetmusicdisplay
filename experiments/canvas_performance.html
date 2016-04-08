@@ -6,9 +6,14 @@
 // * More complex VexFlow systems
 
 // Init function
-window.onload = function() {
-  document.title = "HTML Canvas Memory Tests";
-  document.write("<h1>[OSMD] HTML Canvas Memory Tests</h1>");
+window.onload = function () {
+  window.setTimeout(start, 0);
+}
+
+var start = function () {
+  document.title = "HTML Canvas Performance Tests";
+  document.write("<h1>[OSMD] HTML Canvas Performance Tests</h1>");
+  var t = timer();
   // Run the tests
   repeat(
     "Canvas creation", 100,
@@ -36,7 +41,7 @@ window.onload = function() {
     function(){
       var canvas = document.createElement("canvas");
       canvas.width = 1920;
-      canvas.height = 1080;
+      canvas.height = 200;
       var renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
       var ctx = renderer.getContext();
       for (var j=0; j < 20; j++)
@@ -69,8 +74,27 @@ window.onload = function() {
     }
   );
   repeat(
+    "[VexFlow] Draw systems", 50,
+    "Draw 20 empty staves on a huge canvas (one instrument).",
+    function(){
+      var canvas = document.createElement("canvas");
+      canvas.width = 1920;
+      canvas.height = 1080 * 30;
+      var renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
+      var ctx = renderer.getContext();
+      for (var j=0; j < 20; j++)
+        (new Vex.Flow.Stave(
+          Math.floor(Math.random()*canvas.width),
+          Math.floor(Math.random()*canvas.height),
+          Math.floor(Math.random()*canvas.width)
+        )).addClef("treble")
+          .setContext(ctx)
+          .draw();
+    }
+  );
+  repeat(
     "[VexFlow] Format & draw complex system", 50,
-    "Draw 20 systems with notes, ties and beams on a big canvas (one instrument).",
+    "Draw 20 staves with one voice, ties and beams on a big canvas.",
     function(){
       var canvas = document.createElement("canvas");
       canvas.width = 1920;
@@ -80,7 +104,7 @@ window.onload = function() {
       for (var j=0; j < 20; j++) {
         var stave = new Vex.Flow.Stave(10, 0, 500);
 
-        // Add a treble clef
+        // From the VexFlow Tutorial:
         stave.addClef("treble");
         stave.setContext(ctx).draw();
 
@@ -149,37 +173,210 @@ window.onload = function() {
       }
     }
   );
-  // Finish
-  document.close();
+  repeat(
+    "[VexFlow|big] Format & draw 20 staves 5 voices each.", 50,
+    "...",
+    function(){
+      var canvas = document.createElement("canvas");
+      canvas.width = 1920;
+      canvas.height = 1080;
+      var renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
+      var ctx = renderer.getContext();
+      for (var j=0; j < 20; j++) {
+        var stave = new Vex.Flow.Stave(
+          Math.floor(Math.random()*canvas.width),
+          Math.floor(Math.random()*canvas.height),
+          Math.floor(Math.random()*canvas.width)
+        );
+        stave.addClef("treble");
+        stave.setContext(ctx).draw();
+        var voices = [];
+        for (var i = 0, voice; i < 5; i++) {
+          voice = new Vex.Flow.Voice({
+            num_beats: 4,
+            beat_value: 4,
+            resolution: Vex.Flow.RESOLUTION
+          });
+          voice.addTickables(randomNotes());
+          voices.push(voice);
+        }
+        var formatter = new Vex.Flow.Formatter().
+        joinVoices(voices).format(voices, 500);
+        for (var i = 0; i < 5; i++) {
+          voices[i].draw(ctx, stave);
+        }
+      }
+    }
+  );
+  repeat(
+    "[VexFlow|huge] Format & draw 20 staves with 5 voices each.", 50,
+    "...",
+    function(){
+      var canvas = document.createElement("canvas");
+      canvas.width = 1920;
+      canvas.height = 1080 * 30;
+      var renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
+      var ctx = renderer.getContext();
+      for (var j=0; j < 20; j++) {
+        var stave = new Vex.Flow.Stave(
+          Math.floor(Math.random()*canvas.width),
+          Math.floor(Math.random()*canvas.height),
+          Math.floor(Math.random()*canvas.width)
+        );
+        stave.addClef("treble");
+        stave.setContext(ctx).draw();
+        var voices = [];
+        for (var i = 0, voice; i < 5; i++) {
+          voice = new Vex.Flow.Voice({
+            num_beats: 4,
+            beat_value: 4,
+            resolution: Vex.Flow.RESOLUTION
+          });
+          voice.addTickables(randomNotes());
+          voices.push(voice);
+        }
+        var formatter = new Vex.Flow.Formatter().
+        joinVoices(voices).format(voices, 500);
+        for (var i = 0; i < 5; i++) {
+          voices[i].draw(ctx, stave);
+        }
+      }
+    }
+  );
+
+  var tmp_canvas = document.createElement("canvas");
+  tmp_canvas.width = 1920;
+  tmp_canvas.height = 1080;
+  var tmp_renderer = new Vex.Flow.Renderer(tmp_canvas, Vex.Flow.Renderer.Backends.CANVAS);
+  var ctx = tmp_renderer.getContext();
+  repeat(
+    "[VexFlow|big] Format & draw system", 50,
+    "Draw a measure with a voice.",
+    function(){
+      var stave = new Vex.Flow.Stave(
+        Math.floor(Math.random()*tmp_canvas.width),
+        Math.floor(Math.random()*tmp_canvas.height),
+        Math.floor(Math.random()*tmp_canvas.width)
+      );
+
+      // From the VexFlow Tutorial:
+      stave.addClef("treble");
+      stave.setContext(ctx).draw();
+
+      var notes = [
+        new Vex.Flow.StaveNote({ keys: ["e##/5"], duration: "8d" }).
+        addAccidental(0, new Vex.Flow.Accidental("##")).addDotToAll(),
+        new Vex.Flow.StaveNote({ keys: ["b/4"], duration: "16" }).
+        addAccidental(0, new Vex.Flow.Accidental("b"))
+      ];
+
+      var notes2 = [
+        new Vex.Flow.StaveNote({ keys: ["b/4"], duration: "8" }),
+        new Vex.Flow.StaveNote({ keys: ["d/4"], duration: "16" }),
+        new Vex.Flow.StaveNote({ keys: ["c/4", "e/4"], duration: "16" }).
+        addAccidental(0, new Vex.Flow.Accidental("b"))
+      ];
+
+      var notes3 = [
+        new Vex.Flow.StaveNote({ keys: ["c/4", "e/4"], duration: "8" }),
+        new Vex.Flow.StaveNote({ keys: ["e/4"], duration: "8" }).
+        addAccidental(0, new Vex.Flow.Accidental("#"))
+      ];
+
+      var notes4 = [
+        new Vex.Flow.StaveNote({ keys: ["d/4"], duration: "8" }),
+        new Vex.Flow.StaveNote({ keys: ["e/4"], duration: "8" }),
+      ];
+
+      // Create the beams
+      var beam = new Vex.Flow.Beam(notes);
+      var beam2 = new Vex.Flow.Beam(notes2);
+      var beam3 = new Vex.Flow.Beam(notes3);
+      var beam4 = new Vex.Flow.Beam(notes4);
+
+      // Create a tie between the last note of the first group and the
+      // first note of the last group.
+      var tie = new Vex.Flow.StaveTie({
+        first_note: notes[1],
+        last_note: notes2[0],
+        first_indices: [0],
+        last_indices: [0]
+      });
+
+      // Create another tie between the two chords in the tune
+      var tie2 = new Vex.Flow.StaveTie({
+        first_note: notes2[2],
+        last_note: notes3[0],
+        first_indices: [0, 1],
+        last_indices: [0, 1]
+      });
+
+      var all_notes = notes.concat(notes2).concat(notes3).concat(notes4);
+
+      // Helper function to justify and draw a 4/4 voice
+      Vex.Flow.Formatter.FormatAndDraw(ctx, stave, all_notes);
+
+      // Render beams
+      beam.setContext(ctx).draw();
+      beam2.setContext(ctx).draw();
+      beam3.setContext(ctx).draw();
+      beam4.setContext(ctx).draw();
+
+      // Render ties
+      tie.setContext(ctx).draw();
+      tie2.setContext(ctx).draw();
+    }
+  );
+  finish(t);
 }
 
 //----------------------------------------------------------------------------->
+// Helper functions
+var randomNotes = function () {
+  var notes = [];
+  for (var i = 0, note, key; i < 8; i ++) {
+    key = ("abcdefg".charAt(Math.floor(Math.random()*7))) + "/" + Math.floor(Math.random()*3+2);
+    note = new Vex.Flow.StaveNote({ keys: [key], duration: "8" });
+    notes.push(note);
+  }
+  return notes;
+}
+
+
+//----------------------------------------------------------------------------->
+var finish = function (t) {
+  window.setTimeout(function(){
+    document.write("<hr><p><b>Total Elapsed Time: ~" + Math.floor(t()/1000) + " seconds.</b></p>");
+    document.close();
+  }, 0);
+}
+
 
 // Display the result of a test on the page
 function formatResult(label, descr, times, elapsed) {
-  write("<p><b>" + label + "</b>: " + descr + "<br>");
-  write("<i>Elapsed time: " + (elapsed/times) + "ms each (" + times + " iterations)</i></Op>");
+  document.write("<p><b>" + label + "</b>: " + descr + "<br>");
+  document.write("<i>Elapsed time: " + (elapsed/times) + "ms each (" + times + " iterations)</i></Op>");
 }
 
 // A simple timer
 var timer = function() {
     var start = new Date();
-    return {
-        stop: function() {
-            return (new Date()).getTime() - start.getTime();
-        }
+    return function() {
+      return (new Date()).getTime() - start.getTime();
     }
 }
 
 // Repeat a test
-var repeat = function(label, times, descr, func) {
+var repeat0 = function(label, times, descr, func) {
   var t = timer();
   for (var i = 0; i < times; i++) func();
-  formatResult(label, descr, times, t.stop());
+  formatResult(label, descr, times, t());
 }
-
-// Write directly on the body
-var write = function(x){document.write(x)}
+var repeat = function(label, times, descr, func) {
+  window.setTimeout(function(){
+    repeat0(label, times, descr, func);
+  }, 0);
+}
 
 //----------------------------------------------------------------------------->
 }());</script><!--------------------------------------------------------------->

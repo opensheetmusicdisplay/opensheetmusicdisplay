@@ -8,106 +8,199 @@
       padding: 0; margin: 0;
     }
     div.big {
-      font-size: 40em;
+      font-size: 10em;
       text-align: center;
+      background: url('cat.png');
+      text-shadow: 1px 1px 1px black;
+      color: white;
+    }
+    div.rep1 {
+      position: fixed;
+      top: 0;
+      left: 0; right: 0;
+      overflow: hidden;
+      box-shadow: 0 0 20px black;
+      background-color: white;
     }
   </style>
 
 <script>(function(){
-var nlines = 5;
-var current = 0;
-var currentWidth = 0;
-var currentX = 0;
+// The layers
+var rep1, main;
 var lines = [];
-var dx = 20;
-var cursor = null;
+var nlines = 3 + Math.floor(Math.random() * 4);
+var current = 0; // current line
+var currentWidth = 0; // the width of current line
 var currentHeight = 0;
-var interval = null;
 var heightSum = 0;
+var currentX = 0; // x of the cursor
+var dx = 20;
+var cursor;
+var interval;
 
-function createGradient(width, height, color) {
-  var c = document.createElement("canvas");
-  c.width = width; c.height = height;
-  var ctx = c.getContext("2d");
-  ctx.globalAlpha = 0.5
+function Cursor() {
+  var cursor1 = document.createElement("img");
+  var cursor2 = document.createElement("img");
+  // Public
+  this.cursor1 = cursor1;
+  this.cursor2 = cursor2;
+  // Set position
+  cursor1.style.position = "absolute";
+  cursor2.style.position = "fixed";
+  // Set z-indices
+  cursor1.style.zIndex = "-1";
+  cursor2.style.zIndex = "-1";
 
-  var gradient = ctx.createLinearGradient(0, 0, width, 0);
-  gradient.addColorStop(0, "transparent");
-  gradient.addColorStop(0.5, color);
-  gradient.addColorStop(1, "transparent");
+  // Generate a gradient
+  this.style = function (width, height, color) {
+    var c = document.createElement("canvas");
+    c.width = width; c.height = height;
+    var ctx = c.getContext("2d");
+    ctx.globalAlpha = 0.5
+    // Generate the gradient
+    var gradient = ctx.createLinearGradient(0, 0, width, 0);
+    gradient.addColorStop(0, "transparent");
+    gradient.addColorStop(0.5, color);
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+    // Set the images
+    cursor1.src = cursor2.src = c.toDataURL('image/png');
+    cursor1.width  = cursor2.width  = width ;
+    cursor1.height = cursor2.height = height;
+  }
 
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
-  /*
-  // Add top/bottom lines
-  ctx.beginPath();
-  ctx.moveTo(0,1);
-  ctx.lineTo(width, 1);
-  ctx.stroke();
-  */
-  var img = new Image();
-  img.src = c.toDataURL('image/png');
-  img.width = width; img.height = height;
-  document.body.appendChild(img);
-  return img;
+  // Set positions
+  this.set = function (x, y) {
+    cursor1.style.top = heightSum + "px";
+    cursor1.style.left = currentX + "px";
+    cursor2.style.top = heightSum + "px";
+    cursor2.style.left = currentX + "px";
+  }
+  // Display
+  this.show2 = function (vis) {
+    if (vis) {
+      cursor2.style.display = "block";
+    } else {
+      cursor2.style.display = "none";
+    }
+  }
 }
 
 window.onload = function() {
+  window.resizeTo(650, 650);
+
+  cursor = new Cursor();
+
+  rep1 = document.createElement("div");
+  rep1.className = "rep1";
+
+  var helper = document.createElement("div");
+  helper.className = "helper";
+
+  rep1.appendChild(cursor.cursor2);
+  rep1.appendChild(helper);
+
+  main = document.createElement("div");
+  main.className = "main";
+
+  document.body.appendChild(cursor.cursor1);
+  document.body.appendChild(main);
+  document.body.appendChild(rep1);
+
+  //rep1.style.display = "none";
+  // z-indices
+  //main.style.zIndex = "1";
+  //rep1.style.zIndex = "1";
+  //main.style.background = "green";
+  //
   lines = [];
+  var els = [main, helper];
   // fix div colors
-  for (var i = 0; i < nlines; i++) {
+  for (var i = 0; i < nlines; i++)
+    for (var j = 0; j < els.length; j ++) {
     var div = document.createElement("div");
     div.className = "big";
-    lines.push(div); document.body.appendChild(div);
-    div.style.background = i % 2 ? "black" : "white";
-    div.style.color = i % 2 ? "white" : "black";
-    div.textContent = i + 1;
+    if (j === 0)
+      lines.push(div);
+    els[j].appendChild(div);
+    div.innerHTML = (i ? "&nbsp;" : ":") + (i + 1) + (i !== nlines - 1 ? "&nbsp;" : ":");
   }
   // Initialize variabels
   heightSum = 0;
   currentX = 0; currentWidth = -1; current = -1;
   currentHeight = 0;
-  // start animation
-  interval = window.setInterval(step, 100);
+  window.setTimeout(init, 1);
 }
 
-function step() {
-  //console.log("step");
+function init() {
+  // Fix height
+  rep1.style.height = Math.floor(window.innerHeight / 2) + "px";
+  // start animation
+  interval = window.setInterval(step, 20);
+}
+
+function step () {
   currentX += dx;
+  // We need to go to another staff line
   if (currentX > currentWidth) {
-    current += 1;
     heightSum += currentHeight;
     currentX = 0;
+    current += 1;
     if (current == lines.length) {
-      window.clearInterval(interval);
-      return false;
+      //window.clearInterval(interval);
+      //return false;
+      current = 0;
+      heightSum = 0;
     }
-    window.setTimeout(function(){scrollToLine(current);}, 0);
+    if (current === lines.length - 1) {
+      console.log("Last line: repeat");
+      showRep1(0);
+    }
+    var thenHideSep1 = (current === 0);
+    window.setTimeout(function(){scrollToLine(current, thenHideSep1);}, 0);
     currentWidth = lines[current].offsetWidth - 20;
     currentHeight = lines[current].offsetHeight;
-    // Hide cursor
-    if (cursor)
-      cursor.parentElement.removeChild(cursor);
     // Re-generate cursor
-    cursor = createGradient(20, currentHeight, current % 2 ? "white" : "black");
-    cursor.style.position = "absolute";
-    // Display cursor
-    document.body.appendChild(cursor);
+    cursor.style(20, currentHeight, "black");
   }
-  cursor.style.top = heightSum + "px";
-  cursor.style.left = currentX + "px";
+  cursor.set(heightSum, currentX);
 }
 
-function scrollToLine(line) {
+function scrollToLine(line, thenHideSep1) {
   var height = lines[line].offsetHeight;
   var windowHeight = window.innerHeight;
   var top = Math.max(0, (windowHeight - height) >> 1);
   //window.scrollTo(0, heightSum + top);
-  $('html, body').animate({
-        scrollTop: heightSum - top
-    }, 500);
+  if (thenHideSep1) {
+    // Put the cursor on Sep1
+    cursor.show2(true);
+    $('html, body').animate({
+          scrollTop: heightSum - top
+      }, 500, function() {
+        showRep1();
+      });
+  } else {
+    $('html, body').animate({
+          scrollTop: heightSum - top
+      }, 500);
+  }
 }
 
-}());</script>
+// Show or hide repetition view
+function showRep1(line) {
+  if (typeof line !== "undefined") {
+    rep1.scrollTop = 0;
+    //rep1.style.display = "block";
+    $(rep1).fadeIn("slow");
+  } else {
+    // rep1.style.display = "none";
+    $(rep1).fadeOut("fast");
+    cursor.show2(false);
+  }
+}
+
+}());
+</script>
 </head>
 </html>
