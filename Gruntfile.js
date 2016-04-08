@@ -1,145 +1,154 @@
 module.exports = function (grunt) {
-  'use strict';
-  var BANNER = '/**\n' +
-                ' * Open Sheet Music Display library <%= pkg.version %> built on <%= grunt.template.today("yyyy-mm-dd") %>.\n' +
-                ' * Copyright (c) 2016 PhonicScore\n' +
-                ' *\n' +
-                ' * https://github.com/opensheetmusicdisplay/opensheetmusicdisplay\n' +
-                ' */\n';
-
-  grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
-    // Build output directories
-    outputDir: {
-        build: 'build',
-        dist: 'dist'
-    },
-    // Browserify
-    browserify: {
-        dist: {
-            src: [
-              'typings/browser.d.ts',
-              'typings/vexflow.d.ts',
-              'src/**/*.ts'
-            ],
-            dest: '<%= outputDir.build %>/osmd.js'
+    'use strict';
+    /*var BANNER = '**\n' +
+        ' * Open Sheet Music Display library <%= pkg.version %> built on <%= grunt.template.today("yyyy-mm-dd") %>.\n' +
+        ' * Copyright (c) 2016 PhonicScore\n' +
+        ' *\n' +
+        ' * https://github.com/opensheetmusicdisplay/opensheetmusicdisplay\n' +
+        ' *\n';
+    */
+    grunt.initConfig({
+        pkg: grunt.file.readJSON('package.json'),
+        // Build output directories
+        outputDir: {
+            build: 'build',
+            dist: 'dist'
         },
-        debug: {
-            src: [
-              'typings/browser.d.ts', 'typings/vexflow.d.ts',
-              'src/**/*.ts', 'test/**/*.ts'
-            ],
-            dest: '<%= outputDir.build %>/osmd-debug.js',
+        // Browserify
+        browserify: {
+            dist: {
+                src: [
+                    'typings/browser.d.ts',
+                    'typings/vexflow.d.ts',
+                    'src/**/*.ts'
+                ],
+                dest: '<%= outputDir.build %>/osmd.js'
+            },
+            debug: {
+                src: [
+                    'typings/browser.d.ts', 'typings/vexflow.d.ts',
+                    'src/**/*.ts', 'test/**/*.ts'
+                ],
+                dest: '<%= outputDir.build %>/osmd-debug.js',
+                options: {
+                    browserifyOptions: {
+                        debug: true
+                    }
+                }
+            },
             options: {
-                browserifyOptions: {
-                    debug: true
-
+                plugin: ['tsify']
+            }
+        },
+        // Uglify
+        /*uglify: {
+          options: {
+            compress: {
+              drop_console: true
+            }
+          },
+          my_target: {
+            files: {
+              'build/osmd.js': ['src/input.js']
+            }
+          }
+        },*/
+        // Settings for tests
+        karma: {
+            // For continuous integration
+            ci: {
+                configFile: 'karma.conf.js',
+                options: {
+                    browsers: ['PhantomJS', 'Chrome', 'Firefox'],
+                    files: [
+                        '<%= browserify.debug.dest %>'
+                    ]
+                }
+            },
+            debugWithFirefox: {
+                configFile: 'karma.conf.js',
+                options: {
+                    singleRun: false,
+                    browsers: ['Firefox'],
+                    files: [
+                        '<%= browserify.debug.dest %>', {
+                            pattern: 'src/**/*.ts',
+                            included: false
+                        }, {
+                            pattern: 'test/**/*.ts',
+                            included: false
+                        }
+                    ]
+                }
+            },
+            debugWithChrome: {
+                configFile: 'karma.conf.js',
+                options: {
+                    singleRun: false,
+                    browsers: ['Chrome'],
+                    files: [
+                        '<%= browserify.debug.dest %>', {
+                            pattern: 'src/**/*.ts',
+                            included: false
+                        }, {
+                            pattern: 'test/**/*.ts',
+                            included: false
+                        }
+                    ]
                 }
             }
         },
-        options: {
-            plugin: ['tsify']
-        }
-    },
-    // Uglify
-    /*uglify: {
-      options: {
-        compress: {
-          drop_console: true
-        }
-      },
-      my_target: {
-        files: {
-          'build/osmd.js': ['src/input.js']
-        }
-      }
-    },*/
-    // Settings for tests
-    karma: {
-        // For continuous integration
-        ci: {
-            configFile: 'karma.conf.js',
+        // TSLint setup
+        tslint: {
             options: {
-                browsers: ['PhantomJS', 'Chrome', 'Firefox'],
-                files: [
-                    '<%= browserify.debug.dest %>'
-                ]
+                configuration: 'tslint.json'
+            },
+            all: {
+                src: ['<%= browserify.dist.src %>', '<%= browserify.debug.src %>']
             }
         },
-        debugWithFirefox: {
-            configFile: 'karma.conf.js',
+        // TypeScript type definitions
+        typings: {
+            install: {}
+        },
+        docco: {
+            src: ['src/**/*.ts'],
             options: {
-                singleRun: false,
-                browsers: ['Firefox'],
-                files: [
-                    '<%= browserify.debug.dest %>',
-                    {pattern: 'src/**/*.ts', included: false},
-                    {pattern: 'test/**/*.ts', included: false}
-                ]
+                layout: 'linear',
+                output: 'build/docs'
             }
         },
-        debugWithChrome: {
-            configFile: 'karma.conf.js',
+        // Settings for clean task
+        clean: {
             options: {
-                singleRun: false,
-                browsers: ['Chrome'],
-                files: [
-                    '<%= browserify.debug.dest %>',
-                    {pattern: 'src/**/*.ts', included: false},
-                    {pattern: 'test/**/*.ts', included: false}
+                force: true
+            },
+            all: {
+                src: [
+                    '<%= outputDir.build %>',
+                    '<%= outputDir.dist %>',
+                    '.tscache'
                 ]
             }
         }
-    },
-    // TSLint setup
-    tslint: {
-        options: {
-            configuration: 'tslint.json'
-        },
-        all: {
-            src: ['<%= browserify.dist.src %>', '<%= browserify.debug.src %>']
-        }
-    },
-    // TypeScript type definitions
-    typings: {
-        install: {}
-    },
-    docco: {
-      src: ['src/**/*.ts'],
-      options: {
-        layout: 'linear',
-        output: 'build/docs'
-      }
-    },
-    // Settings for clean task
-    clean: {
-        options: {
-            force: true
-        },
-        all: {
-            src: [
-                '<%= outputDir.build %>',
-                '<%= outputDir.dist %>',
-                '.tscache'
-            ]
-        }
-    },
-  });
+    });
 
-  grunt.loadNpmTasks('grunt-browserify');
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  //grunt.loadNpmTasks('grunt-jscs');
-  grunt.loadNpmTasks('grunt-karma');
-  grunt.loadNpmTasks('grunt-tslint');
-  grunt.loadNpmTasks('grunt-typings');
+    // Load Npm tasks
+    grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    //grunt.loadNpmTasks('grunt-jscs');
+    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-tslint');
+    grunt.loadNpmTasks('grunt-typings');
 
-  grunt.registerTask('default', [/*'tslint',*/ 'browserify', 'karma:ci']);
-  //grunt.registerTask('lint', ['tslint', 'jscs']);
-  grunt.registerTask('test', ['browserify:debug', 'karma:ci']);
-  grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
-  grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
-  grunt.registerTask('rebuild', ['clean', 'default']);
-  grunt.registerTask('publish', ['clean', 'browserify:dist']);
-  grunt.registerTask('all', ['typings', 'default']);
+    // Register tasks
+    grunt.registerTask('default', [ /*'tslint',*/ 'browserify', 'karma:ci']);
+    //grunt.registerTask('lint', ['tslint', 'jscs']);
+    grunt.registerTask('test', ['browserify:debug', 'karma:ci']);
+    //grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
+    //grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
+    grunt.registerTask('rebuild', ['clean', 'default']);
+    grunt.registerTask('publish', ['clean', 'browserify:dist']);
+    grunt.registerTask('all', ['typings', 'default']);
 };

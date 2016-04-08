@@ -1,58 +1,58 @@
 {
-  "name": "opensheetmusicdisplay",
-  "version": "0.0.0",
-  "description": "Open Sheet Music Display library",
-  "main": "build.js",
-  "directories": {
-    "doc": "docs",
-    "test": "test"
-  },
-  "scripts": {
-    "start": "grunt all",
-    "test": "grunt test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
-  },
-  "keywords": [
-    "sheets",
-    "music",
-    "vexflow",
-    "musicxml"
-  ],
-  "author": "PhonicScore",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
-  },
-  "homepage": "http://opensheetmusicdisplay.org",
-  "dependencies": {
-    "browserify": "",
-    "tsify": "",
-    "tslint": "",
-    "chai": "",
-    "mocha": "",
-    "typescript": "",
-    "phantomjs-prebuilt": "",
+    "name": "opensheetmusicdisplay",
+    "version": "0.0.0",
+    "description": "Open Sheet Music Display library",
+    "main": "build.js",
+    "directories": {
+        "doc": "docs",
+        "test": "test"
+    },
+    "scripts": {
+        "start": "grunt typings",
+        "test": "grunt test"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
+    },
+    "keywords": [
+        "sheet",
+        "music",
+        "vexflow",
+        "musicxml"
+    ],
+    "author": "PhonicScore",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
+    },
+    "homepage": "http://opensheetmusicdisplay.org",
+    "dependencies": {
+        "browserify": "",
+        "tsify": "",
+        "tslint": "",
+        "chai": "",
+        "mocha": "",
+        "typescript": "",
+        "phantomjs-prebuilt": "",
 
-    "grunt": "",
-    "grunt-browserify": "",
-    "grunt-contrib-clean": "",
-    "grunt-contrib-watch": "",
-    "grunt-tslint": "",
-    "grunt-contrib-uglify": "",
-    "grunt-karma": "",
-    "grunt-typings": "",
+        "grunt": "",
+        "grunt-browserify": "",
+        "grunt-contrib-clean": "",
+        "grunt-contrib-watch": "",
+        "grunt-tslint": "",
+        "grunt-contrib-uglify": "",
+        "grunt-karma": "",
+        "grunt-typings": "",
 
-    "karma": "",
-    "karma-chai": "",
-    "karma-chrome-launcher": "",
-    "karma-firefox-launcher": "",
-    "karma-mocha": "",
-    "karma-mocha-reporter": "",
-    "karma-phantomjs-launcher": "",
+        "karma": "",
+        "karma-chai": "",
+        "karma-chrome-launcher": "",
+        "karma-firefox-launcher": "",
+        "karma-mocha": "",
+        "karma-mocha-reporter": "",
+        "karma-phantomjs-launcher": "",
 
-    "vexflow": ""
-  }
+        "vexflow": ""
+    }
 }
