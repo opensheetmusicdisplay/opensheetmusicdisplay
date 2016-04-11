@@ -1,18 +1,13 @@
 <!--This file executes some benchmarks with HTML Canvas and VexFlow rendering-->
-<!doctype html><html><head><script defer="defer">(function(){//---------------->
+<!DOCTYPE html><html><head><meta charset="UTF-8"><script defer="defer">(function(){
 //----------------------------------------------------------------------------->
 
 // TODO
 // * More complex VexFlow systems
 
-// Init function
-window.onload = function () {
-  window.setTimeout(start, 0);
-}
-
 var start = function () {
   document.title = "HTML Canvas Performance Tests";
-  document.write("<h1>[OSMD] HTML Canvas Performance Tests</h1>");
+  write("<h1>[OSMD] HTML Canvas Performance Tests</h1>");
   var t = timer();
   // Run the tests
   repeat(
@@ -327,11 +322,91 @@ var start = function () {
       tie2.setContext(ctx).draw();
     }
   );
+  var tmp_c1 = document.createElement("canvas");
+  tmp_c1.width = 1920;
+  tmp_c1.height = 1080 * 30;
+  repeat(
+    "[VexFlow | huge] Format & draw 20 staves with 5 voices each, reusing the canvas.", 50,
+    "...",
+    function(){
+      var canvas = tmp_c1;
+      var renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
+      var ctx = renderer.getContext();
+      for (var j=0; j < 20; j++) {
+        var stave = new Vex.Flow.Stave(
+          Math.floor(Math.random()*canvas.width),
+          Math.floor(Math.random()*canvas.height),
+          Math.floor(Math.random()*canvas.width)
+        );
+        stave.addClef("treble");
+        stave.setContext(ctx).draw();
+        var voices = [];
+        for (var i = 0, voice; i < 5; i++) {
+          voice = new Vex.Flow.Voice({
+            num_beats: 4,
+            beat_value: 4,
+            resolution: Vex.Flow.RESOLUTION
+          });
+          voice.addTickables(randomNotes());
+          voices.push(voice);
+        }
+        var formatter = new Vex.Flow.Formatter().
+        joinVoices(voices).format(voices, 500);
+        for (var i = 0; i < 5; i++) {
+          voices[i].draw(ctx, stave);
+        }
+      }
+    }
+  );
+
+  var tmp_c1 = document.createElement("canvas");
+  tmp_c1.width = 1920;
+  tmp_c1.height = 100;
+  repeat(
+    "[VexFlow | normal] Format & draw 20 staves with 5 voices each, reusing the canvas.", 50,
+    "...",
+    function(){
+      var canvas = tmp_c1;
+      var renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
+      var ctx = renderer.getContext();
+      for (var j=0; j < 20; j++) {
+        var stave = new Vex.Flow.Stave(
+          Math.floor(Math.random()*canvas.width),
+          Math.floor(Math.random()*canvas.height),
+          Math.floor(Math.random()*canvas.width)
+        );
+        stave.addClef("treble");
+        stave.setContext(ctx).draw();
+        var voices = [];
+        for (var i = 0, voice; i < 5; i++) {
+          voice = new Vex.Flow.Voice({
+            num_beats: 4,
+            beat_value: 4,
+            resolution: Vex.Flow.RESOLUTION
+          });
+          voice.addTickables(randomNotes());
+          voices.push(voice);
+        }
+        var formatter = new Vex.Flow.Formatter().
+        joinVoices(voices).format(voices, 500);
+        for (var i = 0; i < 5; i++) {
+          voices[i].draw(ctx, stave);
+        }
+      }
+    }
+  );
+
   finish(t);
 }
 
 //----------------------------------------------------------------------------->
 // Helper functions
+
+// Init function
+window.onload = function () {
+  window.setTimeout(start, 0);
+}
+
 var randomNotes = function () {
   var notes = [];
   for (var i = 0, note, key; i < 8; i ++) {
@@ -346,7 +421,7 @@ var randomNotes = function () {
 //----------------------------------------------------------------------------->
 var finish = function (t) {
   window.setTimeout(function(){
-    document.write("<hr><p><b>Total Elapsed Time: ~" + Math.floor(t()/1000) + " seconds.</b></p>");
+    write("<hr><p><b>Total Elapsed Time: ~" + Math.floor(t()/1000) + " seconds.</b></p>");
     document.close();
   }, 0);
 }
@@ -354,8 +429,8 @@ var finish = function (t) {
 
 // Display the result of a test on the page
 function formatResult(label, descr, times, elapsed) {
-  document.write("<p><b>" + label + "</b>: " + descr + "<br>");
-  document.write("<i>Elapsed time: " + (elapsed/times) + "ms each (" + times + " iterations)</i></Op>");
+  write("<p><b>" + label + "</b>: " + descr + "<br>");
+  write("<i>Elapsed time: " + (elapsed/times) + "ms each (" + times + " iterations)</i></Op>");
 }
 
 // A simple timer
@@ -368,6 +443,7 @@ var timer = function() {
 
 // Repeat a test
 var repeat0 = function(label, times, descr, func) {
+  //debugger;
   var t = timer();
   for (var i = 0; i < times; i++) func();
   formatResult(label, descr, times, t());
@@ -378,6 +454,11 @@ var repeat = function(label, times, descr, func) {
   }, 0);
 }
 
+var write = function(x) {
+  var div = document.createElement("div");
+  div.innerHTML = x;
+  document.body.appendChild(div);
+}
 //----------------------------------------------------------------------------->
 }());</script><!--------------------------------------------------------------->
 <script src="../node_modules/vexflow/releases/vexflow-min.js"></script><!------>

@@ -1,0 +1,31 @@
+<!--This file executes some benchmarks with HTML Canvas and VexFlow rendering-->
+<!DOCTYPE html><html><head><meta charset="UTF-8"><script defer="defer">(function(){
+//----------------------------------------------------------------------------->
+
+window.onload = function() {
+  window.title = "[OSMD] Canvas Memory Test"
+  window.setTimeout(test2, 1);
+}
+
+var test1 = function() {
+  var canvas = document.createElement("canvas");
+  canvas.style.border = "1px solid red";
+  canvas.width = 1920;
+  canvas.height = 1080 * 30;
+  document.body.appendChild(canvas);
+}
+
+var test2 = function() {
+  var canvas = document.createElement("canvas");
+  canvas.style.border = "1px solid red";
+  canvas.width = 1920;
+  canvas.height = 1080 * 30;
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "red";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  document.body.appendChild(canvas);
+}
+
+//----------------------------------------------------------------------------->
+}());</script><!--------------------------------------------------------------->
+</head></html><!--------------------------------------------------------------->
