@@ -99,8 +99,20 @@ export class MeasureSizeCalculator {
     //console.log("this.width", this.voicesWidth);
     //console.log("voicesBB", voicesBoundingBox.getW());
 
-    // FIXME the following: should consider stave modifiers
+
     //this.height = voicesBoundingBox.getH(); FIXME
+
+    // Consider clefs
+    let clefs: Vex.Flow.Clef[] = stave.getModifiers(
+      Vex.Flow.StaveModifier.Position.LEFT,
+      Vex.Flow.Clef.category
+    );
+    for (let clef of clefs) {
+      voicesBoundingBox = voicesBoundingBox.mergeWith(
+        this.getClefBoundingBox(clef)
+      );
+    }
+
     this.topBorder = Math.min(
       0,
       Math.floor(stave.getLineForY(voicesBoundingBox.getY()))
@@ -110,4 +122,42 @@ export class MeasureSizeCalculator {
       Math.ceil(stave.getLineForY(voicesBoundingBox.getY() + voicesBoundingBox.getH()))
     );
   }
+
+  private getClefBoundingBox(clef: Vex.Flow.Clef): Vex.Flow.BoundingBox {
+    let glyph: any = clef.glyph;
+    let x_pos: number = clef.x + glyph.x_shift;
+    let y_pos: number = clef.stave.getYForGlyphs() + glyph.y_shift;
+    let scale: number = glyph.scale;
+    let outline: any[] = glyph.metrics.outline;
+    let xmin: number = 0, xmax: number = 0,
+      ymin: number = 0, ymax: number = 0;
+
+    function update(i: number): void {
+      let x: number = outline[i];
+      let y: number = outline[i];
+      xmin = Math.min(xmin, x);
+      xmax = Math.max(xmax, x);
+      ymin = Math.min(ymin, y);
+      ymax = Math.max(ymax, y);
+    }
+
+    for (let i of outline) {
+      switch (<string> outline[i]) {
+        case "m": update(i); break;
+        case "l": update(i); break;
+        case "q": i++; update(i); break;
+        case "b": i++; i++; update(i); break;
+        default: break;
+      }
+
+    }
+    return new Vex.Flow.BoundingBox(
+      x_pos + xmin * scale,
+      y_pos - ymin * scale,
+      (xmax - xmin) * scale,
+      (ymin - ymax) * scale
+    );
+  }
+
+
 }
