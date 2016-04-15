@@ -53,6 +53,8 @@
         "karma-mocha-reporter": "",
         "karma-phantomjs-launcher": "",
 
-        "vexflow": ""
+        "vexflow": "",
+
+        "fft": "0.2.*"
     }
 }

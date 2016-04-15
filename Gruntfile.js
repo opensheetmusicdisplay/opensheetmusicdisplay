@@ -37,7 +37,10 @@ module.exports = function (grunt) {
                 }
             },
             options: {
-                plugin: ['tsify']
+                plugin: ['tsify'],
+                browserifyOptions: {
+                  standalone: 'MeasureSizeCalculator'
+                }
             }
         },
         // Uglify
