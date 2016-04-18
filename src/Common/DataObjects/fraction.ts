@@ -1,13 +1,15 @@
 // TODO: implement operators!
 "use strict";
 export class Fraction /*implements IComparable, IComparer<Fraction> */{
-   constructor(numerator: number = 0, denominator: number = 1, simplify: boolean = true) {
+   constructor(
+     numerator: number = 0,
+     denominator: number = 1,
+     simplify: boolean = true
+   ) {
        this.numerator = numerator;
        this.denominator = denominator;
 
-       if (simplify) {
-            this.simplify();
-       }
+       if (simplify) { this.simplify(); }
        this.setRealValue();
    }
 
@@ -16,11 +18,17 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     private denominator: number = 1;
     private realValue: number;
 
+    public static Equal(f1: Fraction, f2: Fraction): boolean {
+      // FIXME
+      return f1.Denominator() === f2.Denominator() &&
+      f1.Numerator() === f2.Numerator();
+    }
+
     public static CreateFractionFromFraction(fraction: Fraction): Fraction {
         return new Fraction(fraction.numerator, fraction.denominator);
     }
 
-    public static plus (f1: Fraction , f2: Fraction): Fraction {
+    public static plus (f1: Fraction, f2: Fraction): Fraction {
         let sum: Fraction = Fraction.CreateFractionFromFraction(f1);
         sum.Add(f2);
         return sum;

@@ -12,7 +12,7 @@ export class InstrumentalGroup {
     private musicSheet: MusicSheet;
     private parent: InstrumentalGroup;
     private instrumentalGroups: List<InstrumentalGroup> = new List<InstrumentalGroup>();
-    private instruments: List<Instrument> = new List<Instrument>();
+    //private instruments: List<Instrument> = new List<Instrument>();
     public get InstrumentalGroups(): List<InstrumentalGroup> {
         return this.instrumentalGroups;
     }

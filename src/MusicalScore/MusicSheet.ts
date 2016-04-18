@@ -1,19 +1,20 @@
-export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
-{
+export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet> {
     constructor() {
         try {
             this.Rules = EngravingRules.Rules;
+        } catch (ex) {
+            console.log("MusicSheet Error: EngravingRules"); // FIXME
         }
-        catch (ex) {
-
-        }
-
         this.playbackSettings = this.SheetPlaybackSetting = new PlaybackSettings(new Fraction(4, 4, false), 100);
         this.UserStartTempoInBPM = 100;
         this.PageWidth = 120;
         this.MusicPartManager = new MusicPartManager(this);
     }
-    private idString: string = "kjgdfuilhsdaöoihfsvjh";
+    public static defaultTitle: string = "[kein Titel]";
+    public UserStartTempoInBPM: number;
+    public PageWidth: number;
+
+    private idString: string = "kjgdfuilhsdaï¿½oihfsvjh";
     private sourceMeasures: List<SourceMeasure> = new List<SourceMeasure>();
     private repetitions: List<Repetition> = new List<Repetition>();
     private dynListStaves: List<List<DynamicsContainer>> = new List<List<DynamicsContainer>>();
@@ -27,9 +28,9 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
     private subtitle: Label;
     private composer: Label;
     private lyricist: Label;
-    private languages: List<Language> = new List<Language>();
-    private activeLanguage: Language;
-    private musicPartManager: MusicPartManager = null;
+    // private languages: List<Language> = new List<Language>();
+    // private activeLanguage: Language;
+    private musicPartManager: MusicPartManager = undefined;
     private musicSheetErrors: MusicSheetErrors = new MusicSheetErrors();
     private staves: List<Staff> = new List<Staff>();
     private selectionStart: Fraction;
@@ -39,11 +40,11 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
     private drawErroneousMeasures: boolean = false;
     private hasBeenOpenedForTheFirstTime: boolean = false;
     private currentEnrolledPosition: Fraction = new Fraction(0, 1);
-    private musicSheetParameterObject: MusicSheetParameterObject = null;
+    private musicSheetParameterObject: MusicSheetParameterObject = undefined;
     private engravingRules: EngravingRules;
     private phonicScoreInterface: IPhonicScoreInterface;
     private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
-    public static defaultTitle: string = "[kein Titel]";
+
     public get PhonicScoreInterface(): IPhonicScoreInterface {
         return this.phonicScoreInterface;
     }
@@ -99,7 +100,6 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         this.playbackSettings.BeatsPerMinute = startTempo;
         this.UserStartTempoInBPM = startTempo;
     }
-    public UserStartTempoInBPM: number;
     public get DefaultStartTempoInBpm(): number {
         return this.defaultStartTempoInBpm;
     }
@@ -107,7 +107,6 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         this.defaultStartTempoInBpm = value;
         this.InitializeStartTempoInBPM(value);
     }
-    public PageWidth: number;
     public get Path(): string {
         return this.path;
     }
@@ -118,24 +117,32 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         return this.staves;
     }
     public get TitleString(): string {
-        if (this.title != null)
+        if (this.title !== undefined) {
             return this.title.Text;
-        else return string.Empty;
+        } else {
+            return string.Empty;
+        }
     }
     public get SubtitleString(): string {
-        if (this.subtitle != null)
+        if (this.subtitle !== undefined) {
             return this.subtitle.Text;
-        else return string.Empty;
+        } else {
+            return string.Empty;
+        }
     }
     public get ComposerString(): string {
-        if (this.composer != null)
+        if (this.composer !== undefined) {
             return this.composer.Text;
-        else return string.Empty;
+        } else {
+            return string.Empty;
+        }
     }
     public get LyricistString(): string {
-        if (this.lyricist != null)
+        if (this.lyricist !== undefined) {
             return this.lyricist.Text;
-        else return string.Empty;
+        } else {
+            return string.Empty;
+        }
     }
     public get Title(): Label {
         return this.title;
@@ -196,28 +203,30 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         measure.MeasureListIndex = this.SourceMeasures.Count - 1;
     }
     public checkForInstrumentWithNoVoice(): void {
-        for (var idx: number = 0, len = this.instruments.Count; idx < len; ++idx) {
-            var instrument: Instrument = this.instruments[idx];
-            if (instrument.Voices.Count == 0) {
-                var voice: Voice = new Voice(instrument, 1);
+        for (let idx: number = 0, len: number = this.instruments.Count; idx < len; ++idx) {
+            let instrument: Instrument = this.instruments[idx];
+            if (instrument.Voices.Count === 0) {
+                let voice: Voice = new Voice(instrument, 1);
                 instrument.Voices.Add(voice);
             }
         }
     }
     public getStaffFromIndex(staffIndexInMusicSheet: number): Staff {
-        if (this.staves.Count > staffIndexInMusicSheet)
+        if (this.staves.Count > staffIndexInMusicSheet) {
             return this.staves[staffIndexInMusicSheet];
-        else return null;
+        } else {
+            return undefined;
+        }
     }
     public getIndexFromStaff(staff: Staff): number {
         return staff.IdInMusicSheet;
     }
     public fillStaffList(): void {
-        var i: number = 0;
-        for (var idx: number = 0, len = this.instruments.Count; idx < len; ++idx) {
-            var instrument: Instrument = this.instruments[idx];
-            for (var idx2: number = 0, len2 = instrument.Staves.Count; idx2 < len2; ++idx2) {
-                var staff: Staff = instrument.Staves[idx2];
+        let i: number = 0;
+        for (let idx: number = 0, len: number = this.instruments.Count; idx < len; ++idx) {
+            let instrument: Instrument = this.instruments[idx];
+            for (let idx2: number = 0, len2: number = instrument.Staves.Count; idx2 < len2; ++idx2) {
+                let staff: Staff = instrument.Staves[idx2];
                 staff.IdInMusicSheet = i;
                 this.staves.Add(staff);
                 i++;
@@ -231,23 +240,25 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         this.musicPartManager = value;
     }
     public getCompleteNumberOfStaves(): number {
-        var number: number = 0;
-        for (var idx: number = 0, len = this.instruments.Count; idx < len; ++idx) {
-            var instrument: Instrument = this.instruments[idx];
+        let number: number = 0;
+        for (let idx: number = 0, len: number = this.instruments.Count; idx < len; ++idx) {
+            let instrument: Instrument = this.instruments[idx];
             number += instrument.Staves.Count;
         }
         return number;
     }
     public getListOfMeasuresFromIndeces(start: number, end: number): List<SourceMeasure> {
-        var measures: List<SourceMeasure> = new List<SourceMeasure>();
-        for (var i: number = start; i <= end; i++)
+        let measures: List<SourceMeasure> = new List<SourceMeasure>();
+        for (let i: number = start; i <= end; i++) {
             measures.Add(this.sourceMeasures[i]);
+        }
         return measures;
     }
     public getNextSourceMeasure(measure: SourceMeasure): SourceMeasure {
-        var index: number = this.sourceMeasures.IndexOf(measure);
-        if (index == this.sourceMeasures.Count - 1)
+        let index: number = this.sourceMeasures.IndexOf(measure);
+        if (index === this.sourceMeasures.Count - 1) {
             return measure;
+        }
         return this.sourceMeasures[index + 1];
     }
     public getFirstSourceMeasure(): SourceMeasure {
@@ -257,12 +268,12 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         return this.sourceMeasures[this.sourceMeasures.Count - 1];
     }
     public resetAllNoteStates(): void {
-        var iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
-        while (!iterator.EndReached && iterator.CurrentVoiceEntries != null) {
-            for (var idx: number = 0, len = iterator.CurrentVoiceEntries.Count; idx < len; ++idx) {
-                var voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
-                for (var idx2: number = 0, len2 = voiceEntry.Notes.Count; idx2 < len2; ++idx2) {
-                    var note: Note = voiceEntry.Notes[idx2];
+        let iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
+        while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
+            for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.Count; idx < len; ++idx) {
+                let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
+                for (let idx2: number = 0, len2: number = voiceEntry.Notes.Count; idx2 < len2; ++idx2) {
+                    let note: Note = voiceEntry.Notes[idx2];
                     note.State = NoteState.Normal;
                 }
             }
@@ -273,78 +284,79 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         return this.Instruments.IndexOf(instrument);
     }
     public getGlobalStaffIndexOfFirstStaff(instrument: Instrument): number {
-        var instrumentIndex: number = this.getMusicSheetInstrumentIndex(instrument);
-        var staffLineIndex: number = 0;
-        for (var i: number = 0; i < instrumentIndex; i++)
+        let instrumentIndex: number = this.getMusicSheetInstrumentIndex(instrument);
+        let staffLineIndex: number = 0;
+        for (let i: number = 0; i < instrumentIndex; i++) {
             staffLineIndex += this.Instruments[i].Staves.Count;
+        }
         return staffLineIndex;
     }
     public setRepetitionNewUserNumberOfRepetitions(index: number, value: number): void {
-        var repIndex: number = 0;
-        for (var i: number = 0; i < this.repetitions.Count; i++) {
+        let repIndex: number = 0;
+        for (let i: number = 0; i < this.repetitions.Count; i++) {
             if (this.repetitions[i] instanceof Repetition) {
-                if (index == repIndex) {
+                if (index === repIndex) {
                     (<Repetition>this.repetitions[i]).UserNumberOfRepetitions = value;
                     break;
+                } else {
+                    repIndex++;
                 }
-                else repIndex++;
             }
         }
     }
     public getRepetitionByIndex(index: number): Repetition {
-        var repIndex: number = 0;
-        for (var i: number = 0; i < this.repetitions.Count; i++) {
+        let repIndex: number = 0;
+        for (let i: number = 0; i < this.repetitions.Count; i++) {
             if (this.repetitions[i] instanceof Repetition) {
-                if (index == repIndex)
+                if (index === repIndex) {
                     return <Repetition>this.repetitions[i];
+                }
                 repIndex++;
             }
         }
-        return null;
+        return undefined;
     }
     public CompareTo(other: MusicSheet): number {
         return this.Title.Text.CompareTo(other.Title.Text);
     }
     public get IInstruments(): List<IInstrument> {
-        var list: List<IInstrument> = new List<IInstrument>();
-        for (var idx: number = 0, len = this.instruments.Count; idx < len; ++idx) {
-            var instr: Instrument = this.instruments[idx];
+        let list: List<IInstrument> = new List<IInstrument>();
+        for (let idx: number = 0, len: number = this.instruments.Count; idx < len; ++idx) {
+            let instr: Instrument = this.instruments[idx];
             list.Add(instr);
         }
         return list;
     }
     public get IInitializableInstruments(): List<ISettableInstrument> {
-        var list: List<ISettableInstrument> = new List<ISettableInstrument>();
-        for (var idx: number = 0, len = this.instruments.Count; idx < len; ++idx) {
-            var instr: Instrument = this.instruments[idx];
+        let list: List<ISettableInstrument> = new List<ISettableInstrument>();
+        for (let idx: number = 0, len: number = this.instruments.Count; idx < len; ++idx) {
+            let instr: Instrument = this.instruments[idx];
             list.Add(instr);
         }
         return list;
     }
     public get IRepetitions(): List<IRepetition> {
         try {
-            var repetitions: List<IRepetition> = new List<IRepetition>();
-            for (var idx: number = 0, len = this.repetitions.Count; idx < len; ++idx) {
-                var partListEntry: PartListEntry = this.repetitions[idx];
+            let repetitions: List<IRepetition> = new List<IRepetition>();
+            for (let idx: number = 0, len: number = this.repetitions.Count; idx < len; ++idx) {
+                let partListEntry: PartListEntry = this.repetitions[idx];
                 if (partListEntry instanceof Repetition) {
                     repetitions.Add(<Repetition>partListEntry);
                 }
             }
             return repetitions;
-        }
-        catch (ex) {
+        } catch (ex) {
             Logger.DefaultLogger.LogError(LogLevel.NORMAL, "MusicSheet.IRepetitions get: ", ex);
-            return null;
+            return undefined;
         }
 
     }
     public GetExpressionsStartTempoInBPM(): number {
         if (this.TimestampSortedTempoExpressionsList.Count > 0) {
-            var me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
-            if (me.InstantaniousTempo != null) {
+            let me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
+            if (me.InstantaniousTempo !== undefined) {
                 return me.InstantaniousTempo.TempoInBpm;
-            }
-            else if (me.ContinuousTempo != null) {
+            } else if (me.ContinuousTempo !== undefined) {
                 return me.ContinuousTempo.StartTempo;
             }
         }
@@ -353,18 +365,16 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
     public get Errors(): Dictionary<number, List<string>> {
         try {
             return this.musicSheetErrors.MeasureErrors;
-        }
-        catch (ex) {
+        } catch (ex) {
             Logger.DefaultLogger.LogError(LogLevel.NORMAL, "MusicSheet.Errors get: ", ex);
-            return null;
+            return undefined;
         }
 
     }
     public get FirstMeasureNumber(): number {
         try {
             return this.getFirstSourceMeasure().MeasureNumber;
-        }
-        catch (ex) {
+        } catch (ex) {
             Logger.DefaultLogger.LogError(LogLevel.NORMAL, "MusicSheet.FirstMeasureNumber: ", ex);
             return 0;
         }
@@ -373,8 +383,7 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
     public get LastMeasureNumber(): number {
         try {
             return this.getLastSourceMeasure().MeasureNumber;
-        }
-        catch (ex) {
+        } catch (ex) {
             Logger.DefaultLogger.LogError(LogLevel.NORMAL, "MusicSheet.LastMeasureNumber: ", ex);
             return 0;
         }
@@ -393,23 +402,24 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         this.transpose = value;
     }
     public SetMusicSheetParameter(parameter: MusicSheetParameters, value: Object): void {
-        if (this.PhonicScoreInterface != null)
+        if (this.PhonicScoreInterface !== undefined) {
             this.PhonicScoreInterface.RequestMusicSheetParameter(parameter, value);
-        else {
-            var oldValue: Object = 0;
-            if (parameter == MusicSheetParameters.MusicSheetTranspose) {
+        } else {
+            let oldValue: Object = 0;
+            if (parameter === MusicSheetParameters.MusicSheetTranspose) {
                 oldValue = this.Transpose;
                 this.Transpose = <number>value;
             }
-            if (parameter == MusicSheetParameters.StartTempoInBPM) {
+            if (parameter === MusicSheetParameters.StartTempoInBPM) {
                 oldValue = this.UserStartTempoInBPM;
                 this.UserStartTempoInBPM = <number>value;
             }
-            if (parameter == MusicSheetParameters.HighlightErrors) {
+            if (parameter === MusicSheetParameters.HighlightErrors) {
                 oldValue = value;
             }
-            if (this.MusicSheetParameterChanged != null)
-                MusicSheetParameterChanged(null, parameter, value, oldValue);
+            if (this.MusicSheetParameterChanged !== undefined) {
+                MusicSheetParameterChanged(undefined, parameter, value, oldValue);
+            }
         }
     }
     public get MusicSheetParameterChanged(): MusicSheetParameterChangedDelegate {
@@ -428,26 +438,26 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         this.idString = value;
     }
     public Dispose(): void {
-        this.MusicSheetParameterChanged = null;
-        for (var idx: number = 0, len = this.IInstruments.Count; idx < len; ++idx) {
-            var instrument: IInstrument = this.IInstruments[idx];
+        this.MusicSheetParameterChanged = undefined;
+        for (let idx: number = 0, len: number = this.IInstruments.Count; idx < len; ++idx) {
+            let instrument: IInstrument = this.IInstruments[idx];
             instrument.Dispose();
         }
     }
     public getEnrolledSelectionStartTimeStampWorkaround(): Fraction {
-        var iter: MusicPartManagerIterator = this.MusicPartManager.getIterator(this.SelectionStart);
+        let iter: MusicPartManagerIterator = this.MusicPartManager.getIterator(this.SelectionStart);
         return new Fraction(iter.CurrentEnrolledTimestamp);
     }
     public get SheetEndTimestamp(): Fraction {
-        var lastMeasure: SourceMeasure = this.getLastSourceMeasure();
+        let lastMeasure: SourceMeasure = this.getLastSourceMeasure();
         return lastMeasure.AbsoluteTimestamp + lastMeasure.Duration;
     }
     public getSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
-        for (var idx: number = 0, len = this.SourceMeasures.Count; idx < len; ++idx) {
-            var sm: SourceMeasure = this.SourceMeasures[idx];
-            for (var idx2: number = 0, len2 = sm.VerticalSourceStaffEntryContainers.Count; idx2 < len2; ++idx2) {
-                var vssec: VerticalSourceStaffEntryContainer = sm.VerticalSourceStaffEntryContainers[idx2];
-                if (timeStamp == vssec.getAbsoluteTimestamp()) {
+        for (let idx: number = 0, len: number = this.SourceMeasures.Count; idx < len; ++idx) {
+            let sm: SourceMeasure = this.SourceMeasures[idx];
+            for (let idx2: number = 0, len2: number = sm.VerticalSourceStaffEntryContainers.Count; idx2 < len2; ++idx2) {
+                let vssec: VerticalSourceStaffEntryContainer = sm.VerticalSourceStaffEntryContainers[idx2];
+                if (timeStamp === vssec.getAbsoluteTimestamp()) {
                     return sm;
                 }
             }
@@ -455,11 +465,12 @@ export class MusicSheet implements ISettableMusicSheet, IComparable<MusicSheet>
         return this.findSourceMeasureFromTimeStamp(timeStamp);
     }
     public findSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
-        for (var idx: number = 0, len = this.SourceMeasures.Count; idx < len; ++idx) {
-            var sm: SourceMeasure = this.SourceMeasures[idx];
-            if (sm.AbsoluteTimestamp >= timeStamp && timeStamp < sm.AbsoluteTimestamp + sm.Duration)
+        for (let idx: number = 0, len: number = this.SourceMeasures.Count; idx < len; ++idx) {
+            let sm: SourceMeasure = this.SourceMeasures[idx];
+            if (sm.AbsoluteTimestamp >= timeStamp && timeStamp < sm.AbsoluteTimestamp + sm.Duration) {
                 return sm;
+            }
         }
-        return null;
+        return undefined;
     }
 }

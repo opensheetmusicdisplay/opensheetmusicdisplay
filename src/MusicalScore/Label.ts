@@ -1,26 +1,24 @@
 export class Label {
-    constructor() {
+  constructor(arg1: any, alignment: PSTextAlignment) {
+      if (arg1 instanceof string) {
+          this.text = <string>arg1;
+      } else if (arg1 instanceof FontInfo.MusicFontSymbol) {
+          this.font = PSFonts.PhonicScore;
+          let symbolInfo: FontInfo.SymbolInfo = FontInfo.Info.getSymbolInfo(<FontInfo.MusicFontSymbol>arg1);
+          this.text = symbolInfo.symbol;
+      }
+      if (alignment !== undefined) {
+          this.textAlignment = alignment;
+      }
+  }
 
-    }
-    constructor(text: string) {
-        this.text = text;
-    }
-    constructor(text: string, alignment: PSTextAlignment) {
-        this.text = text;
-        this.textAlignment = alignment;
-    }
-    constructor(symbol: FontInfo.MusicFontSymbol, alignment: PSTextAlignment) {
-        this.font = PSFonts.PhonicScore;
-        var symbolInfo: FontInfo.SymbolInfo = FontInfo.Info.getSymbolInfo(symbol);
-        this.text = symbolInfo.symbol;
-        this.textAlignment = alignment;
-    }
     private text: string;
     private color: PSColor = PSColor.Black;
     private font: PSFonts = PSFonts.TimesNewRoman;
     private fontStyle: PSFontStyles = PSFontStyles.Regular;
     private textAlignment: PSTextAlignment = PSTextAlignment.LeftBottom;
     private fontHeight: number = 2;
+
     public get Text(): string {
         return this.text;
     }

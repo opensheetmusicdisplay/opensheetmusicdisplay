@@ -1,7 +1,4 @@
 export class MusicPartManager implements ISelectionListener {
-    constructor() {
-
-    }
     constructor(musicSheet: MusicSheet) {
         this.musicSheet = musicSheet;
     }
@@ -19,49 +16,21 @@ export class MusicPartManager implements ISelectionListener {
         this.sheetEnd = this.musicSheet.SelectionEnd = this.musicSheet.SheetEndTimestamp;
         this.calcMapping();
     }
-    private calcMapping(): void {
-        this.timestamps = new List<TimestampTransform>();
-        var iterator: MusicPartManagerIterator = this.getIterator();
-        var currentRepetition: Repetition = iterator.CurrentRepetition;
-        var curTimestampTransform: TimestampTransform = new TimestampTransform(new Fraction(iterator.CurrentEnrolledTimestamp),
-            new Fraction(iterator.CurrentSourceTimestamp), null, 0);
-        this.timestamps.Add(curTimestampTransform);
-        while (!iterator.EndReached) {
-            if (iterator.JumpOccurred || currentRepetition != iterator.CurrentRepetition) {
-                currentRepetition = iterator.CurrentRepetition;
-                if (iterator.BackJumpOccurred) {
-                    var jumpRep: Repetition = iterator.JumpResponsibleRepetition;
-                    curTimestampTransform.nextBackJump = iterator.CurrentEnrolledTimestamp;
-                    curTimestampTransform.curRepetition = jumpRep;
-                    curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;
-                    for (var i: number = this.timestamps.Count - 2; i >= 0; i--) {
-                        if (jumpRep.AbsoluteTimestamp > this.timestamps[i].to || this.timestamps[i].curRepetition != null)
-                            break;
-                        this.timestamps[i].nextBackJump = curTimestampTransform.nextBackJump;
-                        this.timestamps[i].curRepetition = jumpRep;
-                        this.timestamps[i].curRepetitionIteration = curTimestampTransform.curRepetitionIteration;
-                    }
-                }
-                curTimestampTransform = new TimestampTransform(new Fraction(iterator.CurrentEnrolledTimestamp),
-                    new Fraction(iterator.CurrentSourceTimestamp), null, 0);
-                this.timestamps.Add(curTimestampTransform);
-            }
-            iterator.moveToNext();
-        }
-    }
     public getCurrentRepetitionTimestampTransform(curEnrolledTimestamp: Fraction): TimestampTransform {
-        var curTransform: TimestampTransform = null;
-        for (var i: number = this.timestamps.Count - 1; i >= 0; i--) {
+        let curTransform: TimestampTransform = undefined;
+        for (let i: number = this.timestamps.Count - 1; i >= 0; i--) {
             curTransform = this.timestamps[i];
-            if (curEnrolledTimestamp >= curTransform.$from)
+            if (curEnrolledTimestamp >= curTransform.$from) {
                 return curTransform;
+            }
         }
         return this.timestamps[0];
     }
     public absoluteEnrolledToSheetTimestamp(timestamp: Fraction): Fraction {
-        if (this.timestamps.Count == 0)
+        if (this.timestamps.Count === 0) {
             return timestamp;
-        var transform: TimestampTransform = this.getCurrentRepetitionTimestampTransform(timestamp);
+        }
+        let transform: TimestampTransform = this.getCurrentRepetitionTimestampTransform(timestamp);
         return timestamp + (transform.to - transform.$from);
     }
     public get Parts(): List<PartListEntry> {
@@ -74,26 +43,64 @@ export class MusicPartManager implements ISelectionListener {
         return new MusicPartManagerIterator(this, this.musicSheet.SelectionStart, this.musicSheet.SelectionEnd);
     }
     public getIterator(start: Fraction): MusicPartManagerIterator {
-        return new MusicPartManagerIterator(this, start, null);
+        return new MusicPartManagerIterator(this, start, undefined);
     }
     public setSelectionStart(beginning: Fraction): void {
         this.musicSheet.SelectionStart = beginning;
-        this.musicSheet.SelectionEnd = null;
+        this.musicSheet.SelectionEnd = undefined;
     }
     public setSelectionRange(start: Fraction, end: Fraction): void {
-        this.musicSheet.SelectionStart = start == null ? this.sheetStart : start;
-        this.musicSheet.SelectionEnd = end == null ? this.sheetEnd : end;
+        this.musicSheet.SelectionStart = start === undefined ? this.sheetStart : start;
+        this.musicSheet.SelectionEnd = end === undefined ? this.sheetEnd : end;
     }
-}
-export module MusicPartManager {
+    private calcMapping(): void {
+        this.timestamps = new List<TimestampTransform>();
+        let iterator: MusicPartManagerIterator = this.getIterator();
+        let currentRepetition: Repetition = iterator.CurrentRepetition;
+        let curTimestampTransform: TimestampTransform = new TimestampTransform(
+            new Fraction(iterator.CurrentEnrolledTimestamp),
+            new Fraction(iterator.CurrentSourceTimestamp),
+            undefined,
+            0,
+        );
+        this.timestamps.Add(curTimestampTransform);
+        while (!iterator.EndReached) {
+            if (iterator.JumpOccurred || currentRepetition !== iterator.CurrentRepetition) {
+                currentRepetition = iterator.CurrentRepetition;
+                if (iterator.BackJumpOccurred) {
+                    let jumpRep: Repetition = iterator.JumpResponsibleRepetition;
+                    curTimestampTransform.nextBackJump = iterator.CurrentEnrolledTimestamp;
+                    curTimestampTransform.curRepetition = jumpRep;
+                    curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;
+                    for (let i: number = this.timestamps.Count - 2; i >= 0; i--) {
+                        if (jumpRep.AbsoluteTimestamp > this.timestamps[i].to || this.timestamps[i].curRepetition !== undefined) {
+                            break;
+                        }
+                        this.timestamps[i].nextBackJump = curTimestampTransform.nextBackJump;
+                        this.timestamps[i].curRepetition = jumpRep;
+                        this.timestamps[i].curRepetitionIteration = curTimestampTransform.curRepetitionIteration;
+                    }
+                }
+                curTimestampTransform = new TimestampTransform(
+                    new Fraction(iterator.CurrentEnrolledTimestamp),
+                    new Fraction(iterator.CurrentSourceTimestamp),
+                    undefined,
+                    0,
+                );
+                this.timestamps.Add(curTimestampTransform);
+            }
+            iterator.moveToNext();
+        }
+    }
+
     export class TimestampTransform {
         constructor(sourceTimestamp: Fraction, enrolledTimestamp: Fraction, repetition: Repetition, curRepetitionIteration: number) {
             this.$from = sourceTimestamp;
             this.to = enrolledTimestamp;
             this.curRepetition = repetition;
             this.curRepetitionIteration = curRepetitionIteration;
-            this.nextBackJump = null;
-            this.nextForwardJump = null;
+            this.nextBackJump = undefined;
+            this.nextForwardJump = undefined;
         }
         public $from: Fraction;
         public to: Fraction;

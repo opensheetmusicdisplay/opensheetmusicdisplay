@@ -6,16 +6,22 @@ export class Instrument extends InstrumentalGroup implements ISettableInstrument
         this.idString = idString;
         this.nameLabel = new Label(idString);
     }
+
+    public Transpose: number = 0;
+    public Highlight: boolean;
+    public InstrumentParameterChanged: InstrumentParameterChangedDelegate;
+
     private phonicScoreInterface: IPhonicScoreInterface;
     private voices: List<Voice> = new List<Voice>();
     private staves: List<Staff> = new List<Staff>();
     private nameLabel: Label;
-    private range: ToneRange;
+    // private range: ToneRange;
     private idString: string;
     private id: number;
     private hasLyrics: boolean = false;
     private hasChordSymbols: boolean = false;
-    private playbackTranspose: number = 0;
+    // private playback
+
     private lyricVersesNumbers: List<number> = new List<number>();
     private subInstruments: List<SubInstrument> = new List<SubInstrument>();
     public get Voices(): List<Voice> {
@@ -70,8 +76,8 @@ export class Instrument extends InstrumentalGroup implements ISettableInstrument
         return this.subInstruments[0].Volume;
     }
     public set Volume(value: number) {
-        for (var idx: number = 0, len = this.subInstruments.Count; idx < len; ++idx) {
-            var subInstrument: SubInstrument = this.subInstruments[idx];
+        for (let idx: number = 0, len: number = this.subInstruments.Count; idx < len; ++idx) {
+            let subInstrument: SubInstrument = this.subInstruments[idx];
             subInstrument.Volume = value;
         }
     }
@@ -81,162 +87,166 @@ export class Instrument extends InstrumentalGroup implements ISettableInstrument
     public set PlaybackTranspose(value: number) {
         this.playbackTranspose = value;
     }
-    public Highlight: boolean;
+
     public get SubInstruments(): List<SubInstrument> {
         return this.subInstruments;
     }
     public getSubInstrument(subInstrumentIdString: string): SubInstrument {
-        for (var idx: number = 0, len = this.subInstruments.Count; idx < len; ++idx) {
-            var subInstrument: SubInstrument = this.subInstruments[idx];
-            if (subInstrument.IdString == subInstrumentIdString) {
+        for (let idx: number = 0, len: number = this.subInstruments.Count; idx < len; ++idx) {
+            let subInstrument: SubInstrument = this.subInstruments[idx];
+            if (subInstrument.IdString === subInstrumentIdString) {
                 return subInstrument;
             }
         }
-        return null;
+        return undefined;
     }
     public get Visible(): boolean {
-        if (this.voices.Count > 0)
+        if (this.voices.Count > 0) {
             return this.Voices[0].Visible;
-        else return false;
+        } else {
+            return false;
+        }
     }
     public set Visible(value: boolean) {
-        for (var idx: number = 0, len = this.Voices.Count; idx < len; ++idx) {
-            var v: Voice = this.Voices[idx];
+        for (let idx: number = 0, len: number = this.Voices.Count; idx < len; ++idx) {
+            let v: Voice = this.Voices[idx];
             v.Visible = value;
         }
     }
     public get Audible(): boolean {
-        var result: boolean = false;
-        for (var idx: number = 0, len = this.Voices.Count; idx < len; ++idx) {
-            var v: Voice = this.Voices[idx];
+        let result: boolean = false;
+        for (let idx: number = 0, len: number = this.Voices.Count; idx < len; ++idx) {
+            let v: Voice = this.Voices[idx];
             result = result || v.Audible;
         }
         return result;
     }
     public set Audible(value: boolean) {
-        for (var idx: number = 0, len = this.Voices.Count; idx < len; ++idx) {
-            var v: Voice = this.Voices[idx];
+        for (let idx: number = 0, len: number = this.Voices.Count; idx < len; ++idx) {
+            let v: Voice = this.Voices[idx];
             v.Audible = value;
         }
-        for (var idx: number = 0, len = this.staves.Count; idx < len; ++idx) {
-            var staff: Staff = this.staves[idx];
+        for (let idx: number = 0, len: number = this.staves.Count; idx < len; ++idx) {
+            let staff: Staff = this.staves[idx];
             staff.Audible = value;
         }
     }
     public get Following(): boolean {
-        var result: boolean = false;
-        for (var idx: number = 0, len = this.Voices.Count; idx < len; ++idx) {
-            var v: Voice = this.Voices[idx];
+        let result: boolean = false;
+        for (let idx: number = 0, len: number = this.Voices.Count; idx < len; ++idx) {
+            let v: Voice = this.Voices[idx];
             result = result || v.Following;
         }
         return result;
     }
     public set Following(value: boolean) {
-        for (var idx: number = 0, len = this.Voices.Count; idx < len; ++idx) {
-            var v: Voice = this.Voices[idx];
+        for (let idx: number = 0, len: number = this.Voices.Count; idx < len; ++idx) {
+            let v: Voice = this.Voices[idx];
             v.Following = value;
         }
-        for (var idx: number = 0, len = this.staves.Count; idx < len; ++idx) {
-            var staff: Staff = this.staves[idx];
+        for (let idx: number = 0, len: number = this.staves.Count; idx < len; ++idx) {
+            let staff: Staff = this.staves[idx];
             staff.Following = value;
         }
     }
     public SetVoiceAudible(voiceId: number, audible: boolean): void {
-        for (var idx: number = 0, len = this.Voices.Count; idx < len; ++idx) {
-            var v: Voice = this.Voices[idx];
-            if (v.VoiceId == voiceId) {
+        for (let idx: number = 0, len: number = this.Voices.Count; idx < len; ++idx) {
+            let v: Voice = this.Voices[idx];
+            if (v.VoiceId === voiceId) {
                 v.Audible = audible;
                 break;
             }
         }
     }
     public SetVoiceFollowing(voiceId: number, following: boolean): void {
-        for (var idx: number = 0, len = this.Voices.Count; idx < len; ++idx) {
-            var v: Voice = this.Voices[idx];
-            if (v.VoiceId == voiceId) {
+        for (let idx: number = 0, len: number = this.Voices.Count; idx < len; ++idx) {
+            let v: Voice = this.Voices[idx];
+            if (v.VoiceId === voiceId) {
                 v.Following = following;
                 break;
             }
         }
     }
     public SetStaffAudible(staffId: number, audible: boolean): void {
-        var staff: Staff = this.staves[staffId - 1];
+        let staff: Staff = this.staves[staffId - 1];
         staff.Audible = audible;
         if (audible) {
-            for (var idx: number = 0, len = staff.Voices.Count; idx < len; ++idx) {
-                var v: Voice = staff.Voices[idx];
+            for (let idx: number = 0, len: number = staff.Voices.Count; idx < len; ++idx) {
+                let v: Voice = staff.Voices[idx];
                 v.Audible = true;
             }
-        }
-        else {
-            for (var idx: number = 0, len = staff.Voices.Count; idx < len; ++idx) {
-                var voice: Voice = staff.Voices[idx];
-                var isAudibleInOtherStaves: boolean = false;
-                for (var idx2: number = 0, len2 = this.Staves.Count; idx2 < len2; ++idx2) {
-                    var st: Staff = this.Staves[idx2];
-                    if (st.Id == staffId || !st.Audible)
-                        continue;
-                    for (var idx3: number = 0, len3 = st.Voices.Count; idx3 < len3; ++idx3) {
-                        var v: Voice = st.Voices[idx3];
-                        if (v == voice)
+        } else {
+            for (let idx: number = 0, len: number = staff.Voices.Count; idx < len; ++idx) {
+                let voice: Voice = staff.Voices[idx];
+                let isAudibleInOtherStaves: boolean = false;
+                for (let idx2: number = 0, len2: number = this.Staves.Count; idx2 < len2; ++idx2) {
+                    let st: Staff = this.Staves[idx2];
+                    if (st.Id === staffId || !st.Audible) { continue; }
+                    for (let idx3: number = 0, len3: number = st.Voices.Count; idx3 < len3; ++idx3) {
+                        let v: Voice = st.Voices[idx3];
+                        if (v === voice) {
                             isAudibleInOtherStaves = true;
+                        }
                     }
                 }
-                if (!isAudibleInOtherStaves)
+                if (!isAudibleInOtherStaves) {
                     voice.Audible = false;
+                }
             }
         }
     }
     public SetStaffFollow(staffId: number, follow: boolean): void {
-        var staff: Staff = this.staves[staffId - 1];
+        let staff: Staff = this.staves[staffId - 1];
         staff.Following = follow;
         if (follow) {
-            for (var idx: number = 0, len = staff.Voices.Count; idx < len; ++idx) {
-                var v: Voice = staff.Voices[idx];
+            for (let idx: number = 0, len: number = staff.Voices.Count; idx < len; ++idx) {
+                let v: Voice = staff.Voices[idx];
                 v.Following = true;
             }
-        }
-        else {
-            for (var idx: number = 0, len = staff.Voices.Count; idx < len; ++idx) {
-                var voice: Voice = staff.Voices[idx];
-                var isFollowingInOtherStaves: boolean = false;
-                for (var idx2: number = 0, len2 = this.Staves.Count; idx2 < len2; ++idx2) {
-                    var st: Staff = this.Staves[idx2];
-                    if (st.Id == staffId || !st.Following)
-                        continue;
-                    for (var idx3: number = 0, len3 = st.Voices.Count; idx3 < len3; ++idx3) {
-                        var v: Voice = st.Voices[idx3];
-                        if (v == voice)
+        } else {
+            for (let idx: number = 0, len: number = staff.Voices.Count; idx < len; ++idx) {
+                let voice: Voice = staff.Voices[idx];
+                let isFollowingInOtherStaves: boolean = false;
+                for (let idx2: number = 0, len2: number = this.Staves.Count; idx2 < len2; ++idx2) {
+                    let st: Staff = this.Staves[idx2];
+                    if (st.Id === staffId || !st.Following) { continue; }
+                    for (let idx3: number = 0, len3: number = st.Voices.Count; idx3 < len3; ++idx3) {
+                        let v: Voice = st.Voices[idx3];
+                        if (v === voice) {
                             isFollowingInOtherStaves = true;
+                        }
                     }
                 }
-                if (!isFollowingInOtherStaves)
+                if (!isFollowingInOtherStaves) {
                     voice.Following = false;
+                }
             }
         }
     }
     public areAllVoiceVisible(): boolean {
-        var counter: number = 0;
-        for (var idx: number = 0, len = this.Voices.Count; idx < len; ++idx) {
-            var voice: Voice = this.Voices[idx];
-            if (voice.Visible)
+        let counter: number = 0;
+        for (let idx: number = 0, len: number = this.Voices.Count; idx < len; ++idx) {
+            let voice: Voice = this.Voices[idx];
+            if (voice.Visible) {
                 counter++;
+            }
         }
-        if (counter == this.voices.Count)
+        if (counter === this.voices.Count) {
             return true;
+        }
         return false;
     }
     public createStaves(numberOfStaves: number): void {
-        for (var i: number = 0; i < numberOfStaves; i++) {
-            var staff: Staff = new Staff(this, i + 1);
+        for (let i: number = 0; i < numberOfStaves; i++) {
+            let staff: Staff = new Staff(this, i + 1);
             this.staves.Add(staff);
         }
     }
     public SetInstrumentParameter(parameter: InstrumentParameters, value: Object): void {
         this.phonicScoreInterface.RequestInstrumentParameter(this.Id, parameter, value);
     }
-    public InstrumentParameterChanged: InstrumentParameterChangedDelegate;
+
     public Dispose(): void {
-        this.InstrumentParameterChanged = null;
+        this.InstrumentParameterChanged = undefined;
     }
 }

@@ -1,7 +1,6 @@
-export class MappingSourceMusicPart implements IComparable, IComparable<MappingSourceMusicPart>
-{
+export class MappingSourceMusicPart implements IComparable, IComparable<MappingSourceMusicPart> {
     constructor(sourceMusicPart: SourceMusicPart, startTimestamp: Fraction) {
-        this(sourceMusicPart, null, startTimestamp, -1, false);
+        this(sourceMusicPart, undefined, startTimestamp, -1, false);
 
     }
     constructor(sourceMusicPart: SourceMusicPart, parentPartListEntry: Repetition, startTimestamp: Fraction, repetitionRun: number, isEnding: boolean) {
@@ -19,13 +18,13 @@ export class MappingSourceMusicPart implements IComparable, IComparable<MappingS
     private repetitionRun: number = -1;
     private isEnding: boolean;
     public get IsRepetition(): boolean {
-        return this.parentRepetition != null;
+        return this.parentRepetition !== undefined;
     }
     public get IsEnding(): boolean {
         return this.isEnding;
     }
     public get IsLastRepetitionRun(): boolean {
-        return this.IsRepetition && (this.repetitionRun + 1 == this.parentRepetition.UserNumberOfRepetitions);
+        return this.IsRepetition && (this.repetitionRun + 1 === this.parentRepetition.UserNumberOfRepetitions);
     }
     public get RepetitionRun(): number {
         return this.repetitionRun;
@@ -40,10 +39,10 @@ export class MappingSourceMusicPart implements IComparable, IComparable<MappingS
         return this.startTimestamp;
     }
     public CompareTo(obj: Object): number {
-        var comp: MappingSourceMusicPart = __as__<MappingSourceMusicPart>(obj, MappingSourceMusicPart);
-        if (comp != null)
+        let comp: MappingSourceMusicPart = __as__<MappingSourceMusicPart>(obj, MappingSourceMusicPart);
+        if (comp !== undefined) {
             return this.startTimestamp.CompareTo(comp.startTimestamp);
-        else return 1;
+        } else { return 1; }
     }
     public CompareTo(other: MappingSourceMusicPart): number {
         return this.CompareTo(<Object>other);
