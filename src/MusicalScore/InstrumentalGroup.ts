@@ -1,8 +1,6 @@
+import { MusicSheet } from "./MusicSheet"
+
 export class InstrumentalGroup {
-    constructor(musicSheet: MusicSheet, parent: InstrumentalGroup) {
-        this.musicSheet = musicSheet;
-        this.parent = parent;
-    }
     constructor(name: string, musicSheet: MusicSheet, parent: InstrumentalGroup) {
         this.name = name;
         this.musicSheet = musicSheet;
@@ -11,9 +9,9 @@ export class InstrumentalGroup {
     private name: string;
     private musicSheet: MusicSheet;
     private parent: InstrumentalGroup;
-    private instrumentalGroups: List<InstrumentalGroup> = new List<InstrumentalGroup>();
+    private instrumentalGroups: InstrumentalGroup[] = new Array();
     //private instruments: List<Instrument> = new List<Instrument>();
-    public get InstrumentalGroups(): List<InstrumentalGroup> {
+    public get InstrumentalGroups(): InstrumentalGroup[] {
         return this.instrumentalGroups;
     }
     public get Parent(): InstrumentalGroup {

@@ -14,7 +14,7 @@ type InstrumentParameterChangedDelegate = any;
 
 export class Instrument extends InstrumentalGroup /*implements ISettableInstrument, IInstrument*/ {
     constructor(id: number, idString: string, phonicScoreInterface: IPhonicScoreInterface, musicSheet: MusicSheet, parent: InstrumentalGroup) {
-        super(musicSheet, parent);
+        super(undefined, musicSheet, parent);
         this.phonicScoreInterface = phonicScoreInterface;
         this.id = id;
         this.idString = idString;

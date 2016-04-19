@@ -1,13 +1,5 @@
 export class MusicPartManagerIterator {
-    constructor(manager: MusicPartManager) {
-        this(manager, undefined);
-
-    }
-    constructor(manager: MusicPartManager, startTimestamp: Fraction) {
-        this(manager, startTimestamp, undefined);
-
-    }
-    constructor(manager: MusicPartManager, startTimestamp: Fraction, endTimestamp: Fraction) {
+    constructor(manager: MusicPartManager, startTimestamp?: Fraction, endTimestamp?: Fraction) {
         try {
             this.frontReached = true;
             this.manager = manager;
