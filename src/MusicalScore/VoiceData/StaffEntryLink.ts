@@ -3,14 +3,14 @@ export class StaffEntryLink {
         this.voiceEntry = voiceEntry;
     }
     private voiceEntry: VoiceEntry;
-    private linkStaffEntries: List<SourceStaffEntry> = new List<SourceStaffEntry>();
+    private linkStaffEntries: SourceStaffEntry[] = new Array();
     public get GetVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
     }
-    public get LinkStaffEntries(): List<SourceStaffEntry> {
+    public get LinkStaffEntries(): SourceStaffEntry[] {
         return this.linkStaffEntries;
     }
-    public set LinkStaffEntries(value: List<SourceStaffEntry>) {
+    public set LinkStaffEntries(value: SourceStaffEntry[]) {
         this.linkStaffEntries = value;
     }
 }

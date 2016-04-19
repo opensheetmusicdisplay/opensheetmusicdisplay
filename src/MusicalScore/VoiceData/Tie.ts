@@ -67,16 +67,15 @@ export class Tie {
     }
     public initializeBoolList(): void {
         this.noteHasBeenCreated.Clear();
-        for (var idx: number = 0, len = this.fractions.Count; idx < len; ++idx) {
-            var fraction: Fraction = this.fractions[idx];
+        for (let idx: number = 0, len: number = this.fractions.Count; idx < len; ++idx) {
+            // let fraction: Fraction = this.fractions[idx];
             this.noteHasBeenCreated.Add(false);
         }
     }
     public allGraphicalNotesHaveBeenCreated(): boolean {
-        for (var idx: number = 0, len = this.noteHasBeenCreated.Count; idx < len; ++idx) {
-            var b: boolean = this.noteHasBeenCreated[idx];
-            if (!b)
-                return false;
+        for (let idx: number = 0, len: number = this.noteHasBeenCreated.Count; idx < len; ++idx) {
+            let b: boolean = this.noteHasBeenCreated[idx];
+            if (!b) { return false; }
         }
         return true;
     }

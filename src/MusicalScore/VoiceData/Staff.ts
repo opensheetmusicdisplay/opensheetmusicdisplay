@@ -9,7 +9,7 @@ export class Staff {
     public Audible: boolean;
     public Following: boolean;
     private parentInstrument: Instrument;
-    private voices: List<Voice> = new List<Voice>();
+    private voices: Voice[] = new Array();
     private volume: number = 1;
     private id: number;
     public get ParentInstrument(): Instrument {

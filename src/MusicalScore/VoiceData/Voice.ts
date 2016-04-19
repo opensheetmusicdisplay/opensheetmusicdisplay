@@ -6,14 +6,14 @@ export class Voice {
         this.following = true;
         this.voiceId = voiceId;
     }
-    private voiceEntries: List<VoiceEntry> = new List<VoiceEntry>();
+    private voiceEntries: VoiceEntry[] = new Array();
     private parent: Instrument;
     private visible: boolean;
     private audible: boolean;
     private following: boolean;
     private voiceId: number;
     private volume: number = 1;
-    public get VoiceEntries(): List<VoiceEntry> {
+    public get VoiceEntries(): VoiceEntry[] {
         return this.voiceEntries;
     }
     public get Parent(): Instrument {

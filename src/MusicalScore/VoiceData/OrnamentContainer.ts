@@ -23,16 +23,10 @@ export class OrnamentContainer {
 }
 export enum OrnamentEnum {
     Trill,
-
     Turn,
-
     InvertedTurn,
-
     DelayedTurn,
-
     DelayedInvertedTurn,
-
     Mordent,
-
     InvertedMordent
 }

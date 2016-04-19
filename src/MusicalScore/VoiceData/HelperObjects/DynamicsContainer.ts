@@ -1,5 +1,4 @@
-export class DynamicsContainer implements IComparable<DynamicsContainer>
-{
+export class DynamicsContainer implements IComparable<DynamicsContainer> {
     constructor(continuousDynamicExpression: ContinuousDynamicExpression, staffNumber: number) {
         this.ContinuousDynamicExpression = continuousDynamicExpression;
         this.StaffNumber = staffNumber;
@@ -12,19 +11,19 @@ export class DynamicsContainer implements IComparable<DynamicsContainer>
     public InstantaniousDynamicExpression: InstantaniousDynamicExpression;
     public StaffNumber: number;
     public parMultiExpression(): MultiExpression {
-        if (this.ContinuousDynamicExpression != null)
+        if (this.ContinuousDynamicExpression !== undefined) {
             return this.ContinuousDynamicExpression.StartMultiExpression;
-        if (this.InstantaniousDynamicExpression != null)
+        }
+        if (this.InstantaniousDynamicExpression !== undefined) {
             return this.InstantaniousDynamicExpression.ParentMultiExpression;
-        return null;
+        }
+        return undefined;
     }
     public CompareTo(other: DynamicsContainer): number {
-        var thisTimestamp: number = this.parMultiExpression().AbsoluteTimestamp.RealValue;
-        var otherTimestamp: number = other.parMultiExpression().AbsoluteTimestamp.RealValue;
-        if (thisTimestamp > otherTimestamp)
-            return 1;
-        if (thisTimestamp < otherTimestamp)
-            return -1;
+        let thisTimestamp: number = this.parMultiExpression().AbsoluteTimestamp.RealValue;
+        let otherTimestamp: number = other.parMultiExpression().AbsoluteTimestamp.RealValue;
+        if (thisTimestamp > otherTimestamp) { return 1; }
+        if (thisTimestamp < otherTimestamp) { return -1; }
         return 0;
     }
 }

@@ -1,6 +1,4 @@
 export class AbstractNotationInstruction {
-    constructor() {
-    }
     constructor(parent: SourceStaffEntry) {
         this.parent = parent;
     }

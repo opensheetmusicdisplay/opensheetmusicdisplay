@@ -4,10 +4,15 @@ export class Note {
         this.parentStaffEntry = parentStaffEntry;
         this.length = length;
         this.pitch = pitch;
-        if (pitch != null)
+        if (pitch !== undefined) {
             this.HalfTone = pitch.getHalfTone();
-        else this.HalfTone = 0;
+        } else {
+          this.HalfTone = 0;
+        }
     }
+    public HalfTone: number;
+    public State: NoteState;
+
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;
@@ -17,7 +22,7 @@ export class Note {
     private tie: Tie;
     private slurs: List<Slur> = new List<Slur>();
     private graceNoteSlash: boolean = false;
-    private playbackInstrumentId: string = null;
+    private playbackInstrumentId: string = undefined;
     public get GraceNoteSlash(): boolean {
         return this.graceNoteSlash;
     }
@@ -45,7 +50,6 @@ export class Note {
     public get Pitch(): Pitch {
         return this.pitch;
     }
-    public HalfTone: number;
     public get NoteBeam(): Beam {
         return this.beam;
     }
@@ -70,7 +74,6 @@ export class Note {
     public set NoteSlurs(value: List<Slur>) {
         this.slurs = value;
     }
-    public State: NoteState;
     public get PlaybackInstrumentId(): string {
         return this.playbackInstrumentId;
     }
@@ -78,11 +81,11 @@ export class Note {
         this.playbackInstrumentId = value;
     }
     public calculateNoteLengthWithoutTie(): Fraction {
-        var withoutTieLength: Fraction = new Fraction(this.length);
-        if (this.tie != null) {
-            var tempLength: Fraction = new Fraction(this.length);
-            for (var idx: number = 0, len = this.tie.Fractions.Count; idx < len; ++idx) {
-                var fraction: Fraction = this.tie.Fractions[idx];
+        let withoutTieLength: Fraction = new Fraction(this.length);
+        if (this.tie !== undefined) {
+            let tempLength: Fraction = new Fraction(this.length);
+            for (let idx: number = 0, len: number = this.tie.Fractions.Count; idx < len; ++idx) {
+                let fraction: Fraction = this.tie.Fractions[idx];
                 tempLength.Sub(fraction);
             }
             withoutTieLength = tempLength;
@@ -93,61 +96,68 @@ export class Note {
         return this.calculateNoteOriginalLength(new Fraction(this.length));
     }
     public calculateNoteOriginalLength(originalLength: Fraction): Fraction {
-        if (this.tie != null)
+        if (this.tie !== undefined) {
             originalLength = this.calculateNoteLengthWithoutTie();
-        if (this.tuplet != null)
+        }
+        if (this.tuplet !== undefined) {
             return this.length;
+        }
         if (originalLength.Numerator > 1) {
-            var exp: number = <number>Math.Log(originalLength.Denominator, 2) - this.calculateNumberOfNeededDots(originalLength);
+            let exp: number = <number>Math.Log(originalLength.Denominator, 2) - this.calculateNumberOfNeededDots(originalLength);
             originalLength.Denominator = <number>Math.Pow(2, exp);
             originalLength.Numerator = 1;
         }
         return originalLength;
     }
     public calculateNoteLengthWithDots(): Fraction {
-        if (this.tie != null)
+        if (this.tie !== undefined) {
             return this.calculateNoteLengthWithoutTie();
+        }
         return this.length;
     }
     public calculateNumberOfNeededDots(): number {
         return this.calculateNumberOfNeededDots(this.length);
     }
     public calculateNumberOfNeededDots(fraction: Fraction): number {
-        var number: number = 1;
-        var product: number = 2;
-        if (this.tuplet == null) {
+        let num: number = 1;
+        let product: number = 2;
+        if (this.tuplet === undefined) {
             while (product < fraction.Numerator) {
-                number++;
-                product = <number>Math.Pow(2, number);
+                num++;
+                product = <number>Math.Pow(2, num); // FIXME
             }
         }
         return number - 1;
     }
     public ToString(): string {
-        if (this.pitch != null)
+        if (this.pitch !== undefined) {
             return this.Pitch.ToString() + ", length: " + this.Length.ToString();
-        else return "rest note, length: " + this.Length.ToString();
+        } else {
+          return "rest note, length: " + this.Length.ToString();
+        }
     }
     public getAbsoluteTimestamp(): Fraction {
-        var absolute: Fraction = new Fraction(this.voiceEntry.Timestamp);
+        let absolute: Fraction = new Fraction(this.voiceEntry.Timestamp);
         absolute += this.parentStaffEntry.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp;
         return absolute;
     }
     public checkForDoubleSlur(slur: Slur): boolean {
-        for (var idx: number = 0, len = this.slurs.Count; idx < len; ++idx) {
-            var noteSlur: Slur = this.slurs[idx];
-            if (noteSlur.StartNote != null && noteSlur.EndNote != null && slur.StartNote != null && slur.StartNote == noteSlur.StartNote && noteSlur.EndNote == this)
-                return true;
+        for (let idx: number = 0, len: number = this.slurs.Count; idx < len; ++idx) {
+            let noteSlur: Slur = this.slurs[idx];
+            if (
+              noteSlur.StartNote !== undefined &&
+              noteSlur.EndNote !== undefined &&
+              slur.StartNote !== undefined &&
+              slur.StartNote === noteSlur.StartNote &&
+              noteSlur.EndNote === this
+            ) { return true; }
         }
         return false;
     }
-}
-export module Note {
+
     export enum Appearance {
         Normal,
-
         Grace,
-
         Cue
     }
 }

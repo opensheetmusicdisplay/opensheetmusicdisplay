@@ -30,29 +30,28 @@ export class RhythmInstruction extends AbstractNotationInstruction {
         this.symbolEnum = value;
     }
     public OperatorEquals(rhythm2: RhythmInstruction): boolean {
-        var rhythm1 = this;
+        let rhythm1: RhythmInstruction = this;
         if (ReferenceEquals(rhythm1, rhythm2)) {
             return true;
         }
-        if ((<Object>rhythm1 == null) || (<Object>rhythm2 == null)) {
+        if ((<Object>rhythm1 === undefined) || (<Object>rhythm2 === undefined)) {
             return false;
         }
-        return (rhythm1.numerator == rhythm2.numerator && rhythm1.denominator == rhythm2.denominator);
+        return (rhythm1.numerator === rhythm2.numerator && rhythm1.denominator === rhythm2.denominator);
     }
 
     public OperatorNotEqual(rhythm2: RhythmInstruction): boolean {
-        var rhythm1 = this;
-        return !(rhythm1 == rhythm2);
+        let rhythm1: RhythmInstruction = this;
+        return !(rhythm1 === rhythm2);
     }
 
     public ToString(): string {
         return "Rhythm: " + this.rhythm.ToString();
     }
 }
+
 export enum RhythmSymbolEnum {
     NONE = 0,
-
     COMMON = 1,
-
-    CUT = 2
+    CUT = 2,
 }

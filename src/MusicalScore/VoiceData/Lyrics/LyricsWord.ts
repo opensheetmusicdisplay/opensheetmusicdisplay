@@ -1,8 +1,8 @@
 import {LyricsEntry} from "./LyricsEntry";
 
 export class LyricWord {
-    private _syllabels: Array<LyricsEntry> = new Array<LyricsEntry>();
-    public get Syllabels(): Array<LyricsEntry> {
+    private _syllabels: LyricsEntry[] = new Array();
+    public get Syllabels(): LyricsEntry[] {
         return this._syllabels;
     }
     public containsVoiceEntry(voiceEntry: VoiceEntry): boolean {

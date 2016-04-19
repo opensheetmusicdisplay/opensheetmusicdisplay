@@ -349,8 +349,9 @@ export class MusicSheetReader implements IMusicSheetReader {
   }
   private staffMeasureIsEmpty(index: number): boolean {
     let counter: number = 0;
-    for (let i: number = 0; i < this.currentMeasure.VerticalSourceStaffEntryContainers.Count; i++)
+    for (let i: number = 0; i < this.currentMeasure.VerticalSourceStaffEntryContainers.Count; i++) {
       if (this.currentMeasure.VerticalSourceStaffEntryContainers[i][index] === undefined) { counter++; }
+    }
     return (counter === this.currentMeasure.VerticalSourceStaffEntryContainers.Count);
   }
   private checkSourceMeasureForundefinedEntries(): void {
@@ -385,8 +386,9 @@ export class MusicSheetReader implements IMusicSheetReader {
   private addSheetLabels(root: IXmlElement, filePath: string): void {
     this.readComposer(root);
     this.readTitle(root);
-    if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined)
+    if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
       this.readTitleAndComposerFromCredits(root);
+    }
     if (this.musicSheet.Title === undefined) {
       try {
         let bar_i: number = Math.max(
@@ -404,7 +406,7 @@ export class MusicSheetReader implements IMusicSheetReader {
     }
   }
   // Checks whether _elem_ has an attribute with value _val_.
-  private presentAttrWithValue(elem: IXmlElement, val: string): boolean {
+  private presentAttrsWithValue(elem: IXmlElement, val: string): boolean {
     for (let attr of elem.Attributes()) {
       if (attr.Value === val) { return true; }
     }
@@ -496,8 +498,9 @@ export class MusicSheetReader implements IMusicSheetReader {
     }
   }
   private computeSystemYCoordinates(root: IXmlElement): number {
-    if (root.Element("defaults") === undefined)
+    if (root.Element("defaults") === undefined) {
       return 0;
+    }
     let paperHeight: number = 0;
     let topSystemDistance: number = 0;
     let defi: string = root.Element("defaults").Element("page-layout").Element("page-height").Value;
@@ -522,8 +525,7 @@ export class MusicSheetReader implements IMusicSheetReader {
           break;
         }
       }
-      if (found === true)
-        break;
+      if (found) { break; }
     }
     if (root.Element("defaults").Element("system-layout") !== undefined) {
       let syslay: IXmlElement = root.Element("defaults").Element("system-layout");
@@ -532,8 +534,7 @@ export class MusicSheetReader implements IMusicSheetReader {
         topSystemDistance = StringToNumberConverter.ToNumber(topSystemDistanceString);
       }
     }
-    if (topSystemDistance === 0)
-      return 0;
+    if (topSystemDistance === 0) { return 0; }
     return paperHeight - topSystemDistance;
   }
   private readTitle(root: IXmlElement): void {
@@ -567,8 +568,9 @@ export class MusicSheetReader implements IMusicSheetReader {
         }
       }
     }
-    if (!String.IsundefinedOrEmpty(finalSubTitle))
+    if (!String.IsundefinedOrEmpty(finalSubTitle)) {
       this.musicSheet.Subtitle = new Label(finalSubTitle);
+    }
   }
   private createInstrumentGroups(entryList: IEnumerable<IXmlElement>): Dictionary<string, Instrument> {
     let instrumentId: number = 0;
@@ -611,11 +613,13 @@ export class MusicSheetReader implements IMusicSheetReader {
                   let instrumentElement: IXmlElement = instrumentElements[idx3];
                   try {
                     if (instrumentElement.Name === "midi-channel") {
-                      if (StringToNumberConverter.ToInteger(instrumentElement.Value) === 10)
+                      if (StringToNumberConverter.ToInteger(instrumentElement.Value) === 10) {
                         instrument.MidiInstrumentId = MidiInstrument.Percussion;
+                      }
                     } else if (instrumentElement.Name === "midi-program") {
-                      if (instrument.SubInstruments.Count > 0 && instrument.MidiInstrumentId !== MidiInstrument.Percussion)
+                      if (instrument.SubInstruments.Count > 0 && instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
                         subInstrument.MidiInstrumentId = <MidiInstrument>Math.Max(0, StringToNumberConverter.ToInteger(instrumentElement.Value) - 1);
+                      }
                     } else if (instrumentElement.Name === "midi-unpitched") {
                       subInstrument.FixedKey = Math.Max(0, StringToNumberConverter.ToInteger(instrumentElement.Value));
                     } else if (instrumentElement.Name === "volume") {
@@ -711,8 +715,9 @@ export class MusicSheetReader implements IMusicSheetReader {
         let xmlMeasure: IXmlElement = xmlMeasureList.First();
         if (xmlMeasure !== undefined) {
           let stavesNode: IXmlElement = xmlMeasure.Element("attributes");
-          if (stavesNode !== undefined)
+          if (stavesNode !== undefined) {
             stavesNode = stavesNode.Element("staves");
+          }
           if (stavesNode === undefined) {
             number++;
           } else {
@@ -735,8 +740,9 @@ export class MusicSheetReader implements IMusicSheetReader {
     if (xmlMeasure !== undefined) {
       let attributes: IXmlElement = xmlMeasure.Element("attributes");
       let staves: IXmlElement = undefined;
-      if (attributes !== undefined)
+      if (attributes !== undefined) {
         staves = attributes.Element("staves");
+      }
       if (attributes === undefined || staves === undefined) {
         number = 1;
       } else {
