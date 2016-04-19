@@ -250,7 +250,7 @@ export class MusicSheetReader implements IMusicSheetReader {
         if (this.currentMeasure.FirstInstructionsStaffEntries[rhythmInstructions.IndexOf(rhythmInstruction)].Instructions.Last() instanceof RhythmInstruction) {
           // TODO Test correctness
           let instrs: any = this.currentMeasure.FirstInstructionsStaffEntries[rhythmInstructions.IndexOf(rhythmInstruction)].Instructions;
-          instrs[instr.length - 1] = new RhythmInstruction(rhythmInstructions[index];
+          instrs[instr.length - 1] = new RhythmInstruction(rhythmInstructions[index]);
         }
       }
       if (

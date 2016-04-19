@@ -949,7 +949,9 @@ export class InstrumentReader {
     }
     return divisionsFromNote;
   }
+}
 
+export module InstrumentReader {
   export class KeyValuePairClass<T, TU> {
     constructor(key: T, value: TU) {
       this.key = key;

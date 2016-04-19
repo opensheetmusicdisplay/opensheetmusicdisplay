@@ -154,7 +154,9 @@ export class Note {
         }
         return false;
     }
+}
 
+export module Note {
     export enum Appearance {
         Normal,
         Grace,

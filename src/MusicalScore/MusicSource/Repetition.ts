@@ -150,22 +150,17 @@ export class Repetition extends PartListEntry implements IRepetition {
         return getLastSourceMeasure().MeasureNumber;
     }
 
+}
 
+export module Repetition {
     export class RepetitionEndingPart {
         constructor(endingPart: SourceMusicPart) {
             this.part = endingPart;
         }
         public part: SourceMusicPart;
-        public endingIndices: List<number> = new List<number>();
+        public endingIndices: number[] = new Array();
         public ToString(): string {
-            let result: string = "";
-            if (this.endingIndices.Count > 0) {
-                result += this.endingIndices[0];
-            }
-            for (let i: number = 1; i < this.endingIndices.Count; i++) {
-                result += ", " + this.endingIndices[i];
-            }
-            return result;
+          return this.endingIndices.join(", ");
         }
     }
 }

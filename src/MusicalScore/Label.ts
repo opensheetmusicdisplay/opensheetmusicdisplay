@@ -1,5 +1,5 @@
 export class Label {
-  constructor(arg1: any, alignment: PSTextAlignment) {
+  constructor(arg1: any, alignment?: PSTextAlignment) {
       if (arg1 instanceof string) {
           this.text = <string>arg1;
       } else if (arg1 instanceof FontInfo.MusicFontSymbol) {

@@ -1,11 +1,7 @@
 // TODO: implement operators!
-"use strict";
+
 export class Fraction /*implements IComparable, IComparer<Fraction> */{
-   constructor(
-     numerator: number = 0,
-     denominator: number = 1,
-     simplify: boolean = true
-   ) {
+   constructor(numerator: number = 0, denominator: number = 1, simplify: boolean = true) {
        this.numerator = numerator;
        this.denominator = denominator;
 
@@ -20,8 +16,7 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
 
     public static Equal(f1: Fraction, f2: Fraction): boolean {
       // FIXME
-      return f1.Denominator() === f2.Denominator() &&
-      f1.Numerator() === f2.Numerator();
+      return f1.Denominator === f2.Denominator && f1.Numerator === f2.Numerator;
     }
 
     public static CreateFractionFromFraction(fraction: Fraction): Fraction {

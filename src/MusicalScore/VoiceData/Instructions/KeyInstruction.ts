@@ -95,7 +95,9 @@ export class KeyInstruction extends AbstractNotationInstruction {
     let key1: KeyInstruction = this;
     return !(key1 === key2);
   }
+}
 
+export module KeyInstruction {
   export class NoteEnumToHalfToneLink {
     constructor(note: NoteEnum, halftone: number) {
       this.note = note;
@@ -106,6 +108,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
   }
 
 }
+
 export enum KeyEnum {
   major = 0,
   minor = 1,
