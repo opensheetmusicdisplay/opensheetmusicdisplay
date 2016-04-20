@@ -55,6 +55,10 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
         return a;
     }
 
+    public clone(): Fraction {
+        return new Fraction(this.numerator, this.denominator, false);
+    }
+
     public get Numerator(): number {
         return this.numerator;
     }

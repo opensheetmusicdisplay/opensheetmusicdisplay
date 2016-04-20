@@ -1,4 +1,13 @@
-export class Repetition extends PartListEntry implements IRepetition {
+import {SourceMusicPart} from "./SourceMusicPart";
+import {VoiceEntry} from "../VoiceData/VoiceEntry";
+import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
+import {SourceMeasure} from "../VoiceData/SourceMeasure";
+import {Fraction} from "../../Common/DataObjects/fraction";
+import {MusicSheet} from "../MusicSheet";
+import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
+import {PartListEntry} from "./PartListEntry";
+
+export class Repetition extends PartListEntry /*implements IRepetition*/ {
     constructor(musicSheet: MusicSheet, virtualOverallRepetition: boolean) {
         super(musicSheet);
         this.musicSheet = musicSheet;
@@ -9,55 +18,55 @@ export class Repetition extends PartListEntry implements IRepetition {
     public EndMarker: RepetitionInstruction;
     public ForwardJumpInstruction: RepetitionInstruction;
 
-    private backwardJumpInstructions: List<RepetitionInstruction> = new List<RepetitionInstruction>();
-    private endingParts: List<RepetitionEndingPart> = new List<RepetitionEndingPart>();
-    private endingIndexDict: Dictionary<number, RepetitionEndingPart> = new Dictionary<number, RepetitionEndingPart>();
+    private backwardJumpInstructions: RepetitionInstruction[] = new Array();
+    private endingParts: RepetitionEndingPart[] = new Array();
+    private endingIndexDict: { [_: number] : RepetitionEndingPart; } = {};
     private userNumberOfRepetitions: number = 0;
-    private visibles: List<boolean> = new List<boolean>();
+    private visibles: boolean[] = new Array();
     private fromWords: boolean = false;
     private musicSheet: MusicSheet;
-    private repetitonIterationOrder: List<number> = new List<number>();
+    private repetitonIterationOrder: number[] = new Array();
     private numberOfEndings: number = 1;
     private virtualOverallRepetition: boolean;
 
-    public get BackwardJumpInstructions(): List<RepetitionInstruction> {
+    public get BackwardJumpInstructions(): RepetitionInstruction[] {
         return this.backwardJumpInstructions;
     }
-    public get EndingIndexDict(): Dictionary<number, RepetitionEndingPart> {
+    public get EndingIndexDict(): { [_: number] : RepetitionEndingPart; } {
         return this.endingIndexDict;
     }
-    public get EndingParts(): List<RepetitionEndingPart> {
+    public get EndingParts(): RepetitionEndingPart[] {
         return this.endingParts;
     }
-    public get Visibles(): List<boolean> {
+    public get Visibles(): boolean[] {
         return this.visibles;
     }
-    public set Visibles(value: List<boolean>) {
+    public set Visibles(value: boolean[]) {
         this.visibles = value;
     }
     public get DefaultNumberOfRepetitions(): number {
         let defaultNumber: number = 2;
         if (this.virtualOverallRepetition) { defaultNumber = 1; }
-        return Math.Max(Math.Max(defaultNumber, this.endingIndexDict.Count), this.checkRepetitionForMultipleLyricVerses());
+        return Math.Max(Math.Max(defaultNumber, this.endingIndexDict.length), this.checkRepetitionForMultipleLyricVerses());
     }
     public get UserNumberOfRepetitions(): number {
         return this.userNumberOfRepetitions;
     }
     public set UserNumberOfRepetitions(value: number) {
         this.userNumberOfRepetitions = value;
-        this.repetitonIterationOrder.Clear();
+        this.repetitonIterationOrder = [];
         let endingsDiff: number = this.userNumberOfRepetitions - this.NumberOfEndings;
         for (let i: number = 1; i <= this.userNumberOfRepetitions; i++) {
             if (i <= endingsDiff) {
-                this.repetitonIterationOrder.Add(1);
+                this.repetitonIterationOrder.push(1);
             } else {
-                this.repetitonIterationOrder.Add(i - endingsDiff);
+                this.repetitonIterationOrder.push(i - endingsDiff);
             }
         }
     }
     public getForwardJumpTargetForIteration(iteration: number): number {
         let endingIndex: number = this.repetitonIterationOrder[iteration - 1];
-        if (this.endingIndexDict.ContainsKey(endingIndex)) {
+        if (this.endingIndexDict[endingIndex] !== undefined) {
             return this.endingIndexDict[endingIndex].part.StartIndex;
         }
         return -1;
@@ -65,14 +74,14 @@ export class Repetition extends PartListEntry implements IRepetition {
     public getBackwardJumpTarget(): number {
         return this.StartMarker.MeasureIndex;
     }
-    public SetEndingStartIndex(endingNumbers: List<number>, startIndex: number): void {
+    public SetEndingStartIndex(endingNumbers: number[], startIndex: number): void {
         let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet, startIndex, startIndex));
-        this.endingParts.Add(part);
-        for (let idx: number = 0, len: number = endingNumbers.Count; idx < len; ++idx) {
+        this.endingParts.push(part);
+        for (let idx: number = 0, len: number = endingNumbers.length; idx < len; ++idx) {
             let endingNumber: number = endingNumbers[idx];
             try {
-                this.endingIndexDict.Add(endingNumber, part);
-                part.endingIndices.Add(endingNumber);
+                this.endingIndexDict[endingNumber] = part;
+                part.endingIndices.push(endingNumber);
                 if (this.numberOfEndings < endingNumber) {
                     this.numberOfEndings = endingNumber;
                 }
@@ -84,15 +93,15 @@ export class Repetition extends PartListEntry implements IRepetition {
     }
     public SetEndingStartIndex(endingNumber: number, startIndex: number): void {
         let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet, startIndex, startIndex));
-        this.endingParts.Add(part);
-        this.endingIndexDict.Add(endingNumber, part);
-        part.endingIndices.Add(endingNumber);
+        this.endingParts.push(part);
+        this.endingIndexDict[endingNumber] = part;
+        part.endingIndices.push(endingNumber);
         if (this.numberOfEndings < endingNumber) {
             this.numberOfEndings = endingNumber;
         }
     }
     public setEndingEndIndex(endingNumber: number, endIndex: number): void {
-        if (this.endingIndexDict.ContainsKey(endingNumber)) {
+        if (this.endingIndexDict[endingNumber] !== undefined) {
             this.endingIndexDict[endingNumber].part.setEndIndex(endIndex);
         }
     }
@@ -112,12 +121,12 @@ export class Repetition extends PartListEntry implements IRepetition {
         return this.StartMarker.MeasureIndex;
     }
     public get EndIndex(): number {
-        if (this.BackwardJumpInstructions.Count === 0) {
+        if (this.BackwardJumpInstructions.length === 0) {
             return this.StartIndex;
         }
-        let result: number = this.BackwardJumpInstructions.Last().MeasureIndex;
-        if (this.endingIndexDict.ContainsKey(this.NumberOfEndings)) {
-            result = Math.Max(this.endingIndexDict[this.NumberOfEndings].part.EndIndex, result);
+        let result: number = this.backwardJumpInstructions[this.backwardJumpInstructions.length - 1].MeasureIndex;
+        if (this.endingIndexDict[this.NumberOfEndings] !== undefined) {
+            result = Math.max(this.endingIndexDict[this.NumberOfEndings].part.EndIndex, result);
         }
         return result;
     }
@@ -128,15 +137,15 @@ export class Repetition extends PartListEntry implements IRepetition {
         for (let measureIndex: number = start; measureIndex <= end; measureIndex++) {
             let sourceMeasure: SourceMeasure = this.musicSheet.SourceMeasures[measureIndex];
             for (let i: number = 0; i < sourceMeasure.CompleteNumberOfStaves; i++) {
-                for (let j: number = 0; j < sourceMeasure.VerticalSourceStaffEntryContainers.Count; j++) {
+                for (let j: number = 0; j < sourceMeasure.VerticalSourceStaffEntryContainers.length; j++) {
                     if (sourceMeasure.VerticalSourceStaffEntryContainers[j][i] !== undefined) {
                         let sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[j][i];
                         let verses: number = 0;
-                        for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.Count; idx < len; ++idx) {
+                        for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                             let voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
-                            verses += voiceEntry.LyricsEntries.Count;
+                            verses += voiceEntry.LyricsEntries.length;
                         }
-                        lyricVerses = Math.Max(lyricVerses, verses);
+                        lyricVerses = Math.max(lyricVerses, verses);
                     }
                 }
             }
@@ -144,23 +153,21 @@ export class Repetition extends PartListEntry implements IRepetition {
         return lyricVerses;
     }
     public get FirstSourceMeasureNumber(): number {
-        return getFirstSourceMeasure().MeasureNumber;
+        return this.getFirstSourceMeasure().MeasureNumber;
     }
     public get LastSourceMeasureNumber(): number {
-        return getLastSourceMeasure().MeasureNumber;
+        return this.getLastSourceMeasure().MeasureNumber;
     }
 
 }
 
-export module Repetition {
-    export class RepetitionEndingPart {
-        constructor(endingPart: SourceMusicPart) {
-            this.part = endingPart;
-        }
-        public part: SourceMusicPart;
-        public endingIndices: number[] = new Array();
-        public ToString(): string {
-          return this.endingIndices.join(", ");
-        }
+export class RepetitionEndingPart {
+    constructor(endingPart: SourceMusicPart) {
+        this.part = endingPart;
+    }
+    public part: SourceMusicPart;
+    public endingIndices: number[] = new Array();
+    public ToString(): string {
+      return this.endingIndices.join(", ");
     }
 }
