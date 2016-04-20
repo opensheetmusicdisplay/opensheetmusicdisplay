@@ -242,9 +242,9 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     //public static get MaxAllowedDenominator(): number {
     //    return Fraction.maximumAllowedNumber;
     //}
-    //public ToString(): string {
-    //    return this.numerator.ToString() + "/" + this.denominator.ToString();
-    //}
+    public ToString(): string {
+        return this.numerator + "/" + this.denominator;
+    }
     //public ToFloatingString(): string {
     //    return this.RealValue.ToString();
     //}

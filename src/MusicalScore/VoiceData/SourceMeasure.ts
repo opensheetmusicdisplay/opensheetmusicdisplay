@@ -1,3 +1,11 @@
+import {Fraction} from "../../Common/DataObjects/fraction";
+import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
+import {SourceStaffEntry} from "./SourceStaffEntry";
+import {RepetitionInstruction} from "./Instructions/RepetitionInstruction";
+import {Staff} from "./Staff";
+import {VoiceEntry} from "./VoiceEntry";
+import {Voice} from "./Voice";
+import {MusicSheet} from "../MusicSheet";
 export class SourceMeasure {
   constructor(completeNumberOfStaves: number) {
     this.completeNumberOfStaves = completeNumberOfStaves;
@@ -11,16 +19,16 @@ export class SourceMeasure {
   private absoluteTimestamp: Fraction;
   private completeNumberOfStaves: number;
   private duration: Fraction;
-  private staffLinkedExpressions: List<List<MultiExpression>> = new List<List<MultiExpression>>();
-  private tempoExpressions: List<MultiTempoExpression> = new List<MultiTempoExpression>();
-  private verticalSourceStaffEntryContainers: List<VerticalSourceStaffEntryContainer> = new List<VerticalSourceStaffEntryContainer>();
+  private staffLinkedExpressions: MultiExpression[] = new Array();
+  private tempoExpressions: MultiTempoExpression[] = new Array();
+  private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = new Array();
   private implicitMeasure: boolean;
   private breakSystemAfter: boolean;
-  private staffMeasureErrors: List<boolean> = new List<boolean>();
-  private firstInstructionsStaffEntries: List<SourceStaffEntry> = new List<SourceStaffEntry>();
-  private lastInstructionsStaffEntries: List<SourceStaffEntry> = new List<SourceStaffEntry>();
-  private firstRepetitionInstructions: List<RepetitionInstruction> = new List<RepetitionInstruction>();
-  private lastRepetitionInstructions: List<RepetitionInstruction> = new List<RepetitionInstruction>();
+  private staffMeasureErrors: boolean[] = new Array();
+  private firstInstructionsStaffEntries: SourceStaffEntry[] = new Array();
+  private lastInstructionsStaffEntries: SourceStaffEntry[] = new Array();
+  private firstRepetitionInstructions: RepetitionInstruction[] = new Array();
+  private lastRepetitionInstructions: RepetitionInstruction[] = new Array();
   public get MeasureNumber(): number {
     return this.measureNumber;
   }
@@ -54,25 +62,25 @@ export class SourceMeasure {
   public set BreakSystemAfter(value: boolean) {
     this.breakSystemAfter = value;
   }
-  public get StaffLinkedExpressions(): List<List<MultiExpression>> {
+  public get StaffLinkedExpressions(): MultiExpression[] {
     return this.staffLinkedExpressions;
   }
-  public get TempoExpressions(): List<MultiTempoExpression> {
+  public get TempoExpressions(): MultiTempoExpression[] {
     return this.tempoExpressions;
   }
-  public get VerticalSourceStaffEntryContainers(): List<VerticalSourceStaffEntryContainer> {
+  public get VerticalSourceStaffEntryContainers(): VerticalSourceStaffEntryContainer[] {
     return this.verticalSourceStaffEntryContainers;
   }
-  public get FirstInstructionsStaffEntries(): List<SourceStaffEntry> {
+  public get FirstInstructionsStaffEntries(): SourceStaffEntry[] {
     return this.firstInstructionsStaffEntries;
   }
-  public get LastInstructionsStaffEntries(): List<SourceStaffEntry> {
+  public get LastInstructionsStaffEntries(): SourceStaffEntry[] {
     return this.lastInstructionsStaffEntries;
   }
-  public get FirstRepetitionInstructions(): List<RepetitionInstruction> {
+  public get FirstRepetitionInstructions(): RepetitionInstruction[] {
     return this.firstRepetitionInstructions;
   }
-  public get LastRepetitionInstructions(): List<RepetitionInstruction> {
+  public get LastRepetitionInstructions(): RepetitionInstruction[] {
     return this.lastRepetitionInstructions;
   }
   public getErrorInMeasure(staffIndex: number): boolean {
@@ -81,13 +89,13 @@ export class SourceMeasure {
   public setErrorInStaffMeasure(staffIndex: number, hasError: boolean): void {
     this.staffMeasureErrors[staffIndex] = hasError;
   }
-  public getNextMeasure(measures: List<SourceMeasure>): SourceMeasure {
-    if (this.MeasureListIndex + 1 < measures.Count) {
+  public getNextMeasure(measures: SourceMeasure[]): SourceMeasure {
+    if (this.MeasureListIndex + 1 < measures.length) {
       return measures[this.MeasureListIndex + 1];
     }
     return undefined;
   }
-  public getPreviousMeasure(measures: List<SourceMeasure>): SourceMeasure {
+  public getPreviousMeasure(measures: SourceMeasure[]): SourceMeasure {
     if (this.MeasureListIndex > 1) {
       return measures[this.MeasureListIndex - 1];
     }
@@ -113,12 +121,12 @@ export class SourceMeasure {
       let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
         this, new Fraction(inMeasureTimestamp), this.completeNumberOfStaves
       );
-      this.verticalSourceStaffEntryContainers.Add(container);
+      this.verticalSourceStaffEntryContainers.push(container);
       staffEntry = new SourceStaffEntry(container, staff);
       container[inSourceMeasureStaffIndex] = staffEntry;
     } else {
       for (
-        let i: number = this.verticalSourceStaffEntryContainers.Count - 1;
+        let i: number = this.verticalSourceStaffEntryContainers.length - 1;
         i >= 0; i--
       ) {
         if (this.verticalSourceStaffEntryContainers[i].Timestamp < inMeasureTimestamp) {
@@ -145,8 +153,7 @@ export class SourceMeasure {
   }
   public findOrCreateVoiceEntry(sse: SourceStaffEntry, voice: Voice, createdNewVoiceEntry: boolean): VoiceEntry {
     let ve: VoiceEntry = undefined;
-    for (let idx: number = 0, len: number = sse.VoiceEntries.Count; idx < len; ++idx) {
-      let voiceEntry: VoiceEntry = sse.VoiceEntries[idx];
+    for (let voiceEntry: VoiceEntry of sse.VoiceEntries) {
       if (voiceEntry.ParentVoice === voice) {
         ve = voiceEntry;
         break;
@@ -154,7 +161,7 @@ export class SourceMeasure {
     }
     if (ve === undefined) {
       ve = new VoiceEntry(sse.Timestamp, voice, sse);
-      sse.VoiceEntries.Add(ve);
+      sse.VoiceEntries.push(ve);
       createdNewVoiceEntry = true;
     } else {
       createdNewVoiceEntry = false;
@@ -203,14 +210,14 @@ export class SourceMeasure {
   }
   public reverseCheck(musicSheet: MusicSheet, maxInstDuration: Fraction): Fraction {
     let maxDuration: Fraction = new Fraction(0, 1);
-    let instrumentsDurations: List<Fraction> = new List<Fraction>();
-    for (let i: number = 0; i < musicSheet.Instruments.Count; i++) {
+    let instrumentsDurations: Fraction[] = new Array();
+    for (let i: number = 0; i < musicSheet.Instruments.length; i++) {
       let instrumentDuration: Fraction = new Fraction(0, 1);
       let inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
       for (let j: number = 0; j < musicSheet.Instruments[i].Staves.Count; j++) {
         let lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
         if (lastStaffEntry !== undefined && !lastStaffEntry.hasTie()) {
-          let verticalContainerIndex: number = this.verticalSourceStaffEntryContainers.IndexOf(lastStaffEntry.VerticalContainerParent);
+          let verticalContainerIndex: number = this.verticalSourceStaffEntryContainers.indexOf(lastStaffEntry.VerticalContainerParent);
           for (let m: number = verticalContainerIndex - 1; m >= 0; m--) {
             let previousStaffEntry: SourceStaffEntry = this.verticalSourceStaffEntryContainers[m][inSourceMeasureInstrumentIndex + j];
             if (previousStaffEntry !== undefined && previousStaffEntry.hasTie()) {
@@ -232,9 +239,9 @@ export class SourceMeasure {
     }
     return Math.max(maxDuration, maxInstDuration);
   }
-  public calculateInstrumentsDuration(musicSheet: MusicSheet, instrumentMaxTieNoteFractions: List<Fraction>): List<Fraction> {
-    let instrumentsDurations: List<Fraction> = new List<Fraction>();
-    for (let i: number = 0; i < musicSheet.Instruments.Count; i++) {
+  public calculateInstrumentsDuration(musicSheet: MusicSheet, instrumentMaxTieNoteFractions: Fraction[]): Fraction[] {
+    let instrumentsDurations: Fraction[] = new Array();
+    for (let i: number = 0; i < musicSheet.Instruments.length; i++) {
       let instrumentDuration: Fraction = new Fraction(0, 1);
       let inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
       for (let j: number = 0; j < musicSheet.Instruments[i].Staves.Count; j++) {
@@ -248,32 +255,32 @@ export class SourceMeasure {
       if (instrumentDuration < instrumentMaxTieNoteFractions[i]) {
         instrumentDuration = instrumentMaxTieNoteFractions[i];
       }
-      instrumentsDurations.Add(instrumentDuration);
+      instrumentsDurations.push(instrumentDuration);
     }
     return instrumentsDurations;
   }
-  public getEntriesPerStaff(staffIndex: number): List<SourceStaffEntry> {
-    let sourceStaffEntries: List<SourceStaffEntry> = new List<SourceStaffEntry>();
-    for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.Count; idx < len; ++idx) {
+  public getEntriesPerStaff(staffIndex: number): SourceStaffEntry[] {
+    let sourceStaffEntries: SourceStaffEntry[] = new Array();
+    for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.length; idx < len; ++idx) {
       let container: VerticalSourceStaffEntryContainer = this.VerticalSourceStaffEntryContainers[idx];
       let sse: SourceStaffEntry = container[staffIndex];
-      if (sse !== undefined) { sourceStaffEntries.Add(sse); }
+      if (sse !== undefined) { sourceStaffEntries.push(sse); }
     }
     return sourceStaffEntries;
   }
   private initialize(): void {
     for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
-      this.firstInstructionsStaffEntries.Add(undefined);
-      this.lastInstructionsStaffEntries.Add(undefined);
-      this.staffMeasureErrors.Add(false);
-      this.staffLinkedExpressions.Add(new List<MultiExpression>());
+      this.firstInstructionsStaffEntries.push(undefined);
+      this.lastInstructionsStaffEntries.push(undefined);
+      this.staffMeasureErrors.push(false);
+      this.staffLinkedExpressions.push([]);
     }
     this.implicitMeasure = false;
     this.breakSystemAfter = false;
     this.EndsPiece = false;
   }
   private getLastSourceStaffEntryForInstrument(instrumentIndex: number): SourceStaffEntry {
-    for (let i: number = this.verticalSourceStaffEntryContainers.Count - 1; i >= 0; i--) {
+    for (let i: number = this.verticalSourceStaffEntryContainers.length - 1; i >= 0; i--) {
       if (this.verticalSourceStaffEntryContainers[i][instrumentIndex] !== undefined) {
         return this.verticalSourceStaffEntryContainers[i][instrumentIndex];
       }

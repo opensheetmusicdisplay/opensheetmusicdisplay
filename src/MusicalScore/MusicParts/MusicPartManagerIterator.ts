@@ -10,6 +10,7 @@ import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {VerticalSourceStaffEntryContainer} from "../VoiceData/VerticalSourceStaffEntryContainer";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
+import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
 
 // FIXME:
 type ContinuousDynamicExpression = AbstractExpression;
@@ -24,8 +25,8 @@ export class MusicPartManagerIterator {
             this.manager = manager;
             this.currentVoiceEntries = undefined;
             this.frontReached = false;
-            for (let rep of manager.MusicSheet.Repetitions.length) {
-                this.repetitionIterationCountDict[rep] = 1;
+            for (let rep of manager.MusicSheet.Repetitions) {
+                this.setRepetitionIterationCount(rep, 1);
             }
             this.activeDynamicExpressions = new Array(manager.MusicSheet.getCompleteNumberOfStaves());
             this.currentMeasure = this.manager.MusicSheet.SourceMeasures[0];
@@ -67,7 +68,9 @@ export class MusicPartManagerIterator {
     private currentVoiceEntries: VoiceEntry[];
     private currentDynamicChangingExpressions: DynamicsContainer[] = new Array();
     private currentTempoChangingExpression: MultiTempoExpression;
-    private repetitionIterationCountDict: { [rep: Repetition] : number; } = {};
+    // FIXME: replace these two with a real Dictionary!
+    private repetitionIterationCountDictKeys: Repetition[];
+    private repetitionIterationCountDictValues: number[];
     private currentRepetition: Repetition = undefined;
     private endReached: boolean = false;
     private frontReached: boolean = false;
@@ -91,13 +94,13 @@ export class MusicPartManagerIterator {
     }
     public get CurrentRepetitionIteration(): number {
         if (this.CurrentRepetition !== undefined) {
-            return this.repetitionIterationCountDict[this.CurrentRepetition];
+            return this.getRepetitionIterationCount(this.CurrentRepetition)
         }
         return 0;
     }
     public get CurrentJumpResponsibleRepetitionIterationBeforeJump(): number {
         if (this.jumpResponsibleRepetition !== undefined) {
-            return this.repetitionIterationCountDict[this.jumpResponsibleRepetition] - 1;
+            return this.getRepetitionIterationCount(this.jumpResponsibleRepetition) - 1;
         }
         return 0;
     }
@@ -108,7 +111,7 @@ export class MusicPartManagerIterator {
         return this.currentMeasureIndex;
     }
     public get CurrentEnrolledTimestamp(): Fraction {
-        return this.currentEnrolledMeasureTimestamp + this.currentVerticalContainerInMeasureTimestamp;
+        return Fraction.plus(this.currentEnrolledMeasureTimestamp, this.currentVerticalContainerInMeasureTimestamp);
     }
     public get CurrentSourceTimestamp(): Fraction {
         return this.currentTimeStamp;
@@ -138,81 +141,71 @@ export class MusicPartManagerIterator {
         ret.frontReached = this.frontReached;
         return ret;
     }
-    public CurrentVisibleVoiceEntries(instrument: Instrument): VoiceEntry[] {
-        let ret: VoiceEntry[] = new Array();
-        if (this.currentVoiceEntries === undefined) {
-            return ret;
-        }
-        for (let idx: number = 0, len: number = this.currentVoiceEntries.length; idx < len; ++idx) {
-            let entry: VoiceEntry = this.currentVoiceEntries[idx];
-            if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
-                this.getVisibleEntries(entry, ret);
-                return ret;
-            }
-        }
-        return ret;
-    }
-    public CurrentVisibleVoiceEntries(): VoiceEntry[] {
+
+    public CurrentVisibleVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         let voiceEntries: VoiceEntry[] = new Array();
-        if (this.currentVoiceEntries !== undefined) {
-            for (let idx: number = 0, len: number = this.currentVoiceEntries.length; idx < len; ++idx) {
-                let entry: VoiceEntry = this.currentVoiceEntries[idx];
+        if (this.currentVoiceEntries === undefined) {
+            return voiceEntries;
+        }
+        if (instrument !== undefined) {
+            for (let entry of this.currentVoiceEntries) {
+                if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
+                    this.getVisibleEntries(entry, voiceEntries);
+                    return voiceEntries;
+                }
+            }
+        } else {
+            for (let entry of this.currentVoiceEntries) {
                 this.getVisibleEntries(entry, voiceEntries);
             }
         }
         return voiceEntries;
     }
-    public CurrentAudibleVoiceEntries(instrument: Instrument): VoiceEntry[] {
-        let ret: VoiceEntry[] = new Array();
-        if (this.currentVoiceEntries === undefined) {
-            return ret;
-        }
-        for (let idx: number = 0, len: number = this.currentVoiceEntries.length; idx < len; ++idx) {
-            let entry: VoiceEntry = this.currentVoiceEntries[idx];
-            if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
-                this.getAudibleEntries(entry, ret);
-                return ret;
-            }
-        }
-        return ret;
-    }
-    public CurrentAudibleVoiceEntries(): VoiceEntry[] {
+
+    public CurrentAudibleVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         let voiceEntries: VoiceEntry[] = new Array();
-        if (this.currentVoiceEntries !== undefined) {
-            for (let idx: number = 0, len: number = this.currentVoiceEntries.length; idx < len; ++idx) {
-                let entry: VoiceEntry = this.currentVoiceEntries[idx];
+        if (this.currentVoiceEntries === undefined) {
+            return voiceEntries;
+        }
+        if (instrument !== undefined) {
+            for (let entry of this.currentVoiceEntries) {
+                if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
+                    this.getAudibleEntries(entry, voiceEntries);
+                    return voiceEntries;
+                }
+            }
+        } else {
+            for (let entry of this.currentVoiceEntries) {
                 this.getAudibleEntries(entry, voiceEntries);
             }
         }
         return voiceEntries;
     }
+
     public getCurrentDynamicChangingExpressions(): DynamicsContainer[] {
         return this.currentDynamicChangingExpressions;
     }
-    public CurrentScoreFollowingVoiceEntries(instrument: Instrument): VoiceEntry[] {
-        let ret: VoiceEntry[] = new Array();
-        if (this.currentVoiceEntries === undefined) {
-            return ret;
-        }
-        for (let idx: number = 0, len: number = this.currentVoiceEntries.length; idx < len; ++idx) {
-            let entry: VoiceEntry = this.currentVoiceEntries[idx];
-            if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
-                this.getScoreFollowingEntries(entry, ret);
-                return ret;
-            }
-        }
-        return ret;
-    }
-    public CurrentScoreFollowingVoiceEntries(): VoiceEntry[] {
+
+    public CurrentScoreFollowingVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         let voiceEntries: VoiceEntry[] = new Array();
-        if (this.currentVoiceEntries !== undefined) {
-            for (let idx: number = 0, len: number = this.currentVoiceEntries.length; idx < len; ++idx) {
-                let entry: VoiceEntry = this.currentVoiceEntries[idx];
+        if (this.currentVoiceEntries === undefined) {
+            return voiceEntries;
+        }
+        if (instrument !== undefined) {
+            for (let entry of this.currentVoiceEntries) {
+                if (entry.ParentVoice.Parent.IdString === instrument.IdString) {
+                    this.getScoreFollowingEntries(entry, voiceEntries);
+                    return voiceEntries;
+                }
+            }
+        } else {
+            for (let entry of this.currentVoiceEntries) {
                 this.getScoreFollowingEntries(entry, voiceEntries);
             }
         }
         return voiceEntries;
     }
+
     //public currentPlaybackSettings(): PlaybackSettings {
     //    return this.manager.MusicSheet.SheetPlaybackSetting;
     //}
@@ -238,17 +231,27 @@ export class MusicPartManagerIterator {
         return 1;
     }
     private incrementRepetitionIterationCount(repetition: Repetition): number {
-        if (this.repetitionIterationCountDict[repetition] !== undefined) {
-            let newIteration: number = this.repetitionIterationCountDict[repetition] + 1;
-            this.repetitionIterationCountDict[repetition] = newIteration;
-            return newIteration;
+        if (this.repetitionIterationCountDictKeys.indexOf(repetition) === -1) {
+            return this.setRepetitionIterationCount(repetition, 1);
         } else {
-            this.repetitionIterationCountDict[repetition] = 1;
-            return 1;
+            return this.setRepetitionIterationCount(repetition, this.getRepetitionIterationCount(repetition) + 1);
         }
     }
-    private setRepetitionIterationCount(repetition: Repetition, iterationCount: number): void {
-        this.repetitionIterationCountDict[repetition] = iterationCount;
+    private setRepetitionIterationCount(repetition: Repetition, iterationCount: number): number {
+        let i: number = this.repetitionIterationCountDictKeys.indexOf(repetition);
+        if (i == -1) {
+            this.repetitionIterationCountDictKeys.push(repetition);
+            this.repetitionIterationCountDictValues.push(iterationCount);
+        } else {
+            this.repetitionIterationCountDictValues[i] = iterationCount;
+        }
+        return iterationCount;
+    }
+    private getRepetitionIterationCount(rep: Repetition): number {
+        let i: number = this.repetitionIterationCountDictKeys.indexOf(rep);
+        if (i != -1) {
+            return this.repetitionIterationCountDictValues[i];
+        }
     }
 /*    private moveTempoIndexToTimestamp(measureNumber: number): void {
         for (let index: number = 0; index < this.manager.MusicSheet.TimestampSortedTempoExpressionsList.length; index++) {
@@ -293,6 +296,7 @@ export class MusicPartManagerIterator {
         }
         return this.manager.MusicSheet.TimestampSortedDynamicExpressionsList[this.currentDynamicEntryIndex + 1].parMultiExpression().AbsoluteTimestamp;
     }
+    */
     private handleRepetitionsAtMeasureBegin(): void {
         for (let idx: number = 0, len: number = this.currentMeasure.FirstRepetitionInstructions.length; idx < len; ++idx) {
             let repetitionInstruction: RepetitionInstruction = this.currentMeasure.FirstRepetitionInstructions[idx];
@@ -312,14 +316,14 @@ export class MusicPartManagerIterator {
             }
         }
     }
-*/
+
     private handleRepetitionsAtMeasureEnd(): void {
         for (let idx: number = 0, len: number = this.currentMeasure.LastRepetitionInstructions.length; idx < len; ++idx) {
             let repetitionInstruction: RepetitionInstruction = this.currentMeasure.LastRepetitionInstructions[idx];
             let currentRepetition: Repetition = repetitionInstruction.ParentRepetition;
             if (currentRepetition === undefined) { continue; }
-            if (currentRepetition.BackwardJumpInstructions[repetitionInstruction] !== undefined) {
-                if (this.repetitionIterationCountDict[currentRepetition] < currentRepetition.UserNumberOfRepetitions) {
+            if (currentRepetition.BackwardJumpInstructions.indexOf(repetitionInstruction) > -1) {
+                if (this.getRepetitionIterationCount(currentRepetition) < currentRepetition.UserNumberOfRepetitions) {
                     this.doBackJump(currentRepetition);
                     this.BackJumpOccurred = true;
                     return;
@@ -336,7 +340,7 @@ export class MusicPartManagerIterator {
                 }
 
                 let forwardJumpTargetMeasureIndex: number = currentRepetition.getForwardJumpTargetForIteration(
-                  this.repetitionIterationCountDict[currentRepetition]
+                  this.getRepetitionIterationCount(currentRepetition)
                 );
                 if (forwardJumpTargetMeasureIndex >= 0) {
                     this.currentMeasureIndex = forwardJumpTargetMeasureIndex;
@@ -409,12 +413,12 @@ export class MusicPartManagerIterator {
             }
             this.currentDynamicEntryIndex++;
         }
-        this.currentDynamicChangingExpressions.Clear();
+        this.currentDynamicChangingExpressions = [];
         for (let staffIndex: number = 0; staffIndex < this.activeDynamicExpressions.length; staffIndex++) {
             if (this.activeDynamicExpressions[staffIndex] !== undefined) {
                 let startTime: Fraction;
                 let endTime: Fraction;
-                if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
+                /*if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
                     let continuousDynamic: ContinuousDynamicExpression = <ContinuousDynamicExpression>this.activeDynamicExpressions[staffIndex];
                     startTime = continuousDynamic.StartMultiExpression.AbsoluteTimestamp;
                     endTime = continuousDynamic.EndMultiExpression.AbsoluteTimestamp;
@@ -426,7 +430,7 @@ export class MusicPartManagerIterator {
                     if (this.CurrentSourceTimestamp === instantaniousDynamic.ParentMultiExpression.AbsoluteTimestamp) {
                         this.currentDynamicChangingExpressions.push(new DynamicsContainer(instantaniousDynamic, staffIndex));
                     }
-                }
+                }*/ // FIXME COMMENTED OUT, missing classes
             }
         }
         let timeSortedTempoExpressions: MultiTempoExpression[] = this.manager.MusicSheet.TimestampSortedTempoExpressionsList;
@@ -458,8 +462,7 @@ export class MusicPartManagerIterator {
             if (this.activeTempoExpression.ContinuousTempo !== undefined) {
                 endTime = this.activeTempoExpression.ContinuousTempo.AbsoluteEndTimestamp;
             }
-            if (
-                   this.CurrentSourceTimestamp >= this.activeTempoExpression.AbsoluteTimestamp
+            if (   this.CurrentSourceTimestamp >= this.activeTempoExpression.AbsoluteTimestamp
                 || this.CurrentSourceTimestamp <= endTime
             ) {
                 this.currentTempoChangingExpression = this.activeTempoExpression;
@@ -476,7 +479,7 @@ export class MusicPartManagerIterator {
             let currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
             this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
-            this.currentTimeStamp = new Fraction(this.currentMeasure.AbsoluteTimestamp + this.currentVerticalContainerInMeasureTimestamp);
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
             if (this.currentTimeStamp >= this.manager.MusicSheet.SelectionEnd) {
                 this.endReached = true;
             }
@@ -487,7 +490,7 @@ export class MusicPartManagerIterator {
         this.handleRepetitionsAtMeasureEnd();
         if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex < this.manager.MusicSheet.SourceMeasures.length) {
             this.currentMeasure = this.manager.MusicSheet.SourceMeasures[this.currentMeasureIndex];
-            this.currentTimeStamp = new Fraction(this.currentMeasure.AbsoluteTimestamp + this.currentVerticalContainerInMeasureTimestamp);
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
             this.currentVoiceEntryIndex = -1;
             this.recursiveMove();
             return;
@@ -525,12 +528,14 @@ export class MusicPartManagerIterator {
     }
     private getVoiceEntries(container: VerticalSourceStaffEntryContainer): VoiceEntry[] {
         let entries: VoiceEntry[] = new Array();
-        for (let sourceStaffEntry: SourceStaffEntry of container.StaffEntries) {
+        for (let sourceStaffEntry of container.StaffEntries) {
             if (sourceStaffEntry === undefined) { continue; }
-            for (let voiceEntry: VoiceEntry of sourceStaffEntry.VoiceEntries) {
+            for (let voiceEntry of sourceStaffEntry.VoiceEntries) {
                 entries.push(voiceEntry);
             }
         }
         return entries;
     }
+
+
 }

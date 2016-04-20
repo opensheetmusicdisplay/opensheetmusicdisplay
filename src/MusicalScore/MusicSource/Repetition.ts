@@ -10,7 +10,7 @@ import {PartListEntry} from "./PartListEntry";
 export class Repetition extends PartListEntry /*implements IRepetition*/ {
     constructor(musicSheet: MusicSheet, virtualOverallRepetition: boolean) {
         super(musicSheet);
-        this.musicSheet = musicSheet;
+        this.musicSheet2 = musicSheet;
         this.virtualOverallRepetition = virtualOverallRepetition;
     }
 
@@ -24,7 +24,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     private userNumberOfRepetitions: number = 0;
     private visibles: boolean[] = new Array();
     private fromWords: boolean = false;
-    private musicSheet: MusicSheet;
+    private musicSheet2: MusicSheet;
     private repetitonIterationOrder: number[] = new Array();
     private numberOfEndings: number = 1;
     private virtualOverallRepetition: boolean;
@@ -47,7 +47,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     public get DefaultNumberOfRepetitions(): number {
         let defaultNumber: number = 2;
         if (this.virtualOverallRepetition) { defaultNumber = 1; }
-        return Math.Max(Math.Max(defaultNumber, this.endingIndexDict.length), this.checkRepetitionForMultipleLyricVerses());
+        return Math.max(defaultNumber, Object.keys(this.endingIndexDict).length, this.checkRepetitionForMultipleLyricVerses());
     }
     public get UserNumberOfRepetitions(): number {
         return this.userNumberOfRepetitions;
@@ -75,7 +75,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         return this.StartMarker.MeasureIndex;
     }
     public SetEndingStartIndex(endingNumbers: number[], startIndex: number): void {
-        let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet, startIndex, startIndex));
+        let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
         this.endingParts.push(part);
         for (let idx: number = 0, len: number = endingNumbers.length; idx < len; ++idx) {
             let endingNumber: number = endingNumbers[idx];
@@ -92,7 +92,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         }
     }
     public SetEndingStartIndex(endingNumber: number, startIndex: number): void {
-        let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet, startIndex, startIndex));
+        let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
         this.endingParts.push(part);
         this.endingIndexDict[endingNumber] = part;
         part.endingIndices.push(endingNumber);
@@ -115,7 +115,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         this.fromWords = value;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return new Fraction(this.musicSheet.SourceMeasures[this.StartMarker.MeasureIndex].AbsoluteTimestamp);
+        return Fraction.CreateFractionFromFraction(this.musicSheet2.SourceMeasures[this.StartMarker.MeasureIndex].AbsoluteTimestamp);
     }
     public get StartIndex(): number {
         return this.StartMarker.MeasureIndex;
@@ -135,15 +135,14 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         let start: number = this.StartIndex;
         let end: number = this.EndIndex;
         for (let measureIndex: number = start; measureIndex <= end; measureIndex++) {
-            let sourceMeasure: SourceMeasure = this.musicSheet.SourceMeasures[measureIndex];
+            let sourceMeasure: SourceMeasure = this.musicSheet2.SourceMeasures[measureIndex];
             for (let i: number = 0; i < sourceMeasure.CompleteNumberOfStaves; i++) {
-                for (let j: number = 0; j < sourceMeasure.VerticalSourceStaffEntryContainers.length; j++) {
-                    if (sourceMeasure.VerticalSourceStaffEntryContainers[j][i] !== undefined) {
-                        let sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[j][i];
+                for (let sourceStaffEntries: SourceStaffEntry[] of sourceMeasure.VerticalSourceStaffEntryContainers) {
+                    if (sourceStaffEntries[i] !== undefined) {
+                        let sourceStaffEntry: SourceStaffEntry = sourceStaffEntries[i];
                         let verses: number = 0;
-                        for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
-                            let voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
-                            verses += voiceEntry.LyricsEntries.length;
+                        for (let voiceEntry: VoiceEntry of sourceStaffEntry.VoiceEntries) {
+                            verses += Object.keys(voiceEntry.LyricsEntries).length;
                         }
                         lyricVerses = Math.max(lyricVerses, verses);
                     }

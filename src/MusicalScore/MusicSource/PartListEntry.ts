@@ -1,3 +1,7 @@
+import {MusicSheet} from "../MusicSheet";
+import {Fraction} from "../../Common/DataObjects/fraction";
+import {SourceMeasure} from "../VoiceData/SourceMeasure";
+
 export class PartListEntry {
     constructor(musicSheet: MusicSheet) {
         this.musicSheet = musicSheet;
@@ -7,7 +11,7 @@ export class PartListEntry {
     public StartIndex: number;
     public EndIndex: number;
 
-    protected enrolledTimestamps: List<Fraction> = new List<Fraction>();
+    protected enrolledTimestamps: Fraction[] = new Array();
     protected visible: boolean = true;
 
     private musicSheet: MusicSheet;

@@ -1,3 +1,6 @@
+import {AbstractNotationInstruction} from "./AbstractNotationInstruction";
+import {Fraction} from "../../../Common/DataObjects/fraction";
+
 export class RhythmInstruction extends AbstractNotationInstruction {
     constructor(rhythm: Fraction, numerator: number, denominator: number, rhythmSymbolEnum: RhythmSymbolEnum) {
         super();
@@ -31,7 +34,7 @@ export class RhythmInstruction extends AbstractNotationInstruction {
     }
     public OperatorEquals(rhythm2: RhythmInstruction): boolean {
         let rhythm1: RhythmInstruction = this;
-        if (ReferenceEquals(rhythm1, rhythm2)) {
+        if (rhythm1 === rhythm2) {
             return true;
         }
         if ((<Object>rhythm1 === undefined) || (<Object>rhythm2 === undefined)) {
