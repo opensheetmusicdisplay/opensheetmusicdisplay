@@ -77,8 +77,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     public SetEndingStartIndex(endingNumbers: number[], startIndex: number): void {
         let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
         this.endingParts.push(part);
-        for (let idx: number = 0, len: number = endingNumbers.length; idx < len; ++idx) {
-            let endingNumber: number = endingNumbers[idx];
+        for (let endingNumber of endingNumbers) {
             try {
                 this.endingIndexDict[endingNumber] = part;
                 part.endingIndices.push(endingNumber);
@@ -91,15 +90,15 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
 
         }
     }
-    public SetEndingStartIndex(endingNumber: number, startIndex: number): void {
-        let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
-        this.endingParts.push(part);
-        this.endingIndexDict[endingNumber] = part;
-        part.endingIndices.push(endingNumber);
-        if (this.numberOfEndings < endingNumber) {
-            this.numberOfEndings = endingNumber;
-        }
-    }
+    //public SetEndingStartIndex(endingNumber: number, startIndex: number): void {
+    //    let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
+    //    this.endingParts.push(part);
+    //    this.endingIndexDict[endingNumber] = part;
+    //    part.endingIndices.push(endingNumber);
+    //    if (this.numberOfEndings < endingNumber) {
+    //        this.numberOfEndings = endingNumber;
+    //    }
+    //}
     public setEndingEndIndex(endingNumber: number, endIndex: number): void {
         if (this.endingIndexDict[endingNumber] !== undefined) {
             this.endingIndexDict[endingNumber].part.setEndIndex(endIndex);
@@ -137,11 +136,11 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         for (let measureIndex: number = start; measureIndex <= end; measureIndex++) {
             let sourceMeasure: SourceMeasure = this.musicSheet2.SourceMeasures[measureIndex];
             for (let i: number = 0; i < sourceMeasure.CompleteNumberOfStaves; i++) {
-                for (let sourceStaffEntries: SourceStaffEntry[] of sourceMeasure.VerticalSourceStaffEntryContainers) {
+                for (let sourceStaffEntries of sourceMeasure.VerticalSourceStaffEntryContainers) {
                     if (sourceStaffEntries[i] !== undefined) {
                         let sourceStaffEntry: SourceStaffEntry = sourceStaffEntries[i];
                         let verses: number = 0;
-                        for (let voiceEntry: VoiceEntry of sourceStaffEntry.VoiceEntries) {
+                        for (let voiceEntry of sourceStaffEntry.VoiceEntries) {
                             verses += Object.keys(voiceEntry.LyricsEntries).length;
                         }
                         lyricVerses = Math.max(lyricVerses, verses);

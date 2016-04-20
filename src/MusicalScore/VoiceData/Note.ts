@@ -1,3 +1,15 @@
+import {VoiceEntry} from "./VoiceEntry";
+import {SourceStaffEntry} from "./SourceStaffEntry";
+import {Fraction} from "../../Common/DataObjects/fraction";
+import {Pitch} from "../../Common/DataObjects/pitch";
+import {Beam} from "./Beam";
+import {Tuplet} from "./Tuplet";
+import {Tie} from "./Tie";
+import {Staff} from "./Staff";
+
+type NoteState = any;
+type Slur = any;
+
 export class Note {
     constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch) {
         this.voiceEntry = voiceEntry;
@@ -20,7 +32,7 @@ export class Note {
     private beam: Beam;
     private tuplet: Tuplet;
     private tie: Tie;
-    private slurs: List<Slur> = new List<Slur>();
+    private slurs: Slur[] = new Array();
     private graceNoteSlash: boolean = false;
     private playbackInstrumentId: string = undefined;
     public get GraceNoteSlash(): boolean {
@@ -68,10 +80,10 @@ export class Note {
     public set NoteTie(value: Tie) {
         this.tie = value;
     }
-    public get NoteSlurs(): List<Slur> {
+    public get NoteSlurs(): Slur[] {
         return this.slurs;
     }
-    public set NoteSlurs(value: List<Slur>) {
+    public set NoteSlurs(value: Slur[]) {
         this.slurs = value;
     }
     public get PlaybackInstrumentId(): string {
@@ -81,10 +93,10 @@ export class Note {
         this.playbackInstrumentId = value;
     }
     public calculateNoteLengthWithoutTie(): Fraction {
-        let withoutTieLength: Fraction = new Fraction(this.length);
+        let withoutTieLength: Fraction = Fraction.CreateFractionFromFraction(this.length);
         if (this.tie !== undefined) {
-            let tempLength: Fraction = new Fraction(this.length);
-            for (let idx: number = 0, len: number = this.tie.Fractions.Count; idx < len; ++idx) {
+            let tempLength: Fraction = Fraction.CreateFractionFromFraction(this.length);
+            for (let idx: number = 0, len: number = this.tie.Fractions.length; idx < len; ++idx) {
                 let fraction: Fraction = this.tie.Fractions[idx];
                 tempLength.Sub(fraction);
             }
@@ -93,7 +105,7 @@ export class Note {
         return withoutTieLength;
     }
     public calculateNoteOriginalLength(): Fraction {
-        return this.calculateNoteOriginalLength(new Fraction(this.length));
+        return this.calculateNoteOriginalLength(Fraction.CreateFractionFromFraction(this.length));
     }
     public calculateNoteOriginalLength(originalLength: Fraction): Fraction {
         if (this.tie !== undefined) {
@@ -103,8 +115,8 @@ export class Note {
             return this.length;
         }
         if (originalLength.Numerator > 1) {
-            let exp: number = <number>Math.Log(originalLength.Denominator, 2) - this.calculateNumberOfNeededDots(originalLength);
-            originalLength.Denominator = <number>Math.Pow(2, exp);
+            let exp: number = Math.floor(Math.log(originalLength.Denominator) / Math.LN2) - this.calculateNumberOfNeededDots(originalLength);
+            originalLength.Denominator = 1 << exp;
             originalLength.Numerator = 1;
         }
         return originalLength;
@@ -124,10 +136,10 @@ export class Note {
         if (this.tuplet === undefined) {
             while (product < fraction.Numerator) {
                 num++;
-                product = <number>Math.Pow(2, num); // FIXME
+                product = 1 << num; // FIXME some logarithm
             }
         }
-        return number - 1;
+        return num - 1;
     }
     public ToString(): string {
         if (this.pitch !== undefined) {
@@ -137,7 +149,7 @@ export class Note {
         }
     }
     public getAbsoluteTimestamp(): Fraction {
-        let absolute: Fraction = new Fraction(this.voiceEntry.Timestamp);
+        let absolute: Fraction = Fraction.CreateFractionFromFraction(this.voiceEntry.Timestamp);
         absolute += this.parentStaffEntry.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp;
         return absolute;
     }
@@ -156,10 +168,8 @@ export class Note {
     }
 }
 
-export module Note {
-    export enum Appearance {
-        Normal,
-        Grace,
-        Cue
-    }
+export enum Appearance {
+    Normal,
+    Grace,
+    Cue
 }

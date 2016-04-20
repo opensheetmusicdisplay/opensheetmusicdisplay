@@ -1,14 +1,15 @@
-export class MappingSourceMusicPart implements IComparable, IComparable<MappingSourceMusicPart> {
-    constructor(sourceMusicPart: SourceMusicPart, startTimestamp: Fraction) {
-        this(sourceMusicPart, undefined, startTimestamp, -1, false);
+import {SourceMusicPart} from "./SourceMusicPart";
+import {Fraction} from "../../Common/DataObjects/fraction";
+import {Repetition} from "./Repetition";
+import {PartListEntry} from "./PartListEntry";
 
-    }
-    constructor(sourceMusicPart: SourceMusicPart, parentPartListEntry: Repetition, startTimestamp: Fraction, repetitionRun: number, isEnding: boolean) {
+export class MappingSourceMusicPart /* implements IComparable, IComparable<MappingSourceMusicPart>*/ {
+    constructor(sourceMusicPart: SourceMusicPart, startTimestamp: Fraction, parentPartListEntry?: Repetition, repetitionRun: number = -1, isEnding: boolean = false) {
         this.sourceMusicPart = sourceMusicPart;
         this.parentPartListEntry = parentPartListEntry;
-        this.startTimestamp = new Fraction(startTimestamp);
+        this.startTimestamp = Fraction.CreateFractionFromFraction(startTimestamp);
         this.repetitionRun = repetitionRun;
-        this.parentRepetition = __as__<Repetition>(parentPartListEntry, Repetition);
+        this.parentRepetition = <Repetition>parentPartListEntry;
         this.isEnding = isEnding;
     }
     private sourceMusicPart: SourceMusicPart;
@@ -38,13 +39,13 @@ export class MappingSourceMusicPart implements IComparable, IComparable<MappingS
     public get StartTimestamp(): Fraction {
         return this.startTimestamp;
     }
-    public CompareTo(obj: Object): number {
-        let comp: MappingSourceMusicPart = __as__<MappingSourceMusicPart>(obj, MappingSourceMusicPart);
+    public CompareTo(comp: MappingSourceMusicPart): number {
+        //let comp: MappingSourceMusicPart = <MappingSourceMusicPart>(obj, MappingSourceMusicPart);
         if (comp !== undefined) {
             return this.startTimestamp.CompareTo(comp.startTimestamp);
         } else { return 1; }
     }
-    public CompareTo(other: MappingSourceMusicPart): number {
-        return this.CompareTo(<Object>other);
-    }
+    //public CompareTo(other: MappingSourceMusicPart): number {
+    //    return this.CompareTo(<Object>other);
+    //}
 }

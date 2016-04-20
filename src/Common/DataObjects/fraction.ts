@@ -212,13 +212,14 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     //        return m1;
     //    else return m2;
     //}
-    //public CompareTo(obj: Object): number {
-    //    if (this > <Fraction>obj)
-    //        return 1;
-    //    else if (this <<Fraction>obj)
-    //        return -1;
-    //    return 0;
-    //}
+    public CompareTo(obj: Fraction): number {
+        if (this.RealValue > obj.RealValue) {
+            return 1;
+        } else if (this.RealValue < obj.RealValue) {
+            return -1;
+        }
+        return 0;
+    }
     //public static getFraction(value: number, denominatorPrecision: number): Fraction {
     //    let numerator: number = <number>Math.round(value / (1.0 / denominatorPrecision));
     //    return new Fraction(numerator, denominatorPrecision);

@@ -1,19 +1,16 @@
 import {PartListEntry} from "./PartListEntry";
 import {Repetition} from "./Repetition";
 import {Fraction} from "../../Common/DataObjects/fraction";
+import {MusicSheet} from "../MusicSheet";
 
 export class SourceMusicPart extends PartListEntry {
-    constructor(musicSheet: MusicSheet) {
+    constructor(musicSheet: MusicSheet, startIndex?: number, endIndex?: number) {
         super(musicSheet);
-        this.musicSheet = musicSheet;
-    }
-    constructor(musicSheet: MusicSheet, startIndex: number, endIndex: number) {
-        super(musicSheet);
-        this.musicSheet = musicSheet;
+        this.musicSheet2 = musicSheet;
         this.startIndex = startIndex;
         this.endIndex = endIndex;
     }
-    protected musicSheet: MusicSheet;
+    protected musicSheet2: MusicSheet;
     protected parentRepetition: Repetition;
     private startIndex: number;
     private endIndex: number;
@@ -33,7 +30,7 @@ export class SourceMusicPart extends PartListEntry {
         this.parentRepetition = value;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return new Fraction(this.musicSheet.SourceMeasures[this.startIndex].AbsoluteTimestamp);
+        return Fraction.CreateFractionFromFraction(this.musicSheet2.SourceMeasures[this.startIndex].AbsoluteTimestamp);
     }
     public setStartIndex(startIndex: number): void {
         this.startIndex = startIndex;

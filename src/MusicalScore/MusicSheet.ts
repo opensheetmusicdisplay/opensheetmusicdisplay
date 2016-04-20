@@ -12,14 +12,29 @@ import {VoiceEntry} from "./VoiceData/VoiceEntry";
 import {MusicPartManagerIterator} from "./MusicParts/MusicPartManagerIterator";
 import {PartListEntry} from "./MusicSource/PartListEntry";
 import {VerticalSourceStaffEntryContainer} from "./VoiceData/VerticalSourceStaffEntryContainer";
+import {Voice} from "./VoiceData/Voice";
+
+// FIXME
+type MusicSheetParameters = any;
+type MultiTempoExpression = any;
+type PlaybackSettings = any;
+type MusicSheetParameterObject = any;
+type EngravingRules = any;
+type MusicSheetErrors = any;
+type IPhonicScoreInterface = any;
+type MusicSheetParameterChangedDelegate = any;
+type IInstrument = any;
+type ISettableInstrument = any;
+type IRepetition = any;
+
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
         try {
-            this.Rules = EngravingRules.Rules;
+            this.Rules = undefined; // FIXME: EngravingRules.Rules;
         } catch (ex) {
             console.log("MusicSheet Error: EngravingRules"); // FIXME
         }
-        this.playbackSettings = this.SheetPlaybackSetting = new PlaybackSettings(new Fraction(4, 4, false), 100);
+        this.playbackSettings = undefined // FIXME this.SheetPlaybackSetting = new PlaybackSettings(new Fraction(4, 4, false), 100);
         this.UserStartTempoInBPM = 100;
         this.PageWidth = 120;
         this.MusicPartManager = new MusicPartManager(this);
@@ -45,7 +60,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     // private languages: Language[] = new Array();
     // private activeLanguage: Language;
     private musicPartManager: MusicPartManager = undefined;
-    private musicSheetErrors: MusicSheetErrors = new MusicSheetErrors();
+    private musicSheetErrors: MusicSheetErrors = undefined; // FIXME new MusicSheetErrors();
     private staves: Staff[] = new Array();
     private selectionStart: Fraction;
     private selectionEnd: Fraction;
@@ -269,7 +284,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return measures;
     }
     public getNextSourceMeasure(measure: SourceMeasure): SourceMeasure {
-        let index: number = this.sourceMeasures.IndexOf(measure);
+        let index: number = this.sourceMeasures.indexOf(measure);
         if (index === this.sourceMeasures.length - 1) {
             return measure;
         }
@@ -288,7 +303,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
                 let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
                 for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                     let note: Note = voiceEntry.Notes[idx2];
-                    note.State = NoteState.Normal;
+                    note.State = undefined // FIXME NoteState.Normal;
                 }
             }
             iterator.moveToNext();
@@ -334,20 +349,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return this.Title.Text.localeCompare(other.Title.Text);
     }
     public get IInstruments(): IInstrument[] {
-        let list: IInstrument[] = new Array();
-        for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
-            let instr: Instrument = this.instruments[idx];
-            list.push(instr);
-        }
-        return list;
+        return this.instruments.slice()
     }
     public get IInitializableInstruments(): ISettableInstrument[] {
-        let list: ISettableInstrument[] = new Array();
-        for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
-            let instr: Instrument = this.instruments[idx];
-            list.push(instr);
-        }
-        return list;
+        return this.instruments.slice();
     }
     public get IRepetitions(): IRepetition[] {
         try {
@@ -377,7 +382,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return this.UserStartTempoInBPM;
     }
-    public get Errors(): Dictionary<number, string[]> {
+    public get Errors(): { [n: number]: string[]; } {
         try {
             return this.musicSheetErrors.MeasureErrors;
         } catch (ex) {
@@ -421,19 +426,19 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             this.PhonicScoreInterface.RequestMusicSheetParameter(parameter, value);
         } else {
             let oldValue: Object = 0;
-            if (parameter === MusicSheetParameters.MusicSheetTranspose) {
+            if (parameter === undefined) { // FIXME MusicSheetParameters.MusicSheetTranspose) {
                 oldValue = this.Transpose;
                 this.Transpose = <number>value;
             }
-            if (parameter === MusicSheetParameters.StartTempoInBPM) {
+            if (parameter === undefined) { // FIXME MusicSheetParameters.StartTempoInBPM) {
                 oldValue = this.UserStartTempoInBPM;
                 this.UserStartTempoInBPM = <number>value;
             }
-            if (parameter === MusicSheetParameters.HighlightErrors) {
+            if (parameter === undefined) { // FIXME MusicSheetParameters.HighlightErrors) {
                 oldValue = value;
             }
             if (this.MusicSheetParameterChanged !== undefined) {
-                this.MusicSheetParameterChanged(undefined, parameter, value, oldValue);
+                this.musicSheetParameterChangedDelegate(undefined, parameter, value, oldValue);
             }
         }
     }
@@ -465,7 +470,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public get SheetEndTimestamp(): Fraction {
         let lastMeasure: SourceMeasure = this.getLastSourceMeasure();
-        return lastMeasure.AbsoluteTimestamp + lastMeasure.Duration;
+        return Fraction.plus(lastMeasure.AbsoluteTimestamp, lastMeasure.Duration);
     }
     public getSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
         for (let idx: number = 0, len: number = this.SourceMeasures.length; idx < len; ++idx) {
@@ -482,7 +487,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public findSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
         for (let idx: number = 0, len: number = this.SourceMeasures.length; idx < len; ++idx) {
             let sm: SourceMeasure = this.SourceMeasures[idx];
-            if (sm.AbsoluteTimestamp >= timeStamp && timeStamp < sm.AbsoluteTimestamp + sm.Duration) {
+            if (sm.AbsoluteTimestamp >= timeStamp && timeStamp < Fraction.plus(sm.AbsoluteTimestamp, sm.Duration)) {
                 return sm;
             }
         }
