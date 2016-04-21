@@ -1,7 +1,6 @@
 import {Voice} from "./Voice";
 import {Instrument} from "../Instrument";
 
-
 export class Staff {
     constructor(parentInstrument: Instrument, instrumentStaffId: number) {
         this.parentInstrument = parentInstrument;
@@ -15,7 +14,7 @@ export class Staff {
     public Following: boolean;
 
     private parentInstrument: Instrument;
-    private voices: Voice[] = new Array();
+    private voices: Voice[] = [];
     private volume: number = 1;
     private id: number;
 

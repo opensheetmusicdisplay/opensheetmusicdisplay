@@ -56,7 +56,7 @@ export class IXmlElement {
     return this.Elements(elementName)[0];
   }
 
-  public Elements(nodeName: string): IXmlElement[] {
+  public Elements(nodeName?: string): IXmlElement[] {
     let nodes: NodeList = this._elem.childNodes;
     let ret: IXmlElement[] = new Array();
     let nameUnset: boolean = typeof nodeName === "undefined";

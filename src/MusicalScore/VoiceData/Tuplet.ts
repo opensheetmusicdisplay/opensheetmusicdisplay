@@ -1,10 +1,13 @@
+import {Note} from "./Note";
+import {Fraction} from "../../Common/DataObjects/fraction";
+
 export class Tuplet {
   constructor(tupletLabelNumber: number) {
     this.tupletLabelNumber = tupletLabelNumber;
   }
   private tupletLabelNumber: number;
-  private notes: Note[][] = new Array();
-  private fractions: Fraction[] = new Array();
+  private notes: Note[][] = [];
+  private fractions: Fraction[] = [];
   public get TupletLabelNumber(): number {
     return this.tupletLabelNumber;
   }

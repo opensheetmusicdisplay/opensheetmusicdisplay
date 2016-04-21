@@ -1,3 +1,7 @@
+import {SourceMeasure} from "./SourceMeasure";
+import {Fraction} from "../../Common/DataObjects/fraction";
+import {SourceStaffEntry} from "./SourceStaffEntry";
+
 export class VerticalSourceStaffEntryContainer {
     constructor(parentMeasure: SourceMeasure, timestamp: Fraction, size: number) {
         this.timestamp = timestamp;
@@ -7,8 +11,8 @@ export class VerticalSourceStaffEntryContainer {
     }
     private timestamp: Fraction;
     private size: number;
-    private staffEntries: SourceStaffEntry[] = new Array();
-    private comments: Comment[] = new Array();
+    private staffEntries: SourceStaffEntry[] = [];
+    private comments: Comment[] = [];
     private parentMeasure: SourceMeasure;
 
     public $get$(index: number): SourceStaffEntry {
@@ -46,7 +50,7 @@ export class VerticalSourceStaffEntryContainer {
     }
     private initialize(): void {
         for (let i: number = 0; i < this.size; i++) {
-            this.staffEntries.Add();
+            this.staffEntries.push(undefined);
         }
     }
 }

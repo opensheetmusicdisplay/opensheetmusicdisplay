@@ -34,7 +34,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         } catch (ex) {
             console.log("MusicSheet Error: EngravingRules"); // FIXME
         }
-        this.playbackSettings = undefined // FIXME this.SheetPlaybackSetting = new PlaybackSettings(new Fraction(4, 4, false), 100);
+        this.playbackSettings = undefined; // FIXME this.SheetPlaybackSetting = new PlaybackSettings(new Fraction(4, 4, false), 100);
         this.UserStartTempoInBPM = 100;
         this.PageWidth = 120;
         this.MusicPartManager = new MusicPartManager(this);
@@ -44,24 +44,24 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public PageWidth: number;
 
     private idString: string = "kjgdfuilhsda�oihfsvjh";
-    private sourceMeasures: SourceMeasure[] = new Array();
-    private repetitions: Repetition[] = new Array();
-    private dynListStaves: DynamicsContainer[][] = new Array();
-    private timestampSortedDynamicExpressionsList: DynamicsContainer[] = new Array();
-    private timestampSortedTempoExpressionsList: MultiTempoExpression[] = new Array();
-    private instrumentalGroups: InstrumentalGroup[] = new Array();
-    private instruments: Instrument[] = new Array();
+    private sourceMeasures: SourceMeasure[] = [];
+    private repetitions: Repetition[] = [];
+    private dynListStaves: DynamicsContainer[][] = [];
+    private timestampSortedDynamicExpressionsList: DynamicsContainer[] = [];
+    private timestampSortedTempoExpressionsList: MultiTempoExpression[] = [];
+    private instrumentalGroups: InstrumentalGroup[] = [];
+    private instruments: Instrument[] = [];
     private playbackSettings: PlaybackSettings;
     private path: string;
     private title: Label;
     private subtitle: Label;
     private composer: Label;
     private lyricist: Label;
-    // private languages: Language[] = new Array();
+    // private languages: Language[] = [];
     // private activeLanguage: Language;
     private musicPartManager: MusicPartManager = undefined;
     private musicSheetErrors: MusicSheetErrors = undefined; // FIXME new MusicSheetErrors();
-    private staves: Staff[] = new Array();
+    private staves: Staff[] = [];
     private selectionStart: Fraction;
     private selectionEnd: Fraction;
     private transpose: number = 0;
@@ -247,7 +247,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             return undefined;
         }
     }
-    public getIndexFromStaff(staff: Staff): number {
+    public static getIndexFromStaff(staff: Staff): number {
         return staff.IdInMusicSheet;
     }
     public fillStaffList(): void {
@@ -277,7 +277,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return number;
     }
     public getListOfMeasuresFromIndeces(start: number, end: number): SourceMeasure[] {
-        let measures: SourceMeasure[] = new Array();
+        let measures: SourceMeasure[] = [];
         for (let i: number = start; i <= end; i++) {
             measures.push(this.sourceMeasures[i]);
         }
@@ -303,7 +303,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
                 let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
                 for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                     let note: Note = voiceEntry.Notes[idx2];
-                    note.State = undefined // FIXME NoteState.Normal;
+                    note.State = undefined; // FIXME NoteState.Normal;
                 }
             }
             iterator.moveToNext();
@@ -323,9 +323,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public setRepetitionNewUserNumberOfRepetitions(index: number, value: number): void {
         let repIndex: number = 0;
         for (let i: number = 0; i < this.repetitions.length; i++) {
-            if (this.repetitions[i] instanceof Repetition) {
+            if (this.repetitions[i] instanceof Repetition) { // FIXME
                 if (index === repIndex) {
-                    (<Repetition>this.repetitions[i]).UserNumberOfRepetitions = value;
+                    this.repetitions[i].UserNumberOfRepetitions = value;
                     break;
                 } else {
                     repIndex++;
@@ -356,7 +356,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public get IRepetitions(): IRepetition[] {
         try {
-            let repetitions: IRepetition[] = new Array();
+            let repetitions: IRepetition[] = [];
             for (let idx: number = 0, len: number = this.repetitions.length; idx < len; ++idx) {
                 let partListEntry: PartListEntry = this.repetitions[idx];
                 if (partListEntry instanceof Repetition) {
@@ -365,8 +365,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             }
             return repetitions;
         } catch (ex) {
-            //Logger.DefaultLogger.LogError(LogLevel.NORMAL, "MusicSheet.IRepetitions get: ", ex);
-            // FIXME logger
+            console.log(/*Logger.DefaultLogger.LogError(LogLevel.NORMAL, FIXME */ "MusicSheet.IRepetitions get: ", ex);
             return undefined;
         }
 
@@ -386,7 +385,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         try {
             return this.musicSheetErrors.MeasureErrors;
         } catch (ex) {
-            // FIXME Logger.DefaultLogger.LogError(LogLevel.NORMAL, "MusicSheet.Errors get: ", ex);
+            console.log(/* FIXME LogLevel.NORMAL, */ "MusicSheet.Errors get: ", ex);
             return undefined;
         }
 
@@ -395,7 +394,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         try {
             return this.getFirstSourceMeasure().MeasureNumber;
         } catch (ex) {
-            // Logger.DefaultLogger.LogError(LogLevel.NORMAL, "MusicSheet.FirstMeasureNumber: ", ex); // FIXME
+            console.log(/* FIXME LogLevel.NORMAL, */ "MusicSheet.FirstMeasureNumber: ", ex);
             return 0;
         }
 
@@ -404,7 +403,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         try {
             return this.getLastSourceMeasure().MeasureNumber;
         } catch (ex) {
-            // Logger.DefaultLogger.LogError(LogLevel.NORMAL, "MusicSheet.LastMeasureNumber: ", ex); // FIXME
+            console.log(/* FIXME LogLevel.NORMAL, */ "MusicSheet.LastMeasureNumber: ", ex);
             return 0;
         }
 
@@ -461,7 +460,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.MusicSheetParameterChanged = undefined;
         for (let idx: number = 0, len: number = this.IInstruments.length; idx < len; ++idx) {
             let instrument: IInstrument = this.IInstruments[idx];
-            instrument.Dispose();
+            instrument.Dispose(); // FIXME
         }
     }
     public getEnrolledSelectionStartTimeStampWorkaround(): Fraction {

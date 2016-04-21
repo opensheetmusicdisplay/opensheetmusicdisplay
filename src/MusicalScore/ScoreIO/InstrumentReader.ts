@@ -10,6 +10,12 @@ import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {Fraction} from "../../Common/DataObjects/fraction";
 import {IXmlElement} from "../../Common/FileIO/Xml";
+import {ITextTranslation} from "../Interfaces/ITextTranslation";
+import {MusicSheetReadingException} from "../Exceptions";
+import {ClefEnum} from "../VoiceData/Instructions/ClefInstruction";
+import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
+import {KeyEnum} from "../VoiceData/Instructions/KeyInstruction";
+import {IXmlAttribute} from "../../Common/FileIO/Xml";
 
 
 // FIXME
@@ -21,12 +27,25 @@ type ExpressionReader = any;
 
 declare class MusicSymbolModuleFactory {
   public static createSlurReader(x: any): any;
+  public static createExpressionGenerator(musicSheet: MusicSheet, instrument: Instrument, n: number);
 }
+
+class MetronomeReader {
+  public static addMetronomeSettings(xmlNode: IXmlElement, musicSheet: MusicSheet): void { }
+  public static readMetronomeInstructions(xmlNode: IXmlElement, musicSheet: MusicSheet, currentXmlMeasureIndex: number): void { }
+  public static readTempoInstruction(soundNode: IXmlElement, musicSheet: MusicSheet, currentXmlMeasureIndex: number): void { }
+}
+
+class ChordSymbolReader {
+  public static readChordSymbol(xmlNode:IXmlElement, musicSheet:MusicSheet, activeKey:any): void {
+  }
+}
+////////////
 
 export class InstrumentReader {
   constructor(repetitionInstructionReader: repetitionInstructionReader, xmlMeasureList: IXmlElement[]/* FIXME IEnumerable<IXmlElement>*/, instrument: Instrument) {
     this.repetitionInstructionReader = repetitionInstructionReader;
-    this.xmlMeasureList = xmlMeasureList; // FIXME .ToArray();
+    this.xmlMeasureList = xmlMeasureList.slice(); // FIXME .ToArray();
     this.musicSheet = instrument.GetMusicSheet;
     this.instrument = instrument;
     this.activeClefs = new Array(instrument.Staves.length);
@@ -43,7 +62,7 @@ export class InstrumentReader {
   private slurReader: SlurReader;
   private instrument: Instrument;
   private voiceGeneratorsDict: { [n: number]: VoiceGenerator; } = {};
-  private staffMainVoiceGeneratorDict: Dictionary<Staff, VoiceGenerator> = new Dictionary<Staff, VoiceGenerator>();
+  private staffMainVoiceGeneratorDict: { [staffId: number]: VoiceGenerator } = {};
   private inSourceMeasureInstrumentIndex: number;
   private divisions: number = 0;
   private currentMeasure: SourceMeasure;
@@ -89,7 +108,7 @@ export class InstrumentReader {
     this.maxTieNoteFraction = new Fraction(0, 1);
     let lastNoteWasGrace: boolean = false;
     try {
-      let xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].Elements().ToArray();
+      let xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].Elements().slice();
       for (let idx: number = 0, len: number = xmlMeasureListArr.length; idx < len; ++idx) {
         let xmlNode: IXmlElement = xmlMeasureListArr[idx];
         if (xmlNode.Name === "note") {
@@ -103,7 +122,7 @@ export class InstrumentReader {
                 noteStaff = parseInt(xmlNode.Element("staff").Value);
               }
             } catch (ex) {
-              // FIXME Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.readNextXmlMeasure.get staff number", ex);
+              // FIXME console.log(/*LogLevel.DEBUG, */  "InstrumentReader.readNextXmlMeasure.get staff number", ex);
               noteStaff = 1;
             }
 
@@ -133,9 +152,9 @@ export class InstrumentReader {
                 isTuplet = true;
               }
             } catch (ex) {
-              let errorMsg: string = "FIXME Instrument Reader"; // FIXME ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
+              let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
               this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-              // FIXME Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.readNextXmlMeasure", errorMsg, ex);
+              // FIXME console.log(/*LogLevel.DEBUG, */  "InstrumentReader.readNextXmlMeasure", errorMsg, ex);
               continue;
             }
 
@@ -151,7 +170,7 @@ export class InstrumentReader {
             musicTimestamp,
             this.inSourceMeasureInstrumentIndex + noteStaff - 1,
             this.currentStaff,
-            newContainerCreated,
+            newContainerCreated
           );
           if (!this.currentVoiceGenerator.hasVoiceEntry() || !isChord && !isGraceNote && !lastNoteWasGrace || !lastNoteWasGrace && isGraceNote) {
             this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote);
@@ -172,10 +191,10 @@ export class InstrumentReader {
           let beginOfMeasure: boolean = (
             this.currentStaffEntry !== undefined &&
             this.currentStaffEntry.Timestamp !== undefined &&
-            this.currentStaffEntry.Timestamp === new Fraction(0, 1) &&
+            this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) &&
             !this.currentStaffEntry.hasNotes()
           );
-          saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
+          this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
           if (this.openChordSymbolContainer !== undefined) {
             this.currentStaffEntry.ChordContainer = this.openChordSymbolContainer;
             this.openChordSymbolContainer = undefined;
@@ -219,7 +238,7 @@ export class InstrumentReader {
               this.divisions = parseInt(divisionsNode.Value);
             } catch (e) {
               let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
-              // FIXME Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.readNextXmlMeasure", errorMsg, e);
+              console.log(/*LogLevel.DEBUG, */"InstrumentReader.readNextXmlMeasure", errorMsg, e);
               this.divisions = this.readDivisionsFromNotes();
               if (this.divisions > 0) {
                 this.musicSheet.SheetErrors.Errors.push(errorMsg + this.instrument.Name);
@@ -245,8 +264,8 @@ export class InstrumentReader {
             }
           }
           this.addAbstractInstruction(xmlNode, guitarPro);
-          if (currentFraction === new Fraction(0, 1) && this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
-            saveAbstractInstructionList(this.instrument.Staves.length, true);
+          if (currentFraction.Equals(new Fraction(0, 1)) && this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
+            this.saveAbstractInstructionList(this.instrument.Staves.length, true);
           }
           if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveClefInstructionAtEndOfMeasure();
@@ -317,7 +336,7 @@ export class InstrumentReader {
       if (this.currentXmlMeasureIndex === this.xmlMeasureList.length - 1) {
         for (let i: number = 0; i < this.instrument.Staves.length; i++) {
           if (!this.activeClefsHaveBeenInitialized[i]) {
-            createDefaultClefInstruction(this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.instrument) + i);
+            this.createDefaultClefInstruction(this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.instrument) + i);
         }}
         if (!this.activeKeyHasBeenInitialized) {
           this.createDefaultKeyInstruction();
@@ -331,11 +350,11 @@ export class InstrumentReader {
       }
     } catch (e) {
       if (divisionsException) {
-        throw new MusicSheetReadingException(e.Message, e, 0);
+        throw new MusicSheetReadingException(e.Message, 0);
       }
       let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
       this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-      // FIXME Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.readNextXmlMeasure", errorMsg, e);
+      // FIXME console.log(/*LogLevel.DEBUG, */  "InstrumentReader.readNextXmlMeasure", errorMsg, e);
     }
 
     this.previousMeasure = this.currentMeasure;
@@ -355,8 +374,8 @@ export class InstrumentReader {
         staff.Voices.push(voiceGenerator.GetVoice);
       }
     } else {
-      if (this.staffMainVoiceGeneratorDict[staff] !== undefined) {
-        let mainVoiceGenerator: VoiceGenerator = this.staffMainVoiceGeneratorDict[staff];
+      let mainVoiceGenerator: VoiceGenerator = this.staffMainVoiceGeneratorDict[staffId];
+      if (mainVoiceGenerator !== undefined) {
         voiceGenerator = new VoiceGenerator(this.instrument, voiceId, this.slurReader, mainVoiceGenerator.GetVoice);
         staff.Voices.push(voiceGenerator.GetVoice);
         this.voiceGeneratorsDict[voiceId] = voiceGenerator;
@@ -364,24 +383,25 @@ export class InstrumentReader {
         voiceGenerator = new VoiceGenerator(this.instrument, voiceId, this.slurReader);
         staff.Voices.push(voiceGenerator.GetVoice);
         this.voiceGeneratorsDict[voiceId] = voiceGenerator;
-        this.staffMainVoiceGeneratorDict[staff] = voiceGenerator;
+        this.staffMainVoiceGeneratorDict[staffId] = voiceGenerator;
       }
     }
     return voiceGenerator
   }
 
-/*
+
   private createExpressionGenerators(numberOfStaves: number): void {
     this.expressionReaders = new Array(numberOfStaves);
-    for (let i: number = 0; i < numberOfStaves; i++)
-      this.expressionReaders[i] = MusicSymbolModuleFactory.createExpressionGenerator(this.musicSheet2, this.instrument, i + 1);
+    for (let i: number = 0; i < numberOfStaves; i++) {
+      this.expressionReaders[i] = MusicSymbolModuleFactory.createExpressionGenerator(this.musicSheet, this.instrument, i + 1);
+    }
   }
 
 
   private createDefaultClefInstruction(staffIndex: number): void {
     let first: SourceMeasure;
-    if (this.musicSheet2.SourceMeasures.Count > 0) {
-      first = this.musicSheet2.SourceMeasures[0];
+    if (this.musicSheet.SourceMeasures.length > 0) {
+      first = this.musicSheet.SourceMeasures[0];
     } else {
       first = this.currentMeasure;
     }
@@ -395,37 +415,37 @@ export class InstrumentReader {
       firstStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
     }
     clefInstruction.Parent = firstStaffEntry;
-    firstStaffEntry.Instructions.Insert(0, clefInstruction);
+    firstStaffEntry.Instructions.splice(0, 0, clefInstruction);
   }
-*/
+
   private createDefaultKeyInstruction(): void {
     let first: SourceMeasure;
-    if (this.musicSheet.SourceMeasures.Count > 0) {
+    if (this.musicSheet.SourceMeasures.length > 0) {
       first = this.musicSheet.SourceMeasures[0];
     } else {
       first = this.currentMeasure;
     }
-    let keyInstruction: KeyInstruction = new KeyInstruction(0, KeyEnum.major);
-    for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + this.instrument.Staves.Count; j++) {
+    let keyInstruction: KeyInstruction = new KeyInstruction(undefined, 0, KeyEnum.major);
+    for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + this.instrument.Staves.length; j++) {
       if (first.FirstInstructionsStaffEntries[j] === undefined) {
         let firstStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
         first.FirstInstructionsStaffEntries[j] = firstStaffEntry;
         keyInstruction.Parent = firstStaffEntry;
-        firstStaffEntry.Instructions.Add(keyInstruction);
+        firstStaffEntry.Instructions.push(keyInstruction);
       } else {
         let firstStaffEntry: SourceStaffEntry = first.FirstInstructionsStaffEntries[j];
         keyInstruction.Parent = firstStaffEntry;
         firstStaffEntry.removeFirstInstructionOfType<KeyInstruction>();
         if (firstStaffEntry.Instructions[0] instanceof ClefInstruction) {
-          firstStaffEntry.Instructions.Insert(1, keyInstruction);
+          firstStaffEntry.Instructions.splice(1, 0, keyInstruction);
         } else {
-          firstStaffEntry.Instructions.Insert(0, keyInstruction);
+          firstStaffEntry.Instructions.splice(0, 0, keyInstruction);
         }
       }
     }
   }
   private isAttributesNodeAtBeginOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    let childs: IXmlElement[] = parentNode.Elements().ToArray();
+    let childs: IXmlElement[] = parentNode.Elements().slice();
     let attributesNodeIndex: number = 0;
     for (let i: number = 0; i < childs.length; i++) {
       if (childs[i] === attributesNode) {
@@ -446,7 +466,7 @@ export class InstrumentReader {
     return (attributesNodeIndex < firstNoteNodeIndex && firstNoteNodeIndex > 0) || (firstNoteNodeIndex < 0);
   }
   private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    let childs: IXmlElement[] = parentNode.Elements().ToArray();
+    let childs: IXmlElement[] = parentNode.Elements().slice();
     let attributesNodeIndex: number = 0;
     for (let i: number = 0; i < childs.length; i++) {
       if (childs[i] === attributesNode) {
@@ -475,7 +495,7 @@ export class InstrumentReader {
   }
   private addAbstractInstruction(node: IXmlElement, guitarPro: boolean): void {
     if (node.Element("divisions") !== undefined) {
-      if (node.Elements().Count() === 1) { return; }
+      if (node.Elements().length === 1) { return; }
     }
     let transposeNode: IXmlElement = node.Element("transpose");
     if (transposeNode !== undefined) {
@@ -484,16 +504,16 @@ export class InstrumentReader {
         this.instrument.PlaybackTranspose = parseInt(chromaticNode.Value);
       }
     }
-    let clefList: IXmlElement[] = node.Elements("clef").ToArray();
+    let clefList: IXmlElement[] = node.Elements("clef");
+    let errorMsg: string;
     if (clefList.length > 0) {
-      for (let idx: number = 0, len: number = clefList.Count(); idx < len; ++idx) {
+      for (let idx: number = 0, len: number = clefList.length; idx < len; ++idx) {
         let nodeList: IXmlElement = clefList[idx];
         let clefEnum: ClefEnum = ClefEnum.G;
         let line: number = 2;
         let staffNumber: number = 1;
         let clefOctaveOffset: number = 0;
         let lineNode: IXmlElement = nodeList.Element("line");
-        let errorMsg: string;
         if (lineNode !== undefined) {
           try {
             line = parseInt(lineNode.Value);
@@ -504,7 +524,7 @@ export class InstrumentReader {
             );
             this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
             line = 2;
-            Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.addAbstractInstruction", errorMsg, ex);
+            console.log(/*LogLevel.DEBUG, */  "InstrumentReader.addAbstractInstruction", errorMsg, ex);
           }
 
         }
@@ -532,7 +552,7 @@ export class InstrumentReader {
             this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
             clefEnum = ClefEnum.G;
             line = 2;
-            Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.addAbstractInstruction", errorMsg, e);
+            console.log(/*LogLevel.DEBUG, */  "InstrumentReader.addAbstractInstruction", errorMsg, e);
           }
 
         }
@@ -550,9 +570,9 @@ export class InstrumentReader {
           }
 
         }
-        if (nodeList.HasAttributes && nodeList.Attributes().First().Name === "number") {
+        if (nodeList.HasAttributes && nodeList.Attributes()[0].Name === "number") {
           try {
-            staffNumber = parseInt(nodeList.Attributes().First().Value);
+            staffNumber = parseInt(nodeList.Attributes()[0].Value);
           } catch (err) {
             errorMsg = ITextTranslation.translateText(
               "ReaderErrorMessages/ClefError",
@@ -564,7 +584,7 @@ export class InstrumentReader {
         }
 
         let clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
-        this.abstractInstructions.Add(new KeyValuePairClass<number, AbstractNotationInstruction>(staffNumber, clefInstruction));
+        this.abstractInstructions[staffNumber] = clefInstruction;
       }
     }
     if (node.Element("key") !== undefined && this.instrument.MidiInstrumentId !== Common.Enums.MidiInstrument.Percussion) {
@@ -580,7 +600,7 @@ export class InstrumentReader {
           );
           this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
           key = 0;
-          Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          console.log(/*LogLevel.DEBUG, */  "InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
       }
@@ -597,12 +617,12 @@ export class InstrumentReader {
           );
           this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
           keyEnum = KeyEnum.major;
-          Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          console.log(/*LogLevel.DEBUG, */  "InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
       }
-      let keyInstruction: KeyInstruction = new KeyInstruction(key, keyEnum);
-      this.abstractInstructions.Add(new KeyValuePairClass<number, AbstractNotationInstruction>(1, keyInstruction));
+      let keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
+      this.abstractInstructions[1] = keyInstruction;
     }
     if (node.Element("time") !== undefined) {
       let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
@@ -610,9 +630,9 @@ export class InstrumentReader {
       if (
         timeNode !== undefined &&
         timeNode.HasAttributes &&
-        timeNode.Attributes().First() !== undefined
+        timeNode.Attributes()[] !== undefined
       ) {
-        let firstAttr: IXmlAttribute = timeNode.Attributes().First();
+        let firstAttr: IXmlAttribute = timeNode.Attributes()[0];
         if (firstAttr.Name === "symbol") {
           if (firstAttr.Value === "common") {
             symbolEnum = RhythmSymbolEnum.COMMON;
@@ -624,34 +644,34 @@ export class InstrumentReader {
       let num: number = 0;
       let denom: number = 0;
       let senzaMisura: boolean = (timeNode !== undefined && timeNode.Element("senza-misura") !== undefined);
-      let timeList: IXmlElement[] = node.Elements("time").ToArray();
-      let beatsList: List<IXmlElement> = new List<IXmlElement>();
-      let typeList: List<IXmlElement> = new List<IXmlElement>();
+      let timeList: IXmlElement[] = node.Elements("time");
+      let beatsList: IXmlElement[] = new Array();
+      let typeList: IXmlElement[] = new Array();
       for (let idx: number = 0, len: number = timeList.length; idx < len; ++idx) {
         let xmlNode: IXmlElement = timeList[idx];
-        beatsList.AddRange(xmlNode.Elements("beats"));
-        typeList.AddRange(xmlNode.Elements("beat-type"));
+        beatsList.push.apply(beatsList, xmlNode.Elements("beats"));
+        typeList.push.apply(typeList, xmlNode.Elements("beat-type"));
       }
       if (!senzaMisura) {
         try {
-          if (beatsList !== undefined && beatsList.Count > 0 && typeList !== undefined && beatsList.Count === typeList.Count) {
-            let length: number = beatsList.Count();
+          if (beatsList !== undefined && beatsList.length > 0 && typeList !== undefined && beatsList.length === typeList.length) {
+            let length: number = beatsList.length;
             let fractions: Fraction[] = new Array(length);
             let maxDenom: number = 0;
             for (let i: number = 0; i < length; i++) {
               let s: string = beatsList[i].Value;
               let n: number = 0;
               let d: number = 0;
-              if (s.IndexOf("+") !== -1) {
-                let numbers: string[] = s.Split("+");
-                for (let idx: number = 0, len: number = numbers.Count(); idx < len; ++idx) {
+              if (s.indexOf("+") !== -1) {
+                let numbers: string[] = s.split("+");
+                for (let idx: number = 0, len: number = numbers.length; idx < len; ++idx) {
                   n += parseInt(numbers[idx]);
                 }
               } else {
                 n = parseInt(s);
               }
               d = parseInt(typeList[i].Value);
-              maxDenom = Math.Max(maxDenom, d);
+              maxDenom = Math.max(maxDenom, d);
               fractions[i] = new Fraction(n, d, false);
             }
             for (let i: number = 0; i < length; i++) {
@@ -671,7 +691,7 @@ export class InstrumentReader {
           this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
           num = 4;
           denom = 4;
-          Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          console.log(/*LogLevel.DEBUG, */  "InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
         if ((num === denom === 4) || (num === denom === 2)) {
@@ -680,15 +700,21 @@ export class InstrumentReader {
         let rhythmInstruction: RhythmInstruction = new RhythmInstruction(
           new Fraction(num, denom, false), num, denom, symbolEnum
         );
-        this.abstractInstructions.Add(new KeyValuePairClass<number, AbstractNotationInstruction>(1, rhythmInstruction));
+        this.abstractInstructions[1] = rhythmInstruction;
       } else {
         let rhythmInstruction: RhythmInstruction = new RhythmInstruction(new Fraction(4, 4, false), 4, 4, RhythmSymbolEnum.NONE);
-        this.abstractInstructions.Add(new KeyValuePairClass<number, AbstractNotationInstruction>(1, rhythmInstruction));
+        this.abstractInstructions[1] = rhythmInstruction;
       }
     }
   }
+
+  private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
+    // FIXME TODO
+    console.log("saveAbstractInstructionList still to implement! See InstrumentReader.ts");
+  }
+
   /*private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
-    for (let i: number = this.abstractInstructions.Count - 1; i >= 0; i--) {
+    for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
       let keyValuePair: KeyValuePairClass<number, AbstractNotationInstruction> = this.abstractInstructions[i];
       if (keyValuePair.value instanceof ClefInstruction) {
         let clefInstruction: ClefInstruction = <ClefInstruction>keyValuePair.value;
@@ -780,7 +806,7 @@ export class InstrumentReader {
                 firstStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[j];
                 newKeyInstruction.Parent = firstStaffEntry;
                 firstStaffEntry.removeFirstInstructionOfType<KeyInstruction>();
-                if (firstStaffEntry.Instructions.Count === 0) {
+                if (firstStaffEntry.Instructions.length === 0) {
                   firstStaffEntry.Instructions.Add(newKeyInstruction);
                 } else {
                   if (firstStaffEntry.Instructions[0] instanceof ClefInstruction) {
@@ -823,23 +849,23 @@ export class InstrumentReader {
   }
   */
   private saveClefInstructionAtEndOfMeasure(): void {
-    for (let i: number = this.abstractInstructions.Count - 1; i >= 0; i--) {
-      let keyValuePair: KeyValuePairClass<number, AbstractNotationInstruction> = this.abstractInstructions[i];
-      if (keyValuePair.value instanceof ClefInstruction) {
-        let clefInstruction: ClefInstruction = __as__<ClefInstruction>(keyValuePair.value, ClefInstruction);
+    for (let key in this.abstractInstructions) {
+      let value = this.abstractInstructions[key];
+      if (value instanceof ClefInstruction) {
+        let clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (
-          (this.activeClefs[keyValuePair.key - 1] === undefined) ||
-          (clefInstruction.ClefType !== this.activeClefs[keyValuePair.key - 1].ClefType || (
-            clefInstruction.ClefType === this.activeClefs[keyValuePair.key - 1].ClefType &&
-            clefInstruction.Line !== this.activeClefs[keyValuePair.key - 1].Line
+          (this.activeClefs[key - 1] === undefined) ||
+          (clefInstruction.ClefType !== this.activeClefs[key - 1].ClefType || (
+            clefInstruction.ClefType === this.activeClefs[key - 1].ClefType &&
+            clefInstruction.Line !== this.activeClefs[key - 1].Line
           ))) {
           let lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
-          this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1] = lastStaffEntry;
+          this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] = lastStaffEntry;
           let newClefInstruction: ClefInstruction = clefInstruction;
           newClefInstruction.Parent = lastStaffEntry;
-          lastStaffEntry.Instructions.Add(newClefInstruction);
-          this.activeClefs[keyValuePair.key - 1] = clefInstruction;
-          this.abstractInstructions.Remove(keyValuePair);
+          lastStaffEntry.Instructions.push(newClefInstruction);
+          this.activeClefs[key - 1] = clefInstruction;
+          delete this.abstractInstructions[key]; // FIXME might hurt performance
         }
       }
     }
@@ -876,7 +902,7 @@ export class InstrumentReader {
           );
           this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
           directionStaffNumber = 1;
-          Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.readExpressionStaffNumber", errorMsg, ex);
+          console.log(/*LogLevel.DEBUG, */  "InstrumentReader.readExpressionStaffNumber", errorMsg, ex);
         }
 
       }
@@ -888,7 +914,7 @@ export class InstrumentReader {
     let xmlMeasureIndex: number = this.currentXmlMeasureIndex;
     let read: boolean = false;
     while (!read) {
-      let xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[xmlMeasureIndex].Elements().ToArray();
+      let xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[xmlMeasureIndex].Elements();
       for (let idx: number = 0, len: number = xmlMeasureListArr.length; idx < len; ++idx) {
         let xmlNode: IXmlElement = xmlMeasureListArr[idx];
         if (xmlNode.Name === "note" && xmlNode.Element("time-modification") === undefined) {
@@ -901,7 +927,7 @@ export class InstrumentReader {
               try {
                 noteDuration = parseInt(durationNode.Value);
               } catch (ex) {
-                Logger.DefaultLogger.LogError(LogLevel.DEBUG, "InstrumentReader.readDivisionsFromNotes", ex);
+                console.log(/*LogLevel.DEBUG, */  "InstrumentReader.readDivisionsFromNotes", ex);
                 continue;
               }
 
@@ -970,7 +996,7 @@ export class InstrumentReader {
   }
 }
 
-
+/*
 class KeyValuePairClass<T, TU> {
   constructor(key: T, value: TU) {
     this.key = key;
@@ -979,3 +1005,4 @@ class KeyValuePairClass<T, TU> {
   public key: T;
   public value: TU;
 }
+*/

@@ -6,6 +6,10 @@ import {Staff} from "./Staff";
 import {VoiceEntry} from "./VoiceEntry";
 import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
+
+type MultiExpression = any;
+type MultiTempoExpression = any;
+
 export class SourceMeasure {
   constructor(completeNumberOfStaves: number) {
     this.completeNumberOfStaves = completeNumberOfStaves;
@@ -19,16 +23,16 @@ export class SourceMeasure {
   private absoluteTimestamp: Fraction;
   private completeNumberOfStaves: number;
   private duration: Fraction;
-  private staffLinkedExpressions: MultiExpression[] = new Array();
-  private tempoExpressions: MultiTempoExpression[] = new Array();
-  private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = new Array();
+  private staffLinkedExpressions: MultiExpression[] = [];
+  private tempoExpressions: MultiTempoExpression[] = [];
+  private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
   private implicitMeasure: boolean;
   private breakSystemAfter: boolean;
-  private staffMeasureErrors: boolean[] = new Array();
-  private firstInstructionsStaffEntries: SourceStaffEntry[] = new Array();
-  private lastInstructionsStaffEntries: SourceStaffEntry[] = new Array();
-  private firstRepetitionInstructions: RepetitionInstruction[] = new Array();
-  private lastRepetitionInstructions: RepetitionInstruction[] = new Array();
+  private staffMeasureErrors: boolean[] = [];
+  private firstInstructionsStaffEntries: SourceStaffEntry[] = [];
+  private lastInstructionsStaffEntries: SourceStaffEntry[] = [];
+  private firstRepetitionInstructions: RepetitionInstruction[] = [];
+  private lastRepetitionInstructions: RepetitionInstruction[] = [];
   public get MeasureNumber(): number {
     return this.measureNumber;
   }
@@ -101,12 +105,18 @@ export class SourceMeasure {
     }
     return undefined;
   }
-  public findOrCreateStaffEntry(inMeasureTimestamp: Fraction, inSourceMeasureStaffIndex: number, staff: Staff, createdNewContainer: boolean): SourceStaffEntry {
+  public findOrCreateStaffEntry(inMeasureTimestamp: Fraction, inSourceMeasureStaffIndex: number, staff: Staff): SourceStaffEntry {
+    // FIXME, createdNewContainer: boolean): SourceStaffEntry {
     let staffEntry: SourceStaffEntry = undefined;
-    createdNewContainer = false;
-    let existingVerticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = this.verticalSourceStaffEntryContainers.Find(
-      o => o.Timestamp === inMeasureTimestamp
-    );
+    //createdNewContainer = false; FIXME! The original C# version uses a "out" argument!
+    // Find:
+    let existingVerticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = undefined;
+    for (let k: number = 0; k < this.verticalSourceStaffEntryContainers.length; k++) {
+      if (this.verticalSourceStaffEntryContainers[k].Timestamp === inMeasureTimestamp) {
+        existingVerticalSourceStaffEntryContainer = this.verticalSourceStaffEntryContainers[k];
+        break;
+      }
+    }
     if (existingVerticalSourceStaffEntryContainer !== undefined) {
       if (existingVerticalSourceStaffEntryContainer[inSourceMeasureStaffIndex] !== undefined) {
         return existingVerticalSourceStaffEntryContainer[inSourceMeasureStaffIndex];
@@ -116,10 +126,11 @@ export class SourceMeasure {
         return staffEntry;
       }
     }
-    createdNewContainer = true;
-    if (this.verticalSourceStaffEntryContainers.Count === 0 || this.verticalSourceStaffEntryContainers.Last().Timestamp < inMeasureTimestamp) {
+    //createdNewContainer = true;
+    let last: VerticalSourceStaffEntryContainer = this.verticalSourceStaffEntryContainers[this.verticalSourceStaffEntryContainers.length - 1];
+    if (this.verticalSourceStaffEntryContainers.length === 0 || last.Timestamp < inMeasureTimestamp) {
       let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
-        this, new Fraction(inMeasureTimestamp), this.completeNumberOfStaves
+        this, Fraction.CreateFractionFromFraction(inMeasureTimestamp), this.completeNumberOfStaves
       );
       this.verticalSourceStaffEntryContainers.push(container);
       staffEntry = new SourceStaffEntry(container, staff);
@@ -131,18 +142,18 @@ export class SourceMeasure {
       ) {
         if (this.verticalSourceStaffEntryContainers[i].Timestamp < inMeasureTimestamp) {
           let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
-            this, new Fraction(inMeasureTimestamp), this.completeNumberOfStaves
+            this, Fraction.CreateFractionFromFraction(inMeasureTimestamp), this.completeNumberOfStaves
           );
-          this.verticalSourceStaffEntryContainers.Insert(i + 1, container);
+          this.verticalSourceStaffEntryContainers.splice(i + 1, 0, container);
           staffEntry = new SourceStaffEntry(container, staff);
           container[inSourceMeasureStaffIndex] = staffEntry;
           return staffEntry;
         }
         if (i === 0) {
           let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
-            this, new Fraction(inMeasureTimestamp), this.completeNumberOfStaves
+            this, Fraction.CreateFractionFromFraction(inMeasureTimestamp), this.completeNumberOfStaves
           );
-          this.verticalSourceStaffEntryContainers.Insert(i, container);
+          this.verticalSourceStaffEntryContainers.splice(i, 0, container);
           staffEntry = new SourceStaffEntry(container, staff);
           container[inSourceMeasureStaffIndex] = staffEntry;
           return staffEntry;
@@ -151,7 +162,7 @@ export class SourceMeasure {
     }
     return staffEntry;
   }
-  public findOrCreateVoiceEntry(sse: SourceStaffEntry, voice: Voice, createdNewVoiceEntry: boolean): VoiceEntry {
+  public findOrCreateVoiceEntry(sse: SourceStaffEntry, voice: Voice): VoiceEntry {//, createdNewVoiceEntry: boolean): VoiceEntry {
     let ve: VoiceEntry = undefined;
     for (let voiceEntry: VoiceEntry of sse.VoiceEntries) {
       if (voiceEntry.ParentVoice === voice) {
@@ -162,9 +173,9 @@ export class SourceMeasure {
     if (ve === undefined) {
       ve = new VoiceEntry(sse.Timestamp, voice, sse);
       sse.VoiceEntries.push(ve);
-      createdNewVoiceEntry = true;
+      // FIXME createdNewVoiceEntry = true;
     } else {
-      createdNewVoiceEntry = false;
+      // FIXME createdNewVoiceEntry = false;
     }
     return ve;
   }
@@ -180,16 +191,16 @@ export class SourceMeasure {
   }
   public getVerticalContainerIndexByTimestamp(musicTimestamp: Fraction): number {
     let index: number = -1;
-    for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.Count; idx < len; ++idx) {
+    for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.length; idx < len; ++idx) {
       let verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = this.VerticalSourceStaffEntryContainers[idx];
       if (verticalSourceStaffEntryContainer.Timestamp === musicTimestamp) {
-        return this.verticalSourceStaffEntryContainers.IndexOf(verticalSourceStaffEntryContainer);
+        return this.verticalSourceStaffEntryContainers.indexOf(verticalSourceStaffEntryContainer);
       }
     }
     return index;
   }
   public getVerticalContainerByTimestamp(musicTimestamp: Fraction): VerticalSourceStaffEntryContainer {
-    for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.Count; idx < len; ++idx) {
+    for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.length; idx < len; ++idx) {
       let verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = this.VerticalSourceStaffEntryContainers[idx];
       if (verticalSourceStaffEntryContainer.Timestamp === musicTimestamp) {
         return verticalSourceStaffEntryContainer;
@@ -205,16 +216,16 @@ export class SourceMeasure {
       }
     }
     if (undefinedCounter === this.completeNumberOfStaves) {
-      this.verticalSourceStaffEntryContainers.Remove(this.verticalSourceStaffEntryContainers[index]);
+      this.verticalSourceStaffEntryContainers.splice(index, 1);
     }
   }
   public reverseCheck(musicSheet: MusicSheet, maxInstDuration: Fraction): Fraction {
     let maxDuration: Fraction = new Fraction(0, 1);
-    let instrumentsDurations: Fraction[] = new Array();
+    let instrumentsDurations: Fraction[] = [];
     for (let i: number = 0; i < musicSheet.Instruments.length; i++) {
       let instrumentDuration: Fraction = new Fraction(0, 1);
       let inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
-      for (let j: number = 0; j < musicSheet.Instruments[i].Staves.Count; j++) {
+      for (let j: number = 0; j < musicSheet.Instruments[i].Staves.length; j++) {
         let lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
         if (lastStaffEntry !== undefined && !lastStaffEntry.hasTie()) {
           let verticalContainerIndex: number = this.verticalSourceStaffEntryContainers.indexOf(lastStaffEntry.VerticalContainerParent);
@@ -229,22 +240,22 @@ export class SourceMeasure {
           }
         }
       }
-      instrumentsDurations.Add(instrumentDuration);
+      instrumentsDurations.push(instrumentDuration);
     }
-    for (let idx: number = 0, len: number = instrumentsDurations.Count; idx < len; ++idx) {
+    for (let idx: number = 0, len: number = instrumentsDurations.length; idx < len; ++idx) {
       let instrumentsDuration: Fraction = instrumentsDurations[idx];
       if (maxDuration < instrumentsDuration) {
         maxDuration = instrumentsDuration;
       }
     }
-    return Math.max(maxDuration, maxInstDuration);
+    return Fraction.max(maxDuration, maxInstDuration);
   }
   public calculateInstrumentsDuration(musicSheet: MusicSheet, instrumentMaxTieNoteFractions: Fraction[]): Fraction[] {
-    let instrumentsDurations: Fraction[] = new Array();
+    let instrumentsDurations: Fraction[] = [];
     for (let i: number = 0; i < musicSheet.Instruments.length; i++) {
       let instrumentDuration: Fraction = new Fraction(0, 1);
       let inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
-      for (let j: number = 0; j < musicSheet.Instruments[i].Staves.Count; j++) {
+      for (let j: number = 0; j < musicSheet.Instruments[i].Staves.length; j++) {
         let lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
         if (lastStaffEntry !== undefined && lastStaffEntry.Timestamp !== undefined) {
           if (instrumentDuration < lastStaffEntry.Timestamp + lastStaffEntry.calculateMaxNoteLength()) {
@@ -260,7 +271,7 @@ export class SourceMeasure {
     return instrumentsDurations;
   }
   public getEntriesPerStaff(staffIndex: number): SourceStaffEntry[] {
-    let sourceStaffEntries: SourceStaffEntry[] = new Array();
+    let sourceStaffEntries: SourceStaffEntry[] = [];
     for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.length; idx < len; ++idx) {
       let container: VerticalSourceStaffEntryContainer = this.VerticalSourceStaffEntryContainers[idx];
       let sse: SourceStaffEntry = container[staffIndex];

@@ -1,26 +1,29 @@
+import {Note} from "./Note";
+
 export class Beam {
-    private notes: List<Note> = new List<Note>();
-    private extendedNoteList: List<Note> = new List<Note>();
-    public get Notes(): List<Note> {
+    private notes: Note[] = [];
+    private extendedNoteList: Note[] = [];
+    public get Notes(): Note[] {
         return this.notes;
     }
-    public set Notes(value: List<Note>) {
+    public set Notes(value: Note[]) {
         this.notes = value;
     }
-    public get ExtendedNoteList(): List<Note> {
+    public get ExtendedNoteList(): Note[] {
         return this.extendedNoteList;
     }
-    public set ExtendedNoteList(value: List<Note>) {
+    public set ExtendedNoteList(value: Note[]) {
         this.extendedNoteList = value;
     }
     public addNoteToBeam(note: Note): void {
         if (note !== undefined) {
             note.NoteBeam = this;
-            this.notes.Add(note);
-            this.extendedNoteList.Add(note);
+            this.notes.push(note);
+            this.extendedNoteList.push(note);
         }
     }
 }
+
 export enum BeamEnum {
     BeamNone = -1,
     BeamBegin = 0,

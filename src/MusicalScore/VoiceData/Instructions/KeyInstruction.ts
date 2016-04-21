@@ -1,18 +1,31 @@
+import {AbstractNotationInstruction} from "./AbstractNotationInstruction";
+import {SourceStaffEntry} from "../SourceStaffEntry";
+import {NoteEnum} from "../../../Common/DataObjects/pitch";
+import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
+import {Pitch} from "../../../Common/DataObjects/pitch";
+
+
 export class KeyInstruction extends AbstractNotationInstruction {
-  constructor(key: number, mode: KeyEnum) {
-    super();
-    this.Key = key;
-    this.mode = mode;
-  }
-  constructor(parent: SourceStaffEntry, key: number, mode: KeyEnum) {
-    super(parent);
-    this.Key = key;
-    this.mode = mode;
-  }
-  constructor(keyInstruction: KeyInstruction) {
-    this(keyInstruction.parent, keyInstruction.keyType, keyInstruction.mode);
-    this.keyType = keyInstruction.keyType;
-    this.mode = keyInstruction.mode;
+  constructor(first: SourceStaffEntry|KeyInstruction, key?: number, mode?: KeyEnum) {
+    if (first === undefined) {
+      super(undefined); // FIXME check
+      this.Key = key;
+      this.mode = mode;
+    }
+    if (first instanceof SourceStaffEntry) {
+      let parent: SourceStaffEntry = <SourceStaffEntry> first;
+      super(parent);
+      this.Key = key;
+      this.mode = mode;
+    }
+    if (first instanceof KeyInstruction) {
+      let keyInstruction: KeyInstruction = <KeyInstruction> first;
+      super(undefined); // FIXME check
+      this(keyInstruction.parent, keyInstruction.keyType, keyInstruction.mode);
+      this.keyType = keyInstruction.keyType;
+      this.mode = keyInstruction.mode;
+    }
+
   }
 
   private static sharpPositionList: NoteEnum[] = [NoteEnum.F, NoteEnum.C, NoteEnum.G, NoteEnum.D, NoteEnum.A, NoteEnum.E, NoteEnum.B];
@@ -21,16 +34,16 @@ export class KeyInstruction extends AbstractNotationInstruction {
   private keyType: number;
   private mode: KeyEnum;
 
-  public static getNoteEnumList(instruction: KeyInstruction): List<NoteEnum> {
-    let enums: List<NoteEnum> = new List<NoteEnum>();
+  public static getNoteEnumList(instruction: KeyInstruction): NoteEnum[] {
+    let enums: NoteEnum[] = new Array();
     if (instruction.keyType > 0) {
       for (let i: number = 0; i < instruction.keyType; i++) {
-        enums.Add(KeyInstruction.sharpPositionList[i]);
+        enums.push(KeyInstruction.sharpPositionList[i]);
       }
     }
     if (instruction.keyType < 0) {
-      for (let i: number = 0; i < Math.Abs(instruction.keyType); i++) {
-        enums.Add(KeyInstruction.flatPositionList[i]);
+      for (let i: number = 0; i < Math.abs(instruction.keyType); i++) {
+        enums.push(KeyInstruction.flatPositionList[i]);
       }
     }
     return enums;
@@ -39,8 +52,8 @@ export class KeyInstruction extends AbstractNotationInstruction {
   public static getAllPossibleMajorKeyInstructions(): KeyInstruction[] {
     let keyInstructionList: KeyInstruction[] = new Array();
     for (let keyType: number = -7; keyType < 7; keyType++) {
-      let currentKeyInstruction: KeyInstruction = new KeyInstruction(keyType, KeyEnum.major);
-      keyInstructionList.Add(currentKeyInstruction);
+      let currentKeyInstruction: KeyInstruction = new KeyInstruction(undefined, keyType, KeyEnum.major);
+      keyInstructionList.push(currentKeyInstruction);
     }
     return keyInstructionList;
   }
@@ -56,36 +69,36 @@ export class KeyInstruction extends AbstractNotationInstruction {
   public set Mode(value: KeyEnum) {
     this.mode = value;
   }
-  public getFundamentalNotesOfAccidentals(): List<NoteEnum> {
-    let noteList: List<NoteEnum> = new List<NoteEnum>();
+  public getFundamentalNotesOfAccidentals(): NoteEnum[] {
+    let noteList: NoteEnum[] = new Array();
     if (this.keyType > 0) {
       for (let i: number = 0; i < this.keyType; i++) {
-        noteList.Add(KeyInstruction.sharpPositionList[i]);
+        noteList.push(KeyInstruction.sharpPositionList[i]);
       }
     } else if (this.keyType < 0) {
       for (let i: number = 0; i < -this.keyType; i++) {
-        noteList.Add(KeyInstruction.flatPositionList[i]);
+        noteList.push(KeyInstruction.flatPositionList[i]);
       }
     }
     return noteList;
   }
   public getAlterationForPitch(pitch: Pitch): AccidentalEnum {
-    if (this.keyType > 0 && Array.IndexOf(KeyInstruction.sharpPositionList, pitch.FundamentalNote) <= this.keyType) {
+    if (this.keyType > 0 && KeyInstruction.sharpPositionList.indexOf(pitch.FundamentalNote) <= this.keyType) {
       return AccidentalEnum.SHARP;
-    } else if (this.keyType < 0 && Array.IndexOf(KeyInstruction.flatPositionList, pitch.FundamentalNote) <= Math.Abs(this.keyType)) {
+    } else if (this.keyType < 0 && KeyInstruction.flatPositionList.indexOf(pitch.FundamentalNote) <= Math.abs(this.keyType)) {
       return AccidentalEnum.FLAT;
     }
     return AccidentalEnum.NONE;
   }
   public ToString(): string {
-    return "Key: " + this.keyType.ToString() + this.mode.ToString();
+    return "Key: " + this.keyType + "" + this.mode;
   }
   public OperatorEquals(key2: KeyInstruction): boolean {
     let key1: KeyInstruction = this;
-    if (ReferenceEquals(key1, key2)) {
+    if (key1 === key2) {
       return true;
     }
-    if ((<Object>key1 === undefined) || (<Object>key2 === undefined)) {
+    if ((key1 === undefined) || (key2 === undefined)) {
       return false;
     }
     return (key1.Key === key2.Key && key1.Mode === key2.Mode);

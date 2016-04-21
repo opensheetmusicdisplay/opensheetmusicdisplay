@@ -1,3 +1,6 @@
+import {Instrument} from "../Instrument";
+import {VoiceEntry} from "./VoiceEntry";
+
 export class Voice {
     constructor(parent: Instrument, voiceId: number) {
         this.parent = parent;

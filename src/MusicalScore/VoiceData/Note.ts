@@ -154,7 +154,7 @@ export class Note {
         return absolute;
     }
     public checkForDoubleSlur(slur: Slur): boolean {
-        for (let idx: number = 0, len: number = this.slurs.Count; idx < len; ++idx) {
+        for (let idx: number = 0, len: number = this.slurs.length; idx < len; ++idx) {
             let noteSlur: Slur = this.slurs[idx];
             if (
               noteSlur.StartNote !== undefined &&

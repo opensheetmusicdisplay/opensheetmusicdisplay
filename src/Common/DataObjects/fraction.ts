@@ -139,12 +139,9 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
         return upTestFraction;
     }
 
-    //public Equals(obj: Object): boolean {
-    //    if (ReferenceEquals(obj, null)) {
-    //        return false;
-    //    }
-    //    return this.Equals(__as__<Fraction>(obj, Fraction));
-    //}
+    public Equals(obj: Fraction): boolean {
+        return this.RealValue == obj.RealValue;
+    }
 
     //public Equals(f: Fraction): boolean {
     //    if (ReferenceEquals(this, f))
@@ -229,11 +226,13 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     //        return f1;
     //    else return f2;
     //}
-    //public static fractionMax(f1: Fraction, f2: Fraction): Fraction {
-    //    if (f1 > f2)
-    //        return f1;
-    //    else return f2;
-    //}
+    public static max(f1: Fraction, f2: Fraction): Fraction {
+        if (f1.RealValue > f2.RealValue) {
+            return f1;
+        } else {
+            return f2;
+        }
+    }
     //public static GetMaxValue(): Fraction {
     //    return new Fraction(Fraction.maximumAllowedNumber, 1);
     //}

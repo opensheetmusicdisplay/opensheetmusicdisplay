@@ -1,3 +1,11 @@
+import {Note} from "./Note";
+import {Beam} from "./Beam";
+import {Fraction} from "../../Common/DataObjects/fraction";
+import {Tuplet} from "./Tuplet";
+
+// FIXME: Missing Slur class
+type Slur = any;
+
 export class Tie {
     constructor(note: Note) {
         this.start = note;
@@ -8,8 +16,8 @@ export class Tie {
     private tieTuplet: Tuplet;
     private tieEndingSlur: Slur;
     private tieStartingSlur: Slur;
-    private fractions: List<Fraction> = new List<Fraction>();
-    private noteHasBeenCreated: List<boolean> = new List<boolean>();
+    private fractions: Fraction[] = [];
+    private noteHasBeenCreated: boolean[] = [];
     private baseNoteYPosition: number;
     public get Start(): Note {
         return this.start;
@@ -47,16 +55,16 @@ export class Tie {
     public set TieStartingSlur(value: Slur) {
         this.tieStartingSlur = value;
     }
-    public get Fractions(): List<Fraction> {
+    public get Fractions(): Fraction[] {
         return this.fractions;
     }
-    public set Fractions(value: List<Fraction>) {
+    public set Fractions(value: Fraction[]) {
         this.fractions = value;
     }
-    public get NoteHasBeenCreated(): List<boolean> {
+    public get NoteHasBeenCreated(): boolean[] {
         return this.noteHasBeenCreated;
     }
-    public set NoteHasBeenCreated(value: List<boolean>) {
+    public set NoteHasBeenCreated(value: boolean[]) {
         this.noteHasBeenCreated = value;
     }
     public get BaseNoteYPosition(): number {
@@ -66,16 +74,15 @@ export class Tie {
         this.baseNoteYPosition = value;
     }
     public initializeBoolList(): void {
-        this.noteHasBeenCreated.Clear();
-        for (let idx: number = 0, len: number = this.fractions.Count; idx < len; ++idx) {
+        this.noteHasBeenCreated = [];
+        for (let idx: number = 0, len: number = this.fractions.length; idx < len; ++idx) {
             // let fraction: Fraction = this.fractions[idx];
-            this.noteHasBeenCreated.Add(false);
+            this.noteHasBeenCreated.push(false);
         }
     }
     public allGraphicalNotesHaveBeenCreated(): boolean {
-        for (let idx: number = 0, len: number = this.noteHasBeenCreated.Count; idx < len; ++idx) {
-            let b: boolean = this.noteHasBeenCreated[idx];
-            if (!b) { return false; }
+        for (let idx: number = 0, len: number = this.noteHasBeenCreated.length; idx < len; ++idx) {
+            if (!this.noteHasBeenCreated[idx]) { return false; }
         }
         return true;
     }

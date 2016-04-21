@@ -4,10 +4,10 @@ import { MusicSheet } from "./MusicSheet"
 import { Voice } from "./VoiceData/Voice"
 import { Staff } from "./VoiceData/Staff"
 import { SubInstrument } from "./SubInstrument"
+import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
 
 // FIXME
 type IPhonicScoreInterface = any;
-type MidiInstrument = any;
 type InstrumentParameters = any;
 type InstrumentParameterChangedDelegate = any;
 

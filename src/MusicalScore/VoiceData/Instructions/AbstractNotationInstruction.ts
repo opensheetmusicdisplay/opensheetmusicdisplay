@@ -1,3 +1,5 @@
+import {SourceStaffEntry} from "../SourceStaffEntry";
+
 export class AbstractNotationInstruction {
     constructor(parent: SourceStaffEntry) {
         this.parent = parent;

@@ -17,11 +17,11 @@ export class SourceStaffEntry {
   }
   private parentStaff: Staff;
   private verticalContainerParent: VerticalSourceStaffEntryContainer;
-  private voiceEntries: VoiceEntry[] = new Array();
+  private voiceEntries: VoiceEntry[] = [];
   private staffEntryLink: StaffEntryLink;
-  private instructions: AbstractNotationInstruction[] = new Array();
-  //private graceVoiceEntriesBefore: VoiceEntry[] = new Array();
-  //private graceVoiceEntriesAfter: VoiceEntry[] = new Array();
+  private instructions: AbstractNotationInstruction[] = [];
+  //private graceVoiceEntriesBefore: VoiceEntry[] = [];
+  //private graceVoiceEntriesAfter: VoiceEntry[] = [];
   private chordSymbolContainer: ChordSymbolContainer;
   public get ParentStaff(): Staff {
     return this.parentStaff;
