@@ -1,7 +1,8 @@
 import {LyricsEntry} from "./LyricsEntry";
+import {VoiceEntry} from "../VoiceEntry";
 
 export class LyricWord {
-    private _syllabels: LyricsEntry[] = new Array();
+    private _syllabels: LyricsEntry[] = [];
     public get Syllabels(): LyricsEntry[] {
         return this._syllabels;
     }
@@ -21,6 +22,5 @@ export class LyricWord {
                 return lyricsEntry;
             }
         }
-        return undefined;
     }
 }

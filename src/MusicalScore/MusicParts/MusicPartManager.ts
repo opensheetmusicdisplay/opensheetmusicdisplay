@@ -1,8 +1,8 @@
-import { MusicSheet } from "../MusicSheet"
-import { PartListEntry } from "../MusicSource/PartListEntry"
-import { Repetition } from "../MusicSource/Repetition"
-import { Fraction } from "../../Common/DataObjects/fraction"
-import { MusicPartManagerIterator } from "./MusicPartManagerIterator"
+import { MusicSheet } from "../MusicSheet";
+import { PartListEntry } from "../MusicSource/PartListEntry";
+import { Repetition } from "../MusicSource/Repetition";
+import { Fraction } from "../../Common/DataObjects/fraction";
+import { MusicPartManagerIterator } from "./MusicPartManagerIterator";
 
 export class MusicPartManager /*implements ISelectionListener*/ {
     constructor(musicSheet: MusicSheet) {
@@ -60,7 +60,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         this.musicSheet.SelectionEnd = end === undefined ? this.sheetEnd : end;
     }
     private calcMapping(): void {
-        let timestamps: TimestampTransform[] = new Array();
+        let timestamps: TimestampTransform[] = [];
         let iterator: MusicPartManagerIterator = this.getIterator();
         let currentRepetition: Repetition = iterator.CurrentRepetition;
         let curTimestampTransform: TimestampTransform = new TimestampTransform(

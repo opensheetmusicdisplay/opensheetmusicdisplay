@@ -1,4 +1,8 @@
-export class DynamicsContainer implements IComparable<DynamicsContainer> {
+type ContinuousDynamicExpression = any;
+type InstantaniousDynamicExpression = any;
+type MultiExpression = any;
+
+export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
     constructor(continuousDynamicExpression: ContinuousDynamicExpression, staffNumber: number) {
         this.ContinuousDynamicExpression = continuousDynamicExpression;
         this.StaffNumber = staffNumber;

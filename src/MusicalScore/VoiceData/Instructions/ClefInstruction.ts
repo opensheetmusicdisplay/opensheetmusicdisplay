@@ -43,7 +43,7 @@ export class ClefInstruction extends AbstractNotationInstruction {
     }
   }
   public static getAllPossibleClefs(): ClefInstruction[] {
-    let clefList: ClefInstruction[] = new Array();
+    let clefList: ClefInstruction[] = [];
     for (let i: number = 0; i <= 2; i++) {
       let clefInstructionG: ClefInstruction = new ClefInstruction(ClefEnum.G, i, 2);
       clefList.push(clefInstructionG);
@@ -112,15 +112,15 @@ export class ClefInstruction extends AbstractNotationInstruction {
   private calcParameters(): void {
     switch (this.clefType) {
       case ClefEnum.G:
-        this.clefPitch = new Pitch(NoteEnum.G, <number>(1 + this.octaveOffset), AccidentalEnum.NONE);
+        this.clefPitch = new Pitch(NoteEnum.G, 1 + this.octaveOffset, AccidentalEnum.NONE);
         this.referenceCyPosition = (5 - this.line) + 2;
         break;
       case ClefEnum.F:
-        this.clefPitch = new Pitch(NoteEnum.F, <number>(0 + this.octaveOffset), AccidentalEnum.NONE);
+        this.clefPitch = new Pitch(NoteEnum.F, 0 + this.octaveOffset, AccidentalEnum.NONE);
         this.referenceCyPosition = (5 - this.line) + 1.5;
         break;
       case ClefEnum.C:
-        this.clefPitch = new Pitch(NoteEnum.C, <number>(1 + this.octaveOffset), AccidentalEnum.NONE);
+        this.clefPitch = new Pitch(NoteEnum.C, 1 + this.octaveOffset, AccidentalEnum.NONE);
         this.referenceCyPosition = (5 - this.line);
         break;
       case ClefEnum.percussion:

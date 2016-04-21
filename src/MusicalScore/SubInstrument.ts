@@ -1,65 +1,68 @@
+import {Instrument} from "./Instrument";
+import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
+
 export class SubInstrument {
     constructor(parentInstrument: Instrument) {
         this.parentInstrument = parentInstrument;
         this.FixedKey = -1;
-        this.MidiInstrumentId = parseMidiInstrument(this.parentInstrument.Name);
-        this.Name = this.MidiInstrumentId.ToString();
+        this.MidiInstrumentId = this.parseMidiInstrument(this.parentInstrument.Name);
+        this.Name = SubInstrument.midiInstrument[this.MidiInstrumentId];
         this.Volume = 1.0;
     }
-    /*private static midiInstrument: Dictionary<string, MidiInstrument> = __init(new Dictionary<string, MidiInstrument>(), {
-        { "cello", MidiInstrument.Cello },
-        { "violon-c", MidiInstrument.Cello },
-        { "contrabass", MidiInstrument.Contrabass },
-        { "kontrabass", MidiInstrument.Contrabass },
-        { "clarinet", MidiInstrument.Clarinet },
-        { "klarinette", MidiInstrument.Clarinet },
-        { "flute", MidiInstrument.Flute },
-        { "fl�te", MidiInstrument.Flute },
-        { "frenchhorn", MidiInstrument.French_Horn },
-        { "guitar", MidiInstrument.Acoustic_Guitar_nylon },
-        { "gitarre", MidiInstrument.Acoustic_Guitar_nylon },
-        { "harp", MidiInstrument.Orchestral_Harp },
-        { "harfe", MidiInstrument.Orchestral_Harp },
-        { "oboe", MidiInstrument.Oboe },
-        { "organ", MidiInstrument.Church_Organ },
-        { "orgue", MidiInstrument.Church_Organ },
-        { "orgel", MidiInstrument.Church_Organ },
-        { "piano", MidiInstrument.Acoustic_Grand_Piano },
-        { "klavier", MidiInstrument.Acoustic_Grand_Piano },
-        { "piccolo", MidiInstrument.Piccolo },
-        { "strings", MidiInstrument.String_Ensemble_1 },
-        { "streicher", MidiInstrument.String_Ensemble_1 },
-        { "steeldrum", MidiInstrument.Steel_Drums },
-        { "trombone", MidiInstrument.Trombone },
-        { "posaune", MidiInstrument.Trombone },
-        { "brass", MidiInstrument.Trombone },
-        { "trumpet", MidiInstrument.Trumpet },
-        { "trompete", MidiInstrument.Trumpet },
-        { "tpt", MidiInstrument.Trumpet },
-        { "tuba", MidiInstrument.Tuba },
-        { "sax", MidiInstrument.Tenor_Sax },
-        { "viola", MidiInstrument.Viola },
-        { "bratsche", MidiInstrument.Viola },
-        { "violin", MidiInstrument.Violin },
-        { "violon.", MidiInstrument.Violin },
-        { "woodblock", MidiInstrument.Woodblock },
-        { "alt", MidiInstrument.Synth_Voice },
-        { "alto", MidiInstrument.Synth_Voice },
-        { "tenor", MidiInstrument.Synth_Voice },
-        { "bariton", MidiInstrument.Synth_Voice },
-        { "baritone", MidiInstrument.Synth_Voice },
-        { "bass", MidiInstrument.Synth_Voice },
-        { "sopran", MidiInstrument.Synth_Voice },
-        { "voice", MidiInstrument.Synth_Voice },
-        { "recorder", MidiInstrument.Recorder },
-        { "blockfl�te", MidiInstrument.Recorder },
-        { "banjo", MidiInstrument.Banjo },
-        { "drums", MidiInstrument.Percussion },
-        { "percussion", MidiInstrument.Percussion },
-        { "schlagzeug", MidiInstrument.Percussion },
-        { "schlagwerk", MidiInstrument.Percussion },
-        { "unnamed", MidiInstrument.Acoustic_Grand_Piano },
-});*/
+    private static midiInstrument: { [key: string]: MidiInstrument; } = {
+        "cello": MidiInstrument.Cello,
+        "violon-c": MidiInstrument.Cello,
+        "contrabass": MidiInstrument.Contrabass,
+        "kontrabass": MidiInstrument.Contrabass,
+        "clarinet": MidiInstrument.Clarinet,
+        "klarinette": MidiInstrument.Clarinet,
+        "flute": MidiInstrument.Flute,
+        "fl�te": MidiInstrument.Flute,
+        "frenchhorn": MidiInstrument.French_Horn,
+        "guitar": MidiInstrument.Acoustic_Guitar_nylon,
+        "gitarre": MidiInstrument.Acoustic_Guitar_nylon,
+        "harp": MidiInstrument.Orchestral_Harp,
+        "harfe": MidiInstrument.Orchestral_Harp,
+        "oboe": MidiInstrument.Oboe,
+        "organ": MidiInstrument.Church_Organ,
+        "orgue": MidiInstrument.Church_Organ,
+        "orgel": MidiInstrument.Church_Organ,
+        "piano": MidiInstrument.Acoustic_Grand_Piano,
+        "klavier": MidiInstrument.Acoustic_Grand_Piano,
+        "piccolo": MidiInstrument.Piccolo,
+        "strings": MidiInstrument.String_Ensemble_1,
+        "streicher": MidiInstrument.String_Ensemble_1,
+        "steeldrum": MidiInstrument.Steel_Drums,
+        "trombone": MidiInstrument.Trombone,
+        "posaune": MidiInstrument.Trombone,
+        "brass": MidiInstrument.Trombone,
+        "trumpet": MidiInstrument.Trumpet,
+        "trompete": MidiInstrument.Trumpet,
+        "tpt": MidiInstrument.Trumpet,
+        "tuba": MidiInstrument.Tuba,
+        "sax": MidiInstrument.Tenor_Sax,
+        "viola": MidiInstrument.Viola,
+        "bratsche": MidiInstrument.Viola,
+        "violin": MidiInstrument.Violin,
+        "violon.": MidiInstrument.Violin,
+        "woodblock": MidiInstrument.Woodblock,
+        "alt": MidiInstrument.Synth_Voice,
+        "alto": MidiInstrument.Synth_Voice,
+        "tenor": MidiInstrument.Synth_Voice,
+        "bariton": MidiInstrument.Synth_Voice,
+        "baritone": MidiInstrument.Synth_Voice,
+        "bass": MidiInstrument.Synth_Voice,
+        "sopran": MidiInstrument.Synth_Voice,
+        "voice": MidiInstrument.Synth_Voice,
+        "recorder": MidiInstrument.Recorder,
+        "blockfl�te": MidiInstrument.Recorder,
+        "banjo": MidiInstrument.Banjo,
+        "drums": MidiInstrument.Percussion,
+        "percussion": MidiInstrument.Percussion,
+        "schlagzeug": MidiInstrument.Percussion,
+        "schlagwerk": MidiInstrument.Percussion,
+        "unnamed": MidiInstrument.Acoustic_Grand_Piano,
+    };
 
     public IdString: string;
     public MidiInstrumentId: MidiInstrument;
@@ -84,31 +87,27 @@ export class SubInstrument {
         this.MidiInstrumentId = this.parseMidiInstrument(instrumentType);
     }
     private parseMidiInstrument(instrumentType: string): MidiInstrument {
+        // FIXME: test this function
         try {
-            if (!string.IsNullOrEmpty(instrumentType)) {
-                let tmpName: string = instrumentType.ToLower().Trim();
-                let midiInstrumentArr: KeyValuePair<string, MidiInstrument>[] = SubInstrument.midiInstrument.ToArray();
-                for (let idx: number = 0, len: number = midiInstrumentArr.length; idx < len; ++idx) {
-                    let keyValuePair: KeyValuePair<string, MidiInstrument> = midiInstrumentArr[idx];
-                    if (tmpName.Contains(keyValuePair.Key)) {
-                        return keyValuePair.Value;
+            if (instrumentType) {
+                let tmpName: string = instrumentType.toLowerCase().trim();
+                for (let key in SubInstrument.midiInstrument) {
+                    if (tmpName.indexOf(key) !== -1) {
+                        return SubInstrument.midiInstrument[key];
                     }
                 }
             }
-            if (!string.IsNullOrEmpty(this.parentInstrument.Name)) {
-                let tmpName: string = this.parentInstrument.Name.ToLower().Trim();
-                let midiInstrumentArr: KeyValuePair<string, MidiInstrument>[] = SubInstrument.midiInstrument.ToArray();
-                for (let idx: number = 0, len: number = midiInstrumentArr.length; idx < len; ++idx) {
-                    let keyValuePair: KeyValuePair<string, MidiInstrument> = midiInstrumentArr[idx];
-                    if (tmpName.Contains(keyValuePair.Key)) {
-                        return keyValuePair.Value;
+            if (this.parentInstrument.Name) {
+                let tmpName: string = this.parentInstrument.Name.toLowerCase().trim();
+                for (let key in SubInstrument.midiInstrument) {
+                    if (tmpName.indexOf(key) !== -1) {
+                        return SubInstrument.midiInstrument[key];
                     }
                 }
             }
-            return MidiInstrument.Acoustic_Grand_Piano;
         } catch (e) {
-            return MidiInstrument.Acoustic_Grand_Piano;
+            console.log("Error parsing MIDI Instrument. Default to Grand Piano."); // FIXME
         }
-
+        return MidiInstrument.Acoustic_Grand_Piano;
     }
 }

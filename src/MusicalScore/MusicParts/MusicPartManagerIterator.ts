@@ -6,16 +6,15 @@ import {MappingSourceMusicPart} from "../MusicSource/MappingSourceMusicPart";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {Instrument} from "../Instrument";
-import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {VerticalSourceStaffEntryContainer} from "../VoiceData/VerticalSourceStaffEntryContainer";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
 
 // FIXME:
-type ContinuousDynamicExpression = AbstractExpression;
-type InstantaniousDynamicExpression = AbstractExpression;
 type MultiTempoExpression = any;
+type ContinuousDynamicExpression = any;
+type InstantaniousDynamicExpression = any;
 type AbstractExpression = any;
 
 export class MusicPartManagerIterator {
@@ -66,7 +65,7 @@ export class MusicPartManagerIterator {
     private currentDynamicEntryIndex: number = 0;
     private currentTempoEntryIndex: number = 0;
     private currentVoiceEntries: VoiceEntry[];
-    private currentDynamicChangingExpressions: DynamicsContainer[] = new Array();
+    private currentDynamicChangingExpressions: DynamicsContainer[] = [];
     private currentTempoChangingExpression: MultiTempoExpression;
     // FIXME: replace these two with a real Dictionary!
     private repetitionIterationCountDictKeys: Repetition[];
@@ -78,7 +77,7 @@ export class MusicPartManagerIterator {
     private currentEnrolledMeasureTimestamp: Fraction = new Fraction(0, 1);
     private currentVerticalContainerInMeasureTimestamp: Fraction = new Fraction(0, 1);
     private jumpResponsibleRepetition: Repetition = undefined;
-    private activeDynamicExpressions: AbstractExpression[] = new Array();
+    private activeDynamicExpressions: AbstractExpression[] = [];
     private activeTempoExpression: MultiTempoExpression;
     public get EndReached(): boolean {
         return this.endReached;
@@ -94,7 +93,7 @@ export class MusicPartManagerIterator {
     }
     public get CurrentRepetitionIteration(): number {
         if (this.CurrentRepetition !== undefined) {
-            return this.getRepetitionIterationCount(this.CurrentRepetition)
+            return this.getRepetitionIterationCount(this.CurrentRepetition);
         }
         return 0;
     }
@@ -143,7 +142,7 @@ export class MusicPartManagerIterator {
     }
 
     public CurrentVisibleVoiceEntries(instrument?: Instrument): VoiceEntry[] {
-        let voiceEntries: VoiceEntry[] = new Array();
+        let voiceEntries: VoiceEntry[] = [];
         if (this.currentVoiceEntries === undefined) {
             return voiceEntries;
         }
@@ -163,7 +162,7 @@ export class MusicPartManagerIterator {
     }
 
     public CurrentAudibleVoiceEntries(instrument?: Instrument): VoiceEntry[] {
-        let voiceEntries: VoiceEntry[] = new Array();
+        let voiceEntries: VoiceEntry[] = [];
         if (this.currentVoiceEntries === undefined) {
             return voiceEntries;
         }
@@ -187,7 +186,7 @@ export class MusicPartManagerIterator {
     }
 
     public CurrentScoreFollowingVoiceEntries(instrument?: Instrument): VoiceEntry[] {
-        let voiceEntries: VoiceEntry[] = new Array();
+        let voiceEntries: VoiceEntry[] = [];
         if (this.currentVoiceEntries === undefined) {
             return voiceEntries;
         }
@@ -239,7 +238,7 @@ export class MusicPartManagerIterator {
     }
     private setRepetitionIterationCount(repetition: Repetition, iterationCount: number): number {
         let i: number = this.repetitionIterationCountDictKeys.indexOf(repetition);
-        if (i == -1) {
+        if (i === -1) {
             this.repetitionIterationCountDictKeys.push(repetition);
             this.repetitionIterationCountDictValues.push(iterationCount);
         } else {
@@ -249,7 +248,7 @@ export class MusicPartManagerIterator {
     }
     private getRepetitionIterationCount(rep: Repetition): number {
         let i: number = this.repetitionIterationCountDictKeys.indexOf(rep);
-        if (i != -1) {
+        if (i !== -1) {
             return this.repetitionIterationCountDictValues[i];
         }
     }
@@ -300,8 +299,7 @@ export class MusicPartManagerIterator {
     private handleRepetitionsAtMeasureBegin(): void {
         for (let idx: number = 0, len: number = this.currentMeasure.FirstRepetitionInstructions.length; idx < len; ++idx) {
             let repetitionInstruction: RepetitionInstruction = this.currentMeasure.FirstRepetitionInstructions[idx];
-            if (repetitionInstruction.ParentRepetition === undefined)
-                continue;
+            if (repetitionInstruction.ParentRepetition === undefined) { continue; }
             let currentRepetition: Repetition = repetitionInstruction.ParentRepetition;
             this.currentRepetition = currentRepetition;
             if (currentRepetition.StartIndex === this.currentMeasureIndex) {
@@ -418,7 +416,7 @@ export class MusicPartManagerIterator {
             if (this.activeDynamicExpressions[staffIndex] !== undefined) {
                 let startTime: Fraction;
                 let endTime: Fraction;
-                /*if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
+                if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
                     let continuousDynamic: ContinuousDynamicExpression = <ContinuousDynamicExpression>this.activeDynamicExpressions[staffIndex];
                     startTime = continuousDynamic.StartMultiExpression.AbsoluteTimestamp;
                     endTime = continuousDynamic.EndMultiExpression.AbsoluteTimestamp;
@@ -430,7 +428,7 @@ export class MusicPartManagerIterator {
                     if (this.CurrentSourceTimestamp === instantaniousDynamic.ParentMultiExpression.AbsoluteTimestamp) {
                         this.currentDynamicChangingExpressions.push(new DynamicsContainer(instantaniousDynamic, staffIndex));
                     }
-                }*/ // FIXME COMMENTED OUT, missing classes
+                }
             }
         }
         let timeSortedTempoExpressions: MultiTempoExpression[] = this.manager.MusicSheet.TimestampSortedTempoExpressionsList;
@@ -527,7 +525,7 @@ export class MusicPartManagerIterator {
         }
     }
     private getVoiceEntries(container: VerticalSourceStaffEntryContainer): VoiceEntry[] {
-        let entries: VoiceEntry[] = new Array();
+        let entries: VoiceEntry[] = [];
         for (let sourceStaffEntry of container.StaffEntries) {
             if (sourceStaffEntry === undefined) { continue; }
             for (let voiceEntry of sourceStaffEntry.VoiceEntries) {

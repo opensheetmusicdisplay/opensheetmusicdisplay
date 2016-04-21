@@ -4,20 +4,25 @@ import {Repetition} from "./Repetition";
 import {PartListEntry} from "./PartListEntry";
 
 export class MappingSourceMusicPart /* implements IComparable, IComparable<MappingSourceMusicPart>*/ {
-    constructor(sourceMusicPart: SourceMusicPart, startTimestamp: Fraction, parentPartListEntry?: Repetition, repetitionRun: number = -1, isEnding: boolean = false) {
+    constructor(
+        sourceMusicPart: SourceMusicPart, startTimestamp: Fraction, parentPartListEntry?: Repetition,
+        repetitionRun: number = -1, isEnding: boolean = false,
+    ) {
         this.sourceMusicPart = sourceMusicPart;
         this.parentPartListEntry = parentPartListEntry;
-        this.startTimestamp = Fraction.CreateFractionFromFraction(startTimestamp);
+        this.startTimestamp = startTimestamp.clone();
         this.repetitionRun = repetitionRun;
-        this.parentRepetition = <Repetition>parentPartListEntry;
+        this.parentRepetition = parentPartListEntry;
         this.isEnding = isEnding;
     }
+
     private sourceMusicPart: SourceMusicPart;
     private parentRepetition: Repetition;
     private parentPartListEntry: PartListEntry;
     private startTimestamp: Fraction;
     private repetitionRun: number = -1;
     private isEnding: boolean;
+
     public get IsRepetition(): boolean {
         return this.parentRepetition !== undefined;
     }

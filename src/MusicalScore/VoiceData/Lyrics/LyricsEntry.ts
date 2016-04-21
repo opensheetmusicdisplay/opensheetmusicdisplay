@@ -1,4 +1,5 @@
 import {LyricWord} from "./LyricsWord";
+import {VoiceEntry} from "../VoiceEntry";
 
 export class LyricsEntry {
     constructor(text: string, word: LyricWord, parent: VoiceEntry) {
@@ -9,6 +10,7 @@ export class LyricsEntry {
     private _text: string;
     private _word: LyricWord;
     private _parent: VoiceEntry;
+
     public get Text(): string {
         return this._text;
     }

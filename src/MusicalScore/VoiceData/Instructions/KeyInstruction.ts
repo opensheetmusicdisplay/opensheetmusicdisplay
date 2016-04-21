@@ -35,7 +35,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
   private mode: KeyEnum;
 
   public static getNoteEnumList(instruction: KeyInstruction): NoteEnum[] {
-    let enums: NoteEnum[] = new Array();
+    let enums: NoteEnum[] = [];
     if (instruction.keyType > 0) {
       for (let i: number = 0; i < instruction.keyType; i++) {
         enums.push(KeyInstruction.sharpPositionList[i]);
@@ -50,7 +50,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
   }
 
   public static getAllPossibleMajorKeyInstructions(): KeyInstruction[] {
-    let keyInstructionList: KeyInstruction[] = new Array();
+    let keyInstructionList: KeyInstruction[] = [];
     for (let keyType: number = -7; keyType < 7; keyType++) {
       let currentKeyInstruction: KeyInstruction = new KeyInstruction(undefined, keyType, KeyEnum.major);
       keyInstructionList.push(currentKeyInstruction);
@@ -70,7 +70,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
     this.mode = value;
   }
   public getFundamentalNotesOfAccidentals(): NoteEnum[] {
-    let noteList: NoteEnum[] = new Array();
+    let noteList: NoteEnum[] = [];
     if (this.keyType > 0) {
       for (let i: number = 0; i < this.keyType; i++) {
         noteList.push(KeyInstruction.sharpPositionList[i]);
@@ -105,21 +105,17 @@ export class KeyInstruction extends AbstractNotationInstruction {
   }
 
   public OperatorNotEqual(key2: KeyInstruction): boolean {
-    let key1: KeyInstruction = this;
-    return !(key1 === key2);
+    return !(this.OperatorEquals(key2));
   }
 }
 
-export module KeyInstruction {
-  export class NoteEnumToHalfToneLink {
-    constructor(note: NoteEnum, halftone: number) {
-      this.note = note;
-      this.halfTone = halftone;
-    }
-    public note: NoteEnum;
-    public halfTone: number;
+export class NoteEnumToHalfToneLink {
+  constructor(note: NoteEnum, halftone: number) {
+    this.note = note;
+    this.halfTone = halftone;
   }
-
+  public note: NoteEnum;
+  public halfTone: number;
 }
 
 export enum KeyEnum {

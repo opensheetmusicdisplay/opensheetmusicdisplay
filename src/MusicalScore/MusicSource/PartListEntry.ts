@@ -11,7 +11,7 @@ export class PartListEntry {
     public StartIndex: number;
     public EndIndex: number;
 
-    protected enrolledTimestamps: Fraction[] = new Array();
+    protected enrolledTimestamps: Fraction[] = [];
     protected visible: boolean = true;
 
     private musicSheet: MusicSheet;

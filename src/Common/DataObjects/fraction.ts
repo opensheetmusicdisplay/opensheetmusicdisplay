@@ -14,6 +14,14 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     private denominator: number = 1;
     private realValue: number;
 
+    public static max(f1: Fraction, f2: Fraction): Fraction {
+        if (f1.RealValue > f2.RealValue) {
+            return f1;
+        } else {
+            return f2;
+        }
+    }
+
     public static Equal(f1: Fraction, f2: Fraction): boolean {
       // FIXME
       return f1.Denominator === f2.Denominator && f1.Numerator === f2.Numerator;
@@ -53,6 +61,10 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
         }
 
         return a;
+    }
+
+    public ToString(): string {
+        return this.numerator + "/" + this.denominator;
     }
 
     public clone(): Fraction {
@@ -140,7 +152,16 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     }
 
     public Equals(obj: Fraction): boolean {
-        return this.RealValue == obj.RealValue;
+        return this.RealValue === obj.RealValue;
+    }
+
+    public CompareTo(obj: Fraction): number {
+        if (this.RealValue > obj.RealValue) {
+            return 1;
+        } else if (this.RealValue < obj.RealValue) {
+            return -1;
+        }
+        return 0;
     }
 
     //public Equals(f: Fraction): boolean {
@@ -209,14 +230,7 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     //        return m1;
     //    else return m2;
     //}
-    public CompareTo(obj: Fraction): number {
-        if (this.RealValue > obj.RealValue) {
-            return 1;
-        } else if (this.RealValue < obj.RealValue) {
-            return -1;
-        }
-        return 0;
-    }
+
     //public static getFraction(value: number, denominatorPrecision: number): Fraction {
     //    let numerator: number = <number>Math.round(value / (1.0 / denominatorPrecision));
     //    return new Fraction(numerator, denominatorPrecision);
@@ -226,13 +240,7 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     //        return f1;
     //    else return f2;
     //}
-    public static max(f1: Fraction, f2: Fraction): Fraction {
-        if (f1.RealValue > f2.RealValue) {
-            return f1;
-        } else {
-            return f2;
-        }
-    }
+
     //public static GetMaxValue(): Fraction {
     //    return new Fraction(Fraction.maximumAllowedNumber, 1);
     //}
@@ -242,9 +250,6 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     //public static get MaxAllowedDenominator(): number {
     //    return Fraction.maximumAllowedNumber;
     //}
-    public ToString(): string {
-        return this.numerator + "/" + this.denominator;
-    }
     //public ToFloatingString(): string {
     //    return this.RealValue.ToString();
     //}

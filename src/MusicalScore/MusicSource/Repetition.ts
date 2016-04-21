@@ -1,5 +1,4 @@
 import {SourceMusicPart} from "./SourceMusicPart";
-import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {Fraction} from "../../Common/DataObjects/fraction";
@@ -18,21 +17,21 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     public EndMarker: RepetitionInstruction;
     public ForwardJumpInstruction: RepetitionInstruction;
 
-    private backwardJumpInstructions: RepetitionInstruction[] = new Array();
-    private endingParts: RepetitionEndingPart[] = new Array();
-    private endingIndexDict: { [_: number] : RepetitionEndingPart; } = {};
+    private backwardJumpInstructions: RepetitionInstruction[] = [];
+    private endingParts: RepetitionEndingPart[] = [];
+    private endingIndexDict: { [_: number]: RepetitionEndingPart; } = {};
     private userNumberOfRepetitions: number = 0;
-    private visibles: boolean[] = new Array();
+    private visibles: boolean[] = [];
     private fromWords: boolean = false;
     private musicSheet2: MusicSheet;
-    private repetitonIterationOrder: number[] = new Array();
+    private repetitonIterationOrder: number[] = [];
     private numberOfEndings: number = 1;
     private virtualOverallRepetition: boolean;
 
     public get BackwardJumpInstructions(): RepetitionInstruction[] {
         return this.backwardJumpInstructions;
     }
-    public get EndingIndexDict(): { [_: number] : RepetitionEndingPart; } {
+    public get EndingIndexDict(): { [_: number]: RepetitionEndingPart; } {
         return this.endingIndexDict;
     }
     public get EndingParts(): RepetitionEndingPart[] {
@@ -164,7 +163,7 @@ export class RepetitionEndingPart {
         this.part = endingPart;
     }
     public part: SourceMusicPart;
-    public endingIndices: number[] = new Array();
+    public endingIndices: number[] = [];
     public ToString(): string {
       return this.endingIndices.join(", ");
     }

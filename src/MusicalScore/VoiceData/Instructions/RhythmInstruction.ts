@@ -3,7 +3,7 @@ import {Fraction} from "../../../Common/DataObjects/fraction";
 
 export class RhythmInstruction extends AbstractNotationInstruction {
     constructor(rhythm: Fraction, numerator: number, denominator: number, rhythmSymbolEnum: RhythmSymbolEnum) {
-        super();
+        super(undefined); // FIXME no parent SourceStaffEntry
         this.rhythm = rhythm;
         this.numerator = numerator;
         this.denominator = denominator;

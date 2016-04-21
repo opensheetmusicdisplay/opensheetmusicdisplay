@@ -43,7 +43,7 @@ export class IXmlElement {
   public Attributes(): IXmlAttribute[] {
     if (typeof this._attrs === "undefined") {
       let attributes: NamedNodeMap = this._elem.attributes;
-      let attrs: IXmlAttribute[] = new Array();
+      let attrs: IXmlAttribute[] = [];
       for (let i: number = 0; i < attributes.length; i += 1) {
         attrs.push(new IXmlAttribute(attributes[i]));
       }
@@ -58,7 +58,7 @@ export class IXmlElement {
 
   public Elements(nodeName?: string): IXmlElement[] {
     let nodes: NodeList = this._elem.childNodes;
-    let ret: IXmlElement[] = new Array();
+    let ret: IXmlElement[] = [];
     let nameUnset: boolean = typeof nodeName === "undefined";
     for (let i: number = 0; i < nodes.length; i += 1) {
       let node: Node = nodes[i];

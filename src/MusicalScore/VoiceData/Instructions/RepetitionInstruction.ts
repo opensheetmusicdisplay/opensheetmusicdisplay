@@ -1,27 +1,7 @@
-export enum RepetitionInstructionEnum {
-  StartLine,
-  ForwardJump,
-  BackJumpLine,
-  Ending,
-  DaCapo,
-  DalSegno,
-  Fine,
-  ToCoda,
-  DalSegnoAlFine,
-  DaCapoAlFine,
-  DalSegnoAlCoda,
-  DaCapoAlCoda,
-  Coda,
-  Segno,
-  None,
-}
-export enum AlignmentType {
-  Begin,
-  End,
-}
+import {Repetition} from "../../MusicSource/Repetition";
 
-export class RepetitionInstructionComparer implements IComparer<RepetitionInstruction> {
-  public Compare(x: RepetitionInstruction, y: RepetitionInstruction): number {
+export class RepetitionInstructionComparer /*implements IComparer<RepetitionInstruction>*/ {
+  public static Compare(x: RepetitionInstruction, y: RepetitionInstruction): number {
     if (x.ParentRepetition !== undefined && y.ParentRepetition !== undefined) {
       if (x.Alignment === AlignmentType.End && y.Alignment === AlignmentType.End) {
         if (x.ParentRepetition.StartIndex < y.ParentRepetition.StartIndex) { return 1; }
@@ -35,34 +15,34 @@ export class RepetitionInstructionComparer implements IComparer<RepetitionInstru
     return 0;
   }
 }
-export class RepetitionInstruction implements IComparable {
+
+export class RepetitionInstruction /*implements IComparable*/ {
+  /* FIXME: Check constructor calling from other classes
   constructor(measureIndex: number, type: RepetitionInstructionEnum) {
-    this(measureIndex, new List<number>(), type, AlignmentType.End, undefined);
+    this(measureIndex, [], type, AlignmentType.End, undefined);
     if (type === RepetitionInstructionEnum.StartLine || type === RepetitionInstructionEnum.Segno || type === RepetitionInstructionEnum.Coda) {
       this.Alignment = AlignmentType.Begin;
     }
   }
   constructor(measureIndex: number, type: RepetitionInstructionEnum, alignment: AlignmentType, parentRepetition: Repetition) {
-    this(measureIndex, new List<number>(), type, alignment, parentRepetition);
+    this(measureIndex, [], type, alignment, parentRepetition);
 
   }
   constructor(measureIndex: number, endingIndex: number, type: RepetitionInstructionEnum, alignment: AlignmentType, parentRepetition: Repetition) {
-    this(measureIndex, __init(new List<number>(), { endingIndex }), type, alignment, parentRepetition);
+    this(measureIndex, [endingIndex], type, alignment, parentRepetition);
 
   }
-  constructor(measureIndex: number, endingIndices: List<number>, type: RepetitionInstructionEnum, alignment: AlignmentType, parentRepetition: Repetition) {
+  */
+  constructor(measureIndex: number, endingIndices: number[], type: RepetitionInstructionEnum, alignment: AlignmentType, parentRepetition: Repetition) {
     this.MeasureIndex = measureIndex;
-    this.EndingIndices = new List<number>();
-    for (let idx: number = 0, len: number = endingIndices.Count; idx < len; ++idx) {
-      let endingIndex: number = endingIndices[idx];
-      this.EndingIndices.Add(endingIndex);
-    }
+    this.EndingIndices = endingIndices.slice();
     this.Type = type;
     this.Alignment = alignment;
     this.ParentRepetition = parentRepetition;
   }
+
   public MeasureIndex: number;
-  public EndingIndices: List<number>;
+  public EndingIndices: number[];
   public Type: RepetitionInstructionEnum;
   public Alignment: AlignmentType;
   public ParentRepetition: Repetition;
@@ -122,16 +102,39 @@ export class RepetitionInstruction implements IComparable {
     }
     return 0;
   }
-  public isIdenticalTo(other: RepetitionInstruction): boolean {
+  public equals(other: RepetitionInstruction): boolean {
     if (
       this.MeasureIndex !== other.MeasureIndex
       || this.Type !== other.Type
       || this.Alignment !== other.Alignment
-      || this.EndingIndices.Count !== other.EndingIndices.Count
+      || this.EndingIndices.length !== other.EndingIndices.length
     ) { return false; }
-    for (let i: number = 0; i < this.EndingIndices.Count; i++) {
+    for (let i: number = 0; i < this.EndingIndices.length; i++) {
       if (this.EndingIndices[i] !== other.EndingIndices[i]) { return false; }
     }
     return true;
   }
+}
+
+export enum RepetitionInstructionEnum {
+  StartLine,
+  ForwardJump,
+  BackJumpLine,
+  Ending,
+  DaCapo,
+  DalSegno,
+  Fine,
+  ToCoda,
+  DalSegnoAlFine,
+  DaCapoAlFine,
+  DalSegnoAlCoda,
+  DaCapoAlCoda,
+  Coda,
+  Segno,
+  None,
+}
+
+export enum AlignmentType {
+  Begin,
+  End,
 }

@@ -1,10 +1,10 @@
 import { InstrumentalGroup } from "./InstrumentalGroup";
 import { Label } from "./Label";
-import { MusicSheet } from "./MusicSheet"
-import { Voice } from "./VoiceData/Voice"
-import { Staff } from "./VoiceData/Staff"
-import { SubInstrument } from "./SubInstrument"
-import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
+import { MusicSheet } from "./MusicSheet";
+import { Voice } from "./VoiceData/Voice";
+import { Staff } from "./VoiceData/Staff";
+import { SubInstrument } from "./SubInstrument";
+import { MidiInstrument } from "./VoiceData/Instructions/ClefInstruction";
 
 // FIXME
 type IPhonicScoreInterface = any;
@@ -26,8 +26,8 @@ export class Instrument extends InstrumentalGroup /*implements ISettableInstrume
     public InstrumentParameterChanged: InstrumentParameterChangedDelegate;
 
     private phonicScoreInterface: IPhonicScoreInterface;
-    private voices: Voice[] = new Array();
-    private staves: Staff[] = new Array();
+    private voices: Voice[] = [];
+    private staves: Staff[] = [];
     private nameLabel: Label;
     // private range: ToneRange;
     private idString: string;
@@ -36,8 +36,8 @@ export class Instrument extends InstrumentalGroup /*implements ISettableInstrume
     private hasChordSymbols: boolean = false;
     private playbackTranspose: number;
 
-    private lyricVersesNumbers: number[] = new Array();
-    private subInstruments: SubInstrument[] = new Array();
+    private lyricVersesNumbers: number[] = [];
+    private subInstruments: SubInstrument[] = [];
     public get Voices(): Voice[] {
         return this.voices;
     }
