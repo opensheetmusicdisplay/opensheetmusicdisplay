@@ -5,10 +5,7 @@ import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstru
 import {VoiceEntry} from "./VoiceEntry";
 import {Note} from "./Note";
 import {StaffEntryLink} from "./StaffEntryLink";
-
-// FIXME
-type ChordSymbolContainer = any;
-
+import {ChordSymbolContainer} from "./ChordSymbolContainer";
 
 export class SourceStaffEntry {
   constructor(verticalContainerParent: VerticalSourceStaffEntryContainer, parentStaff: Staff) {

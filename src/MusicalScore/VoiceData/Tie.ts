@@ -3,9 +3,6 @@ import {Beam} from "./Beam";
 import {Fraction} from "../../Common/DataObjects/fraction";
 import {Tuplet} from "./Tuplet";
 
-// FIXME: Missing Slur class
-type Slur = any;
-
 export class Tie {
     constructor(note: Note) {
         this.start = note;
@@ -14,8 +11,6 @@ export class Tie {
     private tieBeam: Beam;
     private beamStartTimestamp: Fraction;
     private tieTuplet: Tuplet;
-    private tieEndingSlur: Slur;
-    private tieStartingSlur: Slur;
     private fractions: Fraction[] = [];
     private noteHasBeenCreated: boolean[] = [];
     private baseNoteYPosition: number;
@@ -42,18 +37,6 @@ export class Tie {
     }
     public set TieTuplet(value: Tuplet) {
         this.tieTuplet = value;
-    }
-    public get TieEndingSlur(): Slur {
-        return this.tieEndingSlur;
-    }
-    public set TieEndingSlur(value: Slur) {
-        this.tieEndingSlur = value;
-    }
-    public get TieStartingSlur(): Slur {
-        return this.tieStartingSlur;
-    }
-    public set TieStartingSlur(value: Slur) {
-        this.tieStartingSlur = value;
     }
     public get Fractions(): Fraction[] {
         return this.fractions;

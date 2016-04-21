@@ -6,9 +6,7 @@ import {Beam} from "./Beam";
 import {Tuplet} from "./Tuplet";
 import {Tie} from "./Tie";
 import {Staff} from "./Staff";
-
-type NoteState = any;
-type Slur = any;
+import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 
 export class Note {
     constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch) {
@@ -23,7 +21,6 @@ export class Note {
         }
     }
     public HalfTone: number;
-    public State: NoteState;
 
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
