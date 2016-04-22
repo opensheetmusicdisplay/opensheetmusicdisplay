@@ -1,11 +1,10 @@
-// FIXME
-type PSTextAlignment = any;
-type PSFontStyles = any;
-type PSColor = any;
-type PSFonts = any;
+import {OSMDTextAlignment} from "../Common/Enums/osmdTextAlignment";
+import {OSMDColor} from "../Common/DataObjects/osmdColor";
+import {OSMDFonts} from "../Common/Enums/osmdFonts";
+import {OSMDFontStyles} from "../Common/Enums/osmdFontStyles";
 
 export class Label {
-  constructor(arg1: string/*|FontInfo.MusicFontSymbol*/, alignment?: PSTextAlignment) {
+  constructor(arg1: string/*|FontInfo.MusicFontSymbol*/, alignment?: OSMDTextAlignment) {
       //if (arg1 instanceof string) {
       this.text = <string>arg1;
       //} else if (arg1 instanceof FontInfo.MusicFontSymbol) {
@@ -19,10 +18,10 @@ export class Label {
     }
 
     private text: string; // FIXME:
-    private color: PSColor; //= PSColor.Black;
-    private font: PSFonts; // = PSFonts.TimesNewRoman;
-    private fontStyle: PSFontStyles; // = PSFontStyles.Regular;
-    private textAlignment: PSTextAlignment; // = PSTextAlignment.LeftBottom;
+    private color: OSMDColor; //= PSColor.Black;
+    private font: OSMDFonts; // = PSFonts.TimesNewRoman;
+    private fontStyle: OSMDFontStyles; // = PSFontStyles.Regular;
+    private textAlignment: OSMDTextAlignment; // = PSTextAlignment.LeftBottom;
     private fontHeight: number = 2;
 
     public get Text(): string {
@@ -31,22 +30,22 @@ export class Label {
     public set Text(value: string) {
         this.text = value;
     }
-    public get Color(): PSColor {
+    public get Color(): OSMDColor {
         return this.color;
     }
-    public set Color(value: PSColor) {
+    public set Color(value: OSMDColor) {
         this.color = value;
     }
-    public get Font(): PSFonts {
+    public get Font(): OSMDFonts {
         return this.font;
     }
-    public set Font(value: PSFonts) {
+    public set Font(value: OSMDFonts) {
         this.font = value;
     }
-    public get FontStyle(): PSFontStyles {
+    public get FontStyle(): OSMDFontStyles {
         return this.fontStyle;
     }
-    public set FontStyle(value: PSFontStyles) {
+    public set FontStyle(value: OSMDFontStyles) {
         this.fontStyle = value;
     }
     public get FontHeight(): number {
@@ -55,10 +54,10 @@ export class Label {
     public set FontHeight(value: number) {
         this.fontHeight = value;
     }
-    public get TextAlignment(): PSTextAlignment {
+    public get TextAlignment(): OSMDTextAlignment {
         return this.textAlignment;
     }
-    public set TextAlignment(value: PSTextAlignment) {
+    public set TextAlignment(value: OSMDTextAlignment) {
         this.textAlignment = value;
     }
     public ToString(): string {
