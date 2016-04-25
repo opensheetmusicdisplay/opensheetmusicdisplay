@@ -1,5 +1,22 @@
-export class Pitch {
+export enum NoteEnum {
+    C = 0,
+    D = 2,
+    E = 4,
+    F = 5,
+    G = 7,
+    A = 9,
+    B = 11
+}
 
+export enum AccidentalEnum {
+    DOUBLEFLAT = -2,
+    FLAT = -1,
+    NONE = 0,
+    SHARP = 1,
+    DOUBLESHARP = 2
+}
+
+export class Pitch {
     constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum) {
         this.fundamentalNote = fundamentalNote;
         this.octave = octave;
@@ -236,22 +253,4 @@ export class Pitch {
             return Pitch.pitchEnumValues[Pitch.pitchEnumValues.length - 1];
         }
     }
-}
-
-export enum NoteEnum {
-    C = 0,
-    D = 2,
-    E = 4,
-    F = 5,
-    G = 7,
-    A = 9,
-    B = 11
-}
-
-export enum AccidentalEnum {
-    DOUBLEFLAT = -2,
-    FLAT = -1,
-    NONE = 0,
-    SHARP = 1,
-    DOUBLESHARP = 2
 }

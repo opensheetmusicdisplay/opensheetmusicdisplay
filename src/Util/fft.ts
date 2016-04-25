@@ -1,12 +1,8 @@
-module FFT {
+import FFT = require("fft");
 
-  // typing for the FFT npm package
-  export declare class complex {
-    constructor(n: number, inverse: boolean);
-    public simple(output: Float64Array, input: Float64Array, type: string): void;
-  }
+module fft {
 
-  export function toRealImag(timeData: Float64Array): { amplitude: Float64Array; phase: Float64Array; } {
+  export function toRealImag(timeData: Float64Array): { imag: Float64Array; real: Float64Array; } {
     let n: number = timeData.length;
     let fft: any = new FFT.complex(2 * n, false);
     let output: Float64Array = new Float64Array(2 * n);
@@ -26,7 +22,7 @@ module FFT {
       real[i] = output[2 * i];
       imag[i] = output[2 * i + 1];
     }
-    return { real: real, imag: imag };
+    return {imag: imag, real: real};
   }
 
   export function toAmplPhas(timeData: Float64Array): { amplitude: Float64Array; phase: Float64Array; } {

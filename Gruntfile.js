@@ -1,14 +1,21 @@
 module.exports = function (grunt) {
     'use strict';
-    /*var BANNER = '**\n' +
-        ' * Open Sheet Music Display library <%= pkg.version %> built on <%= grunt.template.today("yyyy-mm-dd") %>.\n' +
+    var banner = '/**\n' +
+        ' * Open Sheet Music Display <%= pkg.version %> built on <%= grunt.template.today("yyyy-mm-dd") %>.\n' +
         ' * Copyright (c) 2016 PhonicScore\n' +
         ' *\n' +
         ' * https://github.com/opensheetmusicdisplay/opensheetmusicdisplay\n' +
-        ' *\n';
-    */
+        ' */\n';
+    // Additional manual typings:
+    var typings = [
+      'typings/browser.d.ts',
+      'typings/vexflow.d.ts',
+      'typings/fft.d.ts'
+    ];
+    // Grunt configuration following:
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        banner: banner,
         // Build output directories
         outputDir: {
             build: 'build',
@@ -17,21 +24,21 @@ module.exports = function (grunt) {
         // Browserify
         browserify: {
             dist: {
-                src: [
-                    'typings/browser.d.ts',
-                    'typings/vexflow.d.ts',
-                    'src/**/*.ts'
-                ],
-                dest: '<%= outputDir.build %>/osmd.js'
+                src: typings.concat(['src/**/*.ts']),
+                dest: '<%= outputDir.build %>/osmd.js',
+                options: {
+                    banner: "<%= banner %>"
+                }
             },
             debug: {
-                src: [
-                    'typings/browser.d.ts', 'typings/vexflow.d.ts',
-                    //'src/**/*.ts', 'test/**/*.ts'
-                    'src/Common/**/*.ts', 'test/Common/**/*.ts'
-                ],
+                src: typings.concat([
+                    'src/Common/**/*.ts', 'test/Common/**/*.ts',
+                    'src/Util/**/*.ts', 'test/Util/**/*.ts'
+                    // Should be: 'src/**/*.ts', 'test/**/*.ts'
+                ]),
                 dest: '<%= outputDir.build %>/osmd-debug.js',
                 options: {
+                    banner: "<%= banner %>",
                     browserifyOptions: {
                         debug: true
                     }
@@ -131,7 +138,8 @@ module.exports = function (grunt) {
                 src: [
                     '<%= outputDir.build %>',
                     '<%= outputDir.dist %>',
-                    '.tscache'
+                    '.tscache',
+                    'src/**/*.js', 'test/**/*.js'
                 ]
             }
         }
