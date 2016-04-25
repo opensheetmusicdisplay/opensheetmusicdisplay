@@ -1,20 +1,20 @@
-import FFT = require("fft");
+import FFT = require("FFT");
 
-module fft {
+export class fft {
 
-  export function toRealImag(timeData: Float64Array): { imag: Float64Array; real: Float64Array; } {
+  public static toRealImag(timeData: number[]): { imag: Float64Array; real: Float64Array; } {
     let n: number = timeData.length;
     let fft: any = new FFT.complex(2 * n, false);
     let output: Float64Array = new Float64Array(2 * n);
-    let input: Float64Array = new Float64Array(2 * n);
+    let input: Float64Array = new Float64Array(n);
     // copy timeData into the input array
     // FIXME: is this fix needed?
     // problem: complex transform, real timeData
     for (let i: number = 0; i < n; i++) {
-      input[2 * i] = timeData[i];
-      input[2 * i + 1] = 0;
+      input[i] = timeData[i];
+      //input[2 * i + 1] = 0;
     }
-    fft.simple(output, input, "complex");
+    fft.simple(output, input, "real");
     // Split output in real/imaginary parts
     let real: Float64Array = new Float64Array(n);
     let imag: Float64Array = new Float64Array(n);
@@ -25,7 +25,7 @@ module fft {
     return {imag: imag, real: real};
   }
 
-  export function toAmplPhas(timeData: Float64Array): { amplitude: Float64Array; phase: Float64Array; } {
+  public static toAmplPhas(timeData: Float64Array): { amplitude: Float64Array; phase: Float64Array; } {
     let n: number = timeData.length;
     let fft: any = new FFT.complex(2 * n, false);
     let output: Float64Array = new Float64Array(2 * n);

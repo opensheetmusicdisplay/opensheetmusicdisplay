@@ -1,5 +1,6 @@
 module.exports = function (grunt) {
     'use strict';
+    // The banner on top of the build
     var banner = '/**\n' +
         ' * Open Sheet Music Display <%= pkg.version %> built on <%= grunt.template.today("yyyy-mm-dd") %>.\n' +
         ' * Copyright (c) 2016 PhonicScore\n' +
@@ -64,7 +65,7 @@ module.exports = function (grunt) {
             }
           }
         },*/
-        // Settings for tests
+        // CI setup
         karma: {
             // For continuous integration
             ci: {
@@ -118,10 +119,11 @@ module.exports = function (grunt) {
                 src: ['<%= browserify.dist.src %>', '<%= browserify.debug.src %>']
             }
         },
-        // TypeScript type definitions
+        // TypeScript Type Definitions
         typings: {
             install: {}
         },
+        //
         docco: {
             src: ['src/**/*.ts'],
             options: {
@@ -129,7 +131,7 @@ module.exports = function (grunt) {
                 output: 'build/docs'
             }
         },
-        // Settings for clean task
+        // Cleaning task setup
         clean: {
             options: {
                 force: true
@@ -149,18 +151,18 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-watch');
-    //grunt.loadNpmTasks('grunt-jscs');
+    // grunt.loadNpmTasks('grunt-jscs');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-typings');
 
     // Register tasks
+    grunt.registerTask('all', ['typings', 'default']);
     grunt.registerTask('default', [ /*'tslint',*/ 'browserify', 'karma:ci']);
-    //grunt.registerTask('lint', ['tslint', 'jscs']);
+    // grunt.registerTask('lint', ['tslint', 'jscs']);
     grunt.registerTask('test', ['browserify:debug', 'karma:ci']);
-    //grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
-    //grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
+    // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
+    // grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
     grunt.registerTask('rebuild', ['clean', 'default']);
     grunt.registerTask('publish', ['clean', 'browserify:dist']);
-    grunt.registerTask('all', ['typings', 'default']);
 };
