@@ -18,10 +18,10 @@ export class Label {
     }
 
     private text: string; // FIXME:
-    private color: OSMDColor; //= PSColor.Black;
-    private font: OSMDFonts; // = PSFonts.TimesNewRoman;
-    private fontStyle: OSMDFontStyles; // = PSFontStyles.Regular;
-    private textAlignment: OSMDTextAlignment; // = PSTextAlignment.LeftBottom;
+    private color: OSMDColor = OSMDColor.Black;
+    private font: OSMDFonts = OSMDFonts.TimesNewRoman;
+    private fontStyle: OSMDFontStyles = OSMDFontStyles.Regular;
+    private textAlignment: OSMDTextAlignment = OSMDTextAlignment.LeftBottom;
     private fontHeight: number = 2;
 
     public get Text(): string {
@@ -61,6 +61,6 @@ export class Label {
         this.textAlignment = value;
     }
     public ToString(): string {
-        return this.Text;
+        return this.text;
     }
 }

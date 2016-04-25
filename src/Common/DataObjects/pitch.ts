@@ -1,4 +1,3 @@
-import {PSMath} from "../..//Util/psMath";
 import {CollectionUtil} from "../../Util/collectionUtil";
 
 export enum NoteEnum {
@@ -29,10 +28,12 @@ export class Pitch {
         this.frequency = Pitch.calcFrequency(this);
     }
 
-    public static pitchEnumValues: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B];
+    public static pitchEnumValues: NoteEnum[] = [
+        NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B
+    ];
 
-    private static halftoneFactor: number = 12 / PSMath.log10(2);
-    private static octXmlDiff: number = 3;  // Pitch.octXmlDiff
+    private static halftoneFactor: number = 12 / (Math.LN2 / Math.LN10);
+    private static octXmlDiff: number = 3;
 
     // private _sourceOctave: number;
     // private _sourceFundamentalNote: NoteEnum;
@@ -50,12 +51,12 @@ export class Pitch {
      *          ret[1] = the octave shift (not the new octave!)
      * @constructor
      */
-    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): number[] {
+    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { value: number; overflow: number; } {
         let newHalfTone: number = <number>pitch.fundamentalNote + <number>pitch.accidental + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
-    public static WrapAroundCheck(value: number, limit: number): number[] {
+    public static WrapAroundCheck(value: number, limit: number): { value: number; overflow: number; } {
         let overflow: number = 0;
 
         while (value < 0) {
@@ -66,50 +67,55 @@ export class Pitch {
             value -= limit;
             overflow++; // the octave change
         }
-        return [value, overflow];
+        return {value: value, overflow: overflow};
     }
 
-    public static calcFrequency(pitch: Pitch): number;
+    //public static calcFrequency(pitch: Pitch): number;
 
-    public static calcFrequency(fractionalKey: number): number;
+    //public static calcFrequency(fractionalKey: number): number;
 
-    public static calcFrequency(pitch: any): number {
-        if (pitch instanceof Pitch) {
-            let octaveSteps: number = pitch.octave - 1;
-            let halftoneSteps: number = <number>pitch.fundamentalNote - <number>NoteEnum.A + <number>pitch.accidental;
-            let frequency: number = <number>(440.0 * Math.pow(2, octaveSteps) * Math.pow(2, halftoneSteps / 12.0));
-            return frequency;
-        } else if (typeof pitch === "number") {
-            let fractionalKey: number = pitch;
-            let frequency: number = <number>(440.0 * Math.pow(2, (fractionalKey - 57.0) / 12));
-            return frequency;
+    public static calcFrequency(obj: Pitch|number): number {
+        let frequency: number;
+        let octaveSteps: number = 0;
+        let halftoneSteps: number;
+        if (obj instanceof Pitch) {
+            // obj is a pitch
+            let pitch: Pitch = obj;
+            octaveSteps = pitch.octave - 1;
+            halftoneSteps = <number>pitch.fundamentalNote - <number>NoteEnum.A + <number>pitch.accidental;
+        } else if (typeof obj === "number") {
+            // obj is a fractional key
+            let fractionalKey: number = obj;
+            halftoneSteps = fractionalKey - 57.0;
         }
+        // Return frequency:
+        return 440.0 * Math.pow(2, octaveSteps) * Math.pow(2, halftoneSteps / 12.0);
     }
 
     public static calcFractionalKey(frequency: number): number {
-        let halftoneFrequency: number = <number>((PSMath.log10(frequency / 440.0) * Pitch.halftoneFactor) + 57.0);
-        return halftoneFrequency;
+        // Return half-tone frequency:
+        return Math.log(frequency / 440.0) / Math.LN10 * Pitch.halftoneFactor + 57.0;
     }
 
-    public static getPitchFromFrequency(frequency: number): Pitch {
+    public static fromFrequency(frequency: number): Pitch {
         let key: number = Pitch.calcFractionalKey(frequency) + 0.5;
-        let octave: number = <number>Math.floor(key / 12) - Pitch.octXmlDiff;
-        let halftone: number = Math.floor(<number>(key)) % 12;
+        let octave: number = Math.floor(key / 12) - Pitch.octXmlDiff;
+        let halftone: number = Math.floor(key) % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftone;
         let accidental: AccidentalEnum = AccidentalEnum.NONE;
-        if (!CollectionUtil.contains(this.pitchEnumValues, fundamentalNote)) {
+        if (this.pitchEnumValues.indexOf(fundamentalNote) === -1) {
             fundamentalNote = <NoteEnum>(halftone - 1);
             accidental = AccidentalEnum.SHARP;
         }
-        return new Pitch(fundamentalNote, <number>octave, accidental);
+        return new Pitch(fundamentalNote, octave, accidental);
     }
 
-    public static getPitchFromHalftone(halftone: number): Pitch {
+    public static fromHalftone(halftone: number): Pitch {
         let octave: number = <number>Math.floor(<number>halftone / 12) - Pitch.octXmlDiff;
         let halftoneInOctave: number = halftone % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftoneInOctave;
         let accidental: AccidentalEnum = AccidentalEnum.NONE;
-        if (!CollectionUtil.contains(this.pitchEnumValues, fundamentalNote)) {
+        if (this.pitchEnumValues.indexOf(fundamentalNote) === -1) {
             fundamentalNote = <NoteEnum>(halftoneInOctave - 1);
             accidental = AccidentalEnum.SHARP;
         }
@@ -119,16 +125,16 @@ export class Pitch {
     public static ceiling(halftone: number): NoteEnum {
         halftone = <number>(halftone) % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftone;
-        if (!CollectionUtil.contains(this.pitchEnumValues, fundamentalNote)) {
+        if (this.pitchEnumValues.indexOf(fundamentalNote) === -1) {
             fundamentalNote = <NoteEnum>(halftone + 1);
         }
         return fundamentalNote;
     }
 
     public static floor(halftone: number): NoteEnum {
-        halftone = <number>(halftone) % 12;
+        halftone = halftone % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftone;
-        if (!CollectionUtil.contains(this.pitchEnumValues, fundamentalNote)) {
+        if (this.pitchEnumValues.indexOf(fundamentalNote) === -1) {
             fundamentalNote = <NoteEnum>(halftone - 1);
         }
         return fundamentalNote;
@@ -238,30 +244,18 @@ export class Pitch {
     }
 
     private getNextFundamentalNote(fundamental: NoteEnum): NoteEnum {
-        let i: number = 0;
-        for (; i < Pitch.pitchEnumValues.length; i++) {
-            let note: NoteEnum = Pitch.pitchEnumValues[i];
-            if (note === fundamental) {
-                break;
-            }
-        }
-        i = ++i % Pitch.pitchEnumValues.length;
+        let i = Pitch.pitchEnumValues.indexOf(fundamental);
+        i = (i + 1) % Pitch.pitchEnumValues.length;
         return Pitch.pitchEnumValues[i];
     }
 
     private getPreviousFundamentalNote(fundamental: NoteEnum): NoteEnum {
-        let i: number = 0;
-        for (; i < Pitch.pitchEnumValues.length; i++) {
-            let note: NoteEnum = Pitch.pitchEnumValues[i];
-            if (note === fundamental) {
-                break;
-            }
+        let i = Pitch.pitchEnumValues.indexOf(fundamental);
+        if (i > 0) {
+            return Pitch.pitchEnumValues[i - 1];
+        } else {
+            return Pitch.pitchEnumValues[Pitch.pitchEnumValues.length - 1];
         }
-        i--;
-        if (i < 0) {
-            i += Pitch.pitchEnumValues.length;
-        }
-        return Pitch.pitchEnumValues[i];
     }
 }
 

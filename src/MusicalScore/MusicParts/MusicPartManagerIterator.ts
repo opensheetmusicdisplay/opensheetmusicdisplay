@@ -32,10 +32,9 @@ export class MusicPartManagerIterator {
             if (startTimestamp === undefined) { return; }
             do {
                 this.moveToNext();
-            } while ((this.currentVoiceEntries === undefined || this.currentTimeStamp < startTimestamp) && !this.endReached);
+            } while ((this.currentVoiceEntries === undefined || this.currentTimeStamp.lt(startTimestamp)) && !this.endReached);
             for (let staffIndex: number = 0; staffIndex < this.activeDynamicExpressions.length; staffIndex++) {
                 if (this.activeDynamicExpressions[staffIndex] !== undefined) {
-                    /*
                     if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
                         let continuousDynamic: ContinuousDynamicExpression =
                             <ContinuousDynamicExpression>this.activeDynamicExpressions[staffIndex];
@@ -45,12 +44,11 @@ export class MusicPartManagerIterator {
                             <InstantaniousDynamicExpression>this.activeDynamicExpressions[staffIndex];
                         this.currentDynamicChangingExpressions.push(new DynamicsContainer(instantaniousDynamic, staffIndex));
                     }
-                    */ // FIXME TODO DynamicExpression problems!
                 }
             }
             this.currentTempoChangingExpression = this.activeTempoExpression;
         } catch (err) {
-            console.log("MusicPartManagerIterator: Exception."); // FIXME
+            console.log("MusicPartManagerIterator: Exception." + err); // FIXME
         }
 
     }
@@ -79,6 +77,7 @@ export class MusicPartManagerIterator {
     private jumpResponsibleRepetition: Repetition = undefined;
     private activeDynamicExpressions: AbstractExpression[] = [];
     private activeTempoExpression: MultiTempoExpression;
+
     public get EndReached(): boolean {
         return this.endReached;
     }

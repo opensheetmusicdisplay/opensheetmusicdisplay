@@ -1,5 +1,6 @@
 import {Pitch, AccidentalEnum} from "../../Common/DataObjects/pitch";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
+
 export class ChordSymbolContainer {
     constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree, keyInstruction: KeyInstruction) {
         this.rootPitch = rootPitch;
@@ -29,6 +30,7 @@ export class ChordSymbolContainer {
         return this.keyInstruction;
     }
 }
+
 export class Degree {
     constructor(value: number, alteration: AccidentalEnum, text: ChordDegreeText) {
         this.Value = value;
@@ -39,6 +41,7 @@ export class Degree {
     public Alteration: AccidentalEnum;
     public Text: ChordDegreeText;
 }
+
 export enum ChordDegreeText {
     add,
     alter,

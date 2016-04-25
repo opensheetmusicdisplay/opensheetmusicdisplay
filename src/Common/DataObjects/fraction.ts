@@ -37,7 +37,7 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
         return sum;
     }
 
-    public static minus (f1: Fraction , f2: Fraction): Fraction {
+    public static minus(f1: Fraction , f2: Fraction): Fraction {
         let sum: Fraction = Fraction.CreateFractionFromFraction(f1);
         sum.Sub(f2);
         return sum;
@@ -156,12 +156,13 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     }
 
     public CompareTo(obj: Fraction): number {
-        if (this.RealValue > obj.RealValue) {
-            return 1;
-        } else if (this.RealValue < obj.RealValue) {
-            return -1;
-        }
-        return 0;
+        let diff: number = this.numerator * obj.Denominator - this.denominator * obj.Numerator;
+        // Return the sign of diff
+        return diff ? diff < 0 ? -1 : 1 : 0;
+    }
+
+    public lt(frac: Fraction): boolean {
+        return (this.numerator * frac.Denominator - this.denominator * frac.Numerator) < 0;
     }
 
     //public Equals(f: Fraction): boolean {
@@ -173,7 +174,7 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     //}
 
     public GetInversion(): Fraction {
-        return new Fraction(this.Denominator, this.Numerator);
+        return new Fraction(this.denominator, this.numerator);
     }
 
     private setRealValue(): void {

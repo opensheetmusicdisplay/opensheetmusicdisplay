@@ -4,12 +4,13 @@ export class OSMDColor {
     public green: number;
     public blue: number;
 
-    constructor(alpha: number, red: number, green: number, blue: number) {
+    // FIXME:
+    /*constructor(alpha: number, red: number, green: number, blue: number) {
         this.alpha = alpha;
         this.red = red;
         this.green = green;
         this.blue = blue;
-    }
+    }*/
     constructor(red: number, green: number, blue: number) {
         this.alpha = 255;
         this.red = red;
@@ -40,6 +41,7 @@ export class OSMDColor {
     public static get DarkBlue(): OSMDColor {
         return new OSMDColor(0, 0, 140);
     }
+    // For debugging:
     public static get Debug1(): OSMDColor {
         return new OSMDColor(200, 0, 140);
     }
@@ -48,5 +50,10 @@ export class OSMDColor {
     }
     public static get Debug3(): OSMDColor {
         return new OSMDColor(0, 50, 140);
+    }
+
+    public toString(): string {
+        // FIXME RGBA
+        return "rgb(" + this.red + "," + this.green + "," + this.blue + ")";
     }
 }

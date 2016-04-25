@@ -29,7 +29,7 @@ export class Note {
     private beam: Beam;
     private tuplet: Tuplet;
     private tie: Tie;
-    private slurs: Slur[] = new Array();
+    private slurs: Slur[] = [];
     private graceNoteSlash: boolean = false;
     private playbackInstrumentId: string = undefined;
     public get GraceNoteSlash(): boolean {
@@ -90,21 +90,16 @@ export class Note {
         this.playbackInstrumentId = value;
     }
     public calculateNoteLengthWithoutTie(): Fraction {
-        let withoutTieLength: Fraction = Fraction.CreateFractionFromFraction(this.length);
+        let withoutTieLength: Fraction = this.length.clone();
         if (this.tie !== undefined) {
-            let tempLength: Fraction = Fraction.CreateFractionFromFraction(this.length);
             for (let idx: number = 0, len: number = this.tie.Fractions.length; idx < len; ++idx) {
                 let fraction: Fraction = this.tie.Fractions[idx];
-                tempLength.Sub(fraction);
+                withoutTieLength.Sub(fraction);
             }
-            withoutTieLength = tempLength;
         }
         return withoutTieLength;
     }
-    public calculateNoteOriginalLength(): Fraction {
-        return this.calculateNoteOriginalLength(Fraction.CreateFractionFromFraction(this.length));
-    }
-    public calculateNoteOriginalLength(originalLength: Fraction): Fraction {
+    public calculateNoteOriginalLength(originalLength: Fraction = this.length): Fraction {
         if (this.tie !== undefined) {
             originalLength = this.calculateNoteLengthWithoutTie();
         }
@@ -124,19 +119,13 @@ export class Note {
         }
         return this.length;
     }
-    public calculateNumberOfNeededDots(): number {
-        return this.calculateNumberOfNeededDots(this.length);
-    }
-    public calculateNumberOfNeededDots(fraction: Fraction): number {
-        let num: number = 1;
-        let product: number = 2;
+    public calculateNumberOfNeededDots(fraction: Fraction = this.length): number {
+        // FIXME (Andrea) Test if correct
         if (this.tuplet === undefined) {
-            while (product < fraction.Numerator) {
-                num++;
-                product = 1 << num; // FIXME some logarithm
-            }
+            return Math.floor(Math.log(fraction.Numerator) / Math.LN2);
+        } else {
+            return 0;
         }
-        return num - 1;
     }
     public ToString(): string {
         if (this.pitch !== undefined) {
@@ -146,9 +135,10 @@ export class Note {
         }
     }
     public getAbsoluteTimestamp(): Fraction {
-        let absolute: Fraction = Fraction.CreateFractionFromFraction(this.voiceEntry.Timestamp);
-        absolute += this.parentStaffEntry.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp;
-        return absolute;
+        return Fraction.plus(
+            this.voiceEntry.Timestamp,
+            this.parentStaffEntry.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp
+        );
     }
     public checkForDoubleSlur(slur: Slur): boolean {
         for (let idx: number = 0, len: number = this.slurs.length; idx < len; ++idx) {

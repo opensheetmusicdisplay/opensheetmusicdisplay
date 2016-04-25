@@ -27,7 +27,8 @@ module.exports = function (grunt) {
             debug: {
                 src: [
                     'typings/browser.d.ts', 'typings/vexflow.d.ts',
-                    'src/**/*.ts', 'test/**/*.ts'
+                    //'src/**/*.ts', 'test/**/*.ts'
+                    'src/Common/**/*.ts', 'test/Common/**/*.ts'
                 ],
                 dest: '<%= outputDir.build %>/osmd-debug.js',
                 options: {
