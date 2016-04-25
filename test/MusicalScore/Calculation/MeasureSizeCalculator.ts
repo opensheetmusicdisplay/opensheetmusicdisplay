@@ -47,4 +47,42 @@ describe("Measure Size Calculator Tests", () => {
     chai.expect(calc.getTopBorder()).to.equal(0);
     done();
   });
+
+  it("Will certainly pass", (done: MochaDone) => {
+    let visual = function(func: (r: any, ctx: any) => void) {
+      let canvas: HTMLCanvasElement = document.createElement("canvas");
+      document.body.appendChild(canvas);
+      let renderer: any = new Vex.Flow.Renderer(
+        canvas,
+        Vex.Flow.Renderer.Backends.CANVAS
+      );
+      renderer.resize(300, 100);
+      let ctx: any = renderer.getContext();
+      ctx.setFont("Arial", 10, "").setBackgroundFillStyle("#eed");
+      func(renderer, ctx);
+    }
+
+    visual(function(renderer, ctx) {
+      renderer.resize(420, 120);
+      let stave: Vex.Flow.Stave = new Vex.Flow.Stave(10, 0, 410);
+      stave.setContext(ctx);
+      for (var t in Vex.Flow.Clef.types) {
+        let clef: Vex.Flow.Clef = new Vex.Flow.Clef(t);
+        stave.addModifier(clef, Vex.Flow.StaveModifier.Position.BEGIN);
+        stave.format();
+        // (*&^%$#@) //
+        // FIXME HERE? NaN FIXME FIXME FIXME //
+        clef.setStave(stave);
+        let bb: Vex.Flow.BoundingBox =
+          MeasureSizeCalculator.getClefBoundingBox(clef);
+        console.log(bb);
+        ctx.rect(bb.getX(), bb.getY(), bb.getW(), bb.getH());
+        ctx.stroke();
+      }
+      stave.draw();
+    });
+
+    done();
+  });
+
 });
