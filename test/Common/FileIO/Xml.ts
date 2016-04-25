@@ -1,6 +1,11 @@
 import { IXmlElement } from "../../../src/Common/FileIO/Xml.ts";
 
-let xml_test_data: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 2.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\"><score-partwise>  <identification>    <encoding>      <software>Example Software Name</software>      <encoding-date>2016-04-04</encoding-date>      </encoding>    </identification>   <credit page=\"1\"> <credit-words justify=\"center\" valign=\"top\">Example Credit Words</credit-words> </credit>  </score-partwise>";
+// Test XML simple document
+let xml_test_data: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 2.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">\
+<score-partwise>  <identification>    <encoding>      <software>Example Software Name</software>      \
+<encoding-date>2016-04-04</encoding-date>      </encoding>    </identification>   <credit page=\"1\"> \
+<credit-words justify=\"center\" valign=\"top\">Example Credit Words</credit-words> </credit>  </score-partwise>";
 
 
 describe("XML Unit Tests", () => {
@@ -18,7 +23,7 @@ describe("XML Unit Tests", () => {
       .Element("identification")
       .Element("encoding")
       .Element("software").Value).to.equal("Example Software Name");
-      done();
+    done();
   });
   it("IXmlAttribute Tests", (done: MochaDone) => {
     // Test Attributes method

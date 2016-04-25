@@ -25,9 +25,9 @@ describe("Fraction Unit Tests:", () => {
         return Math.floor(Math.random() * 500) + 1;
       };
       it("lt attribute", (done: MochaDone) => {
-        for (let i = 0; i < 10; i += 1) {
-          let f1: Fraction = new Fraction(rand(), rand());
-          let f2: Fraction = new Fraction(rand(), rand());
+        for (let i: number = 0; i < 10; i += 1) {
+          f1 = new Fraction(rand(), rand());
+          f2 = new Fraction(rand(), rand());
           chai.expect(f1.lt(f2)).to.equal(f1.RealValue < f2.RealValue);
         }
         done();

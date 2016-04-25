@@ -1,23 +1,3 @@
-import {CollectionUtil} from "../../Util/collectionUtil";
-
-export enum NoteEnum {
-    C = 0,
-    D = 2,
-    E = 4,
-    F = 5,
-    G = 7,
-    A = 9,
-    B = 11
-}
-
-export enum AccidentalEnum {
-    DOUBLEFLAT = -2,
-    FLAT = -1,
-    NONE = 0,
-    SHARP = 1,
-    DOUBLESHARP = 2
-}
-
 export class Pitch {
 
     constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum) {
@@ -29,7 +9,7 @@ export class Pitch {
     }
 
     public static pitchEnumValues: NoteEnum[] = [
-        NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B
+        NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B,
     ];
 
     private static halftoneFactor: number = 12 / (Math.LN2 / Math.LN10);
@@ -67,7 +47,7 @@ export class Pitch {
             value -= limit;
             overflow++; // the octave change
         }
-        return {value: value, overflow: overflow};
+        return {overflow: overflow, value: value};
     }
 
     //public static calcFrequency(pitch: Pitch): number;
@@ -75,7 +55,6 @@ export class Pitch {
     //public static calcFrequency(fractionalKey: number): number;
 
     public static calcFrequency(obj: Pitch|number): number {
-        let frequency: number;
         let octaveSteps: number = 0;
         let halftoneSteps: number;
         if (obj instanceof Pitch) {
@@ -244,13 +223,13 @@ export class Pitch {
     }
 
     private getNextFundamentalNote(fundamental: NoteEnum): NoteEnum {
-        let i = Pitch.pitchEnumValues.indexOf(fundamental);
+        let i: number = Pitch.pitchEnumValues.indexOf(fundamental);
         i = (i + 1) % Pitch.pitchEnumValues.length;
         return Pitch.pitchEnumValues[i];
     }
 
     private getPreviousFundamentalNote(fundamental: NoteEnum): NoteEnum {
-        let i = Pitch.pitchEnumValues.indexOf(fundamental);
+        let i: number = Pitch.pitchEnumValues.indexOf(fundamental);
         if (i > 0) {
             return Pitch.pitchEnumValues[i - 1];
         } else {
@@ -259,3 +238,20 @@ export class Pitch {
     }
 }
 
+export enum NoteEnum {
+    C = 0,
+    D = 2,
+    E = 4,
+    F = 5,
+    G = 7,
+    A = 9,
+    B = 11
+}
+
+export enum AccidentalEnum {
+    DOUBLEFLAT = -2,
+    FLAT = -1,
+    NONE = 0,
+    SHARP = 1,
+    DOUBLESHARP = 2
+}
