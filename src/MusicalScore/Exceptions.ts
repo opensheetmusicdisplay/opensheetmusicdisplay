@@ -1,9 +1,12 @@
 export class MusicSheetReadingException implements Error {
     public name: string;
     public message: string;
-    constructor(message: string, exitCode: number) {
+    constructor(message: string, e?: Error) {
         //super(message);
         this.message = message;
+        if (e !== undefined) {
+            this.message += " " + e.toString();
+        }
     }
 }
 

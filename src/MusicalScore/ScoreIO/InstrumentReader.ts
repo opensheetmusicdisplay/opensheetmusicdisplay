@@ -45,9 +45,10 @@ import {VoiceEntry} from "../VoiceData/VoiceEntry";
 //  }
 //}
 
+type repetitionInstructionReader = any;
 
 export class InstrumentReader {
-  constructor(/*repetitionInstructionReader: repetitionInstructionReader, */ xmlMeasureList: IXmlElement[]/* FIXME IEnumerable<IXmlElement>*/, instrument: Instrument) {
+  constructor(repetitionInstructionReader: repetitionInstructionReader, xmlMeasureList: IXmlElement[]/* FIXME IEnumerable<IXmlElement>*/, instrument: Instrument) {
     // (*) this.repetitionInstructionReader = repetitionInstructionReader;
     this.xmlMeasureList = xmlMeasureList.slice(); // FIXME .ToArray();
     this.musicSheet = instrument.GetMusicSheet;
@@ -243,10 +244,10 @@ export class InstrumentReader {
               this.divisions = parseInt(divisionsNode.Value);
             } catch (e) {
               let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
-              console.log(/*LogLevel.DEBUG, */"InstrumentReader.readNextXmlMeasure", errorMsg, e);
+              logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e.toString());
               this.divisions = this.readDivisionsFromNotes();
               if (this.divisions > 0) {
-                this.musicSheet.SheetErrors.Errors.push(errorMsg + this.instrument.Name);
+                this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
               } else {
                 divisionsException = true;
                 throw new MusicSheetReadingException(errorMsg + this.instrument.Name, 0);
@@ -453,20 +454,14 @@ export class InstrumentReader {
     }
   }
   private isAttributesNodeAtBeginOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    let childs: IXmlElement[] = parentNode.Elements().slice();
-    let attributesNodeIndex: number = 0;
-    for (let i: number = 0; i < childs.length; i++) {
-      if (childs[i] === attributesNode) {
-        attributesNodeIndex = i;
-        break;
-      }
-    }
-    if (attributesNodeIndex > 0 && childs[attributesNodeIndex - 1].Name === "backup") {
+    let children: IXmlElement[] = parentNode.Elements().slice();
+    let attributesNodeIndex: number = children.indexOf(attributesNode); // FIXME | 0
+    if (attributesNodeIndex > 0 && children[attributesNodeIndex - 1].Name === "backup") {
       return true;
     }
     let firstNoteNodeIndex: number = -1;
-    for (let i: number = 0; i < childs.length; i++) {
-      if (childs[i].Name === "note") {
+    for (let i: number = 0; i < children.length; i++) {
+      if (children[i].Name === "note") {
         firstNoteNodeIndex = i;
         break;
       }
