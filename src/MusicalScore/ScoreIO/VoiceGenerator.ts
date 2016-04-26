@@ -10,8 +10,15 @@ import {Beam} from "../VoiceData/Beam";
 import {Tie} from "../VoiceData/Tie";
 import {Tuplet} from "../VoiceData/Tuplet";
 import {Fraction} from "../../Common/DataObjects/fraction";
-import {MusicSymbolModuleFactory} from "./InstrumentReader";
+//import {MusicSymbolModuleFactory} from "./InstrumentReader";
 import {IXmlElement} from "../../Common/FileIO/Xml";
+import {ITextTranslation} from "../Interfaces/ITextTranslation";
+import {ArticulationEnum} from "../VoiceData/VoiceEntry";
+import {Slur} from "../VoiceData/Expressions/ContinuousExpressions/Slur";
+import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
+import {MusicSheetReadingException} from "../Exceptions";
+
+type SlurReader = any;
 
 export class VoiceGenerator {
     constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = null) {
@@ -22,13 +29,13 @@ export class VoiceGenerator {
         else {
             this.voice = new Voice(instrument, voiceId);
         }
-        instrument.Voices.Add(this.voice);
-        this.lyricsReader = MusicSymbolModuleFactory.createLyricsReader(this.musicSheet);
-        this.articulationReader = MusicSymbolModuleFactory.createArticulationReader();
+        instrument.Voices.push(this.voice);
+        //this.lyricsReader = MusicSymbolModuleFactory.createLyricsReader(this.musicSheet);
+        //this.articulationReader = MusicSymbolModuleFactory.createArticulationReader();
     }
     private slurReader: SlurReader;
-    private lyricsReader: LyricsReader;
-    private articulationReader: ArticulationReader;
+    //private lyricsReader: LyricsReader;
+    //private articulationReader: ArticulationReader;
     private musicSheet: MusicSheet;
     private voice: Voice;
     private currentVoiceEntry: VoiceEntry;
@@ -38,9 +45,9 @@ export class VoiceGenerator {
     private lastBeamTag: string = "";
     private openBeam: Beam;
     private openGraceBeam: Beam;
-    private openTieDict: Dictionary<number, Tie> = new Dictionary<number, Tie>();
+    private openTieDict: { [_: number]: Tie; } = {};
     private currentOctaveShift: number = 0;
-    private tupletDict: Dictionary<number, Tuplet> = new Dictionary<number, Tuplet>();
+    private tupletDict: { [_: number]: Tuplet; } = {};
     private openTupletNumber: number = 0;
 
     public get GetVoice(): Voice {
@@ -53,11 +60,11 @@ export class VoiceGenerator {
         this.currentOctaveShift = value;
     }
     public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean): void {
-        this.currentVoiceEntry = new VoiceEntry(new Fraction(musicTimestamp), this.voice, parentStaffEntry);
+        this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry);
         if (addToVoice)
-            this.voice.VoiceEntries.Add(this.currentVoiceEntry);
-        if (!parentStaffEntry.VoiceEntries.Contains(this.currentVoiceEntry))
-            parentStaffEntry.VoiceEntries.Add(this.currentVoiceEntry);
+            this.voice.VoiceEntries.push(this.currentVoiceEntry);
+        if (parentStaffEntry.VoiceEntries.indexOf(this.currentVoiceEntry) === -1)
+            parentStaffEntry.VoiceEntries.push(this.currentVoiceEntry);
     }
     public read(noteNode: IXmlElement, noteDuration: number, divisions: number, restNote: boolean, graceNote: boolean,
         parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
@@ -76,26 +83,26 @@ export class VoiceGenerator {
                 if (this.articulationReader != null) {
                     this.readArticulations(notationNode, this.currentVoiceEntry);
                 }
-                var slurNodes: IEnumerable<IXmlElement> = null;
+                var slurNodes: IXmlElement[] = null;
                 if (this.slurReader != null && (slurNodes = notationNode.Elements("slur")).Any())
-                    this.slurReader.addSlur(slurNodes.ToArray(), this.currentNote);
-                var tupletNodeList: IEnumerable<IXmlElement> = null;
-                if ((tupletNodeList = notationNode.Elements("tuplet")).Any())
+                    this.slurReader.addSlur(slurNodes, this.currentNote);
+                var tupletNodeList: IXmlElement[] = null;
+                if ((tupletNodeList = notationNode.Elements("tuplet")))
                     this.openTupletNumber = this.addTuplet(noteNode, tupletNodeList);
                 if (notationNode.Element("arpeggiate") != null && !graceNote)
-                    this.currentVoiceEntry.ArpeggiosNotesIndices.Add(this.currentVoiceEntry.Notes.IndexOf(this.currentNote));
-                var tiedNodeList: IEnumerable<IXmlElement> = null;
-                if ((tiedNodeList = notationNode.Elements("tied")).Any())
+                    this.currentVoiceEntry.ArpeggiosNotesIndices.push(this.currentVoiceEntry.Notes.indexOf(this.currentNote));
+                var tiedNodeList: IXmlElement[] = null;
+                if ((tiedNodeList = notationNode.Elements("tied")))
                     this.addTie(tiedNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction);
-                var toRemove: List<number> = new List<number>();
+                var toRemove: number[] = new number[]();
                 var openTieDictArr: KeyValuePair<number, Tie>[] = this.openTieDict.ToArray();
                 for (var idx: number = 0, len = openTieDictArr.length; idx < len; ++idx) {
                     var openTie: KeyValuePair<number, Tie> = openTieDictArr[idx];
                     var tie: Tie = openTie.Value;
                     if (tie.Start.ParentStaffEntry.Timestamp + tie.Start.Length < this.currentStaffEntry.Timestamp)
-                        toRemove.Add(openTie.Key);
+                        toRemove.push(openTie.Key);
                 }
-                for (var idx: number = 0, len = toRemove.Count; idx < len; ++idx) {
+                for (var idx: number = 0, len = toRemove.length; idx < len; ++idx) {
                     var i: number = toRemove[idx];
                     this.openTieDict.Remove(i);
                 }
@@ -107,27 +114,27 @@ export class VoiceGenerator {
         catch (err) {
             var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteError",
                 "Ignored erroneous Note.");
-            this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
+            this.musicSheet.SheetErrors.pushTemp(errorMsg);
         }
 
         return this.currentNote;
     }
     public checkForOpenGraceNotes(): void {
-        if (this.currentStaffEntry != null && this.currentStaffEntry.VoiceEntries.Count == 0 && this.currentVoiceEntry.GraceVoiceEntriesBefore != null && this.currentVoiceEntry.GraceVoiceEntriesBefore.Count > 0) {
+        if (this.currentStaffEntry != null && this.currentStaffEntry.VoiceEntries.length == 0 && this.currentVoiceEntry.GraceVoiceEntriesBefore != null && this.currentVoiceEntry.GraceVoiceEntriesBefore.length > 0) {
             var voice: Voice = this.currentVoiceEntry.ParentVoice;
-            var horizontalIndex: number = this.currentMeasure.VerticalSourceStaffEntryContainers.IndexOf(this.currentStaffEntry.VerticalContainerParent);
-            var verticalIndex: number = this.currentStaffEntry.VerticalContainerParent.StaffEntries.IndexOf(this.currentStaffEntry);
+            var horizontalIndex: number = this.currentMeasure.VerticalSourceStaffEntryContainers.indexOf(this.currentStaffEntry.VerticalContainerParent);
+            var verticalIndex: number = this.currentStaffEntry.VerticalContainerParent.StaffEntries.indexOf(this.currentStaffEntry);
             var previousStaffEntry: SourceStaffEntry = this.currentMeasure.getPreviousSourceStaffEntryFromIndex(verticalIndex, horizontalIndex);
             if (previousStaffEntry != null) {
                 var previousVoiceEntry: VoiceEntry = null;
-                for (var idx: number = 0, len = previousStaffEntry.VoiceEntries.Count; idx < len; ++idx) {
+                for (var idx: number = 0, len = previousStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     var voiceEntry: VoiceEntry = previousStaffEntry.VoiceEntries[idx];
                     if (voiceEntry.ParentVoice == voice) {
                         previousVoiceEntry = voiceEntry;
-                        previousVoiceEntry.GraceVoiceEntriesAfter = new List<VoiceEntry>();
-                        for (var idx2: number = 0, len2 = this.currentVoiceEntry.GraceVoiceEntriesBefore.Count; idx2 < len2; ++idx2) {
+                        previousVoiceEntry.GraceVoiceEntriesAfter = VoiceEntry[];
+                        for (var idx2: number = 0, len2 = this.currentVoiceEntry.GraceVoiceEntriesBefore.length; idx2 < len2; ++idx2) {
                             var graceVoiceEntry: VoiceEntry = this.currentVoiceEntry.GraceVoiceEntriesBefore[idx2];
-                            previousVoiceEntry.GraceVoiceEntriesAfter.Add(graceVoiceEntry);
+                            previousVoiceEntry.GraceVoiceEntriesAfter.push(graceVoiceEntry);
                         }
                         this.currentVoiceEntry.GraceVoiceEntriesBefore.Clear();
                         this.currentStaffEntry = null;
@@ -140,7 +147,7 @@ export class VoiceGenerator {
     public checkForStaffEntryLink(index: number, currentStaff: Staff, currentStaffEntry: SourceStaffEntry,
         currentMeasure: SourceMeasure): SourceStaffEntry {
         var staffEntryLink: StaffEntryLink = new StaffEntryLink(this.currentVoiceEntry);
-        staffEntryLink.LinkStaffEntries.Add(currentStaffEntry);
+        staffEntryLink.LinkStaffEntries.push(currentStaffEntry);
         currentStaffEntry.Link = staffEntryLink;
         var linkMusicTimestamp: Fraction = new Fraction(this.currentVoiceEntry.Timestamp);
         var verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = currentMeasure.getVerticalContainerByTimestamp(linkMusicTimestamp);
@@ -149,8 +156,8 @@ export class VoiceGenerator {
             currentStaffEntry = new SourceStaffEntry(verticalSourceStaffEntryContainer, currentStaff);
             verticalSourceStaffEntryContainer[index] = currentStaffEntry;
         }
-        currentStaffEntry.VoiceEntries.Add(this.currentVoiceEntry);
-        staffEntryLink.LinkStaffEntries.Add(currentStaffEntry);
+        currentStaffEntry.VoiceEntries.push(this.currentVoiceEntry);
+        staffEntryLink.LinkStaffEntries.push(currentStaffEntry);
         currentStaffEntry.Link = staffEntryLink;
         return currentStaffEntry;
     }
@@ -159,15 +166,15 @@ export class VoiceGenerator {
             this.handleOpenBeam();
     }
     public checkOpenTies(): void {
-        var toRemove: List<number> = new List<number>();
+        var toRemove: number[] = new number[]();
         var openTieDictArr: KeyValuePair<number, Tie>[] = this.openTieDict.ToArray();
         for (var idx: number = 0, len = openTieDictArr.length; idx < len; ++idx) {
             var openTie: KeyValuePair<number, Tie> = openTieDictArr[idx];
             var tie: Tie = openTie.Value;
             if (tie.Start.ParentStaffEntry.Timestamp + tie.Start.Length < tie.Start.ParentStaffEntry.VerticalContainerParent.ParentMeasure.Duration)
-                toRemove.Add(openTie.Key);
+                toRemove.push(openTie.Key);
         }
-        for (var idx: number = 0, len = toRemove.Count; idx < len; ++idx) {
+        for (var idx: number = 0, len = toRemove.length; idx < len; ++idx) {
             var i: number = toRemove[idx];
             this.openTieDict.Remove(i);
         }
@@ -351,7 +358,7 @@ export class VoiceGenerator {
         var note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
         note.PlaybackInstrumentId = playbackInstrumentId;
         if (!graceNote)
-            this.currentVoiceEntry.Notes.Add(note);
+            this.currentVoiceEntry.Notes.push(note);
         else this.handleGraceNote(node, note);
         if (node.Elements("beam").Any() && !chord) {
             this.createBeam(node, note, graceNote);
@@ -361,9 +368,9 @@ export class VoiceGenerator {
     private addRestNote(noteDuration: number, divisions: number): Note {
         var restFraction: Fraction = new Fraction(noteDuration, divisions);
         var restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, null);
-        this.currentVoiceEntry.Notes.Add(restNote);
+        this.currentVoiceEntry.Notes.push(restNote);
         if (this.openBeam != null)
-            this.openBeam.ExtendedNoteList.Add(restNote);
+            this.openBeam.ExtendedNoteList.push(restNote);
         return restNote;
     }
     private createBeam(node: IXmlElement, note: Note, grace: boolean): void {
@@ -374,7 +381,7 @@ export class VoiceGenerator {
                 beamAttr = beamNode.Attribute("number");
             if (beamAttr != null) {
                 var beamNumber: number = StringToNumberConverter.ToInteger(beamAttr.Value);
-                var mainBeamNode: IEnumerable<IXmlElement> = node.Elements("beam");
+                var mainBeamNode: IXmlElement[] = node.Elements("beam");
                 var currentBeamTag: string = mainBeamNode.First().Value;
                 if (beamNumber == 1 && mainBeamNode != null) {
                     if (currentBeamTag == "begin" && this.lastBeamTag != currentBeamTag) {
@@ -395,7 +402,7 @@ export class VoiceGenerator {
                 if (grace) {
                     if (this.openGraceBeam == null)
                         return
-                    for (var idx: number = 0, len = this.openGraceBeam.Notes.Count; idx < len; ++idx) {
+                    for (var idx: number = 0, len = this.openGraceBeam.Notes.length; idx < len; ++idx) {
                         var beamNote: Note = this.openGraceBeam.Notes[idx];
                         if (this.currentVoiceEntry == beamNote.ParentVoiceEntry)
                             sameVoiceEntry = true;
@@ -409,7 +416,7 @@ export class VoiceGenerator {
                 else {
                     if (this.openBeam == null)
                         return
-                    for (var idx: number = 0, len = this.openBeam.Notes.Count; idx < len; ++idx) {
+                    for (var idx: number = 0, len = this.openBeam.Notes.length; idx < len; ++idx) {
                         var beamNote: Note = this.openBeam.Notes[idx];
                         if (this.currentVoiceEntry == beamNote.ParentVoiceEntry)
                             sameVoiceEntry = true;
@@ -431,7 +438,7 @@ export class VoiceGenerator {
 
     }
     private handleOpenBeam(): void {
-        if (this.openBeam.Notes.Count == 1) {
+        if (this.openBeam.Notes.length == 1) {
             var beamNote: Note = this.openBeam.Notes[0];
             beamNote.NoteBeam = null;
             this.openBeam = null;
@@ -443,11 +450,11 @@ export class VoiceGenerator {
             var beamLastNote: Note = this.openBeam.Notes.Last();
             var beamLastNoteStaffEntry: SourceStaffEntry = beamLastNote.ParentStaffEntry;
             var horizontalIndex: number = this.currentMeasure.getVerticalContainerIndexByTimestamp(beamLastNoteStaffEntry.Timestamp);
-            var verticalIndex: number = beamLastNoteStaffEntry.VerticalContainerParent.StaffEntries.IndexOf(beamLastNoteStaffEntry);
-            if (horizontalIndex < this.currentMeasure.VerticalSourceStaffEntryContainers.Count - 1) {
+            var verticalIndex: number = beamLastNoteStaffEntry.VerticalContainerParent.StaffEntries.indexOf(beamLastNoteStaffEntry);
+            if (horizontalIndex < this.currentMeasure.VerticalSourceStaffEntryContainers.length - 1) {
                 var nextStaffEntry: SourceStaffEntry = this.currentMeasure.VerticalSourceStaffEntryContainers[horizontalIndex + 1][verticalIndex];
                 if (nextStaffEntry != null) {
-                    for (var idx: number = 0, len = nextStaffEntry.VoiceEntries.Count; idx < len; ++idx) {
+                    for (var idx: number = 0, len = nextStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                         var voiceEntry: VoiceEntry = nextStaffEntry.VoiceEntries[idx];
                         if (voiceEntry.ParentVoice == this.voice) {
                             var candidateNote: Note = voiceEntry.Notes[0];
@@ -471,7 +478,7 @@ export class VoiceGenerator {
         var graceChord: boolean = false;
         var type: string = "";
         if (node.Elements("type").Any()) {
-            var typeNode: IEnumerable<IXmlElement> = node.Elements("type");
+            var typeNode: IXmlElement[] = node.Elements("type");
             if (typeNode.Any()) {
                 type = typeNode.First().Value;
                 try {
@@ -503,19 +510,19 @@ export class VoiceGenerator {
                 this.currentStaffEntry);
             if (this.currentVoiceEntry.GraceVoiceEntriesBefore == null)
                 this.currentVoiceEntry.GraceVoiceEntriesBefore = new List<VoiceEntry>();
-            this.currentVoiceEntry.GraceVoiceEntriesBefore.Add(graceVoiceEntry);
+            this.currentVoiceEntry.GraceVoiceEntriesBefore.push(graceVoiceEntry);
         }
         else {
-            if (this.currentVoiceEntry.GraceVoiceEntriesBefore != null && this.currentVoiceEntry.GraceVoiceEntriesBefore.Count > 0)
+            if (this.currentVoiceEntry.GraceVoiceEntriesBefore != null && this.currentVoiceEntry.GraceVoiceEntriesBefore.length > 0)
                 graceVoiceEntry = this.currentVoiceEntry.GraceVoiceEntriesBefore.Last();
         }
         if (graceVoiceEntry != null) {
-            graceVoiceEntry.Notes.Add(note);
+            graceVoiceEntry.Notes.push(note);
             note.ParentVoiceEntry = graceVoiceEntry;
         }
     }
-    private addTuplet(node: IXmlElement, tupletNodeList: IEnumerable<IXmlElement>): number {
-        if (tupletNodeList != null && tupletNodeList.Count() > 1) {
+    private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
+        if (tupletNodeList != null && tupletNodeList.length() > 1) {
             var timeModNode: IXmlElement = node.Element("time-modification");
             if (timeModNode != null)
                 timeModNode = timeModNode.Element("actual-notes");
@@ -544,16 +551,16 @@ export class VoiceGenerator {
                         var tuplet: Tuplet = new Tuplet(tupletLabelNumber);
                         if (this.tupletDict.ContainsKey(tupletNumber)) {
                             this.tupletDict.Remove(tupletNumber);
-                            if (this.tupletDict.Count == 0)
+                            if (this.tupletDict.length == 0)
                                 this.openTupletNumber = 0;
-                            else if (this.tupletDict.Count > 1)
+                            else if (this.tupletDict.length > 1)
                                 this.openTupletNumber--;
                         }
-                        this.tupletDict.Add(tupletNumber, tuplet);
+                        this.tupletDict.push(tupletNumber, tuplet);
                         var subnotelist: List<Note> = new List<Note>();
-                        subnotelist.Add(this.currentNote);
-                        tuplet.Notes.Add(subnotelist);
-                        tuplet.Fractions.Add(this.getTupletNoteDurationFromType(node));
+                        subnotelist.push(this.currentNote);
+                        tuplet.Notes.push(subnotelist);
+                        tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
                         this.currentNote.NoteTuplet = tuplet;
                         this.openTupletNumber = tupletNumber;
                     }
@@ -564,14 +571,14 @@ export class VoiceGenerator {
                         if (this.tupletDict.ContainsKey(tupletNumber)) {
                             var tuplet: Tuplet = this.tupletDict[tupletNumber];
                             var subnotelist: List<Note> = new List<Note>();
-                            subnotelist.Add(this.currentNote);
-                            tuplet.Notes.Add(subnotelist);
-                            tuplet.Fractions.Add(this.getTupletNoteDurationFromType(node));
+                            subnotelist.push(this.currentNote);
+                            tuplet.Notes.push(subnotelist);
+                            tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
                             this.currentNote.NoteTuplet = tuplet;
                             this.tupletDict.Remove(tupletNumber);
-                            if (this.tupletDict.Count == 0)
+                            if (this.tupletDict.length == 0)
                                 this.openTupletNumber = 0;
-                            else if (this.tupletDict.Count > 1)
+                            else if (this.tupletDict.length > 1)
                                 this.openTupletNumber--;
                         }
                     }
@@ -619,12 +626,12 @@ export class VoiceGenerator {
                     }
                     else {
                         tuplet = new Tuplet(tupletLabelNumber);
-                        this.tupletDict.Add(tupletnumber, tuplet);
+                        this.tupletDict.push(tupletnumber, tuplet);
                     }
                     var subnotelist: List<Note> = new List<Note>();
-                    subnotelist.Add(this.currentNote);
-                    tuplet.Notes.Add(subnotelist);
-                    tuplet.Fractions.Add(this.getTupletNoteDurationFromType(node));
+                    subnotelist.push(this.currentNote);
+                    tuplet.Notes.push(subnotelist);
+                    tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
                     this.currentNote.NoteTuplet = tuplet;
                     this.openTupletNumber = tupletnumber;
                 }
@@ -634,13 +641,13 @@ export class VoiceGenerator {
                     if (this.tupletDict.ContainsKey(tupletnumber)) {
                         var tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
                         var subnotelist: List<Note> = new List<Note>();
-                        subnotelist.Add(this.currentNote);
-                        tuplet.Notes.Add(subnotelist);
-                        tuplet.Fractions.Add(this.getTupletNoteDurationFromType(node));
+                        subnotelist.push(this.currentNote);
+                        tuplet.Notes.push(subnotelist);
+                        tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
                         this.currentNote.NoteTuplet = tuplet;
-                        if (this.tupletDict.Count == 0)
+                        if (this.tupletDict.length == 0)
                             this.openTupletNumber = 0;
-                        else if (this.tupletDict.Count > 1)
+                        else if (this.tupletDict.length > 1)
                             this.openTupletNumber--;
                         this.tupletDict.Remove(tupletnumber);
                     }
@@ -650,7 +657,7 @@ export class VoiceGenerator {
         return this.openTupletNumber;
     }
     private handleTimeModificationNode(noteNode: IXmlElement): void {
-        if (this.tupletDict.Count != 0) {
+        if (this.tupletDict.length != 0) {
             try {
                 var tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
                 var notes: List<Note> = tuplet.Notes.Last();
@@ -660,10 +667,10 @@ export class VoiceGenerator {
                     noteList = notes;
                 else {
                     noteList = new List<Note>();
-                    tuplet.Notes.Add(noteList);
-                    tuplet.Fractions.Add(this.getTupletNoteDurationFromType(noteNode));
+                    tuplet.Notes.push(noteList);
+                    tuplet.Fractions.push(this.getTupletNoteDurationFromType(noteNode));
                 }
-                noteList.Add(this.currentNote);
+                noteList.push(this.currentNote);
                 this.currentNote.NoteTuplet = tuplet;
             }
             catch (ex) {
@@ -674,19 +681,19 @@ export class VoiceGenerator {
             }
 
         }
-        else if (this.currentVoiceEntry.Notes.Count > 0) {
+        else if (this.currentVoiceEntry.Notes.length > 0) {
             var firstNote: Note = this.currentVoiceEntry.Notes[0];
             if (firstNote.NoteTuplet != null) {
                 var tuplet: Tuplet = firstNote.NoteTuplet;
                 var notes: List<Note> = tuplet.Notes.Last();
-                notes.Add(this.currentNote);
+                notes.push(this.currentNote);
                 this.currentNote.NoteTuplet = tuplet;
             }
         }
     }
-    private addTie(tieNodeList: IEnumerable<IXmlElement>, measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction): void {
+    private addTie(tieNodeList: IXmlElement[], measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction): void {
         if (tieNodeList != null) {
-            if (tieNodeList.Count() == 1) {
+            if (tieNodeList.length() == 1) {
                 var tieNode: IXmlElement = tieNodeList.First();
                 if (tieNode != null && tieNode.Attributes().Any()) {
                     var type: string = tieNode.Attribute("type").Value;
@@ -697,13 +704,13 @@ export class VoiceGenerator {
                                 this.openTieDict.Remove(number);
                             var newTieNumber: number = this.getNextAvailableNumberForTie();
                             var tie: Tie = new Tie(this.currentNote);
-                            this.openTieDict.Add(newTieNumber, tie);
+                            this.openTieDict.push(newTieNumber, tie);
                             if (this.currentNote.NoteBeam != null)
                                 if (this.currentNote.NoteBeam.Notes[0] == this.currentNote) {
                                     tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
                                 }
                                 else {
-                                    for (var idx: number = 0, len = this.currentNote.NoteBeam.Notes.Count; idx < len; ++idx) {
+                                    for (var idx: number = 0, len = this.currentNote.NoteBeam.Notes.length; idx < len; ++idx) {
                                         var note: Note = this.currentNote.NoteBeam.Notes[idx];
                                         if (note.NoteTie != null && note.NoteTie != tie && note.NoteTie.BeamStartTimestamp != null) {
                                             tie.BeamStartTimestamp = note.NoteTie.BeamStartTimestamp;
@@ -716,19 +723,19 @@ export class VoiceGenerator {
                         }
                         else if (type == "stop") {
                             var tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
-                            if (this.openTieDict.ContainsKey(tieNumber)) {
-                                var tie: Tie = this.openTieDict[tieNumber];
+                            var tie: Tie = this.openTieDict[tieNumber];
+                            if (tie !== undefined) {
                                 var tieStartNote: Note = tie.Start;
                                 tieStartNote.NoteTie = tie;
                                 tieStartNote.Length.Add(this.currentNote.Length);
-                                tie.Fractions.Add(this.currentNote.Length);
+                                tie.Fractions.push(this.currentNote.Length);
                                 if (maxTieNoteFraction < this.currentStaffEntry.Timestamp + this.currentNote.Length)
                                     maxTieNoteFraction = this.currentStaffEntry.Timestamp + this.currentNote.Length;
                                 this.currentVoiceEntry.Notes.Remove(this.currentNote);
-                                if (this.currentVoiceEntry.Articulations.Count == 1 && this.currentVoiceEntry.Articulations[0] == ArticulationEnum.fermata && !tieStartNote.ParentVoiceEntry.Articulations.Contains(ArticulationEnum.fermata))
-                                    tieStartNote.ParentVoiceEntry.Articulations.Add(ArticulationEnum.fermata);
+                                if (this.currentVoiceEntry.Articulations.length == 1 && this.currentVoiceEntry.Articulations[0] == ArticulationEnum.fermata && !tieStartNote.ParentVoiceEntry.Articulations.Contains(ArticulationEnum.fermata))
+                                    tieStartNote.ParentVoiceEntry.Articulations.push(ArticulationEnum.fermata);
                                 if (this.currentNote.NoteBeam != null) {
-                                    var noteBeamIndex: number = this.currentNote.NoteBeam.Notes.IndexOf(this.currentNote);
+                                    var noteBeamIndex: number = this.currentNote.NoteBeam.Notes.indexOf(this.currentNote);
                                     if (noteBeamIndex == 0 && tie.BeamStartTimestamp == null)
                                         tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
                                     var noteBeam: Beam = this.currentNote.NoteBeam;
@@ -737,28 +744,28 @@ export class VoiceGenerator {
                                 }
                                 if (this.currentNote.NoteTuplet != null) {
                                     var noteTupletIndex: number = this.currentNote.NoteTuplet.getNoteIndex(this.currentNote);
-                                    var index: number = this.currentNote.NoteTuplet.Notes[noteTupletIndex].IndexOf(this.currentNote);
+                                    var index: number = this.currentNote.NoteTuplet.Notes[noteTupletIndex].indexOf(this.currentNote);
                                     var noteTuplet: Tuplet = this.currentNote.NoteTuplet;
                                     noteTuplet.Notes[noteTupletIndex][index] = tieStartNote;
                                     tie.TieTuplet = noteTuplet;
                                 }
-                                for (var idx: number = 0, len = this.currentNote.NoteSlurs.Count; idx < len; ++idx) {
+                                for (var idx: number = 0, len = this.currentNote.NoteSlurs.length; idx < len; ++idx) {
                                     var slur: Slur = this.currentNote.NoteSlurs[idx];
                                     if (slur.StartNote == this.currentNote) {
                                         slur.StartNote = tie.Start;
-                                        slur.StartNote.NoteSlurs.Add(slur);
+                                        slur.StartNote.NoteSlurs.push(slur);
                                     }
                                     if (slur.EndNote == this.currentNote) {
                                         slur.EndNote = tie.Start;
-                                        slur.EndNote.NoteSlurs.Add(slur);
+                                        slur.EndNote.NoteSlurs.push(slur);
                                     }
                                 }
-                                var lyricsEntriesArr: KeyValuePair<number, LyricsEntry>[] = this.currentVoiceEntry.LyricsEntries.ToArray();
-                                for (var idx: number = 0, len = lyricsEntriesArr.length; idx < len; ++idx) {
-                                    var lyricsEntry: KeyValuePair<number, LyricsEntry> = lyricsEntriesArr[idx];
-                                    if (!tieStartNote.ParentVoiceEntry.LyricsEntries.ContainsKey(lyricsEntry.Key)) {
-                                        tieStartNote.ParentVoiceEntry.LyricsEntries.Add(lyricsEntry.Key, lyricsEntry.Value);
-                                        lyricsEntry.Value.Parent = tieStartNote.ParentVoiceEntry;
+                                //var lyricsEntriesArr: KeyValuePair<number, LyricsEntry>[] = this.currentVoiceEntry.LyricsEntries.ToArray();
+                                for (let lyricsEntry in this.currentVoiceEntry.LyricsEntries) {
+                                    let val: LyricsEntry = this.currentVoiceEntry.LyricsEntries[lyricsEntry];
+                                    if (!tieStartNote.ParentVoiceEntry.LyricsEntries[lyricsEntry] === undefined) {
+                                        tieStartNote.ParentVoiceEntry.LyricsEntries[lyricsEntry] = val;
+                                        val.Parent = tieStartNote.ParentVoiceEntry;
                                     }
                                 }
                                 this.openTieDict.Remove(tieNumber);
@@ -767,42 +774,42 @@ export class VoiceGenerator {
                     }
                     catch (err) {
                         var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TieError", "Error while reading tie.");
-                        this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
+                        this.musicSheet.SheetErrors.pushTemp(errorMsg);
                     }
 
                 }
             }
-            else if (tieNodeList.Count() == 2) {
+            else if (tieNodeList.length() == 2) {
                 var tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
                 if (tieNumber >= 0) {
                     var tie: Tie = this.openTieDict[tieNumber];
                     var tieStartNote: Note = tie.Start;
                     tieStartNote.Length.Add(this.currentNote.Length);
-                    tie.Fractions.Add(this.currentNote.Length);
+                    tie.Fractions.push(this.currentNote.Length);
                     if (this.currentNote.NoteBeam != null) {
-                        var noteBeamIndex: number = this.currentNote.NoteBeam.Notes.IndexOf(this.currentNote);
+                        var noteBeamIndex: number = this.currentNote.NoteBeam.Notes.indexOf(this.currentNote);
                         if (noteBeamIndex == 0 && tie.BeamStartTimestamp == null)
                             tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
                         var noteBeam: Beam = this.currentNote.NoteBeam;
                         noteBeam.Notes[noteBeamIndex] = tieStartNote;
                         tie.TieBeam = noteBeam;
                     }
-                    for (var idx: number = 0, len = this.currentNote.NoteSlurs.Count; idx < len; ++idx) {
+                    for (var idx: number = 0, len = this.currentNote.NoteSlurs.length; idx < len; ++idx) {
                         var slur: Slur = this.currentNote.NoteSlurs[idx];
                         if (slur.StartNote == this.currentNote) {
                             slur.StartNote = tie.Start;
-                            slur.StartNote.NoteSlurs.Add(slur);
+                            slur.StartNote.NoteSlurs.push(slur);
                         }
                         if (slur.EndNote == this.currentNote) {
                             slur.EndNote = tie.Start;
-                            slur.EndNote.NoteSlurs.Add(slur);
+                            slur.EndNote.NoteSlurs.push(slur);
                         }
                     }
                     var lyricsEntries: KeyValuePair<number, LyricsEntry>[] = this.currentVoiceEntry.LyricsEntries.ToArray();
                     for (var idx: number = 0, len = lyricsEntries.length; idx < len; ++idx) {
                         var lyricsEntry: KeyValuePair<number, LyricsEntry> = lyricsEntries[idx];
                         if (!tieStartNote.ParentVoiceEntry.LyricsEntries.ContainsKey(lyricsEntry.Key)) {
-                            tieStartNote.ParentVoiceEntry.LyricsEntries.Add(lyricsEntry.Key, lyricsEntry.Value);
+                            tieStartNote.ParentVoiceEntry.LyricsEntries.push(lyricsEntry.Key, lyricsEntry.Value);
                             lyricsEntry.Value.Parent = tieStartNote.ParentVoiceEntry;
                         }
                     }
@@ -814,15 +821,15 @@ export class VoiceGenerator {
         }
     }
     private getNextAvailableNumberForTie(): number {
-        var keys: List<number> = new List<number>(this.openTieDict.Keys.ToList());
-        if (keys.Count == 0)
+        var keys: number[] = this.openTieDict.keys();
+        if (keys.length == 0)
             return 1;
         keys.Sort();
-        for (var i: number = 0; i < keys.Count; i++) {
+        for (var i: number = 0; i < keys.length; i++) {
             if (i + 1 != keys[i])
                 return i + 1;
         }
-        return keys[keys.Count - 1] + 1;
+        return keys[keys.length - 1] + 1;
     }
     private findCurrentNoteInTieDict(candidateNote: Note): number {
         var openTieDictArr: KeyValuePair<number, Tie>[] = this.openTieDict.ToArray();
@@ -844,8 +851,8 @@ export class VoiceGenerator {
                 }
                 catch (e) {
                     var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid note duration.");
-                    this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                    throw new MusicSheetReadingException("", e, 0);
+                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                    throw new MusicSheetReadingException("", e);
                 }
 
             }
