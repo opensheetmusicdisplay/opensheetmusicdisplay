@@ -105,10 +105,12 @@ export class SourceMeasure {
     }
     return undefined;
   }
-  public findOrCreateStaffEntry(inMeasureTimestamp: Fraction, inSourceMeasureStaffIndex: number, staff: Staff): SourceStaffEntry {
-    // FIXME, createdNewContainer: boolean): SourceStaffEntry {
+  public findOrCreateStaffEntry(
+      inMeasureTimestamp: Fraction, inSourceMeasureStaffIndex: number, staff: Staff
+  ): {createdNewContainer: boolean, staffEntry: SourceStaffEntry} {
+    // FIXME Andrea: debug & Test
+    let createdNewContainer: boolean = false;
     let staffEntry: SourceStaffEntry = undefined;
-    //createdNewContainer = false; FIXME! The original C# version uses a "out" argument!
     // Find:
     let existingVerticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = undefined;
     for (let k: number = 0; k < this.verticalSourceStaffEntryContainers.length; k++) {
@@ -119,14 +121,14 @@ export class SourceMeasure {
     }
     if (existingVerticalSourceStaffEntryContainer !== undefined) {
       if (existingVerticalSourceStaffEntryContainer[inSourceMeasureStaffIndex] !== undefined) {
-        return existingVerticalSourceStaffEntryContainer[inSourceMeasureStaffIndex];
+        staffEntry = existingVerticalSourceStaffEntryContainer[inSourceMeasureStaffIndex];
       } else {
         staffEntry = new SourceStaffEntry(existingVerticalSourceStaffEntryContainer, staff);
         existingVerticalSourceStaffEntryContainer[inSourceMeasureStaffIndex] = staffEntry;
-        return staffEntry;
       }
+      return {createdNewContainer: createdNewContainer, staffEntry: staffEntry};
     }
-    //createdNewContainer = true;
+    createdNewContainer = true;
     let last: VerticalSourceStaffEntryContainer = this.verticalSourceStaffEntryContainers[this.verticalSourceStaffEntryContainers.length - 1];
     if (this.verticalSourceStaffEntryContainers.length === 0 || last.Timestamp < inMeasureTimestamp) {
       let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
@@ -147,7 +149,7 @@ export class SourceMeasure {
           this.verticalSourceStaffEntryContainers.splice(i + 1, 0, container);
           staffEntry = new SourceStaffEntry(container, staff);
           container[inSourceMeasureStaffIndex] = staffEntry;
-          return staffEntry;
+          break;
         }
         if (i === 0) {
           let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
@@ -156,14 +158,15 @@ export class SourceMeasure {
           this.verticalSourceStaffEntryContainers.splice(i, 0, container);
           staffEntry = new SourceStaffEntry(container, staff);
           container[inSourceMeasureStaffIndex] = staffEntry;
-          return staffEntry;
+          break;
         }
       }
     }
-    return staffEntry;
+    return {createdNewContainer: createdNewContainer, staffEntry: staffEntry};
   }
-  public findOrCreateVoiceEntry(sse: SourceStaffEntry, voice: Voice): VoiceEntry {//, createdNewVoiceEntry: boolean): VoiceEntry {
+  public findOrCreateVoiceEntry(sse: SourceStaffEntry, voice: Voice): { createdVoiceEntry: boolean, voiceEntry: VoiceEntry } {
     let ve: VoiceEntry = undefined;
+    let createdNewVoiceEntry: boolean = false;
     for (let voiceEntry: VoiceEntry of sse.VoiceEntries) {
       if (voiceEntry.ParentVoice === voice) {
         ve = voiceEntry;
@@ -173,11 +176,9 @@ export class SourceMeasure {
     if (ve === undefined) {
       ve = new VoiceEntry(sse.Timestamp, voice, sse);
       sse.VoiceEntries.push(ve);
-      // FIXME createdNewVoiceEntry = true;
-    } else {
-      // FIXME createdNewVoiceEntry = false;
+      createdNewVoiceEntry = true;
     }
-    return ve;
+    return { createdVoiceEntry: createdVoiceEntry, voiceEntry: ve };
   }
   public getPreviousSourceStaffEntryFromIndex(
     verticalIndex: number, horizontalIndex: number

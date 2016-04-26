@@ -8,7 +8,10 @@ import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 
+import Vex = require("vexflow");
+
 export class Note {
+
     constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch) {
         this.voiceEntry = voiceEntry;
         this.parentStaffEntry = parentStaffEntry;
@@ -20,6 +23,7 @@ export class Note {
           this.HalfTone = 0;
         }
     }
+
     public HalfTone: number;
 
     private voiceEntry: VoiceEntry;
@@ -32,6 +36,7 @@ export class Note {
     private slurs: Slur[] = [];
     private graceNoteSlash: boolean = false;
     private playbackInstrumentId: string = undefined;
+
     public get GraceNoteSlash(): boolean {
         return this.graceNoteSlash;
     }
@@ -89,11 +94,11 @@ export class Note {
     public set PlaybackInstrumentId(value: string) {
         this.playbackInstrumentId = value;
     }
+
     public calculateNoteLengthWithoutTie(): Fraction {
         let withoutTieLength: Fraction = this.length.clone();
         if (this.tie !== undefined) {
-            for (let idx: number = 0, len: number = this.tie.Fractions.length; idx < len; ++idx) {
-                let fraction: Fraction = this.tie.Fractions[idx];
+            for (let fraction of this.tie.Fractions) {
                 withoutTieLength.Sub(fraction);
             }
         }
@@ -114,6 +119,7 @@ export class Note {
         return originalLength;
     }
     public calculateNoteLengthWithDots(): Fraction {
+        // FIXME is this function the same as this.calculateNoteLengthWithoutTie?
         if (this.tie !== undefined) {
             return this.calculateNoteLengthWithoutTie();
         }

@@ -4,7 +4,8 @@ import {OSMDFonts} from "../Common/Enums/osmdFonts";
 import {OSMDFontStyles} from "../Common/Enums/osmdFontStyles";
 
 export class Label {
-  constructor(arg1: string/*|FontInfo.MusicFontSymbol*/, alignment?: OSMDTextAlignment) {
+    // FIXME contructor
+    constructor(arg1: string/*|FontInfo.MusicFontSymbol*/, alignment?: OSMDTextAlignment) {
       //if (arg1 instanceof string) {
       this.text = <string>arg1;
       //} else if (arg1 instanceof FontInfo.MusicFontSymbol) {

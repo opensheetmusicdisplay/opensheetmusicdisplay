@@ -3,6 +3,7 @@ import {Note} from "./Note";
 export class Beam {
     private notes: Note[] = [];
     private extendedNoteList: Note[] = [];
+
     public get Notes(): Note[] {
         return this.notes;
     }
@@ -15,6 +16,7 @@ export class Beam {
     public set ExtendedNoteList(value: Note[]) {
         this.extendedNoteList = value;
     }
+
     public addNoteToBeam(note: Note): void {
         if (note !== undefined) {
             note.NoteBeam = this;

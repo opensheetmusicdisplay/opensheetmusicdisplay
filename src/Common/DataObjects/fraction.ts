@@ -164,6 +164,9 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     public lt(frac: Fraction): boolean {
         return (this.numerator * frac.Denominator - this.denominator * frac.Numerator) < 0;
     }
+    public lte(frac: Fraction): boolean {
+        return (this.numerator * frac.Denominator - this.denominator * frac.Numerator) <= 0;
+    }
 
     //public Equals(f: Fraction): boolean {
     //    if (ReferenceEquals(this, f))

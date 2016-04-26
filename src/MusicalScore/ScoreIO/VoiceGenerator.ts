@@ -10,6 +10,8 @@ import {Beam} from "../VoiceData/Beam";
 import {Tie} from "../VoiceData/Tie";
 import {Tuplet} from "../VoiceData/Tuplet";
 import {Fraction} from "../../Common/DataObjects/fraction";
+import {MusicSymbolModuleFactory} from "./InstrumentReader";
+import {IXmlElement} from "../../Common/FileIO/Xml";
 
 export class VoiceGenerator {
     constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = null) {
@@ -40,6 +42,7 @@ export class VoiceGenerator {
     private currentOctaveShift: number = 0;
     private tupletDict: Dictionary<number, Tuplet> = new Dictionary<number, Tuplet>();
     private openTupletNumber: number = 0;
+
     public get GetVoice(): Voice {
         return this.voice;
     }
