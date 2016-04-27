@@ -6,16 +6,10 @@ import { Staff } from "./VoiceData/Staff";
 import { SubInstrument } from "./SubInstrument";
 import { MidiInstrument } from "./VoiceData/Instructions/ClefInstruction";
 
-// FIXME
-type IPhonicScoreInterface = any;
-type InstrumentParameters = any;
-type InstrumentParameterChangedDelegate = any;
 
-
-export class Instrument extends InstrumentalGroup /*implements ISettableInstrument, IInstrument*/ {
-    constructor(id: number, idString: string, phonicScoreInterface: IPhonicScoreInterface, musicSheet: MusicSheet, parent: InstrumentalGroup) {
+export class Instrument extends InstrumentalGroup {
+    constructor(id: number, idString: string, musicSheet: MusicSheet, parent: InstrumentalGroup) {
         super(undefined, musicSheet, parent);
-        this.phonicScoreInterface = phonicScoreInterface;
         this.id = id;
         this.idString = idString;
         this.nameLabel = new Label(idString);
@@ -23,13 +17,10 @@ export class Instrument extends InstrumentalGroup /*implements ISettableInstrume
 
     public Transpose: number = 0;
     public Highlight: boolean;
-    public InstrumentParameterChanged: InstrumentParameterChangedDelegate;
 
-    private phonicScoreInterface: IPhonicScoreInterface;
     private voices: Voice[] = [];
     private staves: Staff[] = [];
     private nameLabel: Label;
-    // private range: ToneRange;
     private idString: string;
     private id: number;
     private hasLyrics: boolean = false;
@@ -70,9 +61,6 @@ export class Instrument extends InstrumentalGroup /*implements ISettableInstrume
     }
     public set Name(value: string) {
         this.nameLabel.Text = value;
-    }
-    public set PhonicScoreInterface(value: IPhonicScoreInterface) {
-        this.phonicScoreInterface = value;
     }
     public get IdString(): string {
         return this.idString;
@@ -249,12 +237,5 @@ export class Instrument extends InstrumentalGroup /*implements ISettableInstrume
         for (let i: number = 0; i < numberOfStaves; i++) {
             this.staves.push(new Staff(this, i + 1));
         }
-    }
-    public SetInstrumentParameter(parameter: InstrumentParameters, value: Object): void {
-        this.phonicScoreInterface.RequestInstrumentParameter(this.Id, parameter, value);
-    }
-
-    public Dispose(): void {
-        this.InstrumentParameterChanged = undefined;
     }
 }
