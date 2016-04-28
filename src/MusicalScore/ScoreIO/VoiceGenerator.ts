@@ -174,15 +174,11 @@ export class VoiceGenerator {
             this.handleOpenBeam();
     }
     public checkOpenTies(): void {
-        let toRemove: number[] = [];
-        let openTieDict: {[_: number]: Tie} = this.openTieDict;
+        let openTieDict: {[key: number]: Tie} = this.openTieDict;
         for (let key in openTieDict) {
             let tie: Tie = openTieDict[key];
             if (Fraction.plus(tie.Start.ParentStaffEntry.Timestamp, tie.Start.Length).lt(tie.Start.ParentStaffEntry.VerticalContainerParent.ParentMeasure.Duration))
-                toRemove.push(key);
-        }
-        for (let key of toRemove) {
-            delete openTieDict[key];
+                delete openTieDict[key];
         }
     }
     public hasVoiceEntry(): boolean {
@@ -712,7 +708,7 @@ export class VoiceGenerator {
                             this.openTieDict[newTieNumber] = tie;
                             if (this.currentNote.NoteBeam !== undefined)
                                 if (this.currentNote.NoteBeam.Notes[0] === this.currentNote) {
-                                    tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
+                                    tie.BeamStartTimestamp = Fraction.plus(measureStartAbsoluteTimestamp, this.currentVoiceEntry.Timestamp);
                                 }
                                 else {
                                     for (let idx: number = 0, len = this.currentNote.NoteBeam.Notes.length; idx < len; ++idx) {
@@ -723,7 +719,7 @@ export class VoiceGenerator {
                                         }
                                     }
                                     if (this.currentNote === CollectionUtil.last(this.currentNote.NoteBeam.Notes))
-                                        tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
+                                        tie.BeamStartTimestamp = Fraction.plus(measureStartAbsoluteTimestamp, this.currentVoiceEntry.Timestamp);
                                 }
                         }
                         else if (type === "stop") {
@@ -734,15 +730,16 @@ export class VoiceGenerator {
                                 tieStartNote.NoteTie = tie;
                                 tieStartNote.Length.Add(this.currentNote.Length);
                                 tie.Fractions.push(this.currentNote.Length);
-                                if (maxTieNoteFraction < this.currentStaffEntry.Timestamp + this.currentNote.Length)
-                                    maxTieNoteFraction = this.currentStaffEntry.Timestamp + this.currentNote.Length;
-                                delete this.currentVoiceEntry.Notes[this.currentNote];
+                                if (maxTieNoteFraction.lt(Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length)))
+                                    maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
+                                let i: number = this.currentVoiceEntry.Notes.indexOf(this.currentNote);
+                                if (i !== -1) delete this.currentVoiceEntry.Notes[i];
                                 if (this.currentVoiceEntry.Articulations.length === 1 && this.currentVoiceEntry.Articulations[0] === ArticulationEnum.fermata && tieStartNote.ParentVoiceEntry.Articulations[ArticulationEnum.fermata] === undefined)
                                     tieStartNote.ParentVoiceEntry.Articulations.push(ArticulationEnum.fermata);
                                 if (this.currentNote.NoteBeam !== undefined) {
                                     let noteBeamIndex: number = this.currentNote.NoteBeam.Notes.indexOf(this.currentNote);
                                     if (noteBeamIndex === 0 && tie.BeamStartTimestamp === undefined)
-                                        tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
+                                        tie.BeamStartTimestamp = Fraction.plus(measureStartAbsoluteTimestamp, this.currentVoiceEntry.Timestamp);
                                     let noteBeam: Beam = this.currentNote.NoteBeam;
                                     noteBeam.Notes[noteBeamIndex] = tieStartNote;
                                     tie.TieBeam = noteBeam;
@@ -794,7 +791,7 @@ export class VoiceGenerator {
                     if (this.currentNote.NoteBeam !== undefined) {
                         let noteBeamIndex: number = this.currentNote.NoteBeam.Notes.indexOf(this.currentNote);
                         if (noteBeamIndex === 0 && tie.BeamStartTimestamp === undefined)
-                            tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
+                            tie.BeamStartTimestamp = Fraction.plus(measureStartAbsoluteTimestamp, this.currentVoiceEntry.Timestamp);
                         let noteBeam: Beam = this.currentNote.NoteBeam;
                         noteBeam.Notes[noteBeamIndex] = tieStartNote;
                         tie.TieBeam = noteBeam;
@@ -818,9 +815,11 @@ export class VoiceGenerator {
                             lyricsEntry.Parent = tieStartNote.ParentVoiceEntry;
                         }
                     }
-                    if (maxTieNoteFraction < this.currentStaffEntry.Timestamp + this.currentNote.Length)
-                        maxTieNoteFraction = this.currentStaffEntry.Timestamp + this.currentNote.Length;
-                    delete this.currentVoiceEntry.Notes[this.currentNote];
+                    if (maxTieNoteFraction.lt(Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length)))
+                        maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
+                    // delete currentNote from Notes:
+                    let i: number = this.currentVoiceEntry.Notes.indexOf(this.currentNote);
+                    if (i !== -1) delete this.currentVoiceEntry.Notes[i];
                 }
             }
         }
@@ -829,19 +828,19 @@ export class VoiceGenerator {
         let keys: string[] = Object.keys(this.openTieDict);
         if (keys.length === 0)
             return 1;
-        keys.sort((a, b) => (a - b)); // FIXME Andrea: test
+        keys.sort((a, b) => (+a - +b)); // FIXME Andrea: test
         for (let i: number = 0; i < keys.length; i++) {
-            if (<string>(i + 1) !== keys[i])
+            if ("" + (i + 1) !== keys[i])
                 return i + 1;
         }
-        return keys[keys.length - 1] + 1;
+        return +(keys[keys.length - 1]) + 1;
     }
     private findCurrentNoteInTieDict(candidateNote: Note): number {
         let openTieDict: { [_: number]: Tie; } = this.openTieDict;
         for (let key in openTieDict) {
             let tie: Tie = openTieDict[key];
             if (tie.Start.Pitch.FundamentalNote === candidateNote.Pitch.FundamentalNote && tie.Start.Pitch.Octave === candidateNote.Pitch.Octave) {
-                return key;
+                return +key;
             }
         }
         return -1;

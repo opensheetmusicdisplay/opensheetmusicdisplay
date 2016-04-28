@@ -34,7 +34,7 @@ export class SourceStaffEntry {
   }
   public get AbsoluteTimestamp(): Fraction {
     if (this.VerticalContainerParent !== undefined) {
-      return this.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp + this.VerticalContainerParent.Timestamp;
+      return Fraction.plus(this.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp, this.VerticalContainerParent.Timestamp);
     }
     return undefined;
   }

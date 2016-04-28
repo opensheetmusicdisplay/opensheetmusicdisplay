@@ -5,8 +5,8 @@ export class SubInstrument {
     constructor(parentInstrument: Instrument) {
         this.parentInstrument = parentInstrument;
         this.FixedKey = -1;
-        this.MidiInstrumentId = this.parseMidiInstrument(this.parentInstrument.Name);
-        this.Name = SubInstrument.midiInstrument[this.MidiInstrumentId];
+        this.Name = this.parseMidiInstrument(this.parentInstrument.Name);
+        this.MidiInstrumentId = SubInstrument.midiInstrument[this.Name];
         this.Volume = 1.0;
     }
     private static midiInstrument: { [key: string]: MidiInstrument; } = {
@@ -84,16 +84,17 @@ export class SubInstrument {
           || instrument === MidiInstrument.Electric_Piano_2);
     }
     public setMidiInstrument(instrumentType: string): void {
-        this.MidiInstrumentId = this.parseMidiInstrument(instrumentType);
+        this.MidiInstrumentId = SubInstrument.midiInstrument[this.parseMidiInstrument(instrumentType)];
     }
-    private parseMidiInstrument(instrumentType: string): MidiInstrument {
+
+    private parseMidiInstrument(instrumentType: string): string {
         // FIXME: test this function
         try {
             if (instrumentType) {
                 let tmpName: string = instrumentType.toLowerCase().trim();
                 for (let key in SubInstrument.midiInstrument) {
                     if (tmpName.indexOf(key) !== -1) {
-                        return SubInstrument.midiInstrument[key];
+                        return key;
                     }
                 }
             }
@@ -101,13 +102,13 @@ export class SubInstrument {
                 let tmpName: string = this.parentInstrument.Name.toLowerCase().trim();
                 for (let key in SubInstrument.midiInstrument) {
                     if (tmpName.indexOf(key) !== -1) {
-                        return SubInstrument.midiInstrument[key];
+                        return key;
                     }
                 }
             }
         } catch (e) {
             console.log("Error parsing MIDI Instrument. Default to Grand Piano."); // FIXME
         }
-        return MidiInstrument.Acoustic_Grand_Piano;
+        return "unnamed";
     }
 }

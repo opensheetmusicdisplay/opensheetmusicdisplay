@@ -2,6 +2,7 @@ import {PlacementEnum, AbstractExpression} from "./abstractExpression";
 
 export class MoodExpression extends AbstractExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number) {
+        super();
         this.label = label;
         this.placement = placement;
         this.staffNumber = staffNumber;

@@ -5,12 +5,15 @@ import {AbstractTempoExpression} from "../abstractTempoExpression";
 
 export class ContinuousTempoExpression extends AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number, parentMultiTempoExpression: MultiTempoExpression) {
-        super.label = label;
-        super.placement = placement;
-        super.staffNumber = staffNumber;
-        super.parentMultiTempoExpression = parentMultiTempoExpression;
+        super(label, placement, staffNumber, parentMultiTempoExpression);
+        //super.label = label;
+        //super.placement = placement;
+        //super.staffNumber = staffNumber;
+        //super.parentMultiTempoExpression = parentMultiTempoExpression;
+
         this.setTempoType();
     }
+
     private absoluteEndTimestamp: Fraction;
     private tempoType: ContinuousTempoType;
     private startTempo: number;
@@ -84,6 +87,7 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
         else return false;
     }
 }
+
 export enum ContinuousTempoType {
     accelerando = 0,
     stretto = 1,

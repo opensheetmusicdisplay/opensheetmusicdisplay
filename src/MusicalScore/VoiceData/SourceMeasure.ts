@@ -167,7 +167,7 @@ export class SourceMeasure {
   public findOrCreateVoiceEntry(sse: SourceStaffEntry, voice: Voice): { createdVoiceEntry: boolean, voiceEntry: VoiceEntry } {
     let ve: VoiceEntry = undefined;
     let createdNewVoiceEntry: boolean = false;
-    for (let voiceEntry: VoiceEntry of sse.VoiceEntries) {
+    for (let voiceEntry of sse.VoiceEntries) {
       if (voiceEntry.ParentVoice === voice) {
         ve = voiceEntry;
         break;
@@ -178,7 +178,7 @@ export class SourceMeasure {
       sse.VoiceEntries.push(ve);
       createdNewVoiceEntry = true;
     }
-    return { createdVoiceEntry: createdVoiceEntry, voiceEntry: ve };
+    return { createdVoiceEntry: createdNewVoiceEntry, voiceEntry: ve };
   }
   public getPreviousSourceStaffEntryFromIndex(
     verticalIndex: number, horizontalIndex: number
@@ -233,8 +233,8 @@ export class SourceMeasure {
           for (let m: number = verticalContainerIndex - 1; m >= 0; m--) {
             let previousStaffEntry: SourceStaffEntry = this.verticalSourceStaffEntryContainers[m][inSourceMeasureInstrumentIndex + j];
             if (previousStaffEntry !== undefined && previousStaffEntry.hasTie()) {
-              if (instrumentDuration < previousStaffEntry.Timestamp + previousStaffEntry.calculateMaxNoteLength()) {
-                instrumentDuration = previousStaffEntry.Timestamp + previousStaffEntry.calculateMaxNoteLength();
+              if (instrumentDuration.lt(Fraction.plus(previousStaffEntry.Timestamp, previousStaffEntry.calculateMaxNoteLength()))) {
+                instrumentDuration = Fraction.plus(previousStaffEntry.Timestamp, previousStaffEntry.calculateMaxNoteLength());
                 break;
               }
             }
@@ -259,8 +259,8 @@ export class SourceMeasure {
       for (let j: number = 0; j < musicSheet.Instruments[i].Staves.length; j++) {
         let lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
         if (lastStaffEntry !== undefined && lastStaffEntry.Timestamp !== undefined) {
-          if (instrumentDuration < lastStaffEntry.Timestamp + lastStaffEntry.calculateMaxNoteLength()) {
-            instrumentDuration = new Fraction(lastStaffEntry.Timestamp + lastStaffEntry.calculateMaxNoteLength());
+          if (instrumentDuration.lt(Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntry.calculateMaxNoteLength()))) {
+            instrumentDuration = Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntry.calculateMaxNoteLength());
           }
         }
       }

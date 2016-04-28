@@ -7,8 +7,9 @@ import {Pitch} from "../../../Common/DataObjects/pitch";
 
 export class KeyInstruction extends AbstractNotationInstruction {
   constructor(first: SourceStaffEntry|KeyInstruction, key?: number, mode?: KeyEnum) {
+    // FIXME Andrea: check this constructor
     if (first === undefined) {
-      super(undefined); // FIXME check
+      super(undefined);
       this.Key = key;
       this.mode = mode;
     }
@@ -20,8 +21,13 @@ export class KeyInstruction extends AbstractNotationInstruction {
     }
     if (first instanceof KeyInstruction) {
       let keyInstruction: KeyInstruction = <KeyInstruction> first;
-      super(undefined); // FIXME check
-      this(keyInstruction.parent, keyInstruction.keyType, keyInstruction.mode);
+      //super(undefined);
+      //this(keyInstruction.parent, keyInstruction.keyType, keyInstruction.mode);
+      if (keyInstruction.parent instanceof SourceStaffEntry) {
+        super(keyInstruction.parent);
+      } else {
+        super(undefined);
+      }
       this.keyType = keyInstruction.keyType;
       this.mode = keyInstruction.mode;
     }

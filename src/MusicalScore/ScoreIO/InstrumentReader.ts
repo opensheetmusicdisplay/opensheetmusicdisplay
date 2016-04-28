@@ -250,7 +250,7 @@ export class InstrumentReader {
                 this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
               } else {
                 divisionsException = true;
-                throw new MusicSheetReadingException(errorMsg + this.instrument.Name, 0);
+                throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
               }
             }
 
@@ -266,7 +266,7 @@ export class InstrumentReader {
               this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
             } else {
               divisionsException = true;
-              throw new MusicSheetReadingException(errorMsg + this.instrument.Name, 0);
+              throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
             }
           }
           this.addAbstractInstruction(xmlNode, guitarPro);
@@ -358,7 +358,7 @@ export class InstrumentReader {
       }
     } catch (e) {
       if (divisionsException) {
-        throw new MusicSheetReadingException(e.Message, 0);
+        throw new MusicSheetReadingException(e.Message);
       }
       let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
       this.musicSheet.SheetErrors.pushTemp(errorMsg);
@@ -697,7 +697,7 @@ export class InstrumentReader {
           logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
-        if ((num === denom === 4) || (num === denom === 2)) {
+        if ((num === 4 && denom === 4) || (num === 2 && denom === 2)) {
           symbolEnum = RhythmSymbolEnum.NONE;
         }
         this.abstractInstructions[1] = new RhythmInstruction(
@@ -850,23 +850,23 @@ export class InstrumentReader {
   }
   */
   private saveClefInstructionAtEndOfMeasure(): void {
-    for (let key of this.abstractInstructions) {
+    for (let key in this.abstractInstructions) {
       let value = this.abstractInstructions[key];
       if (value instanceof ClefInstruction) {
         let clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (
-          (this.activeClefs[key - 1] === undefined) ||
-          (clefInstruction.ClefType !== this.activeClefs[key - 1].ClefType || (
-            clefInstruction.ClefType === this.activeClefs[key - 1].ClefType &&
-            clefInstruction.Line !== this.activeClefs[key - 1].Line
+          (this.activeClefs[+key - 1] === undefined) ||
+          (clefInstruction.ClefType !== this.activeClefs[+key - 1].ClefType || (
+            clefInstruction.ClefType === this.activeClefs[+key - 1].ClefType &&
+            clefInstruction.Line !== this.activeClefs[+key - 1].Line
           ))) {
           let lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
-          this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] = lastStaffEntry;
+          this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + (+key) - 1] = lastStaffEntry;
           let newClefInstruction: ClefInstruction = clefInstruction;
           newClefInstruction.Parent = lastStaffEntry;
           lastStaffEntry.Instructions.push(newClefInstruction);
-          this.activeClefs[key - 1] = clefInstruction;
-          delete this.abstractInstructions[key]; // FIXME Andrea: might hurt performance
+          this.activeClefs[+key - 1] = clefInstruction;
+          delete this.abstractInstructions[+key]; // FIXME Andrea: might hurt performance?
         }
       }
     }
@@ -883,7 +883,7 @@ export class InstrumentReader {
           if (actualNotes !== undefined && normalNotes !== undefined) {
             let actual: number = parseInt(actualNotes.Value);
             let normal: number = parseInt(normalNotes.Value);
-            duration = new Fraction(normal, actual) * typeDuration;
+            duration = new Fraction(normal * typeDuration.Numerator, actual * typeDuration.Denominator);
           }
         }
       }
@@ -989,21 +989,10 @@ export class InstrumentReader {
         xmlMeasureIndex++;
         if (xmlMeasureIndex === this.xmlMeasureList.length) {
           let errorMsg: string = ITextTranslation.translateText("ReaderErrorMEssages/DivisionsError", "Invalid divisions value at Instrument: ");
-          throw new MusicSheetReadingException(errorMsg + this.instrument.Name, 0);
+          throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
         }
       }
     }
     return divisionsFromNote;
   }
 }
-
-/*
-class KeyValuePairClass<T, TU> {
-  constructor(key: T, value: TU) {
-    this.key = key;
-    this.value = value;
-  }
-  public key: T;
-  public value: TU;
-}
-*/

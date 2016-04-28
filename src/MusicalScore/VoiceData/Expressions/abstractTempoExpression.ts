@@ -1,10 +1,18 @@
 import {PlacementEnum} from "./abstractExpression";
 import {MultiTempoExpression} from "./multiTempoExpression";
+
 export class AbstractTempoExpression {
+    constructor(label: string, placement: PlacementEnum, staffNumber: number, parentMultiTempoExpression: MultiTempoExpression) {
+        this.label = label;
+        this.placement = placement;
+        this.staffNumber = staffNumber;
+        this.parentMultiTempoExpression = parentMultiTempoExpression;
+    }
     protected label: string;
     protected placement: PlacementEnum;
     protected staffNumber: number;
     protected parentMultiTempoExpression: MultiTempoExpression;
+
     public get Label(): string {
         return this.label;
     }
@@ -26,17 +34,16 @@ export class AbstractTempoExpression {
     public get ParentMultiTempoExpression(): MultiTempoExpression {
         return this.parentMultiTempoExpression;
     }
-    protected static isStringInStringList(wordsToFind: Array<string>, inputString: string): boolean {
-        for (var idx: number = 0, len = wordsToFind.length; idx < len; ++idx) {
-            var wordToFind: string = wordsToFind[idx];
-            if (AbstractTempoExpression.stringContainsSeparatedWord(inputString.toLowerCase().Trim(), wordToFind.toLowerCase().Trim()))
+
+    protected static isStringInStringList(wordsToFind: string[], inputString: string): boolean {
+        for (let wordToFind of wordsToFind) {
+            if (AbstractTempoExpression.stringContainsSeparatedWord(inputString.toLowerCase().trim(), wordToFind.toLowerCase().trim())) {
                 return true;
+            }
         }
         return false;
     }
     private static stringContainsSeparatedWord(str: string, word: string): boolean {
-        if (str == word || str.Contains(" " + word) || str.Contains(word + " "))
-            return true;
-        return false;
+        return (str === word || str.indexOf(" " + word) !== -1 || str.indexOf(word + " ") !== -1);
     }
 }

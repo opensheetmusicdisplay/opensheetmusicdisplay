@@ -12,6 +12,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     //    this.setType();
     //}
     constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number, label: string) {
+        super();
         this.dynamicType = dynamicType;
         this.label = label;
         this.placement = placement;
@@ -94,13 +95,13 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         if (this.EndMultiExpression != null)
             continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsoluteTimestamp;
         else {
-            continuousAbsoluteEndTimestamp = this.startMultiExpression.SourceMeasureParent.AbsoluteTimestamp + this.startMultiExpression.SourceMeasureParent.Duration;
+            continuousAbsoluteEndTimestamp = Fraction.plus(this.startMultiExpression.SourceMeasureParent.AbsoluteTimestamp, this.startMultiExpression.SourceMeasureParent.Duration);
         }
         if (currentAbsoluteTimestamp < continuousAbsoluteStartTimestamp)
             return -1;
         if (currentAbsoluteTimestamp > continuousAbsoluteEndTimestamp)
             return -2;
-        var interpolationRatio: number = (currentAbsoluteTimestamp - continuousAbsoluteStartTimestamp).RealValue / (continuousAbsoluteEndTimestamp - continuousAbsoluteStartTimestamp).RealValue;
+        var interpolationRatio: number = Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue / Fraction.minus(continuousAbsoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;
         var interpolatedVolume: number = Math.max(0.0, Math.min(99.9, this.startVolume + (this.endVolume - this.startVolume) * interpolationRatio));
         return <number>interpolatedVolume;
     }

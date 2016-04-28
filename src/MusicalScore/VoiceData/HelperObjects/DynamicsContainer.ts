@@ -3,12 +3,12 @@ import {InstantaniousDynamicExpression} from "../Expressions/instantaniousDynami
 import {MultiExpression} from "../Expressions/multiExpression";
 
 export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
-    constructor(continuousDynamicExpression: ContinuousDynamicExpression, staffNumber: number) {
-        this.ContinuousDynamicExpression = continuousDynamicExpression;
-        this.StaffNumber = staffNumber;
-    }
-    constructor(instantaniousDynamicExpression: InstantaniousDynamicExpression, staffNumber: number) {
-        this.InstantaneousDynamicExpression = instantaniousDynamicExpression;
+    constructor(dynamicExpression: ContinuousDynamicExpression|InstantaniousDynamicExpression, staffNumber: number) {
+        if (dynamicExpression instanceof ContinuousDynamicExpression) {
+            this.ContinuousDynamicExpression = dynamicExpression;
+        } else if (dynamicExpression instanceof InstantaniousDynamicExpression) {
+            this.InstantaneousDynamicExpression = dynamicExpression;
+        }
         this.StaffNumber = staffNumber;
     }
 

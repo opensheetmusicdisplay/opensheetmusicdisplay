@@ -6,23 +6,23 @@ import {OSMDFontStyles} from "../../../Common/Enums/osmdFontStyles";
 import {AbstractTempoExpression} from "./abstractTempoExpression";
 import {ContinuousTempoExpression} from "./ContinuousExpressions/continuousTempoExpression";
 
-export class MultiTempoExpression implements IComparable<MultiTempoExpression>
-{
+export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>*/ {
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {
         this.sourceMeasure = sourceMeasure;
         this.timestamp = timestamp;
     }
+
     private timestamp: Fraction;
     private sourceMeasure: SourceMeasure;
     private instantaniousTempo: InstantaniousTempoExpression;
     private continuousTempo: ContinuousTempoExpression;
-    private expressions: Array<TempoExpressionEntry> = new Array<TempoExpressionEntry>();
+    private expressions: Array<TempoExpressionEntry> = [];
     private combinedExpressionsText: string;
     public get Timestamp(): Fraction {
         return this.timestamp;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return this.sourceMeasure.AbsoluteTimestamp + this.timestamp;
+        return Fraction.plus(this.sourceMeasure.AbsoluteTimestamp, this.timestamp);
     }
     public get SourceMeasureParent(): SourceMeasure {
         return this.sourceMeasure;
@@ -63,17 +63,17 @@ export class MultiTempoExpression implements IComparable<MultiTempoExpression>
             fontStyle = OSMDFontStyles.Italic;
         return fontStyle;
     }
-    public getFirstEntry(graphicalLabel: GraphicalLabel): AbstractGraphicalExpression {
-        var indexOfFirstNotInstDynExpr: number = 0;
-        if (this.expressions.length > 0) {
-            if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof InstantaniousTempoExpression)
-                return new GraphicalInstantaniousTempoExpression(<InstantaniousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
-            else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousTempoExpression)
-                return new GraphicalContinuousTempoExpression(<ContinuousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
-            else return null;
-        }
-        return null;
-    }
+    //public getFirstEntry(graphicalLabel: GraphicalLabel): AbstractGraphicalExpression {
+    //    var indexOfFirstNotInstDynExpr: number = 0;
+    //    if (this.expressions.length > 0) {
+    //        if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof InstantaniousTempoExpression)
+    //            return new GraphicalInstantaniousTempoExpression(<InstantaniousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
+    //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousTempoExpression)
+    //            return new GraphicalContinuousTempoExpression(<ContinuousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
+    //        else return null;
+    //    }
+    //    return null;
+    //}
     public addExpression(abstractTempoExpression: AbstractTempoExpression, prefix: string): void {
         if (abstractTempoExpression instanceof InstantaniousTempoExpression) {
             this.instantaniousTempo = <InstantaniousTempoExpression>abstractTempoExpression;

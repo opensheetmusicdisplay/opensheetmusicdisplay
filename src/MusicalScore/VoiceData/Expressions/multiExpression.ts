@@ -1,5 +1,14 @@
-export class MultiExpression implements IComparable<MultiExpression>
-{
+import {SourceMeasure} from "../SourceMeasure";
+import {Fraction} from "../../../Common/DataObjects/fraction";
+import {InstantaniousDynamicExpression} from "./instantaniousDynamicExpression";
+import {ContinuousDynamicExpression} from "./ContinuousExpressions/continuousDynamicExpression";
+import {OctaveShift} from "./ContinuousExpressions/octaveShift";
+import {MoodExpression} from "./moodExpression";
+import {UnknownExpression} from "./unknownExpression";
+import {AbstractExpression} from "./abstractExpression";
+import {PlacementEnum} from "./abstractExpression";
+
+export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {
         this.sourceMeasure = sourceMeasure;
         this.timestamp = timestamp;
@@ -10,12 +19,13 @@ export class MultiExpression implements IComparable<MultiExpression>
     private instantaniousDynamic: InstantaniousDynamicExpression;
     private endingContinuousDynamic: ContinuousDynamicExpression;
     private startingContinuousDynamic: ContinuousDynamicExpression;
-    private unknownList: List<UnknownExpression> = new List<UnknownExpression>();
-    private moodList: List<MoodExpression> = new List<MoodExpression>();
-    private expressions: List<MultiExpressionEntry> = new List<MultiExpressionEntry>();
+    private unknownList: UnknownExpression[] = [];
+    private moodList: MoodExpression[] = [];
+    private expressions: MultiExpressionEntry[] = [];
     private combinedExpressionsText: string;
     private octaveShiftStart: OctaveShift;
     private octaveShiftEnd: OctaveShift;
+    
     public get SourceMeasureParent(): SourceMeasure {
         return this.sourceMeasure;
     }
@@ -35,7 +45,7 @@ export class MultiExpression implements IComparable<MultiExpression>
         this.timestamp = value;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return this.timestamp + this.sourceMeasure.AbsoluteTimestamp;
+        return Fraction.plus(this.timestamp, this.sourceMeasure.AbsoluteTimestamp);
     }
     public get InstantaniousDynamic(): InstantaniousDynamicExpression {
         return this.instantaniousDynamic;
@@ -55,13 +65,13 @@ export class MultiExpression implements IComparable<MultiExpression>
     public set StartingContinuousDynamic(value: ContinuousDynamicExpression) {
         this.startingContinuousDynamic = value;
     }
-    public get MoodList(): List<MoodExpression> {
+    public get MoodList():  MoodExpression[] {
         return this.moodList;
     }
-    public get UnknownList(): List<UnknownExpression> {
+    public get UnknownList():  UnknownExpression[] {
         return this.unknownList;
     }
-    public get EntriesList(): List<MultiExpressionEntry> {
+    public get EntriesList():  MultiExpressionEntry[] {
         return this.expressions;
     }
     public get OctaveShiftStart(): OctaveShift {
@@ -84,7 +94,7 @@ export class MultiExpression implements IComparable<MultiExpression>
     }
     public getPlacementOfFirstEntry(): PlacementEnum {
         var placement: PlacementEnum = PlacementEnum.Above;
-        if (this.expressions.Count > 0) {
+        if (this.expressions.length > 0) {
             if (this.expressions[0].expression instanceof InstantaniousDynamicExpression)
                 placement = (<InstantaniousDynamicExpression>(this.expressions[0].expression)).Placement;
             else if (this.expressions[0].expression instanceof ContinuousDynamicExpression)
@@ -96,37 +106,38 @@ export class MultiExpression implements IComparable<MultiExpression>
         }
         return placement;
     }
-    public getFontstyleOfFirstEntry(): PSFontStyles {
-        var fontStyle: PSFontStyles = PSFontStyles.Regular;
-        if (this.expressions.Count > 0) {
-            if (this.expressions[0].expression instanceof ContinuousDynamicExpression)
-                fontStyle = PSFontStyles.Italic;
-            else if (this.expressions[0].expression instanceof MoodExpression)
-                fontStyle = PSFontStyles.Italic;
-            else if (this.expressions[0].expression instanceof UnknownExpression)
-                fontStyle = PSFontStyles.Regular;
-        }
-        return fontStyle;
-    }
-    public getFirstEntry(staffLine: StaffLine, graphLabel: GraphicalLabel): AbstractGraphicalExpression {
-        var indexOfFirstNotInstDynExpr: number = 0;
-        if (this.expressions[0].expression instanceof InstantaniousDynamicExpression)
-            indexOfFirstNotInstDynExpr = 1;
-        if (this.expressions.Count > 0) {
-            if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousDynamicExpression)
-                return new GraphicalContinuousDynamicExpression(<ContinuousDynamicExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
-            else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof MoodExpression)
-                return new GraphicalMoodExpression(<MoodExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
-            else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof UnknownExpression)
-                return new GraphicalUnknownExpression(<UnknownExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
-            else return null;
-        }
-        else return null;
-    }
+    // (*)
+    //public getFontstyleOfFirstEntry(): PSFontStyles {
+    //    var fontStyle: PSFontStyles = PSFontStyles.Regular;
+    //    if (this.expressions.length > 0) {
+    //        if (this.expressions[0].expression instanceof ContinuousDynamicExpression)
+    //            fontStyle = PSFontStyles.Italic;
+    //        else if (this.expressions[0].expression instanceof MoodExpression)
+    //            fontStyle = PSFontStyles.Italic;
+    //        else if (this.expressions[0].expression instanceof UnknownExpression)
+    //            fontStyle = PSFontStyles.Regular;
+    //    }
+    //    return fontStyle;
+    //}
+    //public getFirstEntry(staffLine: StaffLine, graphLabel: GraphicalLabel): AbstractGraphicalExpression {
+    //    var indexOfFirstNotInstDynExpr: number = 0;
+    //    if (this.expressions[0].expression instanceof InstantaniousDynamicExpression)
+    //        indexOfFirstNotInstDynExpr = 1;
+    //    if (this.expressions.length > 0) {
+    //        if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousDynamicExpression)
+    //            return new GraphicalContinuousDynamicExpression(<ContinuousDynamicExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
+    //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof MoodExpression)
+    //            return new GraphicalMoodExpression(<MoodExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
+    //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof UnknownExpression)
+    //            return new GraphicalUnknownExpression(<UnknownExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
+    //        else return null;
+    //    }
+    //    else return null;
+    //}
     public addExpression(abstractExpression: AbstractExpression, prefix: string): void {
         if (abstractExpression instanceof InstantaniousDynamicExpression) {
             if (this.instantaniousDynamic != null)
-                removeExpressionFromEntryList(this.InstantaniousDynamic);
+                this.removeExpressionFromEntryList(this.InstantaniousDynamic);
             this.instantaniousDynamic = <InstantaniousDynamicExpression>abstractExpression;
             this.instantaniousDynamic.ParentMultiExpression = this;
         }
@@ -134,10 +145,10 @@ export class MultiExpression implements IComparable<MultiExpression>
             this.startingContinuousDynamic = <ContinuousDynamicExpression>abstractExpression;
         }
         else if (abstractExpression instanceof MoodExpression) {
-            this.moodList.Add(<MoodExpression>abstractExpression);
+            this.moodList.push(<MoodExpression>abstractExpression);
         }
         else if (abstractExpression instanceof UnknownExpression) {
-            this.unknownList.Add(<UnknownExpression>abstractExpression);
+            this.unknownList.push(<UnknownExpression>abstractExpression);
         }
         this.addExpressionToEntryList(abstractExpression, prefix);
     }
@@ -165,13 +176,13 @@ export class MultiExpression implements IComparable<MultiExpression>
         else if (expression instanceof UnknownExpression)
             multiExpressionEntry.label = (<UnknownExpression>(expression)).Label;
         else multiExpressionEntry.label = "";
-        this.expressions.Add(multiExpressionEntry);
+        this.expressions.push(multiExpressionEntry);
     }
     private removeExpressionFromEntryList(expression: AbstractExpression): void {
-        for (var idx: number = 0, len = this.expressions.Count; idx < len; ++idx) {
+        for (var idx: number = 0, len = this.expressions.length; idx < len; ++idx) {
             var entry: MultiExpressionEntry = this.expressions[idx];
             if (entry.expression == expression) {
-                this.expressions.Remove(entry);
+                this.expressions.splice(idx, 1);
                 break;
             }
         }

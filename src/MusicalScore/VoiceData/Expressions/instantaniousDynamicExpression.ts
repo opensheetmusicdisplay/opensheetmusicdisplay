@@ -7,6 +7,7 @@ import {logging} from "../../../Common/logging";
 
 export class InstantaniousDynamicExpression extends AbstractExpression {
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number) {
+        super();
         this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
         this.soundDynamic = soundDynamics;
         this.placement = placement;
@@ -93,7 +94,6 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
     }
     public static isInputStringInstantaniousDynamic(inputString:string): boolean {
         if (inputString === null) { return false; }
-            return false;
         return (InstantaniousDynamicExpression.listInstantaniousDynamics.indexOf(inputString) !== -1);
     }
 

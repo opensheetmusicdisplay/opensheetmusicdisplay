@@ -6,10 +6,7 @@ import {MultiTempoExpression} from "./multiTempoExpression";
 
 export class InstantaniousTempoExpression extends AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number, soundTempo: number, parentMultiTempoExpression: MultiTempoExpression) {
-        super.label = label;
-        super.placement = placement;
-        super.staffNumber = staffNumber;
-        super.parentMultiTempoExpression = parentMultiTempoExpression;
+        super(label, placement, staffNumber, parentMultiTempoExpression);
         this.setTempoAndTempoType(soundTempo);
     }
     
@@ -187,10 +184,10 @@ export class InstantaniousTempoExpression extends AbstractTempoExpression {
         return this.parentMultiTempoExpression;
     }
     public getAbsoluteTimestamp(): Fraction {
-        return (this.ParentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp + this.ParentMultiTempoExpression.Timestamp);
+        return Fraction.plus(this.ParentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp, this.ParentMultiTempoExpression.Timestamp);
     }
     public getAbsoluteFloatTimestamp(): number {
-        return (this.ParentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp + this.ParentMultiTempoExpression.Timestamp).RealValue;
+        return Fraction.plus(this.ParentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp, this.ParentMultiTempoExpression.Timestamp).RealValue;
     }
     public static getDefaultValueForTempoType(tempoEnum: TempoEnum): number {
         switch (tempoEnum) {
