@@ -4,10 +4,10 @@
 
 
 export class logging {
-    public static debug(...arguments: any[]) {
-        console.log("[OSMD] DEBUG: ", arguments.join(" "));
+    public static debug(...args: any[]) {
+        console.log("[OSMD] DEBUG: ", args.join(" "));
     }
-    public static log(...arguments: any[]) {
-        console.log("[OSMD] ", arguments.join(" "));
+    public static log(...args: any[]) {
+        console.log("[OSMD] ", args.join(" "));
     }
 }
