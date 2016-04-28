@@ -15,8 +15,9 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
     private tempoType: ContinuousTempoType;
     private startTempo: number;
     private endTempo: number;
-    private static listContinuousTempoFaster: Array<string> = __init(new Array<string>(), { "accelerando","piu mosso","poco piu","stretto" });
-    private static listContinuousTempoSlower: Array<string> = __init(new Array<string>(), { "poco meno","meno mosso","piu lento","calando","allargando","rallentando","ritardando","ritenuto","ritard.","ritard","rit.","rit","riten.","riten" });
+    private static listContinuousTempoFaster: string[] = ["accelerando","piu mosso","poco piu","stretto"];
+    private static listContinuousTempoSlower: string[] = ["poco meno","meno mosso","piu lento","calando","allargando","rallentando","ritardando","ritenuto","ritard.","ritard","rit.","rit","riten.","riten"];
+
     public get TempoType(): ContinuousTempoType {
         return this.tempoType;
     }
@@ -44,32 +45,32 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
     public static isInputStringContinuousTempo(inputString: string): boolean {
         if (inputString == null)
             return false;
-        if (isStringInStringList(ContinuousTempoExpression.listContinuousTempoFaster, inputString))
+        if (ContinuousTempoExpression.listContinuousTempoFaster.indexOf(inputString) !== -1)
             return true;
-        if (isStringInStringList(ContinuousTempoExpression.listContinuousTempoSlower, inputString))
+        if (ContinuousTempoExpression.listContinuousTempoSlower.indexOf(inputString) !== -1)
             return true;
         return false;
     }
     private setTempoType(): void {
-        if (isStringInStringList(ContinuousTempoExpression.listContinuousTempoFaster, label))
+        if (ContinuousTempoExpression.listContinuousTempoFaster.indexOf(this.label) !== -1)
             this.tempoType = ContinuousTempoType.accelerando;
-        else if (isStringInStringList(ContinuousTempoExpression.listContinuousTempoSlower, label))
+        else if (ContinuousTempoExpression.listContinuousTempoSlower.indexOf(this.label) !== -1)
             this.tempoType = ContinuousTempoType.ritardando;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return (ParentMultiTempoExpression.AbsoluteTimestamp);
+        return this.ParentMultiTempoExpression.AbsoluteTimestamp;
     }
     public getAbsoluteFloatTimestamp(): number {
-        return (ParentMultiTempoExpression.AbsoluteTimestamp).RealValue;
+        return this.ParentMultiTempoExpression.AbsoluteTimestamp.RealValue;
     }
     public getInterpolatedTempo(currentAbsoluteTimestamp: Fraction): number {
-        var continuousAbsoluteStartTimestamp: Fraction = parentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp + parentMultiTempoExpression.Timestamp;
-        if (currentAbsoluteTimestamp < continuousAbsoluteStartTimestamp)
+        var continuousAbsoluteStartTimestamp: Fraction = Fraction.plus(this.parentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp, this.parentMultiTempoExpression.Timestamp);
+        if (currentAbsoluteTimestamp.lt(continuousAbsoluteStartTimestamp))
             return -1;
-        if (currentAbsoluteTimestamp > this.absoluteEndTimestamp)
+        if (currentAbsoluteTimestamp.lt(this.absoluteEndTimestamp))
             return -2;
-        var interpolationRatio: number = (currentAbsoluteTimestamp - continuousAbsoluteStartTimestamp).RealValue / (this.absoluteEndTimestamp - continuousAbsoluteStartTimestamp).RealValue;
-        var interpolatedTempo: number = Math.Max(0.0f, Math.Min(250.0f, this.startTempo + (this.endTempo - this.startTempo) * interpolationRatio));
+        var interpolationRatio: number = Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue / Fraction.minus(this.absoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;
+        var interpolatedTempo: number = Math.max(0.0, Math.min(250.0, this.startTempo + (this.endTempo - this.startTempo) * interpolationRatio));
         return <number>interpolatedTempo;
     }
     public static isIncreasingTempo(tempoType: ContinuousTempoType): boolean {

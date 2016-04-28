@@ -14,6 +14,7 @@ import {PartListEntry} from "./MusicSource/PartListEntry";
 import {VerticalSourceStaffEntryContainer} from "./VoiceData/VerticalSourceStaffEntryContainer";
 import {Voice} from "./VoiceData/Voice";
 import {MusicSheetErrors} from "../Common/DataObjects/MusicSheetErrors";
+import {MultiTempoExpression} from "./VoiceData/Expressions/multiTempoExpression";
 
 // FIXME
 //type MusicSheetParameters = any;
@@ -29,6 +30,11 @@ import {MusicSheetErrors} from "../Common/DataObjects/MusicSheetErrors";
 //type IRepetition = any;
 
 // FIXME Andrea: Commented out some things, have a look at (*)
+
+export class PlaybackSettings {
+    public Rhythm: Fraction;
+}
+
 
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
@@ -52,10 +58,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private repetitions: Repetition[] = [];
     private dynListStaves: DynamicsContainer[][] = [];
     private timestampSortedDynamicExpressionsList: DynamicsContainer[] = [];
-    // (*) private timestampSortedTempoExpressionsList: MultiTempoExpression[] = [];
+    private timestampSortedTempoExpressionsList: MultiTempoExpression[] = [];
     private instrumentalGroups: InstrumentalGroup[] = [];
     private instruments: Instrument[] = [];
-    // (*) private playbackSettings: PlaybackSettings;
+    private playbackSettings: PlaybackSettings;
     private path: string;
     private title: Label;
     private subtitle: Label;
@@ -99,10 +105,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public get DynListStaves(): DynamicsContainer[][] {
         return this.dynListStaves;
     }
-    // (*)
-    //public get TimestampSortedTempoExpressionsList(): MultiTempoExpression[] {
-    //    return this.timestampSortedTempoExpressionsList;
-    //}
+    public get TimestampSortedTempoExpressionsList(): MultiTempoExpression[] {
+        return this.timestampSortedTempoExpressionsList;
+    }
     public get TimestampSortedDynamicExpressionsList(): DynamicsContainer[] {
         return this.timestampSortedDynamicExpressionsList;
     }
@@ -112,12 +117,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public get Instruments(): Instrument[] {
         return this.instruments;
     }
-    // (*) public get SheetPlaybackSetting(): PlaybackSettings {
-    //    return this.playbackSettings;
-    //}
-    // (*) public set SheetPlaybackSetting(value: PlaybackSettings) {
-    //    this.playbackSettings = value;
-    //}
+     public get SheetPlaybackSetting(): PlaybackSettings {
+        return this.playbackSettings;
+    }
+     public set SheetPlaybackSetting(value: PlaybackSettings) {
+        this.playbackSettings = value;
+    }
     public get DrawErroneousMeasures(): boolean {
         return this.drawErroneousMeasures;
     }

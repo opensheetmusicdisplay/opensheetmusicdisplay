@@ -10,12 +10,10 @@ import {VerticalSourceStaffEntryContainer} from "../VoiceData/VerticalSourceStaf
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
-
-// FIXME:
-type MultiTempoExpression = any;
-type ContinuousDynamicExpression = any;
-type InstantaniousDynamicExpression = any;
-type AbstractExpression = any;
+import {ContinuousDynamicExpression} from "../VoiceData/Expressions/ContinuousExpressions/continuousDynamicExpression";
+import {InstantaniousDynamicExpression} from "../VoiceData/Expressions/instantaniousDynamicExpression";
+import {MultiTempoExpression} from "../VoiceData/Expressions/multiTempoExpression";
+import {AbstractExpression} from "../VoiceData/Expressions/abstractExpression";
 
 export class MusicPartManagerIterator {
     constructor(manager: MusicPartManager, startTimestamp?: Fraction, endTimestamp?: Fraction) {
@@ -404,8 +402,8 @@ export class MusicPartManagerIterator {
             if (this.CurrentSourceTimestamp === dynamicsContainer.parMultiExpression().AbsoluteTimestamp) {
                 if (dynamicsContainer.ContinuousDynamicExpression !== undefined) {
                     this.activeDynamicExpressions[staffIndex] = dynamicsContainer.ContinuousDynamicExpression;
-                } else if (dynamicsContainer.InstantaniousDynamicExpression !== undefined) {
-                    this.activeDynamicExpressions[staffIndex] = dynamicsContainer.InstantaniousDynamicExpression;
+                } else if (dynamicsContainer.InstantaneousDynamicExpression !== undefined) {
+                    this.activeDynamicExpressions[staffIndex] = dynamicsContainer.InstantaneousDynamicExpression;
                 }
             }
             this.currentDynamicEntryIndex++;

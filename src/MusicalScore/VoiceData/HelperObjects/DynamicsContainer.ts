@@ -1,6 +1,6 @@
-type ContinuousDynamicExpression = any;
-type InstantaniousDynamicExpression = any;
-type MultiExpression = any;
+import {ContinuousDynamicExpression} from "../Expressions/ContinuousExpressions/continuousDynamicExpression";
+import {InstantaniousDynamicExpression} from "../Expressions/instantaniousDynamicExpression";
+import {MultiExpression} from "../Expressions/multiExpression";
 
 export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
     constructor(continuousDynamicExpression: ContinuousDynamicExpression, staffNumber: number) {
@@ -8,20 +8,20 @@ export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
         this.StaffNumber = staffNumber;
     }
     constructor(instantaniousDynamicExpression: InstantaniousDynamicExpression, staffNumber: number) {
-        this.InstantaniousDynamicExpression = instantaniousDynamicExpression;
+        this.InstantaneousDynamicExpression = instantaniousDynamicExpression;
         this.StaffNumber = staffNumber;
     }
 
     public ContinuousDynamicExpression: ContinuousDynamicExpression;
-    public InstantaneousDynamicExpression: InstantaneousDynamicExpression;
+    public InstantaneousDynamicExpression: InstantaniousDynamicExpression;
     public StaffNumber: number;
 
     public parMultiExpression(): MultiExpression {
         if (this.ContinuousDynamicExpression !== undefined) {
             return this.ContinuousDynamicExpression.StartMultiExpression;
         }
-        if (this.InstantaniousDynamicExpression !== undefined) {
-            return this.InstantaniousDynamicExpression.ParentMultiExpression;
+        if (this.InstantaneousDynamicExpression !== undefined) {
+            return this.InstantaneousDynamicExpression.ParentMultiExpression;
         }
         return undefined;
     }
