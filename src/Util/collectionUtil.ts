@@ -9,4 +9,8 @@ export class CollectionUtil {
 
         return false;
     }
+
+    public static last(array: any[]): any {
+        return array[array.length - 1];
+    }
 }

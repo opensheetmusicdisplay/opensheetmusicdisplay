@@ -17,14 +17,23 @@ import {ArticulationEnum} from "../VoiceData/VoiceEntry";
 import {Slur} from "../VoiceData/Expressions/ContinuousExpressions/Slur";
 import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
 import {MusicSheetReadingException} from "../Exceptions";
+import {AccidentalEnum} from "../../Common/DataObjects/pitch";
+import {NoteEnum} from "../../Common/DataObjects/pitch";
+import {Staff} from "../VoiceData/Staff";
+import {StaffEntryLink} from "../VoiceData/StaffEntryLink";
+import {VerticalSourceStaffEntryContainer} from "../VoiceData/VerticalSourceStaffEntryContainer";
+import {logging} from "../../Common/logging";
+import {Pitch} from "../../Common/DataObjects/pitch";
+import {IXmlAttribute} from "../../Common/FileIO/Xml";
+import {CollectionUtil} from "../../Util/collectionUtil";
 
 type SlurReader = any;
 
 export class VoiceGenerator {
-    constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = null) {
+    constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
         this.musicSheet = instrument.GetMusicSheet;
         this.slurReader = slurReader;
-        if (mainVoice != null)
+        if (mainVoice !== undefined)
             this.voice = new LinkedVoice(instrument, voiceId, mainVoice);
         else {
             this.voice = new Voice(instrument, voiceId);
@@ -73,71 +82,70 @@ export class VoiceGenerator {
         this.currentMeasure = parentMeasure;
         try {
             this.currentNote = restNote ? this.addRestNote(noteDuration, divisions) : this.addSingleNote(noteNode, noteDuration, divisions, graceNote, chord, guitarPro);
-            if (this.lyricsReader != null && noteNode.Element("lyric") != null) {
-                this.lyricsReader.addLyricEntry(noteNode, this.currentVoiceEntry);
-                this.voice.Parent.HasLyrics = true;
-            }
-            var notationNode: IXmlElement = noteNode.Element("notations");
-            if (notationNode != null) {
-                var articNode: IXmlElement = null;
-                if (this.articulationReader != null) {
-                    this.readArticulations(notationNode, this.currentVoiceEntry);
-                }
-                var slurNodes: IXmlElement[] = null;
-                if (this.slurReader != null && (slurNodes = notationNode.Elements("slur")).Any())
-                    this.slurReader.addSlur(slurNodes, this.currentNote);
-                var tupletNodeList: IXmlElement[] = null;
+            // (*)
+            //if (this.lyricsReader !== undefined && noteNode.Element("lyric") !== undefined) {
+            //    this.lyricsReader.addLyricEntry(noteNode, this.currentVoiceEntry);
+            //    this.voice.Parent.HasLyrics = true;
+            //}
+            let notationNode: IXmlElement = noteNode.Element("notations");
+            if (notationNode !== undefined) {
+                let articNode: IXmlElement = undefined;
+                // (*)
+                //if (this.articulationReader !== undefined) {
+                //    this.readArticulations(notationNode, this.currentVoiceEntry);
+                //}
+                //let slurNodes: IXmlElement[] = undefined;
+                // (*)
+                //if (this.slurReader !== undefined && (slurNodes = notationNode.Elements("slur")))
+                //    this.slurReader.addSlur(slurNodes, this.currentNote);
+                let tupletNodeList: IXmlElement[] = undefined;
                 if ((tupletNodeList = notationNode.Elements("tuplet")))
                     this.openTupletNumber = this.addTuplet(noteNode, tupletNodeList);
-                if (notationNode.Element("arpeggiate") != null && !graceNote)
+                if (notationNode.Element("arpeggiate") !== undefined && !graceNote)
                     this.currentVoiceEntry.ArpeggiosNotesIndices.push(this.currentVoiceEntry.Notes.indexOf(this.currentNote));
-                var tiedNodeList: IXmlElement[] = null;
+                let tiedNodeList: IXmlElement[] = undefined;
                 if ((tiedNodeList = notationNode.Elements("tied")))
                     this.addTie(tiedNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction);
-                var toRemove: number[] = new number[]();
-                var openTieDictArr: KeyValuePair<number, Tie>[] = this.openTieDict.ToArray();
-                for (var idx: number = 0, len = openTieDictArr.length; idx < len; ++idx) {
-                    var openTie: KeyValuePair<number, Tie> = openTieDictArr[idx];
-                    var tie: Tie = openTie.Value;
-                    if (tie.Start.ParentStaffEntry.Timestamp + tie.Start.Length < this.currentStaffEntry.Timestamp)
-                        toRemove.push(openTie.Key);
-                }
-                for (var idx: number = 0, len = toRemove.length; idx < len; ++idx) {
-                    var i: number = toRemove[idx];
-                    this.openTieDict.Remove(i);
+
+                let openTieDict: { [_: number]: Tie; } = this.openTieDict;
+                for (let key in openTieDict) {
+                    let tie: Tie = openTieDict[key];
+                    if (Fraction.plus(tie.Start.ParentStaffEntry.Timestamp, tie.Start.Length).lt(this.currentStaffEntry.Timestamp))
+                        delete openTieDict[key];
                 }
             }
-            if (noteNode.Element("time-modification") != null && notationNode == null) {
+            if (noteNode.Element("time-modification") !== undefined && notationNode === undefined) {
                 this.handleTimeModificationNode(noteNode);
             }
         }
         catch (err) {
-            var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteError",
-                "Ignored erroneous Note.");
+            let errorMsg: string = ITextTranslation.translateText(
+                "ReaderErrorMessages/NoteError", "Ignored erroneous Note."
+            );
             this.musicSheet.SheetErrors.pushTemp(errorMsg);
         }
 
         return this.currentNote;
     }
     public checkForOpenGraceNotes(): void {
-        if (this.currentStaffEntry != null && this.currentStaffEntry.VoiceEntries.length == 0 && this.currentVoiceEntry.GraceVoiceEntriesBefore != null && this.currentVoiceEntry.GraceVoiceEntriesBefore.length > 0) {
-            var voice: Voice = this.currentVoiceEntry.ParentVoice;
-            var horizontalIndex: number = this.currentMeasure.VerticalSourceStaffEntryContainers.indexOf(this.currentStaffEntry.VerticalContainerParent);
-            var verticalIndex: number = this.currentStaffEntry.VerticalContainerParent.StaffEntries.indexOf(this.currentStaffEntry);
-            var previousStaffEntry: SourceStaffEntry = this.currentMeasure.getPreviousSourceStaffEntryFromIndex(verticalIndex, horizontalIndex);
-            if (previousStaffEntry != null) {
-                var previousVoiceEntry: VoiceEntry = null;
-                for (var idx: number = 0, len = previousStaffEntry.VoiceEntries.length; idx < len; ++idx) {
-                    var voiceEntry: VoiceEntry = previousStaffEntry.VoiceEntries[idx];
-                    if (voiceEntry.ParentVoice == voice) {
+        if (this.currentStaffEntry !== undefined && this.currentStaffEntry.VoiceEntries.length === 0 && this.currentVoiceEntry.GraceVoiceEntriesBefore !== undefined && this.currentVoiceEntry.GraceVoiceEntriesBefore.length > 0) {
+            let voice: Voice = this.currentVoiceEntry.ParentVoice;
+            let horizontalIndex: number = this.currentMeasure.VerticalSourceStaffEntryContainers.indexOf(this.currentStaffEntry.VerticalContainerParent);
+            let verticalIndex: number = this.currentStaffEntry.VerticalContainerParent.StaffEntries.indexOf(this.currentStaffEntry);
+            let previousStaffEntry: SourceStaffEntry = this.currentMeasure.getPreviousSourceStaffEntryFromIndex(verticalIndex, horizontalIndex);
+            if (previousStaffEntry !== undefined) {
+                let previousVoiceEntry: VoiceEntry = undefined;
+                for (let idx: number = 0, len = previousStaffEntry.VoiceEntries.length; idx < len; ++idx) {
+                    let voiceEntry: VoiceEntry = previousStaffEntry.VoiceEntries[idx];
+                    if (voiceEntry.ParentVoice === voice) {
                         previousVoiceEntry = voiceEntry;
-                        previousVoiceEntry.GraceVoiceEntriesAfter = VoiceEntry[];
-                        for (var idx2: number = 0, len2 = this.currentVoiceEntry.GraceVoiceEntriesBefore.length; idx2 < len2; ++idx2) {
-                            var graceVoiceEntry: VoiceEntry = this.currentVoiceEntry.GraceVoiceEntriesBefore[idx2];
+                        previousVoiceEntry.GraceVoiceEntriesAfter = [];
+                        for (let idx2: number = 0, len2 = this.currentVoiceEntry.GraceVoiceEntriesBefore.length; idx2 < len2; ++idx2) {
+                            let graceVoiceEntry: VoiceEntry = this.currentVoiceEntry.GraceVoiceEntriesBefore[idx2];
                             previousVoiceEntry.GraceVoiceEntriesAfter.push(graceVoiceEntry);
                         }
-                        this.currentVoiceEntry.GraceVoiceEntriesBefore.Clear();
-                        this.currentStaffEntry = null;
+                        this.currentVoiceEntry.GraceVoiceEntriesBefore = [];
+                        this.currentStaffEntry = undefined;
                         break;
                     }
                 }
@@ -146,13 +154,13 @@ export class VoiceGenerator {
     }
     public checkForStaffEntryLink(index: number, currentStaff: Staff, currentStaffEntry: SourceStaffEntry,
         currentMeasure: SourceMeasure): SourceStaffEntry {
-        var staffEntryLink: StaffEntryLink = new StaffEntryLink(this.currentVoiceEntry);
+        let staffEntryLink: StaffEntryLink = new StaffEntryLink(this.currentVoiceEntry);
         staffEntryLink.LinkStaffEntries.push(currentStaffEntry);
         currentStaffEntry.Link = staffEntryLink;
-        var linkMusicTimestamp: Fraction = new Fraction(this.currentVoiceEntry.Timestamp);
-        var verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = currentMeasure.getVerticalContainerByTimestamp(linkMusicTimestamp);
+        let linkMusicTimestamp: Fraction = this.currentVoiceEntry.Timestamp.clone();
+        let verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = currentMeasure.getVerticalContainerByTimestamp(linkMusicTimestamp);
         currentStaffEntry = verticalSourceStaffEntryContainer[index];
-        if (currentStaffEntry == null) {
+        if (currentStaffEntry === undefined) {
             currentStaffEntry = new SourceStaffEntry(verticalSourceStaffEntryContainer, currentStaff);
             verticalSourceStaffEntryContainer[index] = currentStaffEntry;
         }
@@ -162,25 +170,23 @@ export class VoiceGenerator {
         return currentStaffEntry;
     }
     public checkForOpenBeam(): void {
-        if (this.openBeam != null && this.currentNote != null)
+        if (this.openBeam !== undefined && this.currentNote !== undefined)
             this.handleOpenBeam();
     }
     public checkOpenTies(): void {
-        var toRemove: number[] = new number[]();
-        var openTieDictArr: KeyValuePair<number, Tie>[] = this.openTieDict.ToArray();
-        for (var idx: number = 0, len = openTieDictArr.length; idx < len; ++idx) {
-            var openTie: KeyValuePair<number, Tie> = openTieDictArr[idx];
-            var tie: Tie = openTie.Value;
-            if (tie.Start.ParentStaffEntry.Timestamp + tie.Start.Length < tie.Start.ParentStaffEntry.VerticalContainerParent.ParentMeasure.Duration)
-                toRemove.push(openTie.Key);
+        let toRemove: number[] = [];
+        let openTieDict: {[_: number]: Tie} = this.openTieDict;
+        for (let key in openTieDict) {
+            let tie: Tie = openTieDict[key];
+            if (Fraction.plus(tie.Start.ParentStaffEntry.Timestamp, tie.Start.Length).lt(tie.Start.ParentStaffEntry.VerticalContainerParent.ParentMeasure.Duration))
+                toRemove.push(key);
         }
-        for (var idx: number = 0, len = toRemove.length; idx < len; ++idx) {
-            var i: number = toRemove[idx];
-            this.openTieDict.Remove(i);
+        for (let key of toRemove) {
+            delete openTieDict[key];
         }
     }
     public hasVoiceEntry(): boolean {
-        return this.currentVoiceEntry != null;
+        return this.currentVoiceEntry !== undefined;
     }
     public getNoteDurationFromType(type: string): Fraction {
         switch (type) {
@@ -213,44 +219,45 @@ export class VoiceGenerator {
                 return new Fraction(4, 1);
             case "maxima":
                 return new Fraction(8, 1);
-            default:
-                {
-                    var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError",
-                        "Invalid note duration.");
-                    throw new MusicSheetReadingException(errorMsg, 0);
-                }
+            default: {
+                let errorMsg: string = ITextTranslation.translateText(
+                    "ReaderErrorMessages/NoteDurationError", "Invalid note duration."
+                );
+                throw new MusicSheetReadingException(errorMsg);
+            }
         }
     }
-    private readArticulations(notationNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
-        var articNode: IXmlElement;
-        if ((articNode = notationNode.Element("articulations")) != null)
-            this.articulationReader.addArticulationExpression(articNode, currentVoiceEntry);
-        var fermaNode: IXmlElement = null;
-        if ((fermaNode = notationNode.Element("fermata")) != null)
-            this.articulationReader.addFermata(fermaNode, currentVoiceEntry);
-        var tecNode: IXmlElement = null;
-        if ((tecNode = notationNode.Element("technical")) != null)
-            this.articulationReader.addTechnicalArticulations(tecNode, currentVoiceEntry);
-        var ornaNode: IXmlElement = null;
-        if ((ornaNode = notationNode.Element("ornaments")) != null)
-            this.articulationReader.addOrnament(ornaNode, currentVoiceEntry);
-    }
+    // (*)
+    //private readArticulations(notationNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
+    //    let articNode: IXmlElement;
+    //    if ((articNode = notationNode.Element("articulations")) !== undefined)
+    //        this.articulationReader.addArticulationExpression(articNode, currentVoiceEntry);
+    //    let fermaNode: IXmlElement = undefined;
+    //    if ((fermaNode = notationNode.Element("fermata")) !== undefined)
+    //        this.articulationReader.addFermata(fermaNode, currentVoiceEntry);
+    //    let tecNode: IXmlElement = undefined;
+    //    if ((tecNode = notationNode.Element("technical")) !== undefined)
+    //        this.articulationReader.addTechnicalArticulations(tecNode, currentVoiceEntry);
+    //    let ornaNode: IXmlElement = undefined;
+    //    if ((ornaNode = notationNode.Element("ornaments")) !== undefined)
+    //        this.articulationReader.addOrnament(ornaNode, currentVoiceEntry);
+    //}
     private addSingleNote(node: IXmlElement, noteDuration: number, divisions: number, graceNote: boolean, chord: boolean,
         guitarPro: boolean): Note {
-        var noteAlter: AccidentalEnum = AccidentalEnum.NONE;
-        var noteStep: NoteEnum = NoteEnum.C;
-        var noteOctave: number = 0;
-        var playbackInstrumentId: string = null;
-        var xmlnodeElementsArr: IXmlElement[] = node.Elements().ToArray();
-        for (var idx: number = 0, len = xmlnodeElementsArr.length; idx < len; ++idx) {
-            var noteElement: IXmlElement = xmlnodeElementsArr[idx];
+        let noteAlter: AccidentalEnum = AccidentalEnum.NONE;
+        let noteStep: NoteEnum = NoteEnum.C;
+        let noteOctave: number = 0;
+        let playbackInstrumentId: string = undefined;
+        let xmlnodeElementsArr: IXmlElement[] = node.Elements();
+        for (let idx: number = 0, len = xmlnodeElementsArr.length; idx < len; ++idx) {
+            let noteElement: IXmlElement = xmlnodeElementsArr[idx];
             try {
-                if (noteElement.Name == "pitch") {
-                    var noteElementsArr: IXmlElement[] = noteElement.Elements().ToArray();
-                    for (var idx2: number = 0, len2 = noteElementsArr.length; idx2 < len2; ++idx2) {
-                        var pitchElement: IXmlElement = noteElementsArr[idx2];
+                if (noteElement.Name === "pitch") {
+                    let noteElementsArr: IXmlElement[] = noteElement.Elements();
+                    for (let idx2: number = 0, len2 = noteElementsArr.length; idx2 < len2; ++idx2) {
+                        let pitchElement: IXmlElement = noteElementsArr[idx2];
                         try {
-                            if (pitchElement.Name == "step") {
+                            if (pitchElement.Name === "step") {
                                 try {
                                     switch (pitchElement.Value) {
                                         case "C":
@@ -291,328 +298,330 @@ export class VoiceGenerator {
                                     }
                                 }
                                 catch (e) {
-                                    var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NotePitchError",
-                                        "Invalid pitch while reading note.");
-                                    this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                                    throw new MusicSheetReadingException("", e, 0);
+                                    let errorMsg: string = ITextTranslation.translateText(
+                                        "ReaderErrorMessages/NotePitchError",
+                                        "Invalid pitch while reading note."
+                                    );
+                                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                                    throw new MusicSheetReadingException("", e);
                                 }
 
                             }
-                            else if (pitchElement.Name == "alter") {
+                            else if (pitchElement.Name === "alter") {
                                 try {
-                                    noteAlter = <AccidentalEnum>StringToNumberConverter.ToInteger(pitchElement.Value);
+                                    noteAlter = parseInt(pitchElement.Value);
                                 }
                                 catch (e) {
-                                    var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteAlterationError",
+                                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteAlterationError",
                                         "Invalid alteration while reading note.");
-                                    this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                                    throw new MusicSheetReadingException("", e, 0);
+                                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                                    throw new MusicSheetReadingException("", e);
                                 }
 
                             }
-                            else if (pitchElement.Name == "octave") {
+                            else if (pitchElement.Name === "octave") {
                                 try {
-                                    noteOctave = <number>StringToNumberConverter.ToInteger(pitchElement.Value);
+                                    noteOctave = parseInt(pitchElement.Value);
                                 }
                                 catch (e) {
-                                    var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteOctaveError",
+                                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteOctaveError",
                                         "Invalid octave value while reading note.");
-                                    this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                                    throw new MusicSheetReadingException("", e, 0);
+                                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                                    throw new MusicSheetReadingException("", e);
                                 }
 
                             }
                         }
                         catch (ex) {
-                            Logger.DefaultLogger.LogError(LogLevel.NORMAL,
-                                "VoiceGenerator.addSingleNote read Step: ", ex);
+                            logging.log("VoiceGenerator.addSingleNote read Step: ", ex);
                         }
 
                     }
                 }
-                else if (noteElement.Name == "unpitched") {
-                    var displayStep: IXmlElement = null;
-                    if ((displayStep = noteElement.Element("display-step")) != null) {
-                        noteStep = <NoteEnum>Enum.Parse(/*typeof*/NoteEnum, displayStep.Value);
+                else if (noteElement.Name === "unpitched") {
+                    let displayStep: IXmlElement = undefined;
+                    if ((displayStep = noteElement.Element("display-step")) !== undefined) {
+                        noteStep = NoteEnum[displayStep.Value.toUpperCase()];
                     }
-                    var octave: IXmlElement = null;
-                    if ((octave = noteElement.Element("display-octave")) != null) {
-                        noteOctave = <number>(StringToNumberConverter.ToInteger(octave.Value));
+                    let octave: IXmlElement = undefined;
+                    if ((octave = noteElement.Element("display-octave")) !== undefined) {
+                        noteOctave = parseInt(octave.Value);
                         if (guitarPro)
                             noteOctave += 1;
                     }
                 }
-                else if (noteElement.Name == "instrument") {
-                    if (noteElement.FirstAttribute != null)
+                else if (noteElement.Name === "instrument") {
+                    if (noteElement.FirstAttribute !== undefined)
                         playbackInstrumentId = noteElement.FirstAttribute.Value;
                 }
             }
             catch (ex) {
-                Logger.DefaultLogger.LogError(LogLevel.NORMAL, "VoiceGenerator.addSingleNote: ", ex);
+                logging.log("VoiceGenerator.addSingleNote: ", ex);
             }
 
         }
-        noteOctave -= Pitch.XmlOctaveDifference;
-        var pitch: Pitch = new Pitch(noteStep, noteOctave, noteAlter);
-        var noteLength: Fraction = new Fraction(noteDuration, divisions);
-        var note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
+        noteOctave -= Pitch.OctaveXmlDifference;
+        let pitch: Pitch = new Pitch(noteStep, noteOctave, noteAlter);
+        let noteLength: Fraction = new Fraction(noteDuration, divisions);
+        let note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
         note.PlaybackInstrumentId = playbackInstrumentId;
         if (!graceNote)
             this.currentVoiceEntry.Notes.push(note);
         else this.handleGraceNote(node, note);
-        if (node.Elements("beam").Any() && !chord) {
+        if (node.Elements("beam") && !chord) {
             this.createBeam(node, note, graceNote);
         }
         return note;
     }
     private addRestNote(noteDuration: number, divisions: number): Note {
-        var restFraction: Fraction = new Fraction(noteDuration, divisions);
-        var restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, null);
+        let restFraction: Fraction = new Fraction(noteDuration, divisions);
+        let restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
         this.currentVoiceEntry.Notes.push(restNote);
-        if (this.openBeam != null)
+        if (this.openBeam !== undefined)
             this.openBeam.ExtendedNoteList.push(restNote);
         return restNote;
     }
     private createBeam(node: IXmlElement, note: Note, grace: boolean): void {
         try {
-            var beamNode: IXmlElement = node.Element("beam");
-            var beamAttr: IXmlAttribute = null;
-            if (beamNode != null && beamNode.HasAttributes)
+            let beamNode: IXmlElement = node.Element("beam");
+            let beamAttr: IXmlAttribute = undefined;
+            if (beamNode !== undefined && beamNode.HasAttributes)
                 beamAttr = beamNode.Attribute("number");
-            if (beamAttr != null) {
-                var beamNumber: number = StringToNumberConverter.ToInteger(beamAttr.Value);
-                var mainBeamNode: IXmlElement[] = node.Elements("beam");
-                var currentBeamTag: string = mainBeamNode.First().Value;
-                if (beamNumber == 1 && mainBeamNode != null) {
-                    if (currentBeamTag == "begin" && this.lastBeamTag != currentBeamTag) {
+            if (beamAttr !== undefined) {
+                let beamNumber: number = parseInt(beamAttr.Value);
+                let mainBeamNode: IXmlElement[] = node.Elements("beam");
+                let currentBeamTag: string = mainBeamNode[0].Value;
+                if (beamNumber === 1 && mainBeamNode !== undefined) {
+                    if (currentBeamTag === "begin" && this.lastBeamTag !== currentBeamTag) {
                         if (grace) {
-                            if (this.openGraceBeam != null)
+                            if (this.openGraceBeam !== undefined)
                                 this.handleOpenBeam();
                             this.openGraceBeam = new Beam();
                         }
                         else {
-                            if (this.openBeam != null)
+                            if (this.openBeam !== undefined)
                                 this.handleOpenBeam();
                             this.openBeam = new Beam();
                         }
                     }
                     this.lastBeamTag = currentBeamTag;
                 }
-                var sameVoiceEntry: boolean = false;
+                let sameVoiceEntry: boolean = false;
                 if (grace) {
-                    if (this.openGraceBeam == null)
-                        return
-                    for (var idx: number = 0, len = this.openGraceBeam.Notes.length; idx < len; ++idx) {
-                        var beamNote: Note = this.openGraceBeam.Notes[idx];
-                        if (this.currentVoiceEntry == beamNote.ParentVoiceEntry)
+                    if (this.openGraceBeam === undefined)
+                        return;
+                    for (let idx: number = 0, len = this.openGraceBeam.Notes.length; idx < len; ++idx) {
+                        let beamNote: Note = this.openGraceBeam.Notes[idx];
+                        if (this.currentVoiceEntry === beamNote.ParentVoiceEntry)
                             sameVoiceEntry = true;
                     }
                     if (!sameVoiceEntry) {
                         this.openGraceBeam.addNoteToBeam(note);
-                        if (currentBeamTag == "end" && beamNumber == 1)
-                            this.openGraceBeam = null;
+                        if (currentBeamTag === "end" && beamNumber === 1)
+                            this.openGraceBeam = undefined;
                     }
                 }
                 else {
-                    if (this.openBeam == null)
-                        return
-                    for (var idx: number = 0, len = this.openBeam.Notes.length; idx < len; ++idx) {
-                        var beamNote: Note = this.openBeam.Notes[idx];
-                        if (this.currentVoiceEntry == beamNote.ParentVoiceEntry)
+                    if (this.openBeam === undefined)
+                        return;
+                    for (let idx: number = 0, len = this.openBeam.Notes.length; idx < len; ++idx) {
+                        let beamNote: Note = this.openBeam.Notes[idx];
+                        if (this.currentVoiceEntry === beamNote.ParentVoiceEntry)
                             sameVoiceEntry = true;
                     }
                     if (!sameVoiceEntry) {
                         this.openBeam.addNoteToBeam(note);
-                        if (currentBeamTag == "end" && beamNumber == 1)
-                            this.openBeam = null;
+                        if (currentBeamTag === "end" && beamNumber === 1)
+                            this.openBeam = undefined;
                     }
                 }
             }
         }
         catch (e) {
-            var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/BeamError",
+            let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/BeamError",
                 "Error while reading beam.");
-            this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-            throw new MusicSheetReadingException("", e, 0);
+            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+            throw new MusicSheetReadingException("", e);
         }
 
     }
     private handleOpenBeam(): void {
-        if (this.openBeam.Notes.length == 1) {
-            var beamNote: Note = this.openBeam.Notes[0];
-            beamNote.NoteBeam = null;
-            this.openBeam = null;
+        if (this.openBeam.Notes.length === 1) {
+            let beamNote: Note = this.openBeam.Notes[0];
+            beamNote.NoteBeam = undefined;
+            this.openBeam = undefined;
             return
         }
-        if (this.currentNote == this.openBeam.Notes.Last())
-            this.openBeam = null;
+        if (this.currentNote === CollectionUtil.last(this.openBeam.Notes))
+            this.openBeam = undefined;
         else {
-            var beamLastNote: Note = this.openBeam.Notes.Last();
-            var beamLastNoteStaffEntry: SourceStaffEntry = beamLastNote.ParentStaffEntry;
-            var horizontalIndex: number = this.currentMeasure.getVerticalContainerIndexByTimestamp(beamLastNoteStaffEntry.Timestamp);
-            var verticalIndex: number = beamLastNoteStaffEntry.VerticalContainerParent.StaffEntries.indexOf(beamLastNoteStaffEntry);
+            let beamLastNote: Note = CollectionUtil.last(this.openBeam.Notes);
+            let beamLastNoteStaffEntry: SourceStaffEntry = beamLastNote.ParentStaffEntry;
+            let horizontalIndex: number = this.currentMeasure.getVerticalContainerIndexByTimestamp(beamLastNoteStaffEntry.Timestamp);
+            let verticalIndex: number = beamLastNoteStaffEntry.VerticalContainerParent.StaffEntries.indexOf(beamLastNoteStaffEntry);
             if (horizontalIndex < this.currentMeasure.VerticalSourceStaffEntryContainers.length - 1) {
-                var nextStaffEntry: SourceStaffEntry = this.currentMeasure.VerticalSourceStaffEntryContainers[horizontalIndex + 1][verticalIndex];
-                if (nextStaffEntry != null) {
-                    for (var idx: number = 0, len = nextStaffEntry.VoiceEntries.length; idx < len; ++idx) {
-                        var voiceEntry: VoiceEntry = nextStaffEntry.VoiceEntries[idx];
-                        if (voiceEntry.ParentVoice == this.voice) {
-                            var candidateNote: Note = voiceEntry.Notes[0];
+                let nextStaffEntry: SourceStaffEntry = this.currentMeasure.VerticalSourceStaffEntryContainers[horizontalIndex + 1][verticalIndex];
+                if (nextStaffEntry !== undefined) {
+                    for (let idx: number = 0, len = nextStaffEntry.VoiceEntries.length; idx < len; ++idx) {
+                        let voiceEntry: VoiceEntry = nextStaffEntry.VoiceEntries[idx];
+                        if (voiceEntry.ParentVoice === this.voice) {
+                            let candidateNote: Note = voiceEntry.Notes[0];
                             if (candidateNote.Length <= new Fraction(1, 8)) {
                                 this.openBeam.addNoteToBeam(candidateNote);
-                                this.openBeam = null;
+                                this.openBeam = undefined;
                             }
                             else {
-                                this.openBeam = null;
+                                this.openBeam = undefined;
                             }
                         }
                     }
                 }
             }
             else {
-                this.openBeam = null;
+                this.openBeam = undefined;
             }
         }
     }
     private handleGraceNote(node: IXmlElement, note: Note): void {
-        var graceChord: boolean = false;
-        var type: string = "";
-        if (node.Elements("type").Any()) {
-            var typeNode: IXmlElement[] = node.Elements("type");
-            if (typeNode.Any()) {
-                type = typeNode.First().Value;
+        let graceChord: boolean = false;
+        let type: string = "";
+        if (node.Elements("type")) {
+            let typeNode: IXmlElement[] = node.Elements("type");
+            if (typeNode) {
+                type = typeNode[0].Value;
                 try {
                     note.Length = this.getNoteDurationFromType(type);
                     note.Length.Numerator = 1;
                 }
                 catch (e) {
-                    var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError",
+                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError",
                         "Invalid note duration.");
-                    this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                    throw new MusicSheetReadingException("", e, 0);
+                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                    throw new MusicSheetReadingException("", e);
                 }
 
             }
         }
-        var graceNode: IXmlElement = node.Element("grace");
-        if (graceNode != null && graceNode.Attributes().Any()) {
-            if (graceNode.Attribute("slash") != null) {
-                var slash: string = graceNode.Attribute("slash").Value;
-                if (slash == "yes")
+        let graceNode: IXmlElement = node.Element("grace");
+        if (graceNode !== undefined && graceNode.Attributes()) {
+            if (graceNode.Attribute("slash") !== undefined) {
+                let slash: string = graceNode.Attribute("slash").Value;
+                if (slash === "yes")
                     note.GraceNoteSlash = true;
             }
         }
-        if (node.Element("chord") != null)
+        if (node.Element("chord") !== undefined)
             graceChord = true;
-        var graceVoiceEntry: VoiceEntry = null;
+        let graceVoiceEntry: VoiceEntry = undefined;
         if (!graceChord) {
-            graceVoiceEntry = new VoiceEntry(new Fraction(new Fraction(0, 1)), this.currentVoiceEntry.ParentVoice,
-                this.currentStaffEntry);
-            if (this.currentVoiceEntry.GraceVoiceEntriesBefore == null)
-                this.currentVoiceEntry.GraceVoiceEntriesBefore = new List<VoiceEntry>();
+            graceVoiceEntry = new VoiceEntry(
+                new Fraction(0, 1), this.currentVoiceEntry.ParentVoice, this.currentStaffEntry
+            );
+            if (this.currentVoiceEntry.GraceVoiceEntriesBefore === undefined)
+                this.currentVoiceEntry.GraceVoiceEntriesBefore = [];
             this.currentVoiceEntry.GraceVoiceEntriesBefore.push(graceVoiceEntry);
         }
         else {
-            if (this.currentVoiceEntry.GraceVoiceEntriesBefore != null && this.currentVoiceEntry.GraceVoiceEntriesBefore.length > 0)
-                graceVoiceEntry = this.currentVoiceEntry.GraceVoiceEntriesBefore.Last();
+            if (this.currentVoiceEntry.GraceVoiceEntriesBefore !== undefined && this.currentVoiceEntry.GraceVoiceEntriesBefore.length > 0)
+                graceVoiceEntry = CollectionUtil.last(this.currentVoiceEntry.GraceVoiceEntriesBefore);
         }
-        if (graceVoiceEntry != null) {
+        if (graceVoiceEntry !== undefined) {
             graceVoiceEntry.Notes.push(note);
             note.ParentVoiceEntry = graceVoiceEntry;
         }
     }
     private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
-        if (tupletNodeList != null && tupletNodeList.length() > 1) {
-            var timeModNode: IXmlElement = node.Element("time-modification");
-            if (timeModNode != null)
+        if (tupletNodeList !== undefined && tupletNodeList.length > 1) {
+            let timeModNode: IXmlElement = node.Element("time-modification");
+            if (timeModNode !== undefined)
                 timeModNode = timeModNode.Element("actual-notes");
-            var tupletNodeListArr: IXmlElement[] = tupletNodeList.ToArray();
-            for (var idx: number = 0, len = tupletNodeListArr.length; idx < len; ++idx) {
-                var tupletNode: IXmlElement = tupletNodeListArr[idx];
-                if (tupletNode != null && tupletNode.Attributes().Any()) {
-                    var type: string = tupletNode.Attribute("type").Value;
-                    if (type == "start") {
-                        var tupletNumber: number = 1;
-                        if (tupletNode.Attribute("nummber") != null)
-                            tupletNumber = StringToNumberConverter.ToInteger(tupletNode.Attribute("number").Value);
-                        var tupletLabelNumber: number = 0;
-                        if (timeModNode != null) {
+            let tupletNodeListArr: IXmlElement[] = tupletNodeList;
+            for (let idx: number = 0, len = tupletNodeListArr.length; idx < len; ++idx) {
+                let tupletNode: IXmlElement = tupletNodeListArr[idx];
+                if (tupletNode !== undefined && tupletNode.Attributes()) {
+                    let type: string = tupletNode.Attribute("type").Value;
+                    if (type === "start") {
+                        let tupletNumber: number = 1;
+                        if (tupletNode.Attribute("nummber") !== undefined)
+                            tupletNumber = parseInt(tupletNode.Attribute("number").Value);
+                        let tupletLabelNumber: number = 0;
+                        if (timeModNode !== undefined) {
                             try {
-                                tupletLabelNumber = StringToNumberConverter.ToInteger(timeModNode.Value);
+                                tupletLabelNumber = parseInt(timeModNode.Value);
                             }
                             catch (e) {
-                                var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TupletNoteDurationError",
+                                let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TupletNoteDurationError",
                                     "Invalid tuplet note duration.");
-                                this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                                throw new MusicSheetReadingException("", e, 0);
+                                this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                                throw new MusicSheetReadingException("", e);
                             }
 
                         }
-                        var tuplet: Tuplet = new Tuplet(tupletLabelNumber);
-                        if (this.tupletDict.ContainsKey(tupletNumber)) {
-                            this.tupletDict.Remove(tupletNumber);
-                            if (this.tupletDict.length == 0)
+                        let tuplet: Tuplet = new Tuplet(tupletLabelNumber);
+                        if (this.tupletDict[tupletNumber] !== undefined) {
+                            delete this.tupletDict[tupletNumber];
+                            if (Object.keys(this.tupletDict).length === 0)
                                 this.openTupletNumber = 0;
-                            else if (this.tupletDict.length > 1)
+                            else if (Object.keys(this.tupletDict).length > 1)
                                 this.openTupletNumber--;
                         }
-                        this.tupletDict.push(tupletNumber, tuplet);
-                        var subnotelist: List<Note> = new List<Note>();
+                        this.tupletDict[tupletNumber] = tuplet;
+                        let subnotelist: Note[] = [];
                         subnotelist.push(this.currentNote);
                         tuplet.Notes.push(subnotelist);
                         tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
                         this.currentNote.NoteTuplet = tuplet;
                         this.openTupletNumber = tupletNumber;
                     }
-                    else if (type == "stop") {
-                        var tupletNumber: number = 1;
-                        if (tupletNode.Attribute("nummber") != null)
-                            tupletNumber = StringToNumberConverter.ToInteger(tupletNode.Attribute("number").Value);
-                        if (this.tupletDict.ContainsKey(tupletNumber)) {
-                            var tuplet: Tuplet = this.tupletDict[tupletNumber];
-                            var subnotelist: List<Note> = new List<Note>();
+                    else if (type === "stop") {
+                        let tupletNumber: number = 1;
+                        if (tupletNode.Attribute("number") !== undefined)
+                            tupletNumber = parseInt(tupletNode.Attribute("number").Value);
+                        let tuplet: Tuplet = this.tupletDict[tupletNumber];
+                        if (tuplet !== undefined) {
+                            let subnotelist: Note[] = [];
                             subnotelist.push(this.currentNote);
                             tuplet.Notes.push(subnotelist);
                             tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
                             this.currentNote.NoteTuplet = tuplet;
-                            this.tupletDict.Remove(tupletNumber);
-                            if (this.tupletDict.length == 0)
+                            delete this.tupletDict[tupletNumber];
+                            if (Object.keys(this.tupletDict).length === 0)
                                 this.openTupletNumber = 0;
-                            else if (this.tupletDict.length > 1)
+                            else if (Object.keys(this.tupletDict).length > 1)
                                 this.openTupletNumber--;
                         }
                     }
                 }
             }
         }
-        else if (tupletNodeList.First() != null) {
-            var n: IXmlElement = tupletNodeList.First();
+        else if (tupletNodeList[0] !== undefined) {
+            let n: IXmlElement = tupletNodeList[0];
             if (n.HasAttributes) {
-                var type: string = n.Attribute("type").Value;
-                var tupletnumber: number = 1;
-                var noTupletNumbering: boolean = false;
+                let type: string = n.Attribute("type").Value;
+                let tupletnumber: number = 1;
+                let noTupletNumbering: boolean = false;
                 try {
-                    if (n.Attribute("number") != null)
-                        tupletnumber = StringToNumberConverter.ToInteger(n.Attribute("number").Value);
+                    if (n.Attribute("number") !== undefined)
+                        tupletnumber = parseInt(n.Attribute("number").Value);
                 }
                 catch (err) {
                     noTupletNumbering = true;
                 }
 
-                if (type == "start") {
-                    var tupletLabelNumber: number = 0;
-                    var timeModNode: IXmlElement = node.Element("time-modification");
-                    if (timeModNode != null)
+                if (type === "start") {
+                    let tupletLabelNumber: number = 0;
+                    let timeModNode: IXmlElement = node.Element("time-modification");
+                    if (timeModNode !== undefined)
                         timeModNode = timeModNode.Element("actual-notes");
-                    if (timeModNode != null) {
+                    if (timeModNode !== undefined) {
                         try {
-                            tupletLabelNumber = StringToNumberConverter.ToInteger(timeModNode.Value);
+                            tupletLabelNumber = parseInt(timeModNode.Value);
                         }
                         catch (e) {
-                            var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TupletNoteDurationError",
+                            let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TupletNoteDurationError",
                                 "Invalid tuplet note duration.");
-                            this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                            throw new MusicSheetReadingException("", e, 0);
+                            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                            throw new MusicSheetReadingException("", e);
                         }
 
                     }
@@ -620,36 +629,32 @@ export class VoiceGenerator {
                         this.openTupletNumber++;
                         tupletnumber = this.openTupletNumber;
                     }
-                    var tuplet: Tuplet;
-                    if (this.tupletDict.ContainsKey(tupletnumber)) {
-                        tuplet = this.tupletDict[tupletnumber];
+                    let tuplet: Tuplet = this.tupletDict[tupletnumber];
+                    if (tuplet === undefined) {
+                        tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber);
                     }
-                    else {
-                        tuplet = new Tuplet(tupletLabelNumber);
-                        this.tupletDict.push(tupletnumber, tuplet);
-                    }
-                    var subnotelist: List<Note> = new List<Note>();
+                    let subnotelist: Note[] = [];
                     subnotelist.push(this.currentNote);
                     tuplet.Notes.push(subnotelist);
                     tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
                     this.currentNote.NoteTuplet = tuplet;
                     this.openTupletNumber = tupletnumber;
                 }
-                else if (type == "stop") {
+                else if (type === "stop") {
                     if (noTupletNumbering)
                         tupletnumber = this.openTupletNumber;
-                    if (this.tupletDict.ContainsKey(tupletnumber)) {
-                        var tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
-                        var subnotelist: List<Note> = new List<Note>();
+                    let tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
+                    if (tuplet !== undefined) {
+                        let subnotelist: Note[] = [];
                         subnotelist.push(this.currentNote);
                         tuplet.Notes.push(subnotelist);
                         tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
                         this.currentNote.NoteTuplet = tuplet;
-                        if (this.tupletDict.length == 0)
+                        if (Object.keys(this.tupletDict).length === 0)
                             this.openTupletNumber = 0;
-                        else if (this.tupletDict.length > 1)
+                        else if (Object.keys(this.tupletDict).length > 1)
                             this.openTupletNumber--;
-                        this.tupletDict.Remove(tupletnumber);
+                        delete this.tupletDict[tupletnumber];
                     }
                 }
             }
@@ -657,16 +662,16 @@ export class VoiceGenerator {
         return this.openTupletNumber;
     }
     private handleTimeModificationNode(noteNode: IXmlElement): void {
-        if (this.tupletDict.length != 0) {
+        if (Object.keys(this.tupletDict).length !== 0) {
             try {
-                var tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
-                var notes: List<Note> = tuplet.Notes.Last();
-                var lastTupletVoiceEntry: VoiceEntry = notes[0].ParentVoiceEntry;
-                var noteList: List<Note>;
-                if (lastTupletVoiceEntry.Timestamp == this.currentVoiceEntry.Timestamp)
+                let tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
+                let notes: Note[] = CollectionUtil.last(tuplet.Notes);
+                let lastTupletVoiceEntry: VoiceEntry = notes[0].ParentVoiceEntry;
+                let noteList: Note[];
+                if (lastTupletVoiceEntry.Timestamp === this.currentVoiceEntry.Timestamp)
                     noteList = notes;
                 else {
-                    noteList = new List<Note>();
+                    noteList = [];
                     tuplet.Notes.push(noteList);
                     tuplet.Fractions.push(this.getTupletNoteDurationFromType(noteNode));
                 }
@@ -674,93 +679,93 @@ export class VoiceGenerator {
                 this.currentNote.NoteTuplet = tuplet;
             }
             catch (ex) {
-                var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TupletNumberError",
+                let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TupletNumberError",
                     "Invalid tuplet number.");
-                this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
+                this.musicSheet.SheetErrors.pushTemp(errorMsg);
                 throw ex;
             }
 
         }
         else if (this.currentVoiceEntry.Notes.length > 0) {
-            var firstNote: Note = this.currentVoiceEntry.Notes[0];
-            if (firstNote.NoteTuplet != null) {
-                var tuplet: Tuplet = firstNote.NoteTuplet;
-                var notes: List<Note> = tuplet.Notes.Last();
+            let firstNote: Note = this.currentVoiceEntry.Notes[0];
+            if (firstNote.NoteTuplet !== undefined) {
+                let tuplet: Tuplet = firstNote.NoteTuplet;
+                let notes: Note[] = CollectionUtil.last(tuplet.Notes);
                 notes.push(this.currentNote);
                 this.currentNote.NoteTuplet = tuplet;
             }
         }
     }
     private addTie(tieNodeList: IXmlElement[], measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction): void {
-        if (tieNodeList != null) {
-            if (tieNodeList.length() == 1) {
-                var tieNode: IXmlElement = tieNodeList.First();
-                if (tieNode != null && tieNode.Attributes().Any()) {
-                    var type: string = tieNode.Attribute("type").Value;
+        if (tieNodeList !== undefined) {
+            if (tieNodeList.length === 1) {
+                let tieNode: IXmlElement = tieNodeList[0];
+                if (tieNode !== undefined && tieNode.Attributes()) {
+                    let type: string = tieNode.Attribute("type").Value;
                     try {
-                        if (type == "start") {
-                            var number: number = this.findCurrentNoteInTieDict(this.currentNote);
+                        if (type === "start") {
+                            let number: number = this.findCurrentNoteInTieDict(this.currentNote);
                             if (number < 0)
-                                this.openTieDict.Remove(number);
-                            var newTieNumber: number = this.getNextAvailableNumberForTie();
-                            var tie: Tie = new Tie(this.currentNote);
-                            this.openTieDict.push(newTieNumber, tie);
-                            if (this.currentNote.NoteBeam != null)
-                                if (this.currentNote.NoteBeam.Notes[0] == this.currentNote) {
+                                delete this.openTieDict[number];
+                            let newTieNumber: number = this.getNextAvailableNumberForTie();
+                            let tie: Tie = new Tie(this.currentNote);
+                            this.openTieDict[newTieNumber] = tie;
+                            if (this.currentNote.NoteBeam !== undefined)
+                                if (this.currentNote.NoteBeam.Notes[0] === this.currentNote) {
                                     tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
                                 }
                                 else {
-                                    for (var idx: number = 0, len = this.currentNote.NoteBeam.Notes.length; idx < len; ++idx) {
-                                        var note: Note = this.currentNote.NoteBeam.Notes[idx];
-                                        if (note.NoteTie != null && note.NoteTie != tie && note.NoteTie.BeamStartTimestamp != null) {
+                                    for (let idx: number = 0, len = this.currentNote.NoteBeam.Notes.length; idx < len; ++idx) {
+                                        let note: Note = this.currentNote.NoteBeam.Notes[idx];
+                                        if (note.NoteTie !== undefined && note.NoteTie !== tie && note.NoteTie.BeamStartTimestamp !== undefined) {
                                             tie.BeamStartTimestamp = note.NoteTie.BeamStartTimestamp;
                                             break;
                                         }
                                     }
-                                    if (this.currentNote == this.currentNote.NoteBeam.Notes.Last())
+                                    if (this.currentNote === CollectionUtil.last(this.currentNote.NoteBeam.Notes))
                                         tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
                                 }
                         }
-                        else if (type == "stop") {
-                            var tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
-                            var tie: Tie = this.openTieDict[tieNumber];
+                        else if (type === "stop") {
+                            let tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+                            let tie: Tie = this.openTieDict[tieNumber];
                             if (tie !== undefined) {
-                                var tieStartNote: Note = tie.Start;
+                                let tieStartNote: Note = tie.Start;
                                 tieStartNote.NoteTie = tie;
                                 tieStartNote.Length.Add(this.currentNote.Length);
                                 tie.Fractions.push(this.currentNote.Length);
                                 if (maxTieNoteFraction < this.currentStaffEntry.Timestamp + this.currentNote.Length)
                                     maxTieNoteFraction = this.currentStaffEntry.Timestamp + this.currentNote.Length;
-                                this.currentVoiceEntry.Notes.Remove(this.currentNote);
-                                if (this.currentVoiceEntry.Articulations.length == 1 && this.currentVoiceEntry.Articulations[0] == ArticulationEnum.fermata && !tieStartNote.ParentVoiceEntry.Articulations.Contains(ArticulationEnum.fermata))
+                                delete this.currentVoiceEntry.Notes[this.currentNote];
+                                if (this.currentVoiceEntry.Articulations.length === 1 && this.currentVoiceEntry.Articulations[0] === ArticulationEnum.fermata && tieStartNote.ParentVoiceEntry.Articulations[ArticulationEnum.fermata] === undefined)
                                     tieStartNote.ParentVoiceEntry.Articulations.push(ArticulationEnum.fermata);
-                                if (this.currentNote.NoteBeam != null) {
-                                    var noteBeamIndex: number = this.currentNote.NoteBeam.Notes.indexOf(this.currentNote);
-                                    if (noteBeamIndex == 0 && tie.BeamStartTimestamp == null)
+                                if (this.currentNote.NoteBeam !== undefined) {
+                                    let noteBeamIndex: number = this.currentNote.NoteBeam.Notes.indexOf(this.currentNote);
+                                    if (noteBeamIndex === 0 && tie.BeamStartTimestamp === undefined)
                                         tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
-                                    var noteBeam: Beam = this.currentNote.NoteBeam;
+                                    let noteBeam: Beam = this.currentNote.NoteBeam;
                                     noteBeam.Notes[noteBeamIndex] = tieStartNote;
                                     tie.TieBeam = noteBeam;
                                 }
-                                if (this.currentNote.NoteTuplet != null) {
-                                    var noteTupletIndex: number = this.currentNote.NoteTuplet.getNoteIndex(this.currentNote);
-                                    var index: number = this.currentNote.NoteTuplet.Notes[noteTupletIndex].indexOf(this.currentNote);
-                                    var noteTuplet: Tuplet = this.currentNote.NoteTuplet;
+                                if (this.currentNote.NoteTuplet !== undefined) {
+                                    let noteTupletIndex: number = this.currentNote.NoteTuplet.getNoteIndex(this.currentNote);
+                                    let index: number = this.currentNote.NoteTuplet.Notes[noteTupletIndex].indexOf(this.currentNote);
+                                    let noteTuplet: Tuplet = this.currentNote.NoteTuplet;
                                     noteTuplet.Notes[noteTupletIndex][index] = tieStartNote;
                                     tie.TieTuplet = noteTuplet;
                                 }
-                                for (var idx: number = 0, len = this.currentNote.NoteSlurs.length; idx < len; ++idx) {
-                                    var slur: Slur = this.currentNote.NoteSlurs[idx];
-                                    if (slur.StartNote == this.currentNote) {
+                                for (let idx: number = 0, len = this.currentNote.NoteSlurs.length; idx < len; ++idx) {
+                                    let slur: Slur = this.currentNote.NoteSlurs[idx];
+                                    if (slur.StartNote === this.currentNote) {
                                         slur.StartNote = tie.Start;
                                         slur.StartNote.NoteSlurs.push(slur);
                                     }
-                                    if (slur.EndNote == this.currentNote) {
+                                    if (slur.EndNote === this.currentNote) {
                                         slur.EndNote = tie.Start;
                                         slur.EndNote.NoteSlurs.push(slur);
                                     }
                                 }
-                                //var lyricsEntriesArr: KeyValuePair<number, LyricsEntry>[] = this.currentVoiceEntry.LyricsEntries.ToArray();
+                                //let lyricsEntriesArr: KeyValuePair<number, LyricsEntry>[] = this.currentVoiceEntry.LyricsEntries.ToArray();
                                 for (let lyricsEntry in this.currentVoiceEntry.LyricsEntries) {
                                     let val: LyricsEntry = this.currentVoiceEntry.LyricsEntries[lyricsEntry];
                                     if (!tieStartNote.ParentVoiceEntry.LyricsEntries[lyricsEntry] === undefined) {
@@ -768,95 +773,95 @@ export class VoiceGenerator {
                                         val.Parent = tieStartNote.ParentVoiceEntry;
                                     }
                                 }
-                                this.openTieDict.Remove(tieNumber);
+                                delete this.openTieDict[tieNumber];
                             }
                         }
                     }
                     catch (err) {
-                        var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TieError", "Error while reading tie.");
+                        let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TieError", "Error while reading tie.");
                         this.musicSheet.SheetErrors.pushTemp(errorMsg);
                     }
 
                 }
             }
-            else if (tieNodeList.length() == 2) {
-                var tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+            else if (tieNodeList.length === 2) {
+                let tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
                 if (tieNumber >= 0) {
-                    var tie: Tie = this.openTieDict[tieNumber];
-                    var tieStartNote: Note = tie.Start;
+                    let tie: Tie = this.openTieDict[tieNumber];
+                    let tieStartNote: Note = tie.Start;
                     tieStartNote.Length.Add(this.currentNote.Length);
                     tie.Fractions.push(this.currentNote.Length);
-                    if (this.currentNote.NoteBeam != null) {
-                        var noteBeamIndex: number = this.currentNote.NoteBeam.Notes.indexOf(this.currentNote);
-                        if (noteBeamIndex == 0 && tie.BeamStartTimestamp == null)
+                    if (this.currentNote.NoteBeam !== undefined) {
+                        let noteBeamIndex: number = this.currentNote.NoteBeam.Notes.indexOf(this.currentNote);
+                        if (noteBeamIndex === 0 && tie.BeamStartTimestamp === undefined)
                             tie.BeamStartTimestamp = measureStartAbsoluteTimestamp + this.currentVoiceEntry.Timestamp;
-                        var noteBeam: Beam = this.currentNote.NoteBeam;
+                        let noteBeam: Beam = this.currentNote.NoteBeam;
                         noteBeam.Notes[noteBeamIndex] = tieStartNote;
                         tie.TieBeam = noteBeam;
                     }
-                    for (var idx: number = 0, len = this.currentNote.NoteSlurs.length; idx < len; ++idx) {
-                        var slur: Slur = this.currentNote.NoteSlurs[idx];
-                        if (slur.StartNote == this.currentNote) {
+                    for (let idx: number = 0, len = this.currentNote.NoteSlurs.length; idx < len; ++idx) {
+                        let slur: Slur = this.currentNote.NoteSlurs[idx];
+                        if (slur.StartNote === this.currentNote) {
                             slur.StartNote = tie.Start;
                             slur.StartNote.NoteSlurs.push(slur);
                         }
-                        if (slur.EndNote == this.currentNote) {
+                        if (slur.EndNote === this.currentNote) {
                             slur.EndNote = tie.Start;
                             slur.EndNote.NoteSlurs.push(slur);
                         }
                     }
-                    var lyricsEntries: KeyValuePair<number, LyricsEntry>[] = this.currentVoiceEntry.LyricsEntries.ToArray();
-                    for (var idx: number = 0, len = lyricsEntries.length; idx < len; ++idx) {
-                        var lyricsEntry: KeyValuePair<number, LyricsEntry> = lyricsEntries[idx];
-                        if (!tieStartNote.ParentVoiceEntry.LyricsEntries.ContainsKey(lyricsEntry.Key)) {
-                            tieStartNote.ParentVoiceEntry.LyricsEntries.push(lyricsEntry.Key, lyricsEntry.Value);
-                            lyricsEntry.Value.Parent = tieStartNote.ParentVoiceEntry;
+                    let lyricsEntries: { [_: number]: LyricsEntry; } = this.currentVoiceEntry.LyricsEntries;
+                    for (let key in lyricsEntries) {
+                        let lyricsEntry: LyricsEntry = lyricsEntries[key];
+                        if (tieStartNote.ParentVoiceEntry.LyricsEntries[key] === undefined) {
+                            tieStartNote.ParentVoiceEntry.LyricsEntries[key] = lyricsEntry;
+                            lyricsEntry.Parent = tieStartNote.ParentVoiceEntry;
                         }
                     }
                     if (maxTieNoteFraction < this.currentStaffEntry.Timestamp + this.currentNote.Length)
                         maxTieNoteFraction = this.currentStaffEntry.Timestamp + this.currentNote.Length;
-                    this.currentVoiceEntry.Notes.Remove(this.currentNote);
+                    delete this.currentVoiceEntry.Notes[this.currentNote];
                 }
             }
         }
     }
     private getNextAvailableNumberForTie(): number {
-        var keys: number[] = this.openTieDict.keys();
-        if (keys.length == 0)
+        let keys: string[] = Object.keys(this.openTieDict);
+        if (keys.length === 0)
             return 1;
-        keys.Sort();
-        for (var i: number = 0; i < keys.length; i++) {
-            if (i + 1 != keys[i])
+        keys.sort((a, b) => (a - b)); // FIXME Andrea: test
+        for (let i: number = 0; i < keys.length; i++) {
+            if (<string>(i + 1) !== keys[i])
                 return i + 1;
         }
         return keys[keys.length - 1] + 1;
     }
     private findCurrentNoteInTieDict(candidateNote: Note): number {
-        var openTieDictArr: KeyValuePair<number, Tie>[] = this.openTieDict.ToArray();
-        for (var idx: number = 0, len = openTieDictArr.length; idx < len; ++idx) {
-            var keyValuePair: KeyValuePair<number, Tie> = openTieDictArr[idx];
-            if (keyValuePair.Value.Start.Pitch.FundamentalNote == candidateNote.Pitch.FundamentalNote && keyValuePair.Value.Start.Pitch.Octave == candidateNote.Pitch.Octave) {
-                return keyValuePair.Key;
+        let openTieDict: { [_: number]: Tie; } = this.openTieDict;
+        for (let key in openTieDict) {
+            let tie: Tie = openTieDict[key];
+            if (tie.Start.Pitch.FundamentalNote === candidateNote.Pitch.FundamentalNote && tie.Start.Pitch.Octave === candidateNote.Pitch.Octave) {
+                return key;
             }
         }
         return -1;
     }
     private getTupletNoteDurationFromType(xmlNode: IXmlElement): Fraction {
-        if (xmlNode.Element("type") != null) {
-            var typeNode: IXmlElement = xmlNode.Element("type");
-            if (typeNode != null) {
-                var type: string = typeNode.Value;
+        if (xmlNode.Element("type") !== undefined) {
+            let typeNode: IXmlElement = xmlNode.Element("type");
+            if (typeNode !== undefined) {
+                let type: string = typeNode.Value;
                 try {
                     return this.getNoteDurationFromType(type);
                 }
                 catch (e) {
-                    var errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid note duration.");
+                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid note duration.");
                     this.musicSheet.SheetErrors.pushTemp(errorMsg);
                     throw new MusicSheetReadingException("", e);
                 }
 
             }
         }
-        return null;
+        return undefined;
     }
 }
