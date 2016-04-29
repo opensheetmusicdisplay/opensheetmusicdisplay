@@ -13,9 +13,9 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         this.virtualOverallRepetition = virtualOverallRepetition;
     }
 
-    public StartMarker: RepetitionInstruction;
-    public EndMarker: RepetitionInstruction;
-    public ForwardJumpInstruction: RepetitionInstruction;
+    public startMarker: RepetitionInstruction;
+    public endMarker: RepetitionInstruction;
+    public forwardJumpInstruction: RepetitionInstruction;
 
     private backwardJumpInstructions: RepetitionInstruction[] = [];
     private endingParts: RepetitionEndingPart[] = [];
@@ -71,7 +71,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         return -1;
     }
     public getBackwardJumpTarget(): number {
-        return this.StartMarker.MeasureIndex;
+        return this.startMarker.measureIndex;
     }
     public SetEndingStartIndex(endingNumbers: number[], startIndex: number): void {
         let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
@@ -113,16 +113,16 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         this.fromWords = value;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return Fraction.CreateFractionFromFraction(this.musicSheet2.SourceMeasures[this.StartMarker.MeasureIndex].AbsoluteTimestamp);
+        return Fraction.CreateFractionFromFraction(this.musicSheet2.SourceMeasures[this.startMarker.measureIndex].AbsoluteTimestamp);
     }
     public get StartIndex(): number {
-        return this.StartMarker.MeasureIndex;
+        return this.startMarker.measureIndex;
     }
     public get EndIndex(): number {
         if (this.BackwardJumpInstructions.length === 0) {
             return this.StartIndex;
         }
-        let result: number = this.backwardJumpInstructions[this.backwardJumpInstructions.length - 1].MeasureIndex;
+        let result: number = this.backwardJumpInstructions[this.backwardJumpInstructions.length - 1].measureIndex;
         if (this.endingIndexDict[this.NumberOfEndings] !== undefined) {
             result = Math.max(this.endingIndexDict[this.NumberOfEndings].part.EndIndex, result);
         }

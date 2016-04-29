@@ -5,13 +5,13 @@ export class Staff {
     constructor(parentInstrument: Instrument, instrumentStaffId: number) {
         this.parentInstrument = parentInstrument;
         this.id = instrumentStaffId;
-        this.Audible = true;
-        this.Following = true;
+        this.audible = true;
+        this.following = true;
     }
 
-    public IdInMusicSheet: number;
-    public Audible: boolean;
-    public Following: boolean;
+    public idInMusicSheet: number;
+    public audible: boolean;
+    public following: boolean;
 
     private parentInstrument: Instrument;
     private voices: Voice[] = [];

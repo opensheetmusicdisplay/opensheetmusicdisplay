@@ -15,8 +15,8 @@ export class SourceMeasure {
     this.completeNumberOfStaves = completeNumberOfStaves;
     this.initialize();
   }
-  public MeasureListIndex: number;
-  public EndsPiece: boolean;
+  public measureListIndex: number;
+  public endsPiece: boolean;
 
   private measureNumber: number;
   //private parentMusicPart: SourceMusicPart;
@@ -94,14 +94,14 @@ export class SourceMeasure {
     this.staffMeasureErrors[staffIndex] = hasError;
   }
   public getNextMeasure(measures: SourceMeasure[]): SourceMeasure {
-    if (this.MeasureListIndex + 1 < measures.length) {
-      return measures[this.MeasureListIndex + 1];
+    if (this.measureListIndex + 1 < measures.length) {
+      return measures[this.measureListIndex + 1];
     }
     return undefined;
   }
   public getPreviousMeasure(measures: SourceMeasure[]): SourceMeasure {
-    if (this.MeasureListIndex > 1) {
-      return measures[this.MeasureListIndex - 1];
+    if (this.measureListIndex > 1) {
+      return measures[this.measureListIndex - 1];
     }
     return undefined;
   }
@@ -289,7 +289,7 @@ export class SourceMeasure {
     }
     this.implicitMeasure = false;
     this.breakSystemAfter = false;
-    this.EndsPiece = false;
+    this.endsPiece = false;
   }
   private getLastSourceStaffEntryForInstrument(instrumentIndex: number): SourceStaffEntry {
     for (let i: number = this.verticalSourceStaffEntryContainers.length - 1; i >= 0; i--) {

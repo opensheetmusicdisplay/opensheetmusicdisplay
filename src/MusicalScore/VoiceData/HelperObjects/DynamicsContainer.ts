@@ -5,23 +5,23 @@ import {MultiExpression} from "../Expressions/multiExpression";
 export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
     constructor(dynamicExpression: ContinuousDynamicExpression|InstantaniousDynamicExpression, staffNumber: number) {
         if (dynamicExpression instanceof ContinuousDynamicExpression) {
-            this.ContinuousDynamicExpression = dynamicExpression;
+            this.continuousDynamicExpression = dynamicExpression;
         } else if (dynamicExpression instanceof InstantaniousDynamicExpression) {
-            this.InstantaneousDynamicExpression = dynamicExpression;
+            this.instantaneousDynamicExpression = dynamicExpression;
         }
-        this.StaffNumber = staffNumber;
+        this.staffNumber = staffNumber;
     }
 
-    public ContinuousDynamicExpression: ContinuousDynamicExpression;
-    public InstantaneousDynamicExpression: InstantaniousDynamicExpression;
-    public StaffNumber: number;
+    public continuousDynamicExpression: ContinuousDynamicExpression;
+    public instantaneousDynamicExpression: InstantaniousDynamicExpression;
+    public staffNumber: number;
 
     public parMultiExpression(): MultiExpression {
-        if (this.ContinuousDynamicExpression !== undefined) {
-            return this.ContinuousDynamicExpression.StartMultiExpression;
+        if (this.continuousDynamicExpression !== undefined) {
+            return this.continuousDynamicExpression.StartMultiExpression;
         }
-        if (this.InstantaneousDynamicExpression !== undefined) {
-            return this.InstantaneousDynamicExpression.ParentMultiExpression;
+        if (this.instantaneousDynamicExpression !== undefined) {
+            return this.instantaneousDynamicExpression.ParentMultiExpression;
         }
         return undefined;
     }

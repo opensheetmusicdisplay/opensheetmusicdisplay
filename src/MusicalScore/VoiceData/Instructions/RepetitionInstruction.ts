@@ -2,14 +2,14 @@ import {Repetition} from "../../MusicSource/Repetition";
 
 export class RepetitionInstructionComparer /*implements IComparer<RepetitionInstruction>*/ {
   public static Compare(x: RepetitionInstruction, y: RepetitionInstruction): number {
-    if (x.ParentRepetition !== undefined && y.ParentRepetition !== undefined) {
-      if (x.Alignment === AlignmentType.End && y.Alignment === AlignmentType.End) {
-        if (x.ParentRepetition.StartIndex < y.ParentRepetition.StartIndex) { return 1; }
-        if (x.ParentRepetition.StartIndex > y.ParentRepetition.StartIndex) { return -1; }
+    if (x.parentRepetition !== undefined && y.parentRepetition !== undefined) {
+      if (x.alignment === AlignmentType.End && y.alignment === AlignmentType.End) {
+        if (x.parentRepetition.StartIndex < y.parentRepetition.StartIndex) { return 1; }
+        if (x.parentRepetition.StartIndex > y.parentRepetition.StartIndex) { return -1; }
       }
-      if (x.Alignment === AlignmentType.Begin && y.Alignment === AlignmentType.Begin) {
-        if (x.ParentRepetition.EndIndex < y.ParentRepetition.EndIndex) { return 1; }
-        if (x.ParentRepetition.EndIndex > y.ParentRepetition.EndIndex) { return -1; }
+      if (x.alignment === AlignmentType.Begin && y.alignment === AlignmentType.Begin) {
+        if (x.parentRepetition.EndIndex < y.parentRepetition.EndIndex) { return 1; }
+        if (x.parentRepetition.EndIndex > y.parentRepetition.EndIndex) { return -1; }
       }
     }
     return 0;
@@ -21,7 +21,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
   constructor(measureIndex: number, type: RepetitionInstructionEnum) {
     this(measureIndex, [], type, AlignmentType.End, undefined);
     if (type === RepetitionInstructionEnum.StartLine || type === RepetitionInstructionEnum.Segno || type === RepetitionInstructionEnum.Coda) {
-      this.Alignment = AlignmentType.Begin;
+      this.alignment = AlignmentType.Begin;
     }
   }
   constructor(measureIndex: number, type: RepetitionInstructionEnum, alignment: AlignmentType, parentRepetition: Repetition) {
@@ -34,54 +34,55 @@ export class RepetitionInstruction /*implements IComparable*/ {
   }
   */
   constructor(measureIndex: number, endingIndices: number[], type: RepetitionInstructionEnum, alignment: AlignmentType, parentRepetition: Repetition) {
-    this.MeasureIndex = measureIndex;
-    this.EndingIndices = endingIndices.slice();
-    this.Type = type;
-    this.Alignment = alignment;
-    this.ParentRepetition = parentRepetition;
+    this.measureIndex = measureIndex;
+    this.endingIndices = endingIndices.slice();
+    this.type = type;
+    this.alignment = alignment;
+    this.parentRepetition = parentRepetition;
   }
 
-  public MeasureIndex: number;
-  public EndingIndices: number[];
-  public Type: RepetitionInstructionEnum;
-  public Alignment: AlignmentType;
-  public ParentRepetition: Repetition;
+  public measureIndex: number;
+  public endingIndices: number[];
+  public type: RepetitionInstructionEnum;
+  public alignment: AlignmentType;
+  public parentRepetition: Repetition;
+
   public CompareTo(obj: Object): number {
     let other: RepetitionInstruction = <RepetitionInstruction>obj;
-    if (this.MeasureIndex > other.MeasureIndex) {
+    if (this.measureIndex > other.measureIndex) {
       return 1;
-    } else if (this.MeasureIndex < other.MeasureIndex) {
+    } else if (this.measureIndex < other.measureIndex) {
       return -1;
     }
-    if (this.Alignment === AlignmentType.Begin) {
-      if (other.Alignment === AlignmentType.End) { return -1; }
-      switch (this.Type) {
+    if (this.alignment === AlignmentType.Begin) {
+      if (other.alignment === AlignmentType.End) { return -1; }
+      switch (this.type) {
         case RepetitionInstructionEnum.Ending:
           return 1;
         case RepetitionInstructionEnum.StartLine:
-          if (other.Type === RepetitionInstructionEnum.Ending) {
+          if (other.type === RepetitionInstructionEnum.Ending) {
             return -1;
           }
           return 1;
         case RepetitionInstructionEnum.Coda:
         case RepetitionInstructionEnum.Segno:
-          if (other.Type === RepetitionInstructionEnum.Coda) {
+          if (other.type === RepetitionInstructionEnum.Coda) {
             return 1;
           }
           return -1;
         default:
       }
     } else {
-      if (other.Alignment === AlignmentType.Begin) { return 1; }
-      switch (this.Type) {
+      if (other.alignment === AlignmentType.Begin) { return 1; }
+      switch (this.type) {
         case RepetitionInstructionEnum.Ending:
           return -1;
         case RepetitionInstructionEnum.Fine:
         case RepetitionInstructionEnum.ToCoda:
-          if (other.Type === RepetitionInstructionEnum.Ending) { return 1; }
+          if (other.type === RepetitionInstructionEnum.Ending) { return 1; }
           return -1;
         case RepetitionInstructionEnum.ForwardJump:
-          switch (other.Type) {
+          switch (other.type) {
             case RepetitionInstructionEnum.Ending:
             case RepetitionInstructionEnum.Fine:
             case RepetitionInstructionEnum.ToCoda:
@@ -104,13 +105,13 @@ export class RepetitionInstruction /*implements IComparable*/ {
   }
   public equals(other: RepetitionInstruction): boolean {
     if (
-      this.MeasureIndex !== other.MeasureIndex
-      || this.Type !== other.Type
-      || this.Alignment !== other.Alignment
-      || this.EndingIndices.length !== other.EndingIndices.length
+      this.measureIndex !== other.measureIndex
+      || this.type !== other.type
+      || this.alignment !== other.alignment
+      || this.endingIndices.length !== other.endingIndices.length
     ) { return false; }
-    for (let i: number = 0; i < this.EndingIndices.length; i++) {
-      if (this.EndingIndices[i] !== other.EndingIndices[i]) { return false; }
+    for (let i: number = 0; i < this.endingIndices.length; i++) {
+      if (this.endingIndices[i] !== other.endingIndices[i]) { return false; }
     }
     return true;
   }

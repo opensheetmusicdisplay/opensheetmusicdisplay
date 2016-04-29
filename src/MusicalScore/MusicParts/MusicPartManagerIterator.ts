@@ -50,8 +50,8 @@ export class MusicPartManagerIterator {
         }
 
     }
-    public BackJumpOccurred: boolean;
-    public ForwardJumpOccurred: boolean;
+    public backJumpOccurred: boolean;
+    public forwardJumpOccurred: boolean;
     private manager: MusicPartManager;
     private currentMappingPart: MappingSourceMusicPart;
     private currentMeasure: SourceMeasure;
@@ -113,7 +113,7 @@ export class MusicPartManagerIterator {
         return this.currentTimeStamp;
     }
     public get JumpOccurred(): boolean {
-        return this.BackJumpOccurred || this.ForwardJumpOccurred;
+        return this.backJumpOccurred || this.forwardJumpOccurred;
     }
     public get ActiveTempoExpression(): MultiTempoExpression {
         return this.activeTempoExpression;
@@ -206,7 +206,7 @@ export class MusicPartManagerIterator {
     //    return this.manager.MusicSheet.SheetPlaybackSetting;
     //}
     public moveToNext(): void {
-        this.ForwardJumpOccurred = this.BackJumpOccurred = false;
+        this.forwardJumpOccurred = this.backJumpOccurred = false;
         if (this.endReached) { return; }
         if (this.currentVoiceEntries !== undefined) {
             this.currentVoiceEntries = [];
@@ -296,8 +296,8 @@ export class MusicPartManagerIterator {
     private handleRepetitionsAtMeasureBegin(): void {
         for (let idx: number = 0, len: number = this.currentMeasure.FirstRepetitionInstructions.length; idx < len; ++idx) {
             let repetitionInstruction: RepetitionInstruction = this.currentMeasure.FirstRepetitionInstructions[idx];
-            if (repetitionInstruction.ParentRepetition === undefined) { continue; }
-            let currentRepetition: Repetition = repetitionInstruction.ParentRepetition;
+            if (repetitionInstruction.parentRepetition === undefined) { continue; }
+            let currentRepetition: Repetition = repetitionInstruction.parentRepetition;
             this.currentRepetition = currentRepetition;
             if (currentRepetition.StartIndex === this.currentMeasureIndex) {
                 if (
@@ -315,16 +315,16 @@ export class MusicPartManagerIterator {
     private handleRepetitionsAtMeasureEnd(): void {
         for (let idx: number = 0, len: number = this.currentMeasure.LastRepetitionInstructions.length; idx < len; ++idx) {
             let repetitionInstruction: RepetitionInstruction = this.currentMeasure.LastRepetitionInstructions[idx];
-            let currentRepetition: Repetition = repetitionInstruction.ParentRepetition;
+            let currentRepetition: Repetition = repetitionInstruction.parentRepetition;
             if (currentRepetition === undefined) { continue; }
             if (currentRepetition.BackwardJumpInstructions.indexOf(repetitionInstruction) > -1) {
                 if (this.getRepetitionIterationCount(currentRepetition) < currentRepetition.UserNumberOfRepetitions) {
                     this.doBackJump(currentRepetition);
-                    this.BackJumpOccurred = true;
+                    this.backJumpOccurred = true;
                     return;
                 }
             }
-            if (repetitionInstruction === currentRepetition.ForwardJumpInstruction) {
+            if (repetitionInstruction === currentRepetition.forwardJumpInstruction) {
                 if (
                   this.JumpResponsibleRepetition !== undefined
                   && currentRepetition !== this.JumpResponsibleRepetition
@@ -342,7 +342,7 @@ export class MusicPartManagerIterator {
                     this.currentMeasure = this.manager.MusicSheet.SourceMeasures[this.currentMeasureIndex];
                     this.currentVoiceEntryIndex = -1;
                     this.jumpResponsibleRepetition = currentRepetition;
-                    this.ForwardJumpOccurred = true;
+                    this.forwardJumpOccurred = true;
                     return;
                 }
                 if (forwardJumpTargetMeasureIndex === -2) {
@@ -372,7 +372,7 @@ export class MusicPartManagerIterator {
             for (let idx: number = 0, len: number = instructions.length; idx < len; ++idx) {
                 let abstractNotationInstruction: AbstractNotationInstruction = instructions[idx];
                 if (abstractNotationInstruction instanceof RhythmInstruction) {
-                    this.manager.MusicSheet.SheetPlaybackSetting.Rhythm = (<RhythmInstruction>abstractNotationInstruction).Rhythm;
+                    this.manager.MusicSheet.SheetPlaybackSetting.rhythm = (<RhythmInstruction>abstractNotationInstruction).Rhythm;
                 }
             }
         }
@@ -398,12 +398,12 @@ export class MusicPartManagerIterator {
           && timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp === this.CurrentSourceTimestamp
         ) {
             let dynamicsContainer: DynamicsContainer = timeSortedDynamics[this.currentDynamicEntryIndex];
-            let staffIndex: number = dynamicsContainer.StaffNumber;
+            let staffIndex: number = dynamicsContainer.staffNumber;
             if (this.CurrentSourceTimestamp === dynamicsContainer.parMultiExpression().AbsoluteTimestamp) {
-                if (dynamicsContainer.ContinuousDynamicExpression !== undefined) {
-                    this.activeDynamicExpressions[staffIndex] = dynamicsContainer.ContinuousDynamicExpression;
-                } else if (dynamicsContainer.InstantaneousDynamicExpression !== undefined) {
-                    this.activeDynamicExpressions[staffIndex] = dynamicsContainer.InstantaneousDynamicExpression;
+                if (dynamicsContainer.continuousDynamicExpression !== undefined) {
+                    this.activeDynamicExpressions[staffIndex] = dynamicsContainer.continuousDynamicExpression;
+                } else if (dynamicsContainer.instantaneousDynamicExpression !== undefined) {
+                    this.activeDynamicExpressions[staffIndex] = dynamicsContainer.instantaneousDynamicExpression;
                 }
             }
             this.currentDynamicEntryIndex++;

@@ -8,7 +8,7 @@ import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 
-import Vex = require("vexflow");
+// import Vex = require("vexflow");
 
 export class Note {
 
@@ -18,13 +18,13 @@ export class Note {
         this.length = length;
         this.pitch = pitch;
         if (pitch !== undefined) {
-            this.HalfTone = pitch.getHalfTone();
+            this.halfTone = pitch.getHalfTone();
         } else {
-          this.HalfTone = 0;
+          this.halfTone = 0;
         }
     }
 
-    public HalfTone: number;
+    public halfTone: number;
 
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
@@ -113,7 +113,7 @@ export class Note {
         }
         if (originalLength.Numerator > 1) {
             let exp: number = Math.floor(Math.log(originalLength.Denominator) / Math.LN2) - this.calculateNumberOfNeededDots(originalLength);
-            originalLength.Denominator = 1 << exp;
+            originalLength.Denominator = Math.pow(2, exp);
             originalLength.Numerator = 1;
         }
         return originalLength;

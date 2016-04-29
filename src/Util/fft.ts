@@ -1,6 +1,6 @@
 import FFT = require("FFT");
 
-export class fft {
+export class FFT2 {
 
   public static toRealImag(timeData: number[]): { imag: Float64Array; real: Float64Array; } {
     let n: number = timeData.length;

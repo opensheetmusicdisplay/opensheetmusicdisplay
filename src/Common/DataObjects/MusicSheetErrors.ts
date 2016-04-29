@@ -1,11 +1,12 @@
 // skeleton by Andrea
 
 export class MusicSheetErrors {
+    public measureErrors: { [n: number]: string[] };
+
     private errors: string[];
     private tempErrors: string[];
-    public MeasureErrors: { [n: number]: string[] };
 
-    public TransferTempErrorsToDict(measureNumber: number) {
+    public TransferTempErrorsToDict(measureNumber: number): void {
         for (let errorString of this.tempErrors) {
             this.addErrorMessageAtIndex(measureNumber, errorString);
         }
@@ -13,18 +14,18 @@ export class MusicSheetErrors {
     }
 
     // Add an error message to the temporary errors list
-    public pushTemp(errorMsg: string) {
+    public pushTemp(errorMsg: string): void {
         this.tempErrors.push(errorMsg);
     }
 
-    public push(errorMsg: string) {
+    public push(errorMsg: string): void {
         this.errors.push(errorMsg);
     }
 
-    private addErrorMessageAtIndex(measureNumber: number, errorString: string) {
-        let list: string[] = this.MeasureErrors[measureNumber];
+    private addErrorMessageAtIndex(measureNumber: number, errorString: string): void {
+        let list: string[] = this.measureErrors[measureNumber];
         if (list === undefined) {
-            this.MeasureErrors[measureNumber] = [errorString];
+            this.measureErrors[measureNumber] = [errorString];
         } else {
             list.push(errorString);
         }

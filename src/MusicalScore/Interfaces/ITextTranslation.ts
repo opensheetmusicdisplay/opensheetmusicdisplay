@@ -1,8 +1,8 @@
 export class ITextTranslation {
-    public static DefaultTextTranslation: ITextTranslation;
+    public static defaultTextTranslation: ITextTranslation;
 
     public static translateText(tag: string, text: string): string {
-        if (this.DefaultTextTranslation == undefined) {
+        if (this.defaultTextTranslation === undefined) {
             return text;
         }
 

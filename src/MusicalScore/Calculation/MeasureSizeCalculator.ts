@@ -48,6 +48,44 @@ export class MeasureSizeCalculator {
     this.format();
   }
 
+  public static getClefBoundingBox(clef: Vex.Flow.Clef): Vex.Flow.BoundingBox {
+    let clef2: any = clef;
+    clef2.placeGlyphOnLine(clef2.glyph, clef2.stave, clef2.clef.line);
+    let glyph: any = clef.glyph;
+    let posX: number = clef.x + glyph.x_shift;
+    let posY: number = clef.stave.getYForGlyphs() + glyph.y_shift;
+    let scale: number = glyph.scale;
+    let outline: any[] = glyph.metrics.outline;
+    let xmin: number = 0, xmax: number = 0, ymin: number = 0, ymax: number = 0;
+
+    function update(i: number): void {
+      let x: number = outline[i + 1];
+      let y: number = outline[i + 2];
+      xmin = Math.min(xmin, x);
+      xmax = Math.max(xmax, x);
+      ymin = Math.min(ymin, y);
+      ymax = Math.max(ymax, y);
+    }
+
+    for (let i: number = 0, len: number = outline.length; i < len; i += 3) {
+      console.log(i, outline[i]);
+      switch (<string> outline[i]) {
+        case "m": update(i); break;
+        case "l": update(i); break;
+        case "q": i += 2; update(i); break;
+        case "b": i += 4; update(i); break;
+        default: break;
+      }
+
+    }
+    return new Vex.Flow.BoundingBox(
+        posX + xmin * scale,
+        posY - ymin * scale,
+        (xmax - xmin) * scale,
+        (ymin - ymax) * scale
+    );
+  }
+
   public getWidth(): number {
     // begin_modifiers + voices + end_modifiers
     return this.offsetLeft + this.voicesWidth + this.offsetRight;
@@ -122,44 +160,5 @@ export class MeasureSizeCalculator {
       Math.ceil(stave.getLineForY(voicesBoundingBox.getY() + voicesBoundingBox.getH()))
     );
   }
-
-  public static getClefBoundingBox(clef: Vex.Flow.Clef): Vex.Flow.BoundingBox {
-    let clef2: any = clef;
-    clef2.placeGlyphOnLine(clef2.glyph, clef2.stave, clef2.clef.line);
-    let glyph: any = clef.glyph;
-    let x_pos: number = clef.x + glyph.x_shift;
-    let y_pos: number = clef.stave.getYForGlyphs() + glyph.y_shift;
-    let scale: number = glyph.scale;
-    let outline: any[] = glyph.metrics.outline;
-    let xmin: number = 0, xmax: number = 0, ymin: number = 0, ymax: number = 0;
-
-    function update(i: number): void {
-      let x: number = outline[i + 1];
-      let y: number = outline[i + 2];
-      xmin = Math.min(xmin, x);
-      xmax = Math.max(xmax, x);
-      ymin = Math.min(ymin, y);
-      ymax = Math.max(ymax, y);
-    }
-
-    for (let i = 0, len = outline.length; i < len; i += 3) {
-      console.log(i, outline[i]);
-      switch (<string> outline[i]) {
-        case "m": update(i); break;
-        case "l": update(i); break;
-        case "q": i += 2; update(i); break;
-        case "b": i += 4; update(i); break;
-        default: break;
-      }
-
-    }
-    return new Vex.Flow.BoundingBox(
-      x_pos + xmin * scale,
-      y_pos - ymin * scale,
-      (xmax - xmin) * scale,
-      (ymin - ymax) * scale
-    );
-  }
-
 
 }

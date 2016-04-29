@@ -4,10 +4,10 @@ import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
 export class SubInstrument {
     constructor(parentInstrument: Instrument) {
         this.parentInstrument = parentInstrument;
-        this.FixedKey = -1;
-        this.Name = this.parseMidiInstrument(this.parentInstrument.Name);
-        this.MidiInstrumentId = SubInstrument.midiInstrument[this.Name];
-        this.Volume = 1.0;
+        this.fixedKey = -1;
+        this.name = this.parseMidiInstrument(this.parentInstrument.Name);
+        this.midiInstrumentID = SubInstrument.midiInstrument[this.name];
+        this.volume = 1.0;
     }
     private static midiInstrument: { [key: string]: MidiInstrument; } = {
         "cello": MidiInstrument.Cello,
@@ -64,12 +64,12 @@ export class SubInstrument {
         "unnamed": MidiInstrument.Acoustic_Grand_Piano,
     };
 
-    public IdString: string;
-    public MidiInstrumentId: MidiInstrument;
-    public Volume: number;
-    public Pan: number;
-    public FixedKey: number;
-    public Name: string;
+    public idString: string;
+    public midiInstrumentID: MidiInstrument;
+    public volume: number;
+    public pan: number;
+    public fixedKey: number;
+    public name: string;
 
     private parentInstrument: Instrument;
 
@@ -84,7 +84,7 @@ export class SubInstrument {
           || instrument === MidiInstrument.Electric_Piano_2);
     }
     public setMidiInstrument(instrumentType: string): void {
-        this.MidiInstrumentId = SubInstrument.midiInstrument[this.parseMidiInstrument(instrumentType)];
+        this.midiInstrumentID = SubInstrument.midiInstrument[this.parseMidiInstrument(instrumentType)];
     }
 
     private parseMidiInstrument(instrumentType: string): string {

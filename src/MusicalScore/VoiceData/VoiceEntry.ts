@@ -17,8 +17,9 @@ export class VoiceEntry {
         this.parentVoice = parentVoice;
         this.parentSourceStaffEntry = parentSourceStaffEntry;
     }
-    public GraceVoiceEntriesBefore: VoiceEntry[];
-    public GraceVoiceEntriesAfter: VoiceEntry[];
+    public graceVoiceEntriesBefore: VoiceEntry[];
+    public graceVoiceEntriesAfter: VoiceEntry[];
+
     private parentVoice: Voice;
     private parentSourceStaffEntry: SourceStaffEntry;
     private timestamp: Fraction;

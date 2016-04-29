@@ -3,27 +3,27 @@ import {VoiceEntry} from "../VoiceEntry";
 
 export class LyricsEntry {
     constructor(text: string, word: LyricWord, parent: VoiceEntry) {
-        this._text = text;
-        this._word = word;
-        this._parent = parent;
+        this.text = text;
+        this.word = word;
+        this.parent = parent;
     }
-    private _text: string;
-    private _word: LyricWord;
-    private _parent: VoiceEntry;
+    private text: string;
+    private word: LyricWord;
+    private parent: VoiceEntry;
 
     public get Text(): string {
-        return this._text;
+        return this.text;
     }
     public set Text(value: string) {
-        this._text = value;
+        this.text = value;
     }
     public get Word(): LyricWord {
-        return this._word;
+        return this.word;
     }
     public get Parent(): VoiceEntry {
-        return this._parent;
+        return this.parent;
     }
     public set Parent(value: VoiceEntry) {
-        this._parent = value;
+        this.parent = value;
     }
 }

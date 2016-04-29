@@ -6,14 +6,16 @@ import {MusicSheet} from "../MusicSheet";
 export class SourceMusicPart extends PartListEntry {
     constructor(musicSheet: MusicSheet, startIndex?: number, endIndex?: number) {
         super(musicSheet);
-        this.musicSheet2 = musicSheet;
+        this.musicSheet = musicSheet;
         this.startIndex = startIndex;
         this.endIndex = endIndex;
     }
-    protected musicSheet2: MusicSheet;
+
+    //protected musicSheet: MusicSheet;
     protected parentRepetition: Repetition;
-    private startIndex: number;
-    private endIndex: number;
+    //private startIndex: number;
+    //private endIndex: number;
+
     public get MeasuresCount(): number {
         return this.endIndex - this.startIndex + 1;
     }
@@ -30,7 +32,7 @@ export class SourceMusicPart extends PartListEntry {
         this.parentRepetition = value;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return Fraction.CreateFractionFromFraction(this.musicSheet2.SourceMeasures[this.startIndex].AbsoluteTimestamp);
+        return Fraction.CreateFractionFromFraction(this.musicSheet.SourceMeasures[this.startIndex].AbsoluteTimestamp);
     }
     public setStartIndex(startIndex: number): void {
         this.startIndex = startIndex;

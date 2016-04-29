@@ -7,14 +7,13 @@ export class PartListEntry {
         this.musicSheet = musicSheet;
     }
 
-    public AbsoluteTimestamp: Fraction;
-    public StartIndex: number;
-    public EndIndex: number;
+    public absoluteTimestamp: Fraction;
+    public startIndex: number;
+    public endIndex: number;
 
     protected enrolledTimestamps: Fraction[] = [];
     protected visible: boolean = true;
-
-    private musicSheet: MusicSheet;
+    protected musicSheet: MusicSheet;
 
     public get Visible(): boolean {
         return this.visible;
@@ -23,9 +22,9 @@ export class PartListEntry {
         this.visible = value;
     }
     public getFirstSourceMeasure(): SourceMeasure {
-        return this.musicSheet.SourceMeasures[this.StartIndex];
+        return this.musicSheet.SourceMeasures[this.startIndex];
     }
     public getLastSourceMeasure(): SourceMeasure {
-        return this.musicSheet.SourceMeasures[this.EndIndex];
+        return this.musicSheet.SourceMeasures[this.endIndex];
     }
 }

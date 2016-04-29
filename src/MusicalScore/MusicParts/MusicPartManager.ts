@@ -73,7 +73,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         while (!iterator.EndReached) {
             if (iterator.JumpOccurred || currentRepetition !== iterator.CurrentRepetition) {
                 currentRepetition = iterator.CurrentRepetition;
-                if (iterator.BackJumpOccurred) {
+                if (iterator.backJumpOccurred) {
                     let jumpRep: Repetition = iterator.JumpResponsibleRepetition;
                     curTimestampTransform.nextBackJump = iterator.CurrentEnrolledTimestamp;
                     curTimestampTransform.curRepetition = jumpRep;

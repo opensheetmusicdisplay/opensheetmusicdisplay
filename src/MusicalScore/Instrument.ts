@@ -6,7 +6,6 @@ import { Staff } from "./VoiceData/Staff";
 import { SubInstrument } from "./SubInstrument";
 import { MidiInstrument } from "./VoiceData/Instructions/ClefInstruction";
 
-
 export class Instrument extends InstrumentalGroup {
     constructor(id: number, idString: string, musicSheet: MusicSheet, parent: InstrumentalGroup) {
         super(undefined, musicSheet, parent);
@@ -15,8 +14,8 @@ export class Instrument extends InstrumentalGroup {
         this.nameLabel = new Label(idString);
     }
 
-    public Transpose: number = 0;
-    public Highlight: boolean;
+    public transpose: number = 0;
+    public highlight: boolean;
 
     private voices: Voice[] = [];
     private staves: Staff[] = [];
@@ -29,6 +28,7 @@ export class Instrument extends InstrumentalGroup {
 
     private lyricVersesNumbers: number[] = [];
     private subInstruments: SubInstrument[] = [];
+
     public get Voices(): Voice[] {
         return this.voices;
     }
@@ -69,18 +69,18 @@ export class Instrument extends InstrumentalGroup {
         return this.id;
     }
     public get MidiInstrumentId(): MidiInstrument {
-        return this.subInstruments[0].MidiInstrumentId;
+        return this.subInstruments[0].midiInstrumentID;
     }
     public set MidiInstrumentId(value: MidiInstrument) {
-        this.subInstruments[0].MidiInstrumentId = value;
+        this.subInstruments[0].midiInstrumentID = value;
     }
     public get Volume(): number {
-        return this.subInstruments[0].Volume;
+        return this.subInstruments[0].volume;
     }
     public set Volume(value: number) {
         for (let idx: number = 0, len: number = this.subInstruments.length; idx < len; ++idx) {
             let subInstrument: SubInstrument = this.subInstruments[idx];
-            subInstrument.Volume = value;
+            subInstrument.volume = value;
         }
     }
     public get PlaybackTranspose(): number {
@@ -96,7 +96,7 @@ export class Instrument extends InstrumentalGroup {
     public getSubInstrument(subInstrumentIdString: string): SubInstrument {
         for (let idx: number = 0, len: number = this.subInstruments.length; idx < len; ++idx) {
             let subInstrument: SubInstrument = this.subInstruments[idx];
-            if (subInstrument.IdString === subInstrumentIdString) {
+            if (subInstrument.idString === subInstrumentIdString) {
                 return subInstrument;
             }
         }
@@ -130,7 +130,7 @@ export class Instrument extends InstrumentalGroup {
         }
         for (let idx: number = 0, len: number = this.staves.length; idx < len; ++idx) {
             let staff: Staff = this.staves[idx];
-            staff.Audible = value;
+            staff.audible = value;
         }
     }
     public get Following(): boolean {
@@ -148,7 +148,7 @@ export class Instrument extends InstrumentalGroup {
         }
         for (let idx: number = 0, len: number = this.staves.length; idx < len; ++idx) {
             let staff: Staff = this.staves[idx];
-            staff.Following = value;
+            staff.following = value;
         }
     }
     public SetVoiceAudible(voiceId: number, audible: boolean): void {
@@ -171,7 +171,7 @@ export class Instrument extends InstrumentalGroup {
     }
     public SetStaffAudible(staffId: number, audible: boolean): void {
         let staff: Staff = this.staves[staffId - 1];
-        staff.Audible = audible;
+        staff.audible = audible;
         if (audible) {
             for (let idx: number = 0, len: number = staff.Voices.length; idx < len; ++idx) {
                 let v: Voice = staff.Voices[idx];
@@ -183,7 +183,7 @@ export class Instrument extends InstrumentalGroup {
                 let isAudibleInOtherStaves: boolean = false;
                 for (let idx2: number = 0, len2: number = this.Staves.length; idx2 < len2; ++idx2) {
                     let st: Staff = this.Staves[idx2];
-                    if (st.Id === staffId || !st.Audible) { continue; }
+                    if (st.Id === staffId || !st.audible) { continue; }
                     for (let idx3: number = 0, len3: number = st.Voices.length; idx3 < len3; ++idx3) {
                         let v: Voice = st.Voices[idx3];
                         if (v === voice) {
@@ -199,7 +199,7 @@ export class Instrument extends InstrumentalGroup {
     }
     public SetStaffFollow(staffId: number, follow: boolean): void {
         let staff: Staff = this.staves[staffId - 1];
-        staff.Following = follow;
+        staff.following = follow;
         if (follow) {
             for (let idx: number = 0, len: number = staff.Voices.length; idx < len; ++idx) {
                 let v: Voice = staff.Voices[idx];
@@ -211,7 +211,7 @@ export class Instrument extends InstrumentalGroup {
                 let isFollowingInOtherStaves: boolean = false;
                 for (let idx2: number = 0, len2: number = this.Staves.length; idx2 < len2; ++idx2) {
                     let st: Staff = this.Staves[idx2];
-                    if (st.Id === staffId || !st.Following) { continue; }
+                    if (st.Id === staffId || !st.following) { continue; }
                     for (let idx3: number = 0, len3: number = st.Voices.length; idx3 < len3; ++idx3) {
                         let v: Voice = st.Voices[idx3];
                         if (v === voice) {

@@ -1,7 +1,6 @@
 import {PlacementEnum, AbstractExpression} from "../abstractExpression";
 import {MultiExpression} from "../multiExpression";
 import {Fraction} from "../../../../Common/DataObjects/fraction";
-import {AbstractTempoExpression} from "../abstractTempoExpression";
 
 export class ContinuousDynamicExpression extends AbstractExpression {
     //constructor(placement: PlacementEnum, staffNumber: number, label: string) {
@@ -20,8 +19,9 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         this.staffNumber = staffNumber;
         this.startVolume = -1;
         this.endVolume = -1;
+        this.setType();
     }
-    
+
     private static listContinuousDynamicIncreasing: string[] = ["crescendo", "cresc", "cresc.", "cres."];
     private static listContinuousDynamicDecreasing: string[] = ["decrescendo", "decresc", "decr.", "diminuendo", "dim.", "dim"];
     // private static listContinuousDynamicGeneral: string[] = ["subito","al niente","piu","meno"];
@@ -81,6 +81,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     }
     public set Label(value: string) {
         this.label = value;
+        this.setType();
     }
     public static isInputStringContinuousDynamic(inputString: string): boolean {
         if (inputString === undefined) { return false; }
@@ -95,11 +96,15 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         if (this.EndMultiExpression !== undefined) {
             continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsoluteTimestamp;
         } else {
-            continuousAbsoluteEndTimestamp = Fraction.plus(this.startMultiExpression.SourceMeasureParent.AbsoluteTimestamp, this.startMultiExpression.SourceMeasureParent.Duration);
+            continuousAbsoluteEndTimestamp = Fraction.plus(
+                this.startMultiExpression.SourceMeasureParent.AbsoluteTimestamp, this.startMultiExpression.SourceMeasureParent.Duration
+            );
         }
         if (currentAbsoluteTimestamp.lt(continuousAbsoluteStartTimestamp)) { return -1; }
         if (currentAbsoluteTimestamp.lt(continuousAbsoluteEndTimestamp)) { return -2; }
-        let interpolationRatio: number = Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue / Fraction.minus(continuousAbsoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;
+        let interpolationRatio: number =
+            Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue
+            / Fraction.minus(continuousAbsoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;
         let interpolatedVolume: number = Math.max(0.0, Math.min(99.9, this.startVolume + (this.endVolume - this.startVolume) * interpolationRatio));
         return interpolatedVolume;
     }

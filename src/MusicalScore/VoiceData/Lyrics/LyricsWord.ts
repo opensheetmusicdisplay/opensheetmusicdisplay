@@ -2,13 +2,14 @@ import {LyricsEntry} from "./LyricsEntry";
 import {VoiceEntry} from "../VoiceEntry";
 
 export class LyricWord {
-    private _syllabels: LyricsEntry[] = [];
-    public get Syllabels(): LyricsEntry[] {
-        return this._syllabels;
+    private syllables: LyricsEntry[] = [];
+
+    public get Syllables(): LyricsEntry[] {
+        return this.syllables;
     }
     public containsVoiceEntry(voiceEntry: VoiceEntry): boolean {
-        for (let idx: number = 0, len: number = this.Syllabels.length; idx < len; ++idx) {
-            let lyricsEntry: LyricsEntry = this.Syllabels[idx];
+        for (let idx: number = 0, len: number = this.Syllables.length; idx < len; ++idx) {
+            let lyricsEntry: LyricsEntry = this.Syllables[idx];
             if (lyricsEntry.Parent === voiceEntry) {
                 return true;
             }
@@ -16,8 +17,8 @@ export class LyricWord {
         return false;
     }
     public findLyricEntryInVoiceEntry(voiceEntry: VoiceEntry): LyricsEntry {
-        for (let idx: number = 0, len: number = this.Syllabels.length; idx < len; ++idx) {
-            let lyricsEntry: LyricsEntry = this.Syllabels[idx];
+        for (let idx: number = 0, len: number = this.Syllables.length; idx < len; ++idx) {
+            let lyricsEntry: LyricsEntry = this.Syllables[idx];
             if (lyricsEntry.Parent === voiceEntry) {
                 return lyricsEntry;
             }

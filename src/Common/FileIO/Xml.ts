@@ -1,65 +1,57 @@
-export class IXmlAttribute {
-  public Name: string;
-  public Value: string;
-
-  constructor(attr: Attr) {
-    this.Name = attr.name;
-    this.Value = attr.value;
-  };
-}
+export type IXmlAttribute = Attr;
 
 export class IXmlElement {
-  public Name: string;
-  public Value: string;
-  public HasAttributes: boolean = false;
-  public FirstAttribute: IXmlAttribute;
-  public HasElements: boolean;
+  public name: string;
+  public value: string;
+  public hasAttributes: boolean = false;
+  public firstAttribute: IXmlAttribute;
+  public hasElements: boolean;
 
-  private _attrs: IXmlAttribute[];
-  private _elem: Element;
+  private attrs: IXmlAttribute[];
+  private elem: Element;
 
   constructor(elem: Element) {
-    this._elem = elem;
-    this.Name = elem.nodeName;
+    this.elem = elem;
+    this.name = elem.nodeName;
 
     if (elem.hasAttributes()) {
-      this.HasAttributes = true;
-      this.FirstAttribute = new IXmlAttribute(elem.attributes[0]);
+      this.hasAttributes = true;
+      this.firstAttribute = elem.attributes[0];
       }
-    this.HasElements = elem.hasChildNodes();
+    this.hasElements = elem.hasChildNodes();
     // Look for a value
     if (
       elem.childNodes.length === 1 &&
       elem.childNodes[0].nodeType === Node.TEXT_NODE
     ) {
-      this.Value = elem.childNodes[0].nodeValue;
+      this.value = elem.childNodes[0].nodeValue;
     }
   }
 
-  public Attribute(attributeName: string): IXmlAttribute {
-    return new IXmlAttribute(this._elem.attributes.getNamedItem(attributeName));
+  public attribute(attributeName: string): IXmlAttribute {
+    return this.elem.attributes.getNamedItem(attributeName);
   }
 
-  public Attributes(): IXmlAttribute[] {
-    if (typeof this._attrs === "undefined") {
-      let attributes: NamedNodeMap = this._elem.attributes;
+  public attributes(): IXmlAttribute[] {
+    if (typeof this.attrs === "undefined") {
+      let attributes: NamedNodeMap = this.elem.attributes;
       let attrs: IXmlAttribute[] = [];
       for (let i: number = 0; i < attributes.length; i += 1) {
-        attrs.push(new IXmlAttribute(attributes[i]));
+        attrs.push(attributes[i]);
       }
-      this._attrs = attrs;
+      this.attrs = attrs;
     }
-    return this._attrs;
+    return this.attrs;
   }
 
-  public Element(elementName: string): IXmlElement {
-    return this.Elements(elementName)[0];
+  public element(elementName: string): IXmlElement {
+    return this.elements(elementName)[0];
   }
 
-  public Elements(nodeName?: string): IXmlElement[] {
-    let nodes: NodeList = this._elem.childNodes;
+  public elements(nodeName?: string): IXmlElement[] {
+    let nodes: NodeList = this.elem.childNodes;
     let ret: IXmlElement[] = [];
-    let nameUnset: boolean = typeof nodeName === "undefined";
+    let nameUnset: boolean = typeof nodeName === "undefined"; // FIXME check
     for (let i: number = 0; i < nodes.length; i += 1) {
       let node: Node = nodes[i];
       if (node.nodeType === Node.ELEMENT_NODE &&

@@ -33,13 +33,13 @@ export class ChordSymbolContainer {
 
 export class Degree {
     constructor(value: number, alteration: AccidentalEnum, text: ChordDegreeText) {
-        this.Value = value;
-        this.Alteration = alteration;
-        this.Text = text;
+        this.value = value;
+        this.alteration = alteration;
+        this.text = text;
     }
-    public Value: number;
-    public Alteration: AccidentalEnum;
-    public Text: ChordDegreeText;
+    public value: number;
+    public alteration: AccidentalEnum;
+    public text: ChordDegreeText;
 }
 
 export enum ChordDegreeText {
