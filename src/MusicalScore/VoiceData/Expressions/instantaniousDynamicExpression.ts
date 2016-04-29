@@ -94,7 +94,7 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
     }
     public static isInputStringInstantaniousDynamic(inputString:string): boolean {
         if (inputString === null) { return false; }
-        return (InstantaniousDynamicExpression.listInstantaniousDynamics.indexOf(inputString) !== -1);
+        return InstantaniousDynamicExpression.isStringInStringList(InstantaniousDynamicExpression.listInstantaniousDynamics, inputString);
     }
 
     //public getInstantaniousDynamicSymbol(expressionSymbolEnum:DynamicExpressionSymbolEnum): FontInfo.MusicFontSymbol {

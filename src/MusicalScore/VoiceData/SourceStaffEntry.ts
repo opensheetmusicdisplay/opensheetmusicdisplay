@@ -6,6 +6,9 @@ import {VoiceEntry} from "./VoiceEntry";
 import {Note} from "./Note";
 import {StaffEntryLink} from "./StaffEntryLink";
 import {ChordSymbolContainer} from "./ChordSymbolContainer";
+import {ClefInstruction} from "./Instructions/ClefInstruction";
+import {KeyInstruction} from "./Instructions/KeyInstruction";
+import {RhythmInstruction} from "./Instructions/RhythmInstruction";
 
 export class SourceStaffEntry {
   constructor(verticalContainerParent: VerticalSourceStaffEntryContainer, parentStaff: Staff) {
@@ -62,26 +65,78 @@ export class SourceStaffEntry {
   public set ChordContainer(value: ChordSymbolContainer) {
     this.chordSymbolContainer = value;
   }
-  public removeAllInstructionsOfType<T>(): number {
+  //public removeAllInstructionsOfType<T>(): number {
+  //  let i: number = 0;
+  //  let ret: number = 0;
+  //  while (i < this.instructions.length) {
+  //    if (this.instructions[i] instanceof T) {
+  //      this.instructions.splice(i, 1);
+  //      ret++;
+  //    } else { i++; }
+  //  }
+  //  return ret;
+  //}
+  //public removeFirstInstructionOfType<T>(): boolean {
+  //  for (let i: number = 0; i < this.instructions.length; i++) {
+  //    if (this.instructions[i] instanceof T) {
+  //      this.instructions.splice(i, 1);
+  //      return true;
+  //    }
+  //  }
+  //  return false;
+  //}
+  public removeAllInstructionsOfTypeClefInstruction(): number {
     let i: number = 0;
     let ret: number = 0;
     while (i < this.instructions.length) {
-      if (this.instructions[i] instanceof T) {
+      if (this.instructions[i] instanceof ClefInstruction) {
         this.instructions.splice(i, 1);
         ret++;
       } else { i++; }
     }
     return ret;
   }
-  public removeFirstInstructionOfType<T>(): boolean {
+  public removeFirstInstructionOfTypeClefInstruction(): boolean {
     for (let i: number = 0; i < this.instructions.length; i++) {
-      if (this.instructions[i] instanceof T) {
+      if (this.instructions[i] instanceof ClefInstruction) {
         this.instructions.splice(i, 1);
         return true;
       }
     }
     return false;
   }
+  public removeAllInstructionsOfTypeKeyInstruction(): number {
+    let i: number = 0;
+    let ret: number = 0;
+    while (i < this.instructions.length) {
+      if (this.instructions[i] instanceof KeyInstruction) {
+        this.instructions.splice(i, 1);
+        ret++;
+      } else { i++; }
+    }
+    return ret;
+  }
+  public removeFirstInstructionOfTypeKeyInstruction(): boolean {
+    for (let i: number = 0; i < this.instructions.length; i++) {
+      if (this.instructions[i] instanceof KeyInstruction) {
+        this.instructions.splice(i, 1);
+        return true;
+      }
+    }
+    return false;
+  }
+  public removeAllInstructionsOfTypeRhythmInstruction(): number {
+    let i: number = 0;
+    let ret: number = 0;
+    while (i < this.instructions.length) {
+      if (this.instructions[i] instanceof RhythmInstruction) {
+        this.instructions.splice(i, 1);
+        ret++;
+      } else { i++; }
+    }
+    return ret;
+  }
+
   public calculateMinNoteLength(): Fraction {
     let duration: Fraction = new Fraction(Number.MAX_VALUE, 1);
     for (let idx: number = 0, len: number = this.VoiceEntries.length; idx < len; ++idx) {

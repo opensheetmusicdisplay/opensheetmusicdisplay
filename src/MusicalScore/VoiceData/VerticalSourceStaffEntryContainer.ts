@@ -6,7 +6,7 @@ export class VerticalSourceStaffEntryContainer {
     constructor(parentMeasure: SourceMeasure, timestamp: Fraction, size: number) {
         this.timestamp = timestamp;
         this.size = size;
-        this.initialize();
+        this.staffEntries = new Array(size);
         this.parentMeasure = parentMeasure;
     }
     private timestamp: Fraction;
@@ -46,11 +46,11 @@ export class VerticalSourceStaffEntryContainer {
         this.parentMeasure = value;
     }
     public getAbsoluteTimestamp(): Fraction {
-        return new Fraction(this.timestamp + this.parentMeasure.AbsoluteTimestamp);
+        return Fraction.plus(this.timestamp, this.parentMeasure.AbsoluteTimestamp);
     }
-    private initialize(): void {
-        for (let i: number = 0; i < this.size; i++) {
-            this.staffEntries.push(undefined);
-        }
-    }
+    //private initialize(): void {
+    //    for (let i: number = 0; i < this.size; i++) {
+    //        this.staffEntries.push(undefined);
+    //    }
+    //}
 }

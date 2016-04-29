@@ -421,7 +421,7 @@ export class InstrumentReader {
       first.FirstInstructionsStaffEntries[staffIndex] = firstStaffEntry;
     } else {
       firstStaffEntry = first.FirstInstructionsStaffEntries[staffIndex];
-      firstStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
+      firstStaffEntry.removeFirstInstructionOfTypeClefInstruction();
     }
     clefInstruction.Parent = firstStaffEntry;
     firstStaffEntry.Instructions.splice(0, 0, clefInstruction);
@@ -444,7 +444,7 @@ export class InstrumentReader {
       } else {
         let firstStaffEntry: SourceStaffEntry = first.FirstInstructionsStaffEntries[j];
         keyInstruction.Parent = firstStaffEntry;
-        firstStaffEntry.removeFirstInstructionOfType<KeyInstruction>();
+        firstStaffEntry.removeFirstInstructionOfTypeKeyInstruction();
         if (firstStaffEntry.Instructions[0] instanceof ClefInstruction) {
           firstStaffEntry.Instructions.splice(1, 0, keyInstruction);
         } else {
@@ -806,7 +806,7 @@ export class InstrumentReader {
               } else {
                 firstStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[j];
                 newKeyInstruction.Parent = firstStaffEntry;
-                firstStaffEntry.removeFirstInstructionOfType<KeyInstruction>();
+                firstStaffEntry.removeFirstInstructionOfTypeKeyInstruction();
                 if (firstStaffEntry.Instructions.length === 0) {
                   firstStaffEntry.Instructions.Add(newKeyInstruction);
                 } else {

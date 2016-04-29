@@ -237,168 +237,168 @@ export class InstantaniousTempoExpression extends AbstractTempoExpression {
         if (inputString === undefined)
             return false;
         return (
-            (InstantaniousTempoExpression.listInstantaniousTempoLarghissimo.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoGrave.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoLento.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoLargo.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoLarghetto.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAdagio.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAdagietto.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAndanteModerato.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAndante.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAndantino.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoModerato.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAllegretto.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAllegroModerato.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAllegro.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoVivace.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoVivacissimo.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoAllegrissimo.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoPresto.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoPrestissimo.indexOf(inputString) !== -1)
-            || (InstantaniousTempoExpression.listInstantaniousTempoChangesGeneral.indexOf(inputString) !== -1)
+            (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoLarghissimo, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoGrave, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoLento, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoLargo, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoLarghetto, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAdagio, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAdagietto, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAndanteModerato, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAndante, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAndantino, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoModerato, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAllegretto, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAllegroModerato, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAllegro, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoVivace, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoVivacissimo, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAllegrissimo, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoPresto, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoPrestissimo, inputString))
+            || (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoChangesGeneral, inputString))
         );
     }
     private setTempoAndTempoType(soundTempo: number): void {
-        if (InstantaniousTempoExpression.listInstantaniousTempoLarghissimo.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoLarghissimo, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.larghissimo);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.larghissimo;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoGrave.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoGrave, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.grave);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.grave;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoLento.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoLento, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.lento);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.lento;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoLargo.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoLargo, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.largo);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.largo;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoLarghetto.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoLarghetto, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.larghetto);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.larghetto;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAdagio.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAdagio, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.adagio);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.adagio;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAdagietto.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAdagietto, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.adagietto);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.adagietto;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAndanteModerato.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAndanteModerato, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.andanteModerato);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.andanteModerato;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAndante.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAndante, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.andante);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.andante;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAndantino.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAndantino, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.andantino);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.andantino;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoModerato.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoModerato, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.moderato);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.moderato;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAllegretto.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAllegretto, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.allegretto);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.allegretto;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAllegroModerato.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAllegroModerato, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.allegroModerato);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.allegroModerato;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAllegro.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAllegro, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.allegro);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.allegro;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoVivace.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoVivace, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.vivace);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.vivace;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoVivacissimo.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoVivacissimo, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.vivacissimo);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.vivacissimo;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAllegrissimo.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAllegrissimo, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.allegrissimo);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.allegrissimo;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoPresto.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoPresto, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.presto);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.presto;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoPrestissimo.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoPrestissimo, this.label)) {
             if (soundTempo === 0)
                 soundTempo = InstantaniousTempoExpression.getDefaultValueForTempoType(TempoEnum.prestissimo);
             this.tempoInBpm = soundTempo;
             this.tempoEnum = TempoEnum.prestissimo;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoAddons.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoAddons, this.label)) {
             this.tempoInBpm = 0;
             this.tempoEnum = TempoEnum.addon;
             return;
         }
-        if (InstantaniousTempoExpression.listInstantaniousTempoChangesGeneral.indexOf(this.label) !== -1) {
+        if (InstantaniousTempoExpression.isStringInStringList(InstantaniousTempoExpression.listInstantaniousTempoChangesGeneral, this.label)) {
             this.tempoInBpm = 0;
             this.tempoEnum = TempoEnum.changes;
             return;

@@ -8,6 +8,7 @@ export class AbstractTempoExpression {
         this.staffNumber = staffNumber;
         this.parentMultiTempoExpression = parentMultiTempoExpression;
     }
+
     protected label: string;
     protected placement: PlacementEnum;
     protected staffNumber: number;

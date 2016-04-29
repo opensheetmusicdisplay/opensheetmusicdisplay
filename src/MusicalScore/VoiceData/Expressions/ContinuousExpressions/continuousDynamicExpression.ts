@@ -1,6 +1,7 @@
 import {PlacementEnum, AbstractExpression} from "../abstractExpression";
 import {MultiExpression} from "../multiExpression";
 import {Fraction} from "../../../../Common/DataObjects/fraction";
+import {AbstractTempoExpression} from "../abstractTempoExpression";
 
 export class ContinuousDynamicExpression extends AbstractExpression {
     //constructor(placement: PlacementEnum, staffNumber: number, label: string) {
@@ -20,6 +21,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         this.startVolume = -1;
         this.endVolume = -1;
     }
+    
     private static listContinuousDynamicIncreasing: string[] = ["crescendo", "cresc", "cresc.", "cres."];
     private static listContinuousDynamicDecreasing: string[] = ["decrescendo", "decresc", "decr.", "diminuendo", "dim.", "dim"];
     // private static listContinuousDynamicGeneral: string[] = ["subito","al niente","piu","meno"];
@@ -81,38 +83,35 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         this.label = value;
     }
     public static isInputStringContinuousDynamic(inputString: string): boolean {
-        if (inputString == null)
-            return false;
-        if (ContinuousDynamicExpression.listContinuousDynamicIncreasing.indexOf(inputString) !== -1)
-            return true;
-        if (ContinuousDynamicExpression.listContinuousDynamicDecreasing.indexOf(inputString) !== -1)
-            return true;
-        return false;
+        if (inputString === undefined) { return false; }
+        return (
+            ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicIncreasing, inputString)
+            || ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicDecreasing, inputString)
+        );
     }
     public getInterpolatedDynamic(currentAbsoluteTimestamp: Fraction): number {
-        var continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsoluteTimestamp;
-        var continuousAbsoluteEndTimestamp: Fraction;
-        if (this.EndMultiExpression != null)
+        let continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsoluteTimestamp;
+        let continuousAbsoluteEndTimestamp: Fraction;
+        if (this.EndMultiExpression !== undefined) {
             continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsoluteTimestamp;
-        else {
+        } else {
             continuousAbsoluteEndTimestamp = Fraction.plus(this.startMultiExpression.SourceMeasureParent.AbsoluteTimestamp, this.startMultiExpression.SourceMeasureParent.Duration);
         }
-        if (currentAbsoluteTimestamp < continuousAbsoluteStartTimestamp)
-            return -1;
-        if (currentAbsoluteTimestamp > continuousAbsoluteEndTimestamp)
-            return -2;
-        var interpolationRatio: number = Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue / Fraction.minus(continuousAbsoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;
-        var interpolatedVolume: number = Math.max(0.0, Math.min(99.9, this.startVolume + (this.endVolume - this.startVolume) * interpolationRatio));
-        return <number>interpolatedVolume;
+        if (currentAbsoluteTimestamp.lt(continuousAbsoluteStartTimestamp)) { return -1; }
+        if (currentAbsoluteTimestamp.lt(continuousAbsoluteEndTimestamp)) { return -2; }
+        let interpolationRatio: number = Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue / Fraction.minus(continuousAbsoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;
+        let interpolatedVolume: number = Math.max(0.0, Math.min(99.9, this.startVolume + (this.endVolume - this.startVolume) * interpolationRatio));
+        return interpolatedVolume;
     }
     public isWedge(): boolean {
         return this.label === undefined;
     }
     private setType(): void {
-        if (ContinuousDynamicExpression.listContinuousDynamicIncreasing.indexOf(this.label) !== -1)
+        if (ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicIncreasing, this.label)) {
             this.dynamicType = ContDynamicEnum.crescendo;
-        else if (ContinuousDynamicExpression.listContinuousDynamicDecreasing.indexOf(this.label) !== -1)
+        } else if (ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicDecreasing, this.label)) {
             this.dynamicType = ContDynamicEnum.diminuendo;
+        }
     }
 }
 

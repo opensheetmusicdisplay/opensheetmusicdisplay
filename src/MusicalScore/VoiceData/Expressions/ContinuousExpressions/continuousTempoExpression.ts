@@ -48,16 +48,16 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
     public static isInputStringContinuousTempo(inputString: string): boolean {
         if (inputString == null)
             return false;
-        if (ContinuousTempoExpression.listContinuousTempoFaster.indexOf(inputString) !== -1)
+        if (ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoFaster, inputString))
             return true;
-        if (ContinuousTempoExpression.listContinuousTempoSlower.indexOf(inputString) !== -1)
+        if (ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoSlower, inputString))
             return true;
         return false;
     }
     private setTempoType(): void {
-        if (ContinuousTempoExpression.listContinuousTempoFaster.indexOf(this.label) !== -1)
+        if (ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoFaster, this.label))
             this.tempoType = ContinuousTempoType.accelerando;
-        else if (ContinuousTempoExpression.listContinuousTempoSlower.indexOf(this.label) !== -1)
+        else if (ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoSlower, this.label))
             this.tempoType = ContinuousTempoType.ritardando;
     }
     public get AbsoluteTimestamp(): Fraction {

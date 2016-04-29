@@ -249,7 +249,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
           this.currentMeasure.FirstInstructionsStaffEntries[i] !== undefined &&
           !(this._lastElement(this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions) instanceof RhythmInstruction)
         ) {
-          this.currentMeasure.FirstInstructionsStaffEntries[i].removeAllInstructionsOfType<RhythmInstruction>();
+          this.currentMeasure.FirstInstructionsStaffEntries[i].removeAllInstructionsOfTypeRhythmInstruction();
           this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions.push(rhythmInstruction.clone());
         }
         if (this.currentMeasure.FirstInstructionsStaffEntries[i] === undefined) {
@@ -268,7 +268,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (this.currentMeasure.FirstInstructionsStaffEntries[i] === undefined) {
           this.currentMeasure.FirstInstructionsStaffEntries[i] = new SourceStaffEntry(undefined, undefined);
         } else {
-          this.currentMeasure.FirstInstructionsStaffEntries[i].removeAllInstructionsOfType<RhythmInstruction>();
+          this.currentMeasure.FirstInstructionsStaffEntries[i].removeAllInstructionsOfTypeRhythmInstruction();
         }
         this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions.push(rhythmInstruction);
       }
