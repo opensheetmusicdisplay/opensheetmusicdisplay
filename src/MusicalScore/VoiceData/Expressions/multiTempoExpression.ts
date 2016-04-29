@@ -14,10 +14,11 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
 
     private timestamp: Fraction;
     private sourceMeasure: SourceMeasure;
-    private instantaniousTempo: InstantaniousTempoExpression;
+    private instantaneousTempo: InstantaniousTempoExpression;
     private continuousTempo: ContinuousTempoExpression;
-    private expressions: Array<TempoExpressionEntry> = [];
+    private expressions: TempoExpressionEntry[] = [];
     private combinedExpressionsText: string;
+
     public get Timestamp(): Fraction {
         return this.timestamp;
     }
@@ -31,12 +32,12 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
         this.sourceMeasure = value;
     }
     public get InstantaniousTempo(): InstantaniousTempoExpression {
-        return this.instantaniousTempo;
+        return this.instantaneousTempo;
     }
     public get ContinuousTempo(): ContinuousTempoExpression {
         return this.continuousTempo;
     }
-    public get EntriesList(): Array<TempoExpressionEntry> {
+    public get EntriesList(): TempoExpressionEntry[] {
         return this.expressions;
     }
     public get CombinedExpressionsText(): string {
@@ -46,61 +47,66 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
         this.combinedExpressionsText = value;
     }
     public getPlacementOfFirstEntry(): PlacementEnum {
-        var placement: PlacementEnum = PlacementEnum.Above;
+        let placement: PlacementEnum = PlacementEnum.Above;
         if (this.expressions.length > 0) {
-            if (this.expressions[0].expression instanceof InstantaniousTempoExpression)
+            if (this.expressions[0].expression instanceof InstantaniousTempoExpression) {
                 placement = (<InstantaniousTempoExpression>(this.expressions[0].expression)).Placement;
-            else if (this.expressions[0].expression instanceof ContinuousTempoExpression)
+            } else if (this.expressions[0].expression instanceof ContinuousTempoExpression) {
                 placement = (<ContinuousTempoExpression>(this.expressions[0].expression)).Placement;
+            }
         }
         return placement;
     }
     public getFontstyleOfFirstEntry(): OSMDFontStyles {
-        var fontStyle: OSMDFontStyles = OSMDFontStyles.Regular;
-        if (this.expressions[0].expression instanceof InstantaniousTempoExpression)
+        let fontStyle: OSMDFontStyles = OSMDFontStyles.Regular;
+        if (this.expressions[0].expression instanceof InstantaniousTempoExpression) {
             fontStyle = OSMDFontStyles.Bold;
-        else if (this.expressions[0].expression instanceof ContinuousTempoExpression)
+        } else if (this.expressions[0].expression instanceof ContinuousTempoExpression) {
             fontStyle = OSMDFontStyles.Italic;
+        }
         return fontStyle;
     }
     //public getFirstEntry(graphicalLabel: GraphicalLabel): AbstractGraphicalExpression {
-    //    var indexOfFirstNotInstDynExpr: number = 0;
+    //    let indexOfFirstNotInstDynExpr: number = 0;
     //    if (this.expressions.length > 0) {
     //        if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof InstantaniousTempoExpression)
-    //            return new GraphicalInstantaniousTempoExpression(<InstantaniousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
+    //            return new GraphicalInstantaniousTempoExpression(
+    // <InstantaniousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
     //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousTempoExpression)
-    //            return new GraphicalContinuousTempoExpression(<ContinuousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
+    //            return new GraphicalContinuousTempoExpression(
+    // <ContinuousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
     //        else return null;
     //    }
     //    return null;
     //}
     public addExpression(abstractTempoExpression: AbstractTempoExpression, prefix: string): void {
         if (abstractTempoExpression instanceof InstantaniousTempoExpression) {
-            this.instantaniousTempo = <InstantaniousTempoExpression>abstractTempoExpression;
-        }
-        else if (abstractTempoExpression instanceof ContinuousTempoExpression) {
+            this.instantaneousTempo = <InstantaniousTempoExpression>abstractTempoExpression;
+        } else if (abstractTempoExpression instanceof ContinuousTempoExpression) {
             this.continuousTempo = <ContinuousTempoExpression>abstractTempoExpression;
         }
-        var tempoExpressionEntry: TempoExpressionEntry = new TempoExpressionEntry();
+        let tempoExpressionEntry: TempoExpressionEntry = new TempoExpressionEntry();
         tempoExpressionEntry.prefix = prefix;
         tempoExpressionEntry.expression = abstractTempoExpression;
         tempoExpressionEntry.label = abstractTempoExpression.Label;
         this.expressions.push(tempoExpressionEntry);
     }
     public CompareTo(other: MultiTempoExpression): number {
-        if (this.SourceMeasureParent.MeasureNumber > other.SourceMeasureParent.MeasureNumber)
+        if (this.SourceMeasureParent.MeasureNumber > other.SourceMeasureParent.MeasureNumber) {
             return 1;
-        if (this.SourceMeasureParent.MeasureNumber < other.SourceMeasureParent.MeasureNumber)
+        } else if (this.SourceMeasureParent.MeasureNumber < other.SourceMeasureParent.MeasureNumber) {
             return -1;
-        else {
-            if (this.Timestamp.RealValue > other.Timestamp.RealValue)
-                return 1;
-            if (this.Timestamp.RealValue < other.Timestamp.RealValue)
+        } else {
+            if (this.Timestamp.RealValue > other.Timestamp.RealValue) { return 1; }
+            if (this.Timestamp.RealValue < other.Timestamp.RealValue) {
                 return -1;
-            else return 0;
+            } else {
+                return 0;
+            }
         }
     }
 }
+
 export class TempoExpressionEntry {
     public prefix: string;
     public expression: AbstractTempoExpression;

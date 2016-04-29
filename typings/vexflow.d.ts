@@ -2,28 +2,30 @@ declare namespace Vex {
   export module Flow {
 
     export class Formatter {
+      constructor();
+
       public hasMinTotalWidth: boolean;
       public minTotalWidth: number;
 
-      preCalculateMinTotalWidth(voices: Voice[]);
-      constructor();
+      public preCalculateMinTotalWidth(voices: Voice[]): number;
     }
 
     export class BoundingBox {
-      mergeWith(bb: BoundingBox): BoundingBox;
-      getX(): number;
-      getY(): number;
-      getW(): number;
-      getH(): number;
-
       constructor(x: number, y: number, w: number, h: number);
+
+      public mergeWith(bb: BoundingBox): BoundingBox;
+      public getX(): number;
+      public getY(): number;
+      public getW(): number;
+      public getH(): number;
     }
 
     export class Voice {
-      getBoundingBox(): BoundingBox;
-      setStave(stave: Stave): Voice;
-      addTickables(notes: StaveNote[]): Voice;
       constructor(time: any);
+
+      public getBoundingBox(): BoundingBox;
+      public setStave(stave: Stave): Voice;
+      public addTickables(notes: StaveNote[]): Voice;
     }
 
     export class StaveNote {
@@ -31,24 +33,24 @@ declare namespace Vex {
     }
 
     export class Stave {
-      x: number;
-      start_x: number;
-      end_x: number;
-
-      getYForGlyphs(): number;
-      getWidth(): number;
-      setWidth(width: number): Stave;
-      getNoteStartX(): number;
-      format(): void;
-      getSpacingBetweenLines(): number;
-      getNumLines(): number;
-      getLineForY(y: number): number;
-      getModifiers(pos: any, cat: any): Vex.Flow.Clef[]; // FIXME
-      setContext(ctx: any);
-      addModifier(mod: any, pos: any);
-      draw(): void;
-
       constructor(x: number, y: number, width: number);
+
+      public x: number;
+      public start_x: number;
+      public end_x: number;
+
+      public getYForGlyphs(): number;
+      public getWidth(): number;
+      public setWidth(width: number): Stave;
+      public getNoteStartX(): number;
+      public format(): void;
+      public getSpacingBetweenLines(): number;
+      public getNumLines(): number;
+      public getLineForY(y: number): number;
+      public getModifiers(pos: any, cat: any): Vex.Flow.Clef[]; // FIXME
+      public setContext(ctx: any): void;
+      public addModifier(mod: any, pos: any): void;
+      public draw(): void;
     }
 
     export class StaveModifier {
@@ -56,6 +58,8 @@ declare namespace Vex {
     }
 
     export class Clef {
+      constructor(type: any);
+
       public static category: string;
       public static types: { [type: string]: any; } ;
       public glyph: any;
@@ -64,14 +68,14 @@ declare namespace Vex {
 
       public getBoundingBox(): Vex.Flow.BoundingBox;
       public setStave(stave: Vex.Flow.Stave): void;
-      constructor(type: any);
     }
 
     export class Renderer {
       constructor(canvas: HTMLCanvasElement, backend: any);
-      public resize(a: number, b:number);
-      public getContext(): any;
+
       public static Backends: any;
+      public resize(a: number, b: number): void;
+      public getContext(): any;
     }
 
     //export class

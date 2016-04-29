@@ -1,7 +1,7 @@
 import { IXmlElement } from "../../../src/Common/FileIO/Xml.ts";
 
 // Test XML simple document
-let xml_test_data: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+let xmlTestData: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 <!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 2.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">\
 <score-partwise>  <identification>    <encoding>      <software>Example Software name</software>      \
 <encoding-date>2016-04-04</encoding-date>      </encoding>    </identification>   <credit page=\"1\"> \
@@ -10,7 +10,7 @@ let xml_test_data: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 
 describe("XML Unit Tests", () => {
   let parser: DOMParser = new DOMParser();
-  let doc: Document = parser.parseFromString(xml_test_data, "text/xml");
+  let doc: Document = parser.parseFromString(xmlTestData, "text/xml");
   let documentElement: IXmlElement = new IXmlElement(doc.documentElement);
 
   it("IXmlElement Tests", (done: MochaDone) => {

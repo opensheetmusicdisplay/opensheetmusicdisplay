@@ -11,7 +11,10 @@ export class UnknownExpression extends AbstractExpression {
         this.label = label;
         this.placement = placementEnum;
         this.staffNumber = staffNumber;
-        this.textAlignment = textAlignment | OSMDTextAlignment.LeftBottom;
+        if (textAlignment === undefined) {
+            textAlignment = OSMDTextAlignment.LeftBottom;
+        }
+        this.textAlignment = textAlignment;
     }
     private label: string;
     private placement: PlacementEnum;

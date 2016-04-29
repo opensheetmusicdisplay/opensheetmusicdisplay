@@ -25,7 +25,7 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     private combinedExpressionsText: string;
     private octaveShiftStart: OctaveShift;
     private octaveShiftEnd: OctaveShift;
-    
+
     public get SourceMeasureParent(): SourceMeasure {
         return this.sourceMeasure;
     }
@@ -93,22 +93,23 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
         this.combinedExpressionsText = value;
     }
     public getPlacementOfFirstEntry(): PlacementEnum {
-        var placement: PlacementEnum = PlacementEnum.Above;
+        let placement: PlacementEnum = PlacementEnum.Above;
         if (this.expressions.length > 0) {
-            if (this.expressions[0].expression instanceof InstantaniousDynamicExpression)
+            if (this.expressions[0].expression instanceof InstantaniousDynamicExpression) {
                 placement = (<InstantaniousDynamicExpression>(this.expressions[0].expression)).Placement;
-            else if (this.expressions[0].expression instanceof ContinuousDynamicExpression)
+            } else if (this.expressions[0].expression instanceof ContinuousDynamicExpression) {
                 placement = (<ContinuousDynamicExpression>(this.expressions[0].expression)).Placement;
-            else if (this.expressions[0].expression instanceof MoodExpression)
+            } else if (this.expressions[0].expression instanceof MoodExpression) {
                 placement = (<MoodExpression>(this.expressions[0].expression)).Placement;
-            else if (this.expressions[0].expression instanceof UnknownExpression)
+            } else if (this.expressions[0].expression instanceof UnknownExpression) {
                 placement = (<UnknownExpression>(this.expressions[0].expression)).Placement;
+            }
         }
         return placement;
     }
     // (*)
     //public getFontstyleOfFirstEntry(): PSFontStyles {
-    //    var fontStyle: PSFontStyles = PSFontStyles.Regular;
+    //    let fontStyle: PSFontStyles = PSFontStyles.Regular;
     //    if (this.expressions.length > 0) {
     //        if (this.expressions[0].expression instanceof ContinuousDynamicExpression)
     //            fontStyle = PSFontStyles.Italic;
@@ -120,74 +121,78 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     //    return fontStyle;
     //}
     //public getFirstEntry(staffLine: StaffLine, graphLabel: GraphicalLabel): AbstractGraphicalExpression {
-    //    var indexOfFirstNotInstDynExpr: number = 0;
+    //    let indexOfFirstNotInstDynExpr: number = 0;
     //    if (this.expressions[0].expression instanceof InstantaniousDynamicExpression)
     //        indexOfFirstNotInstDynExpr = 1;
     //    if (this.expressions.length > 0) {
     //        if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousDynamicExpression)
-    //            return new GraphicalContinuousDynamicExpression(<ContinuousDynamicExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
+    //            return new GraphicalContinuousDynamicExpression(
+    // <ContinuousDynamicExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
     //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof MoodExpression)
     //            return new GraphicalMoodExpression(<MoodExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
     //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof UnknownExpression)
     //            return new GraphicalUnknownExpression(<UnknownExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphLabel);
-    //        else return null;
+    //        else return undefined;
     //    }
-    //    else return null;
+    //    else return undefined;
     //}
     public addExpression(abstractExpression: AbstractExpression, prefix: string): void {
         if (abstractExpression instanceof InstantaniousDynamicExpression) {
-            if (this.instantaniousDynamic != null)
+            if (this.instantaniousDynamic !== undefined) {
                 this.removeExpressionFromEntryList(this.InstantaniousDynamic);
+            }
             this.instantaniousDynamic = <InstantaniousDynamicExpression>abstractExpression;
             this.instantaniousDynamic.ParentMultiExpression = this;
-        }
-        else if (abstractExpression instanceof ContinuousDynamicExpression) {
+        } else if (abstractExpression instanceof ContinuousDynamicExpression) {
             this.startingContinuousDynamic = <ContinuousDynamicExpression>abstractExpression;
-        }
-        else if (abstractExpression instanceof MoodExpression) {
+        } else if (abstractExpression instanceof MoodExpression) {
             this.moodList.push(<MoodExpression>abstractExpression);
-        }
-        else if (abstractExpression instanceof UnknownExpression) {
+        } else if (abstractExpression instanceof UnknownExpression) {
             this.unknownList.push(<UnknownExpression>abstractExpression);
         }
         this.addExpressionToEntryList(abstractExpression, prefix);
     }
     public CompareTo(other: MultiExpression): number {
-        if (this.SourceMeasureParent.MeasureNumber > other.SourceMeasureParent.MeasureNumber)
+        if (this.SourceMeasureParent.MeasureNumber > other.SourceMeasureParent.MeasureNumber) {
             return 1;
-        if (this.SourceMeasureParent.MeasureNumber < other.SourceMeasureParent.MeasureNumber)
+        }
+        if (this.SourceMeasureParent.MeasureNumber < other.SourceMeasureParent.MeasureNumber) {
             return -1;
-        else {
-            if (this.Timestamp.RealValue > other.Timestamp.RealValue)
-                return 1;
-            if (this.Timestamp.RealValue < other.Timestamp.RealValue)
+        } else {
+            if (this.Timestamp.RealValue > other.Timestamp.RealValue) { return 1; }
+            if (this.Timestamp.RealValue < other.Timestamp.RealValue) {
                 return -1;
-            else return 0;
+            } else {
+                return 0;
+            }
         }
     }
     private addExpressionToEntryList(expression: AbstractExpression, prefix: string): void {
-        var multiExpressionEntry: MultiExpressionEntry = new MultiExpressionEntry();
+        let multiExpressionEntry: MultiExpressionEntry = new MultiExpressionEntry();
         multiExpressionEntry.prefix = prefix;
         multiExpressionEntry.expression = expression;
-        if (expression instanceof ContinuousDynamicExpression)
+        if (expression instanceof ContinuousDynamicExpression) {
             multiExpressionEntry.label = (<ContinuousDynamicExpression>(expression)).Label;
-        else if (expression instanceof MoodExpression)
+        } else if (expression instanceof MoodExpression) {
             multiExpressionEntry.label = (<MoodExpression>(expression)).Label;
-        else if (expression instanceof UnknownExpression)
+        } else if (expression instanceof UnknownExpression) {
             multiExpressionEntry.label = (<UnknownExpression>(expression)).Label;
-        else multiExpressionEntry.label = "";
+        } else {
+            multiExpressionEntry.label = "";
+        }
         this.expressions.push(multiExpressionEntry);
     }
     private removeExpressionFromEntryList(expression: AbstractExpression): void {
-        for (var idx: number = 0, len = this.expressions.length; idx < len; ++idx) {
-            var entry: MultiExpressionEntry = this.expressions[idx];
-            if (entry.expression == expression) {
+        for (let idx: number = 0, len: number = this.expressions.length; idx < len; ++idx) {
+            let entry: MultiExpressionEntry = this.expressions[idx];
+            if (entry.expression === expression) {
                 this.expressions.splice(idx, 1);
                 break;
             }
         }
     }
 }
+
 export class MultiExpressionEntry {
     public prefix: string;
     public expression: AbstractExpression;

@@ -1,12 +1,13 @@
 export class AbstractExpression {
-    constructor() {
-
-    }
+    //constructor() {
+    //
+    //}
     protected static isStringInStringList(stringList: Array<string>, inputString: string): boolean {
-        for (var idx: number = 0, len = stringList.length; idx < len; ++idx) {
-            var s: string = stringList[idx];
-            if (inputString.toLowerCase() === s.toLowerCase().trim())
+        for (let idx: number = 0, len: number = stringList.length; idx < len; ++idx) {
+            let s: string = stringList[idx];
+            if (inputString.toLowerCase() === s.toLowerCase().trim()) {
                 return true;
+            }
         }
         return false;
     }

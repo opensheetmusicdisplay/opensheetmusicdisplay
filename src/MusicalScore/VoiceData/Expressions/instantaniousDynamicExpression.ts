@@ -1,7 +1,7 @@
 import {PlacementEnum, AbstractExpression} from "./abstractExpression";
 import {MultiExpression} from "./multiExpression";
 import {DynamicExpressionSymbolEnum} from "./dynamicExpressionSymbolEnum";
-import {ArgumentOutOfRangeException} from "../../Exceptions";
+//import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {InvalidEnumArgumentException} from "../../Exceptions";
 import {logging} from "../../../Common/logging";
 
@@ -36,14 +36,14 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
         "rfz": 0.5,
         "sfz": 0.5,
         "sffz": 0.5,
-        "fz": 0.5
+        "fz": 0.5,
     };
 
-    private static weight: number;
+    //private static weight: number;
     private static listInstantaniousDynamics: string[] =  [
         "pppppp", "ppppp", "pppp", "ppp", "pp", "p",
         "ffffff", "fffff", "ffff", "fff", "ff", "f",
-        "mf", "mp", "sf", "sp", "spp", "fp", "rf", "rfz", "sfz", "sffz", "fz"
+        "mf", "mp", "sf", "sp", "spp", "fp", "rf", "rfz", "sfz", "sffz", "fz",
     ];
 
     private multiExpression: MultiExpression;
@@ -92,8 +92,8 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
     public get MidiVolume(): number {
         return InstantaniousDynamicExpression.dynamicToRelativeVolumeDict[this.dynamicEnum] * 127;
     }
-    public static isInputStringInstantaniousDynamic(inputString:string): boolean {
-        if (inputString === null) { return false; }
+    public static isInputStringInstantaniousDynamic(inputString: string): boolean {
+        if (inputString === undefined) { return false; }
         return InstantaniousDynamicExpression.isStringInStringList(InstantaniousDynamicExpression.listInstantaniousDynamics, inputString);
     }
 
@@ -115,19 +115,19 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
     //            throw new ArgumentOutOfRangeException("expressionSymbolEnum");
     //    }
     //}
-    public getDynamicExpressionSymbol(c:string): DynamicExpressionSymbolEnum  {
+    public getDynamicExpressionSymbol(c: string): DynamicExpressionSymbolEnum  {
         switch (c) {
-            case 'p':
+            case "p":
                 return DynamicExpressionSymbolEnum.p;
-            case 'f':
+            case "f":
                 return DynamicExpressionSymbolEnum.f;
-            case 's':
+            case "s":
                 return DynamicExpressionSymbolEnum.s;
-            case 'z':
+            case "z":
                 return DynamicExpressionSymbolEnum.z;
-            case 'm':
+            case "m":
                 return DynamicExpressionSymbolEnum.m;
-            case 'r':
+            case "r":
                 return DynamicExpressionSymbolEnum.r;
             default:
                 throw new InvalidEnumArgumentException("unknown DynamicExpressionSymbolEnum: " + c);

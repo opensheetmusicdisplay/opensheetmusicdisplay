@@ -8,15 +8,11 @@ export class MoodExpression extends AbstractExpression {
         this.staffNumber = staffNumber;
         this.setMoodType();
     }
-    
-    private moodType: MoodEnum;
-    private label: string;
-    private staffNumber: number;
-    private placement: PlacementEnum;
+
     private static listMoodAffettuoso: string[] = ["affettuoso"];
     private static listMoodAgitato: string[] = ["agitato"];
     private static listMoodAppassionato: string[] = ["appassionato"];
-    private static listMoodAnimato: string[] = ["animato","lively"];
+    private static listMoodAnimato: string[] = ["animato", "lively"];
     private static listMoodBrillante: string[] = ["brillante"];
     private static listMoodCantabile: string[] = ["cantabile"];
     private static listMoodDolce: string[] = ["dolce"];
@@ -48,6 +44,53 @@ export class MoodExpression extends AbstractExpression {
     private static listMoodTranquillamente: string[] = ["tranquillamente"];
     private static listMoodTrionfante: string[] = ["trionfante"];
 
+    private moodType: MoodEnum;
+    private label: string;
+    private staffNumber: number;
+    private placement: PlacementEnum;
+
+    public static isInputStringMood(inputString: string): boolean {
+        if (inputString === undefined) {
+            return false;
+        }
+        return (
+            MoodExpression.isStringInStringList(MoodExpression.listMoodAffettuoso, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodAgitato, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodAnimato, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodAppassionato, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodBrillante, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodCantabile, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodDolce, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodEnergico, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodEroico, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodEspressivo, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodFurioso, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodGiocoso, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodGioioso, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodGrandioso, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodGrazioso, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodLacrimoso, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodLeggiero, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodMaestoso, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodMalinconico, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodMarcato, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodMarziale, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodMesto, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodMorendo, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodNobilmente, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodPatetico, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodPesante, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodSaltando, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodSautille, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodScherzando, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodSostenuto, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodSpiccato, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodTenerezza, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodTranquillamente, inputString)
+            || MoodExpression.isStringInStringList(MoodExpression.listMoodTrionfante, inputString)
+        );
+    }
+
     public get Label(): string {
         return this.label;
     }
@@ -73,148 +116,76 @@ export class MoodExpression extends AbstractExpression {
         this.placement = value;
     }
 
-    public static isInputStringMood(inputString: string): boolean {
-        if (inputString == null)
-            return false;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAffettuoso, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAgitato, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAnimato, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAppassionato, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodBrillante, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodCantabile, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodDolce, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodEnergico, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodEroico, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodEspressivo, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodFurioso, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodGiocoso, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodGioioso, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodGrandioso, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodGrazioso, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodLacrimoso, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodLeggiero, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMaestoso, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMalinconico, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMarcato, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMarziale, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMesto, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMorendo, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodNobilmente, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodPatetico, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodPesante, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodSaltando, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodSautille, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodScherzando, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodSostenuto, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodSpiccato, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodTenerezza, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodTranquillamente, inputString))
-            return true;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodTrionfante, inputString))
-            return true;
-        return false;
-    }
     private setMoodType(): void {
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAffettuoso, this.label))
+        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAffettuoso, this.label)) {
             this.moodType = MoodEnum.Affettuoso;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAgitato, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodAgitato, this.label)) {
             this.moodType = MoodEnum.Agitato;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAnimato, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodAnimato, this.label)) {
             this.moodType = MoodEnum.Animato;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodAppassionato, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodAppassionato, this.label)) {
             this.moodType = MoodEnum.Appassionato;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodBrillante, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodBrillante, this.label)) {
             this.moodType = MoodEnum.Brillante;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodCantabile, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodCantabile, this.label)) {
             this.moodType = MoodEnum.Cantabile;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodDolce, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodDolce, this.label)) {
             this.moodType = MoodEnum.Dolce;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodEnergico, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodEnergico, this.label)) {
             this.moodType = MoodEnum.Energico;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodEroico, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodEroico, this.label)) {
             this.moodType = MoodEnum.Eroico;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodEspressivo, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodEspressivo, this.label)) {
             this.moodType = MoodEnum.Espressivo;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodFurioso, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodFurioso, this.label)) {
             this.moodType = MoodEnum.Furioso;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodGiocoso, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodGiocoso, this.label)) {
             this.moodType = MoodEnum.Giocoso;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodGioioso, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodGioioso, this.label)) {
             this.moodType = MoodEnum.Gioioso;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodGrandioso, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodGrandioso, this.label)) {
             this.moodType = MoodEnum.Grandioso;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodGrazioso, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodGrazioso, this.label)) {
             this.moodType = MoodEnum.Grazioso;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodLacrimoso, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodLacrimoso, this.label)) {
             this.moodType = MoodEnum.Lacrimoso;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodLeggiero, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodLeggiero, this.label)) {
             this.moodType = MoodEnum.Leggiero;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMaestoso, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodMaestoso, this.label)) {
             this.moodType = MoodEnum.Maestoso;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMalinconico, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodMalinconico, this.label)) {
             this.moodType = MoodEnum.Malinconico;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMarcato, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodMarcato, this.label)) {
             this.moodType = MoodEnum.Marcato;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMarziale, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodMarziale, this.label)) {
             this.moodType = MoodEnum.Marziale;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMesto, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodMesto, this.label)) {
             this.moodType = MoodEnum.Mesto;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodMorendo, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodMorendo, this.label)) {
             this.moodType = MoodEnum.Morendo;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodNobilmente, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodNobilmente, this.label)) {
             this.moodType = MoodEnum.Nobilmente;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodPatetico, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodPatetico, this.label)) {
             this.moodType = MoodEnum.Patetico;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodPesante, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodPesante, this.label)) {
             this.moodType = MoodEnum.Pesante;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodSaltando, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodSaltando, this.label)) {
             this.moodType = MoodEnum.Saltando;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodSautille, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodSautille, this.label)) {
             this.moodType = MoodEnum.Sautille;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodScherzando, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodScherzando, this.label)) {
             this.moodType = MoodEnum.Scherzando;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodSostenuto, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodSostenuto, this.label)) {
             this.moodType = MoodEnum.Sostenuto;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodSpiccato, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodSpiccato, this.label)) {
             this.moodType = MoodEnum.Spiccato;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodTenerezza, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodTenerezza, this.label)) {
             this.moodType = MoodEnum.Tenerezza;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodTranquillamente, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodTranquillamente, this.label)) {
             this.moodType = MoodEnum.Tranquillamente;
-        if (MoodExpression.isStringInStringList(MoodExpression.listMoodTrionfante, this.label))
+        } else if (MoodExpression.isStringInStringList(MoodExpression.listMoodTrionfante, this.label)) {
             this.moodType = MoodEnum.Trionfante;
+        }
     }
 }
 
