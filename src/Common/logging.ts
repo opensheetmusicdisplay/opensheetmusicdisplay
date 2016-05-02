@@ -3,11 +3,11 @@
  */
 
 
-export class logging {
-    public static debug(...args: any[]) {
+export class Logging {
+    public static debug(...args: any[]): void {
         console.log("[OSMD] DEBUG: ", args.join(" "));
     }
-    public static log(...args: any[]) {
+    public static log(...args: any[]): void {
         console.log("[OSMD] ", args.join(" "));
     }
 }

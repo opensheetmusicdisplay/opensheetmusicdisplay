@@ -49,7 +49,8 @@ describe("Measure Size Calculator Tests", () => {
   });
 
   it("Will certainly pass", (done: MochaDone) => {
-    let visual = function(func: (r: any, ctx: any) => void) {
+    let visual: (testfun: (r: any, ctx: any) => void ) => void;
+    visual = function(func: (r: any, ctx: any) => void): void {
       let canvas: HTMLCanvasElement = document.createElement("canvas");
       document.body.appendChild(canvas);
       let renderer: any = new Vex.Flow.Renderer(
@@ -60,26 +61,28 @@ describe("Measure Size Calculator Tests", () => {
       let ctx: any = renderer.getContext();
       ctx.setFont("Arial", 10, "").setBackgroundFillStyle("#eed");
       func(renderer, ctx);
-    }
+    };
 
-    visual(function(renderer, ctx) {
+    visual((renderer: any, ctx: any): void => {
       renderer.resize(420, 120);
-      let stave: Vex.Flow.Stave = new Vex.Flow.Stave(10, 0, 410);
-      stave.setContext(ctx);
-      for (var t in Vex.Flow.Clef.types) {
-        let clef: Vex.Flow.Clef = new Vex.Flow.Clef(t);
-        stave.addModifier(clef, Vex.Flow.StaveModifier.Position.BEGIN);
-        stave.format();
-        // (*&^%$#@) //
-        // FIXME HERE? NaN FIXME FIXME FIXME //
-        clef.setStave(stave);
-        let bb: Vex.Flow.BoundingBox =
-          MeasureSizeCalculator.getClefBoundingBox(clef);
-        console.log(bb);
-        ctx.rect(bb.getX(), bb.getY(), bb.getW(), bb.getH());
-        ctx.stroke();
+      let stave2: Vex.Flow.Stave = new Vex.Flow.Stave(10, 0, 410);
+      stave2.setContext(ctx);
+      for (let t in Vex.Flow.Clef.types) {
+        if (Vex.Flow.Clef.types.hasOwnProperty(t)) {
+          let clef: Vex.Flow.Clef = new Vex.Flow.Clef(t);
+          stave2.addModifier(clef, Vex.Flow.StaveModifier.Position.BEGIN);
+          stave2.format();
+          // (*&^%$#@) //
+          // FIXME HERE? NaN FIXME FIXME FIXME //
+          clef.setStave(stave2);
+          let bb: Vex.Flow.BoundingBox =
+              MeasureSizeCalculator.getClefBoundingBox(clef);
+          console.log(bb);
+          ctx.rect(bb.getX(), bb.getY(), bb.getW(), bb.getH());
+          ctx.stroke();
+        }
       }
-      stave.draw();
+      stave2.draw();
     });
 
     done();

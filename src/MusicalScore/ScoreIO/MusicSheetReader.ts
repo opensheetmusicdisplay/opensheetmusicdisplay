@@ -6,7 +6,7 @@ import {IXmlElement} from "../../Common/FileIO/Xml";
 import {Instrument} from "../Instrument";
 import {ITextTranslation} from "../Interfaces/ITextTranslation";
 import {MusicSheetReadingException} from "../Exceptions";
-import {logging} from "../../Common/logging";
+import {Logging} from "../../Common/logging";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
@@ -79,7 +79,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     try {
       return this._createMusicSheet(root, path);
     } catch (e) {
-      logging.log("MusicSheetReader.CreateMusicSheet", e);
+      Logging.log("MusicSheetReader.CreateMusicSheet", e);
     }
 
   }
@@ -162,7 +162,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
       //  afterSheetReadingModule.calculate(this.musicSheet);
       //}
     } catch (e) {
-      logging.log("MusicSheetReader._createMusicSheet", e);
+      Logging.log("MusicSheetReader._createMusicSheet", e);
     }
 
     return this.musicSheet;
@@ -665,7 +665,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         let result: number = <number>parseFloat(instrumentElement.value);
                         subInstrument.volume = result / 127.0;
                       } catch (ex) {
-                        logging.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
+                        Logging.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
                       }
 
                     } else if (instrumentElement.name === "pan") {
@@ -673,18 +673,18 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         let result: number = <number>parseFloat(instrumentElement.value);
                         subInstrument.pan = result / 64.0;
                       } catch (ex) {
-                        logging.debug("ExpressionReader.readExpressionParameters", "read pan", ex);
+                        Logging.debug("ExpressionReader.readExpressionParameters", "read pan", ex);
                       }
 
                     }
                   } catch (ex) {
-                    logging.log("MusicSheetReader.createInstrumentGroups midi settings: ", ex);
+                    Logging.log("MusicSheetReader.createInstrumentGroups midi settings: ", ex);
                   }
 
                 }
               }
             } catch (ex) {
-              logging.log("MusicSheetReader.createInstrumentGroups: ", ex);
+              Logging.log("MusicSheetReader.createInstrumentGroups: ", ex);
             }
 
           }

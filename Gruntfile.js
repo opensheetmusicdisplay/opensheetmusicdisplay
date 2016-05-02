@@ -116,7 +116,7 @@ module.exports = function (grunt) {
                 configuration: 'tslint.json'
             },
             all: {
-                src: ['<%= browserify.dist.src %>', '<%= browserify.debug.src %>']
+                src: ['src/**/*.ts', 'test/**/*.ts']
             }
         },
         // TypeScript Type Definitions
@@ -158,9 +158,9 @@ module.exports = function (grunt) {
 
     // Register tasks
     grunt.registerTask('all', ['typings', 'default']);
-    grunt.registerTask('default', [ /*'tslint',*/ 'browserify', 'karma:ci']);
+    grunt.registerTask('default', ['tslint', 'browserify', 'karma:ci']);
     // grunt.registerTask('lint', ['tslint', 'jscs']);
-    grunt.registerTask('test', ['browserify:debug', 'karma:ci']);
+    grunt.registerTask('test', ['tslint', 'browserify:debug', 'karma:ci']);
     // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
     // grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
     grunt.registerTask('rebuild', ['clean', 'default']);

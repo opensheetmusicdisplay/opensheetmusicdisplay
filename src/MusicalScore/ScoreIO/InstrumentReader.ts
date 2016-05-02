@@ -17,7 +17,7 @@ import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
 import {KeyEnum} from "../VoiceData/Instructions/KeyInstruction";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
-import {logging} from "../../Common/logging";
+import {Logging} from "../../Common/logging";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 
 
@@ -125,7 +125,7 @@ export class InstrumentReader {
                 noteStaff = parseInt(xmlNode.element("staff").value, 10);
               }
             } catch (ex) {
-              logging.debug("InstrumentReader.readNextXmlMeasure.get staff number", ex);
+              Logging.debug("InstrumentReader.readNextXmlMeasure.get staff number", ex);
               noteStaff = 1;
             }
 
@@ -157,7 +157,7 @@ export class InstrumentReader {
             } catch (ex) {
               let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
               this.musicSheet.SheetErrors.pushTemp(errorMsg);
-              logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, ex);
+              Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, ex);
               continue;
             }
 
@@ -242,7 +242,7 @@ export class InstrumentReader {
               this.divisions = parseInt(divisionsNode.value, 10);
             } catch (e) {
               let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
-              logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e.toString());
+              Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e.toString());
               this.divisions = this.readDivisionsFromNotes();
               if (this.divisions > 0) {
                 this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
@@ -362,7 +362,7 @@ export class InstrumentReader {
       }
       let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
       this.musicSheet.SheetErrors.pushTemp(errorMsg);
-      logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
+      Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
     }
 
     this.previousMeasure = this.currentMeasure;
@@ -529,7 +529,7 @@ export class InstrumentReader {
             );
             this.musicSheet.SheetErrors.pushTemp(errorMsg);
             line = 2;
-            logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+            Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
           }
 
         }
@@ -557,7 +557,7 @@ export class InstrumentReader {
             this.musicSheet.SheetErrors.pushTemp(errorMsg);
             clefEnum = ClefEnum.G;
             line = 2;
-            logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, e);
+            Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, e);
           }
 
         }
@@ -605,7 +605,7 @@ export class InstrumentReader {
           );
           this.musicSheet.SheetErrors.pushTemp(errorMsg);
           key = 0;
-          logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
       }
@@ -622,7 +622,7 @@ export class InstrumentReader {
           );
           this.musicSheet.SheetErrors.pushTemp(errorMsg);
           keyEnum = KeyEnum.major;
-          logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
       }
@@ -696,7 +696,7 @@ export class InstrumentReader {
           this.musicSheet.SheetErrors.pushTemp(errorMsg);
           num = 4;
           denom = 4;
-          logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
         if ((num === 4 && denom === 4) || (num === 2 && denom === 2)) {
@@ -713,7 +713,7 @@ export class InstrumentReader {
 
   private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
     // FIXME TODO
-    logging.debug("saveAbstractInstructionList still to implement! See InstrumentReader.ts");
+    Logging.debug("saveAbstractInstructionList still to implement! See InstrumentReader.ts");
   }
 
   /*private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
@@ -854,7 +854,7 @@ export class InstrumentReader {
   private saveClefInstructionAtEndOfMeasure(): void {
     for (let key in this.abstractInstructions) {
       if (this.abstractInstructions.hasOwnProperty(key)) {
-        let value: { [n: number]: AbstractNotationInstruction; } = this.abstractInstructions[key];
+        let value: AbstractNotationInstruction = this.abstractInstructions[key];
         if (value instanceof ClefInstruction) {
           let clefInstruction: ClefInstruction = <ClefInstruction>value;
           if (
@@ -932,7 +932,7 @@ export class InstrumentReader {
               try {
                 noteDuration = parseInt(durationNode.value, 10);
               } catch (ex) {
-                logging.debug("InstrumentReader.readDivisionsFromNotes", ex);
+                Logging.debug("InstrumentReader.readDivisionsFromNotes", ex);
                 continue;
               }
 

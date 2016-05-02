@@ -49,4 +49,5 @@ export class FFT2 {
     }
     return { amplitude: ampl, phase: phas };
   }
+
 }
