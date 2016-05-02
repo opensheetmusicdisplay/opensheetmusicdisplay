@@ -1,3 +1,4 @@
+/*global module*/
 module.exports = function (grunt) {
     'use strict';
     // The banner on top of the build
@@ -6,13 +7,17 @@ module.exports = function (grunt) {
         ' * Copyright (c) 2016 PhonicScore\n' +
         ' *\n' +
         ' * https://github.com/opensheetmusicdisplay/opensheetmusicdisplay\n' +
-        ' */\n';
+        ' */\n',
     // Additional manual typings:
-    var typings = [
-      'typings/browser.d.ts',
-      'typings/vexflow.d.ts',
-      'typings/fft.d.ts'
-    ];
+        typings = [
+            'typings/browser.d.ts',
+            'typings/vexflow.d.ts',
+            'typings/fft.d.ts'
+        ],
+    // Paths
+        src = ['src/**/*.ts'],
+        test = ['test/**/*.ts'];
+
     // Grunt configuration following:
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -25,18 +30,14 @@ module.exports = function (grunt) {
         // Browserify
         browserify: {
             dist: {
-                src: typings.concat(['src/**/*.ts']),
+                src: [].concat(typings, src),
                 dest: '<%= outputDir.build %>/osmd.js',
                 options: {
                     banner: "<%= banner %>"
                 }
             },
             debug: {
-                src: typings.concat([
-                    'src/Common/**/*.ts', 'test/Common/**/*.ts',
-                    'src/Util/**/*.ts', 'test/Util/**/*.ts'
-                    // Should be: 'src/**/*.ts', 'test/**/*.ts'
-                ]),
+                src: [].concat(typings, src, test),
                 dest: '<%= outputDir.build %>/osmd-debug.js',
                 options: {
                     banner: "<%= banner %>",
@@ -48,7 +49,7 @@ module.exports = function (grunt) {
             options: {
                 plugin: ['tsify'],
                 browserifyOptions: {
-                  standalone: 'MeasureSizeCalculator'
+                    standalone: 'MeasureSizeCalculator'
                 }
             }
         },
@@ -65,7 +66,7 @@ module.exports = function (grunt) {
             }
           }
         },*/
-        // CI setup
+        // Karma setup
         karma: {
             // For continuous integration
             ci: {
@@ -116,16 +117,20 @@ module.exports = function (grunt) {
                 configuration: 'tslint.json'
             },
             all: {
-                src: ['src/**/*.ts', 'test/**/*.ts']
+                src: [].concat(src, test)
             }
+        },
+        // JsHint setup
+        jshint: {
+            all: ['Gruntfile.js']
         },
         // TypeScript Type Definitions
         typings: {
             install: {}
         },
-        //
+        // Documentation
         docco: {
-            src: ['src/**/*.ts'],
+            src: src,
             options: {
                 layout: 'linear',
                 output: 'build/docs'
@@ -148,21 +153,24 @@ module.exports = function (grunt) {
     });
 
     // Load Npm tasks
+    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-docco');
+    grunt.loadNpmTasks('grunt-tslint');
+    grunt.loadNpmTasks('grunt-typings');
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-watch');
-    // grunt.loadNpmTasks('grunt-jscs');
-    grunt.loadNpmTasks('grunt-karma');
-    grunt.loadNpmTasks('grunt-tslint');
-    grunt.loadNpmTasks('grunt-typings');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
 
     // Register tasks
-    grunt.registerTask('all', ['typings', 'default']);
-    grunt.registerTask('default', ['tslint', 'browserify', 'karma:ci']);
-    // grunt.registerTask('lint', ['tslint', 'jscs']);
-    grunt.registerTask('test', ['tslint', 'browserify:debug', 'karma:ci']);
+    grunt.registerTask('all',     ['typings', 'default']);
+    grunt.registerTask('default', ['lint', 'browserify', 'karma:ci']);
+    grunt.registerTask('test',    ['lint', 'browserify:debug', 'karma:ci']);
+    grunt.registerTask('rebuild', ['clean', 'default']);
+    grunt.registerTask('publish', ['clean', 'browserify:dist', 'docco']);
+
+    grunt.registerTask('lint',    ['tslint', 'jshint']);
+    // Fix these in the future:
     // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
     // grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
-    grunt.registerTask('rebuild', ['clean', 'default']);
-    grunt.registerTask('publish', ['clean', 'browserify:dist']);
 };

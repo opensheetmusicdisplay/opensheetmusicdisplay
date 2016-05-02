@@ -2,11 +2,7 @@
     "name": "opensheetmusicdisplay",
     "version": "0.0.0",
     "description": "Open Sheet Music Display library",
-    "main": "build.js",
-    "directories": {
-        "doc": "docs",
-        "test": "test"
-    },
+    "main": "",
     "scripts": {
         "start": "grunt typings",
         "test": "grunt test"
@@ -28,29 +24,31 @@
     },
     "homepage": "http://opensheetmusicdisplay.org",
     "dependencies": {
-        "browserify": "",
-        "tsify": "",
-        "tslint": "",
         "chai": "",
         "mocha": "",
+        "tsify": "",
+        "tslint": "",
         "typescript": "",
+        "browserify": "",
         "phantomjs-prebuilt": "",
 
         "grunt": "",
+        "grunt-karma": "",
+        "grunt-docco": "",
+        "grunt-tslint": "",
+        "grunt-typings": "",
         "grunt-browserify": "",
         "grunt-contrib-clean": "",
         "grunt-contrib-watch": "",
-        "grunt-tslint": "",
         "grunt-contrib-uglify": "",
-        "grunt-karma": "",
-        "grunt-typings": "",
+        "grunt-contrib-jshint": "",
 
         "karma": "",
         "karma-chai": "",
-        "karma-chrome-launcher": "",
-        "karma-firefox-launcher": "",
         "karma-mocha": "",
         "karma-mocha-reporter": "",
+        "karma-chrome-launcher": "",
+        "karma-firefox-launcher": "",
         "karma-phantomjs-launcher": "",
 
         "vexflow": "",
