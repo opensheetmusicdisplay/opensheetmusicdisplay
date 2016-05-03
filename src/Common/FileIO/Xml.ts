@@ -12,7 +12,7 @@ export class IXmlElement {
 
   constructor(elem: Element) {
     this.elem = elem;
-    this.name = elem.nodeName;
+    this.name = elem.nodeName.toLowerCase();
 
     if (elem.hasAttributes()) {
       this.hasAttributes = true;
@@ -20,10 +20,7 @@ export class IXmlElement {
       }
     this.hasElements = elem.hasChildNodes();
     // Look for a value
-    if (
-      elem.childNodes.length === 1 &&
-      elem.childNodes[0].nodeType === Node.TEXT_NODE
-    ) {
+    if (elem.childNodes.length === 1 && elem.childNodes[0].nodeType === Node.TEXT_NODE) {
       this.value = elem.childNodes[0].nodeValue;
     }
   }
@@ -53,12 +50,14 @@ export class IXmlElement {
     let ret: IXmlElement[] = [];
     let nameUnset: boolean = nodeName === undefined;
     if (!nameUnset) {
-      nodeName = nodeName.toUpperCase();
+      nodeName = nodeName.toLowerCase();
     }
+    console.log("-", nodes.length, this.elem.childElementCount);
     for (let i: number = 0; i < nodes.length; i += 1) {
       let node: Node = nodes[i];
+      console.log("node: ", this.elem.nodeName, ">>", node.nodeName, node.nodeType === Node.ELEMENT_NODE);
       if (node.nodeType === Node.ELEMENT_NODE &&
-        (nameUnset || node.nodeName.toUpperCase() === nodeName)) {
+        (nameUnset || node.nodeName.toLowerCase() === nodeName)) {
           ret.push(new IXmlElement(node as Element));
         }
     }

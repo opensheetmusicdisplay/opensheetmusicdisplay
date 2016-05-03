@@ -84,6 +84,7 @@ export class InstrumentReader {
   private currentVoiceGenerator: VoiceGenerator;
   //private openSlurDict: { [n: number]: Slur; } = {};
   private maxTieNoteFraction: Fraction;
+
   public get ActiveKey(): KeyInstruction {
     return this.activeKey;
   }
@@ -112,24 +113,22 @@ export class InstrumentReader {
     let lastNoteWasGrace: boolean = false;
     try {
       let xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
-      for (let idx: number = 0, len: number = xmlMeasureListArr.length; idx < len; ++idx) {
-        let xmlNode: IXmlElement = xmlMeasureListArr[idx];
+      for (let xmlNode of xmlMeasureListArr) {
         if (xmlNode.name === "note") {
-          if ((xmlNode.hasAttributes && xmlNode.attribute("print-object") !== undefined && xmlNode.attribute("print-spacing") !== undefined)) {
+          if (xmlNode.hasAttributes && xmlNode.attribute("print-object") !== undefined && xmlNode.attribute("print-spacing") !== undefined) {
             continue;
           }
           let noteStaff: number = 1;
           if (this.instrument.Staves.length > 1) {
-            try {
-              if (xmlNode.element("staff") !== undefined) {
-                noteStaff = parseInt(xmlNode.element("staff").value, 10);
+            if (xmlNode.element("staff") !== undefined) {
+              noteStaff = parseInt(xmlNode.element("staff").value, 10);
+              if (isNaN(noteStaff)) {
+                Logging.debug("InstrumentReader.readNextXmlMeasure.get staff number");
+                noteStaff = 1;
               }
-            } catch (ex) {
-              Logging.debug("InstrumentReader.readNextXmlMeasure.get staff number", ex);
-              noteStaff = 1;
             }
-
           }
+
           this.currentStaff = this.instrument.Staves[noteStaff - 1];
           let isChord: boolean = xmlNode.element("chord") !== undefined;
           if (xmlNode.element("voice") !== undefined) {
@@ -156,7 +155,7 @@ export class InstrumentReader {
               }
             } catch (ex) {
               let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
-              this.musicSheet.SheetErrors.pushTemp(errorMsg);
+              this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
               Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, ex);
               continue;
             }
@@ -361,12 +360,12 @@ export class InstrumentReader {
         throw new MusicSheetReadingException(e.Message);
       }
       let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
-      this.musicSheet.SheetErrors.pushTemp(errorMsg);
+      this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
       Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
     }
 
     this.previousMeasure = this.currentMeasure;
-    this.currentXmlMeasureIndex++;
+    this.currentXmlMeasureIndex += 1;
     return true;
   }
   public doCalculationsAfterDurationHasBeenSet(): void {
@@ -527,7 +526,7 @@ export class InstrumentReader {
               "ReaderErrorMessages/ClefLineError",
               "Invalid clef line given -> using default clef line."
             );
-            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+            this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             line = 2;
             Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
           }
@@ -545,7 +544,7 @@ export class InstrumentReader {
                 "ReaderErrorMessages/ClefError",
                 "Unsupported clef found -> using default clef."
               );
-              this.musicSheet.SheetErrors.pushTemp(errorMsg);
+              this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
               clefEnum = ClefEnum.G;
               line = 2;
             }
@@ -554,7 +553,7 @@ export class InstrumentReader {
               "ReaderErrorMessages/ClefError",
               "Invalid clef found -> using default clef."
             );
-            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+            this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             clefEnum = ClefEnum.G;
             line = 2;
             Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, e);
@@ -570,7 +569,7 @@ export class InstrumentReader {
               "ReaderErrorMessages/ClefOctaveError",
               "Invalid clef octave found -> using default clef octave."
             );
-            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+            this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             clefOctaveOffset = 0;
           }
 
@@ -583,7 +582,7 @@ export class InstrumentReader {
               "ReaderErrorMessages/ClefError",
               "Invalid clef found -> using default clef."
             );
-            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+            this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             staffNumber = 1;
           }
         }
@@ -603,7 +602,7 @@ export class InstrumentReader {
             "ReaderErrorMessages/KeyError",
             "Invalid key found -> set to default."
           );
-          this.musicSheet.SheetErrors.pushTemp(errorMsg);
+          this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           key = 0;
           Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
@@ -620,7 +619,7 @@ export class InstrumentReader {
             "ReaderErrorMessages/KeyError",
             "Invalid key found -> set to default."
           );
-          this.musicSheet.SheetErrors.pushTemp(errorMsg);
+          this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           keyEnum = KeyEnum.major;
           Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
@@ -693,7 +692,7 @@ export class InstrumentReader {
           }
         } catch (ex) {
           errorMsg = ITextTranslation.translateText("ReaderErrorMessages/RhythmError", "Invalid rhythm found -> set to default.");
-          this.musicSheet.SheetErrors.pushTemp(errorMsg);
+          this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           num = 4;
           denom = 4;
           Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);

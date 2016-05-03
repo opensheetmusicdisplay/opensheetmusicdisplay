@@ -68,7 +68,7 @@ export class MeasureSizeCalculator {
     }
 
     for (let i: number = 0, len: number = outline.length; i < len; i += 3) {
-      console.log(i, outline[i]);
+      //console.log(i, outline[i]);
       switch (<string> outline[i]) {
         case "m": update(i); break;
         case "l": update(i); break;

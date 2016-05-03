@@ -134,7 +134,7 @@ export class VoiceGenerator {
             let errorMsg: string = ITextTranslation.translateText(
                 "ReaderErrorMessages/NoteError", "Ignored erroneous Note."
             );
-            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+            this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
         }
 
         return this.currentNote;
@@ -284,7 +284,7 @@ export class VoiceGenerator {
                                         "ReaderErrorMessages/NotePitchError",
                                         "Invalid pitch while reading note."
                                     );
-                                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                                     throw new MusicSheetReadingException(errorMsg, undefined);
                                 }
                             } else if (pitchElement.name === "alter") {
@@ -293,7 +293,7 @@ export class VoiceGenerator {
                                     let errorMsg: string = ITextTranslation.translateText(
                                         "ReaderErrorMessages/NoteAlterationError", "Invalid alteration while reading note."
                                     );
-                                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                                     throw new MusicSheetReadingException(errorMsg, undefined);
                                 }
 
@@ -303,7 +303,7 @@ export class VoiceGenerator {
                                     let errorMsg: string = ITextTranslation.translateText(
                                         "ReaderErrorMessages/NoteOctaveError", "Invalid octave value while reading note."
                                     );
-                                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                                     throw new MusicSheetReadingException(errorMsg, undefined);
                                 }
                             }
@@ -420,7 +420,7 @@ export class VoiceGenerator {
             let errorMsg: string = ITextTranslation.translateText(
                 "ReaderErrorMessages/BeamError", "Error while reading beam."
             );
-            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+            this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             throw new MusicSheetReadingException("", e);
         }
 
@@ -474,7 +474,7 @@ export class VoiceGenerator {
                     let errorMsg: string = ITextTranslation.translateText(
                         "ReaderErrorMessages/NoteDurationError", "Invalid note duration."
                     );
-                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     throw new MusicSheetReadingException(errorMsg, e);
                 }
 
@@ -537,7 +537,7 @@ export class VoiceGenerator {
                                 let errorMsg: string = ITextTranslation.translateText(
                                     "ReaderErrorMessages/TupletNoteDurationError", "Invalid tuplet note duration."
                                 );
-                                this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                                this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                                 throw new MusicSheetReadingException(errorMsg, undefined);
                             }
 
@@ -602,7 +602,7 @@ export class VoiceGenerator {
                             let errorMsg: string = ITextTranslation.translateText(
                                 "ReaderErrorMessages/TupletNoteDurationError", "Invalid tuplet note duration."
                             );
-                            this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                            this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                             throw new MusicSheetReadingException(errorMsg);
                         }
 
@@ -664,7 +664,7 @@ export class VoiceGenerator {
                 let errorMsg: string = ITextTranslation.translateText(
                     "ReaderErrorMessages/TupletNumberError", "Invalid tuplet number."
                 );
-                this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 throw ex;
             }
 
@@ -771,7 +771,7 @@ export class VoiceGenerator {
                         }
                     } catch (err) {
                         let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/TieError", "Error while reading tie.");
-                        this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                        this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     }
 
                 }
@@ -854,7 +854,7 @@ export class VoiceGenerator {
                     return this.getNoteDurationFromType(type);
                 } catch (e) {
                     let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid note duration.");
-                    this.musicSheet.SheetErrors.pushTemp(errorMsg);
+                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     throw new MusicSheetReadingException("", e);
                 }
 

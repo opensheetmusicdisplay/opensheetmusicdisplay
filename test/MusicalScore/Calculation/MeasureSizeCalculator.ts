@@ -77,7 +77,7 @@ describe("Measure Size Calculator Tests", () => {
           clef.setStave(stave2);
           let bb: Vex.Flow.BoundingBox =
               MeasureSizeCalculator.getClefBoundingBox(clef);
-          console.log(bb);
+          //console.log(bb);
           ctx.rect(bb.getX(), bb.getY(), bb.getW(), bb.getH());
           ctx.stroke();
         }
