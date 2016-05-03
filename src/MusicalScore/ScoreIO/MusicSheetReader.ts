@@ -16,6 +16,7 @@ import {InstrumentalGroup} from "../InstrumentalGroup";
 import {SubInstrument} from "../SubInstrument";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
+import {Label} from "../Label";
 
 type RepetitionInstructionReader = any;
 
@@ -101,7 +102,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     this.musicSheet.Path = path;
     try {
       if (root !== undefined) {
-        // this.pushSheetLabels(root, path); // FIXME Andrea
+        this.pushSheetLabels(root, path);
         let partlistNode: IXmlElement = root.element("part-list");
         if (partlistNode !== undefined) {
           let partInst: IXmlElement[] = root.elements("part");
@@ -169,9 +170,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
   }
 
   // Trim from a string also newlines
-  //private trimString(str: string): string {
-  //  return str.replace(/^\s+|\s+$/g, "");
-  //}
+  private trimString(str: string): string {
+    return str.replace(/^\s+|\s+$/g, "");
+  }
 
   private _lastElement<T>(list: T[]): T {
     return list[list.length - 1];
@@ -420,196 +421,196 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
       }
     }
   }
-  //private addSheetLabels(root: IXmlElement, filePath: string): void {
-  //  this.readComposer(root);
-  //  this.readTitle(root);
-  //  if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
-  //    this.readTitleAndComposerFromCredits(root);
-  //  }
-  //  if (this.musicSheet.Title === undefined) {
-  //    try {
-  //      let bar_i: number = Math.max(
-  //        0, filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")
-  //      );
-  //      let filename: string = filePath.substr(bar_i);
-  //      let filenameSplits: string[] = filename.split(".", 1);
-  //      this.musicSheet.Title = new Label(filenameSplits[0]);
-  //    } catch (ex) {
-  //      logging.log("MusicSheetReader.pushSheetLabels: ", ex);
-  //    }
-  //
-  //  }
-  //}
+  private pushSheetLabels(root: IXmlElement, filePath: string): void {
+    this.readComposer(root);
+    this.readTitle(root);
+    if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
+      this.readTitleAndComposerFromCredits(root);
+    }
+    if (this.musicSheet.Title === undefined) {
+      try {
+        let barI: number = Math.max(
+          0, filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")
+        );
+        let filename: string = filePath.substr(barI);
+        let filenameSplits: string[] = filename.split(".", 1);
+        this.musicSheet.Title = new Label(filenameSplits[0]);
+      } catch (ex) {
+        Logging.log("MusicSheetReader.pushSheetLabels: ", ex);
+      }
+
+    }
+  }
   // Checks whether _elem_ has an attribute with value _val_.
-  //private presentAttrsWithValue(elem: IXmlElement, val: string): boolean {
-  //  for (let attr of elem.attributes()) {
-  //    if (attr.value === val) { return true; }
-  //  }
-  //  return false;
-  //}
+  private presentAttrsWithValue(elem: IXmlElement, val: string): boolean {
+    for (let attr of elem.attributes()) {
+      if (attr.value === val) { return true; }
+    }
+    return false;
+  }
 
-  //private readComposer(root: IXmlElement): void {
-  //  let identificationNode: IXmlElement = root.element("identification");
-  //  if (identificationNode !== undefined) {
-  //    let creators: IXmlElement[] = identificationNode.elements("creator");
-  //    for (let idx: number = 0, len: number = creators.length; idx < len; ++idx) {
-  //      let creator: IXmlElement = creators[idx];
-  //      if (creator.hasAttributes) {
-  //        if (this.presentAttrsWithValue(creator, "composer")) {
-  //          this.musicSheet.Composer = new Label(this.trimString(creator.value));
-  //          continue;
-  //        }
-  //        if (this.presentAttrsWithValue(creator, "lyricist") || this.presentAttrsWithValue(creator, "poet")) {
-  //          this.musicSheet.Lyricist = new Label(this.trimString(creator.value));
-  //        }
-  //      }
-  //    }
-  //  }
-  //}
+  private readComposer(root: IXmlElement): void {
+    let identificationNode: IXmlElement = root.element("identification");
+    if (identificationNode !== undefined) {
+      let creators: IXmlElement[] = identificationNode.elements("creator");
+      for (let idx: number = 0, len: number = creators.length; idx < len; ++idx) {
+        let creator: IXmlElement = creators[idx];
+        if (creator.hasAttributes) {
+          if (this.presentAttrsWithValue(creator, "composer")) {
+            this.musicSheet.Composer = new Label(this.trimString(creator.value));
+            continue;
+          }
+          if (this.presentAttrsWithValue(creator, "lyricist") || this.presentAttrsWithValue(creator, "poet")) {
+            this.musicSheet.Lyricist = new Label(this.trimString(creator.value));
+          }
+        }
+      }
+    }
+  }
 
-  //private readTitleAndComposerFromCredits(root: IXmlElement): void {
-  //  let systemYCoordinates: number = this.computeSystemYCoordinates(root);
-  //  if (systemYCoordinates === 0) { return; }
-  //  let largestTitleCreditSize: number = 1;
-  //  let finalTitle: string = undefined;
-  //  let largestCreditYInfo: number = 0;
-  //  let finalSubtitle: string = undefined;
-  //  let possibleTitle: string = undefined;
-  //  let creditElements: IXmlElement[] = root.elements("credit");
-  //  for (let idx: number = 0, len: number = creditElements.length; idx < len; ++idx) {
-  //    let credit: IXmlElement = creditElements[idx];
-  //    if (credit.attribute("page") === undefined) { return; }
-  //    if (credit.attribute("page").value === "1") {
-  //      let creditChild: IXmlElement = undefined;
-  //      if (credit !== undefined) {
-  //        creditChild = credit.element("credit-words");
-  //        if (creditChild.attribute("justify") === undefined) {
-  //          break;
-  //        }
-  //        let creditJustify: string = creditChild.attribute("justify").value;
-  //        let creditY: string = creditChild.attribute("default-y").value;
-  //        let creditYInfo: number = parseFloat(creditY);
-  //        if (creditYInfo > systemYCoordinates) {
-  //          if (this.musicSheet.Title === undefined) {
-  //            let creditSize: string = creditChild.attribute("font-size").value;
-  //            let titleCreditSizeInt: number = parseFloat(creditSize);
-  //            if (largestTitleCreditSize < titleCreditSizeInt) {
-  //              largestTitleCreditSize = titleCreditSizeInt;
-  //              finalTitle = creditChild.value;
-  //            }
-  //          }
-  //          if (this.musicSheet.Subtitle === undefined) {
-  //            if (creditJustify !== "right" && creditJustify !== "left") {
-  //              if (largestCreditYInfo < creditYInfo) {
-  //                largestCreditYInfo = creditYInfo;
-  //                if (possibleTitle) {
-  //                  finalSubtitle = possibleTitle;
-  //                  possibleTitle = creditChild.value;
-  //                } else {
-  //                  possibleTitle = creditChild.value;
-  //                }
-  //              }
-  //            }
-  //          }
-  //          if (!(this.musicSheet.Composer !== undefined && this.musicSheet.Lyricist !== undefined)) {
-  //            switch (creditJustify) {
-  //              case "right":
-  //                this.musicSheet.Composer = new Label(this.trimString(creditChild.value));
-  //                break;
-  //              case "left":
-  //                this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
-  //                break;
-  //              default: break;
-  //            }
-  //          }
-  //        }
-  //      }
-  //    }
-  //  }
-  //  if (this.musicSheet.Title === undefined && finalTitle) {
-  //    this.musicSheet.Title = new Label(this.trimString(finalTitle));
-  //  }
-  //  if (this.musicSheet.Subtitle === undefined && finalSubtitle) {
-  //    this.musicSheet.Subtitle = new Label(this.trimString(finalSubtitle));
-  //  }
-  //}
+  private readTitleAndComposerFromCredits(root: IXmlElement): void {
+    let systemYCoordinates: number = this.computeSystemYCoordinates(root);
+    if (systemYCoordinates === 0) { return; }
+    let largestTitleCreditSize: number = 1;
+    let finalTitle: string = undefined;
+    let largestCreditYInfo: number = 0;
+    let finalSubtitle: string = undefined;
+    let possibleTitle: string = undefined;
+    let creditElements: IXmlElement[] = root.elements("credit");
+    for (let idx: number = 0, len: number = creditElements.length; idx < len; ++idx) {
+      let credit: IXmlElement = creditElements[idx];
+      if (credit.attribute("page") === undefined) { return; }
+      if (credit.attribute("page").value === "1") {
+        let creditChild: IXmlElement = undefined;
+        if (credit !== undefined) {
+          creditChild = credit.element("credit-words");
+          if (creditChild.attribute("justify") === undefined) {
+            break;
+          }
+          let creditJustify: string = creditChild.attribute("justify").value;
+          let creditY: string = creditChild.attribute("default-y").value;
+          let creditYInfo: number = parseFloat(creditY);
+          if (creditYInfo > systemYCoordinates) {
+            if (this.musicSheet.Title === undefined) {
+              let creditSize: string = creditChild.attribute("font-size").value;
+              let titleCreditSizeInt: number = parseFloat(creditSize);
+              if (largestTitleCreditSize < titleCreditSizeInt) {
+                largestTitleCreditSize = titleCreditSizeInt;
+                finalTitle = creditChild.value;
+              }
+            }
+            if (this.musicSheet.Subtitle === undefined) {
+              if (creditJustify !== "right" && creditJustify !== "left") {
+                if (largestCreditYInfo < creditYInfo) {
+                  largestCreditYInfo = creditYInfo;
+                  if (possibleTitle) {
+                    finalSubtitle = possibleTitle;
+                    possibleTitle = creditChild.value;
+                  } else {
+                    possibleTitle = creditChild.value;
+                  }
+                }
+              }
+            }
+            if (!(this.musicSheet.Composer !== undefined && this.musicSheet.Lyricist !== undefined)) {
+              switch (creditJustify) {
+                case "right":
+                  this.musicSheet.Composer = new Label(this.trimString(creditChild.value));
+                  break;
+                case "left":
+                  this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
+                  break;
+                default: break;
+              }
+            }
+          }
+        }
+      }
+    }
+    if (this.musicSheet.Title === undefined && finalTitle) {
+      this.musicSheet.Title = new Label(this.trimString(finalTitle));
+    }
+    if (this.musicSheet.Subtitle === undefined && finalSubtitle) {
+      this.musicSheet.Subtitle = new Label(this.trimString(finalSubtitle));
+    }
+  }
 
-  //private computeSystemYCoordinates(root: IXmlElement): number {
-  //  if (root.element("defaults") === undefined) {
-  //    return 0;
-  //  }
-  //  let paperHeight: number = 0;
-  //  let topSystemDistance: number = 0;
-  //  let defi: string = root.element("defaults").element("page-layout").element("page-height").value;
-  //  paperHeight = parseFloat(defi);
-  //  let found: boolean = false;
-  //  let parts: IXmlElement[] = root.elements("part");
-  //  for (let idx: number = 0, len: number = parts.length; idx < len; ++idx) {
-  //    let measures: IXmlElement[] = parts[idx].elements("measure");
-  //    for (let idx2: number = 0, len2: number = measures.length; idx2 < len2; ++idx2) {
-  //      let measure: IXmlElement = measures[idx2];
-  //      if (measure.element("print") !== undefined) {
-  //        let systemLayouts: IXmlElement[] = measure.element("print").elements("system-layout");
-  //        for (let idx3: number = 0, len3: number = systemLayouts.length; idx3 < len3; ++idx3) {
-  //          let syslab: IXmlElement = systemLayouts[idx3];
-  //          if (syslab.element("top-system-distance") !== undefined) {
-  //            let topSystemDistanceString: string = syslab.element("top-system-distance").value;
-  //            topSystemDistance = parseFloat(topSystemDistanceString);
-  //            found = true;
-  //            break;
-  //          }
-  //        }
-  //        break;
-  //      }
-  //    }
-  //    if (found) { break; }
-  //  }
-  //  if (root.element("defaults").element("system-layout") !== undefined) {
-  //    let syslay: IXmlElement = root.element("defaults").element("system-layout");
-  //    if (syslay.element("top-system-distance") !== undefined) {
-  //      let topSystemDistanceString: string = root.element("defaults").element("system-layout").element("top-system-distance").value;
-  //      topSystemDistance = parseFloat(topSystemDistanceString);
-  //    }
-  //  }
-  //  if (topSystemDistance === 0) { return 0; }
-  //  return paperHeight - topSystemDistance;
-  //}
-  //private readTitle(root: IXmlElement): void {
-  //  let titleNode: IXmlElement = root.element("work");
-  //  let titleNodeChild: IXmlElement = undefined;
-  //  if (titleNode !== undefined) {
-  //    titleNodeChild = titleNode.element("work-title");
-  //    if (titleNodeChild !== undefined && titleNodeChild.value) {
-  //      this.musicSheet.Title = new Label(this.trimString(titleNodeChild.value));
-  //    }
-  //  }
-  //  let movementNode: IXmlElement = root.element("movement-title");
-  //  let finalSubTitle: string = "";
-  //  if (movementNode !== undefined) {
-  //    if (this.musicSheet.Title === undefined) {
-  //      this.musicSheet.Title = new Label(this.trimString(movementNode.value));
-  //    } else {
-  //      finalSubTitle = this.trimString(movementNode.value);
-  //    }
-  //  }
-  //  if (titleNode !== undefined) {
-  //    let subtitleNodeChild: IXmlElement = titleNode.element("work-number");
-  //    if (subtitleNodeChild !== undefined) {
-  //      let workNumber: string = subtitleNodeChild.value;
-  //      if (workNumber) {
-  //        if (finalSubTitle) {
-  //          finalSubTitle = workNumber;
-  //        } else {
-  //          finalSubTitle = finalSubTitle + ", " + workNumber;
-  //        }
-  //      }
-  //    }
-  //  }
-  //  if (finalSubTitle
-  //  ) {
-  //    this.musicSheet.Subtitle = new Label(finalSubTitle);
-  //  }
-  //}
+  private computeSystemYCoordinates(root: IXmlElement): number {
+    if (root.element("defaults") === undefined) {
+      return 0;
+    }
+    let paperHeight: number = 0;
+    let topSystemDistance: number = 0;
+    let defi: string = root.element("defaults").element("page-layout").element("page-height").value;
+    paperHeight = parseFloat(defi);
+    let found: boolean = false;
+    let parts: IXmlElement[] = root.elements("part");
+    for (let idx: number = 0, len: number = parts.length; idx < len; ++idx) {
+      let measures: IXmlElement[] = parts[idx].elements("measure");
+      for (let idx2: number = 0, len2: number = measures.length; idx2 < len2; ++idx2) {
+        let measure: IXmlElement = measures[idx2];
+        if (measure.element("print") !== undefined) {
+          let systemLayouts: IXmlElement[] = measure.element("print").elements("system-layout");
+          for (let idx3: number = 0, len3: number = systemLayouts.length; idx3 < len3; ++idx3) {
+            let syslab: IXmlElement = systemLayouts[idx3];
+            if (syslab.element("top-system-distance") !== undefined) {
+              let topSystemDistanceString: string = syslab.element("top-system-distance").value;
+              topSystemDistance = parseFloat(topSystemDistanceString);
+              found = true;
+              break;
+            }
+          }
+          break;
+        }
+      }
+      if (found) { break; }
+    }
+    if (root.element("defaults").element("system-layout") !== undefined) {
+      let syslay: IXmlElement = root.element("defaults").element("system-layout");
+      if (syslay.element("top-system-distance") !== undefined) {
+        let topSystemDistanceString: string = root.element("defaults").element("system-layout").element("top-system-distance").value;
+        topSystemDistance = parseFloat(topSystemDistanceString);
+      }
+    }
+    if (topSystemDistance === 0) { return 0; }
+    return paperHeight - topSystemDistance;
+  }
+  private readTitle(root: IXmlElement): void {
+    let titleNode: IXmlElement = root.element("work");
+    let titleNodeChild: IXmlElement = undefined;
+    if (titleNode !== undefined) {
+      titleNodeChild = titleNode.element("work-title");
+      if (titleNodeChild !== undefined && titleNodeChild.value) {
+        this.musicSheet.Title = new Label(this.trimString(titleNodeChild.value));
+      }
+    }
+    let movementNode: IXmlElement = root.element("movement-title");
+    let finalSubTitle: string = "";
+    if (movementNode !== undefined) {
+      if (this.musicSheet.Title === undefined) {
+        this.musicSheet.Title = new Label(this.trimString(movementNode.value));
+      } else {
+        finalSubTitle = this.trimString(movementNode.value);
+      }
+    }
+    if (titleNode !== undefined) {
+      let subtitleNodeChild: IXmlElement = titleNode.element("work-number");
+      if (subtitleNodeChild !== undefined) {
+        let workNumber: string = subtitleNodeChild.value;
+        if (workNumber) {
+          if (finalSubTitle) {
+            finalSubTitle = workNumber;
+          } else {
+            finalSubTitle = finalSubTitle + ", " + workNumber;
+          }
+        }
+      }
+    }
+    if (finalSubTitle
+    ) {
+      this.musicSheet.Subtitle = new Label(finalSubTitle);
+    }
+  }
   private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument; } {
     let instrumentId: number = 0;
     let instrumentDict: { [_: string]: Instrument; } = {};

@@ -51,12 +51,15 @@ export class IXmlElement {
   public elements(nodeName?: string): IXmlElement[] {
     let nodes: NodeList = this.elem.childNodes;
     let ret: IXmlElement[] = [];
-    let nameUnset: boolean = typeof nodeName === "undefined"; // FIXME check
+    let nameUnset: boolean = nodeName === undefined;
+    if (!nameUnset) {
+      nodeName = nodeName.toUpperCase();
+    }
     for (let i: number = 0; i < nodes.length; i += 1) {
       let node: Node = nodes[i];
       if (node.nodeType === Node.ELEMENT_NODE &&
-        (nameUnset || node.nodeName === nodeName)) {
-          ret.push(new IXmlElement(<Element> node));
+        (nameUnset || node.nodeName.toUpperCase() === nodeName)) {
+          ret.push(new IXmlElement(node as Element));
         }
     }
     return ret;

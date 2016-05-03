@@ -1,7 +1,8 @@
 // Karma configuration
 // Generated on Fri Feb 05 2016 12:36:08 GMT+0100 (CET)
-
-module.exports = function(config) {
+/*globals module*/
+module.exports = function (config) {
+    'use strict';
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -9,20 +10,30 @@ module.exports = function(config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha', 'chai'],
-
-        // list of files / patterns to load in the browser
-        files: [
-          'build/**/*.js'
-        ],
+        frameworks: ['mocha', 'chai', 'fixture'],
 
         // list of files to exclude
-        exclude: [
-        ],
+        exclude: [],
+
+        files: [{
+            pattern: 'build/osmd-debug.js'
+        }, {
+            pattern: 'src/**/*.ts',
+            included: false
+        }, {
+            pattern: 'test/**/*.ts',
+            included: false
+        }, {
+            pattern: 'test/data/*.xml',
+            included: true//,
+            //served: true,
+            //watched: true
+        }],
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
+            'test/data/*.xml': ['html2js']
         },
 
         // test results reporter to use

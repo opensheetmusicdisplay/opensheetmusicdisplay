@@ -72,42 +72,21 @@ module.exports = function (grunt) {
             ci: {
                 configFile: 'karma.conf.js',
                 options: {
-                    browsers: ['PhantomJS'],
-                    files: [
-                        '<%= browserify.debug.dest %>'
-                    ]
+                    browsers: ['PhantomJS']
                 }
             },
             debugWithFirefox: {
                 configFile: 'karma.conf.js',
                 options: {
                     singleRun: false,
-                    browsers: ['Firefox'],
-                    files: [
-                        '<%= browserify.debug.dest %>', {
-                            pattern: 'src/**/*.ts',
-                            included: false
-                        }, {
-                            pattern: 'test/**/*.ts',
-                            included: false
-                        }
-                    ]
+                    browsers: ['Firefox']
                 }
             },
             debugWithChrome: {
                 configFile: 'karma.conf.js',
                 options: {
                     singleRun: false,
-                    browsers: ['Chrome'],
-                    files: [
-                        '<%= browserify.debug.dest %>', {
-                            pattern: 'src/**/*.ts',
-                            included: false
-                        }, {
-                            pattern: 'test/**/*.ts',
-                            included: false
-                        }
-                    ]
+                    browsers: ['Chrome']
                 }
             }
         },
@@ -122,7 +101,7 @@ module.exports = function (grunt) {
         },
         // JsHint setup
         jshint: {
-            all: ['Gruntfile.js']
+            all: ['Gruntfile.js', 'karma.conf.js']
         },
         // TypeScript Type Definitions
         typings: {
@@ -169,7 +148,7 @@ module.exports = function (grunt) {
     grunt.registerTask('rebuild', ['clean', 'default']);
     grunt.registerTask('publish', ['clean', 'browserify:dist', 'docco']);
 
-    grunt.registerTask('lint',    ['tslint', 'jshint']);
+    grunt.registerTask('lint',    ['jshint', 'tslint']);
     // Fix these in the future:
     // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
     // grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
