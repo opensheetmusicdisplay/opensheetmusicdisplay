@@ -2,10 +2,12 @@ import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetRead
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 
+// Fixture has no typings yet, thus declare it as 'any'
 declare var fixture: any;
 
 describe("Music Sheet Reader Tests", () => {
-    // Initialization
+
+    // Initialize variables
     let path: string = "/test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
     let reader: MusicSheetReader = new MusicSheetReader();
     let root: IXmlElement;
@@ -15,8 +17,9 @@ describe("Music Sheet Reader Tests", () => {
         fixture.setBase("base");
     });
 
+    // Load the xml files
     beforeEach((): void => {
-      this.result = fixture.load(path);
+      fixture.load(path);
       // console.log(this.result[0].length, typeof this.result, typeof this.result[0], this.result[0].substr, this.result[0].getElementById);
       let container: Element = document.getElementById("fixture_container");
       let documentElement: IXmlElement = new IXmlElement(container);
@@ -40,7 +43,7 @@ describe("Music Sheet Reader Tests", () => {
         // chai.expect(root.element("part").elements("measure").length).to.equal(38);
         chai.expect(sheet.SourceMeasures.length).to.equal(38);
         console.log("First Measure: ", sheet.SourceMeasures[0]);
-        //console.log("Notes on first Measure: ", sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers[0].StaffEntries[0]);
+        // console.log("Notes on first Measure: ", sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers[0].StaffEntries[0]);
         // chai.expect(sheet.)
         done();
     });
@@ -50,7 +53,7 @@ describe("Music Sheet Reader Tests", () => {
         chai.expect(reader.CompleteNumberOfStaves).to.equal(2);
         chai.expect(sheet.Instruments.length).to.equal(2);
         chai.expect(sheet.InstrumentalGroups.length).to.equal(2);
-        console.log(sheet.SheetErrors);
+        console.log("SheetErrors: ", sheet.SheetErrors);
         chai.expect(sheet.Instruments[0].Name).to.equal("Piano (right)");
         chai.expect(sheet.Instruments[1].Name).to.equal("Piano (left)");
         done();

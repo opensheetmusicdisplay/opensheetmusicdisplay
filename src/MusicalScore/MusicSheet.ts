@@ -32,7 +32,6 @@ export class PlaybackSettings {
     public rhythm: Fraction;
 }
 
-
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
         // (*) try {
@@ -79,6 +78,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     // (*) private musicSheetParameterObject: MusicSheetParameterObject = undefined;
     // (*) private engravingRules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
+
     public static getIndexFromStaff(staff: Staff): number {
         return staff.idInMusicSheet;
     }
@@ -243,11 +243,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
     }
     public getStaffFromIndex(staffIndexInMusicSheet: number): Staff {
-        if (this.staves.length > staffIndexInMusicSheet) {
-            return this.staves[staffIndexInMusicSheet];
-        } else {
-            return undefined;
-        }
+        return this.staves[staffIndexInMusicSheet];
     }
     public fillStaffList(): void {
         let i: number = 0;
@@ -403,10 +399,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
 
     }
     public get CurrentEnrolledPosition(): Fraction {
-        return this.currentEnrolledPosition;
+        return this.currentEnrolledPosition.clone();
     }
     public set CurrentEnrolledPosition(value: Fraction) {
-        this.currentEnrolledPosition = Fraction.CreateFractionFromFraction(value);
+        this.currentEnrolledPosition = value.clone();
     }
     public get Transpose(): number {
         return this.transpose;
@@ -478,10 +474,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return this.findSourceMeasureFromTimeStamp(timeStamp);
     }
-    public findSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
+    public findSourceMeasureFromTimeStamp(timestamp: Fraction): SourceMeasure {
         for (let sm of this.SourceMeasures) {
-            // FIXME: bug?
-            if (timeStamp.lte(sm.AbsoluteTimestamp) && timeStamp.lt(Fraction.plus(sm.AbsoluteTimestamp, sm.Duration))) {
+            if (sm.AbsoluteTimestamp.lte(timestamp) && timestamp.lt(Fraction.plus(sm.AbsoluteTimestamp, sm.Duration))) {
                 return sm;
             }
         }

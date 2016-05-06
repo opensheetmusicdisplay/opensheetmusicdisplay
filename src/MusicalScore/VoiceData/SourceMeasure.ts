@@ -278,8 +278,7 @@ export class SourceMeasure {
     }
     public getEntriesPerStaff(staffIndex: number): SourceStaffEntry[] {
         let sourceStaffEntries: SourceStaffEntry[] = [];
-        for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.length; idx < len; ++idx) {
-            let container: VerticalSourceStaffEntryContainer = this.VerticalSourceStaffEntryContainers[idx];
+        for (let container of this.VerticalSourceStaffEntryContainers) {
             let sse: SourceStaffEntry = container[staffIndex];
             if (sse !== undefined) { sourceStaffEntries.push(sse); }
         }
