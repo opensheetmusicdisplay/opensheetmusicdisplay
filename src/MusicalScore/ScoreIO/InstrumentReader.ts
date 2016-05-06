@@ -163,9 +163,9 @@ export class InstrumentReader {
           }
           let restNote: boolean = xmlNode.element("rest") !== undefined;
           let isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
-          let musicTimestamp: Fraction = Fraction.CreateFractionFromFraction(currentFraction);
+          let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
-            musicTimestamp = Fraction.CreateFractionFromFraction(previousFraction);
+            musicTimestamp = previousFraction.clone();
           }
           let out: {createdNewContainer: boolean, staffEntry: SourceStaffEntry} = this.currentMeasure.findOrCreateStaffEntry(
             musicTimestamp,
@@ -179,8 +179,8 @@ export class InstrumentReader {
             this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote);
           }
           if (!isGraceNote && !isChord) {
-            previousFraction = Fraction.CreateFractionFromFraction(currentFraction);
-            currentFraction.Add(Fraction.CreateFractionFromFraction(noteDuration));
+            previousFraction = currentFraction.clone();
+            currentFraction.Add(noteDuration);
           }
           if (
             isChord &&
@@ -308,7 +308,7 @@ export class InstrumentReader {
           //      expressionReader.readExpressionParameters(
           //        xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, true
           //      );
-          //      expressionReader.addOctaveShift(xmlNode, this.currentMeasure, Fraction.CreateFractionFromFraction(previousFraction));
+          //      expressionReader.addOctaveShift(xmlNode, this.currentMeasure, previousFraction.clone());
           //    }
           //    expressionReader.readExpressionParameters(
           //      xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
@@ -455,7 +455,7 @@ export class InstrumentReader {
     }
   }
   private isAttributesNodeAtBeginOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    let children: IXmlElement[] = parentNode.elements().slice();
+    let children: IXmlElement[] = parentNode.elements();
     let attributesNodeIndex: number = children.indexOf(attributesNode); // FIXME | 0
     if (attributesNodeIndex > 0 && children[attributesNodeIndex - 1].name === "backup") {
       return true;

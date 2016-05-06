@@ -8,6 +8,8 @@ describe("Music Sheet Reader Tests", () => {
     // Initialization
     let path: string = "/test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
     let reader: MusicSheetReader = new MusicSheetReader();
+    let root: IXmlElement;
+    let sheet: MusicSheet;
 
     before((): void => {
         fixture.setBase("base");
@@ -15,41 +17,42 @@ describe("Music Sheet Reader Tests", () => {
 
     beforeEach((): void => {
       this.result = fixture.load(path);
+      // console.log(this.result[0].length, typeof this.result, typeof this.result[0], this.result[0].substr, this.result[0].getElementById);
+      let container: Element = document.getElementById("fixture_container");
+      let documentElement: IXmlElement = new IXmlElement(container);
+      chai.expect(documentElement.elements("score-partwise").length).to.equal(1);
+      root = documentElement.element("score-partwise");
+      chai.expect(root).to.not.be.undefined;
+      sheet = reader.createMusicSheet(root, path);
     });
 
     afterEach((): void => {
       fixture.cleanup();
     });
 
-    it("Test Sonatina Op.36 No. 1 - Pt. 1", (done: MochaDone) => {
-        let container: Element = document.getElementById("fixture_container");
-        let documentElement: IXmlElement = new IXmlElement(container);
-        chai.expect(documentElement.elements("score-partwise").length).to.equal(1);
-        let root: IXmlElement = documentElement.element("score-partwise");
-        //
-        // let elem: Element = (root as any).elem;
-        // console.log(
-        //   "@",
-        //   elem.getElementsByTagName("part")[0].getElementsByTagName("measure").length,
-        //   root.element("part").elements("measure").length
-        // );
-
-
-        chai.expect(root).to.not.be.undefined;
-        chai.expect(root.elements("part").length).to.equal(2);
-        chai.expect(root.element("part").elements("measure").length).to.equal(38);
-        let sheet: MusicSheet = reader.createMusicSheet(root, path);
+    it("Read title and composer", (done: MochaDone) => {
         chai.expect(sheet.TitleString).to.equal("Sonatina Op.36 No 1 Teil 1 Allegro");
         chai.expect(sheet.ComposerString).to.equal("Muzio Clementi");
-        //console.log("Sheet Object:", sheet);
-        console.log(reader.CompleteNumberOfStaves);
-        console.log(sheet.SheetErrors);
-        //console.log(container);
+        done();
+    });
+
+    it("Measures", (done: MochaDone) => {
+        // chai.expect(root.element("part").elements("measure").length).to.equal(38);
+        chai.expect(sheet.SourceMeasures.length).to.equal(38);
+        console.log("First Measure: ", sheet.SourceMeasures[0]);
+        //console.log("Notes on first Measure: ", sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers[0].StaffEntries[0]);
+        // chai.expect(sheet.)
+        done();
+    });
+
+    it("Instruments", (done: MochaDone) => {
+        // chai.expect(root.elements("part").length).to.equal(2);
+        chai.expect(reader.CompleteNumberOfStaves).to.equal(2);
         chai.expect(sheet.Instruments.length).to.equal(2);
+        chai.expect(sheet.InstrumentalGroups.length).to.equal(2);
+        console.log(sheet.SheetErrors);
         chai.expect(sheet.Instruments[0].Name).to.equal("Piano (right)");
         chai.expect(sheet.Instruments[1].Name).to.equal("Piano (left)");
-        chai.expect(sheet.InstrumentalGroups.length).to.equal(2);
-        chai.expect(sheet.SourceMeasures.length).to.equal(38);
         done();
     });
 
