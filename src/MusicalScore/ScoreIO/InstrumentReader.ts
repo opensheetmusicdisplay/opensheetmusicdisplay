@@ -535,7 +535,7 @@ export class InstrumentReader {
         let signNode: IXmlElement = nodeList.element("sign");
         if (signNode !== undefined) {
           try {
-            // (*) clefEnum = <ClefEnum>Enum.Parse(/*typeof*/ClefEnum, signNode.value);
+            clefEnum = ClefEnum[signNode.value];
             if (!ClefInstruction.isSupportedClef(clefEnum)) {
               if (clefEnum === ClefEnum.TAB && guitarPro) {
                 clefOctaveOffset = -1;
@@ -613,7 +613,7 @@ export class InstrumentReader {
       if (modeNode !== undefined) { modeNode = modeNode.element("mode"); }
       if (modeNode !== undefined) {
         try {
-          // (*) keyEnum = <KeyEnum>Enum.Parse(/*typeof*/KeyEnum, modeNode.value);
+          keyEnum = KeyEnum[modeNode.value];
         } catch (ex) {
           errorMsg = ITextTranslation.translateText(
             "ReaderErrorMessages/KeyError",
@@ -631,12 +631,8 @@ export class InstrumentReader {
     if (node.element("time") !== undefined) {
       let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
       let timeNode: IXmlElement = node.element("time");
-      if (
-        timeNode !== undefined &&
-        timeNode.hasAttributes &&
-        timeNode.attributes() !== undefined
-      ) {
-        let firstAttr: IXmlAttribute = timeNode.attributes()[0];
+      if (timeNode !== undefined && timeNode.hasAttributes) {
+        let firstAttr: IXmlAttribute = timeNode.firstAttribute;
         if (firstAttr.name === "symbol") {
           if (firstAttr.value === "common") {
             symbolEnum = RhythmSymbolEnum.COMMON;

@@ -379,7 +379,7 @@
       <direction placement="below">
         <direction-type>
           <dynamics>
-            <p/>
+            <p></p>
             </dynamics>
           </direction-type>
         <sound dynamics="54.44"/>
@@ -1185,7 +1185,7 @@
       <direction placement="below">
         <direction-type>
           <dynamics>
-            <p/>
+            <p></p>
             </dynamics>
           </direction-type>
         <sound dynamics="54.44"/>
@@ -1749,7 +1749,7 @@
       <direction placement="below">
         <direction-type>
           <dynamics>
-            <p/>
+            <p></p>
             </dynamics>
           </direction-type>
         <sound dynamics="54.44"/>

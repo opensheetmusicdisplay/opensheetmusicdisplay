@@ -117,9 +117,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     let partInst: IXmlElement[] = root.elements("part");
     console.log(partInst.length + " parts");
     let partList: IXmlElement[] = partlistNode.elements();
-    Logging.debug("Starting initializeReading");
+    //Logging.debug("Starting initializeReading");
     this.initializeReading(partList, partInst, instrumentReaders);
-    Logging.debug("Done initializeReading");
+    //Logging.debug("Done initializeReading");
     let couldReadMeasure: boolean = true;
     this.currentFraction = new Fraction(0, 1);
     let guitarPro: boolean = false;
@@ -135,7 +135,6 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     }
 
     while (couldReadMeasure) {
-      Logging.debug("+couldReadMeasure");
       if (this.currentMeasure !== undefined && this.currentMeasure.endsPiece) {
         sourceMeasureCounter = 0;
       }

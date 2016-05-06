@@ -26,6 +26,15 @@ describe("Music Sheet Reader Tests", () => {
         let documentElement: IXmlElement = new IXmlElement(container);
         chai.expect(documentElement.elements("score-partwise").length).to.equal(1);
         let root: IXmlElement = documentElement.element("score-partwise");
+        //
+        // let elem: Element = (root as any).elem;
+        // console.log(
+        //   "@",
+        //   elem.getElementsByTagName("part")[0].getElementsByTagName("measure").length,
+        //   root.element("part").elements("measure").length
+        // );
+
+
         chai.expect(root).to.not.be.undefined;
         chai.expect(root.elements("part").length).to.equal(2);
         chai.expect(root.element("part").elements("measure").length).to.equal(38);
