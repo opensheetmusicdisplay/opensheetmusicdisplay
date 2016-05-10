@@ -61,5 +61,5 @@ describe("Music Sheet Reader Tests", () => {
         // Staff Entries on first measure
         // chai.expect(sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers[0].StaffEntries.length).to.equal(4);
         done();
-    })
+    });
 });
