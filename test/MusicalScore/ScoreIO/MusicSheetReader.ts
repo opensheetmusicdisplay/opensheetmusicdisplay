@@ -2,35 +2,39 @@ import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetRead
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 
-// Fixture has no typings yet, thus declare it as 'any'
-declare var fixture: any;
-
 describe("Music Sheet Reader Tests", () => {
-
     // Initialize variables
     let path: string = "/test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
     let reader: MusicSheetReader = new MusicSheetReader();
-    let root: IXmlElement;
+    let score: IXmlElement;
     let sheet: MusicSheet;
 
+    function getSheet(filename: string): Document {
+      return ((window as any).__xml__)[filename];
+    }
+
     before((): void => {
-        fixture.setBase("base");
+        let parser: DOMParser = new DOMParser();
+        let dict: { [filename: string]: any; } = (window as any).__xml__;
+        for (let filename in dict) {
+          if (dict.hasOwnProperty(filename)) {
+            dict[filename] = parser.parseFromString(dict[filename], "text/xml");
+          }
+        }
+        // Load the xml file
+        let doc: Document = getSheet("MuzioClementi_SonatinaOpus36No1_Part1.xml");
+        chai.expect(doc).to.not.be.undefined;
+        score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+        // chai.expect(score).to.not.be.undefined;
+        sheet = reader.createMusicSheet(score, path);
     });
 
-    // Load the xml files
     beforeEach((): void => {
-      fixture.load(path);
-      // console.log(this.result[0].length, typeof this.result, typeof this.result[0], this.result[0].substr, this.result[0].getElementById);
-      let container: Element = document.getElementById("fixture_container");
-      let documentElement: IXmlElement = new IXmlElement(container);
-      chai.expect(documentElement.elements("score-partwise").length).to.equal(1);
-      root = documentElement.element("score-partwise");
-      chai.expect(root).to.not.be.undefined;
-      sheet = reader.createMusicSheet(root, path);
+      // ???
     });
 
     afterEach((): void => {
-      fixture.cleanup();
+      // cleanup?
     });
 
     it("Read title and composer", (done: MochaDone) => {
@@ -54,6 +58,7 @@ describe("Music Sheet Reader Tests", () => {
         chai.expect(sheet.Instruments.length).to.equal(2);
         chai.expect(sheet.InstrumentalGroups.length).to.equal(2);
         console.log("SheetErrors: ", sheet.SheetErrors);
+        console.log("Sheet", sheet);
         chai.expect(sheet.Instruments[0].Name).to.equal("Piano (right)");
         chai.expect(sheet.Instruments[1].Name).to.equal("Piano (left)");
         done();

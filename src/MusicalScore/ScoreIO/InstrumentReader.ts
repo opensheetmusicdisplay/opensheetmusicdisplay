@@ -118,6 +118,7 @@ export class InstrumentReader {
           if (xmlNode.hasAttributes && xmlNode.attribute("print-object") !== undefined && xmlNode.attribute("print-spacing") !== undefined) {
             continue;
           }
+          Logging.log("New Note: ", (xmlNode as any).elem.innerHTML);
           let noteStaff: number = 1;
           if (this.instrument.Staves.length > 1) {
             if (xmlNode.element("staff") !== undefined) {
@@ -142,9 +143,10 @@ export class InstrumentReader {
           let noteDivisions: number = 0;
           let noteDuration: Fraction = new Fraction(0, 1);
           let isTuplet: boolean = false;
+          // Logging.debug("NOTE", (xmlNode as any).elem.innerHTML, xmlNode.element("duration"));
           if (xmlNode.element("duration") !== undefined) {
-            try {
-              noteDivisions = parseInt(xmlNode.element("duration").value, 10);
+            noteDivisions = parseInt(xmlNode.element("duration").value, 10);
+            if (!isNaN(noteDivisions)) {
               noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
               if (noteDivisions === 0) {
                 noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
@@ -153,15 +155,16 @@ export class InstrumentReader {
                 noteDuration = this.getNoteDurationForTuplet(xmlNode);
                 isTuplet = true;
               }
-            } catch (ex) {
+            } else {
               let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
               this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-              Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, ex);
+              Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
               continue;
             }
-
           }
+
           let restNote: boolean = xmlNode.element("rest") !== undefined;
+          Logging.log("New note found!", (xmlNode.element("duration") as any).elem, noteDivisions, noteDuration.toString(), restNote);
           let isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
@@ -237,11 +240,10 @@ export class InstrumentReader {
         } else if (xmlNode.name === "attributes") {
           let divisionsNode: IXmlElement = xmlNode.element("divisions");
           if (divisionsNode !== undefined) {
-            try {
-              this.divisions = parseInt(divisionsNode.value, 10);
-            } catch (e) {
+            this.divisions = parseInt(divisionsNode.value, 10);
+            if (isNaN(this.divisions)) {
               let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
-              Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e.toString());
+              Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
               this.divisions = this.readDivisionsFromNotes();
               if (this.divisions > 0) {
                 this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);

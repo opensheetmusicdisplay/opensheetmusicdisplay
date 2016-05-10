@@ -82,7 +82,7 @@
             <per-minute>156</per-minute>
             </metronome>
           </direction-type>
-        <sound tempo="156"/>
+        <sound tempo="156"></sound>
         </direction>
       <direction placement="above">
         <direction-type>
@@ -91,7 +91,7 @@
             <per-minute>156</per-minute>
             </metronome>
           </direction-type>
-        <sound tempo="156"/>
+        <sound tempo="156"></sound>
         </direction>
       <direction placement="above">
         <direction-type>
@@ -105,7 +105,7 @@
             <per-minute>156</per-minute>
             </metronome>
           </direction-type>
-        <sound tempo="156"/>
+        <sound tempo="156"></sound>
         </direction>
       <note default-x="71.83" default-y="-15.00">
         <pitch>
@@ -360,7 +360,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -382,7 +382,7 @@
             <p></p>
             </dynamics>
           </direction-type>
-        <sound dynamics="54.44"/>
+        <sound dynamics="54.44"></sound>
         </direction>
       <note default-x="54.33" default-y="-15.00">
         <pitch>
@@ -1167,20 +1167,20 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
-        <repeat direction="backward"/>
+        <repeat direction="backward"></repeat>
         </barline>
       </measure>
     <measure number="16" width="136.26">
       <barline location="left">
         <bar-style>heavy-light</bar-style>
-        <repeat direction="forward"/>
+        <repeat direction="forward"></repeat>
         </barline>
       <direction placement="below">
         <direction-type>
@@ -1188,7 +1188,7 @@
             <p></p>
             </dynamics>
           </direction-type>
-        <sound dynamics="54.44"/>
+        <sound dynamics="54.44"></sound>
         </direction>
       <note default-x="12.47" default-y="-20.00">
         <pitch>
@@ -1423,10 +1423,10 @@
       <direction placement="below">
         <direction-type>
           <dynamics>
-            <f/>
+            <f></f>
             </dynamics>
           </direction-type>
-        <sound dynamics="106.67"/>
+        <sound dynamics="106.67"></sound>
         </direction>
       <note default-x="12.00" default-y="5.00">
         <pitch>
@@ -1722,7 +1722,7 @@
         <stem>down</stem>
         </note>
       <note default-x="26.37" default-y="5.00">
-        <chord/>
+        <chord></chord>
         <pitch>
           <step>G</step>
           <octave>5</octave>
@@ -1733,13 +1733,13 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -1752,7 +1752,7 @@
             <p></p>
             </dynamics>
           </direction-type>
-        <sound dynamics="54.44"/>
+        <sound dynamics="54.44"></sound>
         </direction>
       <note default-x="12.00" default-y="-50.00">
         <pitch>
@@ -2017,7 +2017,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -2148,12 +2148,12 @@
         <stem>up</stem>
         <notations>
           <articulations>
-            <staccato/>
+            <staccato></staccato>
             </articulations>
           </notations>
         </note>
       <note default-x="12.00" default-y="-30.00">
-        <chord/>
+        <chord></chord>
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -2174,12 +2174,12 @@
         <stem>up</stem>
         <notations>
           <articulations>
-            <staccato/>
+            <staccato></staccato>
             </articulations>
           </notations>
         </note>
       <note default-x="42.81" default-y="-35.00">
-        <chord/>
+        <chord></chord>
         <pitch>
           <step>F</step>
           <octave>4</octave>
@@ -2200,12 +2200,12 @@
         <stem>up</stem>
         <notations>
           <articulations>
-            <staccato/>
+            <staccato></staccato>
             </articulations>
           </notations>
         </note>
       <note default-x="73.63" default-y="-40.00">
-        <chord/>
+        <chord></chord>
         <pitch>
           <step>E</step>
           <octave>4</octave>
@@ -2226,12 +2226,12 @@
         <stem>up</stem>
         <notations>
           <articulations>
-            <staccato/>
+            <staccato></staccato>
             </articulations>
           </notations>
         </note>
       <note default-x="104.44" default-y="-45.00">
-        <chord/>
+        <chord></chord>
         <pitch>
           <step>D</step>
           <octave>4</octave>
@@ -2246,10 +2246,10 @@
       <direction placement="below">
         <direction-type>
           <dynamics>
-            <f/>
+            <f></f>
             </dynamics>
           </direction-type>
-        <sound dynamics="106.67"/>
+        <sound dynamics="106.67"></sound>
         </direction>
       <note default-x="12.00" default-y="-50.00">
         <pitch>
@@ -2814,20 +2814,20 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
-        <repeat direction="backward"/>
+        <repeat direction="backward"></repeat>
         </barline>
       </measure>
     </part>
@@ -2864,13 +2864,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -2888,13 +2888,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -2912,7 +2912,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -2928,7 +2928,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -2946,7 +2946,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3013,13 +3013,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3037,13 +3037,13 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3115,13 +3115,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3237,13 +3237,13 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3351,13 +3351,13 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3380,7 +3380,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3396,7 +3396,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3414,7 +3414,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3430,7 +3430,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3492,20 +3492,20 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
-        <repeat direction="backward"/>
+        <repeat direction="backward"></repeat>
         </barline>
       </measure>
     <measure number="16" width="136.26">
       <barline location="left">
         <bar-style>heavy-light</bar-style>
-        <repeat direction="forward"/>
+        <repeat direction="forward"></repeat>
         </barline>
       <note default-x="12.47" default-y="-70.00">
         <pitch>
@@ -3571,7 +3571,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3681,7 +3681,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3697,7 +3697,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3782,13 +3782,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3806,13 +3806,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3830,7 +3830,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3846,7 +3846,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3869,7 +3869,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3931,13 +3931,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3955,13 +3955,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -3979,7 +3979,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -3995,7 +3995,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -4013,13 +4013,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -4132,13 +4132,13 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -4246,13 +4246,13 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>4</duration>
         <voice>1</voice>
         <type>half</type>
@@ -4275,7 +4275,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -4291,7 +4291,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -4309,7 +4309,7 @@
         <stem>down</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -4325,7 +4325,7 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
@@ -4387,14 +4387,14 @@
         <stem>up</stem>
         </note>
       <note>
-        <rest/>
+        <rest></rest>
         <duration>2</duration>
         <voice>1</voice>
         <type>quarter</type>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
-        <repeat direction="backward"/>
+        <repeat direction="backward"></repeat>
         </barline>
       </measure>
     </part>

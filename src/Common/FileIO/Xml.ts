@@ -58,7 +58,7 @@ export class IXmlElement {
     // }
     for (let i: number = 0; i < nodes.length; i += 1) {
       let node: Node = nodes[i];
-      // console.log("node: ", this.elem.nodeName, ">>", node.nodeName, node.nodeType === Node.ELEMENT_NODE);
+      console.log("node: ", this.elem.nodeName, ">>", node.nodeName, node.nodeType === Node.ELEMENT_NODE);
       if (node.nodeType === Node.ELEMENT_NODE &&
         (nameUnset || node.nodeName.toLowerCase() === nodeName)) {
           ret.push(new IXmlElement(node as Element));

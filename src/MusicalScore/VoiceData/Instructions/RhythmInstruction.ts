@@ -46,7 +46,7 @@ export class RhythmInstruction extends AbstractNotationInstruction {
     }
 
     public ToString(): string {
-        return "Rhythm: " + this.rhythm.ToString();
+        return "Rhythm: " + this.rhythm.toString();
     }
 }
 

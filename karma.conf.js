@@ -4,7 +4,6 @@
 module.exports = function (config) {
     'use strict';
     config.set({
-
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '',
 
@@ -25,15 +24,13 @@ module.exports = function (config) {
             included: false
         }, {
             pattern: 'test/data/*.xml',
-            included: true//,
-            //served: true,
-            //watched: true
+            included: true
         }],
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            'test/data/*.xml': ['html2js']
+            'test/data/*.xml': ['xml2js']
         },
 
         // test results reporter to use

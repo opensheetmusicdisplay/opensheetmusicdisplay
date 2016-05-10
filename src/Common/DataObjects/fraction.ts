@@ -64,7 +64,7 @@ export class Fraction {
         this.setRealValue();
     }
 
-    public ToString(): string {
+    public toString(): string {
         return this.numerator + "/" + this.denominator;
     }
 

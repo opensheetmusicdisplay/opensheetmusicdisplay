@@ -135,9 +135,9 @@ export class Note {
     }
     public ToString(): string {
         if (this.pitch !== undefined) {
-            return this.Pitch.ToString() + ", length: " + this.Length.ToString();
+            return this.Pitch.ToString() + ", length: " + this.Length.toString();
         } else {
-          return "rest note, length: " + this.Length.ToString();
+          return "rest note, length: " + this.Length.toString();
         }
     }
     public getAbsoluteTimestamp(): Fraction {

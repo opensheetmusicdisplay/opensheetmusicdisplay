@@ -145,6 +145,7 @@ module.exports = function (grunt) {
     grunt.registerTask('all',     ['typings', 'default']);
     grunt.registerTask('default', ['lint', 'browserify', 'karma:ci']);
     grunt.registerTask('test',    ['lint', 'browserify:debug', 'karma:ci']);
+    grunt.registerTask('fasttest', ['browserify:debug', 'karma:ci']);
     grunt.registerTask('rebuild', ['clean', 'default']);
     grunt.registerTask('publish', ['clean', 'browserify:dist', 'docco']);
 

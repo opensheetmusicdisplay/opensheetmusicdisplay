@@ -49,12 +49,10 @@
         "karma": "",
         "karma-chai": "",
         "karma-mocha": "",
-        "karma-fixture": "",
         "karma-mocha-reporter": "",
         "karma-chrome-launcher": "",
         "karma-firefox-launcher": "",
         "karma-phantomjs-launcher": "",
-        "karma-html2js-preprocessor": "",
-        "karma-json-fixtures-preprocessor": ""
+        "karma-xml2js-preprocessor": ""
     }
 }
