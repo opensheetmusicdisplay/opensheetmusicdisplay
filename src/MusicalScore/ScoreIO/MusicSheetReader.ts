@@ -19,6 +19,7 @@ import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNot
 import {Label} from "../Label";
 
 type RepetitionInstructionReader = any;
+type RepetitionCalculator = any;
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
@@ -33,7 +34,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
   //}
 
   private repetitionInstructionReader: RepetitionInstructionReader;
-  // private repetitionCalculator: RepetitionCalculator;
+  private repetitionCalculator: RepetitionCalculator;
   // private afterSheetReadingModules: IAfterSheetReadingModule[];
   private musicSheet: MusicSheet;
   private completeNumberOfStaves: number = 0;
@@ -168,12 +169,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
       }
     }
 
-    //if (this.repetitionInstructionReader !== undefined) {
-    //  this.repetitionInstructionReader.removeRedundantInstructions();
-    //  if (this.repetitionCalculator !== undefined) {
-    //    this.repetitionCalculator.calculateRepetitions(this.musicSheet, this.repetitionInstructionReader.RepetitionInstructions);
-    //  }
-    //}
+    if (this.repetitionInstructionReader !== undefined) {
+      this.repetitionInstructionReader.removeRedundantInstructions();
+      if (this.repetitionCalculator !== undefined) {
+        this.repetitionCalculator.calculateRepetitions(this.musicSheet, this.repetitionInstructionReader.RepetitionInstructions);
+      }
+    }
     this.musicSheet.checkForInstrumentWithNoVoice();
     this.musicSheet.fillStaffList();
     //this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SheetPlaybackSetting.BeatsPerMinute;
@@ -199,10 +200,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     let counter: number = 0;
     for (let node of partInst) {
       let idNode: IXmlAttribute = node.attribute("id");
-      if (idNode !== undefined) {
+      if (idNode) {
         let currentInstrument: Instrument = instrumentDict[idNode.value];
         let xmlMeasureList: IXmlElement[] = node.elements("measure");
-        console.log("Measures; ", xmlMeasureList.length);
         let instrumentNumberOfStaves: number = 1;
         try {
           instrumentNumberOfStaves = this.getInstrumentNumberOfStavesFromXml(node);
@@ -217,9 +217,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
         currentInstrument.createStaves(instrumentNumberOfStaves);
         instrumentReaders.push(new InstrumentReader(this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
-        //if (this.repetitionInstructionReader !== undefined) {
-        //  this.repetitionInstructionReader.XmlMeasureList[counter] = xmlMeasureList;
-        //}
+        if (this.repetitionInstructionReader !== undefined) {
+          this.repetitionInstructionReader.XmlMeasureList[counter] = xmlMeasureList;
+        }
         counter++;
       }
     }
@@ -481,12 +481,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     let creditElements: IXmlElement[] = root.elements("credit");
     for (let idx: number = 0, len: number = creditElements.length; idx < len; ++idx) {
       let credit: IXmlElement = creditElements[idx];
-      if (credit.attribute("page") === undefined) { return; }
+      if (!credit.attribute("page")) { return; }
       if (credit.attribute("page").value === "1") {
         let creditChild: IXmlElement = undefined;
         if (credit !== undefined) {
           creditChild = credit.element("credit-words");
-          if (creditChild.attribute("justify") === undefined) {
+          if (!creditChild.attribute("justify")) {
             break;
           }
           let creditJustify: string = creditChild.attribute("justify").value;
@@ -616,7 +616,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
   private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument; } {
     let instrumentId: number = 0;
     let instrumentDict: { [_: string]: Instrument; } = {};
-    let currentGroup: InstrumentalGroup = undefined;
+    let currentGroup: InstrumentalGroup;
     try {
       let entryArray: IXmlElement[] = entryList;
       for (let idx: number = 0, len: number = entryArray.length; idx < len; ++idx) {
@@ -750,7 +750,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     let num: number = 0;
     for (let partNode of partInst) {
       let xmlMeasureList: IXmlElement[] = partNode.elements("measure");
-      if (xmlMeasureList !== undefined) {
+      if (xmlMeasureList.length > 0) {
         let xmlMeasure: IXmlElement = xmlMeasureList[0];
         if (xmlMeasure !== undefined) {
           let stavesNode: IXmlElement = xmlMeasure.element("attributes");

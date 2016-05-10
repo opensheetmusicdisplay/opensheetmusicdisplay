@@ -101,7 +101,10 @@ module.exports = function (grunt) {
         },
         // JsHint setup
         jshint: {
-            all: ['Gruntfile.js', 'karma.conf.js']
+            all: [
+                'Gruntfile.js', 'karma.conf.js',
+                'node_modules/karma-musicxml2js-preprocessor/package.json', 'node_modules/karma-musicxml2js-preprocessor/lib/index.js'
+            ]
         },
         // TypeScript Type Definitions
         typings: {

@@ -48,7 +48,7 @@ type repetitionInstructionReader = any;
 export class InstrumentReader {
   constructor(repetitionInstructionReader: repetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
     // (*) this.repetitionInstructionReader = repetitionInstructionReader;
-    this.xmlMeasureList = xmlMeasureList.slice(); // FIXME .ToArray();
+    this.xmlMeasureList = xmlMeasureList;
     this.musicSheet = instrument.GetMusicSheet;
     this.instrument = instrument;
     this.activeClefs = new Array(instrument.Staves.length);
@@ -115,10 +115,9 @@ export class InstrumentReader {
       let xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
       for (let xmlNode of xmlMeasureListArr) {
         if (xmlNode.name === "note") {
-          if (xmlNode.hasAttributes && xmlNode.attribute("print-object") !== undefined && xmlNode.attribute("print-spacing") !== undefined) {
+          if (xmlNode.hasAttributes && xmlNode.attribute("print-object") && xmlNode.attribute("print-spacing")) {
             continue;
           }
-          Logging.log("New Note: ", (xmlNode as any).elem.innerHTML);
           let noteStaff: number = 1;
           if (this.instrument.Staves.length > 1) {
             if (xmlNode.element("staff") !== undefined) {
@@ -143,7 +142,6 @@ export class InstrumentReader {
           let noteDivisions: number = 0;
           let noteDuration: Fraction = new Fraction(0, 1);
           let isTuplet: boolean = false;
-          // Logging.debug("NOTE", (xmlNode as any).elem.innerHTML, xmlNode.element("duration"));
           if (xmlNode.element("duration") !== undefined) {
             noteDivisions = parseInt(xmlNode.element("duration").value, 10);
             if (!isNaN(noteDivisions)) {
@@ -164,21 +162,20 @@ export class InstrumentReader {
           }
 
           let restNote: boolean = xmlNode.element("rest") !== undefined;
-          Logging.log("New note found!", (xmlNode.element("duration") as any).elem, noteDivisions, noteDuration.toString(), restNote);
+          Logging.log("New note found!", noteDivisions, noteDuration.toString(), restNote);
           let isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
             musicTimestamp = previousFraction.clone();
           }
-          let out: {createdNewContainer: boolean, staffEntry: SourceStaffEntry} = this.currentMeasure.findOrCreateStaffEntry(
+          this.currentStaffEntry = this.currentMeasure.findOrCreateStaffEntry(
             musicTimestamp,
             this.inSourceMeasureInstrumentIndex + noteStaff - 1,
             this.currentStaff
-          );
-          this.currentStaffEntry = out.staffEntry;
-          //let newContainerCreated: boolean = out.createdNewContainer;
+          ).staffEntry;
+          Logging.log("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
 
-          if (!this.currentVoiceGenerator.hasVoiceEntry() || !isChord && !isGraceNote && !lastNoteWasGrace || !lastNoteWasGrace && isGraceNote) {
+          if (!this.currentVoiceGenerator.hasVoiceEntry() || (!isChord && !isGraceNote && !lastNoteWasGrace) || (!lastNoteWasGrace && isGraceNote)) {
             this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote);
           }
           if (!isGraceNote && !isChord) {

@@ -178,10 +178,10 @@ export class VoiceGenerator {
         currentStaffEntry.Link = staffEntryLink;
         let linkMusicTimestamp: Fraction = this.currentVoiceEntry.Timestamp.clone();
         let verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = currentMeasure.getVerticalContainerByTimestamp(linkMusicTimestamp);
-        currentStaffEntry = verticalSourceStaffEntryContainer[index];
+        currentStaffEntry = verticalSourceStaffEntryContainer.StaffEntries[index];
         if (currentStaffEntry === undefined) {
             currentStaffEntry = new SourceStaffEntry(verticalSourceStaffEntryContainer, currentStaff);
-            verticalSourceStaffEntryContainer[index] = currentStaffEntry;
+            verticalSourceStaffEntryContainer.StaffEntries[index] = currentStaffEntry;
         }
         currentStaffEntry.VoiceEntries.push(this.currentVoiceEntry);
         staffEntryLink.LinkStaffEntries.push(currentStaffEntry);
@@ -484,7 +484,7 @@ export class VoiceGenerator {
         }
         let graceNode: IXmlElement = node.element("grace");
         if (graceNode !== undefined && graceNode.attributes()) {
-            if (graceNode.attribute("slash") !== undefined) {
+            if (graceNode.attribute("slash")) {
                 let slash: string = graceNode.attribute("slash").value;
                 if (slash === "yes") {
                     note.GraceNoteSlash = true;
@@ -529,7 +529,7 @@ export class VoiceGenerator {
                     let type: string = tupletNode.attribute("type").value;
                     if (type === "start") {
                         let tupletNumber: number = 1;
-                        if (tupletNode.attribute("nummber") !== undefined) {
+                        if (tupletNode.attribute("number")) {
                             tupletNumber = parseInt(tupletNode.attribute("number").value, 10);
                         }
                         let tupletLabelNumber: number = 0;
@@ -562,7 +562,7 @@ export class VoiceGenerator {
                         this.openTupletNumber = tupletNumber;
                     } else if (type === "stop") {
                         let tupletNumber: number = 1;
-                        if (tupletNode.attribute("number") !== undefined) {
+                        if (tupletNode.attribute("number")) {
                             tupletNumber = parseInt(tupletNode.attribute("number").value, 10);
                         }
                         let tuplet: Tuplet = this.tupletDict[tupletNumber];
@@ -587,7 +587,7 @@ export class VoiceGenerator {
             if (n.hasAttributes) {
                 let type: string = n.attribute("type").value;
                 let tupletnumber: number = 1;
-                if (n.attribute("number") !== undefined) {
+                if (n.attribute("number")) {
                     tupletnumber = parseInt(n.attribute("number").value, 10);
                 }
                 let noTupletNumbering: boolean = isNaN(tupletnumber);

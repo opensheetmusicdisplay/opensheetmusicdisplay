@@ -52,7 +52,6 @@
         "karma-mocha-reporter": "",
         "karma-chrome-launcher": "",
         "karma-firefox-launcher": "",
-        "karma-phantomjs-launcher": "",
-        "karma-xml2js-preprocessor": ""
+        "karma-phantomjs-launcher": ""
     }
 }
