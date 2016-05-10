@@ -1,14 +1,7 @@
-// TODO: implement operators!
+// FIXME: Check the operators' names
+// FIXME: This class should probably be immutable?
 
-export class Fraction /*implements IComparable, IComparer<Fraction> */{
-   constructor(numerator: number = 0, denominator: number = 1, simplify: boolean = true) {
-       this.numerator = numerator;
-       this.denominator = denominator;
-
-       if (simplify) { this.simplify(); }
-       this.setRealValue();
-   }
-
+export class Fraction {
     private static maximumAllowedNumber: number = 46340;
     private numerator: number = 0;
     private denominator: number = 1;
@@ -23,8 +16,8 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
     }
 
     public static Equal(f1: Fraction, f2: Fraction): boolean {
-      // FIXME
-      return f1.Denominator === f2.Denominator && f1.Numerator === f2.Numerator;
+        // FIXME
+        return f1.Denominator === f2.Denominator && f1.Numerator === f2.Numerator;
     }
 
     public static CreateFractionFromFraction(fraction: Fraction): Fraction {
@@ -61,6 +54,14 @@ export class Fraction /*implements IComparable, IComparer<Fraction> */{
         }
 
         return a;
+    }
+
+    constructor(numerator: number = 0, denominator: number = 1, simplify: boolean = true) {
+        this.numerator = numerator;
+        this.denominator = denominator;
+
+        if (simplify) { this.simplify(); }
+        this.setRealValue();
     }
 
     public ToString(): string {

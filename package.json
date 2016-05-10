@@ -30,7 +30,7 @@
         "chai": "",
         "mocha": "",
         "tsify": "",
-        "tslint": "",
+        "tslint": "3.8.0",
         "typescript": "",
         "browserify": "",
         "phantomjs-prebuilt": "",

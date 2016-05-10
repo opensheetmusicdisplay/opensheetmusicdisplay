@@ -17,14 +17,6 @@ export enum AccidentalEnum {
 }
 
 export class Pitch {
-    constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum) {
-        this.fundamentalNote = fundamentalNote;
-        this.octave = octave;
-        this.accidental = accidental;
-        this.halfTone = <number>(fundamentalNote) + (octave + Pitch.octXmlDiff) * 12 + <number>accidental;
-        this.frequency = Pitch.calcFrequency(this);
-    }
-
     public static pitchEnumValues: NoteEnum[] = [
         NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B,
     ];
@@ -134,6 +126,14 @@ export class Pitch {
             fundamentalNote = <NoteEnum>(halftone - 1);
         }
         return fundamentalNote;
+    }
+
+    constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum) {
+        this.fundamentalNote = fundamentalNote;
+        this.octave = octave;
+        this.accidental = accidental;
+        this.halfTone = <number>(fundamentalNote) + (octave + Pitch.octXmlDiff) * 12 + <number>accidental;
+        this.frequency = Pitch.calcFrequency(this);
     }
 
     public get Octave(): number {

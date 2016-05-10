@@ -2,6 +2,14 @@ import {Instrument} from "../Instrument";
 import {VoiceEntry} from "./VoiceEntry";
 
 export class Voice {
+    private voiceEntries: VoiceEntry[] = [];
+    private parent: Instrument;
+    private visible: boolean;
+    private audible: boolean;
+    private following: boolean;
+    private voiceId: number;
+    private volume: number = 1;
+
     constructor(parent: Instrument, voiceId: number) {
         this.parent = parent;
         this.visible = true;
@@ -9,13 +17,7 @@ export class Voice {
         this.following = true;
         this.voiceId = voiceId;
     }
-    private voiceEntries: VoiceEntry[] = new Array();
-    private parent: Instrument;
-    private visible: boolean;
-    private audible: boolean;
-    private following: boolean;
-    private voiceId: number;
-    private volume: number = 1;
+
     public get VoiceEntries(): VoiceEntry[] {
         return this.voiceEntries;
     }
