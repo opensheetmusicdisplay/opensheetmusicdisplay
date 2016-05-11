@@ -162,7 +162,7 @@ export class InstrumentReader {
           }
 
           let restNote: boolean = xmlNode.element("rest") !== undefined;
-          Logging.log("New note found!", noteDivisions, noteDuration.toString(), restNote);
+          //Logging.log("New note found!", noteDivisions, noteDuration.toString(), restNote);
           let isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
@@ -173,7 +173,7 @@ export class InstrumentReader {
             this.inSourceMeasureInstrumentIndex + noteStaff - 1,
             this.currentStaff
           ).staffEntry;
-          Logging.log("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
+          //Logging.log("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
 
           if (!this.currentVoiceGenerator.hasVoiceEntry() || (!isChord && !isGraceNote && !lastNoteWasGrace) || (!lastNoteWasGrace && isGraceNote)) {
             this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote);

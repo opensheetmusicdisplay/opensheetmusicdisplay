@@ -30,6 +30,10 @@ declare namespace Vex {
 
     export class StaveNote {
       constructor(note_struct: any);
+
+      public getNoteHeadBounds(): any;
+      public getNoteHeadBeginX(): number;
+      public getNoteHeadEndX(): number;
     }
 
     export class Stave {

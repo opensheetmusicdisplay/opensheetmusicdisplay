@@ -85,7 +85,7 @@ export class VoiceGenerator {
     ): Note {
         this.currentStaffEntry = parentStaffEntry;
         this.currentMeasure = parentMeasure;
-        Logging.debug("read called:", restNote);
+        //Logging.debug("read called:", restNote);
         try {
             this.currentNote = restNote
                 ? this.addRestNote(noteDuration, divisions)
@@ -265,7 +265,7 @@ export class VoiceGenerator {
     private addSingleNote(
         node: IXmlElement, noteDuration: number, divisions: number, graceNote: boolean, chord: boolean, guitarPro: boolean
     ): Note {
-        Logging.debug("addSingleNote called");
+        //Logging.debug("addSingleNote called");
         let noteAlter: AccidentalEnum = AccidentalEnum.NONE;
         let noteStep: NoteEnum = NoteEnum.C;
         let noteOctave: number = 0;

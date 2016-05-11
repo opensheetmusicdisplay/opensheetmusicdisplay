@@ -1,7 +1,12 @@
 import Vex = require("vexflow");
+import StaveNote = Vex.Flow.StaveNote;
+
+// The type PositionAndShapeInfo is still to be ported in TypeScript
+type PositionAndShapeInfo = any;
+declare var PositionAndShapeInfo: any;
 
 /* TODO
- * Take into account StaveModifiers
+ * Complete support for StaveModifiers
  * Take into account Ties and Slurs
  */
 
@@ -47,6 +52,39 @@ export class MeasureSizeCalculator {
     }
     this.format();
   }
+
+  // Returns the shape of the note head at position _index_ inside _note_.
+  // Remember: in VexFlow, StaveNote correspond to PhonicScore's VoiceEntries.
+  //  public static getVexFlowNoteHeadShape(note: StaveNote, index: number): PositionAndShapeInfo {
+  //  // note_heads is not public in StaveNote, but we access it anyway...
+  //  let bb = note.note_heads[index].getBoundingBox();
+  //  let info: any = new PositionAndShapeInfo();
+  //  let x: number = bb.getX();
+  //  let y: number = bb.getY();
+  //  let w: number = bb.getW();
+  //  let h: number = bb.getH();
+  //  info.Left = info.Right = bb.getW() / 2;
+  //  info.Top = info.Bottom = bb.getH() / 2;
+  //  info.X = bb.getX() + info.Left;
+  //  info.Y = bb.getY() + info.Bottom;
+  //  return info;
+  //}
+
+  // Returns the shape of all the note heads inside a StaveNote.
+  // Remember: in VexFlow, StaveNote correspond to PhonicScore's VoiceEntries.
+  public static getVexFlowStaveNoteShape(note: StaveNote): PositionAndShapeInfo {
+    let info: any = new PositionAndShapeInfo();
+    let bounds: any = note.getNoteHeadBounds();
+    let beginX: number = note.getNoteHeadBeginX();
+    let endX: number = note.getNoteHeadEndX();
+
+    info.Left = info.Right = (endX - beginX) / 2;
+    info.Top = info.Bottom = (bounds.y_top - bounds.y_bottom) / 2;
+    info.X = beginX + info.Left;
+    info.Y = bounds.y_bottom + info.Bottom;
+    return info;
+  }
+
 
   public static getClefBoundingBox(clef: Vex.Flow.Clef): Vex.Flow.BoundingBox {
     let clef2: any = clef;
