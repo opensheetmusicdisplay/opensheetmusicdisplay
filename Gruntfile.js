@@ -54,18 +54,20 @@ module.exports = function (grunt) {
             }
         },
         // Uglify
-        /*uglify: {
-          options: {
-            compress: {
-              drop_console: true
+        uglify: {
+            options: {
+                compress: {
+                    drop_console: true
+                },
+                banner: banner,
+                mangleProperties: true
+            },
+            my_target: {
+                files: {
+                    'build/osmd.min.js': ['build/osmd.js']
+                }
             }
-          },
-          my_target: {
-            files: {
-              'build/osmd.js': ['src/input.js']
-            }
-          }
-        },*/
+        },
         // Karma setup
         karma: {
             // For continuous integration
@@ -143,10 +145,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
 
     // Register tasks
     grunt.registerTask('all',     ['typings', 'default']);
-    grunt.registerTask('default', ['lint', 'browserify', 'karma:ci']);
+    grunt.registerTask('default', ['lint', 'browserify', 'karma:ci', 'uglify']);
     grunt.registerTask('test',    ['lint', 'browserify:debug', 'karma:ci']);
     grunt.registerTask('fasttest', ['browserify:debug', 'karma:ci']);
     grunt.registerTask('rebuild', ['clean', 'default']);

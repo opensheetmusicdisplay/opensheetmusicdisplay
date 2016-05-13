@@ -106,8 +106,7 @@ export class MeasureSizeCalculator {
     }
 
     for (let i: number = 0, len: number = outline.length; i < len; i += 3) {
-      //console.log(i, outline[i]);
-      switch (<string> outline[i]) {
+      switch (outline[i] as string) {
         case "m": update(i); break;
         case "l": update(i); break;
         case "q": i += 2; update(i); break;
@@ -123,6 +122,16 @@ export class MeasureSizeCalculator {
         (ymin - ymax) * scale
     );
   }
+
+
+  public static getKeySignatureBoundingBox(sig: any): Vex.Flow.BoundingBox {
+    let width: number = sig.getWidth();
+    return new Vex.Flow.BoundingBox(
+        0, 0,
+        width, 0
+    );
+  }
+
 
   public getWidth(): number {
     // begin_modifiers + voices + end_modifiers
@@ -174,8 +183,6 @@ export class MeasureSizeCalculator {
     // TODO voicesBoundingBox.getW() should be similar to this.voicesWidth?
     //console.log("this.width", this.voicesWidth);
     //console.log("voicesBB", voicesBoundingBox.getW());
-
-
     //this.height = voicesBoundingBox.getH(); FIXME
 
     // Consider clefs
