@@ -27,8 +27,8 @@
         "fft": "0.2.1",
         "vexflow": "",
 
-        "chai": "",
-        "mocha": "",
+        "chai": "^3.4.1",
+        "mocha": "^2.3.4",
         "tsify": "",
         "tslint": "3.8.0",
         "typescript": "",
@@ -52,6 +52,9 @@
         "karma-mocha-reporter": "",
         "karma-chrome-launcher": "",
         "karma-firefox-launcher": "",
-        "karma-phantomjs-launcher": ""
+        "karma-phantomjs-launcher": "",
+
+        "submodules/karma-musicxml2js-preprocessor": "",
+        "submodules/karma-mxl2js-preprocessor": ""
     }
 }

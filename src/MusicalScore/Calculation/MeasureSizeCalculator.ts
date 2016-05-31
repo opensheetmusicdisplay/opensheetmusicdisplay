@@ -125,11 +125,19 @@ export class MeasureSizeCalculator {
 
 
   public static getKeySignatureBoundingBox(sig: any): Vex.Flow.BoundingBox {
+    // FIXME: Maybe use Vex.Flow.keySignature(this.keySpec);
+    let stave: Vex.Flow.Stave = sig.getStave();
     let width: number = sig.getWidth();
-    return new Vex.Flow.BoundingBox(
-        0, 0,
-        width, 0
-    );
+    let maxLine: number = 1;
+    let minLine: number = 1;
+    for (let acc of sig.accList) {
+      maxLine = Math.max(acc.line, maxLine);
+      minLine = Math.min(acc.line, minLine);
+    }
+    let y: number = sig.getStave().getYForLine(minLine);
+    let height: number = stave.getSpacingBetweenLines() * (maxLine - minLine);
+    let x: number = 0; // FIXME
+    return new Vex.Flow.BoundingBox(x, y, width, height);
   }
 
 

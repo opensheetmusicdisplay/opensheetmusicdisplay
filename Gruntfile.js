@@ -11,8 +11,8 @@ module.exports = function (grunt) {
     // Additional manual typings:
         typings = [
             'typings/browser.d.ts',
-            'typings/vexflow.d.ts',
-            'typings/fft.d.ts'
+            'typings/vexflow.d.ts'
+            // 'typings/fft.d.ts'
         ],
     // Paths
         src = ['src/**/*.ts'],
@@ -47,10 +47,10 @@ module.exports = function (grunt) {
                 }
             },
             options: {
-                plugin: ['tsify'],
-                browserifyOptions: {
-                    standalone: 'MeasureSizeCalculator'
-                }
+                plugin: ['tsify']//,
+                // browserifyOptions: {
+                //     standalone: 'MeasureSizeCalculator'
+                // }
             }
         },
         // Uglify
@@ -60,7 +60,9 @@ module.exports = function (grunt) {
                     drop_console: true
                 },
                 banner: banner,
-                mangleProperties: true
+                mangle: true,
+                mangleProperties: true,
+                preserveComments: 'all'
             },
             my_target: {
                 files: {
@@ -105,7 +107,7 @@ module.exports = function (grunt) {
         jshint: {
             all: [
                 'Gruntfile.js', 'karma.conf.js',
-                'node_modules/karma-musicxml2js-preprocessor/package.json', 'node_modules/karma-musicxml2js-preprocessor/lib/index.js'
+                'submodules/karma-musicxml2js-preprocessor/package.json', 'submodules/karma-musicxml2js-preprocessor/lib/index.js'
             ]
         },
         // TypeScript Type Definitions
