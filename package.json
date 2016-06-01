@@ -54,7 +54,7 @@
         "karma-firefox-launcher": "",
         "karma-phantomjs-launcher": "",
 
-        "submodules/karma-musicxml2js-preprocessor": "",
-        "submodules/karma-mxl2js-preprocessor": ""
+        "karma-musicxml2js-preprocessor": "file:submodules/karma-musicxml2js-preprocessor",
+        "karma-mxl2js-preprocessor": "file:submodules/karma-mxl2js-preprocessor"
     }
 }
