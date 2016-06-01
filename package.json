@@ -24,7 +24,7 @@
     },
     "homepage": "http://opensheetmusicdisplay.org",
     "dependencies": {
-        "fft": "0.2.1",
+        "jszip": "",
         "vexflow": "",
 
         "chai": "^3.4.1",

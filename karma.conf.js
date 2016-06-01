@@ -25,13 +25,16 @@ module.exports = function (config) {
         }, {
             pattern: 'test/data/*.xml',
             included: true
+        }, {
+            pattern: 'test/data/*.mxl.str',
+            included: true
         }],
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             'test/data/*.xml': ['musicxml2js'],
-            'test/data/*.mxl': ['mxl2js']
+            'test/data/*.mxl.str': ['mxl2js']
         },
 
         // test results reporter to use

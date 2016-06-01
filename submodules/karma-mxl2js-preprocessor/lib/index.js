@@ -8,11 +8,12 @@ var createPreprocessor = function (logger, basePath) {
     'use strict';
     return function (content, file, done) {
         var path = file.originalPath.replace(basePath + '/', ''),
-            filename = path;
+            filename = path.replace('.str', '');
 
         file.path = file.path + '.js';
         done("window.__mxl__ = window.__mxl__ || {};\nwindow.__mxl__['" +
-                filename + "'] = '" + escapeString(content) + "';\n"
+                // filename + "'] = '" + escapeString(content) + "';\n"
+                filename + "'] = window.atob('" + content + "');\n"
               );
     };
 };
