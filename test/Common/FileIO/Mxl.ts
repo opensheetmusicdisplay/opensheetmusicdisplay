@@ -1,34 +1,45 @@
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
 import { extractSheetFromMxl } from "../../../src/Common/FileIO/Mxl.ts";
 
-describe("MXL Tests", () => {
-  // Initialize variables
-  let path: string = "test/data/MozartTrio.mxl";
-  // let score: IXmlElement;
 
+describe("MXL Tests", () => {
+  // Load the mxl file
   function getSheet(filename: string): string {
-    console.log(((window as any).__mxl__));
     return ((window as any).__mxl__)[filename];
   }
 
-  before((): void => {
-      // Load the xml file
-      let mxl: string = getSheet(path);
+  // Generates a test for a mxl file name
+  function testFile(scoreName: string): void {
+    it(scoreName, (done: MochaDone) => {
+      // Load the xml file content
+      let mxl: string = getSheet("test/data/" + scoreName + ".mxl");
       chai.expect(mxl).to.not.be.undefined;
-      extractSheetFromMxl(mxl).then(
-        (elem: IXmlElement) => {
-          console.log("success!", elem);
+      // Extract XML from MXL
+      // Warning, the sheet is loaded asynchronously,
+      // (with Promises), thus we need a little hack to
+      // make Mocha work asynch. with "done()"
+      extractSheetFromMxl(
+        mxl,
+        (score: IXmlElement) => {
+          try {
+            chai.expect(score).to.not.be.undefined;
+            chai.expect(score.name).to.equal("score-partwise");
+          } catch (e) {
+            return done(e);
+          }
+          done();
         },
         (reason: any) => {
-          chai.assert.fail(0, 1, reason.message);
+          done(reason.message);
         }
-      );
-      // score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-      // // chai.expect(score).to.not.be.undefined;
-      // sheet = reader.createMusicSheet(score, path);
-  });
-  it("Success", (done: MochaDone) => {
-    chai.expect(extractSheetFromMxl).to.equal(extractSheetFromMxl);
-    done();
-  });
+      )
+    });
+  }
+
+  // Test all the following mxl files:
+  let scores: string[] = ["MozartTrio"];
+  for (let score of scores) {
+    testFile(score);
+  }
+
 });

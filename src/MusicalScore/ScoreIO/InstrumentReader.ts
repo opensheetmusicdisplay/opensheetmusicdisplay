@@ -707,7 +707,7 @@ export class InstrumentReader {
 
   private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
     // FIXME TODO
-    Logging.debug("saveAbstractInstructionList still to implement! See InstrumentReader.ts");
+    // Logging.debug("saveAbstractInstructionList still to implement! See InstrumentReader.ts");
   }
 
   /*private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
