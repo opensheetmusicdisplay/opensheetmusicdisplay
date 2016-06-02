@@ -15,24 +15,18 @@ describe("MXL Tests", () => {
       let mxl: string = getSheet("test/data/" + scoreName + ".mxl");
       chai.expect(mxl).to.not.be.undefined;
       // Extract XML from MXL
-      // Warning, the sheet is loaded asynchronously,
-      // (with Promises), thus we need a little hack to
-      // make Mocha work asynch. with "done()"
-      extractSheetFromMxl(
-        mxl,
+      // Warning: the sheet is loaded asynchronously,
+      // (with Promises), thus we need a little fix
+      // in the end with 'then(null, done)' to
+      // make Mocha work asynchronously
+      extractSheetFromMxl(mxl).then(
         (score: IXmlElement) => {
-          try {
-            chai.expect(score).to.not.be.undefined;
-            chai.expect(score.name).to.equal("score-partwise");
-          } catch (e) {
-            return done(e);
-          }
+          chai.expect(score).to.not.be.undefined;
+          chai.expect(score.name).to.equal("score-partwise");
           done();
         },
-        (reason: any) => {
-          done(reason.message);
-        }
-      )
+        (exc: any) => { throw exc; }
+      ).then(undefined, done);
     });
   }
 
