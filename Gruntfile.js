@@ -151,12 +151,12 @@ module.exports = function (grunt) {
 
     // Register tasks
     grunt.registerTask('all',     ['typings', 'default']);
+    grunt.registerTask('start',   ['typings']);
     grunt.registerTask('default', ['lint', 'browserify', 'karma:ci', 'uglify']);
     grunt.registerTask('test',    ['lint', 'browserify:debug', 'karma:ci']);
     grunt.registerTask('fasttest', ['browserify:debug', 'karma:ci']);
     grunt.registerTask('rebuild', ['clean', 'default']);
     grunt.registerTask('publish', ['clean', 'browserify:dist', 'docco']);
-
     grunt.registerTask('lint',    ['jshint', 'tslint']);
     // Fix these in the future:
     // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);

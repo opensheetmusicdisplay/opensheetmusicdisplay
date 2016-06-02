@@ -3,6 +3,7 @@
     "target": "ES5"
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "typings"
   ]
 }

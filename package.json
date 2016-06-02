@@ -4,7 +4,7 @@
     "description": "Open Sheet Music Display library",
     "main": "",
     "scripts": {
-        "start": "grunt typings",
+        "start": "grunt start",
         "test": "grunt test"
     },
     "repository": {
@@ -39,7 +39,7 @@
         "grunt-karma": "",
         "grunt-docco": "",
         "grunt-tslint": "",
-        "grunt-typings": "",
+        "grunt-typings": "0.1.4",
         "grunt-browserify": "",
         "grunt-contrib-clean": "",
         "grunt-contrib-watch": "",
