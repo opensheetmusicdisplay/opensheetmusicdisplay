@@ -1,8 +1,5 @@
 import { IXmlElement } from "./Xml";
 import JSZip = require("jszip");
-// typings for JSZip module
-// type JSZip = any;
-// declare var JSZip: any;
 
 export function extractSheetFromMxl(data: string): any {
   "use strict";

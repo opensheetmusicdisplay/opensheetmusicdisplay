@@ -107,7 +107,7 @@ module.exports = function (grunt) {
         jshint: {
             all: [
                 'Gruntfile.js', 'karma.conf.js',
-                'submodules/karma-musicxml2js-preprocessor/package.json', 'submodules/karma-musicxml2js-preprocessor/lib/index.js'
+                'submodules/**/*.json', 'submodules/**/*.js'
             ]
         },
         // TypeScript Type Definitions
