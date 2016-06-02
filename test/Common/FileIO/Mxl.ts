@@ -19,15 +19,18 @@ function extractSheetFromMxl(data: string): any {
     let rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
     console.log("success..", rootFile);
     return zip.file(rootFile).async("string");
-  }).then((content: string) => {
-    console.log("success...", content);
-    let parser: DOMParser = new DOMParser();
-    let doc: Document = parser.parseFromString(content, "text/xml");
-    console.log("success...", doc);
-    return new IXmlElement(doc.documentElement);
-  }, (reason: any) => {
-    chai.assert.fail(0, 1, reason.message);
-  });
+  }).then(
+    (content: string) => {
+      console.log("success...", content);
+      let parser: DOMParser = new DOMParser();
+      let doc: Document = parser.parseFromString(content, "text/xml");
+      console.log("success...", doc);
+      return new IXmlElement(doc.documentElement);
+    },
+    (reason: any) => {
+      chai.assert.fail(0, 1, reason.message);
+    }
+  );
 }
 
 describe("MXL Tests", () => {
@@ -44,11 +47,14 @@ describe("MXL Tests", () => {
       // Load the xml file
       let mxl: string = getSheet(path);
       chai.expect(mxl).to.not.be.undefined;
-      extractSheetFromMxl(mxl).then((elem: any) => {
-        console.log("success!", elem);
-      }, (reason: any) => {
-        chai.assert.fail(0, 1, reason.message);
-      });
+      extractSheetFromMxl(mxl).then(
+        (elem: any) => {
+          console.log("success!", elem);
+        },
+        (reason: any) => {
+          chai.assert.fail(0, 1, reason.message);
+        }
+      );
       // score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
       // // chai.expect(score).to.not.be.undefined;
       // sheet = reader.createMusicSheet(score, path);
