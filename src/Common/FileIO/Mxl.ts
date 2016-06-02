@@ -2,6 +2,16 @@ import { IXmlElement } from "./Xml";
 import { Promise } from "es6-promise";
 import JSZip = require("jszip");
 
+// Usage for extractSheetMusicFromMxl:
+// extractSheetFromMxl(" *** binary content *** ").then(
+//   (score: IXmlElement) => {
+//     // Success! use the score here!
+//   },
+//   (error: any) => {
+//     // There was an error.
+//     // Handle it here.
+//   }
+// )
 export function extractSheetFromMxl(data: string): Promise<any> {
   "use strict";
   // _zip_ must be of type 'any' for now, since typings for JSZip are not up-to-date
@@ -27,11 +37,19 @@ export function extractSheetFromMxl(data: string): Promise<any> {
   ).then(
     (content: string) => {
       let parser: DOMParser = new DOMParser();
-      let doc: Document = parser.parseFromString(content, "text/xml");
-      return Promise.resolve(new IXmlElement(doc.documentElement));
+      let xml: Document = parser.parseFromString(content, "text/xml");
+      let doc: IXmlElement = new IXmlElement(xml.documentElement);
+      return Promise.resolve(doc);
     },
     (err: any) => {
       throw err;
+    }
+  ).then(
+    (content: IXmlElement) => {
+      return Promise.resolve(content);
+    },
+    (err: any) => {
+      throw new Error("extractSheetFromMxl: " + err.message);
     }
   );
 }

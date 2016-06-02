@@ -36,4 +36,16 @@ describe("MXL Tests", () => {
     testFile(score);
   }
 
+  // Test failure
+  it("Corrupted file", (done: MochaDone) => {
+    extractSheetFromMxl("").then(
+      (score: IXmlElement) => {
+        chai.expect(score).to.not.be.undefined;
+        chai.expect(score.name).to.equal("score-partwise");
+        done(new Error("Empty zip file was loaded correctly. How is that even possible?"));
+      },
+      (exc: any) => { done(); }
+    );
+  });
+
 });
