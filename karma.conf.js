@@ -28,6 +28,11 @@ module.exports = function (config) {
         }, {
             pattern: 'test/data/*.mxl.str',
             included: true
+        }, {
+            pattern: 'test/data/*.mxl',
+            included: false,
+            watched: false,
+            served: true
         }],
 
         // preprocess matching files before serving them to the browser

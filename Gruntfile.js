@@ -131,6 +131,7 @@ module.exports = function (grunt) {
                 src: [
                     '<%= outputDir.build %>',
                     '<%= outputDir.dist %>',
+                    'node-modules',
                     '.tscache',
                     'src/**/*.js', 'test/**/*.js'
                 ]

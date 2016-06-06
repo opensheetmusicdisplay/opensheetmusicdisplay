@@ -72,8 +72,7 @@ describe("Measure Size Calculator Tests", () => {
           let clef: Vex.Flow.Clef = new Vex.Flow.Clef(t);
           stave2.addModifier(clef, Vex.Flow.StaveModifier.Position.BEGIN);
           stave2.format();
-          // (*&^%$#@) //
-          // FIXME HERE? NaN FIXME FIXME FIXME //
+
           clef.setStave(stave2);
           let bb: Vex.Flow.BoundingBox =
               MeasureSizeCalculator.getClefBoundingBox(clef);
