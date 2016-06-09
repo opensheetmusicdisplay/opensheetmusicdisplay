@@ -1,61 +1,59 @@
 {
-    "name": "opensheetmusicdisplay",
-    "version": "0.0.0",
-    "description": "Open Sheet Music Display library",
-    "main": "",
-    "scripts": {
-        "start": "grunt start",
-        "test": "grunt test"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
-    },
-    "keywords": [
-        "sheet",
-        "music",
-        "vexflow",
-        "musicxml"
-    ],
-    "author": "PhonicScore",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
-    },
-    "homepage": "http://opensheetmusicdisplay.org",
-    "dependencies": {
-        "jszip": "",
-        "vexflow": "",
-        "es6-promise": "",
-
-        "chai": "^3.4.1",
-        "mocha": "^2.3.4",
-        "tsify": "",
-        "tslint": "3.8.0",
-        "typescript": "",
-        "browserify": "",
-        "phantomjs-prebuilt": "",
-
-        "grunt": "",
-        "grunt-karma": "",
-        "grunt-docco": "",
-        "grunt-tslint": "",
-        "grunt-typings": "0.1.4",
-        "grunt-browserify": "",
-        "grunt-contrib-clean": "",
-        "grunt-contrib-watch": "",
-        "grunt-contrib-uglify": "",
-        "grunt-contrib-jshint": "",
-
-        "karma": "",
-        "karma-chai": "",
-        "karma-mocha": "",
-        "karma-mocha-reporter": "",
-        "karma-chrome-launcher": "",
-        "karma-firefox-launcher": "",
-        "karma-phantomjs-launcher": "",
-
-        "karma-musicxml2js-preprocessor": "file:submodules/karma-musicxml2js-preprocessor",
-        "karma-mxl2js-preprocessor": "file:submodules/karma-mxl2js-preprocessor"
-    }
+  "name": "opensheetmusicdisplay",
+  "version": "0.0.0",
+  "description": "Open Sheet Music Display library",
+  "main": "",
+  "scripts": {
+    "start": "grunt start",
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
+  },
+  "keywords": [
+    "sheet",
+    "music",
+    "vexflow",
+    "musicxml"
+  ],
+  "author": "PhonicScore",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
+  },
+  "homepage": "http://opensheetmusicdisplay.org",
+  "dependencies": {
+    "jszip": "",
+    "vexflow": "",
+    "es6-promise": "",
+    "chai": "^3.4.1",
+    "mocha": "^2.3.4",
+    "tsify": "",
+    "tslint": "3.8.0",
+    "typescript": "",
+    "browserify": "",
+    "phantomjs-prebuilt": "",
+    "grunt": "",
+    "grunt-karma": "",
+    "grunt-docco": "",
+    "grunt-tslint": "",
+    "grunt-typings": "0.1.4",
+    "grunt-browserify": "",
+    "grunt-contrib-clean": "",
+    "grunt-contrib-watch": "",
+    "grunt-contrib-uglify": "",
+    "grunt-contrib-jshint": "",
+    "karma": "",
+    "karma-chai": "",
+    "karma-mocha": "",
+    "karma-mocha-reporter": "",
+    "karma-chrome-launcher": "",
+    "karma-firefox-launcher": "",
+    "karma-phantomjs-launcher": ""
+  },
+  "devDependencies": {
+    "karma-xml2js-preprocessor": "",
+    "karma-mxl2js-preprocessor": "file:submodules/karma-mxl2js-preprocessor"
+  }
 }
