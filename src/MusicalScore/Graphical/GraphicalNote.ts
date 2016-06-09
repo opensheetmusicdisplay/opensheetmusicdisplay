@@ -6,6 +6,7 @@ import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/octaveS
 import {Pitch} from "../../Common/DataObjects/pitch";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
+import {MusicSheetCalculator} from "./MusicSheetCalculator";
 export class GraphicalNote extends GraphicalObject {
     constructor(note: Note, parent: GraphicalStaffEntry) {
         this.SourceNote = note;

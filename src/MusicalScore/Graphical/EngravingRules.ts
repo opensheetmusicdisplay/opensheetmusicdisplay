@@ -1,4 +1,6 @@
-﻿import PagePlacementEnum = PhonicScore.MusicalScore.Graphical.SheetData.PagePlacementEnum;
+﻿import {PagePlacementEnum} from "./GraphicalMusicPage";
+import {MusicSymbol} from "./MusicSymbol";
+import {FontInfo} from "./FontInfo";
 export class EngravingRules {
     private static rules: EngravingRules;
     private static unit: number = 1.0;
@@ -132,8 +134,8 @@ export class EngravingRules {
     private subMeasureXSpacingThreshold: number;
     private measureDynamicsMaxScalingFactor: number;
     private maxInstructionsConstValue: number;
-    private noteDistances: number[] = 1.0,1.0,1.3,1.6,2.0,2.5,3.0,4.0;
-    private noteDistancesScalingFactors: number[] = 1.0,2.0,4.0,8.0,16.0,32.0,64.0,128.0;
+    private noteDistances: number[] = [1.0,1.0,1.3,1.6,2.0,2.5,3.0,4.0];
+    private noteDistancesScalingFactors: number[] = [1.0,2.0,4.0,8.0,16.0,32.0,64.0,128.0];
     private durationDistanceDict: Dictionary<number, number> = new Dictionary<number, number>();
     private durationScalingDistanceDict: Dictionary<number, number> = new Dictionary<number, number>();
     constructor() {

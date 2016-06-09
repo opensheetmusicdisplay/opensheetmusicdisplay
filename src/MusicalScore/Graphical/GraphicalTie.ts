@@ -4,10 +4,7 @@ export class GraphicalTie {
     private tie: Tie;
     private startNote: GraphicalNote;
     private endNote: GraphicalNote;
-    constructor(tie: Tie) {
-        this.tie = tie;
-    }
-    constructor(tie: Tie, start: GraphicalNote, end: GraphicalNote) {
+    constructor(tie: Tie, start: GraphicalNote = null, end: GraphicalNote = null) {
         this.tie = tie;
         this.startNote = start;
         this.endNote = end;

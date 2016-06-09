@@ -3,6 +3,7 @@ import {TextAlignment} from "../../Common/Enums/TextAlignment";
 import {Clickable} from "./Clickable";
 import {BoundingBox} from "./BoundingBox";
 import {EngravingRules} from "./EngravingRules";
+import {MusicSheetCalculator} from "./MusicSheetCalculator";
 export class GraphicalLabel extends Clickable {
     private label: Label;
     constructor(label: Label, textHeight: number, alignment: TextAlignment) {

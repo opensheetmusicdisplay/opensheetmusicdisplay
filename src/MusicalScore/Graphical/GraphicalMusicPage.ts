@@ -4,6 +4,7 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import {MusicSystem} from "./MusicSystem";
 import {EngravingRules} from "./EngravingRules";
 import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 export class GraphicalMusicPage extends GraphicalObject {
     private musicSystems: List<MusicSystem> = new List<MusicSystem>();
     private labels: List<GraphicalLabel> = new List<GraphicalLabel>();
