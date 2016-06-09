@@ -1,5 +1,5 @@
-﻿import PointF_2D = PhonicScore.Common.DataObjects.PointF_2D;
-import {OutlineAndFillStyleEnum} from "./DrawingEnums";
+﻿import {OutlineAndFillStyleEnum} from "./DrawingEnums";
+import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
 export class GraphicalLine {
     private start: PointF_2D;
     private end: PointF_2D;

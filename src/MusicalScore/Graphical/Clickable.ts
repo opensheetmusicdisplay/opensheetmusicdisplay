@@ -1,5 +1,4 @@
-﻿module PhonicScore.MusicalScore.Graphical {
-    export class Clickable extends GraphicalObject {
-        public DataObject: Object;
-    }
+﻿import {GraphicalObject} from "./GraphicalObject";
+export class Clickable extends GraphicalObject {
+    public DataObject: Object;
 }

@@ -1,7 +1,7 @@
 ﻿import {ArgumentOutOfRangeException} from "../Exceptions";
-import PointF_2D = PhonicScore.Common.DataObjects.PointF_2D;
-import SizeF_2D = PhonicScore.Common.DataObjects.SizeF_2D;
-import RectangleF_2D = PhonicScore.Common.DataObjects.RectangleF_2D;
+import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {SizeF_2D} from "../../Common/DataObjects/SizeF_2D";
+import {RectangleF_2D} from "../../Common/DataObjects/RectangleF_2D";
 export class BoundingBox {
         protected isSymbol: boolean = false;
         protected relativePositionHasBeenSet: boolean;

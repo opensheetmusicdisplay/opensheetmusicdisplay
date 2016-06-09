@@ -1,10 +1,11 @@
 ﻿import {Staff} from "../VoiceData/Staff";
 import {BoundingBox} from "./BoundingBox";
 import {Instrument} from "../Instrument";
-import GraphicalObject = PhonicScore.MusicalScore.Graphical.GraphicalObject;
-import StaffMeasure = PhonicScore.MusicalScore.Graphical.SheetData.StaffMeasure;
-import MusicSystem = PhonicScore.MusicalScore.Graphical.SheetData.MusicSystem;
 import {GraphicalLine} from "./GraphicalLine";
+import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
+import {GraphicalObject} from "./GraphicalObject";
+import {StaffMeasure} from "./StaffMeasure";
+import {MusicSystem} from "./MusicSystem";
 export class StaffLine extends GraphicalObject {
     protected measures: List<StaffMeasure> = new List<StaffMeasure>();
     protected staffLines: GraphicalLine[] = new Array(5);
@@ -66,7 +67,7 @@ export class StaffLine extends GraphicalObject {
             var graphicalMeasure: StaffMeasure = this.Measures[idx];
             for (var idx2: number = 0, len2 = graphicalMeasure.StaffEntries.Count; idx2 < len2; ++idx2) {
                 var graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.StaffEntries[idx2];
-                if (Math.Abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X) < 5.0f)
+                if (Math.Abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X) < 5.0)
                 {
                     difference = Math.Abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X);
                     closestStaffentry = graphicalStaffEntry;
