@@ -363,7 +363,7 @@ export class BoundingBox {
         public computeNonOverlappingPosition(placementPsi: BoundingBox, direction: ColDirEnum, position: PointF_2D): void {
             this.RelativePosition = new PointF_2D(position.X, position.Y);
             this.setAbsolutePositionFromParent();
-            var currentPosition: number = 0.0f;
+            var currentPosition: number = 0.0;
             var hasBeenMoved: boolean = false;
             do {
                 switch (direction) {
@@ -398,7 +398,7 @@ export class BoundingBox {
             return null;
         }
         public getObjectsInRegion<T>(region: BoundingBox): IEnumerable<T> {
-            return getObjectsInRegion<T>(region, true);
+            return this.getObjectsInRegion<T>(region, true);
         }
         public getObjectsInRegion<T>(region: BoundingBox, liesInside: boolean): IEnumerable<T> {
             if (this.dataObject instanceof T) {

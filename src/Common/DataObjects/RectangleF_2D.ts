@@ -1,4 +1,6 @@
-﻿export class RectangleF_2D {
+﻿import {SizeF_2D} from "./SizeF_2D";
+import {PointF_2D} from "./PointF_2D";
+export class RectangleF_2D {
     public X: number;
     public Y: number;
     public Width: number;

@@ -11,6 +11,10 @@ import {GraphicalTie} from "./GraphicalTie";
 import {GraphicalObject} from "./GraphicalObject";
 import {StaffMeasure} from "./StaffMeasure";
 import {GraphicalNote} from "./GraphicalNote";
+import {GraphicalChordSymbolContainer} from "./GraphicalChordSymbolContainer";
+import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
+import {AbstractGraphicalInstruction} from "./AbstractGraphicalInstruction";
+import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
 export class GraphicalStaffEntry extends GraphicalObject {
     private graphicalInstructions: List<AbstractGraphicalInstruction> = new List<AbstractGraphicalInstruction>();
     private graphicalTies: List<GraphicalTie> = new List<GraphicalTie>();

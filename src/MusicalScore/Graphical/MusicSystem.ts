@@ -11,6 +11,7 @@ import {StaffMeasure} from "./StaffMeasure";
 import {GraphicalObject} from "./GraphicalObject";
 import {EngravingRules} from "./EngravingRules";
 import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 export class MusicSystem extends GraphicalObject {
     public NeedsToBeRedrawn: boolean = true;
     protected parent: GraphicalMusicPage;
@@ -129,7 +130,7 @@ export class MusicSystem extends GraphicalObject {
             }
             if (instrumentGroup.InstrumentalGroups.Count < 1)
                 continue;
-            createGroupBrackets(instrumentGroup.InstrumentalGroups, staffHeight, recursionDepth + 1);
+            this.createGroupBrackets(instrumentGroup.InstrumentalGroups, staffHeight, recursionDepth + 1);
         }
     }
     public createMusicSystemLabel(instrumentLabelTextHeight: number, systemLabelsRightMargin: number, labelMarginBorderFactor: number): void {
