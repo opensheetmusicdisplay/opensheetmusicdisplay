@@ -1,11 +1,11 @@
-import {OSMDTextAlignment} from "../Common/Enums/osmdTextAlignment";
+import {TextAlignment} from "../Common/Enums/TextAlignment";
 import {OSMDColor} from "../Common/DataObjects/osmdColor";
-import {OSMDFonts} from "../Common/Enums/osmdFonts";
-import {OSMDFontStyles} from "../Common/Enums/osmdFontStyles";
+import {Fonts} from "../Common/Enums/Fonts";
+import {FontStyles} from "../Common/Enums/FontStyles";
 
 export class Label {
     // FIXME contructor
-    constructor(arg1: string/*|FontInfo.MusicFontSymbol*/, alignment?: OSMDTextAlignment) {
+    constructor(arg1: string/*|FontInfo.MusicFontSymbol*/, alignment?: TextAlignment) {
       //if (arg1 instanceof string) {
       this.text = <string>arg1;
       //} else if (arg1 instanceof FontInfo.MusicFontSymbol) {
@@ -20,9 +20,9 @@ export class Label {
 
     private text: string; // FIXME:
     private color: OSMDColor = OSMDColor.Black;
-    private font: OSMDFonts = OSMDFonts.TimesNewRoman;
-    private fontStyle: OSMDFontStyles = OSMDFontStyles.Regular;
-    private textAlignment: OSMDTextAlignment = OSMDTextAlignment.LeftBottom;
+    private font: Fonts = Fonts.TimesNewRoman;
+    private fontStyle: FontStyles = FontStyles.Regular;
+    private textAlignment: TextAlignment = TextAlignment.LeftBottom;
     private fontHeight: number = 2;
 
     public get Text(): string {
@@ -37,16 +37,16 @@ export class Label {
     public set Color(value: OSMDColor) {
         this.color = value;
     }
-    public get Font(): OSMDFonts {
+    public get Font(): Fonts {
         return this.font;
     }
-    public set Font(value: OSMDFonts) {
+    public set Font(value: Fonts) {
         this.font = value;
     }
-    public get FontStyle(): OSMDFontStyles {
+    public get FontStyle(): FontStyles {
         return this.fontStyle;
     }
-    public set FontStyle(value: OSMDFontStyles) {
+    public set FontStyle(value: FontStyles) {
         this.fontStyle = value;
     }
     public get FontHeight(): number {
@@ -55,10 +55,10 @@ export class Label {
     public set FontHeight(value: number) {
         this.fontHeight = value;
     }
-    public get TextAlignment(): OSMDTextAlignment {
+    public get TextAlignment(): TextAlignment {
         return this.textAlignment;
     }
-    public set TextAlignment(value: OSMDTextAlignment) {
+    public set TextAlignment(value: TextAlignment) {
         this.textAlignment = value;
     }
     public ToString(): string {
