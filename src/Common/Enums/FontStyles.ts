@@ -1,4 +1,4 @@
-export enum OSMDFontStyles {
+export enum FontStyles {
     Regular = 0,
     Bold = 1,
     Italic = 2,

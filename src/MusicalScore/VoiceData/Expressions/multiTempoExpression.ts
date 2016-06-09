@@ -2,7 +2,7 @@ import {Fraction} from "../../../Common/DataObjects/fraction";
 import {SourceMeasure} from "../SourceMeasure";
 import {InstantaniousTempoExpression} from "./instantaniousTempoExpression";
 import {PlacementEnum} from "./abstractExpression";
-import {OSMDFontStyles} from "../../../Common/Enums/osmdFontStyles";
+import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {AbstractTempoExpression} from "./abstractTempoExpression";
 import {ContinuousTempoExpression} from "./ContinuousExpressions/continuousTempoExpression";
 
@@ -57,12 +57,12 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
         }
         return placement;
     }
-    public getFontstyleOfFirstEntry(): OSMDFontStyles {
-        let fontStyle: OSMDFontStyles = OSMDFontStyles.Regular;
+    public getFontstyleOfFirstEntry(): FontStyles {
+        let fontStyle: FontStyles = FontStyles.Regular;
         if (this.expressions[0].expression instanceof InstantaniousTempoExpression) {
-            fontStyle = OSMDFontStyles.Bold;
+            fontStyle = FontStyles.Bold;
         } else if (this.expressions[0].expression instanceof ContinuousTempoExpression) {
-            fontStyle = OSMDFontStyles.Italic;
+            fontStyle = FontStyles.Italic;
         }
         return fontStyle;
     }

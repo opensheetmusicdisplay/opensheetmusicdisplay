@@ -1,4 +1,4 @@
-export enum OSMDTextAlignment {
+export enum TextAlignment {
     LeftTop,
     LeftCenter,
     LeftBottom,
