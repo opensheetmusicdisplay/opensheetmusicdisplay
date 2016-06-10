@@ -54,6 +54,6 @@
   },
   "devDependencies": {
     "karma-xml2js-preprocessor": "",
-    "karma-mxl2js-preprocessor": "file:submodules/karma-mxl2js-preprocessor"
+    "karma-base64-to-js-preprocessor": ""
   }
 }

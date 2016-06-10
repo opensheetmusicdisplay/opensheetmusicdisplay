@@ -26,7 +26,7 @@ module.exports = function (config) {
             pattern: 'test/data/*.xml',
             included: true
         }, {
-            pattern: 'test/data/*.mxl.str',
+            pattern: 'test/data/*.mxl.base64',
             included: true
         }, {
             pattern: 'test/data/*.mxl',
@@ -39,7 +39,7 @@ module.exports = function (config) {
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             'test/data/*.xml': ['xml2js'],
-            'test/data/*.mxl.str': ['mxl2js']
+            'test/data/*.mxl.base64': ['base64-to-js']
         },
 
         // test results reporter to use

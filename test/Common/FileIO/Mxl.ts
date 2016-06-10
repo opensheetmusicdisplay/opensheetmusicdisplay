@@ -5,7 +5,7 @@ import { extractSheetFromMxl } from "../../../src/Common/FileIO/Mxl.ts";
 describe("MXL Tests", () => {
   // Load the mxl file
   function getSheet(filename: string): string {
-    return ((window as any).__mxl__)[filename];
+    return ((window as any).__raw__)[filename];
   }
 
   // Generates a test for a mxl file name
