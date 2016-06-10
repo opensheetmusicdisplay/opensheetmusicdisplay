@@ -68,7 +68,7 @@ export class ChordSymbolContainer {
                         break;
                     }
             }
-            text += chordSymbol.ChordDegree.Value.ToString();
+            text += chordSymbol.ChordDegree.Value;
             if (chordSymbol.ChordDegree.Alteration != AccidentalEnum.NONE)
                 text += ChordSymbolContainer.getTextForAccidental(chordSymbol.ChordDegree.Alteration);
         }

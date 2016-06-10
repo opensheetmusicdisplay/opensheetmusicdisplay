@@ -67,9 +67,9 @@ export class StaffLine extends GraphicalObject {
             let graphicalMeasure: StaffMeasure = this.Measures[idx];
             for (let idx2: number = 0, len2: number = graphicalMeasure.StaffEntries.length; idx2 < len2; ++idx2) {
                 let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.StaffEntries[idx2];
-                if (Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X) < 5.0)
+                if (Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x) < 5.0)
                 {
-                    difference = Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X);
+                    difference = Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x);
                     closestStaffentry = graphicalStaffEntry;
                 }
             }

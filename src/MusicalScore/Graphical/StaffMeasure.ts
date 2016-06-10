@@ -11,6 +11,7 @@ import {Fraction} from "../../Common/DataObjects/fraction";
 import {Voice} from "../VoiceData/Voice";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {GraphicalNote} from "./GraphicalNote";
+import {SystemLinesEnum} from "./SystemLinesEnum";
 export class StaffMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
     protected lastInstructionStaffEntry: GraphicalStaffEntry;
@@ -92,7 +93,7 @@ export class StaffMeasure extends GraphicalObject {
         let duration: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.StaffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
-            duration.push(graphicalStaffEntry.findStaffEntryMinNoteLength());
+            duration.Add(graphicalStaffEntry.findStaffEntryMinNoteLength());
         }
         return duration === this.ParentSourceMeasure.Duration;
     }
@@ -104,7 +105,7 @@ export class StaffMeasure extends GraphicalObject {
             let staffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
             for (let idx2: number = 0, len2: number = staffEntry.SourceStaffEntry.VoiceEntries.length; idx2 < len2; ++idx2) {
                 let voiceEntry: VoiceEntry = staffEntry.SourceStaffEntry.VoiceEntries[idx2];
-                if (!voices.indexOf(voiceEntry.ParentVoice) !== -1)
+                if (voices.indexOf(voiceEntry.ParentVoice) < 0)
                     voices.push(voiceEntry.ParentVoice);
             }
         }
@@ -122,7 +123,7 @@ export class StaffMeasure extends GraphicalObject {
             let graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
             for (let idx2: number = 0, len2: number = graphicalStaffEntry.SourceStaffEntry.VoiceEntries.length; idx2 < len2; ++idx2) {
                 let voiceEntry: VoiceEntry = graphicalStaffEntry.SourceStaffEntry.VoiceEntries[idx2];
-                if (!voices.indexOf(voiceEntry.ParentVoice) !== -1)
+                if (voices.indexOf(voiceEntry.ParentVoice) < 0)
                     voices.push(voiceEntry.ParentVoice);
             }
         }
@@ -134,11 +135,11 @@ export class StaffMeasure extends GraphicalObject {
                 for (let idx3: number = 0, len3: number = graphicalStaffEntry.Notes.length; idx3 < len3; ++idx3) {
                     let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.Notes[idx3];
                     if (graphicalNotes.length > 0 && graphicalNotes[0].SourceNote.ParentVoiceEntry.ParentVoice === voice)
-                        voiceDuration.push(graphicalNotes[0].GraphicalNoteLength);
+                        voiceDuration.Add(graphicalNotes[0].GraphicalNoteLength);
                 }
             }
             if (voiceDuration > duration)
-                duration = new Fraction(voiceDuration);
+                duration = Fraction.createFromFraction(voiceDuration);
         }
         return duration;
     }

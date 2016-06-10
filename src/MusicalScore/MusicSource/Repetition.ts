@@ -113,7 +113,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         this.fromWords = value;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return Fraction.CreateFractionFromFraction(this.musicSheet2.SourceMeasures[this.startMarker.measureIndex].AbsoluteTimestamp);
+        return Fraction.createFromFraction(this.musicSheet2.SourceMeasures[this.startMarker.measureIndex].AbsoluteTimestamp);
     }
     public get StartIndex(): number {
         return this.startMarker.measureIndex;

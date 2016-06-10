@@ -393,7 +393,7 @@ export class GraphicalMusicSheet {
         }
         for (let idx: number = 0, len: number = visibleInstruments.length; idx < len; ++idx) {
             let instrument: Instrument = visibleInstruments[idx];
-            let index: number = this.musicSheet.GetGlobalStaffIndexOfFirstStaff(instrument);
+            let index: number = this.musicSheet.getGlobalStaffIndexOfFirstStaff(instrument);
             for (let j: number = 0; j < instrument.Staves.length; j++) {
                 visibleStavesIndeces.push(index + j);
             }
@@ -510,10 +510,10 @@ export class GraphicalMusicSheet {
         for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
             let entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalStaffEntry>(region, false);
-            if (entries === undefined || entries.length() === 0) {
+            if (entries === undefined || entries.length === 0) {
                 continue;
             } else {
-                for (let idx2: number = 0, len2: number = entries.length(); idx2 < len2; ++idx2) {
+                for (let idx2: number = 0, len2: number = entries.length; idx2 < len2; ++idx2) {
                     let gse: GraphicalStaffEntry = entries[idx2];
                     foundEntries.push(gse);
                 }

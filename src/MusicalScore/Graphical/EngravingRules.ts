@@ -269,7 +269,7 @@ export class EngravingRules {
         try {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin;
             if (FontInfo.Info !== undefined) {
-                this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).width + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).Width + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).Width;
+                this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).width + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).width + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).Width;
             }
         }
         catch (ex) {

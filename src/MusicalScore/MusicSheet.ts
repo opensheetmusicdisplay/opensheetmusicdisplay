@@ -454,7 +454,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //}
     public getEnrolledSelectionStartTimeStampWorkaround(): Fraction {
         let iter: MusicPartManagerIterator = this.MusicPartManager.getIterator(this.SelectionStart);
-        return Fraction.CreateFractionFromFraction(iter.CurrentEnrolledTimestamp);
+        return Fraction.createFromFraction(iter.CurrentEnrolledTimestamp);
     }
     public get SheetEndTimestamp(): Fraction {
         let lastMeasure: SourceMeasure = this.getLastSourceMeasure();

@@ -32,7 +32,7 @@ export class SourceMusicPart extends PartListEntry {
         this.parentRepetition = value;
     }
     public get AbsoluteTimestamp(): Fraction {
-        return Fraction.CreateFractionFromFraction(this.musicSheet.SourceMeasures[this.startIndex].AbsoluteTimestamp);
+        return Fraction.createFromFraction(this.musicSheet.SourceMeasures[this.startIndex].AbsoluteTimestamp);
     }
     public setStartIndex(startIndex: number): void {
         this.startIndex = startIndex;

@@ -2,6 +2,7 @@
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {BoundingBox} from "./BoundingBox";
+import {Logging} from "../../Common/logging";
 export class FontInfo {
     protected static info: FontInfo = new FontInfo();
     protected symbolMapping: Dictionary<MusicSymbol, SymbolInfo> = new Dictionary<MusicSymbol, SymbolInfo>();
@@ -43,7 +44,7 @@ export class FontInfo {
     public getCenterDistance(symbol: SymbolInfo): SizeF2D {
         let symbolBox: SizeF2D = symbol.boundingBox;
         let symbolCenter: PointF2D = symbol.center;
-        let centerDistance: SizeF2D = new SizeF2D(symbolBox.Width * symbolCenter.X, symbolBox.Height * symbolCenter.Y);
+        let centerDistance: SizeF2D = new SizeF2D(symbolBox.width * symbolCenter.x, symbolBox.height * symbolCenter.y);
         return centerDistance;
     }
     public fillPSI(psi: BoundingBox, symbol: MusicSymbol): void {
@@ -53,16 +54,16 @@ export class FontInfo {
         let symbolInfo: SymbolInfo = this.symbolMapping[symbol];
         let symbolBox: SizeF2D = symbolInfo.boundingBox;
         let symbolCenter: PointF2D = symbolInfo.center;
-        let centerDistance: SizeF2D = new SizeF2D(symbolBox.Width * symbolCenter.X, symbolBox.Height * symbolCenter.Y);
+        let centerDistance: SizeF2D = new SizeF2D(symbolBox.width * symbolCenter.x, symbolBox.height * symbolCenter.y);
         let symbolMargins: SymbolMargins = symbolInfo.margins;
-        psi.BorderLeft = -centerDistance.Width * scaleFactor;
-        psi.BorderRight = (symbolBox.Width - centerDistance.Width) * scaleFactor;
-        psi.BorderTop = -centerDistance.Height * scaleFactor;
-        psi.BorderBottom = (symbolBox.Height - centerDistance.Height) * scaleFactor;
-        psi.BorderMarginLeft = (-centerDistance.Width - symbolBox.Width * symbolMargins.left) * scaleFactor;
-        psi.BorderMarginRight = (symbolBox.Width - centerDistance.Width + symbolBox.Width * symbolMargins.right) * scaleFactor;
-        psi.BorderMarginTop = (-centerDistance.Height - symbolBox.Height * symbolMargins.top) * scaleFactor;
-        psi.BorderMarginBottom = (symbolBox.Height - centerDistance.Height + symbolBox.Height * symbolMargins.bottom) * scaleFactor;
+        psi.BorderLeft = -centerDistance.width * scaleFactor;
+        psi.BorderRight = (symbolBox.width - centerDistance.width) * scaleFactor;
+        psi.BorderTop = -centerDistance.height * scaleFactor;
+        psi.BorderBottom = (symbolBox.height - centerDistance.height) * scaleFactor;
+        psi.BorderMarginLeft = (-centerDistance.width - symbolBox.width * symbolMargins.left) * scaleFactor;
+        psi.BorderMarginRight = (symbolBox.width - centerDistance.width + symbolBox.width * symbolMargins.right) * scaleFactor;
+        psi.BorderMarginTop = (-centerDistance.height - symbolBox.height * symbolMargins.top) * scaleFactor;
+        psi.BorderMarginBottom = (symbolBox.height - centerDistance.height + symbolBox.height * symbolMargins.bottom) * scaleFactor;
     }
     protected getString(symbol: MusicSymbol): string {
         try {
@@ -80,40 +81,38 @@ export class FontInfo {
         }
         catch (ex) {
             Logging.debug("FontInfo.getScaleFactor", ex);
-            return -1F;
+            return -1;
         }
 
     }
     private createSymbols(): void {
-        let scaleVector: number[] = 1,1, 3, 3, 3,
+        let scaleVector: number[] = [1,1, 3, 3, 3,
             3, 3, 3, 3,
             3, 1, 1, 7,
-                3.5, 4, 1, 1,
-                    2.0, 3.4,
-                        0.6, 0.6, 3, 2,
-                            3, 4, 5,
-                            2.2, 2.55, 2.5, 2.2, 1,
-                                2, 2, 2, 2,
-                                2, 2, 2, 2,
-                                2, 2, 0.4,
-                                    1, 1,
-                                    1, 0.2, 1, 1.5, 1.5,
-                                        0.75 * 2,
-                                            0.75 * 3,
-                                                0.75 * (1 + 1865.0 / 2680.0),
-        0.75 * (1 + 1865.0 / 2680.0),
-        0.75 * (1 + 1865.0 / 2680.0),
-        0.75 * (1 + 1865.0 / 2680.0),
-        2.7, 3.0,
+            3.5, 4, 1, 1,
+            2.0, 3.4,
+            0.6, 0.6, 3, 2,
+            3, 4, 5,
+            2.2, 2.55, 2.5, 2.2, 1,
+            2, 2, 2, 2,
+            2, 2, 2, 2,
+            2, 2, 0.4,
+            1, 1,
+            1, 0.2, 1, 1.5, 1.5,
+            0.75 * 2,
+            0.75 * 3,
+            0.75 * (1 + 1865.0 / 2680.0),
+            0.75 * (1 + 1865.0 / 2680.0),
+            0.75 * (1 + 1865.0 / 2680.0),
+            0.75 * (1 + 1865.0 / 2680.0),
+            2.7, 3.0,
             2, 7.987, 7.987, 7.987, 7.987,
-                4.228, 4.228, 4.228, 4.228,
-                    1.25, 0.75, 1.05, 0.85, 1.05,
-                        1.1, 2, 1.9,
-                            1.2, 1.2, 1.35, 1.2, 1.2,
-                                1, 1.7, 1.8,
-                                    1.09, 0.77,
-                                        3.0;
-        let centerVector: PointF2D[] = new PointF2D(0.5, 0.5),
+            4.228, 4.228, 4.228, 4.228,
+            1.25, 0.75, 1.05, 0.85, 1.05,
+            1.1, 2, 1.9,
+            1.2, 1.2, 1.35, 1.2, 1.2,
+            1, 1.7, 1.8, 1.09, 0.77, 3.0];
+        let centerVector: PointF2D[] = [new PointF2D(0.5, 0.5),
         new PointF2D(0.5, 0.5),
             new PointF2D(0.0, 1.0),
             new PointF2D(0.0, 0.0),
@@ -197,8 +196,8 @@ export class FontInfo {
             new PointF2D(0.5, 0.5),
             new PointF2D(0.5, 0.634),
             new PointF2D(0.5, 0.5),
-            new PointF2D(0.5, 0.5);
-        let marginVector: SymbolMargins[] = new SymbolMargins(0.1, 0.1, 0.1, 0.1),
+            new PointF2D(0.5, 0.5)];
+        let marginVector: SymbolMargins[] = [new SymbolMargins(0.1, 0.1, 0.1, 0.1),
         new SymbolMargins(0.1, 0.1),
             new SymbolMargins(0.1, 0.1),
             new SymbolMargins(0.1, 0.1),
@@ -282,7 +281,7 @@ export class FontInfo {
             new SymbolMargins(0.1, 0.1, 0.1, 0.1),
             new SymbolMargins(0.1, 0.1, 0.1, 0.1),
             new SymbolMargins(0.1, 0.1, 0.1, 0.1),
-            new SymbolMargins(0.1, 0.1, 0.1, 0.1);
+            new SymbolMargins(0.1, 0.1, 0.1, 0.1)];
         let values: Array = Enum.GetValues(/*typeof*/MusicSymbol);
         let i: number = 0;
         for (let c: string = <string>0x21; c <<string>0x21 + values.Length; c++) {
@@ -300,7 +299,6 @@ export class SymbolInfo {
     public center: PointF2D;
     public margins: SymbolMargins;
     constructor(symbol: string, id: number, scaleFactor: number, center: PointF2D, margins: SymbolMargins) {
-        this();
         this.symbol = symbol;
         this.id = id;
         this.scaleFactor = scaleFactor;

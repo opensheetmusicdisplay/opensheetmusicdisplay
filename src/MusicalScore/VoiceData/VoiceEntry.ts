@@ -147,7 +147,7 @@ export class VoiceEntry {
         let baselength: Fraction = baseNote.calculateNoteLengthWithoutTie();
         let baseVoice: Voice = voiceEntryWithOrnament.ParentVoice;
         let baseTimestamp: Fraction = voiceEntryWithOrnament.Timestamp;
-        let currentTimestamp: Fraction = Fraction.CreateFractionFromFraction(baseTimestamp);
+        let currentTimestamp: Fraction = Fraction.createFromFraction(baseTimestamp);
         //let length: Fraction;
         switch (voiceEntryWithOrnament.ornamentContainer.GetOrnament) {
             case OrnamentEnum.Trill: {

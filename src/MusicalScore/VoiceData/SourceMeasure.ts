@@ -6,11 +6,8 @@ import {Staff} from "./Staff";
 import {VoiceEntry} from "./VoiceEntry";
 import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
-//import {Logging} from "../../Common/logging";
-
-type MultiExpression = any;
-type MultiTempoExpression = any;
-
+import {MultiExpression} from "./Expressions/multiExpression";
+import {MultiTempoExpression} from "./Expressions/multiTempoExpression";
 export class SourceMeasure {
     constructor(completeNumberOfStaves: number) {
         this.completeNumberOfStaves = completeNumberOfStaves;
@@ -33,7 +30,7 @@ export class SourceMeasure {
     private absoluteTimestamp: Fraction;
     private completeNumberOfStaves: number;
     private duration: Fraction;
-    private staffLinkedExpressions: MultiExpression[] = [];
+    private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
     private implicitMeasure: boolean;
@@ -77,7 +74,7 @@ export class SourceMeasure {
     public set BreakSystemAfter(value: boolean) {
         this.breakSystemAfter = value;
     }
-    public get StaffLinkedExpressions(): MultiExpression[] {
+    public get StaffLinkedExpressions(): MultiExpression[][] {
         return this.staffLinkedExpressions;
     }
     public get TempoExpressions(): MultiTempoExpression[] {

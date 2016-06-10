@@ -20,7 +20,7 @@ export class Fraction {
         return f1.Denominator === f2.Denominator && f1.Numerator === f2.Numerator;
     }
 
-    public static CreateFractionFromFraction(fraction: Fraction): Fraction {
+    public static createFromFraction(fraction: Fraction): Fraction {
         return new Fraction(fraction.numerator, fraction.denominator);
     }
 

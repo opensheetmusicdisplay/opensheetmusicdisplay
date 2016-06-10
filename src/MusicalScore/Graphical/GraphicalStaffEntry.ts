@@ -53,7 +53,7 @@ export class GraphicalStaffEntry extends GraphicalObject {
         return this.lyricsEntries;
     }
     public getAbsoluteTimestamp(): Fraction {
-        let result: Fraction = Fraction.CreateFractionFromFraction(this.ParentMeasure.ParentSourceMeasure.AbsoluteTimestamp);
+        let result: Fraction = Fraction.createFromFraction(this.ParentMeasure.ParentSourceMeasure.AbsoluteTimestamp);
         if (this.RelInMeasureTimestamp !== undefined)
             result += this.RelInMeasureTimestamp;
         return result;
