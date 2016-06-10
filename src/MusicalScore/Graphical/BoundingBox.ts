@@ -256,11 +256,9 @@ export class BoundingBox {
             minTop = Math.min(minTop, childElement.relativePosition.y + childElement.borderTop);
             maxBottom = Math.max(maxBottom, childElement.relativePosition.y + childElement.borderBottom);
             minMarginLeft = Math.min(minMarginLeft, childElement.relativePosition.x + childElement.borderMarginLeft);
-            maxMarginRight = Math.max(maxMarginRight,
-                childElement.relativePosition.x + childElement.borderMarginRight);
+            maxMarginRight = Math.max(maxMarginRight, childElement.relativePosition.x + childElement.borderMarginRight);
             minMarginTop = Math.min(minMarginTop, childElement.relativePosition.y + childElement.borderMarginTop);
-            maxMarginBottom = Math.max(maxMarginBottom,
-                childElement.relativePosition.y + childElement.borderMarginBottom);
+            maxMarginBottom = Math.max(maxMarginBottom, childElement.relativePosition.y + childElement.borderMarginBottom);
         }
         this.borderLeft = minLeft;
         this.borderRight = maxRight;
@@ -299,8 +297,7 @@ export class BoundingBox {
             minTop = Math.min(minTop, childElement.relativePosition.y + childElement.borderTop);
             maxBottom = Math.max(maxBottom, childElement.relativePosition.y + childElement.borderBottom);
             minMarginTop = Math.min(minMarginTop, childElement.relativePosition.y + childElement.borderMarginTop);
-            maxMarginBottom = Math.max(maxMarginBottom,
-                childElement.relativePosition.y + childElement.borderMarginBottom);
+            maxMarginBottom = Math.max(maxMarginBottom, childElement.relativePosition.y + childElement.borderMarginBottom);
         }
         this.borderTop = minTop;
         this.borderBottom = maxBottom;
@@ -341,8 +338,10 @@ export class BoundingBox {
     }
 
     public collisionDetection(psi: BoundingBox): boolean {
-        let overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderRight, psi.absolutePosition.x + psi.borderRight) - Math.max(this.AbsolutePosition.x + this.borderLeft, psi.absolutePosition.x + psi.borderLeft);
-        let overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderBottom, psi.absolutePosition.y + psi.borderBottom) - Math.max(this.AbsolutePosition.y + this.borderTop, psi.absolutePosition.y + psi.borderTop);
+        let overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderRight, psi.absolutePosition.x + psi.borderRight)
+            - Math.max(this.AbsolutePosition.x + this.borderLeft, psi.absolutePosition.x + psi.borderLeft);
+        let overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderBottom, psi.absolutePosition.y + psi.borderBottom)
+            - Math.max(this.AbsolutePosition.y + this.borderTop, psi.absolutePosition.y + psi.borderTop);
         if (overlapWidth > 0 && overlapHeight > 0) {
             return true;
         }
@@ -350,11 +349,15 @@ export class BoundingBox {
     }
 
     public liesInsideBorders(psi: BoundingBox): boolean {
-        let leftBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderLeft) && (psi.absolutePosition.x + psi.borderLeft) <= (this.AbsolutePosition.x + this.borderRight);
-        let rightBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderRight) && (psi.absolutePosition.x + psi.borderRight) <= (this.AbsolutePosition.x + this.borderRight);
+        let leftBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderLeft)
+            && (psi.absolutePosition.x + psi.borderLeft) <= (this.AbsolutePosition.x + this.borderRight);
+        let rightBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderRight)
+            && (psi.absolutePosition.x + psi.borderRight) <= (this.AbsolutePosition.x + this.borderRight);
         if (leftBorderInside && rightBorderInside) {
-            let topBorderInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderTop) && (psi.absolutePosition.y + psi.borderTop) <= (this.AbsolutePosition.y + this.borderBottom);
-            let bottomBorderInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderBottom) && (psi.absolutePosition.y + psi.borderBottom) <= (this.AbsolutePosition.y + this.borderBottom);
+            let topBorderInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderTop)
+                && (psi.absolutePosition.y + psi.borderTop) <= (this.AbsolutePosition.y + this.borderBottom);
+            let bottomBorderInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderBottom)
+                && (psi.absolutePosition.y + psi.borderBottom) <= (this.AbsolutePosition.y + this.borderBottom);
             if (topBorderInside && bottomBorderInside) {
                 return true;
             }
@@ -364,10 +367,14 @@ export class BoundingBox {
 
     public liesInsideBorders(psi: BoundingBox, leftBorderInside: boolean, rightBorderInside: boolean,
                              topBorderInside: boolean, bottomBorderInside: boolean): boolean {
-        leftBorderInside = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderLeft) && (psi.absolutePosition.x + psi.borderLeft) <= (this.AbsolutePosition.x + this.borderRight);
-        rightBorderInside = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderRight) && (psi.absolutePosition.x + psi.borderRight) <= (this.AbsolutePosition.x + this.borderRight);
-        topBorderInside = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderTop) && (psi.absolutePosition.y + psi.borderTop) <= (this.AbsolutePosition.y + this.borderBottom);
-        bottomBorderInside = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderBottom) && (psi.absolutePosition.y + psi.borderBottom) <= (this.AbsolutePosition.y + this.borderBottom);
+        leftBorderInside = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderLeft)
+            && (psi.absolutePosition.x + psi.borderLeft) <= (this.AbsolutePosition.x + this.borderRight);
+        rightBorderInside = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderRight)
+            && (psi.absolutePosition.x + psi.borderRight) <= (this.AbsolutePosition.x + this.borderRight);
+        topBorderInside = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderTop)
+            && (psi.absolutePosition.y + psi.borderTop) <= (this.AbsolutePosition.y + this.borderBottom);
+        bottomBorderInside = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderBottom)
+            && (psi.absolutePosition.y + psi.borderBottom) <= (this.AbsolutePosition.y + this.borderBottom);
         return topBorderInside && bottomBorderInside && leftBorderInside && rightBorderInside;
     }
 
@@ -383,8 +390,10 @@ export class BoundingBox {
     }
 
     public marginCollisionDetection(psi: BoundingBox): boolean {
-        let overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderMarginRight, psi.absolutePosition.x + psi.borderMarginRight) - Math.max(this.AbsolutePosition.x + this.borderMarginLeft, psi.absolutePosition.x + psi.borderMarginLeft);
-        let overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderMarginBottom, psi.absolutePosition.y + psi.borderMarginBottom) - Math.max(this.AbsolutePosition.y + this.borderMarginTop, psi.absolutePosition.y + psi.borderMarginTop);
+        let overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderMarginRight, psi.absolutePosition.x + psi.borderMarginRight)
+            - Math.max(this.AbsolutePosition.x + this.borderMarginLeft, psi.absolutePosition.x + psi.borderMarginLeft);
+        let overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderMarginBottom, psi.absolutePosition.y + psi.borderMarginBottom)
+            - Math.max(this.AbsolutePosition.y + this.borderMarginTop, psi.absolutePosition.y + psi.borderMarginTop);
         if (overlapWidth > 0 && overlapHeight > 0) {
             return true;
         }
@@ -392,11 +401,15 @@ export class BoundingBox {
     }
 
     public liesInsideMargins(psi: BoundingBox): boolean {
-        let leftMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginLeft) && (psi.absolutePosition.x + psi.borderMarginLeft) <= (this.AbsolutePosition.x + this.borderMarginRight);
-        let rightMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginRight) && (psi.absolutePosition.x + psi.borderMarginRight) <= (this.AbsolutePosition.x + this.borderMarginRight);
+        let leftMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginLeft)
+            && (psi.absolutePosition.x + psi.borderMarginLeft) <= (this.AbsolutePosition.x + this.borderMarginRight);
+        let rightMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginRight)
+            && (psi.absolutePosition.x + psi.borderMarginRight) <= (this.AbsolutePosition.x + this.borderMarginRight);
         if (leftMarginInside && rightMarginInside) {
-            let topMarginInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= (psi.absolutePosition.y + psi.borderMarginTop) && (psi.absolutePosition.y + psi.borderMarginTop) <= (this.AbsolutePosition.y + this.borderMarginBottom);
-            let bottomMarginInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= (psi.absolutePosition.y + psi.borderMarginBottom) && (psi.absolutePosition.y + psi.borderMarginBottom) <= (this.AbsolutePosition.y + this.borderMarginBottom);
+            let topMarginInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= (psi.absolutePosition.y + psi.borderMarginTop)
+                && (psi.absolutePosition.y + psi.borderMarginTop) <= (this.AbsolutePosition.y + this.borderMarginBottom);
+            let bottomMarginInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= (psi.absolutePosition.y + psi.borderMarginBottom)
+                && (psi.absolutePosition.y + psi.borderMarginBottom) <= (this.AbsolutePosition.y + this.borderMarginBottom);
             if (topMarginInside && bottomMarginInside) {
                 return true;
             }
@@ -405,9 +418,11 @@ export class BoundingBox {
     }
 
     public liesInsideMargins(position: PointF2D): boolean {
-        let xInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= position.x && position.x <= (this.AbsolutePosition.x + this.borderMarginRight);
+        let xInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= position.x
+            && position.x <= (this.AbsolutePosition.x + this.borderMarginRight);
         if (xInside) {
-            let yInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= position.y && position.y <= (this.AbsolutePosition.y + this.borderMarginBottom);
+            let yInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= position.y
+                && position.y <= (this.AbsolutePosition.y + this.borderMarginBottom);
             if (yInside) {
                 return true;
             }
@@ -482,13 +497,13 @@ export class BoundingBox {
     protected calculateRectangle(): void {
         this.upperLeftCorner = new PointF2D(this.borderLeft, this.borderTop);
         this.size = new SizeF2D(this.borderRight - this.borderLeft, this.borderBottom - this.borderTop);
-        this.boundingRectangle = new RectangleF2D(this.upperLeftCorner, this.size);
+        this.boundingRectangle = RectangleF2D.createFromLocationAndSize(this.upperLeftCorner, this.size);
     }
 
     protected calculateMarginRectangle(): void {
         this.upperLeftMarginCorner = new PointF2D(this.borderMarginLeft, this.borderMarginTop);
         this.marginSize = new SizeF2D(this.borderMarginRight - this.borderMarginLeft, this.borderMarginBottom - this.borderMarginTop);
-        this.boundingMarginRectangle = new RectangleF2D(this.upperLeftMarginCorner, this.marginSize);
+        this.boundingMarginRectangle = RectangleF2D.createFromLocationAndSize(this.upperLeftMarginCorner, this.marginSize);
     }
 
     private calculateMarginPositionAlongDirection(toBePlaced: BoundingBox, direction: ColDirEnum): void {

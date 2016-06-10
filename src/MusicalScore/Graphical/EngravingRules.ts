@@ -1,6 +1,7 @@
 ﻿import {PagePlacementEnum} from "./GraphicalMusicPage";
 import {MusicSymbol} from "./MusicSymbol";
 import {FontInfo} from "./FontInfo";
+import {Logging} from "../../Common/logging";
 export class EngravingRules {
     private static rules: EngravingRules;
     private static unit: number = 1.0;
@@ -134,8 +135,8 @@ export class EngravingRules {
     private subMeasureXSpacingThreshold: number;
     private measureDynamicsMaxScalingFactor: number;
     private maxInstructionsConstValue: number;
-    private noteDistances: number[] = [1.0,1.0,1.3,1.6,2.0,2.5,3.0,4.0];
-    private noteDistancesScalingFactors: number[] = [1.0,2.0,4.0,8.0,16.0,32.0,64.0,128.0];
+    private noteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
+    private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
     constructor() {
@@ -268,7 +269,7 @@ export class EngravingRules {
         try {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin;
             if (FontInfo.Info !== undefined) {
-                this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).Width + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).Width + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).Width;
+                this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).width + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).Width + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).Width;
             }
         }
         catch (ex) {
