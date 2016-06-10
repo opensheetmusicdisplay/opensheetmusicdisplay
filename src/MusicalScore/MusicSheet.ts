@@ -12,6 +12,7 @@ import {VerticalSourceStaffEntryContainer} from "./VoiceData/VerticalSourceStaff
 import {Voice} from "./VoiceData/Voice";
 import {MusicSheetErrors} from "../Common/DataObjects/MusicSheetErrors";
 import {MultiTempoExpression} from "./VoiceData/Expressions/multiTempoExpression";
+import {EngravingRules} from "./Graphical/EngravingRules";
 
 // FIXME
 //type MusicSheetParameters = any;
@@ -34,11 +35,7 @@ export class PlaybackSettings {
 
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
-        // (*) try {
-        //    this.Rules = EngravingRules.Rules;
-        // } catch (ex) {
-        //     console.log("MusicSheet Error: EngravingRules");
-        // }
+        this.rules = EngravingRules.Rules;
         // (*) this.playbackSettings = new PlaybackSettings(new Fraction(4, 4, false), 100);
         this.userStartTempoInBPM = 100;
         this.pageWidth = 120;
@@ -48,6 +45,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
 
     public userStartTempoInBPM: number;
     public pageWidth: number;
+    public rules: EngravingRules;
 
     //private idString: string = "kjgdfuilhsda�oihfsvjh";
     private sourceMeasures: SourceMeasure[] = [];

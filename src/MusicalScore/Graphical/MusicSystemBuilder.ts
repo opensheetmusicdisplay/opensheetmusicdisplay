@@ -10,7 +10,7 @@ import {BoundingBox} from "./BoundingBox";
 import {Staff} from "../VoiceData/Staff";
 import {MusicSheet} from "../MusicSheet";
 import {Instrument} from "../Instrument";
-import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {StaffLine} from "./StaffLine";
 import {GraphicalLine} from "./GraphicalLine";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
@@ -167,7 +167,7 @@ export class MusicSystemBuilder {
         page.PositionAndShape.BorderRight = this.graphicalMusicSheet.ParentMusicSheet.PageWidth;
         page.PositionAndShape.BorderTop = 0.0;
         page.PositionAndShape.BorderBottom = this.rules.PageHeight;
-        page.PositionAndShape.RelativePosition = new PointF_2D(0.0, 0.0);
+        page.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
         return page;
     }
     private initMusicSystem(): MusicSystem {
@@ -231,7 +231,7 @@ export class MusicSystemBuilder {
             musicSystem.StaffLines.push(staffLine);
             let boundingBox: BoundingBox = staffLine.PositionAndShape;
             musicSystem.PositionAndShape.ChildElements.push(boundingBox);
-            let relativePosition: PointF_2D = new PointF_2D();
+            let relativePosition: PointF2D = new PointF2D();
             if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0])
                 relativePosition.X = this.rules.FirstSystemMargin;
             else relativePosition.X = 0.0;
@@ -244,10 +244,10 @@ export class MusicSystemBuilder {
             boundingBox.BorderTop = 0.0;
             boundingBox.BorderBottom = this.rules.StaffHeight;
             for (let i: number = 0; i < 5; i++) {
-                let start: PointF_2D = new PointF_2D();
+                let start: PointF2D = new PointF2D();
                 start.X = 0.0;
                 start.Y = i * this.rules.StaffHeight / 4;
-                let end: PointF_2D = new PointF_2D();
+                let end: PointF2D = new PointF2D();
                 end.X = staffLine.PositionAndShape.Size.Width;
                 end.Y = i * this.rules.StaffHeight / 4;
                 if (this.leadSheet)
@@ -421,7 +421,7 @@ export class MusicSystemBuilder {
         let visibleInstructionEntries: SourceStaffEntry[] = [];
         for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
             let measure: StaffMeasure = measures[idx];
-            visibleInstructionEntries.push(firstStaffEntries[measure.ParentStaff.IdInMusicSheet]);
+            visibleInstructionEntries.push(firstStaffEntries[measure.ParentStaff.idInMusicSheet]);
         }
         let maxMeasureWidth: number = 0;
         for (let visStaffIdx: number = 0, len: number = visibleInstructionEntries.length; visStaffIdx < len; ++visStaffIdx) {
@@ -657,7 +657,7 @@ export class MusicSystemBuilder {
             staffLine.PositionAndShape.BorderRight = width;
             for (let idx2: number = 0, len2: number = staffLine.StaffLines.Length; idx2 < len2; ++idx2) {
                 let graphicalLine: GraphicalLine = staffLine.StaffLines[idx2];
-                graphicalLine.End = new PointF_2D(width, graphicalLine.End.Y);
+                graphicalLine.End = new PointF2D(width, graphicalLine.End.Y);
             }
         }
         currentSystem.PositionAndShape.BorderRight = width + this.currentSystemParams.MaxLabelLength + this.rules.SystemLabelsRightMargin;

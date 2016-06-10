@@ -475,11 +475,7 @@ export class BoundingBox {
         return undefined;
     }
 
-    public getObjectsInRegion<T>(region: BoundingBox): T[] {
-        return this.getObjectsInRegion<T>(region, true);
-    }
-
-    public getObjectsInRegion<T>(region: BoundingBox, liesInside: boolean): T[] {
+    public getObjectsInRegion<T>(region: BoundingBox, liesInside: boolean = true): T[] {
         if (this.dataObject instanceof T) {
             if (liesInside) {
                 if (region.liesInsideBorders(this)) {
@@ -490,8 +486,14 @@ export class BoundingBox {
                     return [this.dataObject as T];
                 }
             }
+            // FIXME Andrea: add here "return []"?
         }
-        return this.childElements.SelectMany(psi => psi.getObjectsInRegion<T>(region, liesInside));
+        let result: T[] = [];
+        for (let child of this.childElements) {
+            result.concat(child.getObjectsInRegion<T>(region, liesInside));
+        }
+        return result;
+        //return this.childElements.SelectMany(psi => psi.getObjectsInRegion<T>(region, liesInside));
     }
 
     protected calculateRectangle(): void {

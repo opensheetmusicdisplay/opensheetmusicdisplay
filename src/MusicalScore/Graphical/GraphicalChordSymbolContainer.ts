@@ -4,7 +4,7 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
 import {BoundingBox} from "./BoundingBox";
 import {GraphicalObject} from "./GraphicalObject";
-import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 export class GraphicalChordSymbolContainer extends GraphicalObject {
     private chordSymbolContainer: ChordSymbolContainer;
     private graphicalLabel: GraphicalLabel;
@@ -22,7 +22,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     private calculateLabel(textHeight: number, transposeHalftones: number): void {
         let text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones);
         this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, TextAlignment.CenterBottom, this.boundingBox);
-        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF_2D(0.0, 0.0);
+        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
         this.boundingBox.ChildElements.push(this.graphicalLabel.PositionAndShape);
     }
 }

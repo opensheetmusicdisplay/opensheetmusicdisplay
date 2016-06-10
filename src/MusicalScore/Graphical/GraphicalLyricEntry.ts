@@ -4,7 +4,7 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {Label} from "../Label";
 import {TextAlignment} from "../../Common/Enums/TextAlignment";
-import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 export class GraphicalLyricEntry {
     private lyricsEntry: LyricsEntry;
     private graphicalLyricWord: GraphicalLyricWord;
@@ -16,7 +16,7 @@ export class GraphicalLyricEntry {
         this.graphicalLabel = new GraphicalLabel(new Label(lyricsEntry.Text), lyricsHeight,
             TextAlignment.CenterBottom,
             graphicalStaffEntry.PositionAndShape);
-        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF_2D(0.0, staffHeight);
+        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, staffHeight);
     }
     public get GetLyricsEntry(): LyricsEntry {
         return this.lyricsEntry;

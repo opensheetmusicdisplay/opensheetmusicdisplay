@@ -7,7 +7,7 @@ replace = (
     ("Math\\.Sqrt\\(", "Math.sqrt("),
     ("Math\\.Abs\\(", "Math.abs("),
     ("Math\\.Pow\\(", "Math.pow("),
-    ("Math\\.Ceiling", "Math.ceiling"),
+    ("Math\\.Ceiling", "Math.ceil"),
     ("Math\\.Floor", "Math.floor"),
 
     ("var ", "let "),
@@ -41,7 +41,7 @@ replace = (
     ("\\.ToLower\(\)", ".toLowerCase()"),
 
     ("Logger\\.DefaultLogger\\.LogError\(LogLevel\\.DEBUG,(?:[ ]*)", "Logging.debug("),
-    ("# Logger\\.DefaultLogger\\.LogError\(LogLevel\\.NORMAL,(?:[ ]*)", "Logging.log("),
+    ("Logger\\.DefaultLogger\\.LogError\(LogLevel\\.NORMAL,(?:[ ]*)", "Logging.log("),
     ("Logger\\.DefaultLogger\\.LogError\(PhonicScore\\.Common\\.Enums\\.LogLevel\\.NORMAL,(?:[ ]*)", "Logging.log("),
 
     ("Fraction\\.CreateFractionFromFraction\(([a-z|0-9]+)\)", "$1.clone()"),
@@ -60,6 +60,9 @@ replace = (
     ("return\\n", "return;\n"),
 
     ("}(\n[ ]*)else ", "} else "),
+
+    ("\\.IdInMusicSheet", ".idInMusicSheet"),
+    ("F_2D", "F2D"),
 )
 
 def checkForIssues(filename, content):

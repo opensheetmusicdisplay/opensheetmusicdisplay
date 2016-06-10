@@ -3,7 +3,7 @@ import {GraphicalObject} from "./GraphicalObject";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {MusicSystem} from "./MusicSystem";
 import {EngravingRules} from "./EngravingRules";
-import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 export class GraphicalMusicPage extends GraphicalObject {
     private musicSystems: MusicSystem[] = [];
@@ -31,20 +31,20 @@ export class GraphicalMusicPage extends GraphicalObject {
     public set Parent(value: GraphicalMusicSheet) {
         this.parent = value;
     }
-    public setMusicPageAbsolutePosition(pageIndex: number, rules: EngravingRules): PointF_2D {
+    public setMusicPageAbsolutePosition(pageIndex: number, rules: EngravingRules): PointF2D {
         if (rules.PagePlacement === PagePlacementEnum.Down)
-            return new PointF_2D(0.0, pageIndex * rules.PageHeight);
+            return new PointF2D(0.0, pageIndex * rules.PageHeight);
         else if (rules.PagePlacement === PagePlacementEnum.Right)
-            return new PointF_2D(pageIndex * this.parent.ParentMusicSheet.PageWidth, 0.0);
+            return new PointF2D(pageIndex * this.parent.ParentMusicSheet.PageWidth, 0.0);
         else {
             if (pageIndex % 2 === 0) {
                 if (pageIndex === 0)
-                    return new PointF_2D(0.0, pageIndex * rules.PageHeight);
-                else return new PointF_2D(0.0, (pageIndex - 1) * rules.PageHeight);
+                    return new PointF2D(0.0, pageIndex * rules.PageHeight);
+                else return new PointF2D(0.0, (pageIndex - 1) * rules.PageHeight);
             } else {
                 if (pageIndex === 1)
-                    return new PointF_2D(this.parent.ParentMusicSheet.PageWidth, (pageIndex - 1) * rules.PageHeight);
-                else return new PointF_2D(this.parent.ParentMusicSheet.PageWidth, (pageIndex - 2) * rules.PageHeight);
+                    return new PointF2D(this.parent.ParentMusicSheet.PageWidth, (pageIndex - 1) * rules.PageHeight);
+                else return new PointF2D(this.parent.ParentMusicSheet.PageWidth, (pageIndex - 2) * rules.PageHeight);
             }
         }
     }

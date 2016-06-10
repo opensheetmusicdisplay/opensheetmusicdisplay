@@ -10,8 +10,9 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import {StaffMeasure} from "./StaffMeasure";
 import {GraphicalObject} from "./GraphicalObject";
 import {EngravingRules} from "./EngravingRules";
-import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
+
 export class MusicSystem extends GraphicalObject {
     public NeedsToBeRedrawn: boolean = true;
     protected parent: GraphicalMusicPage;
@@ -63,10 +64,10 @@ export class MusicSystem extends GraphicalObject {
 
     }
     public GetLeftBorderAbsoluteXPosition(): number {
-        return this.StaffLines[0].PositionAndShape.AbsolutePosition.X + this.StaffLines[0].Measures[0].BeginInstructionsWidth;
+        return this.StaffLines[0].PositionAndShape.AbsolutePosition.x + this.StaffLines[0].Measures[0].BeginInstructionsWidth;
     }
     public GetRightBorderAbsoluteXPosition(): number {
-        return this.StaffLines[0].PositionAndShape.AbsolutePosition.X + this.StaffLines[0].StaffLines[0].End.X;
+        return this.StaffLines[0].PositionAndShape.AbsolutePosition.x + this.StaffLines[0].StaffLines[0].End.x;
     }
     public AddStaffMeasures(graphicalMeasures: StaffMeasure[]): void {
         for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
@@ -95,10 +96,10 @@ export class MusicSystem extends GraphicalObject {
                         lastStaffLine = staffLine;
                 }
                 if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
-                    let rightUpper: PointF_2D = new PointF_2D(firstStaffLine.PositionAndShape.RelativePosition.X,
-                        firstStaffLine.PositionAndShape.RelativePosition.Y);
-                    let rightLower: PointF_2D = new PointF_2D(lastStaffLine.PositionAndShape.RelativePosition.X,
-                        lastStaffLine.PositionAndShape.RelativePosition.Y + staffHeight);
+                    let rightUpper: PointF2D = new PointF2D(firstStaffLine.PositionAndShape.RelativePosition.x,
+                        firstStaffLine.PositionAndShape.RelativePosition.y);
+                    let rightLower: PointF2D = new PointF2D(lastStaffLine.PositionAndShape.RelativePosition.x,
+                        lastStaffLine.PositionAndShape.RelativePosition.y + staffHeight);
                     this.createInstrumentBracket(rightUpper, rightLower);
                 }
             }
@@ -122,10 +123,10 @@ export class MusicSystem extends GraphicalObject {
                     lastStaffLine = staffLine;
             }
             if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
-                let rightUpper: PointF_2D = new PointF_2D(firstStaffLine.PositionAndShape.RelativePosition.X,
-                    firstStaffLine.PositionAndShape.RelativePosition.Y);
-                let rightLower: PointF_2D = new PointF_2D(lastStaffLine.PositionAndShape.RelativePosition.X,
-                    lastStaffLine.PositionAndShape.RelativePosition.Y + staffHeight);
+                let rightUpper: PointF2D = new PointF2D(firstStaffLine.PositionAndShape.RelativePosition.x,
+                    firstStaffLine.PositionAndShape.RelativePosition.y);
+                let rightLower: PointF2D = new PointF2D(lastStaffLine.PositionAndShape.RelativePosition.x,
+                    lastStaffLine.PositionAndShape.RelativePosition.y + staffHeight);
                 this.createGroupBracket(rightUpper, rightLower, staffHeight, recursionDepth);
             }
             if (instrumentGroup.InstrumentalGroups.length < 1)
@@ -142,14 +143,14 @@ export class MusicSystem extends GraphicalObject {
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.push(graphicalLabel, instrument);
                 this.boundingBox.ChildElements.push(graphicalLabel.PositionAndShape);
-                graphicalLabel.PositionAndShape.RelativePosition = new PointF_2D(0.0, 0.0);
+                graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
             }
             this.maxLabelLength = 0.0;
             let labels: GraphicalLabel[] = this.labels.Keys;
             for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
                 let label: GraphicalLabel = labels[idx];
-                if (label.PositionAndShape.Size.Width > this.maxLabelLength)
-                    this.maxLabelLength = label.PositionAndShape.Size.Width;
+                if (label.PositionAndShape.Size.width > this.maxLabelLength)
+                    this.maxLabelLength = label.PositionAndShape.Size.width;
             }
             this.updateMusicSystemStaffLineXPosition(systemLabelsRightMargin);
         }
@@ -167,14 +168,14 @@ export class MusicSystem extends GraphicalObject {
                             let staffLine: StaffLine = this.staffLines[j];
                             if (staffLine.ParentStaff.ParentInstrument !== entry.Value)
                                 break;
-                            ypositionSum += staffLine.PositionAndShape.RelativePosition.Y;
+                            ypositionSum += staffLine.PositionAndShape.RelativePosition.y;
                             staffCounter++;
                         }
                         break;
                     }
                 }
                 if (staffCounter > 0)
-                    entry.Key.PositionAndShape.RelativePosition = new PointF_2D(0.0, ypositionSum / staffCounter + 2.0);
+                    entry.Key.PositionAndShape.RelativePosition = new PointF2D(0.0, ypositionSum / staffCounter + 2.0);
             }
         }
     }
@@ -204,8 +205,8 @@ export class MusicSystem extends GraphicalObject {
         return false;
     }
     protected calcInstrumentsBracketsWidth(): number { throw new Error('not implemented'); }
-    protected createInstrumentBracket(rightUpper: PointF_2D, rightLower: PointF_2D): void { throw new Error('not implemented'); }
-    protected createGroupBracket(rightUpper: PointF_2D, rightLower: PointF_2D, staffHeight: number,
+    protected createInstrumentBracket(rightUpper: PointF2D, rightLower: PointF2D): void { throw new Error('not implemented'); }
+    protected createGroupBracket(rightUpper: PointF2D, rightLower: PointF2D, staffHeight: number,
         recursionDepth: number): void { throw new Error('not implemented'); }
     private findFirstVisibleInstrumentInInstrumentalGroup(instrumentalGroup: InstrumentalGroup): Instrument {
         for (let idx: number = 0, len: number = instrumentalGroup.InstrumentalGroups.length; idx < len; ++idx) {
@@ -235,12 +236,12 @@ export class MusicSystem extends GraphicalObject {
     private updateMusicSystemStaffLineXPosition(systemLabelsRightMargin: number): void {
         for (let idx: number = 0, len: number = this.StaffLines.length; idx < len; ++idx) {
             let staffLine: StaffLine = this.StaffLines[idx];
-            let relative: PointF_2D = staffLine.PositionAndShape.RelativePosition;
-            relative.X = this.maxLabelLength + systemLabelsRightMargin;
+            let relative: PointF2D = staffLine.PositionAndShape.RelativePosition;
+            relative.x = this.maxLabelLength + systemLabelsRightMargin;
             staffLine.PositionAndShape.RelativePosition = relative;
-            staffLine.PositionAndShape.BorderRight = this.boundingBox.Size.Width - this.maxLabelLength - systemLabelsRightMargin;
-            for (let i: number = 0; i < staffLine.StaffLines.Length; i++) {
-                let lineEnd: PointF_2D = new PointF_2D(staffLine.PositionAndShape.Size.Width, staffLine.StaffLines[i].End.Y);
+            staffLine.PositionAndShape.BorderRight = this.boundingBox.Size.width - this.maxLabelLength - systemLabelsRightMargin;
+            for (let i: number = 0; i < staffLine.StaffLines.length; i++) {
+                let lineEnd: PointF2D = new PointF2D(staffLine.PositionAndShape.Size.width, staffLine.StaffLines[i].End.y);
                 staffLine.StaffLines[i].End = lineEnd;
             }
         }

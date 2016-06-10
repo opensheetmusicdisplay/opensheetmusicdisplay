@@ -1,6 +1,6 @@
 ﻿import {MusicSymbol} from "./MusicSymbol";
-import {SizeF_2D} from "../../Common/DataObjects/SizeF_2D";
-import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {BoundingBox} from "./BoundingBox";
 export class FontInfo {
     protected static info: FontInfo = new FontInfo();
@@ -24,26 +24,26 @@ export class FontInfo {
         }
 
     }
-    public getBoundingBox(symbol: MusicSymbol): SizeF_2D {
+    public getBoundingBox(symbol: MusicSymbol): SizeF2D {
         try {
             return this.symbolMapping[symbol].boundingBox;
         }
         catch (ex) {
             Logging.debug("FontInfo.getBoundingBox", ex);
-            return new SizeF_2D();
+            return new SizeF2D();
         }
 
     }
-    public addBoundingBox(symbol: MusicSymbol, boundingBox: SizeF_2D): void {
+    public addBoundingBox(symbol: MusicSymbol, boundingBox: SizeF2D): void {
         let si: SymbolInfo = this.symbolMapping[symbol];
         si.boundingBox = boundingBox;
         this.symbolMapping.Remove(symbol);
         this.symbolMapping.push(symbol, si);
     }
-    public getCenterDistance(symbol: SymbolInfo): SizeF_2D {
-        let symbolBox: SizeF_2D = symbol.boundingBox;
-        let symbolCenter: PointF_2D = symbol.center;
-        let centerDistance: SizeF_2D = new SizeF_2D(symbolBox.Width * symbolCenter.X, symbolBox.Height * symbolCenter.Y);
+    public getCenterDistance(symbol: SymbolInfo): SizeF2D {
+        let symbolBox: SizeF2D = symbol.boundingBox;
+        let symbolCenter: PointF2D = symbol.center;
+        let centerDistance: SizeF2D = new SizeF2D(symbolBox.Width * symbolCenter.X, symbolBox.Height * symbolCenter.Y);
         return centerDistance;
     }
     public fillPSI(psi: BoundingBox, symbol: MusicSymbol): void {
@@ -51,9 +51,9 @@ export class FontInfo {
     }
     public fillPSI(psi: BoundingBox, symbol: MusicSymbol, scaleFactor: number): void {
         let symbolInfo: SymbolInfo = this.symbolMapping[symbol];
-        let symbolBox: SizeF_2D = symbolInfo.boundingBox;
-        let symbolCenter: PointF_2D = symbolInfo.center;
-        let centerDistance: SizeF_2D = new SizeF_2D(symbolBox.Width * symbolCenter.X, symbolBox.Height * symbolCenter.Y);
+        let symbolBox: SizeF2D = symbolInfo.boundingBox;
+        let symbolCenter: PointF2D = symbolInfo.center;
+        let centerDistance: SizeF2D = new SizeF2D(symbolBox.Width * symbolCenter.X, symbolBox.Height * symbolCenter.Y);
         let symbolMargins: SymbolMargins = symbolInfo.margins;
         psi.BorderLeft = -centerDistance.Width * scaleFactor;
         psi.BorderRight = (symbolBox.Width - centerDistance.Width) * scaleFactor;
@@ -113,91 +113,91 @@ export class FontInfo {
                                 1, 1.7, 1.8,
                                     1.09, 0.77,
                                         3.0;
-        let centerVector: PointF_2D[] = new PointF_2D(0.5, 0.5),
-        new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.0, 1.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 1.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 1.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 1.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(500.0 / 940.0, 1660.0 / 2675.0),
-            new PointF_2D(500.0 / 1830.0, 760.0 / 2680.0),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(400.0 / 925.0, 1210.0 / 2680.0),
-            new PointF_2D(400.0 / 1500.0, 360.0 / 2680.0),
-            new PointF_2D(480.0 / 1190.0, 260.0 / 2680.0),
-            new PointF_2D(510.0 / 1040.0, 190.0 / 2680.0),
-            new PointF_2D(535.0 / 960.0, 160.0 / 2680.0),
-            new PointF_2D(400.0 / 990.0, 1960.0 / 2680.0),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(785.0 / 1570.0, 1960.0 / 2680.0),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.0, 0.0),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(2880.0 / 5760.0, 2250.0 / 2680.0),
-            new PointF_2D(2850.0 / 5700.0, 1810.0 / 2680.0),
-            new PointF_2D(450.0 / 900.0, 1560.0 / 2680.0),
-            new PointF_2D(5250.0 / 10500.0, 1340.0 / 2680.0),
-            new PointF_2D(1787.0 / 3574.0, 1340.0 / 2680.0),
-            new PointF_2D(872.0 / 1744.0, 1340.0 / 2680.0),
-            new PointF_2D(872.0 / 1744.0, 1340.0 / 2680.0),
-            new PointF_2D(1500.0 / 3000.0, 1865.0 / 2680.0),
-            new PointF_2D(1100.0 / 2200.0, 1865.0 / 2680.0),
-            new PointF_2D(1000.0 / 2000.0, 2680.0 / 2680.0),
-            new PointF_2D(1250.0 / 2500.0, 2680.0 / 2680.0),
-            new PointF_2D(2330.0 / 4660.0, 2680.0 / 2680.0),
-            new PointF_2D(1430.0 / 2860.0, 2680.0 / 2680.0),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.63, 0.5448),
-            new PointF_2D(0.63, 0.667),
-            new PointF_2D(0.63, 0.5448),
-            new PointF_2D(0.63, 0.667),
-            new PointF_2D(0.2, 0.224),
-            new PointF_2D(0.2, 0.4067),
-            new PointF_2D(0.2, 0.224),
-            new PointF_2D(0.2, 0.4067),
-            new PointF_2D(0.5, 0.653),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.52, 0.925),
-            new PointF_2D(0.5, 1),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.634),
-            new PointF_2D(0.5, 0.5),
-            new PointF_2D(0.5, 0.5);
+        let centerVector: PointF2D[] = new PointF2D(0.5, 0.5),
+        new PointF2D(0.5, 0.5),
+            new PointF2D(0.0, 1.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 1.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 1.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 1.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(500.0 / 940.0, 1660.0 / 2675.0),
+            new PointF2D(500.0 / 1830.0, 760.0 / 2680.0),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(400.0 / 925.0, 1210.0 / 2680.0),
+            new PointF2D(400.0 / 1500.0, 360.0 / 2680.0),
+            new PointF2D(480.0 / 1190.0, 260.0 / 2680.0),
+            new PointF2D(510.0 / 1040.0, 190.0 / 2680.0),
+            new PointF2D(535.0 / 960.0, 160.0 / 2680.0),
+            new PointF2D(400.0 / 990.0, 1960.0 / 2680.0),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(785.0 / 1570.0, 1960.0 / 2680.0),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.0, 0.0),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(2880.0 / 5760.0, 2250.0 / 2680.0),
+            new PointF2D(2850.0 / 5700.0, 1810.0 / 2680.0),
+            new PointF2D(450.0 / 900.0, 1560.0 / 2680.0),
+            new PointF2D(5250.0 / 10500.0, 1340.0 / 2680.0),
+            new PointF2D(1787.0 / 3574.0, 1340.0 / 2680.0),
+            new PointF2D(872.0 / 1744.0, 1340.0 / 2680.0),
+            new PointF2D(872.0 / 1744.0, 1340.0 / 2680.0),
+            new PointF2D(1500.0 / 3000.0, 1865.0 / 2680.0),
+            new PointF2D(1100.0 / 2200.0, 1865.0 / 2680.0),
+            new PointF2D(1000.0 / 2000.0, 2680.0 / 2680.0),
+            new PointF2D(1250.0 / 2500.0, 2680.0 / 2680.0),
+            new PointF2D(2330.0 / 4660.0, 2680.0 / 2680.0),
+            new PointF2D(1430.0 / 2860.0, 2680.0 / 2680.0),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.63, 0.5448),
+            new PointF2D(0.63, 0.667),
+            new PointF2D(0.63, 0.5448),
+            new PointF2D(0.63, 0.667),
+            new PointF2D(0.2, 0.224),
+            new PointF2D(0.2, 0.4067),
+            new PointF2D(0.2, 0.224),
+            new PointF2D(0.2, 0.4067),
+            new PointF2D(0.5, 0.653),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.52, 0.925),
+            new PointF2D(0.5, 1),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.634),
+            new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5);
         let marginVector: SymbolMargins[] = new SymbolMargins(0.1, 0.1, 0.1, 0.1),
         new SymbolMargins(0.1, 0.1),
             new SymbolMargins(0.1, 0.1),
@@ -296,10 +296,10 @@ export class SymbolInfo {
     public symbol: string;
     public id: number;
     public scaleFactor: number;
-    public boundingBox: SizeF_2D;
-    public center: PointF_2D;
+    public boundingBox: SizeF2D;
+    public center: PointF2D;
     public margins: SymbolMargins;
-    constructor(symbol: string, id: number, scaleFactor: number, center: PointF_2D, margins: SymbolMargins) {
+    constructor(symbol: string, id: number, scaleFactor: number, center: PointF2D, margins: SymbolMargins) {
         this();
         this.symbol = symbol;
         this.id = id;
@@ -313,16 +313,16 @@ export class SymbolInfo {
     public set ScaleFactor(value: number) {
         this.scaleFactor = value;
     }
-    public get BoundingBox(): SizeF_2D {
+    public get BoundingBox(): SizeF2D {
         return this.boundingBox;
     }
-    public set BoundingBox(value: SizeF_2D) {
+    public set BoundingBox(value: SizeF2D) {
         this.boundingBox = value;
     }
-    public get Center(): PointF_2D {
+    public get Center(): PointF2D {
         return this.center;
     }
-    public set Center(value: PointF_2D) {
+    public set Center(value: PointF2D) {
         this.center = value;
     }
     public get Margins(): SymbolMargins {

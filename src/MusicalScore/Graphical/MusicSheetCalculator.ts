@@ -27,7 +27,7 @@ import {StaffEntryLink} from "../VoiceData/StaffEntryLink";
 import {MusicSystemBuilder} from "./MusicSystemBuilder";
 import {MultiTempoExpression} from "../VoiceData/Expressions/multiTempoExpression";
 import {Repetition} from "../MusicSource/Repetition";
-import {PointF_2D} from "../../Common/DataObjects/PointF_2D";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {BoundingBox} from "./BoundingBox";
 import {Instrument} from "../Instrument";
@@ -255,7 +255,7 @@ export class MusicSheetCalculator {
                 let distance: number = graphicalMusicPage.MusicSystems[0].PositionAndShape.BorderTop;
                 for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                     let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                    let newPosition: PointF_2D = new PointF_2D(musicSystem.PositionAndShape.RelativePosition.X, musicSystem.PositionAndShape.RelativePosition.Y - distance);
+                    let newPosition: PointF2D = new PointF2D(musicSystem.PositionAndShape.RelativePosition.X, musicSystem.PositionAndShape.RelativePosition.Y - distance);
                     musicSystem.PositionAndShape.RelativePosition = newPosition;
                 }
                 if (graphicalMusicPage === this.graphicalMusicSheet.MusicPages[0])
@@ -310,7 +310,7 @@ export class MusicSheetCalculator {
 
     }
     protected layoutFingering(staffLine: StaffLine, skyBottomLineCalculator: SkyBottomLineCalculator,
-        staffEntry: GraphicalStaffEntry, measureRelativePosition: PointF_2D): void {
+        staffEntry: GraphicalStaffEntry, measureRelativePosition: PointF2D): void {
 
     }
     protected calculateDynamicExpressionsForSingleMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
@@ -469,11 +469,11 @@ export class MusicSheetCalculator {
     }
     protected resetYPositionForLeadSheet(psi: BoundingBox): void {
         if (this.leadSheet) {
-            psi.RelativePosition = new PointF_2D(psi.RelativePosition.X, 0.0);
+            psi.RelativePosition = new PointF2D(psi.RelativePosition.X, 0.0);
         }
     }
     protected layoutVoiceEntries(graphicalStaffEntry: GraphicalStaffEntry): void {
-        graphicalStaffEntry.PositionAndShape.RelativePosition = new PointF_2D(0.0, 0.0);
+        graphicalStaffEntry.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
         let isGraceStaffEntry: boolean = graphicalStaffEntry.StaffEntryParent !== undefined;
         if (!this.leadSheet) {
             let graphicalStaffEntryNotes: GraphicalNote[][] = graphicalStaffEntry.Notes.Where(n => n.length > 0);
@@ -582,8 +582,8 @@ export class MusicSheetCalculator {
         }
     }
     protected getRelativePositionInStaffLineFromTimestamp(timestamp: Fraction, verticalIndex: number, staffLine: StaffLine,
-        multiStaffInstrument: boolean, firstVisibleMeasureRelativeX: number = 0.0): PointF_2D {
-        let relative: PointF_2D = new PointF_2D();
+        multiStaffInstrument: boolean, firstVisibleMeasureRelativeX: number = 0.0): PointF2D {
+        let relative: PointF2D = new PointF2D();
         let leftStaffEntry: GraphicalStaffEntry = undefined;
         let rightStaffEntry: GraphicalStaffEntry = undefined;
         let numEntries: number = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
@@ -614,7 +614,7 @@ export class MusicSheetCalculator {
                     rightX = staffLine.PositionAndShape.Size.Width;
                 else leftX = staffLine.PositionAndShape.RelativePosition.X;
             }
-            relative = new PointF_2D(leftX + (rightX - leftX) * timestampQuotient, 0.0);
+            relative = new PointF2D(leftX + (rightX - leftX) * timestampQuotient, 0.0);
         }
         return relative;
     }
@@ -794,7 +794,7 @@ export class MusicSheetCalculator {
         return measure;
     }
     private calculatePageLabels(page: GraphicalMusicPage): void {
-        let relative: PointF_2D = new PointF_2D();
+        let relative: PointF2D = new PointF2D();
         let firstSystemAbsoluteTopMargin: number = 10;
         if (page.MusicSystems.length > 0) {
             let firstMusicSystem: MusicSystem = page.MusicSystems[0];
@@ -1019,11 +1019,11 @@ export class MusicSheetCalculator {
     private calculateTwoRestNotesPlacementWithCollisionDetection(graphicalStaffEntry: GraphicalStaffEntry): void {
         let firstRestNote: GraphicalNote = graphicalStaffEntry.Notes[0][0];
         let secondRestNote: GraphicalNote = graphicalStaffEntry.Notes[1][0];
-        secondRestNote.PositionAndShape.RelativePosition = new PointF_2D(0.0, 2.5);
+        secondRestNote.PositionAndShape.RelativePosition = new PointF2D(0.0, 2.5);
         graphicalStaffEntry.PositionAndShape.calculateAbsolutePositionsRecursiveWithoutTopelement();
         firstRestNote.PositionAndShape.computeNonOverlappingPositionWithMargin(graphicalStaffEntry.PositionAndShape, ColDirEnum.Up,
-            new PointF_2D(0.0, secondRestNote.PositionAndShape.RelativePosition.Y));
-        let relative: PointF_2D = firstRestNote.PositionAndShape.RelativePosition;
+            new PointF2D(0.0, secondRestNote.PositionAndShape.RelativePosition.Y));
+        let relative: PointF2D = firstRestNote.PositionAndShape.RelativePosition;
         relative.Y -= 1.0;
         firstRestNote.PositionAndShape.RelativePosition = relative;
         graphicalStaffEntry.PositionAndShape.calculateBoundingBox();
@@ -1050,17 +1050,17 @@ export class MusicSheetCalculator {
         if (collision) {
             if (restNote.SourceNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice) {
                 let bottomBorder: number = graphicalNotes[0].PositionAndShape.BorderMarginBottom + graphicalNotes[0].PositionAndShape.RelativePosition.Y;
-                restNote.PositionAndShape.RelativePosition = new PointF_2D(0.0, bottomBorder - restNote.PositionAndShape.BorderMarginTop + 0.5);
+                restNote.PositionAndShape.RelativePosition = new PointF2D(0.0, bottomBorder - restNote.PositionAndShape.BorderMarginTop + 0.5);
             } else {
                 if (graphicalNotes[0].SourceNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice) {
                     let topBorder: number = graphicalNotes.Last().PositionAndShape.BorderMarginTop + graphicalNotes.Last().PositionAndShape.RelativePosition.Y;
-                    restNote.PositionAndShape.RelativePosition = new PointF_2D(0.0, topBorder - restNote.PositionAndShape.BorderMarginBottom - 0.5);
+                    restNote.PositionAndShape.RelativePosition = new PointF2D(0.0, topBorder - restNote.PositionAndShape.BorderMarginBottom - 0.5);
                 } else {
                     let topBorder: number = graphicalNotes.Last().PositionAndShape.BorderMarginTop + graphicalNotes.Last().PositionAndShape.RelativePosition.Y;
                     let bottomBorder: number = graphicalNotes[0].PositionAndShape.BorderMarginBottom + graphicalNotes[0].PositionAndShape.RelativePosition.Y;
                     if (bottomBorder < 2.0)
-                    restNote.PositionAndShape.RelativePosition = new PointF_2D(0.0, bottomBorder - restNote.PositionAndShape.BorderMarginTop + 0.5);
- else restNote.PositionAndShape.RelativePosition = new PointF_2D(0.0, topBorder - restNote.PositionAndShape.BorderMarginBottom - 0.0);
+                    restNote.PositionAndShape.RelativePosition = new PointF2D(0.0, bottomBorder - restNote.PositionAndShape.BorderMarginTop + 0.5);
+ else restNote.PositionAndShape.RelativePosition = new PointF2D(0.0, topBorder - restNote.PositionAndShape.BorderMarginBottom - 0.0);
                 }
             }
         }
@@ -1101,7 +1101,7 @@ export class MusicSheetCalculator {
                     let skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
                     for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
                         let measure: StaffMeasure = staffLine.Measures[idx4];
-                        let measureRelativePosition: PointF_2D = measure.PositionAndShape.RelativePosition;
+                        let measureRelativePosition: PointF2D = measure.PositionAndShape.RelativePosition;
                         for (let idx5: number = 0, len5: number = measure.StaffEntries.length; idx5 < len5; ++idx5) {
                             let staffEntry: GraphicalStaffEntry = measure.StaffEntries[idx5];
                             let hasTechnicalInstruction: boolean = false;
