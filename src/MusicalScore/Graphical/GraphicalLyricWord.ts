@@ -23,7 +23,7 @@ export class GraphicalLyricWord {
         return true;
     }
     private initialize(): void {
-        for (var i: number = 0; i < this.lyricWord.Syllabels.Count; i++)
+        for (var i: number = 0; i < this.lyricWord.Syllables.Count; i++)
             this.graphicalLyricsEntries.Add(null);
     }
 }
