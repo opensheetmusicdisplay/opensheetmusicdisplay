@@ -230,8 +230,8 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    this.Composer = new Label(this.musicSheetParameterObject.Composer);
     //}
     public addMeasure(measure: SourceMeasure): void {
-        this.SourceMeasures.push(measure);
-        measure.measureListIndex = this.SourceMeasures.length - 1;
+        this.sourceMeasures.push(measure);
+        measure.measureListIndex = this.sourceMeasures.length - 1;
     }
     public checkForInstrumentWithNoVoice(): void {
         for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
@@ -463,8 +463,8 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return Fraction.plus(lastMeasure.AbsoluteTimestamp, lastMeasure.Duration);
     }
     public getSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
-        for (let idx: number = 0, len: number = this.SourceMeasures.length; idx < len; ++idx) {
-            let sm: SourceMeasure = this.SourceMeasures[idx];
+        for (let idx: number = 0, len: number = this.sourceMeasures.length; idx < len; ++idx) {
+            let sm: SourceMeasure = this.sourceMeasures[idx];
             for (let idx2: number = 0, len2: number = sm.VerticalSourceStaffEntryContainers.length; idx2 < len2; ++idx2) {
                 let vssec: VerticalSourceStaffEntryContainer = sm.VerticalSourceStaffEntryContainers[idx2];
                 if (Fraction.Equal(timeStamp, vssec.getAbsoluteTimestamp())) {
@@ -475,7 +475,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return this.findSourceMeasureFromTimeStamp(timeStamp);
     }
     public findSourceMeasureFromTimeStamp(timestamp: Fraction): SourceMeasure {
-        for (let sm of this.SourceMeasures) {
+        for (let sm of this.sourceMeasures) {
             if (sm.AbsoluteTimestamp.lte(timestamp) && timestamp.lt(Fraction.plus(sm.AbsoluteTimestamp, sm.Duration))) {
                 return sm;
             }
