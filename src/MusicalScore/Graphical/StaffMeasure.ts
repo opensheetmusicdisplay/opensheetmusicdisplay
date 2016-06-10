@@ -20,17 +20,17 @@ export class StaffMeasure extends GraphicalObject {
     constructor(staff: Staff, parentSourceMeasure: SourceMeasure) {
         this.staff = staff;
         this.ParentSourceMeasure = parentSourceMeasure;
-        this.StaffEntries = new List<GraphicalStaffEntry>();
-        if (this.ParentSourceMeasure != null)
+        this.StaffEntries = [];
+        if (this.ParentSourceMeasure !== undefined)
             this.measureNumber = this.ParentSourceMeasure.MeasureNumber;
     }
     constructor(staffLine: StaffLine) {
         this.parentStaffLine = staffLine;
         this.staff = staffLine.ParentStaff;
-        this.StaffEntries = new List<GraphicalStaffEntry>();
+        this.StaffEntries = [];
     }
     public ParentSourceMeasure: SourceMeasure;
-    public StaffEntries: List<GraphicalStaffEntry>;
+    public StaffEntries: GraphicalStaffEntry[];
     public ParentMusicSystem: MusicSystem;
     public BeginInstructionsWidth: number;
     public MinimumStaffEntriesWidth: number;
@@ -60,7 +60,7 @@ export class StaffMeasure extends GraphicalObject {
     }
     public set ParentStaffLine(value: StaffLine) {
         this.parentStaffLine = value;
-        if (this.parentStaffLine != null)
+        if (this.parentStaffLine !== undefined)
             this.PositionAndShape.Parent = this.parentStaffLine.PositionAndShape;
     }
     public ResetLayout(): void { throw new Error('not implemented'); }
@@ -73,42 +73,42 @@ export class StaffMeasure extends GraphicalObject {
     public SetWidth(width: number): void { throw new Error('not implemented'); }
     public LayoutSymbols(): void { throw new Error('not implemented'); }
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {
-        for (var idx: number = 0, len = this.StaffEntries.Count; idx < len; ++idx) {
-            var graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
-            if (graphicalStaffEntry.RelInMeasureTimestamp == relativeTimestamp)
+        for (let idx: number = 0, len: number = this.StaffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
+            if (graphicalStaffEntry.RelInMeasureTimestamp === relativeTimestamp)
                 return graphicalStaffEntry;
         }
-        return null;
+        return undefined;
     }
     public findGraphicalStaffEntryFromVerticalContainerTimestamp(absoluteTimestamp: Fraction): GraphicalStaffEntry {
-        for (var idx: number = 0, len = this.StaffEntries.Count; idx < len; ++idx) {
-            var graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
-            if (graphicalStaffEntry.SourceStaffEntry.VerticalContainerParent.getAbsoluteTimestamp() == absoluteTimestamp)
+        for (let idx: number = 0, len: number = this.StaffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
+            if (graphicalStaffEntry.SourceStaffEntry.VerticalContainerParent.getAbsoluteTimestamp() === absoluteTimestamp)
                 return graphicalStaffEntry;
         }
-        return null;
+        return undefined;
     }
     public hasSameDurationWithSourceMeasureParent(): boolean {
-        var duration: Fraction = new Fraction(0, 1);
-        for (var idx: number = 0, len = this.StaffEntries.Count; idx < len; ++idx) {
-            var graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
-            duration.Add(graphicalStaffEntry.findStaffEntryMinNoteLength());
+        let duration: Fraction = new Fraction(0, 1);
+        for (let idx: number = 0, len: number = this.StaffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
+            duration.push(graphicalStaffEntry.findStaffEntryMinNoteLength());
         }
-        return duration == this.ParentSourceMeasure.Duration;
+        return duration === this.ParentSourceMeasure.Duration;
     }
     public hasMultipleVoices(): boolean {
-        if (this.StaffEntries.Count == 0)
+        if (this.StaffEntries.length === 0)
             return false;
-        var voices: List<Voice> = new List<Voice>();
-        for (var idx: number = 0, len = this.StaffEntries.Count; idx < len; ++idx) {
-            var staffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
-            for (var idx2: number = 0, len2 = staffEntry.SourceStaffEntry.VoiceEntries.Count; idx2 < len2; ++idx2) {
-                var voiceEntry: VoiceEntry = staffEntry.SourceStaffEntry.VoiceEntries[idx2];
-                if (!voices.Contains(voiceEntry.ParentVoice))
-                    voices.Add(voiceEntry.ParentVoice);
+        let voices: Voice[] = [];
+        for (let idx: number = 0, len: number = this.StaffEntries.length; idx < len; ++idx) {
+            let staffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
+            for (let idx2: number = 0, len2: number = staffEntry.SourceStaffEntry.VoiceEntries.length; idx2 < len2; ++idx2) {
+                let voiceEntry: VoiceEntry = staffEntry.SourceStaffEntry.VoiceEntries[idx2];
+                if (!voices.indexOf(voiceEntry.ParentVoice) !== -1)
+                    voices.push(voiceEntry.ParentVoice);
             }
         }
-        if (voices.Count > 1)
+        if (voices.length > 1)
             return true;
         return false;
     }
@@ -116,25 +116,25 @@ export class StaffMeasure extends GraphicalObject {
         return this.ParentStaff.ParentInstrument.Visible;
     }
     public getGraphicalMeasureDurationFromStaffEntries(): Fraction {
-        var duration: Fraction = new Fraction(0, 1);
-        var voices: List<Voice> = new List<Voice>();
-        for (var idx: number = 0, len = this.StaffEntries.Count; idx < len; ++idx) {
-            var graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
-            for (var idx2: number = 0, len2 = graphicalStaffEntry.SourceStaffEntry.VoiceEntries.Count; idx2 < len2; ++idx2) {
-                var voiceEntry: VoiceEntry = graphicalStaffEntry.SourceStaffEntry.VoiceEntries[idx2];
-                if (!voices.Contains(voiceEntry.ParentVoice))
-                    voices.Add(voiceEntry.ParentVoice);
+        let duration: Fraction = new Fraction(0, 1);
+        let voices: Voice[] = [];
+        for (let idx: number = 0, len: number = this.StaffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
+            for (let idx2: number = 0, len2: number = graphicalStaffEntry.SourceStaffEntry.VoiceEntries.length; idx2 < len2; ++idx2) {
+                let voiceEntry: VoiceEntry = graphicalStaffEntry.SourceStaffEntry.VoiceEntries[idx2];
+                if (!voices.indexOf(voiceEntry.ParentVoice) !== -1)
+                    voices.push(voiceEntry.ParentVoice);
             }
         }
-        for (var idx: number = 0, len = voices.Count; idx < len; ++idx) {
-            var voice: Voice = voices[idx];
-            var voiceDuration: Fraction = new Fraction(0, 1);
-            for (var idx2: number = 0, len2 = this.StaffEntries.Count; idx2 < len2; ++idx2) {
-                var graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx2];
-                for (var idx3: number = 0, len3 = graphicalStaffEntry.Notes.Count; idx3 < len3; ++idx3) {
-                    var graphicalNotes: List<GraphicalNote> = graphicalStaffEntry.Notes[idx3];
-                    if (graphicalNotes.Count > 0 && graphicalNotes[0].SourceNote.ParentVoiceEntry.ParentVoice == voice)
-                        voiceDuration.Add(graphicalNotes[0].GraphicalNoteLength);
+        for (let idx: number = 0, len: number = voices.length; idx < len; ++idx) {
+            let voice: Voice = voices[idx];
+            let voiceDuration: Fraction = new Fraction(0, 1);
+            for (let idx2: number = 0, len2: number = this.StaffEntries.length; idx2 < len2; ++idx2) {
+                let graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx2];
+                for (let idx3: number = 0, len3: number = graphicalStaffEntry.Notes.length; idx3 < len3; ++idx3) {
+                    let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.Notes[idx3];
+                    if (graphicalNotes.length > 0 && graphicalNotes[0].SourceNote.ParentVoiceEntry.ParentVoice === voice)
+                        voiceDuration.push(graphicalNotes[0].GraphicalNoteLength);
                 }
             }
             if (voiceDuration > duration)
@@ -143,47 +143,47 @@ export class StaffMeasure extends GraphicalObject {
         return duration;
     }
     public addGraphicalStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        this.StaffEntries.Add(graphicalStaffEntry);
-        this.PositionAndShape.ChildElements.Add(graphicalStaffEntry.PositionAndShape);
+        this.StaffEntries.push(graphicalStaffEntry);
+        this.PositionAndShape.ChildElements.push(graphicalStaffEntry.PositionAndShape);
     }
     public addGraphicalStaffEntryAtTimestamp(staffEntry: GraphicalStaffEntry): void {
-        if (staffEntry != null) {
-            if (this.StaffEntries.Count == 0 || this.StaffEntries[this.StaffEntries.Count - 1].RelInMeasureTimestamp < staffEntry.RelInMeasureTimestamp)
-                this.StaffEntries.Add(staffEntry);
+        if (staffEntry !== undefined) {
+            if (this.StaffEntries.length === 0 || this.StaffEntries[this.StaffEntries.length - 1].RelInMeasureTimestamp < staffEntry.RelInMeasureTimestamp)
+                this.StaffEntries.push(staffEntry);
             else {
-                for (var i: number = this.StaffEntries.Count - 1; i >= 0; i--) {
+                for (let i: number = this.StaffEntries.length - 1; i >= 0; i--) {
                     if (this.StaffEntries[i].RelInMeasureTimestamp < staffEntry.RelInMeasureTimestamp) {
-                        this.StaffEntries.Insert(i + 1, staffEntry);
+                        this.StaffEntries.splice(i + 1, 0, staffEntry);
                         break;
                     }
-                    if (i == 0)
-                        this.StaffEntries.Insert(i, staffEntry);
+                    if (i === 0)
+                        this.StaffEntries.splice(i, 0, staffEntry);
                 }
             }
-            this.PositionAndShape.ChildElements.Add(staffEntry.PositionAndShape);
+            this.PositionAndShape.ChildElements.push(staffEntry.PositionAndShape);
         }
     }
     public beginsWithLineRepetition(): boolean {
-        var sourceMeasure: SourceMeasure = this.ParentSourceMeasure;
-        if (sourceMeasure == null)
+        let sourceMeasure: SourceMeasure = this.ParentSourceMeasure;
+        if (sourceMeasure === undefined)
             return false;
         return sourceMeasure.beginsWithLineRepetition();
     }
     public endsWithLineRepetition(): boolean {
-        var sourceMeasure: SourceMeasure = this.ParentSourceMeasure;
-        if (sourceMeasure == null)
+        let sourceMeasure: SourceMeasure = this.ParentSourceMeasure;
+        if (sourceMeasure === undefined)
             return false;
         return sourceMeasure.endsWithLineRepetition();
     }
     public beginsWithWordRepetition(): boolean {
-        var sourceMeasure: SourceMeasure = this.ParentSourceMeasure;
-        if (sourceMeasure == null)
+        let sourceMeasure: SourceMeasure = this.ParentSourceMeasure;
+        if (sourceMeasure === undefined)
             return false;
         return sourceMeasure.beginsWithWordRepetition();
     }
     public endsWithWordRepetition(): boolean {
-        var sourceMeasure: SourceMeasure = this.ParentSourceMeasure;
-        if (sourceMeasure == null)
+        let sourceMeasure: SourceMeasure = this.ParentSourceMeasure;
+        if (sourceMeasure === undefined)
             return false;
         return sourceMeasure.endsWithWordRepetition();
     }

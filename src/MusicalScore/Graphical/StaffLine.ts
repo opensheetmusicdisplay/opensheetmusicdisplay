@@ -7,7 +7,7 @@ import {GraphicalObject} from "./GraphicalObject";
 import {StaffMeasure} from "./StaffMeasure";
 import {MusicSystem} from "./MusicSystem";
 export class StaffLine extends GraphicalObject {
-    protected measures: List<StaffMeasure> = new List<StaffMeasure>();
+    protected measures: StaffMeasure[] = [];
     protected staffLines: GraphicalLine[] = new Array(5);
     protected parentMusicSystem: MusicSystem;
     protected parentStaff: Staff;
@@ -18,10 +18,10 @@ export class StaffLine extends GraphicalObject {
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(parentSystem.PositionAndShape, this);
     }
-    public get Measures(): List<StaffMeasure> {
+    public get Measures(): StaffMeasure[] {
         return this.measures;
     }
-    public set Measures(value: List<StaffMeasure>) {
+    public set Measures(value: StaffMeasure[]) {
         this.measures = value;
     }
     public get StaffLines(): GraphicalLine[] {
@@ -55,21 +55,21 @@ export class StaffLine extends GraphicalObject {
         this.bottomLine = value;
     }
     public isPartOfMultiStaffInstrument(): boolean {
-        var instrument: Instrument = this.parentStaff.ParentInstrument;
-        if (instrument.Staves.Count > 1)
+        let instrument: Instrument = this.parentStaff.ParentInstrument;
+        if (instrument.Staves.length > 1)
             return true;
         return false;
     }
     public findClosestStaffEntry(xPosition: number): GraphicalStaffEntry {
-        var closestStaffentry: GraphicalStaffEntry = null;
-        var difference: number = number.MaxValue;
-        for (var idx: number = 0, len = this.Measures.Count; idx < len; ++idx) {
-            var graphicalMeasure: StaffMeasure = this.Measures[idx];
-            for (var idx2: number = 0, len2 = graphicalMeasure.StaffEntries.Count; idx2 < len2; ++idx2) {
-                var graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.StaffEntries[idx2];
-                if (Math.Abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X) < 5.0)
+        let closestStaffentry: GraphicalStaffEntry = undefined;
+        let difference: number = Number.MAX_VALUE;
+        for (let idx: number = 0, len: number = this.Measures.length; idx < len; ++idx) {
+            let graphicalMeasure: StaffMeasure = this.Measures[idx];
+            for (let idx2: number = 0, len2: number = graphicalMeasure.StaffEntries.length; idx2 < len2; ++idx2) {
+                let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.StaffEntries[idx2];
+                if (Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X) < 5.0)
                 {
-                    difference = Math.Abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X);
+                    difference = Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.X - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.X);
                     closestStaffentry = graphicalStaffEntry;
                 }
             }

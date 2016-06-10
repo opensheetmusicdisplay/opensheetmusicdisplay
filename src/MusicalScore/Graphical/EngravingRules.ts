@@ -136,8 +136,8 @@ export class EngravingRules {
     private maxInstructionsConstValue: number;
     private noteDistances: number[] = [1.0,1.0,1.3,1.6,2.0,2.5,3.0,4.0];
     private noteDistancesScalingFactors: number[] = [1.0,2.0,4.0,8.0,16.0,32.0,64.0,128.0];
-    private durationDistanceDict: Dictionary<number, number> = new Dictionary<number, number>();
-    private durationScalingDistanceDict: Dictionary<number, number> = new Dictionary<number, number>();
+    private durationDistanceDict: {[_: number]: number; } = {};
+    private durationScalingDistanceDict: {[_: number]: number; } = {};
     constructor() {
         this.samplingUnit = EngravingRules.unit * 3;
         this.sheetTitleHeight = 4.0;
@@ -267,17 +267,17 @@ export class EngravingRules {
         this.populateDictionaries();
         try {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin;
-            if (FontInfo.Info != null) {
+            if (FontInfo.Info !== undefined) {
                 this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).Width + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).Width + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).Width;
             }
         }
         catch (ex) {
-            Logger.DefaultLogger.LogError(PhonicScore.Common.Enums.LogLevel.NORMAL, "EngravingRules()", ex);
+            Logging.log("EngravingRules()", ex);
         }
 
     }
     public static get Rules(): EngravingRules {
-        return EngravingRules.rules != null ? EngravingRules.rules : (EngravingRules.rules = new EngravingRules());
+        return EngravingRules.rules !== undefined ? EngravingRules.rules : (EngravingRules.rules = new EngravingRules());
     }
     public get SamplingUnit(): number {
         return this.samplingUnit;
@@ -1059,46 +1059,46 @@ export class EngravingRules {
     public set NoteDistancesScalingFactors(value: number[]) {
         this.noteDistancesScalingFactors = value;
     }
-    public get DurationDistanceDict(): Dictionary<number, number> {
+    public get DurationDistanceDict(): {[_: number]: number; } {
         return this.durationDistanceDict;
     }
-    public get DurationScalingDistanceDict(): Dictionary<number, number> {
+    public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
     }
     private populateDictionaries(): void {
-        for (var i: number = 0; i < this.noteDistances.length; i++) {
+        for (let i: number = 0; i < this.noteDistances.length; i++) {
             switch (i) {
                 case 0:
-                    this.durationDistanceDict.Add(0.015625, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.Add(0.015625, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict.push(0.015625, this.noteDistances[i]);
+                    this.durationScalingDistanceDict.push(0.015625, this.noteDistancesScalingFactors[i]);
                     break;
                 case 1:
-                    this.durationDistanceDict.Add(0.03125, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.Add(0.03125, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict.push(0.03125, this.noteDistances[i]);
+                    this.durationScalingDistanceDict.push(0.03125, this.noteDistancesScalingFactors[i]);
                     break;
                 case 2:
-                    this.durationDistanceDict.Add(0.0625, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.Add(0.0625, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict.push(0.0625, this.noteDistances[i]);
+                    this.durationScalingDistanceDict.push(0.0625, this.noteDistancesScalingFactors[i]);
                     break;
                 case 3:
-                    this.durationDistanceDict.Add(0.125, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.Add(0.125, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict.push(0.125, this.noteDistances[i]);
+                    this.durationScalingDistanceDict.push(0.125, this.noteDistancesScalingFactors[i]);
                     break;
                 case 4:
-                    this.durationDistanceDict.Add(0.25, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.Add(0.25, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict.push(0.25, this.noteDistances[i]);
+                    this.durationScalingDistanceDict.push(0.25, this.noteDistancesScalingFactors[i]);
                     break;
                 case 5:
-                    this.durationDistanceDict.Add(0.5, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.Add(0.5, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict.push(0.5, this.noteDistances[i]);
+                    this.durationScalingDistanceDict.push(0.5, this.noteDistancesScalingFactors[i]);
                     break;
                 case 6:
-                    this.durationDistanceDict.Add(1.0, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.Add(1.0, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict.push(1.0, this.noteDistances[i]);
+                    this.durationScalingDistanceDict.push(1.0, this.noteDistancesScalingFactors[i]);
                     break;
                 case 7:
-                    this.durationDistanceDict.Add(2.0, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.Add(2.0, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict.push(2.0, this.noteDistances[i]);
+                    this.durationScalingDistanceDict.push(2.0, this.noteDistancesScalingFactors[i]);
                     break;
             }
         }
@@ -1108,12 +1108,12 @@ export class EngravingRules {
         this.oneMinusTPower3 = new Array(this.bezierCurveStepSize);
         this.factorOne = new Array(this.bezierCurveStepSize);
         this.factorTwo = new Array(this.bezierCurveStepSize);
-        for (var i: number = 0; i < this.bezierCurveStepSize; i++) {
-            var t: number = <number>i / this.bezierCurveStepSize;
-            this.tPower3[i] = Math.Pow(t, 3);
-            this.oneMinusTPower3[i] = Math.Pow((1 - t), 3);
-            this.factorOne[i] = 3 * Math.Pow((1 - t), 2) * t;
-            this.factorTwo[i] = 3 * (1 - t) * Math.Pow(t, 2);
+        for (let i: number = 0; i < this.bezierCurveStepSize; i++) {
+            let t: number = <number>i / this.bezierCurveStepSize;
+            this.tPower3[i] = Math.pow(t, 3);
+            this.oneMinusTPower3[i] = Math.pow((1 - t), 3);
+            this.factorOne[i] = 3 * Math.pow((1 - t), 2) * t;
+            this.factorTwo[i] = 3 * (1 - t) * Math.pow(t, 2);
         }
     }
 }

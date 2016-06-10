@@ -20,9 +20,9 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         return this.graphicalLabel;
     }
     private calculateLabel(textHeight: number, transposeHalftones: number): void {
-        var text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones);
+        let text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones);
         this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, TextAlignment.CenterBottom, this.boundingBox);
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF_2D(0.0, 0.0);
-        this.boundingBox.ChildElements.Add(this.graphicalLabel.PositionAndShape);
+        this.boundingBox.ChildElements.push(this.graphicalLabel.PositionAndShape);
     }
 }

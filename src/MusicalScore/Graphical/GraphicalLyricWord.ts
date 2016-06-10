@@ -2,7 +2,7 @@
 import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
 export class GraphicalLyricWord {
     private lyricWord: LyricWord;
-    private graphicalLyricsEntries: List<GraphicalLyricEntry> = new List<GraphicalLyricEntry>();
+    private graphicalLyricsEntries: GraphicalLyricEntry[] = [];
     constructor(lyricWord: LyricWord) {
         this.lyricWord = lyricWord;
         this.initialize();
@@ -10,20 +10,20 @@ export class GraphicalLyricWord {
     public get GetLyricWord(): LyricWord {
         return this.lyricWord;
     }
-    public get GraphicalLyricsEntries(): List<GraphicalLyricEntry> {
+    public get GraphicalLyricsEntries(): GraphicalLyricEntry[] {
         return this.graphicalLyricsEntries;
     }
-    public set GraphicalLyricsEntries(value: List<GraphicalLyricEntry>) {
+    public set GraphicalLyricsEntries(value: GraphicalLyricEntry[]) {
         this.graphicalLyricsEntries = value;
     }
     public isFilled(): boolean {
-        for (var i: number = 0; i < this.graphicalLyricsEntries.Count; i++)
-            if (this.graphicalLyricsEntries[i] == null)
+        for (let i: number = 0; i < this.graphicalLyricsEntries.length; i++)
+            if (this.graphicalLyricsEntries[i] === undefined)
                 return false;
         return true;
     }
     private initialize(): void {
-        for (var i: number = 0; i < this.lyricWord.Syllables.Count; i++)
-            this.graphicalLyricsEntries.Add(null);
+        for (let i: number = 0; i < this.lyricWord.Syllables.length; i++)
+            this.graphicalLyricsEntries.push(undefined);
     }
 }

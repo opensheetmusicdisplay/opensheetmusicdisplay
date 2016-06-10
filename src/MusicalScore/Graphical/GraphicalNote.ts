@@ -15,17 +15,17 @@ export class GraphicalNote extends GraphicalObject {
     public SourceNote: Note;
     public GraphicalNoteLength: Fraction;
     public ParentStaffEntry: GraphicalStaffEntry;
-    public get ParentList(): List<GraphicalNote> {
-        for (var idx: number = 0, len = this.ParentStaffEntry.Notes.Count; idx < len; ++idx) {
-            var graphicalNotes: List<GraphicalNote> = this.ParentStaffEntry.Notes[idx];
-            if (graphicalNotes.Contains(this))
+    public get ParentList(): GraphicalNote[] {
+        for (let idx: number = 0, len: number = this.ParentStaffEntry.Notes.length; idx < len; ++idx) {
+            let graphicalNotes: GraphicalNote[] = this.ParentStaffEntry.Notes[idx];
+            if (graphicalNotes.indexOf(this) !== -1)
                 return graphicalNotes;
         }
-        return null;
+        return undefined;
     }
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
-        var transposedPitch: Pitch = this.SourceNote.Pitch;
-        if (MusicSheetCalculator.TransposeCalculator != null)
+        let transposedPitch: Pitch = this.SourceNote.Pitch;
+        if (MusicSheetCalculator.TransposeCalculator !== undefined)
             transposedPitch = MusicSheetCalculator.TransposeCalculator.TransposePitch(this.SourceNote.Pitch, keyInstruction, halfTones);
         return transposedPitch;
     }

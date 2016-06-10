@@ -23,22 +23,22 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 export class GraphicalMusicSheet {
     constructor(musicSheet: MusicSheet, calculator: MusicSheetCalculator) {
         this.musicSheet = musicSheet;
-        this.numberOfStaves = this.musicSheet.Staves.Count;
+        this.numberOfStaves = this.musicSheet.Staves.length;
         this.calculator = calculator;
-        this.SourceToGraphicalMeasureLinks = new Dictionary<SourceMeasure, List<StaffMeasure>>();
+        this.SourceToGraphicalMeasureLinks = new Dictionary<SourceMeasure, StaffMeasure[]>();
         this.calculator.initialize(this);
     }
     private musicSheet: MusicSheet;
     private fontInfo: FontInfo = this.FontInfo.Info;
     private calculator: MusicSheetCalculator;
-    private musicPages: List<GraphicalMusicPage> = new List<GraphicalMusicPage>();
-    private measureList: List<List<StaffMeasure>> = new List<List<StaffMeasure>>();
-    private verticalGraphicalStaffEntryContainers: List<VerticalGraphicalStaffEntryContainer> = new List<VerticalGraphicalStaffEntryContainer>();
+    private musicPages: GraphicalMusicPage[] = [];
+    private measureList: StaffMeasure[][] = [];
+    private verticalGraphicalStaffEntryContainers: VerticalGraphicalStaffEntryContainer[] = [];
     private title: GraphicalLabel;
     private subtitle: GraphicalLabel;
     private composer: GraphicalLabel;
     private lyricist: GraphicalLabel;
-    private scoreFollowingLines: List<GraphicalLine> = new List<GraphicalLine>();
+    private scoreFollowingLines: GraphicalLine[] = [];
     private maxAllowedSystemWidth: number;
     private systemImages: Dictionary<MusicSystem, SystemImageProperties> = new Dictionary<MusicSystem, SystemImageProperties>();
     private numberOfStaves: number;
@@ -49,25 +49,25 @@ export class GraphicalMusicSheet {
     public get GetCalculator(): MusicSheetCalculator {
         return this.calculator;
     }
-    public get MusicPages(): List<GraphicalMusicPage> {
+    public get MusicPages(): GraphicalMusicPage[] {
         return this.musicPages;
     }
-    public set MusicPages(value: List<GraphicalMusicPage>) {
+    public set MusicPages(value: GraphicalMusicPage[]) {
         this.musicPages = value;
     }
     public get FontInfo(): FontInfo {
         return this.fontInfo;
     }
-    public get MeasureList(): List<List<StaffMeasure>> {
+    public get MeasureList(): StaffMeasure[][] {
         return this.measureList;
     }
-    public set MeasureList(value: List<List<StaffMeasure>>) {
+    public set MeasureList(value: StaffMeasure[][]) {
         this.measureList = value;
     }
-    public get VerticalGraphicalStaffEntryContainers(): List<VerticalGraphicalStaffEntryContainer> {
+    public get VerticalGraphicalStaffEntryContainers(): VerticalGraphicalStaffEntryContainer[] {
         return this.verticalGraphicalStaffEntryContainers;
     }
-    public set VerticalGraphicalStaffEntryContainers(value: List<VerticalGraphicalStaffEntryContainer>) {
+    public set VerticalGraphicalStaffEntryContainers(value: VerticalGraphicalStaffEntryContainer[]) {
         this.verticalGraphicalStaffEntryContainers = value;
     }
     public get Title(): GraphicalLabel {
@@ -94,7 +94,7 @@ export class GraphicalMusicSheet {
     public set Lyricist(value: GraphicalLabel) {
         this.lyricist = value;
     }
-    public get ScoreFollowingLines(): List<GraphicalLine> {
+    public get ScoreFollowingLines(): GraphicalLine[] {
         return this.scoreFollowingLines;
     }
     public get MaxAllowedSystemWidth(): number {
@@ -106,7 +106,7 @@ export class GraphicalMusicSheet {
     public get SystemImages(): Dictionary<MusicSystem, SystemImageProperties> {
         return this.systemImages;
     }
-    public SourceToGraphicalMeasureLinks: Dictionary<SourceMeasure, List<StaffMeasure>>;
+    public SourceToGraphicalMeasureLinks: Dictionary<SourceMeasure, StaffMeasure[]>;
     public get NumberOfStaves(): number {
         return this.numberOfStaves;
     }
@@ -117,16 +117,16 @@ export class GraphicalMusicSheet {
         this.leadSheet = value;
     }
     public static transformRelativeToAbsolutePosition(graphicalMusicSheet: GraphicalMusicSheet): void {
-        for (var i: number = 0; i < graphicalMusicSheet.MusicPages.Count; i++) {
-            var pageAbsolute: PointF_2D = graphicalMusicSheet.MusicPages[i].setMusicPageAbsolutePosition(i, graphicalMusicSheet.ParentMusicSheet.Rules);
-            var page: GraphicalMusicPage = graphicalMusicSheet.MusicPages[i];
+        for (let i: number = 0; i < graphicalMusicSheet.MusicPages.length; i++) {
+            let pageAbsolute: PointF_2D = graphicalMusicSheet.MusicPages[i].setMusicPageAbsolutePosition(i, graphicalMusicSheet.ParentMusicSheet.Rules);
+            let page: GraphicalMusicPage = graphicalMusicSheet.MusicPages[i];
             page.PositionAndShape.calculateAbsolutePositionsRecursive(pageAbsolute.X, pageAbsolute.Y);
         }
     }
     public Initialize(): void {
-        this.verticalGraphicalStaffEntryContainers.Clear();
-        this.musicPages.Clear();
-        this.measureList.Clear();
+        this.verticalGraphicalStaffEntryContainers = [];
+        this.musicPages = [];
+        this.measureList = [];
     }
     public reCalculate(): void {
         this.calculator.calculate();
@@ -135,88 +135,87 @@ export class GraphicalMusicSheet {
         this.calculator.prepareGraphicalMusicSheet();
     }
     public EnforceRedrawOfMusicSystems(): void {
-        for (var idx: number = 0, len = this.musicPages.Count; idx < len; ++idx) {
-            var graphicalMusicPage: GraphicalMusicPage = this.musicPages[idx];
-            for (var idx2: number = 0, len2 = graphicalMusicPage.MusicSystems.Count; idx2 < len2; ++idx2) {
-                var musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+        for (let idx: number = 0, len: number = this.musicPages.length; idx < len; ++idx) {
+            let graphicalMusicPage: GraphicalMusicPage = this.musicPages[idx];
+            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                 musicSystem.NeedsToBeRedrawn = true;
             }
         }
     }
     public getClickedObject<T>(positionOnMusicSheet: PointF_2D): T {
-        for (var idx: number = 0, len = this.MusicPages.Count; idx < len; ++idx) {
-            var graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
+        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
+            let graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
             return graphicalMusicPage.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
         }
-        return null;
+        return undefined;
     }
     public findGraphicalStaffEntryFromMeasureList(staffIndex: number, measureIndex: number,
         sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
-        for (var i: number = measureIndex; i < this.measureList.Count; i++) {
-            var graphicalMeasure: StaffMeasure = this.measureList[i][staffIndex];
-            for (var idx: number = 0, len = graphicalMeasure.StaffEntries.Count; idx < len; ++idx) {
-                var graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.StaffEntries[idx];
-                if (graphicalStaffEntry.SourceStaffEntry == sourceStaffEntry)
+        for (let i: number = measureIndex; i < this.measureList.length; i++) {
+            let graphicalMeasure: StaffMeasure = this.measureList[i][staffIndex];
+            for (let idx: number = 0, len: number = graphicalMeasure.StaffEntries.length; idx < len; ++idx) {
+                let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.StaffEntries[idx];
+                if (graphicalStaffEntry.SourceStaffEntry === sourceStaffEntry)
                     return graphicalStaffEntry;
             }
         }
-        return null;
+        return undefined;
     }
     public findNextGraphicalStaffEntry(staffIndex: number, measureIndex: number,
         graphicalStaffEntry: GraphicalStaffEntry): GraphicalStaffEntry {
-        var graphicalMeasure: StaffMeasure = graphicalStaffEntry.ParentMeasure;
-        var graphicalStaffEntryIndex: number = graphicalMeasure.StaffEntries.IndexOf(graphicalStaffEntry);
-        if (graphicalStaffEntryIndex < graphicalMeasure.StaffEntries.Count - 1) {
+        let graphicalMeasure: StaffMeasure = graphicalStaffEntry.ParentMeasure;
+        let graphicalStaffEntryIndex: number = graphicalMeasure.StaffEntries.indexOf(graphicalStaffEntry);
+        if (graphicalStaffEntryIndex < graphicalMeasure.StaffEntries.length - 1) {
             return graphicalMeasure.StaffEntries[graphicalStaffEntryIndex + 1];
-        }
-        else if (measureIndex < this.measureList.Count - 1) {
-            var nextMeasure: StaffMeasure = this.measureList[measureIndex + 1][staffIndex];
-            if (nextMeasure.StaffEntries.Count > 0)
+        } else if (measureIndex < this.measureList.length - 1) {
+            let nextMeasure: StaffMeasure = this.measureList[measureIndex + 1][staffIndex];
+            if (nextMeasure.StaffEntries.length > 0)
                 return nextMeasure.StaffEntries[0];
         }
-        return null;
+        return undefined;
     }
-    public getFirstVisibleMeasuresListFromIndeces(start: number, end: number): List<StaffMeasure> {
-        var graphicalMeasures: List<StaffMeasure> = new List<StaffMeasure>();
-        var numberOfStaves: number = this.measureList[0].Count;
-        for (var i: number = start; i <= end; i++)
-            for (var j: number = 0; j < numberOfStaves; j++)
+    public getFirstVisibleMeasuresListFromIndeces(start: number, end: number): StaffMeasure[] {
+        let graphicalMeasures: StaffMeasure[] = [];
+        let numberOfStaves: number = this.measureList[0].length;
+        for (let i: number = start; i <= end; i++)
+            for (let j: number = 0; j < numberOfStaves; j++)
                 if (this.measureList[i][j].isVisible()) {
-                    graphicalMeasures.Add(this.measureList[i][j]);
+                    graphicalMeasures.push(this.measureList[i][j]);
                     break;
                 }
         return graphicalMeasures;
     }
-    public orderMeasuresByStaffLine(measures: List<StaffMeasure>): List<List<StaffMeasure>> {
-        var orderedMeasures: List<List<StaffMeasure>> = new List<List<StaffMeasure>>();
-        var mList: List<StaffMeasure> = new List<StaffMeasure>();
-        orderedMeasures.Add(mList);
-        for (var i: number = 0; i < measures.Count; i++) {
-            if (i == 0)
-                mList.Add(measures[0]);
+    public orderMeasuresByStaffLine(measures: StaffMeasure[]): StaffMeasure[][] {
+        let orderedMeasures: StaffMeasure[][] = [];
+        let mList: StaffMeasure[] = [];
+        orderedMeasures.push(mList);
+        for (let i: number = 0; i < measures.length; i++) {
+            if (i === 0)
+                mList.push(measures[0]);
             else {
-                if (measures[i].ParentStaffLine == measures[i - 1].ParentStaffLine)
-                    mList.Add(measures[i]);
+                if (measures[i].ParentStaffLine === measures[i - 1].ParentStaffLine)
+                    mList.push(measures[i]);
                 else {
-                    if (!orderedMeasures.Contains(mList))
-                        orderedMeasures.Add(mList);
-                    mList = new List<StaffMeasure>();
-                    orderedMeasures.Add(mList);
-                    mList.Add(measures[i]);
+                    if (!orderedMeasures.indexOf(mList) !== -1)
+                        orderedMeasures.push(mList);
+                    mList = [];
+                    orderedMeasures.push(mList);
+                    mList.push(measures[i]);
                 }
             }
         }
         return orderedMeasures;
     }
-    public initializeActiveClefs(): List<ClefInstruction> {
-        var activeClefs: List<ClefInstruction> = new List<ClefInstruction>();
-        var firstSourceMeasure: SourceMeasure = this.musicSheet.getFirstSourceMeasure();
-        if (firstSourceMeasure != null) {
-            for (var i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
-                for (var idx: number = 0, len = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.Count; idx < len; ++idx) {
-                    var abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
+    public initializeActiveClefs(): ClefInstruction[] {
+        let activeClefs: ClefInstruction[] = [];
+        let firstSourceMeasure: SourceMeasure = this.musicSheet.getFirstSourceMeasure();
+        if (firstSourceMeasure !== undefined) {
+            for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
+                for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
+                    let abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
                     if (abstractNotationInstruction instanceof ClefInstruction) {
-                        activeClefs.Add(<ClefInstruction>abstractNotationInstruction);
+                        activeClefs.push(<ClefInstruction>abstractNotationInstruction);
                     }
                 }
             }
@@ -224,107 +223,102 @@ export class GraphicalMusicSheet {
         return activeClefs;
     }
     public GetMainKey(): KeyInstruction {
-        var firstSourceMeasure: SourceMeasure = this.musicSheet.getFirstSourceMeasure();
-        if (firstSourceMeasure != null) {
-            for (var i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
-                for (var idx: number = 0, len = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.Count; idx < len; ++idx) {
-                    var abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
+        let firstSourceMeasure: SourceMeasure = this.musicSheet.getFirstSourceMeasure();
+        if (firstSourceMeasure !== undefined) {
+            for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
+                for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
+                    let abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
                     if (abstractNotationInstruction instanceof KeyInstruction) {
                         return <KeyInstruction>abstractNotationInstruction;
                     }
                 }
             }
         }
-        return null;
+        return undefined;
     }
     public getOrCreateVerticalContainer(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
-        if (this.verticalGraphicalStaffEntryContainers.Count == 0 || timestamp > this.verticalGraphicalStaffEntryContainers.Last().AbsoluteTimestamp) {
-            var verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer = new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
-            this.verticalGraphicalStaffEntryContainers.Add(verticalGraphicalStaffEntryContainer);
+        if (this.verticalGraphicalStaffEntryContainers.length === 0 || timestamp > this.verticalGraphicalStaffEntryContainers.Last().AbsoluteTimestamp) {
+            let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer = new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
+            this.verticalGraphicalStaffEntryContainers.push(verticalGraphicalStaffEntryContainer);
             return verticalGraphicalStaffEntryContainer;
         }
-        var i: number;
+        let i: number;
         for (; i >= 0; i--) {
             if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp < timestamp) {
-                var verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer = new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
-                this.verticalGraphicalStaffEntryContainers.Insert(i + 1, verticalGraphicalStaffEntryContainer);
+                let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer = new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
+                this.verticalGraphicalStaffEntryContainers.splice(i + 1, 0, verticalGraphicalStaffEntryContainer);
                 return verticalGraphicalStaffEntryContainer;
             }
-            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp == timestamp)
+            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp === timestamp)
                 return this.verticalGraphicalStaffEntryContainers[i];
         }
-        return null;
+        return undefined;
     }
     public GetVerticalContainerFromTimestamp(timestamp: Fraction, startIndex: number): VerticalGraphicalStaffEntryContainer {
-        var index: number = this.verticalGraphicalStaffEntryContainers.BinarySearch(startIndex,
-            this.verticalGraphicalStaffEntryContainers.Count - startIndex,
+        let index: number = this.verticalGraphicalStaffEntryContainers.BinarySearch(startIndex,
+            this.verticalGraphicalStaffEntryContainers.length - startIndex,
             new VerticalGraphicalStaffEntryContainer(0,
                 timestamp),
             new VerticalGraphicalStaffEntryContainer.VgseContainerTimestampComparer());
         if (index >= 0)
             return this.verticalGraphicalStaffEntryContainers[index];
-        return null;
+        return undefined;
     }
     public GetVerticalContainerFromTimestamp(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
-        var index: number = this.verticalGraphicalStaffEntryContainers.BinarySearch(new VerticalGraphicalStaffEntryContainer(0, timestamp),
+        let index: number = this.verticalGraphicalStaffEntryContainers.BinarySearch(new VerticalGraphicalStaffEntryContainer(0, timestamp),
             new VerticalGraphicalStaffEntryContainer.VgseContainerTimestampComparer());
         if (index >= 0)
             return this.verticalGraphicalStaffEntryContainers[index];
-        return null;
+        return undefined;
     }
     public GetInterpolatedIndexInVerticalContainers(musicTimestamp: Fraction): number {
-        var containers: List<VerticalGraphicalStaffEntryContainer> = this.verticalGraphicalStaffEntryContainers;
-        var leftIndex: number = 0;
-        var rightIndex: number = containers.Count - 1;
-        var foundIndex: number;
-        var leftTS: Fraction = null;
-        var rightTS: Fraction = null;
+        let containers: VerticalGraphicalStaffEntryContainer[] = this.verticalGraphicalStaffEntryContainers;
+        let leftIndex: number = 0;
+        let rightIndex: number = containers.length - 1;
+        let foundIndex: number;
+        let leftTS: Fraction = undefined;
+        let rightTS: Fraction = undefined;
         if (musicTimestamp <= containers.Last().AbsoluteTimestamp) {
             while (rightIndex - leftIndex > 1) {
-                var middleIndex: number = (rightIndex + leftIndex) / 2;
-                if (containers[leftIndex].AbsoluteTimestamp == musicTimestamp) {
+                let middleIndex: number = (rightIndex + leftIndex) / 2;
+                if (containers[leftIndex].AbsoluteTimestamp === musicTimestamp) {
                     rightIndex = leftIndex;
                     break;
-                }
-                else if (containers[rightIndex].AbsoluteTimestamp == musicTimestamp) {
+                } else if (containers[rightIndex].AbsoluteTimestamp === musicTimestamp) {
                     leftIndex = rightIndex;
                     break;
-                }
-                else if (containers[middleIndex].AbsoluteTimestamp == musicTimestamp) {
-                    return this.verticalGraphicalStaffEntryContainers.IndexOf(containers[middleIndex]);
-                }
-                else if (containers[middleIndex].AbsoluteTimestamp > musicTimestamp) {
+                } else if (containers[middleIndex].AbsoluteTimestamp === musicTimestamp) {
+                    return this.verticalGraphicalStaffEntryContainers.indexOf(containers[middleIndex]);
+                } else if (containers[middleIndex].AbsoluteTimestamp > musicTimestamp) {
                     rightIndex = middleIndex;
-                }
-                else {
+                } else {
                     leftIndex = middleIndex;
                 }
             }
-            if (leftIndex == rightIndex)
-                return this.verticalGraphicalStaffEntryContainers.IndexOf(containers[leftIndex]);
+            if (leftIndex === rightIndex)
+                return this.verticalGraphicalStaffEntryContainers.indexOf(containers[leftIndex]);
             leftTS = containers[leftIndex].AbsoluteTimestamp;
             rightTS = containers[rightIndex].AbsoluteTimestamp;
-        }
-        else {
+        } else {
             leftTS = containers.Last().AbsoluteTimestamp;
-            rightTS = new Fraction(getLongestStaffEntryDuration(containers.Count - 1) + leftTS);
-            rightIndex = containers.Count;
+            rightTS = new Fraction(getLongestStaffEntryDuration(containers.length - 1) + leftTS);
+            rightIndex = containers.length;
         }
-        var diff: number = rightTS.RealValue - leftTS.RealValue;
-        var diffTS: number = rightTS.RealValue - musicTimestamp.RealValue;
+        let diff: number = rightTS.RealValue - leftTS.RealValue;
+        let diffTS: number = rightTS.RealValue - musicTimestamp.RealValue;
         foundIndex = rightIndex - (diffTS / diff);
-        return Math.Min(foundIndex, this.verticalGraphicalStaffEntryContainers.Count);
+        return Math.min(foundIndex, this.verticalGraphicalStaffEntryContainers.length);
     }
     private getLongestStaffEntryDuration(index: number): Fraction {
-        var maxLength: Fraction = new Fraction(0, 1);
-        for (var idx: number = 0, len = this.verticalGraphicalStaffEntryContainers[index].StaffEntries.Count; idx < len; ++idx) {
-            var graphicalStaffEntry: GraphicalStaffEntry = this.verticalGraphicalStaffEntryContainers[index].StaffEntries[idx];
-            if (graphicalStaffEntry == null)
+        let maxLength: Fraction = new Fraction(0, 1);
+        for (let idx: number = 0, len: number = this.verticalGraphicalStaffEntryContainers[index].StaffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: GraphicalStaffEntry = this.verticalGraphicalStaffEntryContainers[index].StaffEntries[idx];
+            if (graphicalStaffEntry === undefined)
                 continue;
-            for (var idx2: number = 0, len2 = graphicalStaffEntry.Notes.Count; idx2 < len2; ++idx2) {
-                var graphicalNotes: List<GraphicalNote> = graphicalStaffEntry.Notes[idx2];
-                for (var idx3: number = 0, len3 = graphicalNotes.Count; idx3 < len3; ++idx3) {
-                    var note: GraphicalNote = graphicalNotes[idx3];
+            for (let idx2: number = 0, len2: number = graphicalStaffEntry.Notes.length; idx2 < len2; ++idx2) {
+                let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.Notes[idx2];
+                for (let idx3: number = 0, len3: number = graphicalNotes.length; idx3 < len3; ++idx3) {
+                    let note: GraphicalNote = graphicalNotes[idx3];
                     if (note.GraphicalNoteLength > maxLength)
                         maxLength = note.GraphicalNoteLength;
                 }
@@ -332,37 +326,37 @@ export class GraphicalMusicSheet {
         }
         return maxLength;
     }
-    public getVisibleStavesIndecesFromSourceMeasure(visibleMeasures: List<StaffMeasure>): List<number> {
-        var visibleInstruments: List<Instrument> = new List<Instrument>();
-        var visibleStavesIndeces: List<number> = new List<number>();
-        for (var idx: number = 0, len = visibleMeasures.Count; idx < len; ++idx) {
-            var graphicalMeasure: StaffMeasure = visibleMeasures[idx];
-            var instrument: Instrument = graphicalMeasure.ParentStaff.ParentInstrument;
-            if (!visibleInstruments.Contains(instrument))
-                visibleInstruments.Add(instrument);
+    public getVisibleStavesIndecesFromSourceMeasure(visibleMeasures: StaffMeasure[]): number[] {
+        let visibleInstruments: Instrument[] = [];
+        let visibleStavesIndeces: number[] = [];
+        for (let idx: number = 0, len: number = visibleMeasures.length; idx < len; ++idx) {
+            let graphicalMeasure: StaffMeasure = visibleMeasures[idx];
+            let instrument: Instrument = graphicalMeasure.ParentStaff.ParentInstrument;
+            if (!visibleInstruments.indexOf(instrument) !== -1)
+                visibleInstruments.push(instrument);
         }
-        for (var idx: number = 0, len = visibleInstruments.Count; idx < len; ++idx) {
-            var instrument: Instrument = visibleInstruments[idx];
-            var index: number = this.musicSheet.GetGlobalStaffIndexOfFirstStaff(instrument);
-            for (var j: number = 0; j < instrument.Staves.Count; j++)
-                visibleStavesIndeces.Add(index + j);
+        for (let idx: number = 0, len: number = visibleInstruments.length; idx < len; ++idx) {
+            let instrument: Instrument = visibleInstruments[idx];
+            let index: number = this.musicSheet.GetGlobalStaffIndexOfFirstStaff(instrument);
+            for (let j: number = 0; j < instrument.Staves.length; j++)
+                visibleStavesIndeces.push(index + j);
         }
         return visibleStavesIndeces;
     }
     public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, index: number): StaffMeasure {
-        for (var i: number = 0; i < this.measureList.Count; i++) {
-            if (this.measureList[i][0].ParentSourceMeasure == sourceMeasure)
+        for (let i: number = 0; i < this.measureList.length; i++) {
+            if (this.measureList[i][0].ParentSourceMeasure === sourceMeasure)
                 return this.measureList[i][index];
         }
-        return null;
+        return undefined;
     }
     public getMeasureIndex(graphicalMeasure: StaffMeasure, measureIndex: number, inListIndex: number): boolean {
         measureIndex = 0;
         inListIndex = 0;
-        for (; measureIndex < this.measureList.Count; measureIndex++) {
-            for (var idx: number = 0, len = this.measureList[measureIndex].Count; idx < len; ++idx) {
-                var measure: StaffMeasure = this.measureList[measureIndex][idx];
-                if (measure == graphicalMeasure)
+        for (; measureIndex < this.measureList.length; measureIndex++) {
+            for (let idx: number = 0, len: number = this.measureList[measureIndex].length; idx < len; ++idx) {
+                let measure: StaffMeasure = this.measureList[measureIndex][idx];
+                if (measure === graphicalMeasure)
                     return true;
             }
         }
@@ -372,130 +366,127 @@ export class GraphicalMusicSheet {
         return this.getMeasureIndex(entry.ParentMeasure, measureIndex, inListIndex);
     }
     public GetNearesNote(clickPosition: PointF_2D, maxClickDist: PointF_2D): GraphicalNote {
-        var initialSearchArea: number = 10;
-        var foundNotes: List<GraphicalNote> = new List<GraphicalNote>();
-        var region: BoundingBox = new BoundingBox(null);
+        let initialSearchArea: number = 10;
+        let foundNotes: GraphicalNote[] = [];
+        let region: BoundingBox = new BoundingBox(undefined);
         region.BorderLeft = clickPosition.X - initialSearchArea;
         region.BorderTop = clickPosition.Y - initialSearchArea;
         region.BorderRight = clickPosition.X + initialSearchArea;
         region.BorderBottom = clickPosition.Y + initialSearchArea;
         region.AbsolutePosition = new PointF_2D(0, 0);
-        for (var idx: number = 0, len = this.MusicPages.Count; idx < len; ++idx) {
-            var graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            var entries: IEnumerable<GraphicalNote> = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalNote>(region);
-            var entriesArr: GraphicalNote[] = __as__<GraphicalNote[]>(entries, GraphicalNote[]) ?? entries.ToArray();
-            if (entries == null) {
+        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
+            let graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
+            let entries: GraphicalNote[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalNote>(region);
+            let entriesArr: GraphicalNote[] = __as__<GraphicalNote[]>(entries, GraphicalNote[]) ?? entries;
+            if (entries === undefined) {
                 continue;
-            }
-            else {
-                for (var idx2: number = 0, len2 = entriesArr.length; idx2 < len2; ++idx2) {
-                    var note: GraphicalNote = entriesArr[idx2];
-                    if (Math.Abs(note.PositionAndShape.AbsolutePosition.X - clickPosition.X) < maxClickDist.X && Math.Abs(note.PositionAndShape.AbsolutePosition.Y - clickPosition.Y) < maxClickDist.Y)
-                        foundNotes.Add(note);
+            } else {
+                for (let idx2: number = 0, len2: number = entriesArr.length; idx2 < len2; ++idx2) {
+                    let note: GraphicalNote = entriesArr[idx2];
+                    if (Math.abs(note.PositionAndShape.AbsolutePosition.X - clickPosition.X) < maxClickDist.X && Math.abs(note.PositionAndShape.AbsolutePosition.Y - clickPosition.Y) < maxClickDist.Y)
+                        foundNotes.push(note);
                 }
             }
         }
-        var closest: GraphicalNote = null;
-        for (var idx: number = 0, len = foundNotes.Count; idx < len; ++idx) {
-            var note: GraphicalNote = foundNotes[idx];
-            if (closest == null)
+        let closest: GraphicalNote = undefined;
+        for (let idx: number = 0, len: number = foundNotes.length; idx < len; ++idx) {
+            let note: GraphicalNote = foundNotes[idx];
+            if (closest === undefined)
                 closest = note;
             else {
-                if (note.ParentStaffEntry.RelInMeasureTimestamp == null)
+                if (note.ParentStaffEntry.RelInMeasureTimestamp === undefined)
                     continue;
-                var deltaNew: number = this.CalculateDistance(note.PositionAndShape.AbsolutePosition, clickPosition);
-                var deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
+                let deltaNew: number = this.CalculateDistance(note.PositionAndShape.AbsolutePosition, clickPosition);
+                let deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
                 if (deltaNew < deltaOld)
                     closest = note;
             }
         }
-        if (closest != null)
+        if (closest !== undefined)
             return closest;
-        return null;
+        return undefined;
     }
     public GetClickableLabel(clickPosition: PointF_2D): GraphicalLabel {
-        var initialSearchAreaX: number = 4;
-        var initialSearchAreaY: number = 4;
-        var region: BoundingBox = new BoundingBox(null);
+        let initialSearchAreaX: number = 4;
+        let initialSearchAreaY: number = 4;
+        let region: BoundingBox = new BoundingBox(undefined);
         region.BorderLeft = clickPosition.X - initialSearchAreaX;
         region.BorderTop = clickPosition.Y - initialSearchAreaY;
         region.BorderRight = clickPosition.X + initialSearchAreaX;
         region.BorderBottom = clickPosition.Y + initialSearchAreaY;
         region.AbsolutePosition = new PointF_2D(0, 0);
-        for (var idx: number = 0, len = this.MusicPages.Count; idx < len; ++idx) {
-            var graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            var entries: GraphicalLabel[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalLabel>(region).ToArray();
-            if (entries.length != 1) {
+        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
+            let graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
+            let entries: GraphicalLabel[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalLabel>(region);
+            if (entries.length !== 1) {
                 continue;
-            }
-            else {
-                for (var idx2: number = 0, len2 = entries.length; idx2 < len2; ++idx2) {
-                    var clickedLabel: GraphicalLabel = entries[idx2];
+            } else {
+                for (let idx2: number = 0, len2: number = entries.length; idx2 < len2; ++idx2) {
+                    let clickedLabel: GraphicalLabel = entries[idx2];
                     return clickedLabel;
                 }
             }
         }
-        return null;
+        return undefined;
     }
     public GetNearestStaffEntry(clickPosition: PointF_2D): GraphicalStaffEntry {
-        var initialSearchArea: number = 10;
-        var foundEntries: List<GraphicalStaffEntry> = new List<GraphicalStaffEntry>();
-        var region: BoundingBox = new BoundingBox(null);
+        let initialSearchArea: number = 10;
+        let foundEntries: GraphicalStaffEntry[] = [];
+        let region: BoundingBox = new BoundingBox(undefined);
         region.BorderLeft = clickPosition.X - initialSearchArea;
         region.BorderTop = clickPosition.Y - initialSearchArea;
         region.BorderRight = clickPosition.X + initialSearchArea;
         region.BorderBottom = clickPosition.Y + initialSearchArea;
         region.AbsolutePosition = new PointF_2D(0, 0);
-        for (var idx: number = 0, len = this.MusicPages.Count; idx < len; ++idx) {
-            var graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            var entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalStaffEntry>(region, false).ToArray();
-            if (entries == null || entries.Count() == 0) {
+        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
+            let graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
+            let entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalStaffEntry>(region, false);
+            if (entries === undefined || entries.length() === 0) {
                 continue;
-            }
-            else {
-                for (var idx2: number = 0, len2 = entries.Count(); idx2 < len2; ++idx2) {
-                    var gse: GraphicalStaffEntry = entries[idx2];
-                    foundEntries.Add(gse);
+            } else {
+                for (let idx2: number = 0, len2: number = entries.length(); idx2 < len2; ++idx2) {
+                    let gse: GraphicalStaffEntry = entries[idx2];
+                    foundEntries.push(gse);
                 }
             }
         }
-        var closest: GraphicalStaffEntry = null;
-        for (var idx: number = 0, len = foundEntries.Count; idx < len; ++idx) {
-            var gse: GraphicalStaffEntry = foundEntries[idx];
-            if (closest == null)
+        let closest: GraphicalStaffEntry = undefined;
+        for (let idx: number = 0, len: number = foundEntries.length; idx < len; ++idx) {
+            let gse: GraphicalStaffEntry = foundEntries[idx];
+            if (closest === undefined)
                 closest = gse;
             else {
-                if (gse.RelInMeasureTimestamp == null)
+                if (gse.RelInMeasureTimestamp === undefined)
                     continue;
-                var deltaNew: number = this.CalculateDistance(gse.PositionAndShape.AbsolutePosition, clickPosition);
-                var deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
+                let deltaNew: number = this.CalculateDistance(gse.PositionAndShape.AbsolutePosition, clickPosition);
+                let deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
                 if (deltaNew < deltaOld)
                     closest = gse;
             }
         }
-        if (closest != null)
+        if (closest !== undefined)
             return closest;
-        return null;
+        return undefined;
     }
     public GetPossibleCommentAnchor(clickPosition: PointF_2D): SourceStaffEntry {
-        var entry: GraphicalStaffEntry = this.GetNearestStaffEntry(clickPosition);
-        if (entry == null)
-            return null;
+        let entry: GraphicalStaffEntry = this.GetNearestStaffEntry(clickPosition);
+        if (entry === undefined)
+            return undefined;
         return entry.SourceStaffEntry;
     }
     public getClickedObjectOfType<T>(positionOnMusicSheet: PointF_2D): T {
-        for (var idx: number = 0, len = this.musicPages.Count; idx < len; ++idx) {
-            var page: GraphicalMusicPage = this.musicPages[idx];
-            var o: Object = page.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
-            if (o != null)
-                return __as__<T>(o, T);
+        for (let idx: number = 0, len: number = this.musicPages.length; idx < len; ++idx) {
+            let page: GraphicalMusicPage = this.musicPages[idx];
+            let o: Object = page.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
+            if (o !== undefined)
+                return (o as T);
         }
-        return null;
+        return undefined;
     }
     public tryGetTimestampFromPosition(positionOnMusicSheet: PointF_2D): Fraction {
-        var entry: GraphicalStaffEntry = this.getClickedObjectOfType<GraphicalStaffEntry>(positionOnMusicSheet);
-        if (entry == null)
-            return null;
+        let entry: GraphicalStaffEntry = this.getClickedObjectOfType<GraphicalStaffEntry>(positionOnMusicSheet);
+        if (entry === undefined)
+            return undefined;
         return entry.getAbsoluteTimestamp();
     }
     public tryGetClickableLabel(positionOnMusicSheet: PointF_2D): GraphicalLabel {
@@ -507,13 +498,13 @@ export class GraphicalMusicSheet {
                 "positionOnMusicSheet: " + positionOnMusicSheet, ex);
         }
 
-        return null;
+        return undefined;
     }
     public tryGetTimeStampFromPosition(positionOnMusicSheet: PointF_2D): Fraction {
         try {
-            var entry: GraphicalStaffEntry = this.GetNearestStaffEntry(positionOnMusicSheet);
-            if (entry == null)
-                return null;
+            let entry: GraphicalStaffEntry = this.GetNearestStaffEntry(positionOnMusicSheet);
+            if (entry === undefined)
+                return undefined;
             return entry.getAbsoluteTimestamp();
         }
         catch (ex) {
@@ -521,27 +512,26 @@ export class GraphicalMusicSheet {
                 "positionOnMusicSheet: " + positionOnMusicSheet, ex);
         }
 
-        return null;
+        return undefined;
     }
     private CalculateDistance(pt1: PointF_2D, pt2: PointF_2D): number {
-        var deltaX: number = pt1.X - pt2.X;
-        var deltaY: number = pt1.Y - pt2.Y;
+        let deltaX: number = pt1.X - pt2.X;
+        let deltaY: number = pt1.Y - pt2.Y;
         return (deltaX * deltaX) + (deltaY * deltaY);
     }
     public getStaffEntry(index: number): GraphicalStaffEntry {
         return this.getStaffEntry(this.VerticalGraphicalStaffEntryContainers[index]);
     }
     public getStaffEntry(container: VerticalGraphicalStaffEntryContainer): GraphicalStaffEntry {
-        var staffEntry: GraphicalStaffEntry = null;
+        let staffEntry: GraphicalStaffEntry = undefined;
         try {
-            for (var idx: number = 0, len = container.StaffEntries.Count; idx < len; ++idx) {
-                var entry: GraphicalStaffEntry = container.StaffEntries[idx];
-                if (entry == null || !entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible)
+            for (let idx: number = 0, len: number = container.StaffEntries.length; idx < len; ++idx) {
+                let entry: GraphicalStaffEntry = container.StaffEntries[idx];
+                if (entry === undefined || !entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible)
                     continue;
-                if (staffEntry == null) {
+                if (staffEntry === undefined) {
                     staffEntry = entry;
-                }
-                else if (entry.PositionAndShape != null && staffEntry.PositionAndShape != null) {
+                } else if (entry.PositionAndShape !== undefined && staffEntry.PositionAndShape !== undefined) {
                     if (staffEntry.PositionAndShape.RelativePosition.X > entry.PositionAndShape.RelativePosition.X)
                         staffEntry = entry;
                 }
@@ -554,171 +544,163 @@ export class GraphicalMusicSheet {
         return staffEntry;
     }
     public GetPreviousVisibleContainerIndex(index: number): number {
-        for (var i: number = index - 1; i >= 0; i--) {
-            var entries: List<GraphicalStaffEntry> = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
-            for (var idx: number = 0, len = entries.Count; idx < len; ++idx) {
-                var entry: GraphicalStaffEntry = entries[idx];
-                if (entry != null && entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible)
+        for (let i: number = index - 1; i >= 0; i--) {
+            let entries: GraphicalStaffEntry[] = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
+            for (let idx: number = 0, len: number = entries.length; idx < len; ++idx) {
+                let entry: GraphicalStaffEntry = entries[idx];
+                if (entry !== undefined && entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible)
                     return i;
             }
         }
         return -1;
     }
     public GetNextVisibleContainerIndex(index: number): number {
-        for (var i: number = index + 1; i < this.verticalGraphicalStaffEntryContainers.Count; ++i) {
-            var entries: List<GraphicalStaffEntry> = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
-            for (var idx: number = 0, len = entries.Count; idx < len; ++idx) {
-                var entry: GraphicalStaffEntry = entries[idx];
-                if (entry != null && entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible)
+        for (let i: number = index + 1; i < this.verticalGraphicalStaffEntryContainers.length; ++i) {
+            let entries: GraphicalStaffEntry[] = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
+            for (let idx: number = 0, len: number = entries.length; idx < len; ++idx) {
+                let entry: GraphicalStaffEntry = entries[idx];
+                if (entry !== undefined && entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible)
                     return i;
             }
         }
         return -1;
     }
     public findClosestLeftStaffEntry(fractionalIndex: number, searchOnlyVisibleEntries: boolean): GraphicalStaffEntry {
-        var foundEntry: GraphicalStaffEntry = null;
-        var leftIndex: number = <number>Math.Floor(fractionalIndex);
-        leftIndex = Math.Min(this.VerticalGraphicalStaffEntryContainers.Count - 1, leftIndex);
-        for (var i: number = leftIndex; i >= 0; i--) {
+        let foundEntry: GraphicalStaffEntry = undefined;
+        let leftIndex: number = <number>Math.floor(fractionalIndex);
+        leftIndex = Math.min(this.VerticalGraphicalStaffEntryContainers.length - 1, leftIndex);
+        for (let i: number = leftIndex; i >= 0; i--) {
             foundEntry = this.getStaffEntry(i);
-            if (foundEntry != null) {
+            if (foundEntry !== undefined) {
                 if (searchOnlyVisibleEntries) {
                     if (foundEntry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible)
                         return foundEntry;
-                }
-                else return foundEntry;
+                } else return foundEntry;
             }
         }
-        return null;
+        return undefined;
     }
     public findClosestRightStaffEntry(fractionalIndex: number, returnOnlyVisibleEntries: boolean): GraphicalStaffEntry {
-        var foundEntry: GraphicalStaffEntry = null;
-        var rightIndex: number = <number>Math.Max(0, Math.Ceiling(fractionalIndex));
-        for (var i: number = rightIndex; i < this.VerticalGraphicalStaffEntryContainers.Count; i++) {
+        let foundEntry: GraphicalStaffEntry = undefined;
+        let rightIndex: number = <number>Math.max(0, Math.ceiling(fractionalIndex));
+        for (let i: number = rightIndex; i < this.VerticalGraphicalStaffEntryContainers.length; i++) {
             foundEntry = this.getStaffEntry(i);
-            if (foundEntry != null) {
+            if (foundEntry !== undefined) {
                 if (returnOnlyVisibleEntries) {
                     if (foundEntry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible)
                         return foundEntry;
-                }
-                else return foundEntry;
+                } else return foundEntry;
             }
         }
-        return null;
+        return undefined;
     }
     public calculateXPositionFromTimestamp(timeStamp: Fraction, currentMusicSystem: MusicSystem): number {
-        var fractionalIndex: number = this.GetInterpolatedIndexInVerticalContainers(timeStamp);
-        var previousStaffEntry: GraphicalStaffEntry = this.findClosestLeftStaffEntry(fractionalIndex, true);
-        var nextStaffEntry: GraphicalStaffEntry = this.findClosestRightStaffEntry(fractionalIndex, true);
-        var currentTimeStamp: number = timeStamp.RealValue;
-        if (previousStaffEntry == null && nextStaffEntry == null) {
-            currentMusicSystem = null;
+        let fractionalIndex: number = this.GetInterpolatedIndexInVerticalContainers(timeStamp);
+        let previousStaffEntry: GraphicalStaffEntry = this.findClosestLeftStaffEntry(fractionalIndex, true);
+        let nextStaffEntry: GraphicalStaffEntry = this.findClosestRightStaffEntry(fractionalIndex, true);
+        let currentTimeStamp: number = timeStamp.RealValue;
+        if (previousStaffEntry === undefined && nextStaffEntry === undefined) {
+            currentMusicSystem = undefined;
             return 0;
         }
-        var previousStaffEntryMusicSystem: MusicSystem = null;
-        if (previousStaffEntry != null) {
+        let previousStaffEntryMusicSystem: MusicSystem = undefined;
+        if (previousStaffEntry !== undefined) {
             previousStaffEntryMusicSystem = previousStaffEntry.ParentMeasure.ParentStaffLine.ParentMusicSystem;
-        }
-        else {
+        } else {
             previousStaffEntryMusicSystem = nextStaffEntry.ParentMeasure.ParentStaffLine.ParentMusicSystem;
         }
-        var nextStaffEntryMusicSystem: MusicSystem = null;
-        if (nextStaffEntry != null) {
+        let nextStaffEntryMusicSystem: MusicSystem = undefined;
+        if (nextStaffEntry !== undefined) {
             nextStaffEntryMusicSystem = nextStaffEntry.ParentMeasure.ParentStaffLine.ParentMusicSystem;
-        }
-        else {
+        } else {
             nextStaffEntryMusicSystem = previousStaffEntry.ParentMeasure.ParentStaffLine.ParentMusicSystem;
         }
-        if (previousStaffEntryMusicSystem == nextStaffEntryMusicSystem) {
+        if (previousStaffEntryMusicSystem === nextStaffEntryMusicSystem) {
             currentMusicSystem = previousStaffEntryMusicSystem;
-            var fraction: number;
-            var previousStaffEntryPositionX: number;
-            var nextStaffEntryPositionX: number;
-            if (previousStaffEntry == null) {
+            let fraction: number;
+            let previousStaffEntryPositionX: number;
+            let nextStaffEntryPositionX: number;
+            if (previousStaffEntry === undefined) {
                 previousStaffEntryPositionX = nextStaffEntryPositionX = nextStaffEntry.PositionAndShape.AbsolutePosition.X;
                 fraction = 0;
-            }
-            else if (nextStaffEntry == null) {
+            } else if (nextStaffEntry === undefined) {
                 previousStaffEntryPositionX = previousStaffEntry.PositionAndShape.AbsolutePosition.X;
                 nextStaffEntryPositionX = currentMusicSystem.GetRightBorderAbsoluteXPosition();
                 fraction = (currentTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue) / ((previousStaffEntry.ParentMeasure.ParentSourceMeasure.AbsoluteTimestamp + previousStaffEntry.ParentMeasure.ParentSourceMeasure.Duration).RealValue - previousStaffEntry.getAbsoluteTimestamp().RealValue);
-            }
-            else {
+            } else {
                 previousStaffEntryPositionX = previousStaffEntry.PositionAndShape.AbsolutePosition.X;
                 nextStaffEntryPositionX = nextStaffEntry.PositionAndShape.AbsolutePosition.X;
-                if (previousStaffEntry == nextStaffEntry)
+                if (previousStaffEntry === nextStaffEntry)
                     fraction = 0;
                 else fraction = (currentTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue) / (nextStaffEntry.getAbsoluteTimestamp().RealValue - previousStaffEntry.getAbsoluteTimestamp().RealValue);
             }
-            fraction = Math.Min(1, Math.Max(0, fraction));
-            var interpolatedXPosition: number = previousStaffEntryPositionX + fraction * (nextStaffEntryPositionX - previousStaffEntryPositionX);
+            fraction = Math.min(1, Math.max(0, fraction));
+            let interpolatedXPosition: number = previousStaffEntryPositionX + fraction * (nextStaffEntryPositionX - previousStaffEntryPositionX);
             return interpolatedXPosition;
-        }
-        else {
-            var nextSystemLeftBorderTimeStamp: number = nextStaffEntry.ParentMeasure.ParentSourceMeasure.AbsoluteTimestamp.RealValue;
-            var fraction: number;
-            var interpolatedXPosition: number;
+        } else {
+            let nextSystemLeftBorderTimeStamp: number = nextStaffEntry.ParentMeasure.ParentSourceMeasure.AbsoluteTimestamp.RealValue;
+            let fraction: number;
+            let interpolatedXPosition: number;
             if (currentTimeStamp < nextSystemLeftBorderTimeStamp) {
                 currentMusicSystem = previousStaffEntryMusicSystem;
-                var previousStaffEntryPositionX: number = previousStaffEntry.PositionAndShape.AbsolutePosition.X;
-                var previousSystemRightBorderX: number = currentMusicSystem.GetRightBorderAbsoluteXPosition();
+                let previousStaffEntryPositionX: number = previousStaffEntry.PositionAndShape.AbsolutePosition.X;
+                let previousSystemRightBorderX: number = currentMusicSystem.GetRightBorderAbsoluteXPosition();
                 fraction = (currentTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue) / (nextSystemLeftBorderTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue);
-                fraction = Math.Min(1, Math.Max(0, fraction));
+                fraction = Math.min(1, Math.max(0, fraction));
                 interpolatedXPosition = previousStaffEntryPositionX + fraction * (previousSystemRightBorderX - previousStaffEntryPositionX);
-            }
-            else {
+            } else {
                 currentMusicSystem = nextStaffEntryMusicSystem;
-                var nextStaffEntryPositionX: number = nextStaffEntry.PositionAndShape.AbsolutePosition.X;
-                var nextSystemLeftBorderX: number = currentMusicSystem.GetLeftBorderAbsoluteXPosition();
+                let nextStaffEntryPositionX: number = nextStaffEntry.PositionAndShape.AbsolutePosition.X;
+                let nextSystemLeftBorderX: number = currentMusicSystem.GetLeftBorderAbsoluteXPosition();
                 fraction = (currentTimeStamp - nextSystemLeftBorderTimeStamp) / (nextStaffEntry.getAbsoluteTimestamp().RealValue - nextSystemLeftBorderTimeStamp);
-                fraction = Math.Min(1, Math.Max(0, fraction));
+                fraction = Math.min(1, Math.max(0, fraction));
                 interpolatedXPosition = nextSystemLeftBorderX + fraction * (nextStaffEntryPositionX - nextSystemLeftBorderX);
             }
             return interpolatedXPosition;
         }
     }
     public GetNumberOfVisibleInstruments(): number {
-        var visibleInstrumentCount: number = 0;
-        for (var idx: number = 0, len = this.musicSheet.Instruments.Count; idx < len; ++idx) {
-            var instrument: Instrument = this.musicSheet.Instruments[idx];
-            if (instrument.Visible == true)
+        let visibleInstrumentCount: number = 0;
+        for (let idx: number = 0, len: number = this.musicSheet.Instruments.length; idx < len; ++idx) {
+            let instrument: Instrument = this.musicSheet.Instruments[idx];
+            if (instrument.Visible === true)
                 visibleInstrumentCount++;
         }
         return visibleInstrumentCount;
     }
     public GetNumberOfFollowedInstruments(): number {
-        var followedInstrumentCount: number = 0;
-        for (var idx: number = 0, len = this.musicSheet.Instruments.Count; idx < len; ++idx) {
-            var instrument: Instrument = this.musicSheet.Instruments[idx];
-            if (instrument.Following == true)
+        let followedInstrumentCount: number = 0;
+        for (let idx: number = 0, len: number = this.musicSheet.Instruments.length; idx < len; ++idx) {
+            let instrument: Instrument = this.musicSheet.Instruments[idx];
+            if (instrument.Following === true)
                 followedInstrumentCount++;
         }
         return followedInstrumentCount;
     }
-    public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): List<StaffMeasure> {
+    public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): StaffMeasure[] {
         return this.SourceToGraphicalMeasureLinks[sourceMeasure];
     }
     public GetGraphicalFromSourceStaffEntry(sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
-        var graphicalMeasure: StaffMeasure = this.SourceToGraphicalMeasureLinks[sourceStaffEntry.VerticalContainerParent.ParentMeasure][sourceStaffEntry.ParentStaff.IdInMusicSheet];
+        let graphicalMeasure: StaffMeasure = this.SourceToGraphicalMeasureLinks[sourceStaffEntry.VerticalContainerParent.ParentMeasure][sourceStaffEntry.ParentStaff.IdInMusicSheet];
         return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);
     }
-    public GetGraphicalFromSourceStaffEntry(voiceEntries: List<VoiceEntry>): GraphicalStaffEntry {
-        if (voiceEntries.Count == 0)
-            return null;
-        var sse: SourceStaffEntry = voiceEntries[0].ParentSourceStaffEntry;
-        var graphicalMeasure: StaffMeasure = this.SourceToGraphicalMeasureLinks[sse.VerticalContainerParent.ParentMeasure][sse.ParentStaff.IdInMusicSheet];
+    public GetGraphicalFromSourceStaffEntry(voiceEntries: VoiceEntry[]): GraphicalStaffEntry {
+        if (voiceEntries.length === 0)
+            return undefined;
+        let sse: SourceStaffEntry = voiceEntries[0].ParentSourceStaffEntry;
+        let graphicalMeasure: StaffMeasure = this.SourceToGraphicalMeasureLinks[sse.VerticalContainerParent.ParentMeasure][sse.ParentStaff.IdInMusicSheet];
         return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sse.Timestamp);
     }
     public GetGraphicalNoteFromSourceNote(note: Note, containingGse: GraphicalStaffEntry): GraphicalNote {
-        for (var idx: number = 0, len = containingGse.Notes.Count; idx < len; ++idx) {
-            var graphicalNotes: List<GraphicalNote> = containingGse.Notes[idx];
-            for (var idx2: number = 0, len2 = graphicalNotes.Count; idx2 < len2; ++idx2) {
-                var graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                if (graphicalNote.SourceNote == note)
+        for (let idx: number = 0, len: number = containingGse.Notes.length; idx < len; ++idx) {
+            let graphicalNotes: GraphicalNote[] = containingGse.Notes[idx];
+            for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
+                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                if (graphicalNote.SourceNote === note)
                     return graphicalNote;
             }
         }
-        return null;
+        return undefined;
     }
 }
 export class SystemImageProperties {

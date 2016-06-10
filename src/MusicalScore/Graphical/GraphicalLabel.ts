@@ -22,14 +22,14 @@ export class GraphicalLabel extends Clickable {
         return this.label;
     }
     public setLabelPositionAndShapeBorders(): void {
-        if (this.Label.Text.Trim().Equals(String.Empty))
-            return
-        var labelMarginBorderFactor: number = EngravingRules.Rules.LabelMarginBorderFactor;
+        if (this.Label.Text.Trim().Equals(""))
+            return;
+        let labelMarginBorderFactor: number = EngravingRules.Rules.LabelMarginBorderFactor;
 
-        var widthToHeightRatio: number = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.Text, this.Label.Font, this.Label.FontStyle);
-        var height: number = this.Label.FontHeight;
-        var width: number = height * widthToHeightRatio;
-        var psi: BoundingBox = this.PositionAndShape;
+        let widthToHeightRatio: number = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.Text, this.Label.Font, this.Label.FontStyle);
+        let height: number = this.Label.FontHeight;
+        let width: number = height * widthToHeightRatio;
+        let psi: BoundingBox = this.PositionAndShape;
         switch (this.Label.TextAlignment) {
             case TextAlignment.CenterBottom:
                 psi.BorderTop = -height;

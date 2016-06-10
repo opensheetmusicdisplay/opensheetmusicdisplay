@@ -25,13 +25,13 @@ export class Fraction {
     }
 
     public static plus (f1: Fraction, f2: Fraction): Fraction {
-        let sum: Fraction = Fraction.CreateFractionFromFraction(f1);
+        let sum: Fraction = f1.clone();
         sum.Add(f2);
         return sum;
     }
 
     public static minus(f1: Fraction , f2: Fraction): Fraction {
-        let sum: Fraction = Fraction.CreateFractionFromFraction(f1);
+        let sum: Fraction = f1.clone();
         sum.Sub(f2);
         return sum;
     }
@@ -172,7 +172,7 @@ export class Fraction {
     //public Equals(f: Fraction): boolean {
     //    if (ReferenceEquals(this, f))
     //        return true;
-    //    if (ReferenceEquals(f, null))
+    //    if (ReferenceEquals(f, undefined))
     //        return false;
     //    return <number>this.numerator * f.denominator === <number>f.numerator * this.denominator;
     //}
@@ -301,16 +301,16 @@ export class Fraction {
     //}
     //
     //// operator overload ==
-    //public static bool operator == (Fraction f1, Fraction f2)
+    //public static bool operator === (Fraction f1, Fraction f2)
     //{
     //    // code enhanced for performance
-    //    // System.Object.ReferenceEquals(f1, null) is better than if (f1 == null)
+    //    // System.Object.ReferenceEquals(f1, undefined) is better than if (f1 === undefined)
     //    // and comparisons between booleans are quick
-    //    bool f1IsNull = System.Object.ReferenceEquals(f1, null);
-    //    bool f2IsNull = System.Object.ReferenceEquals(f2, null);
+    //    bool f1IsNull = System.Object.ReferenceEquals(f1, undefined);
+    //    bool f2IsNull = System.Object.ReferenceEquals(f2, undefined);
     //
-    //    // method returns true when both are null, false when only the first is null, otherwise the result of equals
-    //    if (f1IsNull != f2IsNull)
+    //    // method returns true when both are undefined, false when only the first is undefined, otherwise the result of equals
+    //    if (f1IsNull !== f2IsNull)
     //        return false;
     //
     //    if (f1IsNull /*&& f2IsNull*/)
@@ -320,9 +320,9 @@ export class Fraction {
     //}
     //
     //// operator overload !=
-    //public static bool operator != (Fraction f1, Fraction f2)
+    //public static bool operator !== (Fraction f1, Fraction f2)
     //{
-    //    return (!(f1 == f2));
+    //    return (!(f1 === f2));
     //}
     //
     //// operator overload >=
@@ -344,8 +344,8 @@ export class Fraction {
     //
     //public static Fraction operator / (Fraction f1, Fraction f2)
     //{
-    //    var res = new Fraction(f1.Numerator*f2.Denominator, f1.Denominator*f2.Numerator);
-    //    return res.Denominator == 0 ? new Fraction(0, 1) : res;
+    //    let res = new Fraction(f1.Numerator*f2.Denominator, f1.Denominator*f2.Numerator);
+    //    return res.Denominator === 0 ? new Fraction(0, 1) : res;
     //}
     //
     //public static Fraction operator * (Fraction f1, Fraction f2)
@@ -355,7 +355,7 @@ export class Fraction {
     //
     //public static Fraction operator % (Fraction f1, Fraction f2)
     //{
-    //    var a = f1/f2;
+    //    let a = f1/f2;
     //    return new Fraction(a.Numerator%a.Denominator, a.Denominator)*f2;
     //}
     //

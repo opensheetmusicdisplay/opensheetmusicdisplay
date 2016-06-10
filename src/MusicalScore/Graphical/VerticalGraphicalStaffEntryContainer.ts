@@ -3,11 +3,11 @@ import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 export class VerticalGraphicalStaffEntryContainer {
     private index: number;
     private absoluteTimestamp: Fraction;
-    private staffEntries: List<GraphicalStaffEntry> = new List<GraphicalStaffEntry>();
+    private staffEntries: GraphicalStaffEntry[] = [];
     constructor(numberOfEntries: number, absoluteTimestamp: Fraction) {
         this.absoluteTimestamp = absoluteTimestamp;
-        for (var i: number = 0; i < numberOfEntries; i++)
-            this.staffEntries.Add(null);
+        for (let i: number = 0; i < numberOfEntries; i++)
+            this.staffEntries.push(undefined);
     }
     public RelativeInMeasureTimestamp: Fraction;
     public get Index(): number {
@@ -22,19 +22,19 @@ export class VerticalGraphicalStaffEntryContainer {
     public set AbsoluteTimestamp(value: Fraction) {
         this.absoluteTimestamp = value;
     }
-    public get StaffEntries(): List<GraphicalStaffEntry> {
+    public get StaffEntries(): GraphicalStaffEntry[] {
         return this.staffEntries;
     }
-    public set StaffEntries(value: List<GraphicalStaffEntry>) {
+    public set StaffEntries(value: GraphicalStaffEntry[]) {
         this.staffEntries = value;
     }
     public getFirstNonNullStaffEntry(): GraphicalStaffEntry {
-        for (var idx: number = 0, len = this.staffEntries.Count; idx < len; ++idx) {
-            var graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry != null)
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
+            if (graphicalStaffEntry !== undefined)
                 return graphicalStaffEntry;
         }
-        return null;
+        return undefined;
     }
 }
 export module VerticalGraphicalStaffEntryContainer {
