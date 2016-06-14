@@ -16,21 +16,26 @@ import {BoundingBox} from "./BoundingBox";
 export class StaffMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
     protected lastInstructionStaffEntry: GraphicalStaffEntry;
-    private staff: Staff;
+    private parentStaff: Staff;
     private measureNumber: number = -1;
     private parentStaffLine: StaffLine;
-    constructor(staff: Staff = null, staffLine: StaffLine = null, parentSourceMeasure: SourceMeasure = null) {
-        this.staff = staff;
+    
+    constructor(staff: Staff = null, parentSourceMeasure: SourceMeasure = null, staffLine: StaffLine = null) {
+        this.parentStaff = staff;
         this.ParentSourceMeasure = parentSourceMeasure;
         this.parentStaffLine = staffLine;
-        if (staffLine != null)
-            this.staff = staffLine.ParentStaff;
+        if (staffLine != null) {
+            this.parentStaff = staffLine.ParentStaff;
+            this.PositionAndShape = new BoundingBox(staffLine.PositionAndShape, this);
+        }
+        else {
+            this.PositionAndShape = new BoundingBox(this);
+        }
+        this.PositionAndShape.BorderBottom = 4;
         if (this.ParentSourceMeasure != null)
             this.measureNumber = this.ParentSourceMeasure.MeasureNumber;
+
         this.StaffEntries = [];
-        if (staffLine != null)
-            this.PositionAndShape = new BoundingBox(staffLine.PositionAndShape, this);
-        else this.PositionAndShape = new BoundingBox(this);
     }
     public ParentSourceMeasure: SourceMeasure;
     public StaffEntries: GraphicalStaffEntry[];
@@ -41,7 +46,7 @@ export class StaffMeasure extends GraphicalObject {
     public EndInstructionsWidth: number;
     public hasError: boolean;
     public get ParentStaff(): Staff {
-        return this.staff;
+        return this.parentStaff;
     }
     public get MeasureNumber(): number {
         return this.measureNumber;
