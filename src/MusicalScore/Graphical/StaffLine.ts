@@ -6,6 +6,7 @@ import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
 import {StaffMeasure} from "./StaffMeasure";
 import {MusicSystem} from "./MusicSystem";
+
 export class StaffLine extends GraphicalObject {
     protected measures: StaffMeasure[] = [];
     protected staffLines: GraphicalLine[] = new Array(5);
@@ -13,63 +14,82 @@ export class StaffLine extends GraphicalObject {
     protected parentStaff: Staff;
     protected skyLine: number[];
     protected bottomLine: number[];
+
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         this.parentMusicSystem = parentSystem;
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(parentSystem.PositionAndShape, this);
     }
+
     public get Measures(): StaffMeasure[] {
         return this.measures;
     }
+
     public set Measures(value: StaffMeasure[]) {
         this.measures = value;
     }
+
     public get StaffLines(): GraphicalLine[] {
         return this.staffLines;
     }
+
     public set StaffLines(value: GraphicalLine[]) {
         this.staffLines = value;
     }
+
     public get ParentMusicSystem(): MusicSystem {
         return this.parentMusicSystem;
     }
+
     public set ParentMusicSystem(value: MusicSystem) {
         this.parentMusicSystem = value;
     }
+
     public get ParentStaff(): Staff {
         return this.parentStaff;
     }
+
     public set ParentStaff(value: Staff) {
         this.parentStaff = value;
     }
+
     public get SkyLine(): number[] {
         return this.skyLine;
     }
+
     public set SkyLine(value: number[]) {
         this.skyLine = value;
     }
+
     public get BottomLine(): number[] {
         return this.bottomLine;
     }
+
     public set BottomLine(value: number[]) {
         this.bottomLine = value;
     }
+
     public isPartOfMultiStaffInstrument(): boolean {
         let instrument: Instrument = this.parentStaff.ParentInstrument;
-        if (instrument.Staves.length > 1)
+        if (instrument.Staves.length > 1) {
             return true;
+        }
         return false;
     }
+
     public findClosestStaffEntry(xPosition: number): GraphicalStaffEntry {
         let closestStaffentry: GraphicalStaffEntry = undefined;
         let difference: number = Number.MAX_VALUE;
         for (let idx: number = 0, len: number = this.Measures.length; idx < len; ++idx) {
             let graphicalMeasure: StaffMeasure = this.Measures[idx];
-            for (let idx2: number = 0, len2: number = graphicalMeasure.StaffEntries.length; idx2 < len2; ++idx2) {
-                let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.StaffEntries[idx2];
-                if (Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x) < 5.0)
-                {
-                    difference = Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x);
+            for (let idx2: number = 0, len2: number = graphicalMeasure.staffEntries.length; idx2 < len2; ++idx2) {
+                let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx2];
+                if (
+                    Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x) < 5.0
+                ) {
+                    difference = Math.abs(
+                        graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x
+                    );
                     closestStaffentry = graphicalStaffEntry;
                 }
             }

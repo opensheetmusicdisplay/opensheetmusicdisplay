@@ -11,12 +11,15 @@ export class FontInfo {
     constructor() {
         this.createSymbols();
     }
+
     public static get Info(): FontInfo {
         return FontInfo.info;
     }
+
     public updateSymbol(symbol: MusicSymbol, newSymbolInfo: SymbolInfo): void {
         this.symbolMapping[symbol] = newSymbolInfo;
     }
+
     public getSymbolInfo(symbol: MusicSymbol): SymbolInfo {
         try {
             return this.symbolMapping[symbol];
@@ -26,6 +29,7 @@ export class FontInfo {
         }
 
     }
+
     public getBoundingBox(symbol: MusicSymbol): SizeF2D {
         try {
             return this.symbolMapping[symbol].boundingBox;
@@ -35,21 +39,25 @@ export class FontInfo {
         }
 
     }
+
     public addBoundingBox(symbol: MusicSymbol, boundingBox: SizeF2D): void {
         let si: SymbolInfo = this.symbolMapping[symbol];
         si.boundingBox = boundingBox;
         this.symbolMapping.Remove(symbol);
         this.symbolMapping.push(symbol, si);
     }
+
     public getCenterDistance(symbol: SymbolInfo): SizeF2D {
         let symbolBox: SizeF2D = symbol.boundingBox;
         let symbolCenter: PointF2D = symbol.center;
         let centerDistance: SizeF2D = new SizeF2D(symbolBox.width * symbolCenter.x, symbolBox.height * symbolCenter.y);
         return centerDistance;
     }
+
     public fillPSI(psi: BoundingBox, symbol: MusicSymbol): void {
         this.fillPSI(psi, symbol, 1.0);
     }
+
     public fillPSI(psi: BoundingBox, symbol: MusicSymbol, scaleFactor: number): void {
         let symbolInfo: SymbolInfo = this.symbolMapping[symbol];
         let symbolBox: SizeF2D = symbolInfo.boundingBox;
@@ -65,6 +73,7 @@ export class FontInfo {
         psi.BorderMarginTop = (-centerDistance.height - symbolBox.height * symbolMargins.top) * scaleFactor;
         psi.BorderMarginBottom = (symbolBox.height - centerDistance.height + symbolBox.height * symbolMargins.bottom) * scaleFactor;
     }
+
     protected getString(symbol: MusicSymbol): string {
         try {
             return this.symbolMapping[symbol].symbol;
@@ -74,6 +83,7 @@ export class FontInfo {
         }
 
     }
+
     protected getScaleFactor(symbol: MusicSymbol): number {
         try {
             return this.symbolMapping[symbol].scaleFactor;
@@ -83,6 +93,7 @@ export class FontInfo {
         }
 
     }
+
     private createSymbols(): void {
         let scaleVector: number[] = [1, 1, 3, 3, 3,
             3, 3, 3, 3,
@@ -111,7 +122,7 @@ export class FontInfo {
             1.2, 1.2, 1.35, 1.2, 1.2,
             1, 1.7, 1.8, 1.09, 0.77, 3.0];
         let centerVector: PointF2D[] = [new PointF2D(0.5, 0.5),
-        new PointF2D(0.5, 0.5),
+            new PointF2D(0.5, 0.5),
             new PointF2D(0.0, 1.0),
             new PointF2D(0.0, 0.0),
             new PointF2D(0.0, 1.0),
@@ -196,7 +207,7 @@ export class FontInfo {
             new PointF2D(0.5, 0.5),
             new PointF2D(0.5, 0.5)];
         let marginVector: SymbolMargins[] = [new SymbolMargins(0.1, 0.1, 0.1, 0.1),
-        new SymbolMargins(0.1, 0.1),
+            new SymbolMargins(0.1, 0.1),
             new SymbolMargins(0.1, 0.1),
             new SymbolMargins(0.1, 0.1),
             new SymbolMargins(0.1, 0.1),
@@ -282,7 +293,7 @@ export class FontInfo {
             new SymbolMargins(0.1, 0.1, 0.1, 0.1)];
         let values: Array = Enum.GetValues(/*typeof*/MusicSymbol);
         let i: number = 0;
-        for (let c: string = <string>0x21; c <<string>0x21 + values.length; c++) {
+        for (let c: string = <string>0x21; c << string > 0x21 + values.length; c++) {
             let si: SymbolInfo = new SymbolInfo(c.ToString(), i, scaleVector[i], centerVector[i], marginVector[i]);
             this.symbolMapping.push(<MusicSymbol>values.GetValue(i), si);
             i++;
@@ -296,6 +307,7 @@ export class SymbolInfo {
     public boundingBox: SizeF2D;
     public center: PointF2D;
     public margins: SymbolMargins;
+
     constructor(symbol: string, id: number, scaleFactor: number, center: PointF2D, margins: SymbolMargins) {
         this.symbol = symbol;
         this.id = id;
@@ -303,27 +315,35 @@ export class SymbolInfo {
         this.center = center;
         this.margins = margins;
     }
+
     public get ScaleFactor(): number {
         return this.scaleFactor;
     }
+
     public set ScaleFactor(value: number) {
         this.scaleFactor = value;
     }
+
     public get BoundingBox(): SizeF2D {
         return this.boundingBox;
     }
+
     public set BoundingBox(value: SizeF2D) {
         this.boundingBox = value;
     }
+
     public get Center(): PointF2D {
         return this.center;
     }
+
     public set Center(value: PointF2D) {
         this.center = value;
     }
+
     public get Margins(): SymbolMargins {
         return this.margins;
     }
+
     public set Margins(value: SymbolMargins) {
         this.margins = value;
     }
@@ -334,6 +354,7 @@ export class SymbolMargins {
     public right: number;
     public top: number;
     public bottom: number;
+
     constructor(left: number, right: number, top: number = 0, bottom: number = 0) {
         this.left = left;
         this.right = right;

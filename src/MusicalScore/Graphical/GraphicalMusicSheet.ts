@@ -172,7 +172,7 @@ export class GraphicalMusicSheet {
             let graphicalMusicPage: GraphicalMusicPage = this.musicPages[idx];
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                 let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                musicSystem.NeedsToBeRedrawn = true;
+                musicSystem.needsToBeRedrawn = true;
             }
         }
     }
@@ -188,9 +188,9 @@ export class GraphicalMusicSheet {
     public findGraphicalStaffEntryFromMeasureList(staffIndex: number, measureIndex: number, sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
         for (let i: number = measureIndex; i < this.measureList.length; i++) {
             let graphicalMeasure: StaffMeasure = this.measureList[i][staffIndex];
-            for (let idx: number = 0, len: number = graphicalMeasure.StaffEntries.length; idx < len; ++idx) {
-                let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.StaffEntries[idx];
-                if (graphicalStaffEntry.SourceStaffEntry === sourceStaffEntry) {
+            for (let idx: number = 0, len: number = graphicalMeasure.staffEntries.length; idx < len; ++idx) {
+                let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx];
+                if (graphicalStaffEntry.sourceStaffEntry === sourceStaffEntry) {
                     return graphicalStaffEntry;
                 }
             }
@@ -199,14 +199,14 @@ export class GraphicalMusicSheet {
     }
 
     public findNextGraphicalStaffEntry(staffIndex: number, measureIndex: number, graphicalStaffEntry: GraphicalStaffEntry): GraphicalStaffEntry {
-        let graphicalMeasure: StaffMeasure = graphicalStaffEntry.ParentMeasure;
-        let graphicalStaffEntryIndex: number = graphicalMeasure.StaffEntries.indexOf(graphicalStaffEntry);
-        if (graphicalStaffEntryIndex < graphicalMeasure.StaffEntries.length - 1) {
-            return graphicalMeasure.StaffEntries[graphicalStaffEntryIndex + 1];
+        let graphicalMeasure: StaffMeasure = graphicalStaffEntry.parentMeasure;
+        let graphicalStaffEntryIndex: number = graphicalMeasure.staffEntries.indexOf(graphicalStaffEntry);
+        if (graphicalStaffEntryIndex < graphicalMeasure.staffEntries.length - 1) {
+            return graphicalMeasure.staffEntries[graphicalStaffEntryIndex + 1];
         } else if (measureIndex < this.measureList.length - 1) {
             let nextMeasure: StaffMeasure = this.measureList[measureIndex + 1][staffIndex];
-            if (nextMeasure.StaffEntries.length > 0) {
-                return nextMeasure.StaffEntries[0];
+            if (nextMeasure.staffEntries.length > 0) {
+                return nextMeasure.staffEntries[0];
             }
         }
         return undefined;
@@ -368,12 +368,12 @@ export class GraphicalMusicSheet {
             if (graphicalStaffEntry === undefined) {
                 continue;
             }
-            for (let idx2: number = 0, len2: number = graphicalStaffEntry.Notes.length; idx2 < len2; ++idx2) {
-                let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.Notes[idx2];
+            for (let idx2: number = 0, len2: number = graphicalStaffEntry.notes.length; idx2 < len2; ++idx2) {
+                let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx2];
                 for (let idx3: number = 0, len3: number = graphicalNotes.length; idx3 < len3; ++idx3) {
                     let note: GraphicalNote = graphicalNotes[idx3];
-                    if (note.GraphicalNoteLength > maxLength) {
-                        maxLength = note.GraphicalNoteLength;
+                    if (note.graphicalNoteLength > maxLength) {
+                        maxLength = note.graphicalNoteLength;
                     }
                 }
             }
@@ -403,7 +403,7 @@ export class GraphicalMusicSheet {
 
     public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, index: number): StaffMeasure {
         for (let i: number = 0; i < this.measureList.length; i++) {
-            if (this.measureList[i][0].ParentSourceMeasure === sourceMeasure) {
+            if (this.measureList[i][0].parentSourceMeasure === sourceMeasure) {
                 return this.measureList[i][index];
             }
         }
@@ -425,7 +425,7 @@ export class GraphicalMusicSheet {
     }
 
     public getMeasureIndex(entry: GraphicalStaffEntry, measureIndex: number, inListIndex: number): boolean {
-        return this.getMeasureIndex(entry.ParentMeasure, measureIndex, inListIndex);
+        return this.getMeasureIndex(entry.parentMeasure, measureIndex, inListIndex);
     }
 
     public GetNearesNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
@@ -458,7 +458,7 @@ export class GraphicalMusicSheet {
             if (closest === undefined) {
                 closest = note;
             } else {
-                if (note.ParentStaffEntry.RelInMeasureTimestamp === undefined) {
+                if (note.parentStaffEntry.relInMeasureTimestamp === undefined) {
                     continue;
                 }
                 let deltaNew: number = this.CalculateDistance(note.PositionAndShape.AbsolutePosition, clickPosition);
@@ -525,7 +525,7 @@ export class GraphicalMusicSheet {
             if (closest === undefined) {
                 closest = gse;
             } else {
-                if (gse.RelInMeasureTimestamp === undefined) {
+                if (gse.relInMeasureTimestamp === undefined) {
                     continue;
                 }
                 let deltaNew: number = this.CalculateDistance(gse.PositionAndShape.AbsolutePosition, clickPosition);
@@ -546,7 +546,7 @@ export class GraphicalMusicSheet {
         if (entry === undefined) {
             return undefined;
         }
-        return entry.SourceStaffEntry;
+        return entry.sourceStaffEntry;
     }
 
     public getClickedObjectOfType<T>(positionOnMusicSheet: PointF2D): T {
@@ -609,7 +609,7 @@ export class GraphicalMusicSheet {
         try {
             for (let idx: number = 0, len: number = container.StaffEntries.length; idx < len; ++idx) {
                 let entry: GraphicalStaffEntry = container.StaffEntries[idx];
-                if (entry === undefined || !entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
+                if (entry === undefined || !entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                     continue;
                 }
                 if (staffEntry === undefined) {
@@ -632,7 +632,7 @@ export class GraphicalMusicSheet {
             let entries: GraphicalStaffEntry[] = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
             for (let idx: number = 0, len: number = entries.length; idx < len; ++idx) {
                 let entry: GraphicalStaffEntry = entries[idx];
-                if (entry !== undefined && entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
+                if (entry !== undefined && entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                     return i;
                 }
             }
@@ -645,7 +645,7 @@ export class GraphicalMusicSheet {
             let entries: GraphicalStaffEntry[] = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
             for (let idx: number = 0, len: number = entries.length; idx < len; ++idx) {
                 let entry: GraphicalStaffEntry = entries[idx];
-                if (entry !== undefined && entry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
+                if (entry !== undefined && entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                     return i;
                 }
             }
@@ -661,7 +661,7 @@ export class GraphicalMusicSheet {
             foundEntry = this.getStaffEntry(i);
             if (foundEntry !== undefined) {
                 if (searchOnlyVisibleEntries) {
-                    if (foundEntry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
+                    if (foundEntry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                         return foundEntry;
                     }
                 } else {
@@ -679,7 +679,7 @@ export class GraphicalMusicSheet {
             foundEntry = this.getStaffEntry(i);
             if (foundEntry !== undefined) {
                 if (returnOnlyVisibleEntries) {
-                    if (foundEntry.SourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
+                    if (foundEntry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                         return foundEntry;
                     }
                 } else {
@@ -701,15 +701,15 @@ export class GraphicalMusicSheet {
         }
         let previousStaffEntryMusicSystem: MusicSystem = undefined;
         if (previousStaffEntry !== undefined) {
-            previousStaffEntryMusicSystem = previousStaffEntry.ParentMeasure.ParentStaffLine.ParentMusicSystem;
+            previousStaffEntryMusicSystem = previousStaffEntry.parentMeasure.ParentStaffLine.ParentMusicSystem;
         } else {
-            previousStaffEntryMusicSystem = nextStaffEntry.ParentMeasure.ParentStaffLine.ParentMusicSystem;
+            previousStaffEntryMusicSystem = nextStaffEntry.parentMeasure.ParentStaffLine.ParentMusicSystem;
         }
         let nextStaffEntryMusicSystem: MusicSystem = undefined;
         if (nextStaffEntry !== undefined) {
-            nextStaffEntryMusicSystem = nextStaffEntry.ParentMeasure.ParentStaffLine.ParentMusicSystem;
+            nextStaffEntryMusicSystem = nextStaffEntry.parentMeasure.ParentStaffLine.ParentMusicSystem;
         } else {
-            nextStaffEntryMusicSystem = previousStaffEntry.ParentMeasure.ParentStaffLine.ParentMusicSystem;
+            nextStaffEntryMusicSystem = previousStaffEntry.parentMeasure.ParentStaffLine.ParentMusicSystem;
         }
         if (previousStaffEntryMusicSystem === nextStaffEntryMusicSystem) {
             currentMusicSystem = previousStaffEntryMusicSystem;
@@ -722,7 +722,7 @@ export class GraphicalMusicSheet {
             } else if (nextStaffEntry === undefined) {
                 previousStaffEntryPositionX = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
                 nextStaffEntryPositionX = currentMusicSystem.GetRightBorderAbsoluteXPosition();
-                fraction = (currentTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue) / ((previousStaffEntry.ParentMeasure.ParentSourceMeasure.AbsoluteTimestamp + previousStaffEntry.ParentMeasure.ParentSourceMeasure.Duration).RealValue - previousStaffEntry.getAbsoluteTimestamp().RealValue);
+                fraction = (currentTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue) / ((previousStaffEntry.parentMeasure.parentSourceMeasure.AbsoluteTimestamp + previousStaffEntry.parentMeasure.parentSourceMeasure.Duration).RealValue - previousStaffEntry.getAbsoluteTimestamp().RealValue);
             } else {
                 previousStaffEntryPositionX = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
                 nextStaffEntryPositionX = nextStaffEntry.PositionAndShape.AbsolutePosition.x;
@@ -736,7 +736,7 @@ export class GraphicalMusicSheet {
             let interpolatedXPosition: number = previousStaffEntryPositionX + fraction * (nextStaffEntryPositionX - previousStaffEntryPositionX);
             return interpolatedXPosition;
         } else {
-            let nextSystemLeftBorderTimeStamp: number = nextStaffEntry.ParentMeasure.ParentSourceMeasure.AbsoluteTimestamp.RealValue;
+            let nextSystemLeftBorderTimeStamp: number = nextStaffEntry.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.RealValue;
             let fraction: number;
             let interpolatedXPosition: number;
             if (currentTimeStamp < nextSystemLeftBorderTimeStamp) {
@@ -800,11 +800,11 @@ export class GraphicalMusicSheet {
     }
 
     public GetGraphicalNoteFromSourceNote(note: Note, containingGse: GraphicalStaffEntry): GraphicalNote {
-        for (let idx: number = 0, len: number = containingGse.Notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = containingGse.Notes[idx];
+        for (let idx: number = 0, len: number = containingGse.notes.length; idx < len; ++idx) {
+            let graphicalNotes: GraphicalNote[] = containingGse.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                if (graphicalNote.SourceNote === note) {
+                if (graphicalNote.sourceNote === note) {
                     return graphicalNote;
                 }
             }

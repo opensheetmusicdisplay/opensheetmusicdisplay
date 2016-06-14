@@ -7,26 +7,32 @@ import {Pitch} from "../../Common/DataObjects/pitch";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
+
 export class GraphicalNote extends GraphicalObject {
     constructor(note: Note, parent: GraphicalStaffEntry) {
-        this.SourceNote = note;
-        this.ParentStaffEntry = parent;
+        this.sourceNote = note;
+        this.parentStaffEntry = parent;
     }
-    public SourceNote: Note;
-    public GraphicalNoteLength: Fraction;
-    public ParentStaffEntry: GraphicalStaffEntry;
+
+    public sourceNote: Note;
+    public graphicalNoteLength: Fraction;
+    public parentStaffEntry: GraphicalStaffEntry;
+
     public get ParentList(): GraphicalNote[] {
-        for (let idx: number = 0, len: number = this.ParentStaffEntry.Notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.ParentStaffEntry.Notes[idx];
-            if (graphicalNotes.indexOf(this) !== -1)
+        for (let idx: number = 0, len: number = this.parentStaffEntry.notes.length; idx < len; ++idx) {
+            let graphicalNotes: GraphicalNote[] = this.parentStaffEntry.notes[idx];
+            if (graphicalNotes.indexOf(this) !== -1) {
                 return graphicalNotes;
+            }
         }
         return undefined;
     }
+
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
-        let transposedPitch: Pitch = this.SourceNote.Pitch;
-        if (MusicSheetCalculator.TransposeCalculator !== undefined)
-            transposedPitch = MusicSheetCalculator.TransposeCalculator.transposePitch(this.SourceNote.Pitch, keyInstruction, halfTones);
+        let transposedPitch: Pitch = this.sourceNote.Pitch;
+        if (MusicSheetCalculator.TransposeCalculator !== undefined) {
+            transposedPitch = MusicSheetCalculator.TransposeCalculator.transposePitch(this.sourceNote.Pitch, keyInstruction, halfTones);
+        }
         return transposedPitch;
     }
 }

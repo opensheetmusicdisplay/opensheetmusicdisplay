@@ -23,6 +23,7 @@ import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
+import {VexFlowMeasure} from "./VexFlowMeasure";
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
         super(new VexFlowGraphicalSymbolFactory());
@@ -41,8 +42,24 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
     }
+
+    /**
+     * Calculates the x layout of the staff entries within the staff measures belonging to one source measure.
+     * All staff entries are x-aligned throughout all vertically aligned staff measures.
+     * This method is called within calculateXLayout.
+     * The staff entries are aligned with minimum needed x distances.
+     * The MinimumStaffEntriesWidth of every measure will be set - needed for system building.
+     * @param measures
+     */
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
-        throw new NotImplementedException();
+        // set measure length and Borders
+        for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
+            let measure: VexFlowMeasure  = <VexFlowMeasure>measures[idx];
+            // set Measure StaffEntriesLength (needed later to calculate the whole Measure Width)
+            //measure.MinimumStaffEntriesWidth = measureLength;
+
+
+        }
     }
 
     /**

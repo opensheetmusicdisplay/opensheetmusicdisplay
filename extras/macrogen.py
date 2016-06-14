@@ -72,6 +72,7 @@ replace = (
 
     ("\\.IdInMusicSheet", ".idInMusicSheet"),
     ("F_2D", "F2D"),
+    ("List<Tuple<Object\\[\\], Object>>", "[Object[], Object][]")
 )
 
 def checkForIssues(filename, content):

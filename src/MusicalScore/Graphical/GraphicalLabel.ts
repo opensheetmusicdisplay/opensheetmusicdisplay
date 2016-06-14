@@ -4,29 +4,36 @@ import {Clickable} from "./Clickable";
 import {BoundingBox} from "./BoundingBox";
 import {EngravingRules} from "./EngravingRules";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
+
 export class GraphicalLabel extends Clickable {
     private label: Label;
+
     constructor(label: Label, textHeight: number, alignment: TextAlignment) {
         this.label = label;
         this.boundingBox = new BoundingBox(this);
         this.label.FontHeight = textHeight;
         this.label.TextAlignment = alignment;
     }
+
     constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox) {
         this.label = label;
         this.boundingBox = new BoundingBox(parent, this);
         this.label.FontHeight = textHeight;
         this.label.TextAlignment = alignment;
     }
+
     public get Label(): Label {
         return this.label;
     }
+
     public setLabelPositionAndShapeBorders(): void {
-        if (this.Label.Text.Trim().Equals(""))
+        if (this.Label.Text.trim() === "") {
             return;
+        }
         let labelMarginBorderFactor: number = EngravingRules.Rules.LabelMarginBorderFactor;
 
-        let widthToHeightRatio: number = MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.Text, this.Label.Font, this.Label.FontStyle);
+        let widthToHeightRatio: number =
+            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.Text, this.Label.Font, this.Label.FontStyle);
         let height: number = this.Label.FontHeight;
         let width: number = height * widthToHeightRatio;
         let psi: BoundingBox = this.PositionAndShape;
@@ -85,6 +92,7 @@ export class GraphicalLabel extends Clickable {
                 psi.BorderBottom = height;
                 psi.BorderRight = 0;
                 break;
+            default:
         }
         psi.BorderMarginTop = psi.BorderTop - height * labelMarginBorderFactor;
         psi.BorderMarginLeft = psi.BorderLeft - height * labelMarginBorderFactor;

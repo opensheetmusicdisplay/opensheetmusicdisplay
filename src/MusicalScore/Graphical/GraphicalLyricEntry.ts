@@ -5,19 +5,25 @@ import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {Label} from "../Label";
 import {TextAlignment} from "../../Common/Enums/TextAlignment";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+
 export class GraphicalLyricEntry {
     private lyricsEntry: LyricsEntry;
     private graphicalLyricWord: GraphicalLyricWord;
     private graphicalLabel: GraphicalLabel;
     private graphicalStaffEntry: GraphicalStaffEntry;
+
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
         this.graphicalStaffEntry = graphicalStaffEntry;
-        this.graphicalLabel = new GraphicalLabel(new Label(lyricsEntry.Text), lyricsHeight,
+        this.graphicalLabel = new GraphicalLabel(
+            new Label(lyricsEntry.Text),
+            lyricsHeight,
             TextAlignment.CenterBottom,
-            graphicalStaffEntry.PositionAndShape);
+            graphicalStaffEntry.PositionAndShape
+        );
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, staffHeight);
     }
+
     public get GetLyricsEntry(): LyricsEntry {
         return this.lyricsEntry;
     }

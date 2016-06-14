@@ -19,6 +19,8 @@ import {SystemLinesEnum} from "./SystemLinesEnum";
 import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
+import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
+
 export class MusicSystemBuilder {
     private measureList: StaffMeasure[][];
     private graphicalMusicSheet: GraphicalMusicSheet;
@@ -35,8 +37,10 @@ export class MusicSystemBuilder {
     private globalSystemIndex: number = 0;
     private leadSheet: boolean = false;
     private symbolFactory: IGraphicalSymbolFactory;
-    public initialize(graphicalMusicSheet: GraphicalMusicSheet, measureList: StaffMeasure[][],
-        numberOfStaffLines: number, symbolFactory: IGraphicalSymbolFactory): void {
+
+    public initialize(
+        graphicalMusicSheet: GraphicalMusicSheet, measureList: StaffMeasure[][], numberOfStaffLines: number, symbolFactory: IGraphicalSymbolFactory
+    ): void {
         this.leadSheet = graphicalMusicSheet.LeadSheet;
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = this.graphicalMusicSheet.ParentMusicSheet.rules;
@@ -50,6 +54,7 @@ export class MusicSystemBuilder {
         this.activeClefs = new Array(this.numberOfVisibleStaffLines);
         this.initializeActiveInstructions(this.measureList[0]);
     }
+
     public buildMusicSystems(): void {
         let previousMeasureEndsSystem: boolean = false;
         let systemMaxWidth: number = this.getFullPageSystemWidth();
@@ -57,16 +62,19 @@ export class MusicSystemBuilder {
         this.currentSystemParams = new SystemBuildParameters();
         this.currentSystemParams.currentSystem = this.initMusicSystem();
         this.layoutSystemStaves();
-        this.currentSystemParams.currentSystem.createMusicSystemLabel(this.rules.InstrumentLabelTextHeight,
+        this.currentSystemParams.currentSystem.createMusicSystemLabel(
+            this.rules.InstrumentLabelTextHeight,
             this.rules.SystemLabelsRightMargin,
-            this.rules.LabelMarginBorderFactor);
-        this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.RelativePosition.Y;
+            this.rules.LabelMarginBorderFactor
+        );
+        this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.RelativePosition.y;
         let numberOfMeasures: number = this.measureList.length(m => m.Any());
         while (this.measureListIndex < numberOfMeasures) {
             let staffMeasures: StaffMeasure[] = this.measureList[this.measureListIndex];
-            for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx)
+            for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
                 staffMeasures[idx].ResetLayout();
-            let sourceMeasure: SourceMeasure = staffMeasures[0].ParentSourceMeasure;
+            }
+            let sourceMeasure: SourceMeasure = staffMeasures[0].parentSourceMeasure;
             let sourceMeasureEndsSystem: boolean = sourceMeasure.BreakSystemAfter;
             let isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             let isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
@@ -79,14 +87,15 @@ export class MusicSystemBuilder {
                 currentMeasureEndInstructionsWidth += this.addEndInstructions(staffMeasures);
             }
             let currentMeasureVarWidth: number = 0;
-            for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++)
-                currentMeasureVarWidth = Math.max(currentMeasureVarWidth, staffMeasures[i].MinimumStaffEntriesWidth);
+            for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++) {
+                currentMeasureVarWidth = Math.max(currentMeasureVarWidth, staffMeasures[i].minimumStaffEntriesWidth);
+            }
             let measureEndLine: SystemLinesEnum = this.getMeasureEndLine();
             currentMeasureEndInstructionsWidth += this.getLineWidth(staffMeasures[0], measureEndLine, isSystemStartMeasure);
             let nextMeasureBeginInstructionWidth: number = this.rules.MeasureLeftMargin;
             if (this.measureListIndex + 1 < this.measureList.length) {
                 let nextStaffMeasures: StaffMeasure[] = this.measureList[this.measureListIndex + 1];
-                let nextSourceMeasure: SourceMeasure = nextStaffMeasures[0].ParentSourceMeasure;
+                let nextSourceMeasure: SourceMeasure = nextStaffMeasures[0].parentSourceMeasure;
                 if (nextSourceMeasure.hasBeginInstructions()) {
                     nextMeasureBeginInstructionWidth += this.addBeginInstructions(nextStaffMeasures, false, false);
                 }
@@ -94,7 +103,10 @@ export class MusicSystemBuilder {
             let totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
             let measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
             if (isSystemStartMeasure || measureFitsInSystem) {
-                this.addMeasureToSystem(staffMeasures, measureStartLine, measureEndLine, totalMeasureWidth, currentMeasureBeginInstructionsWidth, currentMeasureVarWidth, currentMeasureEndInstructionsWidth);
+                this.addMeasureToSystem(
+                    staffMeasures, measureStartLine, measureEndLine, totalMeasureWidth,
+                    currentMeasureBeginInstructionsWidth, currentMeasureVarWidth, currentMeasureEndInstructionsWidth
+                );
                 this.updateActiveClefs(sourceMeasure, staffMeasures);
                 this.measureListIndex++;
             } else {
@@ -104,25 +116,32 @@ export class MusicSystemBuilder {
         }
         this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true);
     }
+
     private setMeasureWidth(staffMeasures: StaffMeasure[], width: number, beginInstrWidth: number, endInstrWidth: number): void {
         for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
             let measure: StaffMeasure = staffMeasures[idx];
             measure.SetWidth(width);
-            if (beginInstrWidth > 0)
-                measure.BeginInstructionsWidth = beginInstrWidth;
-            if (endInstrWidth > 0)
-                measure.EndInstructionsWidth = endInstrWidth;
+            if (beginInstrWidth > 0) {
+                measure.beginInstructionsWidth = beginInstrWidth;
+            }
+            if (endInstrWidth > 0) {
+                measure.endInstructionsWidth = endInstrWidth;
+            }
         }
     }
+
     private finalizeCurrentAndCreateNewSystem(measures: StaffMeasure[], isPartEndingSystem: boolean = false): void {
         this.adaptRepetitionLineWithIfNeeded();
         if (!isPartEndingSystem) {
             this.checkAndCreateExtraInstructionMeasure(measures);
         }
         this.stretchMusicSystem(isPartEndingSystem);
-        if (this.currentPageHeight + this.currentSystemParams.currentSystem.PositionAndShape.Size.Height + this.rules.SystemDistance <= this.rules.PageHeight) {
-            this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.Size.Height + this.rules.SystemDistance;
-            if (this.currentPageHeight + this.currentSystemParams.currentSystem.PositionAndShape.Size.Height + this.rules.SystemDistance >= this.rules.PageHeight) {
+        if (this.currentPageHeight + this.currentSystemParams.currentSystem.PositionAndShape.Size.height + this.rules.SystemDistance <= this.rules.PageHeight) {
+            this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.Size.height + this.rules.SystemDistance;
+            if (
+                this.currentPageHeight + this.currentSystemParams.currentSystem.PositionAndShape.Size.height
+                + this.rules.SystemDistance >= this.rules.PageHeight
+            ) {
                 this.currentMusicPage = this.createMusicPage();
                 this.currentPageHeight = this.rules.PageTopMargin + this.rules.TitleTopDistance;
             }
@@ -136,10 +155,12 @@ export class MusicSystemBuilder {
             this.layoutSystemStaves();
         }
     }
+
     private adaptRepetitionLineWithIfNeeded(): void {
         let systemMeasures: MeasureBuildParameters[] = this.currentSystemParams.systemMeasures;
         if (systemMeasures.length >= 1) {
-            let measures: StaffMeasure[] = this.currentSystemParams.currentSystem.GraphicalMeasures[this.currentSystemParams.currentSystem.GraphicalMeasures.length - 1];
+            let measures: StaffMeasure[] =
+                this.currentSystemParams.currentSystem.GraphicalMeasures[this.currentSystemParams.currentSystem.GraphicalMeasures.length - 1];
             let measureParams: MeasureBuildParameters = systemMeasures[systemMeasures.length - 1];
             let diff: number = 0.0;
             if (measureParams.endLine === SystemLinesEnum.DotsBoldBoldDots) {
@@ -149,30 +170,37 @@ export class MusicSystemBuilder {
             this.currentSystemParams.currentSystemFixWidth -= diff;
             for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
                 let measure: StaffMeasure = measures[idx];
-                measure.EndInstructionsWidth -= diff;
+                measure.endInstructionsWidth -= diff;
             }
         }
     }
-    private addMeasureToSystem(staffMeasures: StaffMeasure[], measureStartLine: SystemLinesEnum, measureEndLine: SystemLinesEnum, totalMeasureWidth: number, currentMeasureBeginInstructionsWidth: number, currentVarWidth: number, currentMeasureEndInstructionsWidth: number): void {
-        this.currentSystemParams.systemMeasures.push(__init(new MeasureBuildParameters(), { beginLine: measureStartLine, endLine: measureEndLine }));
-        this.setMeasureWidth(staffMeasures, totalMeasureWidth, currentMeasureBeginInstructionsWidth,
-            currentMeasureEndInstructionsWidth);
+
+    private addMeasureToSystem(
+        staffMeasures: StaffMeasure[], measureStartLine: SystemLinesEnum, measureEndLine: SystemLinesEnum,
+        totalMeasureWidth: number, currentMeasureBeginInstructionsWidth: number, currentVarWidth: number, currentMeasureEndInstructionsWidth: number
+    ): void {
+        this.currentSystemParams.systemMeasures.push({beginLine: measureStartLine, endLine: measureEndLine});
+        this.setMeasureWidth(
+            staffMeasures, totalMeasureWidth, currentMeasureBeginInstructionsWidth, currentMeasureEndInstructionsWidth
+        );
         this.addStaveMeasuresToSystem(staffMeasures);
         this.currentSystemParams.currentWidth += totalMeasureWidth;
         this.currentSystemParams.currentSystemFixWidth += currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth;
         this.currentSystemParams.currentSystemVarWidth += currentVarWidth;
         this.currentSystemParams.systemMeasureIndex++;
     }
+
     private createMusicPage(): GraphicalMusicPage {
         let page: GraphicalMusicPage = new GraphicalMusicPage(this.graphicalMusicSheet);
         this.graphicalMusicSheet.MusicPages.push(page);
         page.PositionAndShape.BorderLeft = 0.0;
-        page.PositionAndShape.BorderRight = this.graphicalMusicSheet.ParentMusicSheet.PageWidth;
+        page.PositionAndShape.BorderRight = this.graphicalMusicSheet.ParentMusicSheet.pageWidth;
         page.PositionAndShape.BorderTop = 0.0;
         page.PositionAndShape.BorderBottom = this.rules.PageHeight;
         page.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
         return page;
     }
+
     private initMusicSystem(): MusicSystem {
         let musicSystem: MusicSystem = this.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
         this.currentMusicPage.MusicSystems.push(musicSystem);
@@ -180,9 +208,12 @@ export class MusicSystemBuilder {
         this.currentMusicPage.PositionAndShape.ChildElements.push(boundingBox);
         return musicSystem;
     }
+
     private getFullPageSystemWidth(): number {
-        return this.currentMusicPage.PositionAndShape.Size.Width - this.rules.PageLeftMargin - this.rules.PageRightMargin - this.rules.SystemLeftMargin - this.rules.SystemRightMargin;
+        return this.currentMusicPage.PositionAndShape.Size.width - this.rules.PageLeftMargin
+            - this.rules.PageRightMargin - this.rules.SystemLeftMargin - this.rules.SystemRightMargin;
     }
+
     private layoutSystemStaves(): void {
         let systemWidth: number = this.getFullPageSystemWidth();
         let musicSystem: MusicSystem = this.currentSystemParams.currentSystem;
@@ -219,15 +250,18 @@ export class MusicSystemBuilder {
                 if (this.leadSheet && !multiLyrics) {
                     yOffset = 2.5;
                 } else {
-                    if (staffList[i].ParentInstrument === staffList[i + 1].ParentInstrument)
+                    if (staffList[i].ParentInstrument === staffList[i + 1].ParentInstrument) {
                         yOffset = this.rules.BetweenStaffDistance;
-                    else yOffset = this.rules.StaffDistance;
+                    } else {
+                        yOffset = this.rules.StaffDistance;
+                    }
                 }
                 yOffsetSum += yOffset;
             }
         }
         boundingBox.BorderBottom = yOffsetSum;
     }
+
     private addStaffLineToMusicSystem(musicSystem: MusicSystem, relativeYPosition: number, staff: Staff): void {
         if (musicSystem !== undefined) {
             let staffLine: StaffLine = this.symbolFactory.createStaffLine(musicSystem, staff);
@@ -235,30 +269,36 @@ export class MusicSystemBuilder {
             let boundingBox: BoundingBox = staffLine.PositionAndShape;
             musicSystem.PositionAndShape.ChildElements.push(boundingBox);
             let relativePosition: PointF2D = new PointF2D();
-            if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0])
-                relativePosition.X = this.rules.FirstSystemMargin;
-            else relativePosition.X = 0.0;
-            relativePosition.Y = relativeYPosition;
+            if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
+                relativePosition.x = this.rules.FirstSystemMargin;
+            } else {
+                relativePosition.x = 0.0;
+            }
+            relativePosition.y = relativeYPosition;
             boundingBox.RelativePosition = relativePosition;
-            if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0])
-                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.Width - this.rules.FirstSystemMargin;
-            else boundingBox.BorderRight = musicSystem.PositionAndShape.Size.Width;
+            if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
+                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width - this.rules.FirstSystemMargin;
+            } else {
+                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width;
+            }
             boundingBox.BorderLeft = 0.0;
             boundingBox.BorderTop = 0.0;
             boundingBox.BorderBottom = this.rules.StaffHeight;
             for (let i: number = 0; i < 5; i++) {
                 let start: PointF2D = new PointF2D();
-                start.X = 0.0;
-                start.Y = i * this.rules.StaffHeight / 4;
+                start.x = 0.0;
+                start.y = i * this.rules.StaffHeight / 4;
                 let end: PointF2D = new PointF2D();
-                end.X = staffLine.PositionAndShape.Size.Width;
-                end.Y = i * this.rules.StaffHeight / 4;
-                if (this.leadSheet)
-                    start.Y = end.Y = 0;
+                end.x = staffLine.PositionAndShape.Size.width;
+                end.y = i * this.rules.StaffHeight / 4;
+                if (this.leadSheet) {
+                    start.y = end.y = 0;
+                }
                 staffLine.StaffLines[i] = new GraphicalLine(start, end, this.rules.StaffLineWidth);
             }
         }
     }
+
     private initializeActiveInstructions(measureList: StaffMeasure[]): void {
         let firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
         if (firstSourceMeasure !== undefined) {
@@ -267,42 +307,57 @@ export class MusicSystemBuilder {
                 let staffIndex: number = this.visibleStaffIndices[i];
                 let graphicalMeasure: StaffMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(firstSourceMeasure, staffIndex);
                 this.activeClefs[i] = <ClefInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[0];
-                let keyInstruction: KeyInstruction = new KeyInstruction(<KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1]);
+                let keyInstruction: KeyInstruction = new KeyInstruction(
+                    <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1]
+                );
                 keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
                 this.activeKeys[i] = keyInstruction;
                 this.activeRhythm[i] = <RhythmInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
             }
         }
     }
+
     private transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: StaffMeasure): KeyInstruction {
-        if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0 && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== Common.Enums.MidiInstrument.Percussion && MusicSheetCalculator.TransposeCalculator !== undefined)
-            MusicSheetCalculator.TransposeCalculator.TransposeKey(keyInstruction,
-                this.graphicalMusicSheet.ParentMusicSheet.Transpose);
+        if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0
+            && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
+            && MusicSheetCalculator.TransposeCalculator !== undefined
+        ) {
+            MusicSheetCalculator.TransposeCalculator.transposeKey(
+                keyInstruction,
+                this.graphicalMusicSheet.ParentMusicSheet.Transpose
+            );
+        }
         return keyInstruction;
     }
+
     private addBeginInstructions(measures: StaffMeasure[], isSystemFirstMeasure: boolean, isFirstSourceMeasure: boolean): number {
         let measureCount: number = measures.length;
-        if (measureCount === 0)
+        if (measureCount === 0) {
             return 0;
+        }
         let totalBeginInstructionLengthX: number = 0.0;
-        let sourceMeasure: SourceMeasure = measures[0].ParentSourceMeasure;
+        let sourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
         for (let idx: number = 0; idx < measureCount; ++idx) {
             let measure: StaffMeasure = measures[idx];
             let staffIndex: number = this.visibleStaffIndices[idx];
             let beginInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[staffIndex];
-            let beginInstructionLengthX: number = this.AddInstructionsAtMeasureBegin(beginInstructionsStaffEntry, measure,
+            let beginInstructionLengthX: number = this.AddInstructionsAtMeasureBegin(
+                beginInstructionsStaffEntry, measure,
                 idx, isFirstSourceMeasure,
-                isSystemFirstMeasure);
+                isSystemFirstMeasure
+            );
             totalBeginInstructionLengthX = Math.max(totalBeginInstructionLengthX, beginInstructionLengthX);
         }
         return totalBeginInstructionLengthX;
     }
+
     private addEndInstructions(measures: StaffMeasure[]): number {
         let measureCount: number = measures.length;
-        if (measureCount === 0)
+        if (measureCount === 0) {
             return 0;
+        }
         let totalEndInstructionLengthX: number = 0.5;
-        let sourceMeasure: SourceMeasure = measures[0].ParentSourceMeasure;
+        let sourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
         for (let idx: number = 0; idx < measureCount; idx++) {
             let measure: StaffMeasure = measures[idx];
             let staffIndex: number = this.visibleStaffIndices[idx];
@@ -312,8 +367,9 @@ export class MusicSystemBuilder {
         }
         return totalEndInstructionLengthX;
     }
+
     private AddInstructionsAtMeasureBegin(firstEntry: SourceStaffEntry, measure: StaffMeasure,
-        visibleStaffIdx: number, isFirstSourceMeasure: boolean, isSystemStartMeasure: boolean): number {
+                                          visibleStaffIdx: number, isFirstSourceMeasure: boolean, isSystemStartMeasure: boolean): number {
         let instructionsLengthX: number = 0;
         let currentClef: ClefInstruction = undefined;
         let currentKey: KeyInstruction = undefined;
@@ -361,15 +417,18 @@ export class MusicSystemBuilder {
             rhythmAdded = true;
         }
         if (clefAdded || keyAdded || rhythmAdded) {
-            instructionsLengthX += measure.BeginInstructionsWidth;
-            if (rhythmAdded)
+            instructionsLengthX += measure.beginInstructionsWidth;
+            if (rhythmAdded) {
                 instructionsLengthX += this.rules.RhythmRightMargin;
+            }
         }
         return instructionsLengthX;
     }
+
     private addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: StaffMeasure): number {
-        if (lastEntry === undefined || lastEntry.Instructions === undefined || lastEntry.Instructions.length === 0)
+        if (lastEntry === undefined || lastEntry.Instructions === undefined || lastEntry.Instructions.length === 0) {
             return 0;
+        }
         for (let idx: number = 0, len: number = lastEntry.Instructions.length; idx < len; ++idx) {
             let abstractNotationInstruction: AbstractNotationInstruction = lastEntry.Instructions[idx];
             if (abstractNotationInstruction instanceof ClefInstruction) {
@@ -377,8 +436,9 @@ export class MusicSystemBuilder {
                 measure.AddClefAtEnd(activeClef);
             }
         }
-        return this.rules.MeasureRightMargin + measure.EndInstructionsWidth;
+        return this.rules.MeasureRightMargin + measure.endInstructionsWidth;
     }
+
     private updateActiveClefs(measure: SourceMeasure, staffMeasures: StaffMeasure[]): void {
         for (let visStaffIdx: number = 0, len: number = staffMeasures.length; visStaffIdx < len; visStaffIdx++) {
             let staffIndex: number = this.visibleStaffIndices[visStaffIdx];
@@ -419,8 +479,9 @@ export class MusicSystemBuilder {
             }
         }
     }
+
     private checkAndCreateExtraInstructionMeasure(measures: StaffMeasure[]): void {
-        let firstStaffEntries: SourceStaffEntry[] = measures[0].ParentSourceMeasure.FirstInstructionsStaffEntries;
+        let firstStaffEntries: SourceStaffEntry[] = measures[0].parentSourceMeasure.FirstInstructionsStaffEntries;
         let visibleInstructionEntries: SourceStaffEntry[] = [];
         for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
             let measure: StaffMeasure = measures[idx];
@@ -429,17 +490,20 @@ export class MusicSystemBuilder {
         let maxMeasureWidth: number = 0;
         for (let visStaffIdx: number = 0, len: number = visibleInstructionEntries.length; visStaffIdx < len; ++visStaffIdx) {
             let sse: SourceStaffEntry = visibleInstructionEntries[visStaffIdx];
-            if (sse === undefined)
+            if (sse === undefined) {
                 continue;
+            }
             let instructions: AbstractNotationInstruction[] = sse.Instructions;
             let keyInstruction: KeyInstruction = undefined;
             let rhythmInstruction: RhythmInstruction = undefined;
             for (let idx2: number = 0, len2: number = instructions.length; idx2 < len2; ++idx2) {
                 let instruction: AbstractNotationInstruction = instructions[idx2];
-                if (instruction instanceof KeyInstruction && (<KeyInstruction>instruction).Key !== this.activeKeys[visStaffIdx].Key)
+                if (instruction instanceof KeyInstruction && (<KeyInstruction>instruction).Key !== this.activeKeys[visStaffIdx].Key) {
                     keyInstruction = <KeyInstruction>instruction;
-                if (instruction instanceof RhythmInstruction && (<RhythmInstruction>instruction) !== this.activeRhythm[visStaffIdx])
+                }
+                if (instruction instanceof RhythmInstruction && (<RhythmInstruction>instruction) !== this.activeRhythm[visStaffIdx]) {
                     rhythmInstruction = <RhythmInstruction>instruction;
+                }
             }
             if (keyInstruction !== undefined || rhythmInstruction !== undefined) {
                 let measureWidth: number = this.addExtraInstructionMeasure(visStaffIdx, keyInstruction, rhythmInstruction);
@@ -447,11 +511,15 @@ export class MusicSystemBuilder {
             }
         }
         if (maxMeasureWidth > 0) {
-            this.currentSystemParams.systemMeasures.push(__init(new MeasureBuildParameters(), { beginLine: SystemLinesEnum.None, endLine: SystemLinesEnum.None }));
+            this.currentSystemParams.systemMeasures.push({
+                beginLine: SystemLinesEnum.None,
+                endLine: SystemLinesEnum.None,
+            });
             this.currentSystemParams.currentWidth += maxMeasureWidth;
             this.currentSystemParams.currentSystemFixWidth += maxMeasureWidth;
         }
     }
+
     private addExtraInstructionMeasure(visStaffIdx: number, keyInstruction: KeyInstruction, rhythmInstruction: RhythmInstruction): number {
         let currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         let measures: StaffMeasure[] = [];
@@ -466,18 +534,20 @@ export class MusicSystemBuilder {
         measure.PositionAndShape.BorderLeft = 0.0;
         measure.PositionAndShape.BorderTop = 0.0;
         measure.PositionAndShape.BorderBottom = this.rules.StaffHeight;
-        let width: number = this.rules.MeasureLeftMargin + measure.BeginInstructionsWidth + this.rules.MeasureRightMargin;
+        let width: number = this.rules.MeasureLeftMargin + measure.beginInstructionsWidth + this.rules.MeasureRightMargin;
         measure.PositionAndShape.BorderRight = width;
         currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
         measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
         currentSystem.StaffLines[visStaffIdx].PositionAndShape.ChildElements.push(measure.PositionAndShape);
         return width;
     }
+
     private addStaveMeasuresToSystem(staffMeasures: StaffMeasure[]): void {
         if (staffMeasures[0] !== undefined) {
             let gmeasures: StaffMeasure[] = [];
-            for (let i: number = 0; i < staffMeasures.length; i++)
+            for (let i: number = 0; i < staffMeasures.length; i++) {
                 gmeasures.push(staffMeasures[i]);
+            }
             let currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
             for (let visStaffIdx: number = 0; visStaffIdx < this.numberOfVisibleStaffLines; visStaffIdx++) {
                 let measure: StaffMeasure = gmeasures[visStaffIdx];
@@ -488,6 +558,7 @@ export class MusicSystemBuilder {
             currentSystem.AddStaffMeasures(gmeasures);
         }
     }
+
     private getMeasureStartLine(): SystemLinesEnum {
         let thisMeasureBeginsLineRep: boolean = this.thisMeasureBeginsLineRepetition();
         if (thisMeasureBeginsLineRep) {
@@ -496,11 +567,13 @@ export class MusicSystemBuilder {
             if (this.previousMeasureEndsLineRepetition() && !isSystemStartMeasure) {
                 return SystemLinesEnum.DotsBoldBoldDots;
             }
-            if (!isGlobalFirstMeasure)
+            if (!isGlobalFirstMeasure) {
                 return SystemLinesEnum.BoldThinDots;
+            }
         }
         return SystemLinesEnum.None;
     }
+
     private getMeasureEndLine(): SystemLinesEnum {
         if (this.nextMeasureBeginsLineRepetition() && this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsBoldBoldDots;
@@ -508,7 +581,7 @@ export class MusicSystemBuilder {
         if (this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsThinBold;
         }
-        if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].ParentSourceMeasure.EndsPiece) {
+        if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.EndsPiece) {
             return SystemLinesEnum.ThinBold;
         }
         if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
@@ -516,6 +589,7 @@ export class MusicSystemBuilder {
         }
         return SystemLinesEnum.SingleThin;
     }
+
     private getLineWidth(measure: StaffMeasure, systemLineEnum: SystemLinesEnum, isSystemStartMeasure: boolean): number {
         let width: number = measure.GetLineWidth(systemLineEnum);
         if (systemLineEnum === SystemLinesEnum.DotsBoldBoldDots) {
@@ -526,89 +600,113 @@ export class MusicSystemBuilder {
         }
         return width;
     }
+
     private previousMeasureEndsLineRepetition(): boolean {
-        if (this.measureListIndex === 0)
+        if (this.measureListIndex === 0) {
             return false;
+        }
         for (let idx: number = 0, len: number = this.measureList[this.measureListIndex - 1].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[this.measureListIndex - 1][idx];
-            if (measure.endsWithLineRepetition())
+            if (measure.endsWithLineRepetition()) {
                 return true;
+            }
         }
         return false;
     }
+
     private thisMeasureBeginsLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.measureList[this.measureListIndex].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[this.measureListIndex][idx];
-            if (measure.beginsWithLineRepetition())
+            if (measure.beginsWithLineRepetition()) {
                 return true;
+            }
         }
         return false;
     }
+
     private nextMeasureBeginsLineRepetition(): boolean {
         let nextMeasureIndex: number = this.measureListIndex + 1;
-        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length)
+        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length) {
             return false;
+        }
         for (let idx: number = 0, len: number = this.measureList[nextMeasureIndex].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[nextMeasureIndex][idx];
-            if (measure.beginsWithLineRepetition())
+            if (measure.beginsWithLineRepetition()) {
                 return true;
+            }
         }
         return false;
     }
+
     private thisMeasureEndsLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.measureList[this.measureListIndex].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[this.measureListIndex][idx];
-            if (measure.endsWithLineRepetition())
+            if (measure.endsWithLineRepetition()) {
                 return true;
+            }
         }
         return false;
     }
+
     private nextMeasureBeginsWordRepetition(): boolean {
         let nextMeasureIndex: number = this.measureListIndex + 1;
-        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length)
+        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length) {
             return false;
+        }
         for (let idx: number = 0, len: number = this.measureList[nextMeasureIndex].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[nextMeasureIndex][idx];
-            if (measure.beginsWithWordRepetition())
+            if (measure.beginsWithWordRepetition()) {
                 return true;
+            }
         }
         return false;
     }
+
     private thisMeasureEndsWordRepetition(): boolean {
         for (let idx: number = 0, len: number = this.measureList[this.measureListIndex].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[this.measureListIndex][idx];
-            if (measure.endsWithWordRepetition())
+            if (measure.endsWithWordRepetition()) {
                 return true;
+            }
         }
         return false;
     }
+
     private nextMeasureHasKeyInstructionChange(): boolean {
         return this.getNextMeasureKeyInstruction() !== undefined;
     }
+
     private getNextMeasureKeyInstruction(): KeyInstruction {
         if (this.measureListIndex < this.measureList.length - 1) {
             for (let visIndex: number = 0; visIndex < this.measureList[this.measureListIndex].length; visIndex++) {
-                let sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex + 1][visIndex].ParentSourceMeasure;
-                if (sourceMeasure === undefined)
+                let sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex + 1][visIndex].parentSourceMeasure;
+                if (sourceMeasure === undefined) {
                     return undefined;
+                }
                 return sourceMeasure.getKeyInstruction(this.visibleStaffIndices[visIndex]);
             }
         }
         return undefined;
     }
+
     private calculateXScalingFactor(systemFixWidth: number, systemVarWidth: number): number {
-        if (Math.abs(systemVarWidth - 0) < 0.00001 || Math.abs(systemFixWidth - 0) < 0.00001)
-        return 1.0;
+        if (Math.abs(systemVarWidth - 0) < 0.00001 || Math.abs(systemFixWidth - 0) < 0.00001) {
+            return 1.0;
+        }
         let systemEndX: number;
         let currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
-        systemEndX = currentSystem.StaffLines[0].PositionAndShape.Size.Width;
+        systemEndX = currentSystem.StaffLines[0].PositionAndShape.Size.width;
         let scalingFactor: number = (systemEndX - systemFixWidth) / systemVarWidth;
         return scalingFactor;
     }
+
     private stretchMusicSystem(isPartEndingSystem: boolean): void {
-        let scalingFactor: number = this.calculateXScalingFactor(this.currentSystemParams.currentSystemFixWidth, this.currentSystemParams.currentSystemVarWidth);
-        if (isPartEndingSystem)
+        let scalingFactor: number = this.calculateXScalingFactor(
+            this.currentSystemParams.currentSystemFixWidth, this.currentSystemParams.currentSystemVarWidth
+        );
+        if (isPartEndingSystem) {
             scalingFactor = Math.min(scalingFactor, this.rules.LastSystemMaxScalingFactor);
+        }
         let currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         for (let visStaffIdx: number = 0, len: number = currentSystem.StaffLines.length; visStaffIdx < len; ++visStaffIdx) {
             let staffLine: StaffLine = currentSystem.StaffLines[visStaffIdx];
@@ -616,54 +714,58 @@ export class MusicSystemBuilder {
             for (let i: number = 0; i < staffLine.Measures.length; i++) {
                 let measure: StaffMeasure = staffLine.Measures[i];
                 measure.SetPositionInStaffline(currentXPosition);
-                measure.SetWidth(measure.BeginInstructionsWidth + measure.MinimumStaffEntriesWidth * scalingFactor + measure.EndInstructionsWidth);
+                measure.SetWidth(measure.beginInstructionsWidth + measure.minimumStaffEntriesWidth * scalingFactor + measure.endInstructionsWidth);
                 if (i < this.currentSystemParams.systemMeasures.length) {
                     let startLine: SystemLinesEnum = this.currentSystemParams.systemMeasures[i].beginLine;
                     let lineWidth: number = measure.GetLineWidth(SystemLinesEnum.BoldThinDots);
                     switch (startLine) {
                         case SystemLinesEnum.BoldThinDots:
-                            {
-                                let xPosition: number = currentXPosition;
-                                if (i === 0) {
-                                    xPosition = currentXPosition + measure.BeginInstructionsWidth - lineWidth;
-                                }
-                                currentSystem.createVerticalLineForMeasure(xPosition, SystemLinesEnum.BoldThinDots, lineWidth, visStaffIdx);
-                                break;
+                            let xPosition: number = currentXPosition;
+                            if (i === 0) {
+                                xPosition = currentXPosition + measure.beginInstructionsWidth - lineWidth;
                             }
+                            currentSystem.createVerticalLineForMeasure(xPosition, SystemLinesEnum.BoldThinDots, lineWidth, visStaffIdx);
+                            break;
+                        default:
                     }
                 }
-                measure.StaffEntriesScaleFactor = scalingFactor;
+                measure.staffEntriesScaleFactor = scalingFactor;
                 measure.LayoutSymbols();
-                let nextMeasureHasRepStartLine: boolean = i + 1 < this.currentSystemParams.systemMeasures.length && this.currentSystemParams.systemMeasures[i + 1].beginLine === SystemLinesEnum.BoldThinDots;
+                let nextMeasureHasRepStartLine: boolean = i + 1 < this.currentSystemParams.systemMeasures.length
+                    && this.currentSystemParams.systemMeasures[i + 1].beginLine === SystemLinesEnum.BoldThinDots;
                 if (!nextMeasureHasRepStartLine) {
                     let endLine: SystemLinesEnum = SystemLinesEnum.SingleThin;
                     if (i < this.currentSystemParams.systemMeasures.length) {
                         endLine = this.currentSystemParams.systemMeasures[i].endLine;
                     }
                     let lineWidth: number = measure.GetLineWidth(endLine);
-                    let xPos: number = measure.PositionAndShape.RelativePosition.X + measure.PositionAndShape.BorderRight - lineWidth;
-                    if (endLine === SystemLinesEnum.DotsBoldBoldDots)
+                    let xPos: number = measure.PositionAndShape.RelativePosition.x + measure.PositionAndShape.BorderRight - lineWidth;
+                    if (endLine === SystemLinesEnum.DotsBoldBoldDots) {
                         xPos -= lineWidth / 2;
+                    }
                     currentSystem.createVerticalLineForMeasure(xPos, endLine, lineWidth, visStaffIdx);
                 }
-                currentXPosition = measure.PositionAndShape.RelativePosition.X + measure.PositionAndShape.BorderRight;
+                currentXPosition = measure.PositionAndShape.RelativePosition.x + measure.PositionAndShape.BorderRight;
             }
         }
-        if (isPartEndingSystem)
+        if (isPartEndingSystem) {
             this.decreaseMusicSystemBorders();
+        }
     }
+
     private decreaseMusicSystemBorders(): void {
         let currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
-        let width: number = currentSystem.StaffLines[0].Measures.Last().PositionAndShape.RelativePosition.X + currentSystem.StaffLines[0].Measures.Last().PositionAndShape.Size.Width;
+        let width: number = currentSystem.StaffLines[0].Measures.Last().PositionAndShape.RelativePosition.x
+            + currentSystem.StaffLines[0].Measures.Last().PositionAndShape.Size.width;
         for (let idx: number = 0, len: number = currentSystem.StaffLines.length; idx < len; ++idx) {
             let staffLine: StaffLine = currentSystem.StaffLines[idx];
             staffLine.PositionAndShape.BorderRight = width;
             for (let idx2: number = 0, len2: number = staffLine.StaffLines.length; idx2 < len2; ++idx2) {
                 let graphicalLine: GraphicalLine = staffLine.StaffLines[idx2];
-                graphicalLine.End = new PointF2D(width, graphicalLine.End.Y);
+                graphicalLine.End = new PointF2D(width, graphicalLine.End.y);
             }
         }
-        currentSystem.PositionAndShape.BorderRight = width + this.currentSystemParams.MaxLabelLength + this.rules.SystemLabelsRightMargin;
+        currentSystem.PositionAndShape.BorderRight = width + this.currentSystemParams.maxLabelLength + this.rules.SystemLabelsRightMargin;
     }
 }
 export class SystemBuildParameters {
@@ -673,7 +775,8 @@ export class SystemBuildParameters {
     public currentWidth: number = 0;
     public currentSystemFixWidth: number = 0;
     public currentSystemVarWidth: number = 0;
-    public MaxLabelLength: number = 0;
+    public maxLabelLength: number = 0;
+
     public IsSystemStartMeasure(): boolean {
         return this.systemMeasureIndex === 0;
     }

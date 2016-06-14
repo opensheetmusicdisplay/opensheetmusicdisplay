@@ -5,6 +5,7 @@ import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
 import {BoundingBox} from "./BoundingBox";
 import {GraphicalObject} from "./GraphicalObject";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+
 export class GraphicalChordSymbolContainer extends GraphicalObject {
     private chordSymbolContainer: ChordSymbolContainer;
     private graphicalLabel: GraphicalLabel;

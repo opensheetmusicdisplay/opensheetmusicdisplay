@@ -1,12 +1,15 @@
 ﻿import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
 import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
+
 export class GraphicalLyricWord {
     private lyricWord: LyricWord;
     private graphicalLyricsEntries: GraphicalLyricEntry[] = [];
+
     constructor(lyricWord: LyricWord) {
         this.lyricWord = lyricWord;
         this.initialize();
     }
+
     public get GetLyricWord(): LyricWord {
         return this.lyricWord;
     }

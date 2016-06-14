@@ -1,16 +1,19 @@
 ﻿import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+
 export class GraphicalLine {
-    private start: PointF2D;
-    private end: PointF2D;
-    private width: number;
     constructor(start: PointF2D, end: PointF2D, width: number = 0, styleEnum: OutlineAndFillStyleEnum = OutlineAndFillStyleEnum.BaseWritingColor) {
         this.start = start;
         this.end = end;
         this.width = width;
-        this.StyleId = <number>styleEnum;
+        this.styleId = <number>styleEnum;
     }
-    public StyleId: number;
+    public styleId: number;
+
+    private start: PointF2D;
+    private end: PointF2D;
+    private width: number;
+
     public get Start(): PointF2D {
         return this.start;
     }

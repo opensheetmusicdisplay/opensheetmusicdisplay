@@ -1,6 +1,7 @@
 ﻿import {StaffEntryLink} from "../VoiceData/StaffEntryLink";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalNote} from "./GraphicalNote";
+
 export class GraphicalStaffEntryLink {
     private staffEntryLink: StaffEntryLink;
     private graphicalLinkedStaffEntries: GraphicalStaffEntry[] = [];
@@ -29,12 +30,14 @@ export class GraphicalStaffEntryLink {
             let notes: GraphicalNote[] = [];
             for (let idx: number = 0, len: number = this.graphicalLinkedStaffEntries.length; idx < len; ++idx) {
                 let graphicalLinkedStaffEntry: GraphicalStaffEntry = this.graphicalLinkedStaffEntries[idx];
-                for (let idx2: number = 0, len2: number = graphicalLinkedStaffEntry.Notes.length; idx2 < len2; ++idx2) {
-                    let graphicalNotes: GraphicalNote[] = graphicalLinkedStaffEntry.Notes[idx2];
+                for (let idx2: number = 0, len2: number = graphicalLinkedStaffEntry.notes.length; idx2 < len2; ++idx2) {
+                    let graphicalNotes: GraphicalNote[] = graphicalLinkedStaffEntry.notes[idx2];
                     for (let idx3: number = 0, len3: number = graphicalNotes.length; idx3 < len3; ++idx3) {
                         let graphicalNote: GraphicalNote = graphicalNotes[idx3];
-                        if (graphicalNote.SourceNote.ParentStaffEntry.Link !== undefined && graphicalNote.SourceNote.ParentVoiceEntry === this.staffEntryLink.GetVoiceEntry)
+                        if (graphicalNote.sourceNote.ParentStaffEntry.Link !== undefined
+                            && graphicalNote.sourceNote.ParentVoiceEntry === this.staffEntryLink.GetVoiceEntry) {
                             notes.push(graphicalNote);
+                        }
                     }
                 }
             }

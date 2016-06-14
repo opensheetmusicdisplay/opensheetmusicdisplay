@@ -1,4 +1,5 @@
 ﻿import {BoundingBox} from "./BoundingBox";
+
 export class GraphicalObject {
     protected boundingBox: BoundingBox;
     public get PositionAndShape(): BoundingBox {

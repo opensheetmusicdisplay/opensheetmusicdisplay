@@ -18,7 +18,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * This is needed to evaluate a measure a second time by system builder.
      */
     public resetLayout(): void {
-        this.BeginInstructionsWidth = 0;
+        this.beginInstructionsWidth = 0;
 
     }
 
@@ -38,7 +38,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtBegin(clef: ClefInstruction): void {
-        this.BeginInstructionsWidth += 20;
+        this.beginInstructionsWidth += 20;
     }
 
     /**
