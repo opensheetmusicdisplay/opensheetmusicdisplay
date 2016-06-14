@@ -179,7 +179,7 @@ export class MusicSystem extends GraphicalObject {
 
     public createMusicSystemLabel(instrumentLabelTextHeight: number, systemLabelsRightMargin: number, labelMarginBorderFactor: number): void {
         if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
-            let instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.Instruments.Where(i => i.Voices.length > 0 && i.Voices[0].Visible);
+            let instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.getVisibleInstruments();
             for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
                 let instrument: Instrument = instruments[idx];
                 let graphicalLabel: GraphicalLabel = new GraphicalLabel(instrument.NameLabel, instrumentLabelTextHeight, TextAlignment.LeftCenter, this.boundingBox);
