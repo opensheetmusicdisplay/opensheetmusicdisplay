@@ -12,30 +12,83 @@ export class VexFlowMeasure extends StaffMeasure {
         super(staff, staffLine, sourceMeasure);
 
     }
+
+    /**
+     * Reset all the geometric values and parameters of this measure and put it in an initialized state.
+     * This is needed to evaluate a measure a second time by system builder.
+     */
     public resetLayout(): void {
 
     }
+
+    /**
+     * returns the x-width of a given measure line.
+     * @param line
+     * @returns {SystemLinesEnum} the x-width
+     */
     public getLineWidth(line: SystemLinesEnum): number {
         return SystemLinesEnum.SingleThin;
     }
+
+    /**
+     * adds the given clef to the begin of the measure.
+     * This has to update/increase BeginInstructionsWidth.
+     * @param clef
+     */
     public addClefAtBegin(clef: ClefInstruction): void {
 
     }
+
+    /**
+     * adds the given key to the begin of the measure.
+     * This has to update/increase BeginInstructionsWidth.
+     * @param currentKey the new valid key.
+     * @param previousKey the old cancelled key. Needed to show which accidentals are not valid any more.
+     * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
+     */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
 
     }
+
+    /**
+     * adds the given rhythm to the begin of the measure.
+     * This has to update/increase BeginInstructionsWidth.
+     * @param rhythm
+     */
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
 
     }
+
+    /**
+     * adds the given clef to the end of the measure.
+     * This has to update/increase EndInstructionsWidth.
+     * @param clef
+     */
     public addClefAtEnd(clef: ClefInstruction): void {
 
     }
+
+    /**
+     * This method sets the x-position relative to the staffline. (y-Position is always 0 relative to the staffline)
+     * @param xPos
+     */
     public setPositionInStaffline(xPos: number): void {
 
     }
+
+    /**
+     * Sets the overall x-width of the measure.
+     * @param width
+     */
     public setWidth(width: number): void {
 
     }
+
+    /**
+     * This method is called after the StaffEntriesScaleFactor has been set.
+     * Here the final x-positions of the staff entries have to be set.
+     * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
+     */
     public layoutSymbols(): void {
 
     }
