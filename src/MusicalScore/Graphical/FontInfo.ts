@@ -293,8 +293,8 @@ export class FontInfo {
             new SymbolMargins(0.1, 0.1, 0.1, 0.1)];
         let values: Array = Enum.GetValues(/*typeof*/MusicSymbol);
         let i: number = 0;
-        for (let c: string = <string>0x21; c << string > 0x21 + values.length; c++) {
-            let si: SymbolInfo = new SymbolInfo(c.ToString(), i, scaleVector[i], centerVector[i], marginVector[i]);
+        for (let c: string = <string>0x21; c < <string> 0x21 + values.length; c++) {
+            let si: SymbolInfo = new SymbolInfo(c, i, scaleVector[i], centerVector[i], marginVector[i]);
             this.symbolMapping.push(<MusicSymbol>values.GetValue(i), si);
             i++;
         }

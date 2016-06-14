@@ -300,18 +300,6 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
-    public GetVerticalContainerFromTimestamp(timestamp: Fraction, startIndex: number): VerticalGraphicalStaffEntryContainer {
-        let index: number = this.verticalGraphicalStaffEntryContainers.BinarySearch(startIndex,
-            this.verticalGraphicalStaffEntryContainers.length - startIndex,
-            new VerticalGraphicalStaffEntryContainer(0,
-                timestamp),
-            new VerticalGraphicalStaffEntryContainer.VgseContainerTimestampComparer());
-        if (index >= 0) {
-            return this.verticalGraphicalStaffEntryContainers[index];
-        }
-        return undefined;
-    }
-
     public GetVerticalContainerFromTimestamp(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
         let index: number = this.verticalGraphicalStaffEntryContainers.BinarySearch(new VerticalGraphicalStaffEntryContainer(0, timestamp),
             new VerticalGraphicalStaffEntryContainer.VgseContainerTimestampComparer());
