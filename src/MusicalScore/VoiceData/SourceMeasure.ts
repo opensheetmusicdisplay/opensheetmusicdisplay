@@ -8,6 +8,9 @@ import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
 import {MultiExpression} from "./Expressions/multiExpression";
 import {MultiTempoExpression} from "./Expressions/multiTempoExpression";
+import {KeyInstruction} from "./Instructions/KeyInstruction";
+import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
+import {Repetition} from "../MusicSource/Repetition";
 export class SourceMeasure {
     constructor(completeNumberOfStaves: number) {
         this.completeNumberOfStaves = completeNumberOfStaves;
@@ -280,6 +283,75 @@ export class SourceMeasure {
             if (sse !== undefined) { sourceStaffEntries.push(sse); }
         }
         return sourceStaffEntries;
+    }
+    public hasBeginInstructions(): boolean {
+        for (var staffIndex: number = 0, len = this.FirstInstructionsStaffEntries.length; staffIndex < len; staffIndex++) {
+            var beginInstructionsStaffEntry: SourceStaffEntry = this.FirstInstructionsStaffEntries[staffIndex];
+            if (beginInstructionsStaffEntry != null && beginInstructionsStaffEntry.Instructions.length > 0)
+                return true;
+        }
+        return false;
+    }
+    public beginsWithLineRepetition(): boolean {
+        for (var idx: number = 0, len = this.FirstRepetitionInstructions.length; idx < len; ++idx) {
+            var instr: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
+            if (instr.parentRepetition != null && instr == instr.parentRepetition.startMarker && !instr.parentRepetition.FromWords)
+                return true;
+        }
+        return false;
+    }
+    public endsWithLineRepetition(): boolean {
+        for (var idx: number = 0, len = this.LastRepetitionInstructions.length; idx < len; ++idx) {
+            var instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
+            var rep: Repetition = instruction.parentRepetition;
+            if (rep == null)
+                continue;
+            if (rep.FromWords)
+                continue;
+            for (var idx2: number = 0, len2 = rep.BackwardJumpInstructions.length; idx2 < len2; ++idx2) {
+                var backJumpInstruction: RepetitionInstruction = rep.BackwardJumpInstructions[idx2];
+                if (instruction == backJumpInstruction)
+                    return true;
+            }
+        }
+        return false;
+    }
+    public beginsWithWordRepetition(): boolean {
+        for (var idx: number = 0, len = this.FirstRepetitionInstructions.length; idx < len; ++idx) {
+            var instruction: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
+            if (instruction.parentRepetition != null && instruction == instruction.parentRepetition.startMarker && instruction.parentRepetition.FromWords)
+                return true;
+        }
+        return false;
+    }
+    public endsWithWordRepetition(): boolean {
+        for (var idx: number = 0, len = this.LastRepetitionInstructions.length; idx < len; ++idx) {
+            var instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
+            var rep: Repetition = instruction.parentRepetition;
+            if (rep == null)
+                continue;
+            if (!rep.FromWords)
+                continue;
+            for (var idx2: number = 0, len2 = rep.BackwardJumpInstructions.length; idx2 < len2; ++idx2) {
+                var backJumpInstruction: RepetitionInstruction = rep.BackwardJumpInstructions[idx2];
+                if (instruction == backJumpInstruction)
+                    return true;
+            }
+            if (instruction == rep.forwardJumpInstruction)
+                return true;
+        }
+        return false;
+    }
+    public getKeyInstruction(staffIndex: number): KeyInstruction {
+        if (this.FirstInstructionsStaffEntries[staffIndex] != null) {
+            var sourceStaffEntry: SourceStaffEntry = this.FirstInstructionsStaffEntries[staffIndex];
+            for (var idx: number = 0, len = sourceStaffEntry.Instructions.length; idx < len; ++idx) {
+                var abstractNotationInstruction: AbstractNotationInstruction = sourceStaffEntry.Instructions[idx];
+                if (abstractNotationInstruction instanceof KeyInstruction)
+                    return <KeyInstruction>abstractNotationInstruction;
+            }
+        }
+        return null;
     }
     private getLastSourceStaffEntryForInstrument(instrumentIndex: number): SourceStaffEntry {
         for (let i: number = this.verticalSourceStaffEntryContainers.length - 1; i >= 0; i--) {

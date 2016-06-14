@@ -26,7 +26,7 @@ export class GraphicalNote extends GraphicalObject {
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.SourceNote.Pitch;
         if (MusicSheetCalculator.TransposeCalculator !== undefined)
-            transposedPitch = MusicSheetCalculator.TransposeCalculator.TransposePitch(this.SourceNote.Pitch, keyInstruction, halfTones);
+            transposedPitch = MusicSheetCalculator.TransposeCalculator.transposePitch(this.SourceNote.Pitch, keyInstruction, halfTones);
         return transposedPitch;
     }
 }

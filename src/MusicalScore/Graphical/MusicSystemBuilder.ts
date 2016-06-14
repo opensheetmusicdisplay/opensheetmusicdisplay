@@ -16,6 +16,9 @@ import {GraphicalLine} from "./GraphicalLine";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {SystemLinesEnum} from "./SystemLinesEnum";
+import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
+import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
+import {MusicSheetCalculator} from "./MusicSheetCalculator";
 export class MusicSystemBuilder {
     private measureList: StaffMeasure[][];
     private graphicalMusicSheet: GraphicalMusicSheet;
@@ -36,7 +39,7 @@ export class MusicSystemBuilder {
         numberOfStaffLines: number, symbolFactory: IGraphicalSymbolFactory): void {
         this.leadSheet = graphicalMusicSheet.LeadSheet;
         this.graphicalMusicSheet = graphicalMusicSheet;
-        this.rules = this.graphicalMusicSheet.ParentMusicSheet.Rules;
+        this.rules = this.graphicalMusicSheet.ParentMusicSheet.rules;
         this.measureList = measureList;
         this.symbolFactory = symbolFactory;
         this.currentMusicPage = this.createMusicPage();
@@ -45,7 +48,7 @@ export class MusicSystemBuilder {
         this.activeRhythm = new Array(this.numberOfVisibleStaffLines);
         this.activeKeys = new Array(this.numberOfVisibleStaffLines);
         this.activeClefs = new Array(this.numberOfVisibleStaffLines);
-        initializeActiveInstructions(this.measureList[0]);
+        this.initializeActiveInstructions(this.measureList[0]);
     }
     public buildMusicSystems(): void {
         let previousMeasureEndsSystem: boolean = false;
@@ -70,7 +73,7 @@ export class MusicSystemBuilder {
             let currentMeasureBeginInstructionsWidth: number = this.rules.MeasureLeftMargin;
             let currentMeasureEndInstructionsWidth: number = 0;
             let measureStartLine: SystemLinesEnum = this.getMeasureStartLine();
-            currentMeasureBeginInstructionsWidth += getLineWidth(staffMeasures[0], measureStartLine, isSystemStartMeasure);
+            currentMeasureBeginInstructionsWidth += this.getLineWidth(staffMeasures[0], measureStartLine, isSystemStartMeasure);
             if (!this.leadSheet) {
                 currentMeasureBeginInstructionsWidth += this.addBeginInstructions(staffMeasures, isSystemStartMeasure, isFirstSourceMeasure);
                 currentMeasureEndInstructionsWidth += this.addEndInstructions(staffMeasures);
@@ -79,7 +82,7 @@ export class MusicSystemBuilder {
             for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++)
                 currentMeasureVarWidth = Math.max(currentMeasureVarWidth, staffMeasures[i].MinimumStaffEntriesWidth);
             let measureEndLine: SystemLinesEnum = this.getMeasureEndLine();
-            currentMeasureEndInstructionsWidth += getLineWidth(staffMeasures[0], measureEndLine, isSystemStartMeasure);
+            currentMeasureEndInstructionsWidth += this.getLineWidth(staffMeasures[0], measureEndLine, isSystemStartMeasure);
             let nextMeasureBeginInstructionWidth: number = this.rules.MeasureLeftMargin;
             if (this.measureListIndex + 1 < this.measureList.length) {
                 let nextStaffMeasures: StaffMeasure[] = this.measureList[this.measureListIndex + 1];
@@ -99,7 +102,7 @@ export class MusicSystemBuilder {
             }
             previousMeasureEndsSystem = sourceMeasureEndsSystem;
         }
-        finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true);
+        this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true);
     }
     private setMeasureWidth(staffMeasures: StaffMeasure[], width: number, beginInstrWidth: number, endInstrWidth: number): void {
         for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
@@ -655,7 +658,7 @@ export class MusicSystemBuilder {
         for (let idx: number = 0, len: number = currentSystem.StaffLines.length; idx < len; ++idx) {
             let staffLine: StaffLine = currentSystem.StaffLines[idx];
             staffLine.PositionAndShape.BorderRight = width;
-            for (let idx2: number = 0, len2: number = staffLine.StaffLines.Length; idx2 < len2; ++idx2) {
+            for (let idx2: number = 0, len2: number = staffLine.StaffLines.length; idx2 < len2; ++idx2) {
                 let graphicalLine: GraphicalLine = staffLine.StaffLines[idx2];
                 graphicalLine.End = new PointF2D(width, graphicalLine.End.Y);
             }

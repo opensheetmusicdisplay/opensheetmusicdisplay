@@ -12,23 +12,25 @@ import {Voice} from "../VoiceData/Voice";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {GraphicalNote} from "./GraphicalNote";
 import {SystemLinesEnum} from "./SystemLinesEnum";
+import {BoundingBox} from "./BoundingBox";
 export class StaffMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
     protected lastInstructionStaffEntry: GraphicalStaffEntry;
     private staff: Staff;
     private measureNumber: number = -1;
     private parentStaffLine: StaffLine;
-    constructor(staff: Staff, parentSourceMeasure: SourceMeasure) {
+    constructor(staff: Staff = null, staffLine: StaffLine = null, parentSourceMeasure: SourceMeasure = null) {
         this.staff = staff;
         this.ParentSourceMeasure = parentSourceMeasure;
-        this.StaffEntries = [];
-        if (this.ParentSourceMeasure !== undefined)
-            this.measureNumber = this.ParentSourceMeasure.MeasureNumber;
-    }
-    constructor(staffLine: StaffLine) {
         this.parentStaffLine = staffLine;
-        this.staff = staffLine.ParentStaff;
+        if (staffLine != null)
+            this.staff = staffLine.ParentStaff;
+        if (this.ParentSourceMeasure != null)
+            this.measureNumber = this.ParentSourceMeasure.MeasureNumber;
         this.StaffEntries = [];
+        if (staffLine != null)
+            this.PositionAndShape = new BoundingBox(staffLine.PositionAndShape, this);
+        else this.PositionAndShape = new BoundingBox(this);
     }
     public ParentSourceMeasure: SourceMeasure;
     public StaffEntries: GraphicalStaffEntry[];

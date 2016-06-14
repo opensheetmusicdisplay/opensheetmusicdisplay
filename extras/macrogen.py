@@ -20,12 +20,13 @@ replace = (
     ("IEnumerable<([a-zA-Z0-9]+)>", "$1[]"),
 
     ("\\.Count", ".length"),
+    ("\\.Length", ".length"),
     ("\\.Add\(", ".push("),
     ("\\.First\(\)", "[0]"),
 
     ("\\.Insert\((.*), (.*)\)", ".splice($1, 0, $2)"),
     ("\\.RemoveAt\(([a-z|0-9]+)\)", ".splice($1, 1)"),
-    ("\\.Clear\(\);", " = [];"),
+    ("\\.Clear\(\);", ".length = 0;"),
     ("\\.IndexOf", ".indexOf"),
     ("\\.ToArray\\(\\)", ""),
 
@@ -71,7 +72,13 @@ def checkForIssues(filename, content):
 
 def applyAll():
     root = sys.argv[1]
-    filenames = []; recurse(root, filenames)
+    filenames = []
+
+    if os.path.isdir(root):
+        recurse(root, filenames)
+    else:
+        filenames.append(root)
+        
     print("Apply replacements to:")
     for filename in filenames:
         print("  >>> " + os.path.basename(filename))
