@@ -74,7 +74,7 @@ export class EngravingRules {
     private betweenDotsDistance: number;
     private ornamentAccidentalScalingFactor: number;
     private chordSymbolTextHeight: number;
-    private chordSymbolYOffset: number;
+    //private chordSymbolYOffset: number;
     private fingeringLabelFontHeight: number;
     private measureNumberLabelHeight: number;
     private measureNumberLabelOffset: number;
@@ -269,10 +269,11 @@ export class EngravingRules {
         try {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin;
             if (FontInfo.Info !== undefined) {
-                this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).width + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).width + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).Width;
+                this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).width
+                    + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).width
+                    + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).width;
             }
-        }
-        catch (ex) {
+        } catch (ex) {
             Logging.log("EngravingRules()", ex);
         }
 
@@ -1070,37 +1071,39 @@ export class EngravingRules {
         for (let i: number = 0; i < this.noteDistances.length; i++) {
             switch (i) {
                 case 0:
-                    this.durationDistanceDict.push(0.015625, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.push(0.015625, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict[0.015625] = this.noteDistances[i];
+                    this.durationScalingDistanceDict[0.015625] = this.noteDistancesScalingFactors[i];
                     break;
                 case 1:
-                    this.durationDistanceDict.push(0.03125, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.push(0.03125, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict[0.03125] = this.noteDistances[i];
+                    this.durationScalingDistanceDict[0.03125] = this.noteDistancesScalingFactors[i];
                     break;
                 case 2:
-                    this.durationDistanceDict.push(0.0625, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.push(0.0625, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict[0.0625] = this.noteDistances[i];
+                    this.durationScalingDistanceDict[0.0625] = this.noteDistancesScalingFactors[i];
                     break;
                 case 3:
-                    this.durationDistanceDict.push(0.125, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.push(0.125, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict[0.125] = this.noteDistances[i];
+                    this.durationScalingDistanceDict[0.125] = this.noteDistancesScalingFactors[i];
                     break;
                 case 4:
-                    this.durationDistanceDict.push(0.25, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.push(0.25, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict[0.25] = this.noteDistances[i];
+                    this.durationScalingDistanceDict[0.25] = this.noteDistancesScalingFactors[i];
                     break;
                 case 5:
-                    this.durationDistanceDict.push(0.5, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.push(0.5, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict[0.5] = this.noteDistances[i];
+                    this.durationScalingDistanceDict[0.5] = this.noteDistancesScalingFactors[i];
                     break;
                 case 6:
-                    this.durationDistanceDict.push(1.0, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.push(1.0, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict[1.0] = this.noteDistances[i];
+                    this.durationScalingDistanceDict[1.0] = this.noteDistancesScalingFactors[i];
                     break;
                 case 7:
-                    this.durationDistanceDict.push(2.0, this.noteDistances[i]);
-                    this.durationScalingDistanceDict.push(2.0, this.noteDistancesScalingFactors[i]);
+                    this.durationDistanceDict[2.0] = this.noteDistances[i];
+                    this.durationScalingDistanceDict[2.0] = this.noteDistancesScalingFactors[i];
                     break;
+                default:
+                    // FIXME
             }
         }
     }
@@ -1110,7 +1113,7 @@ export class EngravingRules {
         this.factorOne = new Array(this.bezierCurveStepSize);
         this.factorTwo = new Array(this.bezierCurveStepSize);
         for (let i: number = 0; i < this.bezierCurveStepSize; i++) {
-            let t: number = <number>i / this.bezierCurveStepSize;
+            let t: number = i / this.bezierCurveStepSize;
             this.tPower3[i] = Math.pow(t, 3);
             this.oneMinusTPower3[i] = Math.pow((1 - t), 3);
             this.factorOne[i] = 3 * Math.pow((1 - t), 2) * t;

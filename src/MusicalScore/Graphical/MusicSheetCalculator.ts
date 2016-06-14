@@ -156,7 +156,7 @@ export class MusicSheetCalculator {
         octaveShiftValue: OctaveEnum,
         graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction, numberOfDots: number,
         openTie: Tie, isLastTieNote: boolean): void { throw new Error('not implemented'); }
-    protected handleVoiceEntryLyrics(lyricsEntries: Dictionary<number, LyricsEntry>, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
+    protected handleVoiceEntryLyrics(lyricsEntries: { [_: number]: LyricsEntry; }, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
         openLyricWords: LyricWord[]): void { throw new Error('not implemented'); }
     protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
         graphicalStaffEntry: GraphicalStaffEntry): void { throw new Error('not implemented'); }
@@ -188,13 +188,13 @@ export class MusicSheetCalculator {
         if (this.graphicalMusicSheet.MeasureList === undefined) return;
         
         let allMeasures: StaffMeasure[][] = this.graphicalMusicSheet.MeasureList;
-        if (allMeasures == null)
+        if (allMeasures === undefined)
             return;
         let visibleMeasureList: StaffMeasure[][] = [];
-        for (var idx: number = 0, len = allMeasures.length; idx < len; ++idx) {
+        for (let idx: number = 0, len: number = allMeasures.length; idx < len; ++idx) {
             let staffMeasures: StaffMeasure[] = allMeasures[idx];
             let visibleStaffMeasures: StaffMeasure[] = [];
-            for (var idx2: number = 0, len2 = staffMeasures.length; idx2 < len2; ++idx2) {
+            for (let idx2: number = 0, len2: number = staffMeasures.length; idx2 < len2; ++idx2) {
                 let staffMeasure: StaffMeasure = allMeasures[idx][idx2];
                 if (staffMeasure.isVisible())
                     visibleStaffMeasures.push(staffMeasure);
@@ -556,7 +556,7 @@ export class MusicSheetCalculator {
                             let gse: GraphicalStaffEntry = measure.StaffEntries[0];
                             if (gse.Notes.length > 0 && gse.Notes[0].length > 0) {
                                 let graphicalNote: GraphicalNote = gse.Notes[0][0];
-                                if (graphicalNote.SourceNote.Pitch === undefined && graphicalNote.SourceNote.Length >= new Fraction(1, 2)) {
+                                if (graphicalNote.SourceNote.Pitch === undefined && graphicalNote.SourceNote.length >= new Fraction(1, 2)) {
                                     this.layoutMeasureWithWholeRest(graphicalNote, gse, measure);
                                 }
                             }

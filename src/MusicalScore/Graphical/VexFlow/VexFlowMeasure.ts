@@ -10,7 +10,7 @@ import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction"
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
         super(staff, staffLine, sourceMeasure);
-
+        // this.MinimumStaffEntriesWidth =
     }
 
     /**
@@ -18,6 +18,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * This is needed to evaluate a measure a second time by system builder.
      */
     public resetLayout(): void {
+        this.BeginInstructionsWidth = 0;
 
     }
 
@@ -27,7 +28,8 @@ export class VexFlowMeasure extends StaffMeasure {
      * @returns {SystemLinesEnum} the x-width
      */
     public getLineWidth(line: SystemLinesEnum): number {
-        return SystemLinesEnum.SingleThin;
+        //SystemLinesEnum.
+        return 5;
     }
 
     /**
@@ -36,7 +38,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtBegin(clef: ClefInstruction): void {
-
+        this.BeginInstructionsWidth += 20;
     }
 
     /**

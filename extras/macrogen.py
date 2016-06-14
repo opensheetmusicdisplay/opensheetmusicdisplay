@@ -12,10 +12,17 @@ replace = (
 
     ("var ", "let "),
 
+    # Lists --> Arrays
     ("new List<List<([a-zA-Z]*)>>\(\)", "[]"),
     ("List<List<([a-zA-Z]*)>>", "$1[][]"),
     ("new List<([a-zA-Z]*)>\(\)", "[]"),
     ("List<([a-zA-Z]*)>", "$1[]"),
+
+    # Dictionaries:
+    ("new Dictionary<number, ([a-zA-Z0-9\\[\\]\\.]*)>\\(\\)", "{}"),
+    ("Dictionary<number, ([a-zA-Z0-9\\[\\]\\.]*)>", "{ [_: number]: $1; }"),
+    ("new Dictionary<string, ([a-zA-Z0-9\\[\\]\\.]*)>\\(\\)", "{}"),
+    ("Dictionary<string, ([a-zA-Z0-9\\[\\]\\.]*)>", "{ [_: string]: $1; }"),
 
     ("IEnumerable<([a-zA-Z0-9]+)>", "$1[]"),
 
@@ -29,6 +36,7 @@ replace = (
     ("\\.Clear\(\);", ".length = 0;"),
     ("\\.IndexOf", ".indexOf"),
     ("\\.ToArray\\(\\)", ""),
+    ("\\.ContainsKey", ".hasOwnProperty"),
 
     ("\\.Contains\(([a-zA-Z0-9.]+)\)", ".indexOf($1) !== -1"),
 
@@ -73,12 +81,12 @@ def checkForIssues(filename, content):
 def applyAll():
     root = sys.argv[1]
     filenames = []
+    recurse(root, filenames)
+    # if os.path.isdir(root):
+    #     recurse(root, filenames)
+    # else:
+    #     filenames.append(root)
 
-    if os.path.isdir(root):
-        recurse(root, filenames)
-    else:
-        filenames.append(root)
-        
     print("Apply replacements to:")
     for filename in filenames:
         print("  >>> " + os.path.basename(filename))
@@ -96,7 +104,8 @@ def recurse(folder, files):
     if os.path.isfile(folder):
         files.append(folder)
     if os.path.isdir(folder):
-        files.extend(os.path.join(folder, i) for i in os.listdir(folder))
+        for i in os.listdir(folder):
+            recurse(os.path.join(folder, i), files)
 
 def keycode(c):
     if len(c) > 1:

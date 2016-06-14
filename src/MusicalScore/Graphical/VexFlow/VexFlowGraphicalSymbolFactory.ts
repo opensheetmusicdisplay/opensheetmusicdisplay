@@ -46,7 +46,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): StaffMeasure {
-        var measure: VexFlowMeasure = new VexFlowMeasure(sourceMeasure, staff);
+        let measure: VexFlowMeasure = new VexFlowMeasure(sourceMeasure, staff);
         return measure;
     }
 
@@ -56,7 +56,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createExtraStaffMeasure(staffLine: StaffLine): StaffMeasure {
-        var measure: VexFlowMeasure = new VexFlowMeasure(staffLine);
+        let measure: VexFlowMeasure = new VexFlowMeasure(staffLine);
         return measure;
     }
 
@@ -67,7 +67,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowStaffEntry}
      */
     public createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: StaffMeasure): GraphicalStaffEntry {
-        return new VexFlowStaffEntry(<VexFlowMeasure>measure, sourceStaffEntry, null);
+        return new VexFlowStaffEntry(<VexFlowMeasure>measure, sourceStaffEntry, undefined);
     }
 
     /**
@@ -79,7 +79,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowStaffEntry}
      */
     public createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: StaffMeasure): GraphicalStaffEntry {
-        return new VexFlowStaffEntry(<VexFlowMeasure>measure, null, <VexFlowStaffEntry>staffEntryParent);
+        return new VexFlowStaffEntry(<VexFlowMeasure>measure, undefined, <VexFlowStaffEntry>staffEntryParent);
     }
 
     /**

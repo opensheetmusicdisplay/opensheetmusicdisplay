@@ -19,16 +19,16 @@ export class StaffMeasure extends GraphicalObject {
     private staff: Staff;
     private measureNumber: number = -1;
     private parentStaffLine: StaffLine;
-    constructor(staff: Staff = null, staffLine: StaffLine = null, parentSourceMeasure: SourceMeasure = null) {
+    constructor(staff: Staff = undefined, staffLine: StaffLine = undefined, parentSourceMeasure: SourceMeasure = undefined) {
         this.staff = staff;
         this.ParentSourceMeasure = parentSourceMeasure;
         this.parentStaffLine = staffLine;
-        if (staffLine != null)
+        if (staffLine !== undefined)
             this.staff = staffLine.ParentStaff;
-        if (this.ParentSourceMeasure != null)
+        if (this.ParentSourceMeasure !== undefined)
             this.measureNumber = this.ParentSourceMeasure.MeasureNumber;
         this.StaffEntries = [];
-        if (staffLine != null)
+        if (staffLine !== undefined)
             this.PositionAndShape = new BoundingBox(staffLine.PositionAndShape, this);
         else this.PositionAndShape = new BoundingBox(this);
     }
@@ -95,7 +95,7 @@ export class StaffMeasure extends GraphicalObject {
         let duration: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.StaffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.StaffEntries[idx];
-            duration.Add(graphicalStaffEntry.findStaffEntryMinNoteLength());
+            duration.push(graphicalStaffEntry.findStaffEntryMinNoteLength());
         }
         return duration === this.ParentSourceMeasure.Duration;
     }
@@ -137,7 +137,7 @@ export class StaffMeasure extends GraphicalObject {
                 for (let idx3: number = 0, len3: number = graphicalStaffEntry.Notes.length; idx3 < len3; ++idx3) {
                     let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.Notes[idx3];
                     if (graphicalNotes.length > 0 && graphicalNotes[0].SourceNote.ParentVoiceEntry.ParentVoice === voice)
-                        voiceDuration.Add(graphicalNotes[0].GraphicalNoteLength);
+                        voiceDuration.push(graphicalNotes[0].GraphicalNoteLength);
                 }
             }
             if (voiceDuration > duration)

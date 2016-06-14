@@ -4,58 +4,75 @@ import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {GraphicalNote} from "./GraphicalNote";
 import {Pitch} from "../../Common/DataObjects/pitch";
 import {NoteEnum} from "../../Common/DataObjects/pitch";
+
 export class AccidentalCalculator {
     private symbolFactory: IGraphicalSymbolFactory;
-    private keySignatureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
-    private currentAlterationsComparedToKeyInstructionDict: List<number> = new List<number>();
-    private currentInMeasureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
+    private keySignatureNoteAlterationsDict: { [_: number]: AccidentalEnum; } = {};
+    private currentAlterationsComparedToKeyInstructionDict: number[] = [];
+    private currentInMeasureNoteAlterationsDict: { [_: number]: AccidentalEnum; } = {};
     private activeKeyInstruction: KeyInstruction;
+
     constructor(symbolFactory: IGraphicalSymbolFactory) {
         this.symbolFactory = symbolFactory;
     }
+
     public get ActiveKeyInstruction(): KeyInstruction {
         return this.activeKeyInstruction;
     }
+
     public set ActiveKeyInstruction(value: KeyInstruction) {
         this.activeKeyInstruction = value;
         this.reactOnKeyInstructionChange();
     }
+
     public doCalculationsAtEndOfMeasure(): void {
-        this.currentInMeasureNoteAlterationsDict.Clear();
-        var keySignatureNoteAlterationsDictArr: KeyValuePair<number, AccidentalEnum>[] = this.keySignatureNoteAlterationsDict.ToArray();
-        for (var idx: number = 0, len = keySignatureNoteAlterationsDictArr.length; idx < len; ++idx) {
-            var pair: KeyValuePair<number, AccidentalEnum> = keySignatureNoteAlterationsDictArr[idx];
-            this.currentInMeasureNoteAlterationsDict[pair.Key] = pair.Value;
+        this.currentInMeasureNoteAlterationsDict = {};
+        for (let key in this.keySignatureNoteAlterationsDict) {
+            if (this.keySignatureNoteAlterationsDict.hasOwnProperty(key)) {
+                this.currentInMeasureNoteAlterationsDict[key] = this.keySignatureNoteAlterationsDict[key];
+            }
         }
     }
+
     public checkAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
-        if (pitch == null)
-            return
-        var pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;
-        var pitchKeyGivenInMeasureDict: boolean = this.currentInMeasureNoteAlterationsDict.ContainsKey(pitchKey);
-        if ((pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict[pitchKey] != pitch.Accidental) || (!pitchKeyGivenInMeasureDict && pitch.Accidental != AccidentalEnum.NONE)) {
-            if (!this.currentAlterationsComparedToKeyInstructionDict.Contains(pitchKey))
-                this.currentAlterationsComparedToKeyInstructionDict.Add(pitchKey);
+        if (pitch === undefined) {
+            return;
+        }
+        let pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;
+        let pitchKeyGivenInMeasureDict: boolean = this.currentInMeasureNoteAlterationsDict.hasOwnProperty(pitchKey as string);
+        if (
+            (pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict[pitchKey] !== pitch.Accidental)
+            || (!pitchKeyGivenInMeasureDict && pitch.Accidental !== AccidentalEnum.NONE)
+        ) {
+            if (this.currentAlterationsComparedToKeyInstructionDict.indexOf(pitchKey) === -1) {
+                this.currentAlterationsComparedToKeyInstructionDict.push(pitchKey);
+            }
             this.currentInMeasureNoteAlterationsDict[pitchKey] = pitch.Accidental;
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
-        }
-        else if (this.currentAlterationsComparedToKeyInstructionDict.Contains(pitchKey) && ((pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict[pitchKey] != pitch.Accidental) || (!pitchKeyGivenInMeasureDict && pitch.Accidental == AccidentalEnum.NONE))) {
-            this.currentAlterationsComparedToKeyInstructionDict.Remove(pitchKey);
+        } else if (
+            this.currentAlterationsComparedToKeyInstructionDict.indexOf(pitchKey) !== -1
+            && ((pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict[pitchKey] !== pitch.Accidental)
+            || (!pitchKeyGivenInMeasureDict && pitch.Accidental === AccidentalEnum.NONE))
+        ) {
+            delete this.currentAlterationsComparedToKeyInstructionDict[pitchKey];
             this.currentInMeasureNoteAlterationsDict[pitchKey] = pitch.Accidental;
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
         }
     }
+
     private reactOnKeyInstructionChange(): void {
-        var noteEnums: List<NoteEnum> = KeyInstruction.getNoteEnumList(this.activeKeyInstruction);
-        var keyAccidentalType: AccidentalEnum;
-        if (this.activeKeyInstruction.Key > 0)
+        let noteEnums: NoteEnum[] = KeyInstruction.getNoteEnumList(this.activeKeyInstruction);
+        let keyAccidentalType: AccidentalEnum;
+        if (this.activeKeyInstruction.Key > 0) {
             keyAccidentalType = AccidentalEnum.SHARP;
-        else keyAccidentalType = AccidentalEnum.FLAT;
-        this.keySignatureNoteAlterationsDict.Clear();
-        this.currentAlterationsComparedToKeyInstructionDict.Clear();
-        for (var octave: number = -9; octave < 9; octave++) {
-            for (var i: number = 0; i < noteEnums.Count; i++) {
-                this.keySignatureNoteAlterationsDict.Add(<number>noteEnums[i] + octave * 12, keyAccidentalType);
+        } else {
+            keyAccidentalType = AccidentalEnum.FLAT;
+        }
+        this.keySignatureNoteAlterationsDict = {};
+        this.currentAlterationsComparedToKeyInstructionDict.length = 0;
+        for (let octave: number = -9; octave < 9; octave++) {
+            for (let i: number = 0; i < noteEnums.length; i++) {
+                this.keySignatureNoteAlterationsDict[<number>noteEnums[i] + octave * 12] = keyAccidentalType;
             }
         }
         this.doCalculationsAtEndOfMeasure();

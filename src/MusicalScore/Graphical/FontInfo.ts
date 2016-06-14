@@ -3,9 +3,11 @@ import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {BoundingBox} from "./BoundingBox";
 import {Logging} from "../../Common/logging";
+
 export class FontInfo {
     protected static info: FontInfo = new FontInfo();
     protected symbolMapping: Dictionary<MusicSymbol, SymbolInfo> = new Dictionary<MusicSymbol, SymbolInfo>();
+
     constructor() {
         this.createSymbols();
     }
@@ -18,8 +20,7 @@ export class FontInfo {
     public getSymbolInfo(symbol: MusicSymbol): SymbolInfo {
         try {
             return this.symbolMapping[symbol];
-        }
-        catch (ex) {
+        } catch (ex) {
             Logging.debug("FontInfo.getSymbolInfo", ex);
             return new SymbolInfo();
         }
@@ -28,8 +29,7 @@ export class FontInfo {
     public getBoundingBox(symbol: MusicSymbol): SizeF2D {
         try {
             return this.symbolMapping[symbol].boundingBox;
-        }
-        catch (ex) {
+        } catch (ex) {
             Logging.debug("FontInfo.getBoundingBox", ex);
             return new SizeF2D();
         }
@@ -68,8 +68,7 @@ export class FontInfo {
     protected getString(symbol: MusicSymbol): string {
         try {
             return this.symbolMapping[symbol].symbol;
-        }
-        catch (ex) {
+        } catch (ex) {
             Logging.debug("FontInfo.getString", ex);
             return undefined;
         }
@@ -78,15 +77,14 @@ export class FontInfo {
     protected getScaleFactor(symbol: MusicSymbol): number {
         try {
             return this.symbolMapping[symbol].scaleFactor;
-        }
-        catch (ex) {
+        } catch (ex) {
             Logging.debug("FontInfo.getScaleFactor", ex);
             return -1;
         }
 
     }
     private createSymbols(): void {
-        let scaleVector: number[] = [1,1, 3, 3, 3,
+        let scaleVector: number[] = [1, 1, 3, 3, 3,
             3, 3, 3, 3,
             3, 1, 1, 7,
             3.5, 4, 1, 1,
@@ -284,7 +282,7 @@ export class FontInfo {
             new SymbolMargins(0.1, 0.1, 0.1, 0.1)];
         let values: Array = Enum.GetValues(/*typeof*/MusicSymbol);
         let i: number = 0;
-        for (let c: string = <string>0x21; c <<string>0x21 + values.Length; c++) {
+        for (let c: string = <string>0x21; c <<string>0x21 + values.length; c++) {
             let si: SymbolInfo = new SymbolInfo(c.ToString(), i, scaleVector[i], centerVector[i], marginVector[i]);
             this.symbolMapping.push(<MusicSymbol>values.GetValue(i), si);
             i++;
