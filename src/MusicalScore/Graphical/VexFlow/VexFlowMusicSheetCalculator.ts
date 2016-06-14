@@ -28,6 +28,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         super(new VexFlowGraphicalSymbolFactory());
 
     }
+
+    /**
+     * The main method for the Calculator.
+     */
     public calculate(): void {
         this.clearSystemsAndMeasures();
         this.clearRecreatedObjects();
@@ -40,6 +44,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
         throw new NotImplementedException();
     }
+
+    /**
+     * Creates the music systems and calculates their layout.
+     */
     protected calculateMusicSystems(): void {
         let measureList: StaffMeasure[][] = this.graphicalMusicSheet.MeasureList.Select(ml => ml.Where(m => m.isVisible()).ToList()).ToList();
         let numberOfStaffLines: number = 0;
@@ -61,22 +69,52 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
 
     }
+
+    /**
+     * Can be used to calculate stem directions, helper(ledger) lines, and overlapping note x-displacement.
+     * Is Excecuted per voice entry of a staff entry.
+     * After that layoutStaffEntry is called.
+     * @param voiceEntry
+     * @param graphicalNotes
+     * @param graphicalStaffEntry
+     * @param hasPitchedNote
+     * @param isGraceStaffEntry
+     */
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
 
     }
+
+    /**
+     * Do all layout calculations that have to be done per staff entry, like dots, ornaments, arpeggios....
+     * This method is called after the voice entries are handled by layoutVoiceEntry().
+     * @param graphicalStaffEntry
+     */
     protected layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
 
     }
+
+    /**
+     * calculates the y positions of the staff lines within a system and
+     * furthermore the y positions of the systems themselves.
+     */
     protected calculateSystemYLayout(): void {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             if (!this.leadSheet) {
                 for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                     let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                    // calculate y positions of stafflines within system
+                    // ...
                 }
             }
+            // set y positions of systems using the previous system and a fixed distance.
+            // ...
         }
     }
+
+    /**
+     * Is called at the begin of the method for creating the vertically aligned staff measures belonging to one source measure.
+     */
     protected initStaffMeasuresCreation(): void {
 
     }
@@ -103,6 +141,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         openTie: Tie, isLastTieNote: boolean): void {
 
     }
+
+    /**
+     * Is called if a note is part of a beam.
+     * @param graphicalNote
+     * @param beam
+     * @param openBeams a list of all currently open beams
+     */
     protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
 
     }
@@ -115,6 +160,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     protected handleVoiceEntryArticulations(articulations: ArticulationEnum[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
 
     }
+
+    /**
+     * Is called if a note is part of a tuplet.
+     * @param graphicalNote
+     * @param tuplet
+     * @param openTuplets a list of all currently open tuplets
+     */
     protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
 
     }
