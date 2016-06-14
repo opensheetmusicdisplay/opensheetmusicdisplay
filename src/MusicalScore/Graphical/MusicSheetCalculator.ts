@@ -49,6 +49,7 @@ import {AccidentalCalculator} from "./AccidentalCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {Staff} from "../VoiceData/Staff";
 import {OctaveShift} from "../VoiceData/Expressions/ContinuousExpressions/octaveShift";
+
 export class MusicSheetCalculator {
     public static TransposeCalculator: ITransposeCalculator;
     protected static textMeasurer: ITextMeasurer;
@@ -91,7 +92,7 @@ export class MusicSheetCalculator {
         this.calculate();
     }
     public prepareGraphicalMusicSheet(): void {
-        this.graphicalMusicSheet.SystemImages.length = 0;
+        //this.graphicalMusicSheet.SystemImages.length = 0;
         let musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
         this.staffEntriesWithGraphicalTies = [];
         this.staffEntriesWithOrnaments = [];
@@ -703,7 +704,7 @@ export class MusicSheetCalculator {
             let measure: StaffMeasure = this.createGraphicalMeasure(sourceMeasure, tieTimestampListDictList[staffIndex], openTuplets, openBeams, accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks);
             verticalMeasureList.push(measure);
         }
-        this.graphicalMusicSheet.SourceToGraphicalMeasureLinks[sourceMeasure] = verticalMeasureList;
+        this.graphicalMusicSheet.sourceToGraphicalMeasureLinks[sourceMeasure] = verticalMeasureList;
         return verticalMeasureList;
     }
     private createGraphicalMeasure(sourceMeasure: SourceMeasure, tieTimestampListDict: Dictionary<Tie, Fraction[]>, openTuplets: Tuplet[], openBeams: Beam[],
