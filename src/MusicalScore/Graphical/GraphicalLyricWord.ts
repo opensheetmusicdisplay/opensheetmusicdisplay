@@ -13,20 +13,27 @@ export class GraphicalLyricWord {
     public get GetLyricWord(): LyricWord {
         return this.lyricWord;
     }
+
     public get GraphicalLyricsEntries(): GraphicalLyricEntry[] {
         return this.graphicalLyricsEntries;
     }
+
     public set GraphicalLyricsEntries(value: GraphicalLyricEntry[]) {
         this.graphicalLyricsEntries = value;
     }
+
     public isFilled(): boolean {
-        for (let i: number = 0; i < this.graphicalLyricsEntries.length; i++)
-            if (this.graphicalLyricsEntries[i] === undefined)
+        for (let i: number = 0; i < this.graphicalLyricsEntries.length; i++) {
+            if (this.graphicalLyricsEntries[i] === undefined) {
                 return false;
+            }
+        }
         return true;
     }
+
     private initialize(): void {
-        for (let i: number = 0; i < this.lyricWord.Syllables.length; i++)
+        for (let i: number = 0; i < this.lyricWord.Syllables.length; i++) {
             this.graphicalLyricsEntries.push(undefined);
+        }
     }
 }

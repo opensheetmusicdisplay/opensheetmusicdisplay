@@ -481,11 +481,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
 
     public getVisibleInstruments(): Instrument[] {
-        var visInstruments: Instrument[] = [];
-        for (var idx: number = 0, len = this.Instruments.length; idx < len; ++idx) {
-            var instrument: Instrument = this.Instruments[idx];
-            if (instrument.Voices.length > 0 && instrument.Voices[0].Visible)
+        let visInstruments: Instrument[] = [];
+        for (let idx: number = 0, len: number = this.Instruments.length; idx < len; ++idx) {
+            let instrument: Instrument = this.Instruments[idx];
+            if (instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
                 visInstruments.push(instrument);
+            }
         }
         return visInstruments;
     }
