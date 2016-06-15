@@ -46,7 +46,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): StaffMeasure {
-        let measure: VexFlowMeasure = new VexFlowMeasure(sourceMeasure, staff);
+        let measure: VexFlowMeasure = new VexFlowMeasure(staff, null, sourceMeasure);
         return measure;
     }
 
@@ -56,7 +56,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createExtraStaffMeasure(staffLine: StaffLine): StaffMeasure {
-        let measure: VexFlowMeasure = new VexFlowMeasure(staffLine);
+        let measure: VexFlowMeasure = new VexFlowMeasure(staffLine.ParentStaff, staffLine);
         return measure;
     }
 
