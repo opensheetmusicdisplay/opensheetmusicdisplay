@@ -1,6 +1,5 @@
 ﻿import {PagePlacementEnum} from "./GraphicalMusicPage";
 import {MusicSymbol} from "./MusicSymbol";
-import {FontInfo} from "./FontInfo";
 import {Logging} from "../../Common/logging";
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -267,12 +266,12 @@ export class EngravingRules {
         this.measureDynamicsMaxScalingFactor = 2.5;
         this.populateDictionaries();
         try {
-            this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin;
-            if (FontInfo.Info !== undefined) {
-                this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).width
-                    + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).width
-                    + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).width;
-            }
+            this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
+            //if (FontInfo.Info !== undefined) {
+            //    this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).width
+            //        + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).width
+            //        + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).width;
+            //}
         } catch (ex) {
             Logging.log("EngravingRules()", ex);
         }

@@ -1,7 +1,6 @@
 ﻿import {MusicSheet} from "../MusicSheet";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {StaffMeasure} from "./StaffMeasure";
-import {FontInfo} from "./FontInfo";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {VerticalGraphicalStaffEntryContainer} from "./VerticalGraphicalStaffEntryContainer";
 import {GraphicalLabel} from "./GraphicalLabel";
@@ -34,7 +33,7 @@ export class GraphicalMusicSheet {
     private sourceToGraphicalMeasureLinks: { [sourceMeasureIndex: number]: StaffMeasure[]; };
 
     private musicSheet: MusicSheet;
-    private fontInfo: FontInfo = FontInfo.Info;
+    //private fontInfo: FontInfo = FontInfo.Info;
     private calculator: MusicSheetCalculator;
     private musicPages: GraphicalMusicPage[] = [];
     private measureList: StaffMeasure[][] = [];
@@ -65,9 +64,9 @@ export class GraphicalMusicSheet {
         this.musicPages = value;
     }
 
-    public get FontInfo(): FontInfo {
-        return this.fontInfo;
-    }
+    //public get FontInfo(): FontInfo {
+    //    return this.fontInfo;
+    //}
 
     public get MeasureList(): StaffMeasure[][] {
         return this.measureList;
