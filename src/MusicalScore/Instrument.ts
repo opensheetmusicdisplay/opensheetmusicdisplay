@@ -57,10 +57,10 @@ export class Instrument extends InstrumentalGroup {
         this.lyricVersesNumbers = value;
     }
     public get Name(): string {
-        return this.nameLabel.Text;
+        return this.nameLabel.text;
     }
     public set Name(value: string) {
-        this.nameLabel.Text = value;
+        this.nameLabel.text = value;
     }
     public get IdString(): string {
         return this.idString;

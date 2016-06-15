@@ -6,6 +6,8 @@ import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
 import {StaffMeasure} from "./StaffMeasure";
 import {MusicSystem} from "./MusicSystem";
+import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
 export class StaffLine extends GraphicalObject {
     protected measures: StaffMeasure[] = [];
@@ -67,6 +69,13 @@ export class StaffLine extends GraphicalObject {
 
     public set BottomLine(value: number[]) {
         this.bottomLine = value;
+    }
+
+    public addActivitySymbolClickArea(): void {
+        var activitySymbol: StaffLineActivitySymbol = new StaffLineActivitySymbol(this);
+        var staffLinePsi: BoundingBox = this.PositionAndShape;
+        activitySymbol.PositionAndShape.RelativePosition = new PointF2D(staffLinePsi.RelativePosition.x + staffLinePsi.BorderRight + 0.5, staffLinePsi.RelativePosition.y + 0.5);
+        this.parentMusicSystem.PositionAndShape.ChildElements.push(activitySymbol.PositionAndShape);
     }
 
     public isPartOfMultiStaffInstrument(): boolean {

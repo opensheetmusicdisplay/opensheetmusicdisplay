@@ -147,28 +147,28 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public get TitleString(): string {
         if (this.title !== undefined) {
-            return this.title.Text;
+            return this.title.text;
         } else {
             return "";
         }
     }
     public get SubtitleString(): string {
         if (this.subtitle !== undefined) {
-            return this.subtitle.Text;
+            return this.subtitle.text;
         } else {
             return "";
         }
     }
     public get ComposerString(): string {
         if (this.composer !== undefined) {
-            return this.composer.Text;
+            return this.composer.text;
         } else {
             return "";
         }
     }
     public get LyricistString(): string {
         if (this.lyricist !== undefined) {
-            return this.lyricist.Text;
+            return this.lyricist.text;
         } else {
             return "";
         }
@@ -339,7 +339,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return undefined;
     }
     public CompareTo(other: MusicSheet): number {
-        return this.Title.Text.localeCompare(other.Title.Text);
+        return this.Title.text.localeCompare(other.Title.text);
     }
     // (*)
     //public get IInstruments(): IInstrument[] {

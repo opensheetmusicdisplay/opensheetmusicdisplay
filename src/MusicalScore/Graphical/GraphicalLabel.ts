@@ -11,15 +11,15 @@ export class GraphicalLabel extends Clickable {
     constructor(label: Label, textHeight: number, alignment: TextAlignment) {
         this.label = label;
         this.boundingBox = new BoundingBox(this);
-        this.label.FontHeight = textHeight;
-        this.label.TextAlignment = alignment;
+        this.label.fontHeight = textHeight;
+        this.label.textAlignment = alignment;
     }
 
     constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox) {
         this.label = label;
         this.boundingBox = new BoundingBox(parent, this);
-        this.label.FontHeight = textHeight;
-        this.label.TextAlignment = alignment;
+        this.label.fontHeight = textHeight;
+        this.label.textAlignment = alignment;
     }
 
     public get Label(): Label {
@@ -27,17 +27,17 @@ export class GraphicalLabel extends Clickable {
     }
 
     public setLabelPositionAndShapeBorders(): void {
-        if (this.Label.Text.trim() === "") {
+        if (this.Label.text.trim() === "") {
             return;
         }
         let labelMarginBorderFactor: number = EngravingRules.Rules.LabelMarginBorderFactor;
 
         let widthToHeightRatio: number =
-            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.Text, this.Label.Font, this.Label.FontStyle);
-        let height: number = this.Label.FontHeight;
+            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.text, this.Label.font, this.Label.fontStyle);
+        let height: number = this.Label.fontHeight;
         let width: number = height * widthToHeightRatio;
         let psi: BoundingBox = this.PositionAndShape;
-        switch (this.Label.TextAlignment) {
+        switch (this.Label.textAlignment) {
             case TextAlignment.CenterBottom:
                 psi.BorderTop = -height;
                 psi.BorderLeft = -width / 2;

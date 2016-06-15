@@ -282,6 +282,13 @@ export class MusicSheetCalculator {
                 let newPosition: PointF2D = new PointF2D(musicSystem.PositionAndShape.RelativePosition.x, musicSystem.PositionAndShape.RelativePosition.y - distance);
                 musicSystem.PositionAndShape.RelativePosition = newPosition;
             }
+            for (var idx2: number = 0, len2 = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+                var musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                for (var idx3: number = 0, len3 = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
+                    var staffLine: StaffLine = musicSystem.StaffLines[idx3];
+                    staffLine.addActivitySymbolClickArea();
+                }
+            }
             if (graphicalMusicPage === this.graphicalMusicSheet.MusicPages[0])
                 this.calculatePageLabels(graphicalMusicPage);
             graphicalMusicPage.PositionAndShape.calculateTopBottomBorders();
