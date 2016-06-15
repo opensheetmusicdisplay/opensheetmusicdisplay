@@ -144,7 +144,7 @@ export class StaffMeasure extends GraphicalObject {
         let duration: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            duration.Add(graphicalStaffEntry.findStaffEntryMinNoteLength());
+            duration.push(graphicalStaffEntry.findStaffEntryMinNoteLength());
         }
         return duration === this.parentSourceMeasure.Duration;
     }
@@ -193,7 +193,7 @@ export class StaffMeasure extends GraphicalObject {
                 for (let idx3: number = 0, len3: number = graphicalStaffEntry.notes.length; idx3 < len3; ++idx3) {
                     let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx3];
                     if (graphicalNotes.length > 0 && graphicalNotes[0].sourceNote.ParentVoiceEntry.ParentVoice === voice) {
-                        voiceDuration.Add(graphicalNotes[0].graphicalNoteLength);
+                        voiceDuration.push(graphicalNotes[0].graphicalNoteLength);
                     }
                 }
             }

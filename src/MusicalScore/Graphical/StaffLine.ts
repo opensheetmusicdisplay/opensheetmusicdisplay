@@ -72,9 +72,10 @@ export class StaffLine extends GraphicalObject {
     }
 
     public addActivitySymbolClickArea(): void {
-        var activitySymbol: StaffLineActivitySymbol = new StaffLineActivitySymbol(this);
-        var staffLinePsi: BoundingBox = this.PositionAndShape;
-        activitySymbol.PositionAndShape.RelativePosition = new PointF2D(staffLinePsi.RelativePosition.x + staffLinePsi.BorderRight + 0.5, staffLinePsi.RelativePosition.y + 0.5);
+        let activitySymbol: StaffLineActivitySymbol = new StaffLineActivitySymbol(this);
+        let staffLinePsi: BoundingBox = this.PositionAndShape;
+        activitySymbol.PositionAndShape.RelativePosition =
+            new PointF2D(staffLinePsi.RelativePosition.x + staffLinePsi.BorderRight + 0.5, staffLinePsi.RelativePosition.y + 0.5);
         this.parentMusicSystem.PositionAndShape.ChildElements.push(activitySymbol.PositionAndShape);
     }
 

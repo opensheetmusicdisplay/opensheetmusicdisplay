@@ -1,4 +1,4 @@
-﻿import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
+import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {StaffLine} from "./StaffLine";
 import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 import {EngravingRules} from "./EngravingRules";
@@ -152,16 +152,21 @@ export class MusicSheetCalculator {
     }
 
     public calculateXLayout(graphicalMusicSheet: GraphicalMusicSheet, maxInstrNameLabelLength: number): void {
-        let maxLength: number = 0;
+        let minLength: number = 0;
         let maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
         if (this.graphicalMusicSheet.MeasureList.length > 0) {
-            maxLength = this.calculateMeasureXLayout(this.graphicalMusicSheet.MeasureList[0]) * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
+            let measures: StaffMeasure[] = this.graphicalMusicSheet.MeasureList[0];
+            let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
+            MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
+            minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
-                let measures: StaffMeasure[] = this.graphicalMusicSheet.MeasureList[i];
-                maxLength = Math.max(maxLength, this.calculateMeasureXLayout(measures) * 1.2 + maxInstructionsLength);
+                measures = this.graphicalMusicSheet.MeasureList[i];
+                minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
+                MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
+                minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
             }
         }
-        this.graphicalMusicSheet.MaxAllowedSystemWidth = maxLength;
+        this.graphicalMusicSheet.MinAllowedSystemWidth = minLength;
     }
 
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
@@ -472,7 +477,9 @@ export class MusicSheetCalculator {
                     for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
                         let graphicalMeasure: StaffMeasure = staffLine.Measures[idx4];
                         if (graphicalMeasure.FirstInstructionStaffEntry !== undefined) {
-                            let index: number = graphicalMeasure.PositionAndShape.ChildElements.indexOf(graphicalMeasure.FirstInstructionStaffEntry.PositionAndShape);
+                            let index: number = graphicalMeasure.PositionAndShape.ChildElements.indexOf(
+                                graphicalMeasure.FirstInstructionStaffEntry.PositionAndShape
+                            );
                             if (index > -1) {
                                 graphicalMeasure.PositionAndShape.ChildElements.splice(index, 1);
                             }
@@ -480,7 +487,9 @@ export class MusicSheetCalculator {
                             graphicalMeasure.beginInstructionsWidth = 0.0;
                         }
                         if (graphicalMeasure.LastInstructionStaffEntry !== undefined) {
-                            let index: number = graphicalMeasure.PositionAndShape.ChildElements.indexOf(graphicalMeasure.LastInstructionStaffEntry.PositionAndShape);
+                            let index: number = graphicalMeasure.PositionAndShape.ChildElements.indexOf(
+                                graphicalMeasure.LastInstructionStaffEntry.PositionAndShape
+                            );
                             if (index > -1) {
                                 graphicalMeasure.PositionAndShape.ChildElements.splice(index, 1);
                             }
@@ -704,7 +713,7 @@ export class MusicSheetCalculator {
                             let gse: GraphicalStaffEntry = measure.staffEntries[0];
                             if (gse.notes.length > 0 && gse.notes[0].length > 0) {
                                 let graphicalNote: GraphicalNote = gse.notes[0][0];
-                                if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.Length)) {
+                                if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.length)) {
                                     this.layoutMeasureWithWholeRest(graphicalNote, gse, measure);
                                 }
                             }
@@ -809,7 +818,12 @@ export class MusicSheetCalculator {
         let posX: number = gse.PositionAndShape.RelativePosition.x + gse.parentMeasure.PositionAndShape.RelativePosition.x;
         return posX;
     }
-
+    private static setMeasuresMinStaffEntriesWidth(measures: StaffMeasure[], minimumStaffEntriesWidth: number): void {
+        for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
+            let measure: StaffMeasure = measures[idx];
+            measure.minimumStaffEntriesWidth = minimumStaffEntriesWidth;
+        }
+    }
     private createAccidentalCalculators(): AccidentalCalculator[] {
         let accidentalCalculators: AccidentalCalculator[] = [];
         let firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
@@ -865,7 +879,10 @@ export class MusicSheetCalculator {
         let openTuplets: Tuplet[] = [];
         let staffEntryLinks: StaffEntryLink[] = [];
         for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
-            let measure: StaffMeasure = this.createGraphicalMeasure(sourceMeasure, tieTimestampListDictList[staffIndex], openTuplets, openBeams, accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks);
+            let measure: StaffMeasure = this.createGraphicalMeasure(
+                sourceMeasure, tieTimestampListDictList[staffIndex], openTuplets, openBeams,
+                accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
+            );
             verticalMeasureList.push(measure);
         }
         this.graphicalMusicSheet.sourceToGraphicalMeasureLinks[sourceMeasure] = verticalMeasureList;
@@ -1386,7 +1403,11 @@ export class MusicSheetCalculator {
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
-                        if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaniousDynamic !== undefined || (sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic !== undefined && sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression === sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)) {
+                        if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaniousDynamic !== undefined ||
+                            (sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic !== undefined &&
+                            sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression ===
+                            sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)
+                        ) {
                             this.calculateDynamicExpressionsForSingleMultiExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
                     }

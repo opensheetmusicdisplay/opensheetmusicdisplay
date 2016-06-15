@@ -1,4 +1,4 @@
-﻿import {MusicSheetCalculator} from "../MusicSheetCalculator";
+import {MusicSheetCalculator} from "../MusicSheetCalculator";
 import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
 import {GraphicalMusicSheet} from "../GraphicalMusicSheet";
 import {StaffMeasure} from "../StaffMeasure";
@@ -51,16 +51,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * The staff entries are aligned with minimum needed x distances.
      * The MinimumStaffEntriesWidth of every measure will be set - needed for system building.
      * @param measures
+     * @returns the minimum required x width of the source measure (=list of staff measures)
      */
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
-        // set measure length and Borders
-        for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
-            //let measure: VexFlowMeasure  = <VexFlowMeasure>measures[idx];
-            // set Measure StaffEntriesLength (needed later to calculate the whole Measure Width)
-            //measure.MinimumStaffEntriesWidth = measureLength;
-
-
-        }
+        // layout the measures in x.
+        // return the minimum required x width of this vertically aligned measure set:
         return 0;
     }
 
@@ -82,7 +77,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (let idx: number = 0, len: number = measureList.length; idx < len; ++idx) {
             let gmlist: StaffMeasure[] = measureList[idx];
             numberOfStaffLines = Math.max(gmlist.length, numberOfStaffLines);
-            break;
         }
         if (numberOfStaffLines === 0) { return; }
         let musicSystemBuilder: MusicSystemBuilder = new MusicSystemBuilder();

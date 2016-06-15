@@ -1,4 +1,4 @@
-﻿import {MusicSheet} from "../MusicSheet";
+import {MusicSheet} from "../MusicSheet";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {StaffMeasure} from "./StaffMeasure";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
@@ -43,8 +43,8 @@ export class GraphicalMusicSheet {
     private composer: GraphicalLabel;
     private lyricist: GraphicalLabel;
     private scoreFollowingLines: GraphicalLine[] = [];
-    private maxAllowedSystemWidth: number;
-    private systemImages: Dictionary<MusicSystem, SystemImageProperties> = new Dictionary<MusicSystem, SystemImageProperties>();
+    private minAllowedSystemWidth: number;
+    //private systemImages: Dictionary<MusicSystem, SystemImageProperties> = new Dictionary<MusicSystem, SystemImageProperties>();
     private numberOfStaves: number;
     private leadSheet: boolean = false;
 
@@ -120,12 +120,12 @@ export class GraphicalMusicSheet {
         return this.scoreFollowingLines;
     }
 
-    public get MaxAllowedSystemWidth(): number {
-        return this.maxAllowedSystemWidth;
+    public get MinAllowedSystemWidth(): number {
+        return this.minAllowedSystemWidth;
     }
 
-    public set MaxAllowedSystemWidth(value: number) {
-        this.maxAllowedSystemWidth = value;
+    public set MinAllowedSystemWidth(value: number) {
+        this.minAllowedSystemWidth = value;
     }
 
     public get SystemImages(): Dictionary<MusicSystem, SystemImageProperties> {
