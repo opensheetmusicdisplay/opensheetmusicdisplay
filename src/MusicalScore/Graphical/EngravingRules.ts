@@ -1,6 +1,7 @@
 ﻿import {PagePlacementEnum} from "./GraphicalMusicPage";
-import {MusicSymbol} from "./MusicSymbol";
+//import {MusicSymbol} from "./MusicSymbol";
 import {Logging} from "../../Common/logging";
+
 export class EngravingRules {
     private static rules: EngravingRules;
     private static unit: number = 1.0;

@@ -8,6 +8,7 @@ export class ChordSymbolContainer {
     private bassPitch: Pitch;
     private degree: Degree;
     private keyInstruction: KeyInstruction;
+
     constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree, keyInstruction: KeyInstruction) {
         this.rootPitch = rootPitch;
         this.chordKind = chordKind;
@@ -15,211 +16,169 @@ export class ChordSymbolContainer {
         this.bassPitch = bassPitch;
         this.degree = chordDegree;
     }
+
     public get RootPitch(): Pitch {
         return this.rootPitch;
     }
+
     public get ChordKind(): ChordSymbolEnum {
         return this.chordKind;
     }
+
     public get BassPitch(): Pitch {
         return this.bassPitch;
     }
+
     public get ChordDegree(): Degree {
         return this.degree;
     }
+
     public get KeyInstruction(): KeyInstruction {
         return this.keyInstruction;
     }
+
     public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number): string {
-        var transposedRootPitch: Pitch = chordSymbol.RootPitch;
-        if (MusicSheetCalculator.TransposeCalculator != null)
-            transposedRootPitch = MusicSheetCalculator.TransposeCalculator.TransposePitch(chordSymbol.RootPitch,
+        let transposedRootPitch: Pitch = chordSymbol.RootPitch;
+        if (MusicSheetCalculator.transposeCalculator !== undefined) {
+            transposedRootPitch = MusicSheetCalculator.transposeCalculator.TransposePitch(
+                chordSymbol.RootPitch,
                 chordSymbol.KeyInstruction,
-                transposeHalftones);
-        var text: string = transposedRootPitch.FundamentalNote.ToString();
-        if (transposedRootPitch.Accidental != AccidentalEnum.NONE)
+                transposeHalftones
+            );
+        }
+        let text: string = transposedRootPitch.FundamentalNote.ToString();
+        if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
             text += this.getTextForAccidental(transposedRootPitch.Accidental);
+        }
         text += ChordSymbolContainer.getTextFromChordKindEnum(chordSymbol.ChordKind);
-        if (chordSymbol.BassPitch != null) {
-            var transposedBassPitch: Pitch = chordSymbol.BassPitch;
-            if (MusicSheetCalculator.TransposeCalculator != null)
-                transposedBassPitch = MusicSheetCalculator.TransposeCalculator.TransposePitch(chordSymbol.BassPitch,
+        if (chordSymbol.BassPitch !== undefined) {
+            let transposedBassPitch: Pitch = chordSymbol.BassPitch;
+            if (MusicSheetCalculator.transposeCalculator !== undefined) {
+                transposedBassPitch = MusicSheetCalculator.transposeCalculator.TransposePitch(
+                    chordSymbol.BassPitch,
                     chordSymbol.KeyInstruction,
-                    transposeHalftones);
+                    transposeHalftones
+                );
+            }
             text += "/";
             text += transposedBassPitch.FundamentalNote.ToString();
             text += this.getTextForAccidental(transposedBassPitch.Accidental);
         }
-        if (chordSymbol.ChordDegree != null) {
-            switch (chordSymbol.ChordDegree.Text) {
+        if (chordSymbol.ChordDegree !== undefined) {
+            switch (chordSymbol.ChordDegree.text) {
                 case ChordDegreeText.add:
-                    {
-                        text += "add";
-                        break;
-                    }
+                    text += "add";
+                    break;
                 case ChordDegreeText.alter:
-                    {
-                        text += "alt";
-                        break;
-                    }
+                    text += "alt";
+                    break;
                 case ChordDegreeText.subtract:
-                    {
-                        text += "sub";
-                        break;
-                    }
+                    text += "sub";
+                    break;
+                default:
             }
-            text += chordSymbol.ChordDegree.Value;
-            if (chordSymbol.ChordDegree.Alteration != AccidentalEnum.NONE)
-                text += ChordSymbolContainer.getTextForAccidental(chordSymbol.ChordDegree.Alteration);
+            text += chordSymbol.ChordDegree.value;
+            if (chordSymbol.ChordDegree.alteration !== AccidentalEnum.NONE) {
+                text += ChordSymbolContainer.getTextForAccidental(chordSymbol.ChordDegree.alteration);
+            }
         }
         return text;
     }
+
     private static getTextForAccidental(alteration: AccidentalEnum): string {
-        var text: string = "";
+        let text: string = "";
         switch (alteration) {
             case AccidentalEnum.DOUBLEFLAT:
-                {
-                    text += "bb";
-                    break;
-                }
+                text += "bb";
+                break;
             case AccidentalEnum.FLAT:
-                {
-                    text += "b";
-                    break;
-                }
+                text += "b";
+                break;
             case AccidentalEnum.SHARP:
-                {
-                    text += "#";
-                    break;
-                }
+                text += "#";
+                break;
             case AccidentalEnum.DOUBLESHARP:
-                {
-                    text += "x";
-                    break;
-                }
+                text += "x";
+                break;
+            default:
         }
         return text;
     }
+
     private static getTextFromChordKindEnum(kind: ChordSymbolEnum): string {
-        var text: string = "";
+        let text: string = "";
         switch (kind) {
             case ChordSymbolEnum.major:
                 break;
             case ChordSymbolEnum.minor:
-                {
-                    text += "m";
-                    break;
-                }
+                text += "m";
+                break;
             case ChordSymbolEnum.augmented:
-                {
-                    text += "aug";
-                    break;
-                }
+                text += "aug";
+                break;
             case ChordSymbolEnum.diminished:
-                {
-                    text += "dim";
-                    break;
-                }
+                text += "dim";
+                break;
             case ChordSymbolEnum.dominant:
-                {
-                    text += "7";
-                    break;
-                }
+                text += "7";
+                break;
             case ChordSymbolEnum.majorseventh:
-                {
-                    text += "maj7";
-                    break;
-                }
+                text += "maj7";
+                break;
             case ChordSymbolEnum.minorseventh:
-                {
-                    text += "m7";
-                    break;
-                }
+                text += "m7";
+                break;
             case ChordSymbolEnum.diminishedseventh:
-                {
-                    text += "dim7";
-                    break;
-                }
+                text += "dim7";
+                break;
             case ChordSymbolEnum.augmentedseventh:
-                {
-                    text += "aug7";
-                    break;
-                }
+                text += "aug7";
+                break;
             case ChordSymbolEnum.halfdiminished:
-                {
-                    text += "m7b5";
-                    break;
-                }
+                text += "m7b5";
+                break;
             case ChordSymbolEnum.majorminor:
-                {
-                    text += "";
-                    break;
-                }
+                text += "";
+                break;
             case ChordSymbolEnum.majorsixth:
-                {
-                    text += "maj6";
-                    break;
-                }
+                text += "maj6";
+                break;
             case ChordSymbolEnum.minorsixth:
-                {
-                    text += "m6";
-                    break;
-                }
+                text += "m6";
+                break;
             case ChordSymbolEnum.dominantninth:
-                {
-                    text += "9";
-                    break;
-                }
+                text += "9";
+                break;
             case ChordSymbolEnum.majorninth:
-                {
-                    text += "maj9";
-                    break;
-                }
+                text += "maj9";
+                break;
             case ChordSymbolEnum.minorninth:
-                {
-                    text += "m9";
-                    break;
-                }
+                text += "m9";
+                break;
             case ChordSymbolEnum.dominant11th:
-                {
-                    text += "11";
-                    break;
-                }
+                text += "11";
+                break;
             case ChordSymbolEnum.major11th:
-                {
-                    text += "maj11";
-                    break;
-                }
+                text += "maj11";
+                break;
             case ChordSymbolEnum.minor11th:
-                {
-                    text += "m11";
-                    break;
-                }
+                text += "m11";
+                break;
             case ChordSymbolEnum.dominant13th:
-                {
-                    text += "13";
-                    break;
-                }
+                text += "13";
+                break;
             case ChordSymbolEnum.major13th:
-                {
-                    text += "maj13";
-                    break;
-                }
+                text += "maj13";
+                break;
             case ChordSymbolEnum.minor13th:
-                {
-                    text += "m13";
-                    break;
-                }
+                text += "m13";
+                break;
             case ChordSymbolEnum.suspendedsecond:
-                {
-                    text += "sus2";
-                    break;
-                }
+                text += "sus2";
+                break;
             case ChordSymbolEnum.suspendedfourth:
-                {
-                    text += "sus4";
-                    break;
-                }
+                text += "sus4";
+                break;
             case ChordSymbolEnum.Neapolitan:
             case ChordSymbolEnum.Italian:
             case ChordSymbolEnum.French:
@@ -228,87 +187,59 @@ export class ChordSymbolContainer {
             case ChordSymbolEnum.power:
             case ChordSymbolEnum.Tristan:
                 break;
+            default
         }
         return text;
     }
 }
 export class Degree {
     constructor(value: number, alteration: AccidentalEnum, text: ChordDegreeText) {
-        this.Value = value;
-        this.Alteration = alteration;
-        this.Text = text;
+        this.value = value;
+        this.alteration = alteration;
+        this.text = text;
     }
-    public Value: number;
-    public Alteration: AccidentalEnum;
-    public Text: ChordDegreeText;
+
+    public value: number;
+    public alteration: AccidentalEnum;
+    public text: ChordDegreeText;
 }
+
 export enum ChordDegreeText {
     add,
-
     alter,
-
     subtract
 }
+
 export enum ChordSymbolEnum {
     major,
-
     minor,
-
     augmented,
-
     diminished,
-
     dominant,
-
     majorseventh,
-
     minorseventh,
-
     diminishedseventh,
-
     augmentedseventh,
-
     halfdiminished,
-
     majorminor,
-
     majorsixth,
-
     minorsixth,
-
     dominantninth,
-
     majorninth,
-
     minorninth,
-
     dominant11th,
-
     major11th,
-
     minor11th,
-
     dominant13th,
-
     major13th,
-
     minor13th,
-
     suspendedsecond,
-
     suspendedfourth,
-
     Neapolitan,
-
     Italian,
-
     French,
-
     German,
-
     pedal,
-
     power,
-
     Tristan
 }

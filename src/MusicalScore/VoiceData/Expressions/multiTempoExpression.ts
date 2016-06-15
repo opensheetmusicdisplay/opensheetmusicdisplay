@@ -75,9 +75,9 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousTempoExpression)
     //            return new GraphicalContinuousTempoExpression(
     // <ContinuousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
-    //        else return null;
+    //        else return undefined;
     //    }
-    //    return null;
+    //    return undefined;
     //}
     public addExpression(abstractTempoExpression: AbstractTempoExpression, prefix: string): void {
         if (abstractTempoExpression instanceof InstantaniousTempoExpression) {

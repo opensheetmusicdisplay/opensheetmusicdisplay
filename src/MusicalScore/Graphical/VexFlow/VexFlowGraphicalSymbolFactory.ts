@@ -17,6 +17,7 @@ import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/octa
 import {GraphicalNote} from "../GraphicalNote";
 import {Pitch} from "../../../Common/DataObjects/pitch";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
      * Create a new music system for the given page.
@@ -46,7 +47,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): StaffMeasure {
-        let measure: VexFlowMeasure = new VexFlowMeasure(staff, null, sourceMeasure);
+        let measure: VexFlowMeasure = new VexFlowMeasure(staff, undefined, sourceMeasure);
         return measure;
     }
 
@@ -91,7 +92,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift   The currently active octave transposition enum, needed for positioning the note vertically
      * @returns {GraphicalNote}
      */
-    public createNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry, activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
+    public createNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
+                      activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
         let gn: GraphicalNote = new GraphicalNote(note, graphicalStaffEntry);
         return gn;
     }
@@ -105,7 +107,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift
      * @returns {GraphicalNote}
      */
-    public createGraceNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry, activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
+    public createGraceNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
+                           activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
         let gn: GraphicalNote = new GraphicalNote(note, graphicalStaffEntry);
         return gn;
     }
@@ -118,7 +121,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param graceScalingFactor
      */
     public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
-
+        return;
     }
 
     /**
@@ -129,7 +132,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param graphicalStaffEntry
      */
     public addFermataAtTiedEndNote(tiedNote: Note, graphicalStaffEntry: GraphicalStaffEntry): void {
-
+        return;
     }
 
     /**
@@ -138,7 +141,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param graphicalStaffEntry
      */
     public createGraphicalTechnicalInstruction(technicalInstruction: TechnicalInstruction, graphicalStaffEntry: GraphicalStaffEntry): void {
-
+        return;
     }
 
     /**
@@ -147,7 +150,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param clefInstruction
      */
     public createInStaffClef(graphicalStaffEntry: GraphicalStaffEntry, clefInstruction: ClefInstruction): void {
-
+        return;
     }
 
     /**
@@ -157,6 +160,6 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param transposeHalftones
      */
     public createChordSymbol(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
-
+        return;
     }
 }

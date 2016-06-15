@@ -23,7 +23,8 @@ import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
-import {VexFlowMeasure} from "./VexFlowMeasure";
+//import {VexFlowMeasure} from "./VexFlowMeasure";
+
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
         super(new VexFlowGraphicalSymbolFactory());
@@ -54,37 +55,48 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
         // set measure length and Borders
         for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
-            let measure: VexFlowMeasure  = <VexFlowMeasure>measures[idx];
+            //let measure: VexFlowMeasure  = <VexFlowMeasure>measures[idx];
             // set Measure StaffEntriesLength (needed later to calculate the whole Measure Width)
             //measure.MinimumStaffEntriesWidth = measureLength;
 
 
         }
+        return 0;
     }
 
     /**
      * Creates the music systems and calculates their layout.
      */
     protected calculateMusicSystems(): void {
-        let measureList: StaffMeasure[][] = this.graphicalMusicSheet.MeasureList.Select(ml => ml.Where(m => m.isVisible()).ToList()).ToList();
+        let measureList: StaffMeasure[][] = [];
+        for (let mlist of this.graphicalMusicSheet.MeasureList) {
+            let list: StaffMeasure[] = [];
+            for (let m of mlist) {
+                if (m.isVisible()) {
+                    list.push(m);
+                }
+            }
+            measureList.push(list);
+        }
         let numberOfStaffLines: number = 0;
         for (let idx: number = 0, len: number = measureList.length; idx < len; ++idx) {
             let gmlist: StaffMeasure[] = measureList[idx];
             numberOfStaffLines = Math.max(gmlist.length, numberOfStaffLines);
             break;
         }
-        if (numberOfStaffLines === 0)
-            return;
+        if (numberOfStaffLines === 0) { return; }
         let musicSystemBuilder: MusicSystemBuilder = new MusicSystemBuilder();
         musicSystemBuilder.initialize(this.graphicalMusicSheet, measureList, numberOfStaffLines, this.symbolFactory);
         musicSystemBuilder.buildMusicSystems();
         this.checkMeasuresForWholeRestNotes();
     }
+
     protected updateStaffLineBorders(staffLine: StaffLine): void {
-
+        return;
     }
-    protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
 
+    protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
+        return;
     }
 
     /**
@@ -97,8 +109,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param hasPitchedNote
      * @param isGraceStaffEntry
      */
-    protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
-
+    protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry,
+                               hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
+        return;
     }
 
     /**
@@ -107,7 +120,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param graphicalStaffEntry
      */
     protected layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-
+        return;
     }
 
     /**
@@ -119,7 +132,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             if (!this.leadSheet) {
                 for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                    let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                    //let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                     // calculate y positions of stafflines within system
                     // ...
                 }
@@ -133,30 +146,37 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * Is called at the begin of the method for creating the vertically aligned staff measures belonging to one source measure.
      */
     protected initStaffMeasuresCreation(): void {
-
+        return;
     }
+
     protected handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number): void {
-
+        return;
     }
+
     protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
-
+        return;
     }
+
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {
-
+        return;
     }
+
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-
+        return;
     }
+
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
-
+        return;
     }
+
     protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-
+        return;
     }
-    protected createGraphicalTieNote(beams: Beam[], activeClef: ClefInstruction,
-        octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction, numberOfDots: number,
-        openTie: Tie, isLastTieNote: boolean): void {
 
+    protected createGraphicalTieNote(beams: Beam[], activeClef: ClefInstruction,
+                                     octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction, numberOfDots: number,
+                                     openTie: Tie, isLastTieNote: boolean): void {
+        return;
     }
 
     /**
@@ -166,16 +186,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param openBeams a list of all currently open beams
      */
     protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
-
+        return;
     }
-    protected handleVoiceEntryLyrics(lyricsEntries: { [_: number]: LyricsEntry; }, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
 
+    protected handleVoiceEntryLyrics(lyricsEntries: { [_: number]: LyricsEntry; }, voiceEntry: VoiceEntry,
+                                     graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
+        return;
     }
+
     protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
-
+        return;
     }
-    protected handleVoiceEntryArticulations(articulations: ArticulationEnum[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
 
+    protected handleVoiceEntryArticulations(articulations: ArticulationEnum[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
+        return;
     }
 
     /**
@@ -185,6 +209,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param openTuplets a list of all currently open tuplets
      */
     protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
-
+        return;
     }
 }

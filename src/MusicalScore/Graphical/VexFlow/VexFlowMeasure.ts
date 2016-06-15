@@ -49,7 +49,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
      */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
-
+        return;
     }
 
     /**
@@ -58,7 +58,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param rhythm
      */
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
-
+        return;
     }
 
     /**
@@ -67,7 +67,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtEnd(clef: ClefInstruction): void {
-
+        return;
     }
 
     /**
@@ -75,7 +75,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param xPos
      */
     public setPositionInStaffline(xPos: number): void {
-
+        return;
     }
 
     /**
@@ -83,7 +83,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param width
      */
     public setWidth(width: number): void {
-
+        return;
     }
 
     /**
@@ -92,6 +92,6 @@ export class VexFlowMeasure extends StaffMeasure {
      * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
      */
     public layoutSymbols(): void {
-
+        return;
     }
 }
