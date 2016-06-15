@@ -138,16 +138,21 @@ export class MusicSheetCalculator {
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
     }
     public calculateXLayout(graphicalMusicSheet: GraphicalMusicSheet, maxInstrNameLabelLength: number): void {
-        let maxLength: number = 0;
-        let maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
+        var minLength: number = 0;
+        var maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
         if (this.graphicalMusicSheet.MeasureList.length > 0) {
-            maxLength = this.calculateMeasureXLayout(this.graphicalMusicSheet.MeasureList[0]) * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
-            for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
-                let measures: StaffMeasure[] = this.graphicalMusicSheet.MeasureList[i];
-                maxLength = Math.max(maxLength, this.calculateMeasureXLayout(measures) * 1.2 + maxInstructionsLength);
+            var measures: StaffMeasure[] = this.graphicalMusicSheet.MeasureList[0];
+            var minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
+            MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
+            minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
+            for (var i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
+                measures = this.graphicalMusicSheet.MeasureList[i];
+                minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
+                MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
+                minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
             }
         }
-        this.graphicalMusicSheet.MaxAllowedSystemWidth = maxLength;
+        this.graphicalMusicSheet.MinAllowedSystemWidth = minLength;
     }
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number { throw new Error('not implemented'); }
     protected calculateSystemYLayout(): void { throw new Error('not implemented'); }
@@ -657,6 +662,12 @@ export class MusicSheetCalculator {
         let gse: GraphicalStaffEntry = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[discreteIndex].getFirstNonNullStaffEntry();
         let posX: number = gse.PositionAndShape.RelativePosition.x + gse.parentMeasure.PositionAndShape.RelativePosition.x;
         return posX;
+    }
+    private static setMeasuresMinStaffEntriesWidth(measures: StaffMeasure[], minimumStaffEntriesWidth: number): void {
+        for (var idx: number = 0, len = measures.length; idx < len; ++idx) {
+            var measure: StaffMeasure = measures[idx];
+            measure.minimumStaffEntriesWidth = minimumStaffEntriesWidth;
+        }
     }
     private createAccidentalCalculators(): AccidentalCalculator[] {
         let accidentalCalculators: AccidentalCalculator[] = [];
