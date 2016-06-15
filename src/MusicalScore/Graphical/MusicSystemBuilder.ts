@@ -320,9 +320,9 @@ export class MusicSystemBuilder {
     private transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: StaffMeasure): KeyInstruction {
         if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0
             && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
-            && MusicSheetCalculator.TransposeCalculator !== undefined
+            && MusicSheetCalculator.transposeCalculator !== undefined
         ) {
-            MusicSheetCalculator.TransposeCalculator.transposeKey(
+            MusicSheetCalculator.transposeCalculator.transposeKey(
                 keyInstruction,
                 this.graphicalMusicSheet.ParentMusicSheet.Transpose
             );

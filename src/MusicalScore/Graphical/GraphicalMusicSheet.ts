@@ -1,4 +1,4 @@
-﻿import {MusicSheet} from "../MusicSheet";
+import {MusicSheet} from "../MusicSheet";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {StaffMeasure} from "./StaffMeasure";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
@@ -30,7 +30,7 @@ export class GraphicalMusicSheet {
         this.calculator.initialize(this);
     }
 
-    private sourceToGraphicalMeasureLinks: { [sourceMeasureIndex: number]: StaffMeasure[]; };
+    private sourceToGraphicalMeasureLinks: Dictionary<SourceMeasure, StaffMeasure[]> = new Dictionary<SourceMeasure, StaffMeasure>();
 
     private musicSheet: MusicSheet;
     //private fontInfo: FontInfo = FontInfo.Info;
@@ -128,9 +128,9 @@ export class GraphicalMusicSheet {
         this.minAllowedSystemWidth = value;
     }
 
-    //public get SystemImages(): Dictionary<MusicSystem, SystemImageProperties> {
-    //    return this.systemImages;
-    //}
+    public get SystemImages(): Dictionary<MusicSystem, SystemImageProperties> {
+        return this.systemImages;
+    }
 
     public get NumberOfStaves(): number {
         return this.numberOfStaves;
@@ -281,14 +281,16 @@ export class GraphicalMusicSheet {
 
     public getOrCreateVerticalContainer(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
         if (this.verticalGraphicalStaffEntryContainers.length === 0 || timestamp > this.verticalGraphicalStaffEntryContainers.Last().AbsoluteTimestamp) {
-            let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer = new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
+            let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer =
+                new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
             this.verticalGraphicalStaffEntryContainers.push(verticalGraphicalStaffEntryContainer);
             return verticalGraphicalStaffEntryContainer;
         }
         let i: number;
         for (; i >= 0; i--) {
             if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp < timestamp) {
-                let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer = new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
+                let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer =
+                    new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
                 this.verticalGraphicalStaffEntryContainers.splice(i + 1, 0, verticalGraphicalStaffEntryContainer);
                 return verticalGraphicalStaffEntryContainer;
             }
@@ -765,10 +767,7 @@ export class GraphicalMusicSheet {
     }
 
     public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): StaffMeasure[] {
-        // Andrea: FIXME This code should remove the necessity for a dictionary in this.sourceToGraphicalMeasureLinks
-        // But I should check better!
-        let index: number = this.musicSheet.SourceMeasures.indexOf(sourceMeasure);
-        return this.sourceToGraphicalMeasureLinks[index];
+        return this.sourceToGraphicalMeasureLinks.Get(sourceMeasure);
     }
 
     public GetGraphicalFromSourceStaffEntry(sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {

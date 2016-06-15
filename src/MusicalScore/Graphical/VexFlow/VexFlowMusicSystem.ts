@@ -15,7 +15,7 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param systemLabelsRightMargin
      */
     public createSystemLeftVerticalLineObject(lineWidth: number, systemLabelsRightMargin: number): void {
-
+        return;
     }
 
     /**
@@ -26,7 +26,7 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param index
      */
     public createVerticalLineForMeasure(position: number, lineType: SystemLinesEnum, lineWidth: number, index: number): void {
-
+        return;
     }
 
     /**
@@ -34,7 +34,7 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param rules
      */
     public setYPositionsToVerticalLineObjectsAndCreateLines(rules: EngravingRules): void {
-
+        return;
     }
 
     /**
@@ -52,7 +52,7 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param rightLower the lower right corner point of the bracket to create
      */
     protected createInstrumentBracket(rightUpper: PointF2D, rightLower: PointF2D): void {
-
+        return;
     }
 
     /**
@@ -65,6 +65,6 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param recursionDepth
      */
     protected createGroupBracket(rightUpper: PointF2D, rightLower: PointF2D, staffHeight: number, recursionDepth: number): void {
-
+        return;
     }
 }

@@ -20,8 +20,9 @@ export class GraphicalStaffEntryLink {
     }
     public isFilled(): boolean {
         for (let i: number = 0; i < this.graphicalLinkedStaffEntries.length; i++) {
-            if (this.graphicalLinkedStaffEntries[i] === undefined)
+            if (this.graphicalLinkedStaffEntries[i] === undefined) {
                 return false;
+            }
         }
         return true;
     }

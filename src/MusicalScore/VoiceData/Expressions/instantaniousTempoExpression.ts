@@ -139,7 +139,7 @@ export class InstantaniousTempoExpression extends AbstractTempoExpression {
     //private splitStringAfterInstructionWord(inputString: string, instruction: string[], value: TempoEnum, pre: string, post: string): TempoEnum {
     //    pre = undefined;
     //    post = undefined;
-    //    for (let idx: number = 0, len = instruction.length; idx < len; ++idx) {
+    //    for (let idx: number = 0, len: number = instruction.length; idx < len; ++idx) {
     //        let instructionWord: string = instruction[idx];
     //        let separators: string[] = [" " + instructionWord, instructionWord + " ", "," + instructionWord, instructionWord + ","];
     //        for (let j: number = 0; j < 4; j++) {

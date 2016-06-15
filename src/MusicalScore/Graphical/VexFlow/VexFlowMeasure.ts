@@ -1,15 +1,15 @@
 ﻿import {StaffMeasure} from "../StaffMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
-import {BoundingBox} from "../BoundingBox";
 import {StaffLine} from "../StaffLine";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
+
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
-        super(staff, staffLine, sourceMeasure);
+        super(staff, sourceMeasure, staffLine);
         // this.MinimumStaffEntriesWidth =
     }
 
@@ -49,7 +49,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
      */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
-
+        return;
     }
 
     /**
@@ -58,7 +58,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param rhythm
      */
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
-
+        return;
     }
 
     /**
@@ -67,7 +67,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtEnd(clef: ClefInstruction): void {
-
+        return;
     }
 
     /**
@@ -75,7 +75,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param xPos
      */
     public setPositionInStaffline(xPos: number): void {
-
+        return;
     }
 
     /**
@@ -83,7 +83,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param width
      */
     public setWidth(width: number): void {
-
+        return;
     }
 
     /**
@@ -92,6 +92,6 @@ export class VexFlowMeasure extends StaffMeasure {
      * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
      */
     public layoutSymbols(): void {
-
+        return;
     }
 }

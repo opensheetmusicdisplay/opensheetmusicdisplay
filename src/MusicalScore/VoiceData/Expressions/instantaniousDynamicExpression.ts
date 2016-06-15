@@ -134,12 +134,12 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
         }
     }
     private calculateLength(): number {
-        //var length: number = 0.0;
-        //var dynamic: string = DynamicEnum[this.dynamicEnum];
-        //for (var idx: number = 0, len = dynamic.length; idx < len; ++idx) {
-        //    var c: string = dynamic[idx];
-        //    var dynamicExpressionSymbol: DynamicExpressionSymbolEnum = this.getDynamicExpressionSymbol(c);
-        //    var symbol: FontInfo.MusicFontSymbol = this.getInstantaniousDynamicSymbol(dynamicExpressionSymbol);
+        //let length: number = 0.0;
+        //let dynamic: string = DynamicEnum[this.dynamicEnum];
+        //for (let idx: number = 0, len: number = dynamic.length; idx < len; ++idx) {
+        //    let c: string = dynamic[idx];
+        //    let dynamicExpressionSymbol: DynamicExpressionSymbolEnum = this.getDynamicExpressionSymbol(c);
+        //    let symbol: FontInfo.MusicFontSymbol = this.getInstantaniousDynamicSymbol(dynamicExpressionSymbol);
         //    length += FontInfo.Info.getBoundingBox(symbol).Width;
         //}
         //return length;

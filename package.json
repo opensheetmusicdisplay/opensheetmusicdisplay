@@ -24,6 +24,18 @@
   },
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
+<<<<<<< HEAD
+=======
+    "jszip": "",
+    "vexflow": "",
+    "es6-promise": "",
+    "typescript-collections": "",
+    "chai": "^3.4.1",
+    "mocha": "^2.3.4",
+    "tsify": "",
+    "tslint": "3.8.0",
+    "typescript": "",
+>>>>>>> efa0a344c7d5b0b1d9242dfdbdf2bb80f1d27dd6
     "browserify": "",
     "chai": "^3.4.1",
     "es6-promise": "",
