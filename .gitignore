@@ -52,3 +52,4 @@ typings
 .vscode/
 .idea/encodings.xml
 *.md
+node_modules/

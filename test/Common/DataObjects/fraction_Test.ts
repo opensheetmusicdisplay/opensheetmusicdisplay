@@ -2,6 +2,7 @@
  * Created by Oliver on 16.03.2016.
  */
 import { Fraction } from "../../../src/Common/DataObjects/fraction";
+import * as Collections from "../../../node_modules/typescript-collections";
 
 describe("Fraction Unit Tests:", () => {
     describe("Construct Fraction, check properties", () => {
@@ -32,5 +33,36 @@ describe("Fraction Unit Tests:", () => {
         }
         done();
       });
+    });
+    // Todo: remove when typescript porting phase 2 is done an project is compiling properly again
+    describe("blablabla", () => {
+        let dict: Collections.Dictionary<Fraction, Fraction> = new Collections.Dictionary<Fraction, Fraction>();
+        //     new Collections.Dictionary<Fraction, Fraction>(
+        //     function(f: Fraction): string {
+        //         return f.toString();
+        // });
+
+        let keys: Fraction[] = [];
+        let values: Fraction[] = [];
+
+        for (let i: number = 0; i < 10; ++i) {
+            keys.push(new Fraction(1, i));
+            values.push(new Fraction(i, 1));
+            dict.setValue(keys[i], values[i]);
+        }
+
+        it("retrieved fractions should be equal", (done: MochaDone) => {
+            for (let i: number = 9; i > -1; --i) {
+                let key: Fraction = keys[i];
+                let value: Fraction = values[i];
+
+                //console.log(values[i].toString() + "== " + dict.getValue(key));
+                console.log(values[i].toString() + "== " + dict.getValue(new Fraction(key.Numerator, key.Denominator)));
+                // chai.expect(dict.getValue(key)).to.equal(value);
+                chai.expect(dict.getValue(new Fraction(key.Numerator, key.Denominator))).to.equal(value);
+            }
+
+            done();
+        });
     });
 });
