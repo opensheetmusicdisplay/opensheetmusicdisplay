@@ -93,6 +93,12 @@ export class MusicSheetCalculator {
         }
         tieTimestampListDict.push(note.NoteTie, tieTimestampList);
     }
+    private static setMeasuresMinStaffEntriesWidth(measures: StaffMeasure[], minimumStaffEntriesWidth: number): void {
+        for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
+            let measure: StaffMeasure = measures[idx];
+            measure.minimumStaffEntriesWidth = minimumStaffEntriesWidth;
+        }
+    }
 
     public initialize(graphicalMusicSheet: GraphicalMusicSheet): void {
         this.graphicalMusicSheet = graphicalMusicSheet;
@@ -818,12 +824,7 @@ export class MusicSheetCalculator {
         let posX: number = gse.PositionAndShape.RelativePosition.x + gse.parentMeasure.PositionAndShape.RelativePosition.x;
         return posX;
     }
-    private static setMeasuresMinStaffEntriesWidth(measures: StaffMeasure[], minimumStaffEntriesWidth: number): void {
-        for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
-            let measure: StaffMeasure = measures[idx];
-            measure.minimumStaffEntriesWidth = minimumStaffEntriesWidth;
-        }
-    }
+
     private createAccidentalCalculators(): AccidentalCalculator[] {
         let accidentalCalculators: AccidentalCalculator[] = [];
         let firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
@@ -890,7 +891,8 @@ export class MusicSheetCalculator {
     }
 
     private createGraphicalMeasure(sourceMeasure: SourceMeasure, tieTimestampListDict: Dictionary<Tie, Fraction[]>, openTuplets: Tuplet[], openBeams: Beam[],
-                                   accidentalCalculator: AccidentalCalculator, activeClefs: ClefInstruction[], openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
+                                   accidentalCalculator: AccidentalCalculator, activeClefs: ClefInstruction[],
+                                   openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
                                    staffEntryLinks: StaffEntryLink[]): StaffMeasure {
         let staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         let measure: StaffMeasure = this.symbolFactory.createStaffMeasure(sourceMeasure, staff);
@@ -1347,36 +1349,37 @@ export class MusicSheetCalculator {
         }
     }
 
-    private calculateFingering(): void {
-        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    let staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                    let skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
-                    for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
-                        let measure: StaffMeasure = staffLine.Measures[idx4];
-                        let measureRelativePosition: PointF2D = measure.PositionAndShape.RelativePosition;
-                        for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
-                            let staffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
-                            let hasTechnicalInstruction: boolean = false;
-                            for (let idx6: number = 0, len6: number = staffEntry.sourceStaffEntry.VoiceEntries.length; idx6 < len6; ++idx6) {
-                                let ve: VoiceEntry = staffEntry.sourceStaffEntry.VoiceEntries[idx6];
-                                if (ve.TechnicalInstructions.length > 0) {
-                                    hasTechnicalInstruction = true;
-                                    break;
-                                }
-                            }
-                            if (hasTechnicalInstruction) {
-                                this.layoutFingering(staffLine, skyBottomLineCalculator, staffEntry, measureRelativePosition);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // Commented because unused:
+    //private calculateFingering(): void {
+    //    for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
+    //        let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+    //        for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+    //            let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+    //            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
+    //                let staffLine: StaffLine = musicSystem.StaffLines[idx3];
+    //                let skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
+    //                for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
+    //                    let measure: StaffMeasure = staffLine.Measures[idx4];
+    //                    let measureRelativePosition: PointF2D = measure.PositionAndShape.RelativePosition;
+    //                    for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
+    //                        let staffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
+    //                        let hasTechnicalInstruction: boolean = false;
+    //                        for (let idx6: number = 0, len6: number = staffEntry.sourceStaffEntry.VoiceEntries.length; idx6 < len6; ++idx6) {
+    //                            let ve: VoiceEntry = staffEntry.sourceStaffEntry.VoiceEntries[idx6];
+    //                            if (ve.TechnicalInstructions.length > 0) {
+    //                                hasTechnicalInstruction = true;
+    //                                break;
+    //                            }
+    //                        }
+    //                        if (hasTechnicalInstruction) {
+    //                            this.layoutFingering(staffLine, skyBottomLineCalculator, staffEntry, measureRelativePosition);
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 
     private calculateLyricsPosition(): void {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.ParentMusicSheet.Instruments.length; idx < len; ++idx) {

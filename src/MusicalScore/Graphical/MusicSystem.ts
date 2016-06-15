@@ -182,7 +182,9 @@ export class MusicSystem extends GraphicalObject {
             let instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.getVisibleInstruments();
             for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
                 let instrument: Instrument = instruments[idx];
-                let graphicalLabel: GraphicalLabel = new GraphicalLabel(instrument.NameLabel, instrumentLabelTextHeight, TextAlignment.LeftCenter, this.boundingBox);
+                let graphicalLabel: GraphicalLabel = new GraphicalLabel(
+                    instrument.NameLabel, instrumentLabelTextHeight, TextAlignment.LeftCenter, this.boundingBox
+                );
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.push(graphicalLabel, instrument);
                 this.boundingBox.ChildElements.push(graphicalLabel.PositionAndShape);
