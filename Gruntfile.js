@@ -11,7 +11,7 @@ module.exports = function (grunt) {
         typings = [
             'typings/browser.d.ts',
             // Additional manual typings:
-            'typings/vexflow.d.ts'
+            'external/vexflow/vexflow.d.ts'
             // 'typings/fft.d.ts'
         ],
     // Paths
