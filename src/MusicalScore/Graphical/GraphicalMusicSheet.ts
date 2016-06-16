@@ -20,17 +20,19 @@ import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {Note} from "../VoiceData/Note";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {Logging} from "../../Common/logging";
+import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
+import {CollectionUtil} from "../../Util/collectionUtil";
 
 export class GraphicalMusicSheet {
     constructor(musicSheet: MusicSheet, calculator: MusicSheetCalculator) {
         this.musicSheet = musicSheet;
         this.numberOfStaves = this.musicSheet.Staves.length;
         this.calculator = calculator;
-        this.sourceToGraphicalMeasureLinks = {};
+        this.sourceToGraphicalMeasureLinks = new Dictionary<SourceMeasure, StaffMeasure[]>();
         this.calculator.initialize(this);
     }
 
-    private sourceToGraphicalMeasureLinks: Dictionary<SourceMeasure, StaffMeasure[]> = new Dictionary<SourceMeasure, StaffMeasure>();
+    public sourceToGraphicalMeasureLinks: Dictionary<SourceMeasure, StaffMeasure[]>;
 
     private musicSheet: MusicSheet;
     //private fontInfo: FontInfo = FontInfo.Info;
@@ -128,9 +130,9 @@ export class GraphicalMusicSheet {
         this.minAllowedSystemWidth = value;
     }
 
-    public get SystemImages(): Dictionary<MusicSystem, SystemImageProperties> {
-        return this.systemImages;
-    }
+    // public get SystemImages(): Dictionary<MusicSystem, SystemImageProperties> {
+    //     return this.systemImages;
+    // }
 
     public get NumberOfStaves(): number {
         return this.numberOfStaves;
@@ -280,7 +282,7 @@ export class GraphicalMusicSheet {
     }
 
     public getOrCreateVerticalContainer(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
-        if (this.verticalGraphicalStaffEntryContainers.length === 0 || timestamp > this.verticalGraphicalStaffEntryContainers.Last().AbsoluteTimestamp) {
+        if (this.verticalGraphicalStaffEntryContainers.length === 0 || timestamp > CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp) {
             let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer =
                 new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
             this.verticalGraphicalStaffEntryContainers.push(verticalGraphicalStaffEntryContainer);
@@ -767,7 +769,7 @@ export class GraphicalMusicSheet {
     }
 
     public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): StaffMeasure[] {
-        return this.sourceToGraphicalMeasureLinks.Get(sourceMeasure);
+        return this.sourceToGraphicalMeasureLinks.getValue(sourceMeasure);
     }
 
     public GetGraphicalFromSourceStaffEntry(sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {

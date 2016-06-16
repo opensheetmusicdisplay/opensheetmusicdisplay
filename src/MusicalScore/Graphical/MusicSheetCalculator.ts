@@ -50,6 +50,8 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {Staff} from "../VoiceData/Staff";
 import {OctaveShift} from "../VoiceData/Expressions/ContinuousExpressions/octaveShift";
 import {Logging} from "../../Common/logging";
+import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
+import {CollectionUtil} from "../../Util/collectionUtil";
 
 export class MusicSheetCalculator {
     public static transposeCalculator: ITransposeCalculator;
@@ -91,7 +93,7 @@ export class MusicSheetCalculator {
             }
             tieTimestampList.push(musicTimestamp);
         }
-        tieTimestampListDict.push(note.NoteTie, tieTimestampList);
+        tieTimestampListDict.setValue(note.NoteTie, tieTimestampList);
     }
     private static setMeasuresMinStaffEntriesWidth(measures: StaffMeasure[], minimumStaffEntriesWidth: number): void {
         for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
@@ -122,7 +124,7 @@ export class MusicSheetCalculator {
         let lyricWords: LyricWord[] = [];
         let completeNumberOfStaves: number = musicSheet.getCompleteNumberOfStaves();
         let openOctaveShifts: OctaveShiftParams[] = [];
-        let tieTimestampListDictList: List<Dictionary<Tie, Fraction[]>> = new List<Dictionary<Tie, Fraction[]>>();
+        let tieTimestampListDictList: Dictionary<Tie, Fraction[]>[] = [];
         for (let i: number = 0; i < completeNumberOfStaves; i++) {
             let tieTimestampListDict: Dictionary<Tie, Fraction[]> = new Dictionary<Tie, Fraction[]>();
             tieTimestampListDictList.push(tieTimestampListDict);
@@ -524,7 +526,7 @@ export class MusicSheetCalculator {
         let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.findOrCreateGraphicalNotesListFromVoiceEntry(voiceEntry);
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             let note: Note = voiceEntry.Notes[idx];
-            if (sourceStaffEntry !== undefined && sourceStaffEntry.Link !== undefined && linkedNotes !== undefined && !linkedNotes.indexOf(note) !== -1) {
+            if (sourceStaffEntry !== undefined && sourceStaffEntry.Link !== undefined && linkedNotes !== undefined && linkedNotes.indexOf(note) > -1) {
                 continue;
             }
             let graphicalNote: GraphicalNote;
@@ -559,7 +561,7 @@ export class MusicSheetCalculator {
         if (voiceEntry.TechnicalInstructions.length > 0) {
             this.checkVoiceEntriesForTechnicalInstructions(voiceEntry, graphicalStaffEntry);
         }
-        if (voiceEntry.LyricsEntries.length > 0) {
+        if (voiceEntry.LyricsEntries.size > 0) {
             this.handleVoiceEntryLyrics(voiceEntry.LyricsEntries, voiceEntry, graphicalStaffEntry, openLyricWords);
         }
         if (voiceEntry.OrnamentContainer !== undefined) {
@@ -593,12 +595,15 @@ export class MusicSheetCalculator {
 
     protected handleOpenTies(measure: StaffMeasure, beams: Beam[], tieTimestampListDict: Dictionary<Tie, Fraction[]>,
                              activeClef: ClefInstruction, octaveShiftParams: OctaveShiftParams): void {
-        for (let m: number = tieTimestampListDict.length - 1; m >= 0; m--) {
-            let keyValuePair: KeyValuePair<Tie, Fraction[]> = tieTimestampListDict.ElementAt(m);
-            let openTie: Tie = keyValuePair.Key;
-            let tieTimestamps: Fraction[] = keyValuePair.Value;
+
+        CollectionUtil.removeDictElementIfTrue(tieTimestampListDict, function(openTie: Tie, tieTimestamps: Fraction[]): boolean {
+            // for (let m: number = tieTimestampListDict.size() - 1; m >= 0; m--) {
+            //     let keyValuePair: KeyValuePair<Tie, Fraction[]> = tieTimestampListDict.ElementAt(m);
+            //     let openTie: Tie = keyValuePair.Key;
+            //    let tieTimestamps: Fraction[] = keyValuePair.Value;
             let absoluteTimestamp: Fraction = undefined;
             let k: number;
+            let removeTie: boolean = false;
             for (; k < tieTimestamps.length; k++) {
                 if (!openTie.NoteHasBeenCreated[k]) {
                     absoluteTimestamp = tieTimestamps[k];
@@ -639,12 +644,14 @@ export class MusicSheetCalculator {
                         }
                         openTie.NoteHasBeenCreated[k] = true;
                         if (openTie.allGraphicalNotesHaveBeenCreated()) {
-                            tieTimestampListDict.Remove(openTie);
+                            removeTie = true;
+                            //tieTimestampListDict.remove(openTie);
                         }
                     }
                 }
             }
-        }
+            return removeTie;
+        });
     }
 
     protected resetYPositionForLeadSheet(psi: BoundingBox): void {
@@ -719,7 +726,7 @@ export class MusicSheetCalculator {
                             let gse: GraphicalStaffEntry = measure.staffEntries[0];
                             if (gse.notes.length > 0 && gse.notes[0].length > 0) {
                                 let graphicalNote: GraphicalNote = gse.notes[0][0];
-                                if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.length)) {
+                                if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.Length)) {
                                     this.layoutMeasureWithWholeRest(graphicalNote, gse, measure);
                                 }
                             }
@@ -872,7 +879,7 @@ export class MusicSheetCalculator {
 
     private createGraphicalMeasuresForSourceMeasure(sourceMeasure: SourceMeasure, accidentalCalculators: AccidentalCalculator[],
                                                     openLyricWords: LyricWord[],
-                                                    tieTimestampListDictList: List<Dictionary<Tie, Fraction[]>>,
+                                                    tieTimestampListDictList: Dictionary<Tie, Fraction[]>[],
                                                     openOctaveShifts: OctaveShiftParams[], activeClefs: ClefInstruction[]): StaffMeasure[] {
         this.initStaffMeasuresCreation();
         let verticalMeasureList: StaffMeasure[] = [];
@@ -905,7 +912,7 @@ export class MusicSheetCalculator {
                     if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0 &&
                         measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
                         MusicSheetCalculator.transposeCalculator !== undefined) {
-                        MusicSheetCalculator.transposeCalculator.TransposeKey(
+                        MusicSheetCalculator.transposeCalculator.transposeKey(
                             key, this.graphicalMusicSheet.ParentMusicSheet.Transpose
                         );
                     }
@@ -982,7 +989,7 @@ export class MusicSheetCalculator {
                 }
             }
         }
-        if (tieTimestampListDict.length > 0) {
+        if (tieTimestampListDict.size > 0) {
             this.handleOpenTies(
                 measure, openBeams,
                 tieTimestampListDict, activeClefs[staffIndex], openOctaveShifts[staffIndex]

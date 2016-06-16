@@ -9,7 +9,7 @@ import {OrnamentContainer} from "./OrnamentContainer";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {OrnamentEnum} from "./OrnamentContainer";
 import {AccidentalEnum} from "../../Common/DataObjects/pitch";
-
+import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
 
 export class VoiceEntry {
     constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry) {
@@ -26,7 +26,7 @@ export class VoiceEntry {
     private notes: Note[] = [];
     private articulations: ArticulationEnum[] = [];
     private technicalInstructions: TechnicalInstruction[] = [];
-    private lyricsEntries: { [n: number]: LyricsEntry; } = {};
+    private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
     private arpeggiosNotesIndices: number[] = [];
     private ornamentContainer: OrnamentContainer;
     public get ParentSourceStaffEntry(): SourceStaffEntry {
@@ -50,11 +50,8 @@ export class VoiceEntry {
     public get TechnicalInstructions(): TechnicalInstruction[] {
         return this.technicalInstructions;
     }
-    public get LyricsEntries(): { [n: number]: LyricsEntry; } {
+    public get LyricsEntries(): Dictionary<number, LyricsEntry> {
         return this.lyricsEntries;
-    }
-    public set LyricsEntries(value: { [n: number]: LyricsEntry; }) {
-        this.lyricsEntries = value;
     }
     public get ArpeggiosNotesIndices(): number[] {
         return this.arpeggiosNotesIndices;
@@ -176,13 +173,13 @@ export class VoiceEntry {
                 this.createAlteratedVoiceEntry(
                     currentTimestamp, length, baseVoice, higherPitch, higherAlteration, voiceEntries
                 );
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createAlteratedVoiceEntry(
                     currentTimestamp, length, baseVoice, lowerPitch, lowerAlteration, voiceEntries
                 );
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
             }
                 break;
@@ -195,13 +192,13 @@ export class VoiceEntry {
                 this.createAlteratedVoiceEntry(
                     currentTimestamp, length, baseVoice, lowerPitch, lowerAlteration, voiceEntries
                 );
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createAlteratedVoiceEntry(
                     currentTimestamp, length, baseVoice, higherPitch, higherAlteration, voiceEntries
                 );
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
             }
                 break;
@@ -215,11 +212,11 @@ export class VoiceEntry {
                 currentTimestamp = Fraction.plus(baseTimestamp, length);
                 length.Denominator = baselength.Denominator * 8;
                 this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, higherPitch, higherAlteration, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, lowerPitch, lowerAlteration, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
             }
                 break;
@@ -233,11 +230,11 @@ export class VoiceEntry {
                 currentTimestamp = Fraction.plus(baseTimestamp, length);
                 length.Denominator = baselength.Denominator * 8;
                 this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, lowerPitch, lowerAlteration, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, higherPitch, higherAlteration, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
             }
                 break;
@@ -246,7 +243,7 @@ export class VoiceEntry {
                 let higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
                 let alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, higherPitch, alteration, voiceEntries);
                 length.Denominator = baselength.Denominator * 2;
                 currentTimestamp = Fraction.plus(baseTimestamp, length);
@@ -258,7 +255,7 @@ export class VoiceEntry {
                 let lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
                 let alteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.push(length);
+                currentTimestamp.Add(length);
                 this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, lowerPitch, alteration, voiceEntries);
                 length.Denominator = baselength.Denominator * 2;
                 currentTimestamp = Fraction.plus(baseTimestamp, length);

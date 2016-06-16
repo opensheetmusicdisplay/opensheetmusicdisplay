@@ -2,7 +2,7 @@
  * Created by Oliver on 16.03.2016.
  */
 import { Fraction } from "../../../src/Common/DataObjects/fraction";
-import * as Collections from "../../../node_modules/typescript-collections";
+import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
 
 describe("Fraction Unit Tests:", () => {
     describe("Construct Fraction, check properties", () => {
@@ -36,7 +36,7 @@ describe("Fraction Unit Tests:", () => {
     });
     // Todo: remove when typescript porting phase 2 is done an project is compiling properly again
     describe("blablabla", () => {
-        let dict: Collections.Dictionary<Fraction, Fraction> = new Collections.Dictionary<Fraction, Fraction>();
+        let dict: Dictionary<Fraction, Fraction> = new Dictionary<Fraction, Fraction>();
         //     new Collections.Dictionary<Fraction, Fraction>(
         //     function(f: Fraction): string {
         //         return f.toString();
