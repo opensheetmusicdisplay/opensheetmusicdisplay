@@ -197,7 +197,7 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     private increaseBeginInstructionWidth(modifier: any): void {
-        // FIXME: Check possible paddings
+        // FIXME: Check possible paddings...
         //this.beginInstructionsWidth += modifier.getWidth();
         this.beginInstructionsWidth = this.stave.getNoteStartX();
     }
