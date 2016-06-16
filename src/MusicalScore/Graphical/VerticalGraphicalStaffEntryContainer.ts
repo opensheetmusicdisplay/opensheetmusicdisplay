@@ -38,6 +38,19 @@ export class VerticalGraphicalStaffEntryContainer {
         this.staffEntries = value;
     }
 
+    public static compareByTimestamp(x: VerticalGraphicalStaffEntryContainer, y: VerticalGraphicalStaffEntryContainer): number
+    {
+        let xValue = x.absoluteTimestamp.RealValue;
+        let yValue = y.absoluteTimestamp.RealValue;
+
+        if (xValue < yValue)
+            return -1;
+        else if (xValue > yValue)
+            return 1;
+        else
+            return 0;
+    }
+    
     public getFirstNonNullStaffEntry(): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
@@ -49,8 +62,4 @@ export class VerticalGraphicalStaffEntryContainer {
     }
 }
 
-export class VgseContainerTimestampComparer implements IComparer<VerticalGraphicalStaffEntryContainer> {
-    public Compare(x: VerticalGraphicalStaffEntryContainer, y: VerticalGraphicalStaffEntryContainer): number {
-        return Comparer.Default.Compare(x.AbsoluteTimestamp.RealValue, y.AbsoluteTimestamp.RealValue);
-    }
-}
+

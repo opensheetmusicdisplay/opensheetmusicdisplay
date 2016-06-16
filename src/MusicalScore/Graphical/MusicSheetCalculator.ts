@@ -452,11 +452,6 @@ export class MusicSheetCalculator {
         return;
     }
 
-    protected layoutFingering(staffLine: StaffLine, skyBottomLineCalculator: SkyBottomLineCalculator,
-                              staffEntry: GraphicalStaffEntry, measureRelativePosition: PointF2D): void {
-        return;
-    }
-
     protected calculateDynamicExpressionsForSingleMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
         return;
     }

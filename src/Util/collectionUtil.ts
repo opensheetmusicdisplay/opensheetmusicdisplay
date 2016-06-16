@@ -40,4 +40,18 @@ export class CollectionUtil {
     public static getLastElement<T>(array: T[]): T{
         return array[array.length-1];
     }
+
+    public static binarySearch<T>(array: T[], element: T, cmp: (elem1: T, elem2: T) => number, startIndex: number = 0, endIndex: number = array.length): number 
+    {
+        var mid = 1;
+        while (startIndex < endIndex) {
+            mid = Math.floor((startIndex + endIndex) / 2);
+            var c = cmp(array[mid], element);
+            if (c === 0) return mid;
+            if (c < 0) startIndex = mid + 1;
+            if (0 < c) endIndex = mid;
+        }
+        
+        return -mid;
+    }
 }
