@@ -43,6 +43,8 @@ declare namespace Vex {
       public start_x: number;
       public end_x: number;
 
+      public setX(x: number): Stave;
+      public addClef(clef: Clef, size: any, annotation: any, position: any): void;
       public getYForGlyphs(): number;
       public getWidth(): number;
       public setWidth(width: number): Stave;
@@ -55,6 +57,7 @@ declare namespace Vex {
       public setContext(ctx: any): void;
       public addModifier(mod: any, pos: any): void;
       public draw(): void;
+      public addTimeSignature(sig: string): void;
     }
 
     export class StaveModifier {
@@ -72,6 +75,7 @@ declare namespace Vex {
 
       public getBoundingBox(): Vex.Flow.BoundingBox;
       public setStave(stave: Vex.Flow.Stave): void;
+      public getWidth(): number;
     }
 
     export class Renderer {
@@ -82,7 +86,12 @@ declare namespace Vex {
       public getContext(): any;
     }
 
-    //export class
+    export class TimeSignature {
+      constructor(timeSpec: string, customPadding?: any);
+    }
+    export class KeySignature {
+      constructor(keySpec: string, cancelKeySpec: string, alterKeySpec?: string);
+    }
 
   }
 }
