@@ -36,6 +36,7 @@ declare namespace Vex {
       public getNoteHeadBounds(): any;
       public getNoteHeadBeginX(): number;
       public getNoteHeadEndX(): number;
+      public addAccidental(index: number, accidental: Accidental): StaveNote;
     }
 
     export class Stave {
@@ -93,6 +94,10 @@ declare namespace Vex {
     }
     export class KeySignature {
       constructor(keySpec: string, cancelKeySpec: string, alterKeySpec?: string);
+    }
+
+    export class Accidental {
+      constructor(type: string);
     }
 
   }
