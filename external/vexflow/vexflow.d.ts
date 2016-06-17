@@ -1,5 +1,6 @@
 declare namespace Vex {
   export module Flow {
+    const RESOLUTION: any;
 
     export class Formatter {
       constructor();
@@ -26,6 +27,7 @@ declare namespace Vex {
       public getBoundingBox(): BoundingBox;
       public setStave(stave: Stave): Voice;
       public addTickables(notes: StaveNote[]): Voice;
+      public addTickable(note: StaveNote): Voice;
     }
 
     export class StaveNote {

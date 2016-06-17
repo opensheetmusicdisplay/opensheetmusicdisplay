@@ -9,6 +9,7 @@ import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction"
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {RhythmSymbolEnum} from "../../VoiceData/Instructions/RhythmInstruction";
 import {KeyEnum} from "../../VoiceData/Instructions/KeyInstruction";
+import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -27,8 +28,11 @@ export class VexFlowMeasure extends StaffMeasure {
 
     private stave: Vex.Flow.Stave;
 
+    private static toVFStaveNote(voiceEntry: VoiceEntry): Vex.Flow.StaveNote {
+        return undefined;
+    }
 
-    private static toVexFlowClef(clef: ClefInstruction) {
+    private static toVFClef(clef: ClefInstruction) {
         let type: string;
         switch (clef.ClefType) {
             case ClefEnum.G:
@@ -51,7 +55,7 @@ export class VexFlowMeasure extends StaffMeasure {
         return new Vex.Flow.Clef(type);
     }
 
-    private static toVexFlowTimeSignature(rhythm: RhythmInstruction): Vex.Flow.TimeSignature {
+    private static toVFTimeSignature(rhythm: RhythmInstruction): Vex.Flow.TimeSignature {
         let timeSpec: string;
         switch (rhythm.SymbolEnum) {
             case RhythmSymbolEnum.NONE:
@@ -122,7 +126,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtBegin(clef: ClefInstruction): void {
-        let vfclef: Vex.Flow.Clef = VexFlowMeasure.toVexFlowClef(clef);
+        let vfclef: Vex.Flow.Clef = VexFlowMeasure.toVFClef(clef);
         this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.StaveModifier.Position.BEGIN);
         this.increaseBeginInstructionWidth(vfclef);
     }
@@ -148,7 +152,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param rhythm
      */
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
-        let timeSig: Vex.Flow.TimeSignature = VexFlowMeasure.toVexFlowTimeSignature(rhythm);
+        let timeSig: Vex.Flow.TimeSignature = VexFlowMeasure.toVFTimeSignature(rhythm);
         this.stave.addModifier(
             timeSig,
             Vex.Flow.StaveModifier.Position.BEGIN
@@ -162,7 +166,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtEnd(clef: ClefInstruction): void {
-        let vfclef: Vex.Flow.Clef = VexFlowMeasure.toVexFlowClef(clef);
+        let vfclef: Vex.Flow.Clef = VexFlowMeasure.toVFClef(clef);
         this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.StaveModifier.Position.END);
         this.increaseBeginInstructionWidth(vfclef);
     }
@@ -194,6 +198,32 @@ export class VexFlowMeasure extends StaffMeasure {
         this.setWidth(min * this.staffEntriesScaleFactor);
         this.stave.format();
         this.stave.draw();
+    }
+
+    public getVexFlowVoices(): { [id: number]: Vex.Flow.Voice; } {
+        let notes: { [id: number]: Vex.Flow.StaveNote[]; } = {};
+        for (let entry of this.staffEntries) {
+            for (let voiceEntry of entry.sourceStaffEntry.VoiceEntries) {
+                let id: number = voiceEntry.ParentVoice.VoiceId;
+                if (!(id in notes)) {
+                    notes[id] = [];
+                }
+                notes[id].push(VexFlowMeasure.toVFStaveNote(voiceEntry));
+            }
+        }
+        let voices: { [id: number]: Vex.Flow.Voice; } = {};
+        for (let id in notes) {
+            if (notes.hasOwnProperty(id)) {
+                let voice: Vex.Flow.Voice = new Vex.Flow.Voice({
+                    beat_value: 4,
+                    num_beats: 4,
+                    resolution: Vex.Flow.RESOLUTION,
+                });
+                voice.addTickables(notes[id]);
+                voices[id] = voice;
+            }
+        }
+        return voices;
     }
 
     private increaseBeginInstructionWidth(modifier: any): void {
