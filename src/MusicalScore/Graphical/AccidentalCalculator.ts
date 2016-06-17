@@ -4,12 +4,13 @@ import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {GraphicalNote} from "./GraphicalNote";
 import {Pitch} from "../../Common/DataObjects/pitch";
 import {NoteEnum} from "../../Common/DataObjects/pitch";
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 export class AccidentalCalculator {
     private symbolFactory: IGraphicalSymbolFactory;
-    private keySignatureNoteAlterationsDict: { [_: number]: AccidentalEnum; } = {};
+    private keySignatureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
     private currentAlterationsComparedToKeyInstructionDict: number[] = [];
-    private currentInMeasureNoteAlterationsDict: { [_: number]: AccidentalEnum; } = {};
+    private currentInMeasureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
     private activeKeyInstruction: KeyInstruction;
 
     constructor(symbolFactory: IGraphicalSymbolFactory) {
@@ -26,7 +27,7 @@ export class AccidentalCalculator {
     }
 
     public doCalculationsAtEndOfMeasure(): void {
-        this.currentInMeasureNoteAlterationsDict = {};
+        this.currentInMeasureNoteAlterationsDict.clear();
         for (let key in this.keySignatureNoteAlterationsDict) {
             if (this.keySignatureNoteAlterationsDict.hasOwnProperty(key)) {
                 this.currentInMeasureNoteAlterationsDict[key] = this.keySignatureNoteAlterationsDict[key];
@@ -39,7 +40,7 @@ export class AccidentalCalculator {
             return;
         }
         let pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;
-        let pitchKeyGivenInMeasureDict: boolean = this.currentInMeasureNoteAlterationsDict.hasOwnProperty(pitchKey as string);
+        let pitchKeyGivenInMeasureDict: boolean = this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey);
         if (
             (pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict[pitchKey] !== pitch.Accidental)
             || (!pitchKeyGivenInMeasureDict && pitch.Accidental !== AccidentalEnum.NONE)
@@ -68,7 +69,7 @@ export class AccidentalCalculator {
         } else {
             keyAccidentalType = AccidentalEnum.FLAT;
         }
-        this.keySignatureNoteAlterationsDict = {};
+        this.keySignatureNoteAlterationsDict.clear();
         this.currentAlterationsComparedToKeyInstructionDict.length = 0;
         for (let octave: number = -9; octave < 9; octave++) {
             for (let i: number = 0; i < noteEnums.length; i++) {

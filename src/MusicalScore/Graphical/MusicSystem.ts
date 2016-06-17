@@ -13,6 +13,8 @@ import {EngravingRules} from "./EngravingRules";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SystemLinesEnum} from "./SystemLinesEnum";
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import {CollectionUtil} from "../../Util/collectionUtil";
 
 export class MusicSystem extends GraphicalObject {
     public needsToBeRedrawn: boolean = true;
@@ -26,9 +28,10 @@ export class MusicSystem extends GraphicalObject {
     protected objectsToRedraw: [Object[], Object][] = [];
 
     constructor(parent: GraphicalMusicPage, id: number) {
+        super();
         this.parent = parent;
         this.id = id;
-        this.boundingBox = new BoundingBox(parent.PositionAndShape, this);
+        this.boundingBox = new BoundingBox(this, parent.PositionAndShape);
         this.maxLabelLength = 0.0;
     }
 
@@ -53,7 +56,7 @@ export class MusicSystem extends GraphicalObject {
     }
 
     public get Labels(): GraphicalLabel[] {
-        return this.labels.GetKeys();
+        return this.labels.keys();
     }
 
     public get ObjectsToRedraw(): [Object[], Object][] {
@@ -106,7 +109,7 @@ export class MusicSystem extends GraphicalObject {
 
     public GetSystemsLastTimeStamp(): Fraction {
         let m: SourceMeasure = this.graphicalMeasures[this.graphicalMeasures.length - 1][0].parentSourceMeasure;
-        return m.AbsoluteTimestamp + m.Duration;
+        return Fraction.plus(m.AbsoluteTimestamp, m.Duration);
     }
 
     public createInstrumentBrackets(instruments: Instrument[], staffHeight: number): void {
@@ -155,7 +158,7 @@ export class MusicSystem extends GraphicalObject {
                 if (staffLine.ParentStaff === instrument1.Staves[0]) {
                     firstStaffLine = staffLine;
                 }
-                if (staffLine.ParentStaff === instrument2.Staves.Last()) {
+                if (staffLine.ParentStaff === CollectionUtil.last(instrument2.Staves)) {
                     lastStaffLine = staffLine;
                 }
             }
@@ -186,12 +189,12 @@ export class MusicSystem extends GraphicalObject {
                     instrument.NameLabel, instrumentLabelTextHeight, TextAlignment.LeftCenter, this.boundingBox
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
-                this.labels.push(graphicalLabel, instrument);
+                this.labels.setValue(graphicalLabel, instrument);
                 this.boundingBox.ChildElements.push(graphicalLabel.PositionAndShape);
                 graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
             }
             this.maxLabelLength = 0.0;
-            let labels: GraphicalLabel[] = this.labels.Keys;
+            let labels: GraphicalLabel[] = this.labels.keys();
             for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
                 let label: GraphicalLabel = labels[idx];
                 if (label.PositionAndShape.Size.width > this.maxLabelLength) {
@@ -204,16 +207,14 @@ export class MusicSystem extends GraphicalObject {
 
     public setMusicSystemLabelsYPosition(): void {
         if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
-            let labels: KeyValuePair<GraphicalLabel, Instrument>[] = this.labels;
-            for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
-                let entry: KeyValuePair<GraphicalLabel, Instrument> = labels[idx];
+            this.labels.forEach((key: GraphicalLabel, value: Instrument): void => {
                 let ypositionSum: number = 0;
                 let staffCounter: number = 0;
                 for (let i: number = 0; i < this.staffLines.length; i++) {
-                    if (this.staffLines[i].ParentStaff.ParentInstrument === entry.Value) {
+                    if (this.staffLines[i].ParentStaff.ParentInstrument === value) {
                         for (let j: number = i; j < this.staffLines.length; j++) {
                             let staffLine: StaffLine = this.staffLines[j];
-                            if (staffLine.ParentStaff.ParentInstrument !== entry.Value) {
+                            if (staffLine.ParentStaff.ParentInstrument !== value) {
                                 break;
                             }
                             ypositionSum += staffLine.PositionAndShape.RelativePosition.y;
@@ -223,9 +224,9 @@ export class MusicSystem extends GraphicalObject {
                     }
                 }
                 if (staffCounter > 0) {
-                    entry.Key.PositionAndShape.RelativePosition = new PointF2D(0.0, ypositionSum / staffCounter + 2.0);
+                    key.PositionAndShape.RelativePosition = new PointF2D(0.0, ypositionSum / staffCounter + 2.0);
                 }
-            }
+            });
         }
     }
 

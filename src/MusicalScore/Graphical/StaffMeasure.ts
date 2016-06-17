@@ -19,12 +19,13 @@ export class StaffMeasure extends GraphicalObject {
     protected lastInstructionStaffEntry: GraphicalStaffEntry;
 
     constructor(staff: Staff = undefined, parentSourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
+        super();
         this.parentStaff = staff;
         this.parentSourceMeasure = parentSourceMeasure;
         this.parentStaffLine = staffLine;
         if (staffLine !== undefined) {
             this.parentStaff = staffLine.ParentStaff;
-            this.PositionAndShape = new BoundingBox(staffLine.PositionAndShape, this);
+            this.PositionAndShape = new BoundingBox(this, staffLine.PositionAndShape);
         } else {
             this.PositionAndShape = new BoundingBox(this);
         }
@@ -144,7 +145,7 @@ export class StaffMeasure extends GraphicalObject {
         let duration: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            duration.push(graphicalStaffEntry.findStaffEntryMinNoteLength());
+            duration.Add(graphicalStaffEntry.findStaffEntryMinNoteLength());
         }
         return duration === this.parentSourceMeasure.Duration;
     }
@@ -193,7 +194,7 @@ export class StaffMeasure extends GraphicalObject {
                 for (let idx3: number = 0, len3: number = graphicalStaffEntry.notes.length; idx3 < len3; ++idx3) {
                     let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx3];
                     if (graphicalNotes.length > 0 && graphicalNotes[0].sourceNote.ParentVoiceEntry.ParentVoice === voice) {
-                        voiceDuration.push(graphicalNotes[0].graphicalNoteLength);
+                        voiceDuration.Add(graphicalNotes[0].graphicalNoteLength);
                     }
                 }
             }

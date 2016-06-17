@@ -18,9 +18,10 @@ export class StaffLine extends GraphicalObject {
     protected bottomLine: number[];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
+        super();
         this.parentMusicSystem = parentSystem;
         this.parentStaff = parentStaff;
-        this.boundingBox = new BoundingBox(parentSystem.PositionAndShape, this);
+        this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
     }
 
     public get Measures(): StaffMeasure[] {

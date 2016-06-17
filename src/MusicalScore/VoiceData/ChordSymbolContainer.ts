@@ -40,13 +40,13 @@ export class ChordSymbolContainer {
     public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number): string {
         let transposedRootPitch: Pitch = chordSymbol.RootPitch;
         if (MusicSheetCalculator.transposeCalculator !== undefined) {
-            transposedRootPitch = MusicSheetCalculator.transposeCalculator.TransposePitch(
+            transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                 chordSymbol.RootPitch,
                 chordSymbol.KeyInstruction,
                 transposeHalftones
             );
         }
-        let text: string = transposedRootPitch.FundamentalNote.ToString();
+        let text: string = Pitch.getNoteEnumString(transposedRootPitch.FundamentalNote);
         if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
             text += this.getTextForAccidental(transposedRootPitch.Accidental);
         }
@@ -54,14 +54,14 @@ export class ChordSymbolContainer {
         if (chordSymbol.BassPitch !== undefined) {
             let transposedBassPitch: Pitch = chordSymbol.BassPitch;
             if (MusicSheetCalculator.transposeCalculator !== undefined) {
-                transposedBassPitch = MusicSheetCalculator.transposeCalculator.TransposePitch(
+                transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                     chordSymbol.BassPitch,
                     chordSymbol.KeyInstruction,
                     transposeHalftones
                 );
             }
             text += "/";
-            text += transposedBassPitch.FundamentalNote.ToString();
+            text += Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote);
             text += this.getTextForAccidental(transposedBassPitch.Accidental);
         }
         if (chordSymbol.ChordDegree !== undefined) {
@@ -187,7 +187,8 @@ export class ChordSymbolContainer {
             case ChordSymbolEnum.power:
             case ChordSymbolEnum.Tristan:
                 break;
-            default
+            default:
+                break;
         }
         return text;
     }

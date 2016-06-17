@@ -50,7 +50,7 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {Staff} from "../VoiceData/Staff";
 import {OctaveShift} from "../VoiceData/Expressions/ContinuousExpressions/octaveShift";
 import {Logging} from "../../Common/logging";
-import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
 
 export class MusicSheetCalculator {
@@ -87,14 +87,15 @@ export class MusicSheetCalculator {
         for (let m: number = 0; m < note.NoteTie.Fractions.length; m++) {
             let musicTimestamp: Fraction;
             if (m === 0) {
-                musicTimestamp = new Fraction(note.calculateNoteLengthWithoutTie() + note.getAbsoluteTimestamp());
+                musicTimestamp = Fraction.plus(note.calculateNoteLengthWithoutTie(), note.getAbsoluteTimestamp());
             } else {
-                musicTimestamp = new Fraction(tieTimestampList[m - 1] + note.NoteTie.Fractions[m - 1]);
+                musicTimestamp = Fraction.plus(tieTimestampList[m - 1], note.NoteTie.Fractions[m - 1]);
             }
             tieTimestampList.push(musicTimestamp);
         }
         tieTimestampListDict.setValue(note.NoteTie, tieTimestampList);
     }
+
     private static setMeasuresMinStaffEntriesWidth(measures: StaffMeasure[], minimumStaffEntriesWidth: number): void {
         for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
             let measure: StaffMeasure = measures[idx];
@@ -178,90 +179,90 @@ export class MusicSheetCalculator {
     }
 
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected calculateSystemYLayout(): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected initStaffMeasuresCreation(): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected createGraphicalTieNote(beams: Beam[], activeClef: ClefInstruction,
                                      octaveShiftValue: OctaveEnum,
                                      graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction, numberOfDots: number,
                                      openTie: Tie, isLastTieNote: boolean): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
-    protected handleVoiceEntryLyrics(lyricsEntries: { [_: number]: LyricsEntry; }, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
+    protected handleVoiceEntryLyrics(lyricsEntries: Dictionary<number, LyricsEntry>, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
                                      openLyricWords: LyricWord[]): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
                                         graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
                                             voiceEntry: VoiceEntry,
                                             graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
                                graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number,
                         measureIndex: number): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected updateStaffLineBorders(staffLine: StaffLine): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
                                          measureIndex: number, staffIndex: number): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
                                                  measureIndex: number): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-        throw new Error("not implemented");
+        throw new Error("abstract, not implemented");
     }
 
     protected clearRecreatedObjects(): void {
@@ -556,7 +557,7 @@ export class MusicSheetCalculator {
         if (voiceEntry.TechnicalInstructions.length > 0) {
             this.checkVoiceEntriesForTechnicalInstructions(voiceEntry, graphicalStaffEntry);
         }
-        if (voiceEntry.LyricsEntries.size > 0) {
+        if (voiceEntry.LyricsEntries.size() > 0) {
             this.handleVoiceEntryLyrics(voiceEntry.LyricsEntries, voiceEntry, graphicalStaffEntry, openLyricWords);
         }
         if (voiceEntry.OrnamentContainer !== undefined) {
@@ -590,8 +591,7 @@ export class MusicSheetCalculator {
 
     protected handleOpenTies(measure: StaffMeasure, beams: Beam[], tieTimestampListDict: Dictionary<Tie, Fraction[]>,
                              activeClef: ClefInstruction, octaveShiftParams: OctaveShiftParams): void {
-
-        CollectionUtil.removeDictElementIfTrue(tieTimestampListDict, function(openTie: Tie, tieTimestamps: Fraction[]): boolean {
+        CollectionUtil.removeDictElementIfTrue(tieTimestampListDict, function (openTie: Tie, tieTimestamps: Fraction[]): boolean {
             // for (let m: number = tieTimestampListDict.size() - 1; m >= 0; m--) {
             //     let keyValuePair: KeyValuePair<Tie, Fraction[]> = tieTimestampListDict.ElementAt(m);
             //     let openTie: Tie = keyValuePair.Key;
@@ -602,7 +602,7 @@ export class MusicSheetCalculator {
             for (; k < tieTimestamps.length; k++) {
                 if (!openTie.NoteHasBeenCreated[k]) {
                     absoluteTimestamp = tieTimestamps[k];
-                    if (absoluteTimestamp >= (measure.parentSourceMeasure.AbsoluteTimestamp + measure.parentSourceMeasure.Duration)) {
+                    if (absoluteTimestamp >= Fraction.plus(measure.parentSourceMeasure.AbsoluteTimestamp, measure.parentSourceMeasure.Duration)) {
                         continue;
                     }
                     let graphicalStaffEntry: GraphicalStaffEntry = undefined;
@@ -803,8 +803,8 @@ export class MusicSheetCalculator {
             if (leftStaffEntry !== rightStaffEntry) {
                 let leftTimestamp: Fraction = leftStaffEntry.getAbsoluteTimestamp();
                 let rightTimestamp: Fraction = rightStaffEntry.getAbsoluteTimestamp();
-                let leftDifference: Fraction = new Fraction(timestamp - leftTimestamp);
-                timestampQuotient = leftDifference.RealValue / (rightTimestamp - leftTimestamp).RealValue;
+                let leftDifference: Fraction = Fraction.minus(timestamp, leftTimestamp);
+                timestampQuotient = leftDifference.RealValue / Fraction.minus(rightTimestamp, leftTimestamp).RealValue;
             }
             if (leftStaffEntry.parentMeasure.ParentStaffLine !== rightStaffEntry.parentMeasure.ParentStaffLine) {
                 if (leftStaffEntry.parentMeasure.ParentStaffLine === staffLine) {
@@ -888,7 +888,7 @@ export class MusicSheetCalculator {
             );
             verticalMeasureList.push(measure);
         }
-        this.graphicalMusicSheet.sourceToGraphicalMeasureLinks[sourceMeasure] = verticalMeasureList;
+        this.graphicalMusicSheet.sourceToGraphicalMeasureLinks.setValue(sourceMeasure, verticalMeasureList);
         return verticalMeasureList;
     }
 
@@ -984,7 +984,7 @@ export class MusicSheetCalculator {
                 }
             }
         }
-        if (tieTimestampListDict.size > 0) {
+        if (tieTimestampListDict.size() > 0) {
             this.handleOpenTies(
                 measure, openBeams,
                 tieTimestampListDict, activeClefs[staffIndex], openOctaveShifts[staffIndex]
@@ -1016,7 +1016,11 @@ export class MusicSheetCalculator {
             let graphicalNotes: GraphicalNote[] = [];
             graphicalStaffEntry.notes.push(graphicalNotes);
             let numberOfDots: number = note.calculateNumberOfNeededDots();
-            let graphicalNote: GraphicalNote = this.symbolFactory.createNote(note, numberOfDots, graphicalStaffEntry, new ClefInstruction(ClefEnum.G, 0, 2));
+            let graphicalNote: GraphicalNote = this.symbolFactory.createNote(   note,
+                                                                                numberOfDots,
+                                                                                graphicalStaffEntry,
+                                                                                new ClefInstruction(ClefEnum.G, 0, 2),
+                                                                                OctaveEnum.NONE);
             graphicalNotes.push(graphicalNote);
             graphicalStaffEntry.PositionAndShape.ChildElements.push(graphicalNote.PositionAndShape);
         }
@@ -1096,11 +1100,14 @@ export class MusicSheetCalculator {
         }
         accidentalCalculator.checkAccidental(graphicalNote, pitch, grace, scalingFactor);
     }
-
+    // needed to disable linter, as it doesn't recognize the existing usage of this method.
+    // ToDo: check if a newer version doesn't have the problem.
+    /* tslint:disable:no-unused-variable */
     private createStaffEntryForTieNote(measure: StaffMeasure, absoluteTimestamp: Fraction, openTie: Tie): GraphicalStaffEntry {
+        /* tslint:enable:no-unused-variable */
         let graphicalStaffEntry: GraphicalStaffEntry;
         graphicalStaffEntry = this.symbolFactory.createStaffEntry(openTie.Start.ParentStaffEntry, measure);
-        graphicalStaffEntry.relInMeasureTimestamp = new Fraction(absoluteTimestamp - measure.parentSourceMeasure.AbsoluteTimestamp);
+        graphicalStaffEntry.relInMeasureTimestamp = Fraction.minus(absoluteTimestamp, measure.parentSourceMeasure.AbsoluteTimestamp);
         this.resetYPositionForLeadSheet(graphicalStaffEntry.PositionAndShape);
         measure.addGraphicalStaffEntry(graphicalStaffEntry);
         return graphicalStaffEntry;

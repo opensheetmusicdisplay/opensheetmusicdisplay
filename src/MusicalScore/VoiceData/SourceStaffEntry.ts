@@ -147,8 +147,8 @@ export class SourceStaffEntry {
           if (duration > note.calculateNoteLengthWithoutTie()) {
             duration = note.calculateNoteLengthWithoutTie();
           }
-        } else if (duration > note.length) {
-            duration = note.length;
+        } else if (duration > note.Length) {
+            duration = note.Length;
         }
       }
     }
@@ -165,10 +165,10 @@ export class SourceStaffEntry {
             duration = note.calculateNoteLengthWithoutTie();
             for (let idx3: number = 0, len3: number = note.NoteTie.Fractions.length; idx3 < len3; ++idx3) {
               let fraction: Fraction = note.NoteTie.Fractions[idx3];
-              duration.push(fraction);
+              duration.Add(fraction);
             }
           }
-        } else if (duration < note.length) { duration = note.length; }
+        } else if (duration < note.Length) { duration = note.Length; }
       }
     }
     return duration;

@@ -2,7 +2,7 @@
  * Created by Oliver on 16.03.2016.
  */
 import { Fraction } from "../../../src/Common/DataObjects/fraction";
-import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 describe("Fraction Unit Tests:", () => {
     describe("Construct Fraction, check properties", () => {

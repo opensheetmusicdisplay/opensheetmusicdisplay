@@ -23,6 +23,7 @@ import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 //import {VexFlowMeasure} from "./VexFlowMeasure";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
@@ -183,7 +184,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         return;
     }
 
-    protected handleVoiceEntryLyrics(lyricsEntries: { [_: number]: LyricsEntry; }, voiceEntry: VoiceEntry,
+    protected handleVoiceEntryLyrics(lyricsEntries: Dictionary<number, LyricsEntry>, voiceEntry: VoiceEntry,
                                      graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
         return;
     }

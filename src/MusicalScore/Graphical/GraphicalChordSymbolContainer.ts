@@ -10,8 +10,9 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     private chordSymbolContainer: ChordSymbolContainer;
     private graphicalLabel: GraphicalLabel;
     constructor(chordSymbolContainer: ChordSymbolContainer, parent: BoundingBox, textHeight: number, transposeHalftones: number) {
+        super();
         this.chordSymbolContainer = chordSymbolContainer;
-        this.boundingBox = new BoundingBox(parent, this);
+        this.boundingBox = new BoundingBox(this, parent);
         this.calculateLabel(textHeight, transposeHalftones);
     }
     public get GetChordSymbolContainer(): ChordSymbolContainer {

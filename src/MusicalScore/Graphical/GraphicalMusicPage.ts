@@ -12,8 +12,9 @@ export class GraphicalMusicPage extends GraphicalObject {
     private parent: GraphicalMusicSheet;
 
     constructor(parent: GraphicalMusicSheet) {
+        super();
         this.parent = parent;
-        this.boundingBox = new BoundingBox(undefined, this);
+        this.boundingBox = new BoundingBox(this, undefined);
     }
 
     public get MusicSystems(): MusicSystem[] {

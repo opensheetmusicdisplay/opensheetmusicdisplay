@@ -16,11 +16,10 @@ import {Fraction} from "../../Common/DataObjects/fraction";
 import {GraphicalNote} from "./GraphicalNote";
 import {Instrument} from "../Instrument";
 import {BoundingBox} from "./BoundingBox";
-import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {Note} from "../VoiceData/Note";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {Logging} from "../../Common/logging";
-import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
 
 export class GraphicalMusicSheet {
@@ -282,7 +281,8 @@ export class GraphicalMusicSheet {
     }
 
     public getOrCreateVerticalContainer(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
-        if (this.verticalGraphicalStaffEntryContainers.length === 0 || timestamp > CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp) {
+        if (this.verticalGraphicalStaffEntryContainers.length === 0 ||
+            timestamp > CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp) {
             let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer =
                 new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
             this.verticalGraphicalStaffEntryContainers.push(verticalGraphicalStaffEntryContainer);
@@ -305,11 +305,10 @@ export class GraphicalMusicSheet {
 
     public GetVerticalContainerFromTimestamp(timestamp: Fraction, startIndex: number = 0): VerticalGraphicalStaffEntryContainer {
         let index: number = CollectionUtil.binarySearch(this.verticalGraphicalStaffEntryContainers,
-            new VerticalGraphicalStaffEntryContainer(0, timestamp),
-            VerticalGraphicalStaffEntryContainer.compareByTimestamp,
-            startIndex,
-            this.verticalGraphicalStaffEntryContainers.length - startIndex
-        );
+                                                        new VerticalGraphicalStaffEntryContainer(0, timestamp),
+                                                        VerticalGraphicalStaffEntryContainer.compareByTimestamp,
+                                                        startIndex,
+                                                        this.verticalGraphicalStaffEntryContainers.length - startIndex);
         if (index >= 0) {
             return this.verticalGraphicalStaffEntryContainers[index];
         }
@@ -347,7 +346,7 @@ export class GraphicalMusicSheet {
             rightTS = containers[rightIndex].AbsoluteTimestamp;
         } else {
             leftTS = containers[containers.length - 1].AbsoluteTimestamp;
-            rightTS = new Fraction(this.getLongestStaffEntryDuration(containers.length - 1) + leftTS);
+            rightTS = Fraction.plus(this.getLongestStaffEntryDuration(containers.length - 1), leftTS);
             rightIndex = containers.length;
         }
         let diff: number = rightTS.RealValue - leftTS.RealValue;
@@ -399,14 +398,10 @@ export class GraphicalMusicSheet {
         return false;
     }
 
-    public getMeasureIndex(entry: GraphicalStaffEntry, measureIndex: number, inListIndex: number): boolean {
-        return this.getMeasureIndex(entry.parentMeasure, measureIndex, inListIndex);
-    }
-
     public GetNearesNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
         let initialSearchArea: number = 10;
         let foundNotes: GraphicalNote[] = [];
-        let region: BoundingBox = new BoundingBox(undefined);
+        let region: BoundingBox = new BoundingBox();
         region.BorderLeft = clickPosition.x - initialSearchArea;
         region.BorderTop = clickPosition.y - initialSearchArea;
         region.BorderRight = clickPosition.x + initialSearchArea;
@@ -453,7 +448,7 @@ export class GraphicalMusicSheet {
     public GetClickableLabel(clickPosition: PointF2D): GraphicalLabel {
         let initialSearchAreaX: number = 4;
         let initialSearchAreaY: number = 4;
-        let region: BoundingBox = new BoundingBox(undefined);
+        let region: BoundingBox = new BoundingBox();
         region.BorderLeft = clickPosition.x - initialSearchAreaX;
         region.BorderTop = clickPosition.y - initialSearchAreaY;
         region.BorderRight = clickPosition.x + initialSearchAreaX;
@@ -572,10 +567,7 @@ export class GraphicalMusicSheet {
     }
 
     public getStaffEntry(index: number): GraphicalStaffEntry {
-        return this.getStaffEntry(this.VerticalGraphicalStaffEntryContainers[index]);
-    }
-
-    public getStaffEntry(container: VerticalGraphicalStaffEntryContainer): GraphicalStaffEntry {
+        let container: VerticalGraphicalStaffEntryContainer = this.VerticalGraphicalStaffEntryContainers[index];
         let staffEntry: GraphicalStaffEntry = undefined;
         try {
             for (let idx: number = 0, len: number = container.StaffEntries.length; idx < len; ++idx) {
@@ -693,10 +685,9 @@ export class GraphicalMusicSheet {
             } else if (nextStaffEntry === undefined) {
                 previousStaffEntryPositionX = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
                 nextStaffEntryPositionX = currentMusicSystem.GetRightBorderAbsoluteXPosition();
+                let sm: SourceMeasure = previousStaffEntry.parentMeasure.parentSourceMeasure;
                 fraction = (currentTimeStamp - previousStaffEntry.getAbsoluteTimestamp().RealValue) / (
-                    (previousStaffEntry.parentMeasure.parentSourceMeasure.AbsoluteTimestamp
-                    + previousStaffEntry.parentMeasure.parentSourceMeasure.Duration).RealValue - previousStaffEntry.getAbsoluteTimestamp().RealValue
-                    );
+                    Fraction.plus(sm.AbsoluteTimestamp, sm.Duration).RealValue - previousStaffEntry.getAbsoluteTimestamp().RealValue);
             } else {
                 previousStaffEntryPositionX = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
                 nextStaffEntryPositionX = nextStaffEntry.PositionAndShape.AbsolutePosition.x;
@@ -765,15 +756,6 @@ export class GraphicalMusicSheet {
         let graphicalMeasure: StaffMeasure = this.GetGraphicalFromSourceMeasure(sourceStaffEntry.VerticalContainerParent.ParentMeasure)
             [sourceStaffEntry.ParentStaff.idInMusicSheet];
         return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);
-    }
-
-    public GetGraphicalFromSourceStaffEntry(voiceEntries: VoiceEntry[]): GraphicalStaffEntry {
-        if (voiceEntries.length === 0) {
-            return undefined;
-        }
-        let sse: SourceStaffEntry = voiceEntries[0].ParentSourceStaffEntry;
-        let graphicalMeasure: StaffMeasure = this.GetGraphicalFromSourceMeasure(sse.VerticalContainerParent.ParentMeasure)[sse.ParentStaff.idInMusicSheet];
-        return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sse.Timestamp);
     }
 
     public GetGraphicalNoteFromSourceNote(note: Note, containingGse: GraphicalStaffEntry): GraphicalNote {

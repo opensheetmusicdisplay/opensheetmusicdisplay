@@ -38,19 +38,19 @@ export class VerticalGraphicalStaffEntryContainer {
         this.staffEntries = value;
     }
 
-    public static compareByTimestamp(x: VerticalGraphicalStaffEntryContainer, y: VerticalGraphicalStaffEntryContainer): number
-    {
-        let xValue = x.absoluteTimestamp.RealValue;
-        let yValue = y.absoluteTimestamp.RealValue;
+    public static compareByTimestamp(x: VerticalGraphicalStaffEntryContainer, y: VerticalGraphicalStaffEntryContainer): number {
+        let xValue: number = x.absoluteTimestamp.RealValue;
+        let yValue: number = y.absoluteTimestamp.RealValue;
 
-        if (xValue < yValue)
+        if (xValue < yValue) {
             return -1;
-        else if (xValue > yValue)
+        } else if (xValue > yValue) {
             return 1;
-        else
+        } else {
             return 0;
+        }
     }
-    
+
     public getFirstNonNullStaffEntry(): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];

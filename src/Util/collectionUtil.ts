@@ -1,4 +1,4 @@
-import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 export class CollectionUtil {
 
@@ -23,35 +23,44 @@ export class CollectionUtil {
      * @param dict
      * @param iterationFunction
      */
-    public static removeDictElementIfTrue<T, V>(dict: Dictionary<T, V>, iterationFunction: (key: T, value: V) => boolean): void
-    {
+    public static removeDictElementIfTrue<T, V>(dict: Dictionary<T, V>, iterationFunction: (key: T, value: V) => boolean): void {
         let toDeleteEntries: T[] = [];
-        dict.forEach(function(key: T, value: V) {
+        dict.forEach(function (key: T, value: V): void {
             let shallDelete: boolean = iterationFunction(key, value);
-            if (shallDelete)
+            if (shallDelete) {
                 toDeleteEntries.push(key);
+            }
         });
 
         for (let i: number = 0; i < toDeleteEntries.length; i++) {
             dict.remove(toDeleteEntries[i]);
         }
     }
-    
-    public static getLastElement<T>(array: T[]): T{
-        return array[array.length-1];
+
+    public static getLastElement<T>(array: T[]): T {
+        return array[array.length - 1];
     }
 
-    public static binarySearch<T>(array: T[], element: T, cmp: (elem1: T, elem2: T) => number, startIndex: number = 0, endIndex: number = array.length): number 
-    {
-        var mid = 1;
+    public static binarySearch<T>(array: T[],
+                                  element: T,
+                                  cmp: (elem1: T, elem2: T) => number,
+                                  startIndex: number = 0,
+                                  endIndex: number = array.length): number {
+        let mid: number = 1;
         while (startIndex < endIndex) {
             mid = Math.floor((startIndex + endIndex) / 2);
-            var c = cmp(array[mid], element);
-            if (c === 0) return mid;
-            if (c < 0) startIndex = mid + 1;
-            if (0 < c) endIndex = mid;
+            let c: number = cmp(array[mid], element);
+            if (c === 0) {
+                return mid;
+            }
+            if (c < 0) {
+                startIndex = mid + 1;
+            }
+            if (0 < c) {
+                endIndex = mid;
+            }
         }
-        
+
         return -mid;
     }
 }

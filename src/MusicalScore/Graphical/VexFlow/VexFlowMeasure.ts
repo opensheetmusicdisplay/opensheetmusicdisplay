@@ -28,7 +28,7 @@ export class VexFlowMeasure extends StaffMeasure {
     private stave: Vex.Flow.Stave;
 
 
-    private static toVexFlowClef(clef: ClefInstruction) {
+    private static toVexFlowClef(clef: ClefInstruction): Vex.Flow.Clef {
         let type: string;
         switch (clef.ClefType) {
             case ClefEnum.G:

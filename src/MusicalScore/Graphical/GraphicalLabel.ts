@@ -8,16 +8,10 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 export class GraphicalLabel extends Clickable {
     private label: Label;
 
-    constructor(label: Label, textHeight: number, alignment: TextAlignment) {
+    constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox = undefined) {
+        super();
         this.label = label;
-        this.boundingBox = new BoundingBox(this);
-        this.label.fontHeight = textHeight;
-        this.label.textAlignment = alignment;
-    }
-
-    constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox) {
-        this.label = label;
-        this.boundingBox = new BoundingBox(parent, this);
+        this.boundingBox = new BoundingBox(this, parent);
         this.label.fontHeight = textHeight;
         this.label.textAlignment = alignment;
     }
