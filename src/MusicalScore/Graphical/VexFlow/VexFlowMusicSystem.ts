@@ -3,6 +3,7 @@ import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {EngravingRules} from "../EngravingRules";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
+
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
         super(parent, id);
