@@ -22,11 +22,18 @@ export class VexFlowConverter {
     };
 
     public static duration(fraction: Fraction): string {
-        return undefined;
+        // FIXME TODO
+        return "q";
     }
 
+    /**
+     * Takes a Pitch and returns a string representing a VexFlow pitch,
+     * which has the form "b/4", plus its alteration (accidental)
+     * @param pitch
+     * @returns {string[]}
+     */
     public static pitch(pitch: Pitch): [string, string] {
-        let fund: string = NoteEnum[pitch.FundamentalNote];
+        let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         let octave: number = pitch.Octave;
         let acc: string = "";
 
@@ -51,7 +58,7 @@ export class VexFlowConverter {
     }
 
     public static StaveNote(voiceEntry: VoiceEntry): Vex.Flow.StaveNote {
-        let keys: string[] = []; //["b/4"]
+        let keys: string[] = [];
         let duration: string = VexFlowConverter.duration(voiceEntry.Notes[0].Length);
         let accidentals: string[] = [];
         for (let note of voiceEntry.Notes) {

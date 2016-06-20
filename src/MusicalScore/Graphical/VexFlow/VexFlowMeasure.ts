@@ -104,10 +104,12 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     /**
-     * This method sets the x-position relative to the staffline. (y-Position is always 0 relative to the staffline)
+     * Set the x-position relative to the staffline.
+     * (y-Position is always 0 relative to the staffline)
      * @param x
      */
     public setPositionInStaffline(x: number): void {
+        // Already implemented in VexFlow, it does _not_ call .format()
         this.stave.setX(x);
     }
 
@@ -116,8 +118,12 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param width
      */
     public setWidth(width: number): void {
-        // FIXME: this should consider modifiers!
-        this.stave.setWidth(width);
+        // Widths in PS and VexFlow work differently.
+        // In VexFlow, width is only the width of the actual voices, without considering
+        // modifiers like clefs. In PS, width is the total width of the stave.
+        // @Andrea: The following could be improved by storing the values in this object.
+        //          Now it calls .format() implicitly.
+        this.stave.setWidth(width - (this.stave.getNoteEndX() - this.stave.getWidth()));
     }
 
     /**
@@ -153,6 +159,7 @@ export class VexFlowMeasure extends StaffMeasure {
                     num_beats: num,
                     resolution: Vex.Flow.RESOLUTION,
                 });
+                voice.setMode(Vex.Flow.Voice.Mode.SOFT);
                 voice.addTickables(notes[id]);
                 voices[id] = voice;
             }

@@ -23,11 +23,13 @@ declare namespace Vex {
 
     export class Voice {
       constructor(time: any);
+      public static Mode: any;
 
       public getBoundingBox(): BoundingBox;
       public setStave(stave: Stave): Voice;
       public addTickables(notes: StaveNote[]): Voice;
       public addTickable(note: StaveNote): Voice;
+      public setMode(mode: any): Voice;
     }
 
     export class StaveNote {
@@ -52,6 +54,7 @@ declare namespace Vex {
       public getWidth(): number;
       public setWidth(width: number): Stave;
       public getNoteStartX(): number;
+      public getNoteEndX(): number;
       public format(): void;
       public getSpacingBetweenLines(): number;
       public getNumLines(): number;
