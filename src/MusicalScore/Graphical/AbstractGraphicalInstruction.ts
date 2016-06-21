@@ -4,6 +4,7 @@ import {GraphicalObject} from "./GraphicalObject";
 export class AbstractGraphicalInstruction extends GraphicalObject {
     protected parent: GraphicalStaffEntry;
     constructor(parent: GraphicalStaffEntry) {
+        super();
         this.parent = parent;
     }
     public get Parent(): GraphicalStaffEntry {

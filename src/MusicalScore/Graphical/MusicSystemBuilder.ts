@@ -8,7 +8,6 @@ import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {MusicSystem} from "./MusicSystem";
 import {BoundingBox} from "./BoundingBox";
 import {Staff} from "../VoiceData/Staff";
-import {MusicSheet} from "../MusicSheet";
 import {Instrument} from "../Instrument";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {StaffLine} from "./StaffLine";
@@ -20,6 +19,7 @@ import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
+import {CollectionUtil} from "../../Util/collectionUtil";
 
 export class MusicSystemBuilder {
     private measureList: StaffMeasure[][];
@@ -68,7 +68,14 @@ export class MusicSystemBuilder {
             this.rules.LabelMarginBorderFactor
         );
         this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.RelativePosition.y;
-        let numberOfMeasures: number = this.measureList.length(m => m.Any());
+
+        let numberOfMeasures: number = 0;
+        for (let idx: number = 0, len: number = this.measureList.length; idx < len; ++idx) {
+            if (this.measureList[idx].length > 0) {
+                numberOfMeasures++;
+            }
+        }
+
         while (this.measureListIndex < numberOfMeasures) {
             let staffMeasures: StaffMeasure[] = this.measureList[this.measureListIndex];
             for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
@@ -222,10 +229,12 @@ export class MusicSystemBuilder {
         boundingBox.BorderRight = systemWidth;
         boundingBox.BorderTop = 0.0;
         let staffList: Staff[] = [];
-        let musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
-        let instruments: Instrument[] = musicSheet.Instruments.Where(i => i.Voices.length > 0 && i.Voices[0].Visible);
+        let instruments: Instrument[] = this.graphicalMusicSheet.ParentMusicSheet.Instruments;
         for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
             let instrument: Instrument = instruments[idx];
+            if (instrument.Voices.length === 0 || !instrument.Visible) {
+                continue;
+            }
             for (let idx2: number = 0, len2: number = instrument.Staves.length; idx2 < len2; ++idx2) {
                 let staff: Staff = instrument.Staves[idx2];
                 staffList.push(staff);
@@ -581,7 +590,7 @@ export class MusicSystemBuilder {
         if (this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsThinBold;
         }
-        if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.EndsPiece) {
+        if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
             return SystemLinesEnum.ThinBold;
         }
         if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
@@ -755,8 +764,8 @@ export class MusicSystemBuilder {
 
     private decreaseMusicSystemBorders(): void {
         let currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
-        let width: number = currentSystem.StaffLines[0].Measures.Last().PositionAndShape.RelativePosition.x
-            + currentSystem.StaffLines[0].Measures.Last().PositionAndShape.Size.width;
+        let bb: BoundingBox = CollectionUtil.last(currentSystem.StaffLines[0].Measures).PositionAndShape;
+        let width: number = bb.RelativePosition.x + bb.Size.width;
         for (let idx: number = 0, len: number = currentSystem.StaffLines.length; idx < len; ++idx) {
             let staffLine: StaffLine = currentSystem.StaffLines[idx];
             staffLine.PositionAndShape.BorderRight = width;

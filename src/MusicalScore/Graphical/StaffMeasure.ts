@@ -19,12 +19,13 @@ export class StaffMeasure extends GraphicalObject {
     protected lastInstructionStaffEntry: GraphicalStaffEntry;
 
     constructor(staff: Staff = undefined, parentSourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
+        super();
         this.parentStaff = staff;
         this.parentSourceMeasure = parentSourceMeasure;
         this.parentStaffLine = staffLine;
         if (staffLine !== undefined) {
             this.parentStaff = staffLine.ParentStaff;
-            this.PositionAndShape = new BoundingBox(staffLine.PositionAndShape, this);
+            this.PositionAndShape = new BoundingBox(this, staffLine.PositionAndShape);
         } else {
             this.PositionAndShape = new BoundingBox(this);
         }

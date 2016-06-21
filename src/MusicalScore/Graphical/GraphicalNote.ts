@@ -10,6 +10,7 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 
 export class GraphicalNote extends GraphicalObject {
     constructor(note: Note, parent: GraphicalStaffEntry) {
+        super();
         this.sourceNote = note;
         this.parentStaffEntry = parent;
     }

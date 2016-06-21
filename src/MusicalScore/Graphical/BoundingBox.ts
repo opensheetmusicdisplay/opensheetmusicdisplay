@@ -28,15 +28,11 @@ export class BoundingBox {
     protected parent: BoundingBox;
     protected dataObject: Object;
 
-    constructor(dataObject: Object) {
+    constructor(dataObject: Object = undefined, parent: BoundingBox = undefined) {
+        this.parent = parent;
         this.dataObject = dataObject;
         this.xBordersHaveBeenSet = false;
         this.yBordersHaveBeenSet = false;
-    }
-
-    constructor(parent: BoundingBox, dataObject: Object) {
-        this(dataObject);
-        this.parent = parent;
     }
 
     public get RelativePositionHasBeenSet(): boolean {
@@ -307,10 +303,6 @@ export class BoundingBox {
         this.calculateMarginRectangle();
     }
 
-    public computeNonOverlappingPositionWithMargin(placementPsi: BoundingBox, direction: ColDirEnum): void {
-        this.computeNonOverlappingPositionWithMargin(placementPsi, direction, new PointF2D(0.0, 0.0));
-    }
-
     public computeNonOverlappingPositionWithMargin(placementPsi: BoundingBox, direction: ColDirEnum, position: PointF2D): void {
         this.RelativePosition = new PointF2D(position.x, position.y);
         this.setAbsolutePositionFromParent();
@@ -365,20 +357,7 @@ export class BoundingBox {
         return false;
     }
 
-    public liesInsideBorders(psi: BoundingBox, leftBorderInside: boolean, rightBorderInside: boolean,
-                             topBorderInside: boolean, bottomBorderInside: boolean): boolean {
-        leftBorderInside = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderLeft)
-            && (psi.absolutePosition.x + psi.borderLeft) <= (this.AbsolutePosition.x + this.borderRight);
-        rightBorderInside = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderRight)
-            && (psi.absolutePosition.x + psi.borderRight) <= (this.AbsolutePosition.x + this.borderRight);
-        topBorderInside = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderTop)
-            && (psi.absolutePosition.y + psi.borderTop) <= (this.AbsolutePosition.y + this.borderBottom);
-        bottomBorderInside = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderBottom)
-            && (psi.absolutePosition.y + psi.borderBottom) <= (this.AbsolutePosition.y + this.borderBottom);
-        return topBorderInside && bottomBorderInside && leftBorderInside && rightBorderInside;
-    }
-
-    public liesInsideBorders(position: PointF2D): boolean {
+    public pointLiesInsideBorders(position: PointF2D): boolean {
         let xInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= position.x && position.x <= (this.AbsolutePosition.x + this.borderRight);
         if (xInside) {
             let yInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= position.y && position.y <= (this.AbsolutePosition.y + this.borderBottom);
@@ -417,7 +396,7 @@ export class BoundingBox {
         return false;
     }
 
-    public liesInsideMargins(position: PointF2D): boolean {
+    public pointLiesInsideMargins(position: PointF2D): boolean {
         let xInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= position.x
             && position.x <= (this.AbsolutePosition.x + this.borderMarginRight);
         if (xInside) {
@@ -428,10 +407,6 @@ export class BoundingBox {
             }
         }
         return false;
-    }
-
-    public computeNonOverlappingPosition(placementPsi: BoundingBox, direction: ColDirEnum, margin: number): void {
-        this.computeNonOverlappingPosition(placementPsi, direction, new PointF2D(0.0, 0.0));
     }
 
     public computeNonOverlappingPosition(placementPsi: BoundingBox, direction: ColDirEnum, position: PointF2D): void {
@@ -462,7 +437,7 @@ export class BoundingBox {
 
     public getClickedObjectOfType<T>(clickPosition: PointF2D): T {
         let obj: Object = this.dataObject;
-        if (this.liesInsideBorders(clickPosition) && (obj instanceof T)) {
+        if (this.pointLiesInsideBorders(clickPosition) && (<T>obj !== undefined)) {
             return (obj as T);
         }
         for (let idx: number = 0, len: number = this.childElements.length; idx < len; ++idx) {
@@ -476,7 +451,7 @@ export class BoundingBox {
     }
 
     public getObjectsInRegion<T>(region: BoundingBox, liesInside: boolean = true): T[] {
-        if (this.dataObject instanceof T) {
+        if (<T>this.dataObject !== undefined) {
             if (liesInside) {
                 if (region.liesInsideBorders(this)) {
                     return [this.dataObject as T];

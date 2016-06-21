@@ -1,4 +1,4 @@
-﻿import {StaffMeasure} from "../StaffMeasure";
+import {StaffMeasure} from "../StaffMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";

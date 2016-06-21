@@ -9,7 +9,7 @@ import {OrnamentContainer} from "./OrnamentContainer";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {OrnamentEnum} from "./OrnamentContainer";
 import {AccidentalEnum} from "../../Common/DataObjects/pitch";
-import {Dictionary} from 'typescript-collections/dist/lib/Dictionary';
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 export class VoiceEntry {
     constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry) {
@@ -119,15 +119,13 @@ export class VoiceEntry {
         return false;
     }
     public getVerseNumberForLyricEntry(lyricsEntry: LyricsEntry): number {
-        let lyricsEntries: { [n: number]: LyricsEntry; } = this.lyricsEntries;
-        for (let key in lyricsEntries) {
-            if (lyricsEntries.hasOwnProperty(key)) { // FIXME check has own property
-                if (lyricsEntry === this.lyricsEntries[key]) {
-                    return +key;
-                }
+        let verseNumber: number = 1;
+        this.lyricsEntries.forEach((key: number, value: LyricsEntry): void => {
+            if (lyricsEntry === value) {
+                verseNumber = key;
             }
-        }
-        return 1;
+        });
+        return verseNumber;
     }
     //public createVoiceEntriesForOrnament(activeKey: KeyInstruction): VoiceEntry[] {
     //    return this.createVoiceEntriesForOrnament(this, activeKey);

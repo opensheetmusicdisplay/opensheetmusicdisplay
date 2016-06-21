@@ -15,9 +15,11 @@ import {GraphicalChordSymbolContainer} from "./GraphicalChordSymbolContainer";
 import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
 import {AbstractGraphicalInstruction} from "./AbstractGraphicalInstruction";
 import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
+import {CollectionUtil} from "../../Util/collectionUtil";
 
 export class GraphicalStaffEntry extends GraphicalObject {
     constructor(parentMeasure: StaffMeasure, sourceStaffEntry: SourceStaffEntry = undefined, staffEntryParent: GraphicalStaffEntry = undefined) {
+        super();
         this.parentMeasure = parentMeasure;
         this.notes = [];
         this.graceStaffEntriesBefore = [];
@@ -26,9 +28,9 @@ export class GraphicalStaffEntry extends GraphicalObject {
         if (staffEntryParent !== undefined) {
             this.staffEntryParent = staffEntryParent;
             this.parentVerticalContainer = staffEntryParent.parentVerticalContainer;
-            this.PositionAndShape = new BoundingBox(staffEntryParent.PositionAndShape, this);
+            this.PositionAndShape = new BoundingBox(this, staffEntryParent.PositionAndShape);
         } else {
-            this.PositionAndShape = new BoundingBox(parentMeasure.PositionAndShape, this);
+            this.PositionAndShape = new BoundingBox(this, parentMeasure.PositionAndShape);
         }
         if (sourceStaffEntry !== undefined) {
             this.relInMeasureTimestamp = sourceStaffEntry.Timestamp;
@@ -65,7 +67,7 @@ export class GraphicalStaffEntry extends GraphicalObject {
     public getAbsoluteTimestamp(): Fraction {
         let result: Fraction = Fraction.createFromFraction(this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp);
         if (this.relInMeasureTimestamp !== undefined) {
-            result += this.relInMeasureTimestamp;
+            result.Add(this.relInMeasureTimestamp);
         }
         return result;
     }
@@ -196,7 +198,7 @@ export class GraphicalStaffEntry extends GraphicalObject {
     public getMainVoice(): Voice {
         for (let idx: number = 0, len: number = this.sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
             let voiceEntry: VoiceEntry = this.sourceStaffEntry.VoiceEntries[idx];
-            if (voiceEntry.ParentVoice.GetType() !== /*typeof*/LinkedVoice) {
+            if (!(voiceEntry.ParentVoice instanceof LinkedVoice)) {
                 return voiceEntry.ParentVoice;
             }
         }
@@ -273,7 +275,8 @@ export class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public addGraphicalNoteToListAtCorrectYPosition(graphicalNotes: GraphicalNote[], graphicalNote: GraphicalNote): void {
-        if (graphicalNotes.length === 0 || graphicalNote.PositionAndShape.RelativePosition.y < graphicalNotes.Last().PositionAndShape.RelativePosition.Y) {
+        if (graphicalNotes.length === 0 ||
+            graphicalNote.PositionAndShape.RelativePosition.y < CollectionUtil.last(graphicalNotes).PositionAndShape.RelativePosition.Y) {
             graphicalNotes.push(graphicalNote);
         } else {
             for (let i: number = graphicalNotes.length - 1; i >= 0; i--) {

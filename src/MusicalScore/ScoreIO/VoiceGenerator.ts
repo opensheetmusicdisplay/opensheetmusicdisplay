@@ -26,6 +26,7 @@ import {Logging} from "../../Common/logging";
 import {Pitch} from "../../Common/DataObjects/pitch";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {CollectionUtil} from "../../Util/collectionUtil";
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 type SlurReader = any;
 
@@ -758,7 +759,7 @@ export class VoiceGenerator {
                                         slur.EndNote.NoteSlurs.push(slur);
                                     }
                                 }
-                                let lyricsEntries: { [n: number]: LyricsEntry; } = this.currentVoiceEntry.LyricsEntries;
+                                let lyricsEntries: Dictionary<number, LyricsEntry> = this.currentVoiceEntry.LyricsEntries;
                                 for (let lyricsEntry in lyricsEntries) {
                                     if (lyricsEntries.hasOwnProperty(lyricsEntry)) {
                                         let val: LyricsEntry = this.currentVoiceEntry.LyricsEntries[lyricsEntry];
@@ -804,16 +805,13 @@ export class VoiceGenerator {
                             slur.EndNote.NoteSlurs.push(slur);
                         }
                     }
-                    let lyricsEntries: { [_: number]: LyricsEntry; } = this.currentVoiceEntry.LyricsEntries;
-                    for (let key in lyricsEntries) {
-                        if (lyricsEntries.hasOwnProperty(key)) {
-                            let lyricsEntry: LyricsEntry = lyricsEntries[key];
-                            if (!tieStartNote.ParentVoiceEntry.LyricsEntries.hasOwnProperty(key)) {
-                                tieStartNote.ParentVoiceEntry.LyricsEntries[key] = lyricsEntry;
-                                lyricsEntry.Parent = tieStartNote.ParentVoiceEntry;
-                            }
+
+                    this.currentVoiceEntry.LyricsEntries.forEach((key: number, value: LyricsEntry): void => {
+                        if (!tieStartNote.ParentVoiceEntry.LyricsEntries.containsKey(key)) {
+                            tieStartNote.ParentVoiceEntry.LyricsEntries.setValue(key, value);
+                            value.Parent = tieStartNote.ParentVoiceEntry;
                         }
-                    }
+                    });
                     if (maxTieNoteFraction.lt(Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length))) {
                         maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
                     }

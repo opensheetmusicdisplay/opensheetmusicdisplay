@@ -33,6 +33,27 @@ export class Pitch {
     private frequency: number;
     private halfTone: number;
 
+    public static getNoteEnumString(note: NoteEnum): string {
+        switch (note) {
+            case NoteEnum.C:
+                return "C";
+            case NoteEnum.D:
+                return "D";
+            case NoteEnum.E:
+                return "E";
+            case NoteEnum.F:
+                return "F";
+            case NoteEnum.G:
+                return "G";
+            case NoteEnum.A:
+                return "A";
+            case NoteEnum.B:
+                return "B";
+            default:
+                return "";
+        }
+    }
+
     /**
      * @param the input pitch
      * @param the number of halftones to transpose with
