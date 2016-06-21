@@ -126,7 +126,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * Sets the overall x-width of the measure.
      * @param width
      */
-    public SetWidth(width: number): void {
+    public setWidth(width: number): void {
         // Widths in PS and VexFlow work differently.
         // In VexFlow, width is only the width of the actual voices, without considering
         // modifiers like clefs. In PS, width is the total width of the stave.

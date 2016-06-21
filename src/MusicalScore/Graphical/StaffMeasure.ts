@@ -86,32 +86,32 @@ export class StaffMeasure extends GraphicalObject {
         }
     }
 
-    public ResetLayout(): void {
+    public resetLayout(): void {
     }
 
-    public GetLineWidth(line: SystemLinesEnum): number {
+    public getLineWidth(line: SystemLinesEnum): number {
         return undefined;
     }
 
-    public AddClefAtBegin(clef: ClefInstruction): void {
+    public addClefAtBegin(clef: ClefInstruction): void {
     }
 
-    public AddKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
+    public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
     }
 
-    public AddRhythmAtBegin(rhythm: RhythmInstruction): void {
+    public addRhythmAtBegin(rhythm: RhythmInstruction): void {
     }
 
-    public AddClefAtEnd(clef: ClefInstruction): void {
+    public addClefAtEnd(clef: ClefInstruction): void {
     }
 
-    public SetPositionInStaffline(xPos: number): void {
+    public setPositionInStaffline(xPos: number): void {
     }
 
-    public SetWidth(width: number): void {
+    public setWidth(width: number): void {
     }
 
-    public LayoutSymbols(): void {
+    public layoutSymbols(): void {
     }
 
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {
