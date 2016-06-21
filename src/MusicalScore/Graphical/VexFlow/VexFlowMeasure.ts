@@ -22,8 +22,6 @@ export class VexFlowMeasure extends StaffMeasure {
     private stave: Vex.Flow.Stave;
     private voices: { [voiceID: number]: Vex.Flow.Voice; };
     //private duration: Fraction;
-    //private begModifiers: number = 0;
-    //private endModifiers: number = 0;
 
     /**
      * Reset all the geometric values and parameters of this measure and put it in an initialized state.
@@ -31,6 +29,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public resetLayout(): void {
         this.beginInstructionsWidth = 0;
+        this.endInstructionsWidth = 0;
     }
 
     /**
@@ -125,7 +124,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * Sets the overall x-width of the measure.
      * @param width
      */
-    public setWidth(width: number): void {
+    public SetWidth(width: number): void {
         // Widths in PS and VexFlow work differently.
         // In VexFlow, width is only the width of the actual voices, without considering
         // modifiers like clefs. In PS, width is the total width of the stave.

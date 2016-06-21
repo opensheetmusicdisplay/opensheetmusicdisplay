@@ -85,39 +85,31 @@ export class StaffMeasure extends GraphicalObject {
     }
 
     public ResetLayout(): void {
-        throw new Error("not implemented");
     }
 
     public GetLineWidth(line: SystemLinesEnum): number {
-        throw new Error("not implemented");
+        return undefined;
     }
 
     public AddClefAtBegin(clef: ClefInstruction): void {
-        throw new Error("not implemented");
     }
 
     public AddKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
-        throw new Error("not implemented");
     }
 
     public AddRhythmAtBegin(rhythm: RhythmInstruction): void {
-        throw new Error("not implemented");
     }
 
     public AddClefAtEnd(clef: ClefInstruction): void {
-        throw new Error("not implemented");
     }
 
     public SetPositionInStaffline(xPos: number): void {
-        throw new Error("not implemented");
     }
 
     public SetWidth(width: number): void {
-        throw new Error("not implemented");
     }
 
     public LayoutSymbols(): void {
-        throw new Error("not implemented");
     }
 
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {

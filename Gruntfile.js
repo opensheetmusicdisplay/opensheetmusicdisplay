@@ -9,7 +9,7 @@ module.exports = function (grunt) {
         ' * https://github.com/opensheetmusicdisplay/opensheetmusicdisplay\n' +
         ' */\n',
         typings = [
-            'typings/browser.d.ts',
+            'typings/index.d.ts',
             // Additional manual typings:
             'external/vexflow/vexflow.d.ts'
             // 'typings/fft.d.ts'
@@ -21,7 +21,7 @@ module.exports = function (grunt) {
     // Grunt configuration following:
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        banner: banner,
+        banner: '',
         // Build output directories
         outputDir: {
             build: 'build',
