@@ -9,7 +9,7 @@ module.exports = function (grunt) {
         ' * https://github.com/opensheetmusicdisplay/opensheetmusicdisplay\n' +
         ' */\n',
         typings = [
-            'typings/browser.d.ts',
+            'typings/index.d.ts',
             // Additional manual typings:
             'external/vexflow/vexflow.d.ts'
             // 'typings/fft.d.ts'
