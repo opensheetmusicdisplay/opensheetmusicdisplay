@@ -79,7 +79,7 @@ export class MusicSystemBuilder {
         while (this.measureListIndex < numberOfMeasures) {
             let staffMeasures: StaffMeasure[] = this.measureList[this.measureListIndex];
             for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
-                staffMeasures[idx].ResetLayout();
+                staffMeasures[idx].resetLayout();
             }
             let sourceMeasure: SourceMeasure = staffMeasures[0].parentSourceMeasure;
             let sourceMeasureEndsSystem: boolean = sourceMeasure.BreakSystemAfter;
@@ -127,7 +127,7 @@ export class MusicSystemBuilder {
     private setMeasureWidth(staffMeasures: StaffMeasure[], width: number, beginInstrWidth: number, endInstrWidth: number): void {
         for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
             let measure: StaffMeasure = staffMeasures[idx];
-            measure.SetWidth(width);
+            measure.setWidth(width);
             if (beginInstrWidth > 0) {
                 measure.beginInstructionsWidth = beginInstrWidth;
             }
@@ -172,7 +172,7 @@ export class MusicSystemBuilder {
             let diff: number = 0.0;
             if (measureParams.endLine === SystemLinesEnum.DotsBoldBoldDots) {
                 measureParams.endLine = SystemLinesEnum.DotsThinBold;
-                diff = measures[0].GetLineWidth(SystemLinesEnum.DotsBoldBoldDots) / 2 - measures[0].GetLineWidth(SystemLinesEnum.DotsThinBold);
+                diff = measures[0].getLineWidth(SystemLinesEnum.DotsBoldBoldDots) / 2 - measures[0].getLineWidth(SystemLinesEnum.DotsThinBold);
             }
             this.currentSystemParams.currentSystemFixWidth -= diff;
             for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
@@ -410,7 +410,7 @@ export class MusicSystemBuilder {
         let keyAdded: boolean = false;
         let rhythmAdded: boolean = false;
         if (currentClef !== undefined) {
-            measure.AddClefAtBegin(currentClef);
+            measure.addClefAtBegin(currentClef);
             clefAdded = true;
         } else {
             currentClef = this.activeClefs[visibleStaffIdx];
@@ -418,11 +418,11 @@ export class MusicSystemBuilder {
         if (currentKey !== undefined) {
             currentKey = this.transposeKeyInstruction(currentKey, measure);
             let previousKey: KeyInstruction = isSystemStartMeasure ? undefined : this.activeKeys[visibleStaffIdx];
-            measure.AddKeyAtBegin(currentKey, previousKey, currentClef);
+            measure.addKeyAtBegin(currentKey, previousKey, currentClef);
             keyAdded = true;
         }
         if (currentRhythm !== undefined) {
-            measure.AddRhythmAtBegin(currentRhythm);
+            measure.addRhythmAtBegin(currentRhythm);
             rhythmAdded = true;
         }
         if (clefAdded || keyAdded || rhythmAdded) {
@@ -442,7 +442,7 @@ export class MusicSystemBuilder {
             let abstractNotationInstruction: AbstractNotationInstruction = lastEntry.Instructions[idx];
             if (abstractNotationInstruction instanceof ClefInstruction) {
                 let activeClef: ClefInstruction = <ClefInstruction>abstractNotationInstruction;
-                measure.AddClefAtEnd(activeClef);
+                measure.addClefAtEnd(activeClef);
             }
         }
         return this.rules.MeasureRightMargin + measure.endInstructionsWidth;
@@ -535,10 +535,10 @@ export class MusicSystemBuilder {
         let measure: StaffMeasure = this.symbolFactory.createExtraStaffMeasure(currentSystem.StaffLines[visStaffIdx]);
         measures.push(measure);
         if (keyInstruction !== undefined) {
-            measure.AddKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
+            measure.addKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
         }
         if (rhythmInstruction !== undefined) {
-            measure.AddRhythmAtBegin(rhythmInstruction);
+            measure.addRhythmAtBegin(rhythmInstruction);
         }
         measure.PositionAndShape.BorderLeft = 0.0;
         measure.PositionAndShape.BorderTop = 0.0;
@@ -600,7 +600,7 @@ export class MusicSystemBuilder {
     }
 
     private getLineWidth(measure: StaffMeasure, systemLineEnum: SystemLinesEnum, isSystemStartMeasure: boolean): number {
-        let width: number = measure.GetLineWidth(systemLineEnum);
+        let width: number = measure.getLineWidth(systemLineEnum);
         if (systemLineEnum === SystemLinesEnum.DotsBoldBoldDots) {
             width /= 2;
         }
@@ -722,11 +722,11 @@ export class MusicSystemBuilder {
             let currentXPosition: number = 0.0;
             for (let i: number = 0; i < staffLine.Measures.length; i++) {
                 let measure: StaffMeasure = staffLine.Measures[i];
-                measure.SetPositionInStaffline(currentXPosition);
-                measure.SetWidth(measure.beginInstructionsWidth + measure.minimumStaffEntriesWidth * scalingFactor + measure.endInstructionsWidth);
+                measure.setPositionInStaffline(currentXPosition);
+                measure.setWidth(measure.beginInstructionsWidth + measure.minimumStaffEntriesWidth * scalingFactor + measure.endInstructionsWidth);
                 if (i < this.currentSystemParams.systemMeasures.length) {
                     let startLine: SystemLinesEnum = this.currentSystemParams.systemMeasures[i].beginLine;
-                    let lineWidth: number = measure.GetLineWidth(SystemLinesEnum.BoldThinDots);
+                    let lineWidth: number = measure.getLineWidth(SystemLinesEnum.BoldThinDots);
                     switch (startLine) {
                         case SystemLinesEnum.BoldThinDots:
                             let xPosition: number = currentXPosition;
@@ -739,7 +739,7 @@ export class MusicSystemBuilder {
                     }
                 }
                 measure.staffEntriesScaleFactor = scalingFactor;
-                measure.LayoutSymbols();
+                measure.layoutSymbols();
                 let nextMeasureHasRepStartLine: boolean = i + 1 < this.currentSystemParams.systemMeasures.length
                     && this.currentSystemParams.systemMeasures[i + 1].beginLine === SystemLinesEnum.BoldThinDots;
                 if (!nextMeasureHasRepStartLine) {
@@ -747,7 +747,7 @@ export class MusicSystemBuilder {
                     if (i < this.currentSystemParams.systemMeasures.length) {
                         endLine = this.currentSystemParams.systemMeasures[i].endLine;
                     }
-                    let lineWidth: number = measure.GetLineWidth(endLine);
+                    let lineWidth: number = measure.getLineWidth(endLine);
                     let xPos: number = measure.PositionAndShape.RelativePosition.x + measure.PositionAndShape.BorderRight - lineWidth;
                     if (endLine === SystemLinesEnum.DotsBoldBoldDots) {
                         xPos -= lineWidth / 2;

@@ -85,39 +85,39 @@ export class StaffMeasure extends GraphicalObject {
         }
     }
 
-    public ResetLayout(): void {
+    public resetLayout(): void {
         throw new Error("not implemented");
     }
 
-    public GetLineWidth(line: SystemLinesEnum): number {
+    public getLineWidth(line: SystemLinesEnum): number {
         throw new Error("not implemented");
     }
 
-    public AddClefAtBegin(clef: ClefInstruction): void {
+    public addClefAtBegin(clef: ClefInstruction): void {
         throw new Error("not implemented");
     }
 
-    public AddKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
+    public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
         throw new Error("not implemented");
     }
 
-    public AddRhythmAtBegin(rhythm: RhythmInstruction): void {
+    public addRhythmAtBegin(rhythm: RhythmInstruction): void {
         throw new Error("not implemented");
     }
 
-    public AddClefAtEnd(clef: ClefInstruction): void {
+    public addClefAtEnd(clef: ClefInstruction): void {
         throw new Error("not implemented");
     }
 
-    public SetPositionInStaffline(xPos: number): void {
+    public setPositionInStaffline(xPos: number): void {
         throw new Error("not implemented");
     }
 
-    public SetWidth(width: number): void {
+    public setWidth(width: number): void {
         throw new Error("not implemented");
     }
 
-    public LayoutSymbols(): void {
+    public layoutSymbols(): void {
         throw new Error("not implemented");
     }
 
