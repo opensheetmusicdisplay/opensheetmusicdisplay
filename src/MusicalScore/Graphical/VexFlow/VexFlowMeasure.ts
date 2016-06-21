@@ -10,6 +10,8 @@ import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 //import {Fraction} from "../../../Common/DataObjects/fraction";
 
+import Vex = require("vexflow");
+
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
         super(staff, sourceMeasure, staffLine);
@@ -66,7 +68,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addClefAtBegin(clef: ClefInstruction): void {
         let vfclef: Vex.Flow.Clef = VexFlowConverter.Clef(clef);
-        this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.StaveModifier.Position.BEGIN);
+        this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
         this.increaseBeginInstructionWidth(vfclef);
     }
 
@@ -82,7 +84,7 @@ export class VexFlowMeasure extends StaffMeasure {
             VexFlowConverter.keySignature(currentKey),
             VexFlowConverter.keySignature(previousKey)
         );
-        this.stave.addModifier(keySig, Vex.Flow.StaveModifier.Position.BEGIN);
+        this.stave.addModifier(keySig, Vex.Flow.Modifier.Position.BEGIN);
     }
 
     /**
@@ -94,7 +96,7 @@ export class VexFlowMeasure extends StaffMeasure {
         let timeSig: Vex.Flow.TimeSignature = VexFlowConverter.TimeSignature(rhythm);
         this.stave.addModifier(
             timeSig,
-            Vex.Flow.StaveModifier.Position.BEGIN
+            Vex.Flow.Modifier.Position.BEGIN
         );
         this.increaseBeginInstructionWidth(timeSig);
     }
@@ -106,7 +108,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addClefAtEnd(clef: ClefInstruction): void {
         let vfclef: Vex.Flow.Clef = VexFlowConverter.Clef(clef);
-        this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.StaveModifier.Position.END);
+        this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.END);
         this.increaseEndInstructionWidth(vfclef);
     }
 

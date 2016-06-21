@@ -70,7 +70,7 @@ describe("Measure Size Calculator Tests", () => {
       for (let t in Vex.Flow.Clef.types) {
         if (Vex.Flow.Clef.types.hasOwnProperty(t)) {
           let clef: Vex.Flow.Clef = new Vex.Flow.Clef(t);
-          stave2.addModifier(clef, Vex.Flow.StaveModifier.Position.BEGIN);
+          stave2.addModifier(clef, Vex.Flow.Modifier.Position.BEGIN);
           stave2.format();
 
           clef.setStave(stave2);

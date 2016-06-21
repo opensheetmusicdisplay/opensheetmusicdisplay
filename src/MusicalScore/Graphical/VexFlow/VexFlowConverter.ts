@@ -1,6 +1,5 @@
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
-import {VexFlowConverter} from "./VexFlowConverter";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {Pitch} from "../../../Common/DataObjects/pitch";
 import {Fraction} from "../../../Common/DataObjects/fraction";
@@ -10,6 +9,8 @@ import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {KeyEnum} from "../../VoiceData/Instructions/KeyInstruction";
 import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
 import {NoteEnum} from "../../../Common/DataObjects/pitch";
+
+import Vex = require("vexflow");
 
 export class VexFlowConverter {
     private static majorMap: {[_: number]: string; } = {

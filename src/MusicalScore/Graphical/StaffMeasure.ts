@@ -1,3 +1,4 @@
+/* tslint:disable:no-empty */
 import {MusicSystem} from "./MusicSystem";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";

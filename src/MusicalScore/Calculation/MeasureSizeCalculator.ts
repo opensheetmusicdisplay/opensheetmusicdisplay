@@ -195,7 +195,7 @@ export class MeasureSizeCalculator {
 
     // Consider clefs
     let clefs: Vex.Flow.Clef[] = stave.getModifiers(
-      Vex.Flow.StaveModifier.Position.LEFT,
+      Vex.Flow.Modifier.Position.LEFT,
       Vex.Flow.Clef.category
     );
     for (let clef of clefs) {

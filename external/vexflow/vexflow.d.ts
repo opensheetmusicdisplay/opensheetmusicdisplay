@@ -66,11 +66,13 @@ declare namespace Vex {
       public addTimeSignature(sig: string): void;
     }
 
-    export class StaveModifier {
+    export class Modifier {
       public static Position: any;
     }
 
-    export class Clef {
+    export class StaveModifier implements Modifier {}
+
+    export class Clef implements StaveModifier {
       constructor(type: any);
 
       public static category: string;
