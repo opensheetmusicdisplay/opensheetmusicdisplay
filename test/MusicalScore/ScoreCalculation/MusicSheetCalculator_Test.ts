@@ -7,9 +7,10 @@ import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {MusicSheetCalculator} from "../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import {VexFlowMusicSheetCalculator} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {GraphicalMusicSheet} from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
+import {VexFlowTextMeasurer} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 
 
-describe("Music Sheet Reader Tests", () => {
+describe("Music Sheet Calculator Tests", () => {
     // Initialize variables
     let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
     let reader: MusicSheetReader = new MusicSheetReader();
@@ -22,14 +23,7 @@ describe("Music Sheet Reader Tests", () => {
     }
 
     before((): void => {
-        // Load the xml file
-        let doc: Document = getSheet(path);
-        chai.expect(doc).to.not.be.undefined;
-        score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-        // chai.expect(score).to.not.be.undefined;
-        sheet = reader.createMusicSheet(score, path);
-        let graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);
-        graphicalSheet.reCalculate();
+        
     });
 
     beforeEach((): void => {
@@ -38,5 +32,19 @@ describe("Music Sheet Reader Tests", () => {
 
     afterEach((): void => {
         // cleanup?
+    });
+
+    it("Do Calculation", (done: MochaDone) => {
+        MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
+        // Load the xml file
+        let doc: Document = getSheet(path);
+        chai.expect(doc).to.not.be.undefined;
+        score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+        // chai.expect(score).to.not.be.undefined;
+        sheet = reader.createMusicSheet(score, path);
+        
+        let graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);
+        graphicalSheet.reCalculate();
+        done();
     });
 });
