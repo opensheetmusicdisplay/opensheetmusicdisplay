@@ -1,4 +1,3 @@
-/* tslint:disable:no-empty */
 import {MusicSystem} from "./MusicSystem";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
@@ -87,31 +86,39 @@ export class StaffMeasure extends GraphicalObject {
     }
 
     public resetLayout(): void {
+        throw new Error("not implemented");
     }
 
     public getLineWidth(line: SystemLinesEnum): number {
-        return undefined;
+        throw new Error("not implemented");
     }
 
     public addClefAtBegin(clef: ClefInstruction): void {
+        throw new Error("not implemented");
     }
 
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
+        throw new Error("not implemented");
     }
 
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
+        throw new Error("not implemented");
     }
 
     public addClefAtEnd(clef: ClefInstruction): void {
+        throw new Error("not implemented");
     }
 
     public setPositionInStaffline(xPos: number): void {
+        throw new Error("not implemented");
     }
 
     public setWidth(width: number): void {
+        throw new Error("not implemented");
     }
 
     public layoutSymbols(): void {
+        throw new Error("not implemented");
     }
 
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {
@@ -254,3 +261,4 @@ export class StaffMeasure extends GraphicalObject {
         return sourceMeasure.endsWithWordRepetition();
     }
 }
+
