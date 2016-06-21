@@ -80,7 +80,7 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static Clef(clef: ClefInstruction): Vex.Flow.Clef {
+    public static Clef(clef: ClefInstruction): string {
         let type: string;
         switch (clef.ClefType) {
             case ClefEnum.G:
@@ -100,7 +100,7 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        return new Vex.Flow.Clef(type);
+        return type;
     }
 
     public static TimeSignature(rhythm: RhythmInstruction): Vex.Flow.TimeSignature {
