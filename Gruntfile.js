@@ -21,7 +21,7 @@ module.exports = function (grunt) {
     // Grunt configuration following:
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        banner: banner,
+        // banner: banner,
         // Build output directories
         outputDir: {
             build: 'build',
