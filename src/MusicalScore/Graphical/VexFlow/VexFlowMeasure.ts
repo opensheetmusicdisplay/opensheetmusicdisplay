@@ -11,6 +11,7 @@ import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 //import {Fraction} from "../../../Common/DataObjects/fraction";
 
 import Vex = require("vexflow");
+import StaveModifier = Vex.Flow.StaveModifier;
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -69,7 +70,7 @@ export class VexFlowMeasure extends StaffMeasure {
     public addClefAtBegin(clef: ClefInstruction): void {
         let vfclef: string = VexFlowConverter.Clef(clef);
         this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
-        //this.increaseBeginInstructionWidth(vfclef);
+        this.increaseBeginInstructionWidth();
     }
 
     /**
@@ -98,7 +99,7 @@ export class VexFlowMeasure extends StaffMeasure {
             timeSig,
             Vex.Flow.Modifier.Position.BEGIN
         );
-        //this.increaseBeginInstructionWidth(timeSig);
+        this.increaseBeginInstructionWidth();
     }
 
     /**
@@ -109,7 +110,7 @@ export class VexFlowMeasure extends StaffMeasure {
     public addClefAtEnd(clef: ClefInstruction): void {
         let vfclef: string = VexFlowConverter.Clef(clef);
         this.stave.setEndClef(vfclef, undefined, undefined);
-        //this.increaseEndInstructionWidth(vfclef);
+        this.increaseEndInstructionWidth();
     }
 
     /**
@@ -144,8 +145,6 @@ export class VexFlowMeasure extends StaffMeasure {
         // This is already done in the MusicSystemBuilder!
         //this.setWidth(this.minimumStaffEntriesWidth * this.staffEntriesScaleFactor);
         this.stave.format();
-        // Set context first!
-        this.stave.draw();
     }
 
     public addGraphicalStaffEntry(entry: VexFlowStaffEntry): void {
@@ -170,20 +169,20 @@ export class VexFlowMeasure extends StaffMeasure {
         // TODO
     }
 
-    //private increaseBeginInstructionWidth(modifier: StaveModifier): void {
-    //    let padding: number = modifier.getCategory("") === "keysignatures" ? modifier.getPadding(2) : 0;
-    //    //modifier.getPadding(this.begModifiers);
-    //    let width: number = modifier.getWidth();
-    //    this.beginInstructionsWidth += padding + width;
-    //
-    //    //if (padding + width > 0) {
-    //    //    this.begModifiers += 1;
-    //    //}
-    //}
-    //
-    //private increaseEndInstructionWidth(modifier: StaveModifier): void {
-    //    let padding: number = 0; //modifier.getPadding(this.endModifiers++);
-    //    let width: number = modifier.getWidth();
-    //    this.endInstructionsWidth += padding + width;
-    //}
+    private increaseBeginInstructionWidth(): void {
+        let modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
+        let modifier: Vex.Flow.StaveModifier = modifiers[modifiers.length - 1];
+        let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
+        //modifier.getPadding(this.begModifiers);
+        let width: number = modifier.getWidth();
+        this.beginInstructionsWidth += padding + width;
+    }
+
+    private increaseEndInstructionWidth(): void {
+        let modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
+        let modifier: Vex.Flow.StaveModifier = modifiers[modifiers.length - 1];
+        let padding: number = 0; //modifier.getPadding(this.endModifiers++);
+        let width: number = modifier.getWidth();
+        this.endInstructionsWidth += padding + width;
+    }
 }
