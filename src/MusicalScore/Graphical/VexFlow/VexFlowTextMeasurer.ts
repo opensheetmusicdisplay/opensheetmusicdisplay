@@ -6,10 +6,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
  */
 
 export class VexFlowTextMeasurer implements ITextMeasurer {
-    constructor() {
-    }
-    
-    computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles): number {
-        return text.length/2;
+    public computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles): number {
+        return text.length / 2;
     }
 }

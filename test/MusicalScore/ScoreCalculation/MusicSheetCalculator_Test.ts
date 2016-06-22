@@ -23,7 +23,7 @@ describe("Music Sheet Calculator Tests", () => {
     }
 
     before((): void => {
-        
+        // ???
     });
 
     beforeEach((): void => {
@@ -42,7 +42,7 @@ describe("Music Sheet Calculator Tests", () => {
         score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
         // chai.expect(score).to.not.be.undefined;
         sheet = reader.createMusicSheet(score, path);
-        
+
         let graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);
         graphicalSheet.reCalculate();
         done();
