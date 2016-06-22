@@ -1,11 +1,11 @@
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
-import {VexFlowGraphicalSymbolFactory} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalSymbolFactory";
-import {IGraphicalSymbolFactory} from "../../../../src/MusicalScore/Interfaces/IGraphicalSymbolFactory";
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
 import {MusicSheetReader} from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
+import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasure";
+import {StaffMeasure} from "../../../../src/MusicalScore/Graphical/StaffMeasure";
 
 
 describe("VexFlow Measure Test", () => {
@@ -48,6 +48,30 @@ describe("VexFlow Measure Test", () => {
         let sheet: MusicSheet = reader.createMusicSheet(score, path);
         let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
         console.log(gms);
+        done();
+    });
+
+    it("Simple Measure", (done: MochaDone) => {
+        let sheet: MusicSheet = new MusicSheet();
+        let measure: SourceMeasure = new SourceMeasure(1);
+        sheet.addMeasure(measure);
+        let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
+        let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
+        chai.expect(gms.MeasureList.length).to.equal(1);
+        chai.expect(gms.MeasureList[0].length).to.equal(1);
+        let gm: StaffMeasure = gms.MeasureList[0][0];
+        console.log(gm);
+        done();
+    });
+
+    it("Empty Measure", (done: MochaDone) => {
+        let sheet: MusicSheet = new MusicSheet();
+        let measure: SourceMeasure = new SourceMeasure(1);
+        sheet.addMeasure(measure);
+        let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
+        let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
+        chai.expect(gms.MeasureList.length).to.equal(1);
+        chai.expect(gms.MeasureList[0].length).to.equal(0);
         done();
     });
 });

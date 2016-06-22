@@ -7,6 +7,7 @@ declare namespace Vex {
 
       public hasMinTotalWidth: boolean;
       public minTotalWidth: number;
+      public joinVoices(voices: Vex.Flow.Voice[]): void;
 
       public preCalculateMinTotalWidth(voices: Voice[]): number;
     }
@@ -30,6 +31,7 @@ declare namespace Vex {
       public addTickables(notes: StaveNote[]): Voice;
       public addTickable(note: StaveNote): Voice;
       public setMode(mode: any): Voice;
+      public draw(ctx: any, stave: Stave): void;
     }
 
     export class StaveNote {
@@ -62,7 +64,7 @@ declare namespace Vex {
       public getNumLines(): number;
       public getLineForY(y: number): number;
       public getModifiers(pos: any, cat: any): Vex.Flow.Clef[]; // FIXME
-      public setContext(ctx: any): void;
+      public setContext(ctx: any): Stave;
       public addModifier(mod: any, pos: any): void;
       public draw(): void;
       public addTimeSignature(sig: string): void;

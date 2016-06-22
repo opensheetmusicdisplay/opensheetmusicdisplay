@@ -24,6 +24,7 @@ import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 //import {VexFlowMeasure} from "./VexFlowMeasure";
 
@@ -58,7 +59,24 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
         // layout the measures in x.
         // return the minimum required x width of this vertically aligned measure set:
-        return 0;
+        let allVoices: Vex.Flow.Voice[] = [];
+        let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
+        for (let measure of measures) {
+            let mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).voices;
+            let voices: Vex.Flow.Voice[] = [];
+            for (let voiceID in mvoices) {
+                if (mvoices.hasOwnProperty(voiceID)) {
+                    voices.push(mvoices[voiceID]);
+                    allVoices.push(mvoices[voiceID]);
+    }
+            }
+            formatter.joinVoices(voices);
+        }
+        let width: number = formatter.preCalculateMinTotalWidth(allVoices);
+        for (let measure of measures) {
+            measure.minimumStaffEntriesWidth = width;
+        }
+        return width;
     }
 
     /**
