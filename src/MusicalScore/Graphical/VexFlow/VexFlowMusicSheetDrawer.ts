@@ -11,8 +11,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawMeasure(measure: StaffMeasure): void {
-        let vfMeasure: VexFlowMeasure = <VexFlowMeasure> measure;
-        throw new Error("not implemented");
+        //let vfMeasure: VexFlowMeasure = <VexFlowMeasure> measure;
+        //throw new Error("not implemented");
+        let canvas: HTMLCanvasElement = document.createElement("canvas");
+        document.body.appendChild(canvas);
+        canvas.width = canvas.height = 100;
+        return (measure as VexFlowMeasure).draw(canvas);
     }
 
     protected applyScreenTransformation(rectangle: RectangleF2D): RectangleF2D {

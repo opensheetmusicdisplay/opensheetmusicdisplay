@@ -11,7 +11,6 @@ import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 //import {Fraction} from "../../../Common/DataObjects/fraction";
 
 import Vex = require("vexflow");
-import StaveModifier = Vex.Flow.StaveModifier;
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -167,6 +166,17 @@ export class VexFlowMeasure extends StaffMeasure {
     public addGraphicalStaffEntryAtTimestamp(entry: VexFlowStaffEntry): void {
         super.addGraphicalStaffEntryAtTimestamp(entry);
         // TODO
+    }
+
+    public draw(canvas: HTMLCanvasElement): void {
+        let renderer: Vex.Flow.Renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
+        let ctx: any = renderer.getContext();
+        this.stave.setContext(ctx).draw();
+        for (let voiceID in this.voices) {
+            if (this.voices.hasOwnProperty(voiceID)) {
+                this.voices[voiceID].draw(ctx, this.stave);
+            }
+        }
     }
 
     private increaseBeginInstructionWidth(): void {
