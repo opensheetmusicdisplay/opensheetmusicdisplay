@@ -24,12 +24,13 @@ import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 //import {VexFlowMeasure} from "./VexFlowMeasure";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
         super(new VexFlowGraphicalSymbolFactory());
-
+        MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
     }
 
     /**

@@ -7,12 +7,14 @@ import {Pitch} from "../../Common/DataObjects/pitch";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
+import {BoundingBox} from "./BoundingBox";
 
 export class GraphicalNote extends GraphicalObject {
     constructor(note: Note, parent: GraphicalStaffEntry) {
         super();
         this.sourceNote = note;
         this.parentStaffEntry = parent;
+        this.PositionAndShape = new BoundingBox(this, parent.PositionAndShape);
     }
 
     public sourceNote: Note;

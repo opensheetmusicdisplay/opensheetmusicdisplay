@@ -5,6 +5,7 @@ import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/Graphi
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
 import {MusicSheetReader} from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
+import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 
 
 describe("VexFlow Measure Test", () => {
@@ -37,8 +38,8 @@ describe("VexFlow Measure Test", () => {
     //});
 
     it("prepareGraphicalMusicSheet", (done: MochaDone) => {
-        let factory: IGraphicalSymbolFactory = new VexFlowGraphicalSymbolFactory();
-        let calc: MusicSheetCalculator = new MusicSheetCalculator(factory);
+        let calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
+        
         let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
         let doc: Document = ((window as any).__xml__)[path];
         chai.expect(doc).to.not.be.undefined;

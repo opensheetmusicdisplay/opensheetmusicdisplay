@@ -53,7 +53,7 @@ import {Logging} from "../../Common/logging";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
 
-export class MusicSheetCalculator {
+export abstract class MusicSheetCalculator {
     public static transposeCalculator: ITransposeCalculator;
     protected static textMeasurer: ITextMeasurer;
     protected staffEntriesWithGraphicalTies: GraphicalStaffEntry[] = [];
