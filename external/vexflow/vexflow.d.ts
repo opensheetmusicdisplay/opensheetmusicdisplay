@@ -7,6 +7,7 @@ declare namespace Vex {
 
       public hasMinTotalWidth: boolean;
       public minTotalWidth: number;
+      public joinVoices(voices: Vex.Flow.Voice[]): void;
 
       public preCalculateMinTotalWidth(voices: Voice[]): number;
     }

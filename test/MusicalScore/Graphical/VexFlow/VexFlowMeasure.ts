@@ -1,6 +1,4 @@
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
-import {VexFlowGraphicalSymbolFactory} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalSymbolFactory";
-import {IGraphicalSymbolFactory} from "../../../../src/MusicalScore/Interfaces/IGraphicalSymbolFactory";
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";

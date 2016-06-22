@@ -15,14 +15,14 @@ import Vex = require("vexflow");
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
         super(staff, sourceMeasure, staffLine);
-        // this.MinimumStaffEntriesWidth =
+        this.minimumStaffEntriesWidth = -1;
         this.stave = new Vex.Flow.Stave(0, 0, 0);
         this.voices = {};
         //this.duration = this.parentSourceMeasure.Duration;
     }
 
+    public voices: { [voiceID: number]: Vex.Flow.Voice; };
     private stave: Vex.Flow.Stave;
-    private voices: { [voiceID: number]: Vex.Flow.Voice; };
     //private duration: Fraction;
 
     /**
