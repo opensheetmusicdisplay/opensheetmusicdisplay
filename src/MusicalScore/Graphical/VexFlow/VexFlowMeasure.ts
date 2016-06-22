@@ -67,9 +67,9 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtBegin(clef: ClefInstruction): void {
-        let vfclef: Vex.Flow.Clef = VexFlowConverter.Clef(clef);
+        let vfclef: string = VexFlowConverter.Clef(clef);
         this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
-        this.increaseBeginInstructionWidth(vfclef);
+        //this.increaseBeginInstructionWidth(vfclef);
     }
 
     /**
@@ -98,7 +98,7 @@ export class VexFlowMeasure extends StaffMeasure {
             timeSig,
             Vex.Flow.Modifier.Position.BEGIN
         );
-        this.increaseBeginInstructionWidth(timeSig);
+        //this.increaseBeginInstructionWidth(timeSig);
     }
 
     /**
@@ -107,9 +107,9 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtEnd(clef: ClefInstruction): void {
-        let vfclef: Vex.Flow.Clef = VexFlowConverter.Clef(clef);
-        this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.END);
-        this.increaseEndInstructionWidth(vfclef);
+        let vfclef: string = VexFlowConverter.Clef(clef);
+        this.stave.setEndClef(vfclef, undefined, undefined);
+        //this.increaseEndInstructionWidth(vfclef);
     }
 
     /**
@@ -126,7 +126,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * Sets the overall x-width of the measure.
      * @param width
      */
-    public SetWidth(width: number): void {
+    public setWidth(width: number): void {
         // Widths in PS and VexFlow work differently.
         // In VexFlow, width is only the width of the actual voices, without considering
         // modifiers like clefs. In PS, width is the total width of the stave.
@@ -170,20 +170,20 @@ export class VexFlowMeasure extends StaffMeasure {
         // TODO
     }
 
-    private increaseBeginInstructionWidth(modifier: any): void {
-        let padding: number = modifier.getCategory("") === "keysignatures" ? modifier.getPadding(2) : 0;
-        //modifier.getPadding(this.begModifiers);
-        let width: number = modifier.getWidth();
-        this.beginInstructionsWidth += padding + width;
-
-        //if (padding + width > 0) {
-        //    this.begModifiers += 1;
-        //}
-    }
-
-    private increaseEndInstructionWidth(modifier: any): void {
-        let padding: number = 0; //modifier.getPadding(this.endModifiers++);
-        let width: number = modifier.getWidth();
-        this.endInstructionsWidth += padding + width;
-    }
+    //private increaseBeginInstructionWidth(modifier: StaveModifier): void {
+    //    let padding: number = modifier.getCategory("") === "keysignatures" ? modifier.getPadding(2) : 0;
+    //    //modifier.getPadding(this.begModifiers);
+    //    let width: number = modifier.getWidth();
+    //    this.beginInstructionsWidth += padding + width;
+    //
+    //    //if (padding + width > 0) {
+    //    //    this.begModifiers += 1;
+    //    //}
+    //}
+    //
+    //private increaseEndInstructionWidth(modifier: StaveModifier): void {
+    //    let padding: number = 0; //modifier.getPadding(this.endModifiers++);
+    //    let width: number = modifier.getWidth();
+    //    this.endInstructionsWidth += padding + width;
+    //}
 }
