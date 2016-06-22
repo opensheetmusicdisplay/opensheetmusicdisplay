@@ -51,6 +51,7 @@ declare namespace Vex {
       public setX(x: number): Stave;
       public addClef(clefSpec: string, size: any, annotation: any, position: any): void;
       public setEndClef(clefSpec: string, size: any, annotation: any): void;
+      public getModifiers(): StaveModifier[];
       public getYForGlyphs(): number;
       public getWidth(): number;
       public setWidth(width: number): Stave;
@@ -69,11 +70,14 @@ declare namespace Vex {
 
     export class Modifier {
       public static Position: any;
+      public getCategory(): string;
+      public getWidth(): number;
+      public getPadding(index: number): number;
     }
 
-    export class StaveModifier implements Modifier {}
+    export class StaveModifier extends Modifier {}
 
-    export class Clef implements StaveModifier {
+    export class Clef extends StaveModifier {
       constructor(type: any);
 
       public static category: string;
@@ -84,7 +88,6 @@ declare namespace Vex {
 
       public getBoundingBox(): Vex.Flow.BoundingBox;
       public setStave(stave: Vex.Flow.Stave): void;
-      public getWidth(): number;
     }
 
     export class Renderer {

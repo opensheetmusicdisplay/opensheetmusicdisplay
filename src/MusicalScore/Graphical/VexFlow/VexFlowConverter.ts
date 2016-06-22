@@ -121,6 +121,9 @@ export class VexFlowConverter {
     }
 
     public static keySignature(key: KeyInstruction): string {
+        if (key === undefined) {
+            return undefined;
+        }
         switch (key.Mode) {
             case KeyEnum.none:
                 return undefined;
