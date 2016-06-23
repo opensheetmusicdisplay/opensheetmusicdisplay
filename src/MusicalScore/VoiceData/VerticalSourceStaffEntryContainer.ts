@@ -48,9 +48,4 @@ export class VerticalSourceStaffEntryContainer {
     public getAbsoluteTimestamp(): Fraction {
         return Fraction.plus(this.timestamp, this.parentMeasure.AbsoluteTimestamp);
     }
-    //private initialize(): void {
-    //    for (let i: number = 0; i < this.size; i++) {
-    //        this.staffEntries.push(undefined);
-    //    }
-    //}
 }

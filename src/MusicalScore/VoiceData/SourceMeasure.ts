@@ -30,7 +30,6 @@ export class SourceMeasure {
     public endsPiece: boolean;
 
     private measureNumber: number;
-    //private parentMusicPart: SourceMusicPart;
     private absoluteTimestamp: Fraction;
     private completeNumberOfStaves: number;
     private duration: Fraction;
@@ -408,6 +407,6 @@ export class SourceMeasure {
                 return this.verticalSourceStaffEntryContainers[i][instrumentIndex];
             }
         }
-        //return undefined;
+        return undefined;
     }
 }

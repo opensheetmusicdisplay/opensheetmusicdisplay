@@ -9,8 +9,6 @@ import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
 
-// import Vex = require("vexflow");
-
 export class Note {
 
     constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch) {
