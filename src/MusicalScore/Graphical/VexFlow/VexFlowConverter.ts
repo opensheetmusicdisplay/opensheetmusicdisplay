@@ -34,6 +34,9 @@ export class VexFlowConverter {
      * @returns {string[]}
      */
     public static pitch(pitch: Pitch): [string, string] {
+        if (pitch.FundamentalNote === undefined) {
+            return ["", ""];
+        }
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         let octave: number = pitch.Octave;
         let acc: string = "";

@@ -135,9 +135,8 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         for (let measureIndex: number = start; measureIndex <= end; measureIndex++) {
             let sourceMeasure: SourceMeasure = this.musicSheet2.SourceMeasures[measureIndex];
             for (let i: number = 0; i < sourceMeasure.CompleteNumberOfStaves; i++) {
-                for (let sourceStaffEntries of sourceMeasure.VerticalSourceStaffEntryContainers) {
-                    if (sourceStaffEntries[i] !== undefined) {
-                        let sourceStaffEntry: SourceStaffEntry = sourceStaffEntries[i];
+                for (let sourceStaffEntry of sourceMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries) {
+                    if (sourceStaffEntry !== undefined) {
                         let verses: number = 0;
                         for (let voiceEntry of sourceStaffEntry.VoiceEntries) {
                             verses += Object.keys(voiceEntry.LyricsEntries).length;

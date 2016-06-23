@@ -390,7 +390,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
   private staffMeasureIsEmpty(index: number): boolean {
     let counter: number = 0;
     for (let i: number = 0; i < this.currentMeasure.VerticalSourceStaffEntryContainers.length; i++) {
-      if (this.currentMeasure.VerticalSourceStaffEntryContainers[i][index] === undefined) { counter++; }
+      if (this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries[index] === undefined) { counter++; }
     }
     return (counter === this.currentMeasure.VerticalSourceStaffEntryContainers.length);
   }

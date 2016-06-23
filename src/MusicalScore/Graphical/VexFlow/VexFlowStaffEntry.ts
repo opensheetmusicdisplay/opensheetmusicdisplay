@@ -10,10 +10,11 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         // Generate Vex.Flow.StaveNotes
         let vfnotes: { [id: number]: Vex.Flow.StaveNote; } = {};
         for (let voiceEntry of this.sourceStaffEntry.VoiceEntries) {
+            console.log("NEVER HERE!");
             vfnotes[voiceEntry.ParentVoice.VoiceId] = VexFlowConverter.StaveNote(voiceEntry);
         }
         this.vfnotes = vfnotes;
-        console.log("vfnotes generated", vfnotes, this.sourceStaffEntry.VoiceEntries);
+        console.log("vfnotes generated", vfnotes, "==>", this.sourceStaffEntry.VoiceEntries);
     }
 
     public vfnotes: { [id: number]: Vex.Flow.StaveNote; };

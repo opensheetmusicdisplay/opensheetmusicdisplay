@@ -443,7 +443,7 @@ export class VoiceGenerator {
             let horizontalIndex: number = this.currentMeasure.getVerticalContainerIndexByTimestamp(beamLastNoteStaffEntry.Timestamp);
             let verticalIndex: number = beamLastNoteStaffEntry.VerticalContainerParent.StaffEntries.indexOf(beamLastNoteStaffEntry);
             if (horizontalIndex < this.currentMeasure.VerticalSourceStaffEntryContainers.length - 1) {
-                let nextStaffEntry: SourceStaffEntry = this.currentMeasure.VerticalSourceStaffEntryContainers[horizontalIndex + 1][verticalIndex];
+                let nextStaffEntry: SourceStaffEntry = this.currentMeasure.VerticalSourceStaffEntryContainers[horizontalIndex + 1].StaffEntries[verticalIndex];
                 if (nextStaffEntry !== undefined) {
                     for (let idx: number = 0, len: number = nextStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                         let voiceEntry: VoiceEntry = nextStaffEntry.VoiceEntries[idx];
