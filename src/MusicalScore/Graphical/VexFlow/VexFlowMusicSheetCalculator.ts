@@ -80,12 +80,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
             formatter.joinVoices(voices);
         }
-        let width: number = formatter.preCalculateMinTotalWidth(allVoices);
+        let firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
+        let width: number = formatter.preCalculateMinTotalWidth(allVoices) / firstMeasure.unit;
         for (let measure of measures) {
             measure.minimumStaffEntriesWidth = width;
             (measure as VexFlowMeasure).formatVoices = undefined;
         }
-        (measures[0] as VexFlowMeasure).formatVoices = (w: number) => {
+        firstMeasure.formatVoices = (w: number) => {
             formatter.format(allVoices, w);
         };
         return width;

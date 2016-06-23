@@ -57,8 +57,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createExtraStaffMeasure(staffLine: StaffLine): StaffMeasure {
-        let measure: VexFlowMeasure = new VexFlowMeasure(staffLine.ParentStaff, staffLine);
-        return measure;
+        return new VexFlowMeasure(staffLine.ParentStaff, staffLine);
     }
 
     /**
@@ -94,7 +93,9 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
                       activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
+        // Creates the note:
         let graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef);
+        // Adds the note to the right (graphical) voice (mynotes)
         let voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
         let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).mynotes;
         if (!(voiceID in mynotes)) {
@@ -115,8 +116,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createGraceNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
                            activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
-        let gn: GraphicalNote = new GraphicalNote(note, graphicalStaffEntry);
-        return gn;
+        return new GraphicalNote(note, graphicalStaffEntry);
     }
 
     /**

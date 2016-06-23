@@ -51,6 +51,7 @@ declare namespace Vex {
       public end_x: number;
 
       public setX(x: number): Stave;
+      public setY(y: number): Stave;
       public addClef(clefSpec: string, size: any, annotation: any, position: any): void;
       public setEndClef(clefSpec: string, size: any, annotation: any): void;
       public getModifiers(): StaveModifier[];

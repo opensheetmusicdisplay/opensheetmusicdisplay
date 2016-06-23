@@ -22,8 +22,14 @@ export class VexFlowMeasure extends StaffMeasure {
     public octaveOffset: number = 3; // FIXME
     public voices: { [voiceID: number]: Vex.Flow.Voice; };
     public formatVoices: (width: number) => void;
+    public unit: number = 10.0;
     private stave: Vex.Flow.Stave;
     //private duration: Fraction;
+
+    public setAbsoluteCoordinates(x: number, y: number): void {
+        this.stave.setX(x);
+        this.stave.setY(y);
+    }
 
     /**
      * Reset all the geometric values and parameters of this measure and put it in an initialized state.
@@ -114,18 +120,6 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     /**
-     * Set the x-position relative to the staffline.
-     * (y-Position is always 0 relative to the staffline)
-     * @param x
-     */
-    public setPositionInStaffline(x: number): void {
-        super.setPositionInStaffline(x);
-        // Already implemented in VexFlow, it does _not_ call .format()
-        // Remove this:
-        this.stave.setX(x);
-    }
-
-    /**
      * Sets the overall x-width of the measure.
      * @param width
      */
@@ -137,9 +131,9 @@ export class VexFlowMeasure extends StaffMeasure {
         //          Now it calls .format() implicitly.
         //
         super.setWidth(width);
-        this.stave.setWidth(width);
+        this.stave.setWidth(width * this.unit);
         if (this.formatVoices) {
-            this.formatVoices(width - this.beginInstructionsWidth - this.endInstructionsWidth);
+            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * this.unit);
             this.formatVoices = undefined;
         }
     }
@@ -171,7 +165,6 @@ export class VexFlowMeasure extends StaffMeasure {
                 this.voices[voiceID].draw(ctx, this.stave);
             }
         }
-        console.log("X", (<any>this.stave).getX());
     }
 
     private increaseBeginInstructionWidth(): void {
@@ -181,7 +174,7 @@ export class VexFlowMeasure extends StaffMeasure {
         let padding: number = modifier.getPadding(20);
         //modifier.getPadding(this.begModifiers);
         let width: number = modifier.getWidth();
-        this.beginInstructionsWidth += padding + width;
+        this.beginInstructionsWidth += (padding + width) / this.unit;
     }
 
     private increaseEndInstructionWidth(): void {
@@ -189,6 +182,6 @@ export class VexFlowMeasure extends StaffMeasure {
         let modifier: Vex.Flow.StaveModifier = modifiers[modifiers.length - 1];
         let padding: number = 0; //modifier.getPadding(this.endModifiers++);
         let width: number = modifier.getWidth();
-        this.endInstructionsWidth += padding + width;
+        this.endInstructionsWidth += (padding + width) / this.unit;
     }
 }

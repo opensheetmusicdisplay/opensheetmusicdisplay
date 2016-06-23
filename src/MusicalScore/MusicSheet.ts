@@ -41,7 +41,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.rules = EngravingRules.Rules;
         // (*) this.playbackSettings = new PlaybackSettings(new Fraction(4, 4, false), 100);
         this.userStartTempoInBPM = 100;
-        this.pageWidth = 1200;
+        this.pageWidth = 120;
         this.MusicPartManager = new MusicPartManager(this);
     }
     public static defaultTitle: string = "[kein Titel]";
