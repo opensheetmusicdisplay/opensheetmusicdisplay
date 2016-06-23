@@ -1,3 +1,4 @@
+import Vex = require("vexflow");
 import {StaffMeasure} from "../StaffMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
@@ -8,9 +9,6 @@ import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
-//import {Fraction} from "../../../Common/DataObjects/fraction";
-
-import Vex = require("vexflow");
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -121,7 +119,9 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param x
      */
     public setPositionInStaffline(x: number): void {
+        super.setPositionInStaffline(x);
         // Already implemented in VexFlow, it does _not_ call .format()
+        // Remove this:
         this.stave.setX(x);
     }
 
@@ -136,8 +136,8 @@ export class VexFlowMeasure extends StaffMeasure {
         // @Andrea: The following could be improved by storing the values in this object.
         //          Now it calls .format() implicitly.
         //
-        console.log("stave size", width, width - this.beginInstructionsWidth - this.endInstructionsWidth);
-        this.stave.setWidth(Math.floor(width));
+        super.setWidth(width);
+        this.stave.setWidth(width);
         if (this.formatVoices) {
             this.formatVoices(width - this.beginInstructionsWidth - this.endInstructionsWidth);
             this.formatVoices = undefined;
@@ -155,19 +155,6 @@ export class VexFlowMeasure extends StaffMeasure {
 
     public addGraphicalStaffEntry(entry: VexFlowStaffEntry): void {
         super.addGraphicalStaffEntry(entry);
-        let vfnotes: { [voiceID: number]: Vex.Flow.StaveNote; } = entry.vfnotes;
-        for (let id in vfnotes) {
-            if (vfnotes.hasOwnProperty(id)) {
-                if (!(id in this.voices)) {
-                    this.voices[id] = new Vex.Flow.Voice({
-                        beat_value: this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: this.parentSourceMeasure.Duration.Numerator,
-                        resolution: Vex.Flow.RESOLUTION,
-                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
-                }
-                this.voices[id].addTickable(vfnotes[id]);
-            }
-        }
     }
 
     public addGraphicalStaffEntryAtTimestamp(entry: VexFlowStaffEntry): void {
@@ -184,12 +171,14 @@ export class VexFlowMeasure extends StaffMeasure {
                 this.voices[voiceID].draw(ctx, this.stave);
             }
         }
+        console.log("X", (<any>this.stave).getX());
     }
 
     private increaseBeginInstructionWidth(): void {
         let modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
         let modifier: Vex.Flow.StaveModifier = modifiers[modifiers.length - 1];
-        let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
+        //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
+        let padding: number = modifier.getPadding(20);
         //modifier.getPadding(this.begModifiers);
         let width: number = modifier.getWidth();
         this.beginInstructionsWidth += padding + width;

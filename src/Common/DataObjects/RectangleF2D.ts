@@ -2,10 +2,10 @@
 import {PointF2D} from "./PointF2D";
 
 export class RectangleF2D {
-    public x: number;
-    public y: number;
-    public width: number;
-    public height: number;
+    public x: number = 0;
+    public y: number = 0;
+    public width: number = 0;
+    public height: number = 0;
 
     constructor(x: number, y: number, width: number, height: number) {
         this.x = x;

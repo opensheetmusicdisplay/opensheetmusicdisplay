@@ -1,6 +1,6 @@
+import Vex = require("vexflow");
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
-import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {Pitch} from "../../../Common/DataObjects/pitch";
 import {Fraction} from "../../../Common/DataObjects/fraction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
@@ -9,9 +9,6 @@ import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {KeyEnum} from "../../VoiceData/Instructions/KeyInstruction";
 import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
 import {NoteEnum} from "../../../Common/DataObjects/pitch";
-
-import Vex = require("vexflow");
-import Clef = Vex.Flow.Clef;
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {GraphicalNote} from "../GraphicalNote";
 
@@ -52,7 +49,8 @@ export class VexFlowConverter {
      */
     public static pitch(pitch: Pitch, octaveOffset: number): [string, string] {
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        let octave: number = pitch.Octave + octaveOffset;
+        let octave: number = pitch.Octave + octaveOffset + 3;
+        console.log("pitch", pitch.Octave, octaveOffset);
         let acc: string = "";
 
         switch (pitch.Accidental) {
@@ -75,7 +73,7 @@ export class VexFlowConverter {
         return [fund + acc + "/" + octave, acc];
     }
 
-    public static StaveNote(notes: GraphicalNote[], octaveOffset: number): Vex.Flow.StaveNote {
+    public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];
         let duration: string = VexFlowConverter.duration(notes[0].sourceNote.Length);
         let accidentals: string[] = [];

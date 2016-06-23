@@ -13,6 +13,7 @@ import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {GraphicalNote} from "./GraphicalNote";
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import {BoundingBox} from "./BoundingBox";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
 export class StaffMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
@@ -110,11 +111,11 @@ export class StaffMeasure extends GraphicalObject {
     }
 
     public setPositionInStaffline(xPos: number): void {
-        throw new Error("not implemented");
+        this.PositionAndShape.RelativePosition = new PointF2D(xPos, 0);
     }
 
     public setWidth(width: number): void {
-        throw new Error("not implemented");
+        this.PositionAndShape.BorderRight = width;
     }
 
     public layoutSymbols(): void {
