@@ -17,6 +17,7 @@ import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/octa
 import {GraphicalNote} from "../GraphicalNote";
 import {Pitch} from "../../../Common/DataObjects/pitch";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -94,8 +95,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
                       activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
-        let gn: GraphicalNote = new GraphicalNote(note, graphicalStaffEntry);
-        return gn;
+        return new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef);
     }
 
     /**

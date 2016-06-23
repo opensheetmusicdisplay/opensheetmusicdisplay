@@ -21,7 +21,9 @@ export class VexFlowMeasure extends StaffMeasure {
         //this.duration = this.parentSourceMeasure.Duration;
     }
 
+    public octaveOffset: number = 3; // FIXME
     public voices: { [voiceID: number]: Vex.Flow.Voice; };
+    public formatVoices: (width: number) => void;
     private stave: Vex.Flow.Stave;
     //private duration: Fraction;
 
@@ -67,6 +69,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtBegin(clef: ClefInstruction): void {
+        this.octaveOffset = clef.OctaveOffset;
         let vfclef: string = VexFlowConverter.Clef(clef);
         this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
         this.increaseBeginInstructionWidth();
@@ -132,7 +135,13 @@ export class VexFlowMeasure extends StaffMeasure {
         // modifiers like clefs. In PS, width is the total width of the stave.
         // @Andrea: The following could be improved by storing the values in this object.
         //          Now it calls .format() implicitly.
-        this.stave.setWidth(width - this.beginInstructionsWidth - this.endInstructionsWidth);
+        //
+        console.log("stave size", width, width - this.beginInstructionsWidth - this.endInstructionsWidth);
+        this.stave.setWidth(Math.floor(width));
+        if (this.formatVoices) {
+            this.formatVoices(width - this.beginInstructionsWidth - this.endInstructionsWidth);
+            this.formatVoices = undefined;
+        }
     }
 
     /**
@@ -141,8 +150,6 @@ export class VexFlowMeasure extends StaffMeasure {
      * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
      */
     public layoutSymbols(): void {
-        // This is already done in the MusicSystemBuilder!
-        //this.setWidth(this.minimumStaffEntriesWidth * this.staffEntriesScaleFactor);
         this.stave.format();
     }
 

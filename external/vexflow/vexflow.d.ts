@@ -7,8 +7,8 @@ declare namespace Vex {
 
       public hasMinTotalWidth: boolean;
       public minTotalWidth: number;
-      public joinVoices(voices: Vex.Flow.Voice[]): void;
-
+      public joinVoices(voices: Voice[]): void;
+      public format(voices: Voice[], width: number): void;
       public preCalculateMinTotalWidth(voices: Voice[]): number;
     }
 
@@ -63,7 +63,7 @@ declare namespace Vex {
       public getSpacingBetweenLines(): number;
       public getNumLines(): number;
       public getLineForY(y: number): number;
-      public getModifiers(pos: any, cat: any): Vex.Flow.Clef[]; // FIXME
+      public getModifiers(pos: any, cat: any): Clef[]; // FIXME
       public setContext(ctx: any): Stave;
       public addModifier(mod: any, pos: any): void;
       public draw(): void;
@@ -88,8 +88,8 @@ declare namespace Vex {
       public x: number;
       public stave: Stave;
 
-      public getBoundingBox(): Vex.Flow.BoundingBox;
-      public setStave(stave: Vex.Flow.Stave): void;
+      public getBoundingBox(): BoundingBox;
+      public setStave(stave: Stave): void;
     }
 
     export class Renderer {

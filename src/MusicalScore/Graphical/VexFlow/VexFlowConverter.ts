@@ -11,6 +11,9 @@ import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
 import {NoteEnum} from "../../../Common/DataObjects/pitch";
 
 import Vex = require("vexflow");
+import Clef = Vex.Flow.Clef;
+import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import {GraphicalNote} from "../GraphicalNote";
 
 export class VexFlowConverter {
     private static majorMap: {[_: number]: string; } = {
@@ -23,8 +26,22 @@ export class VexFlowConverter {
     };
 
     public static duration(fraction: Fraction): string {
-        // FIXME TODO
-        return "q";
+        let dur: number = fraction.RealValue;
+        switch (dur) {
+            case 0.25:
+                return "q";
+            case 0.5:
+                return "h";
+            case 1:
+                return "w";
+            case 0.125:
+                return "8";
+            case 0.0625:
+                return "16";
+            // FIXME TODO
+            default:
+                return "16";
+        }
     }
 
     /**
@@ -33,12 +50,9 @@ export class VexFlowConverter {
      * @param pitch
      * @returns {string[]}
      */
-    public static pitch(pitch: Pitch): [string, string] {
-        if (pitch.FundamentalNote === undefined) {
-            return ["", ""];
-        }
+    public static pitch(pitch: Pitch, octaveOffset: number): [string, string] {
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        let octave: number = pitch.Octave;
+        let octave: number = pitch.Octave + octaveOffset;
         let acc: string = "";
 
         switch (pitch.Accidental) {
@@ -61,12 +75,18 @@ export class VexFlowConverter {
         return [fund + acc + "/" + octave, acc];
     }
 
-    public static StaveNote(voiceEntry: VoiceEntry): Vex.Flow.StaveNote {
+    public static StaveNote(notes: GraphicalNote[], octaveOffset: number): Vex.Flow.StaveNote {
         let keys: string[] = [];
-        let duration: string = VexFlowConverter.duration(voiceEntry.Notes[0].Length);
+        let duration: string = VexFlowConverter.duration(notes[0].sourceNote.Length);
         let accidentals: string[] = [];
-        for (let note of voiceEntry.Notes) {
-            let res: [string, string] = VexFlowConverter.pitch(note.Pitch);
+        for (let note of notes) {
+            let res: [string, string] = (note as VexFlowGraphicalNote).vfpitch;
+            if (res === undefined) {
+                keys = ["b/4"];
+                accidentals = [];
+                duration += "r";
+                break;
+            }
             keys.push(res[0]);
             accidentals.push(res[1]);
         }
@@ -127,14 +147,20 @@ export class VexFlowConverter {
         if (key === undefined) {
             return undefined;
         }
+        let ret: string;
         switch (key.Mode) {
             case KeyEnum.none:
-                return undefined;
+                ret = undefined;
+                break;
             case KeyEnum.minor:
-                return VexFlowConverter.minorMap[key.Key];
+                ret = VexFlowConverter.minorMap[key.Key] + "m";
+                break;
             case KeyEnum.major:
-                return VexFlowConverter.majorMap[key.Key] + "m";
+                ret = VexFlowConverter.majorMap[key.Key];
+                break;
             default:
         }
+        //console.log("keySignature", key, ret);
+        return ret;
     }
 }

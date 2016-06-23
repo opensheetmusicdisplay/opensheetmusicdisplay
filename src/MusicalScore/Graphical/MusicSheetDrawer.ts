@@ -4,6 +4,7 @@ import {StaffLine} from "./StaffLine";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 import {MusicSystem} from "./MusicSystem";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
+import {VexFlowMeasure} from "./VexFlow/VexFlowMeasure";
 
 export class MusicSheetDrawer {
     private graphicalMusicSheet: GraphicalMusicSheet;

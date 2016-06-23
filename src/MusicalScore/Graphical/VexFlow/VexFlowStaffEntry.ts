@@ -9,12 +9,14 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
 
         // Generate Vex.Flow.StaveNotes
         let vfnotes: { [id: number]: Vex.Flow.StaveNote; } = {};
-        for (let voiceEntry of this.sourceStaffEntry.VoiceEntries) {
-            console.log("NEVER HERE!");
-            vfnotes[voiceEntry.ParentVoice.VoiceId] = VexFlowConverter.StaveNote(voiceEntry);
+        for (let note of this.notes) {
+            vfnotes[note[0].sourceNote.ParentVoiceEntry.ParentVoice.VoiceId] = VexFlowConverter.StaveNote(
+                note,
+                (this.parentMeasure as VexFlowMeasure).octaveOffset
+            );
         }
         this.vfnotes = vfnotes;
-        console.log("vfnotes generated", vfnotes, "==>", this.sourceStaffEntry.VoiceEntries);
+        console.log("vfnotes generated", vfnotes);
     }
 
     public vfnotes: { [id: number]: Vex.Flow.StaveNote; };

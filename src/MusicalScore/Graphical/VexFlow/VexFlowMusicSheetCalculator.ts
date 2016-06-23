@@ -81,7 +81,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         let width: number = formatter.preCalculateMinTotalWidth(allVoices);
         for (let measure of measures) {
             measure.minimumStaffEntriesWidth = width;
+            (measure as VexFlowMeasure).formatVoices = undefined;
         }
+        (measures[0] as VexFlowMeasure).formatVoices = (w: number) => {
+            formatter.format(allVoices, w);
+        };
         return width;
     }
 
