@@ -768,8 +768,9 @@ export class InstrumentReader {
             }
           }
         }
-        if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1])
+        if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
           this.abstractInstructions.remove(key);
+        }
       }
       if (value instanceof KeyInstruction) {
         let keyInstruction: KeyInstruction = <KeyInstruction>value;
@@ -812,8 +813,9 @@ export class InstrumentReader {
             }
           }
         }
-        if (this.activeKey !== undefined && this.activeKey === keyInstruction)
+        if (this.activeKey !== undefined && this.activeKey === keyInstruction) {
           this.abstractInstructions.remove(key);
+        }
       }
       if (value instanceof RhythmInstruction) {
         let rhythmInstruction: RhythmInstruction = <RhythmInstruction>value;
@@ -836,8 +838,9 @@ export class InstrumentReader {
             }
           }
         }
-        if (this.activeRhythm !== undefined && this.activeRhythm === rhythmInstruction)
+        if (this.activeRhythm !== undefined && this.activeRhythm === rhythmInstruction) {
           this.abstractInstructions.remove(key);
+        }
       }
     }
   }

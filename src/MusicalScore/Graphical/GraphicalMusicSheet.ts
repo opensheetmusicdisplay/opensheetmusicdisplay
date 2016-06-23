@@ -9,7 +9,7 @@ import {MusicSystem} from "./MusicSystem";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
-import {ClefInstruction, ClefEnum} from "../VoiceData/Instructions/ClefInstruction";
+import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {Fraction} from "../../Common/DataObjects/fraction";
