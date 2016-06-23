@@ -1,11 +1,12 @@
-import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
+//import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
 import {MusicSheetReader} from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
-import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasure";
-import {StaffMeasure} from "../../../../src/MusicalScore/Graphical/StaffMeasure";
+import {TestUtils} from "../../../Util/TestUtils";
+//import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasure";
+//import {StaffMeasure} from "../../../../src/MusicalScore/Graphical/StaffMeasure";
 
 
 describe("VexFlow Measure Test", () => {
@@ -37,13 +38,12 @@ describe("VexFlow Measure Test", () => {
     //    done();
     //});
 
+
     it("prepareGraphicalMusicSheet", (done: MochaDone) => {
-        let calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
-        
         let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
-        let doc: Document = ((window as any).__xml__)[path];
-        chai.expect(doc).to.not.be.undefined;
-        let score: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+        let score: IXmlElement = TestUtils.getScore(path);
+        chai.expect(score).to.not.be.undefined;
+        let calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
         let reader: MusicSheetReader = new MusicSheetReader();
         let sheet: MusicSheet = reader.createMusicSheet(score, path);
         let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
@@ -51,27 +51,27 @@ describe("VexFlow Measure Test", () => {
         done();
     });
 
-    it("Simple Measure", (done: MochaDone) => {
-        let sheet: MusicSheet = new MusicSheet();
-        let measure: SourceMeasure = new SourceMeasure(1);
-        sheet.addMeasure(measure);
-        let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
-        let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
-        chai.expect(gms.MeasureList.length).to.equal(1);
-        chai.expect(gms.MeasureList[0].length).to.equal(1);
-        let gm: StaffMeasure = gms.MeasureList[0][0];
-        console.log(gm);
-        done();
-    });
-
-    it("Empty Measure", (done: MochaDone) => {
-        let sheet: MusicSheet = new MusicSheet();
-        let measure: SourceMeasure = new SourceMeasure(1);
-        sheet.addMeasure(measure);
-        let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
-        let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
-        chai.expect(gms.MeasureList.length).to.equal(1);
-        chai.expect(gms.MeasureList[0].length).to.equal(0);
-        done();
-    });
+    //it("Simple Measure", (done: MochaDone) => {
+    //    let sheet: MusicSheet = new MusicSheet();
+    //    let measure: SourceMeasure = new SourceMeasure(1);
+    //    sheet.addMeasure(measure);
+    //    let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
+    //    let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
+    //    chai.expect(gms.MeasureList.length).to.equal(1);
+    //    chai.expect(gms.MeasureList[0].length).to.equal(1);
+    //    let gm: StaffMeasure = gms.MeasureList[0][0];
+    //    console.log(gm);
+    //    done();
+    //});
+    //
+    //it("Empty Measure", (done: MochaDone) => {
+    //    let sheet: MusicSheet = new MusicSheet();
+    //    let measure: SourceMeasure = new SourceMeasure(1);
+    //    sheet.addMeasure(measure);
+    //    let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
+    //    let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
+    //    chai.expect(gms.MeasureList.length).to.equal(1);
+    //    chai.expect(gms.MeasureList[0].length).to.equal(0);
+    //    done();
+    //});
 });

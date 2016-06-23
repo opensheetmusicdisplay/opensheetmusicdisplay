@@ -8,6 +8,7 @@ import {MusicSheetCalculator} from "../../../src/MusicalScore/Graphical/MusicShe
 import {VexFlowMusicSheetCalculator} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {GraphicalMusicSheet} from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {VexFlowTextMeasurer} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
+import {TestUtils} from "../../Util/TestUtils";
 
 
 describe("Music Sheet Calculator Tests", () => {
@@ -17,10 +18,6 @@ describe("Music Sheet Calculator Tests", () => {
     let calculator: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
     let score: IXmlElement;
     let sheet: MusicSheet;
-
-    function getSheet(filename: string): Document {
-        return ((window as any).__xml__)[filename];
-    }
 
     before((): void => {
         // ???
@@ -37,10 +34,8 @@ describe("Music Sheet Calculator Tests", () => {
     it("Do Calculation", (done: MochaDone) => {
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
         // Load the xml file
-        let doc: Document = getSheet(path);
-        chai.expect(doc).to.not.be.undefined;
-        score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
-        // chai.expect(score).to.not.be.undefined;
+        score = TestUtils.getScore(path);
+        chai.expect(score).to.not.be.undefined;
         sheet = reader.createMusicSheet(score, path);
 
         let graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);

@@ -28,6 +28,8 @@ import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 //import {VexFlowMeasure} from "./VexFlowMeasure";
 
+import Vex = require("vexflow");
+
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
         super(new VexFlowGraphicalSymbolFactory());
@@ -69,6 +71,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     voices.push(mvoices[voiceID]);
                     allVoices.push(mvoices[voiceID]);
     }
+            }
+            if (voices.length === 0) {
+                console.log("Found a measure with no voices... Continuing anyway.", mvoices);
+                continue;
             }
             formatter.joinVoices(voices);
         }

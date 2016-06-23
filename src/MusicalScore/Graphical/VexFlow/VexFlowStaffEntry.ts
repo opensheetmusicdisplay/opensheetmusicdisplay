@@ -13,6 +13,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             vfnotes[voiceEntry.ParentVoice.VoiceId] = VexFlowConverter.StaveNote(voiceEntry);
         }
         this.vfnotes = vfnotes;
+        console.log("vfnotes generated", vfnotes, this.sourceStaffEntry.VoiceEntries);
     }
 
     public vfnotes: { [id: number]: Vex.Flow.StaveNote; };
