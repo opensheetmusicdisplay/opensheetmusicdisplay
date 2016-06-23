@@ -5,7 +5,7 @@ import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
 import {ArgumentOutOfRangeException} from "../../Exceptions";
 
 export class ClefInstruction extends AbstractNotationInstruction {
-  constructor(clefType: ClefEnum, octaveOffset: number, line: number) {
+  constructor(clefType: ClefEnum = ClefEnum.G, octaveOffset: number = 0, line: number = 2) {
     super(undefined); // FIXME? Missing SourceStaffEntry!
     this.line = line;
     this.clefType = clefType;

@@ -9,7 +9,7 @@ import {MusicSystem} from "./MusicSystem";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
-import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
+import {ClefInstruction, ClefEnum} from "../VoiceData/Instructions/ClefInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {Fraction} from "../../Common/DataObjects/fraction";
@@ -254,12 +254,17 @@ export class GraphicalMusicSheet {
         let firstSourceMeasure: SourceMeasure = this.musicSheet.getFirstSourceMeasure();
         if (firstSourceMeasure !== undefined) {
             for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
-                for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
-                    let abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
-                    if (abstractNotationInstruction instanceof ClefInstruction) {
-                        activeClefs.push(<ClefInstruction>abstractNotationInstruction);
+                let clef: ClefInstruction = new ClefInstruction();
+                if (firstSourceMeasure.FirstInstructionsStaffEntries[i] !== undefined) {
+                    for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
+                        let abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
+                        if (abstractNotationInstruction instanceof ClefInstruction) {
+                            clef = <ClefInstruction>abstractNotationInstruction;
+
+                        }
                     }
                 }
+                activeClefs.push(clef);
             }
         }
         return activeClefs;

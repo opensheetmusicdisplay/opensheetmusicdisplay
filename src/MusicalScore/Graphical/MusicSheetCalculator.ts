@@ -832,13 +832,15 @@ export abstract class MusicSheetCalculator {
         let firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
         if (firstSourceMeasure !== undefined) {
             for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
-                for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
-                    let abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
-                    if (abstractNotationInstruction instanceof KeyInstruction) {
-                        let keyInstruction: KeyInstruction = <KeyInstruction>abstractNotationInstruction;
-                        let accidentalCalculator: AccidentalCalculator = new AccidentalCalculator(this.symbolFactory);
-                        accidentalCalculator.ActiveKeyInstruction = keyInstruction;
-                        accidentalCalculators.push(accidentalCalculator);
+                let accidentalCalculator: AccidentalCalculator = new AccidentalCalculator(this.symbolFactory);
+                accidentalCalculators.push(accidentalCalculator);
+                if (firstSourceMeasure.FirstInstructionsStaffEntries[i] !== undefined) {
+                    for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
+                        let abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
+                        if (abstractNotationInstruction instanceof KeyInstruction) {
+                            let keyInstruction: KeyInstruction = <KeyInstruction>abstractNotationInstruction;
+                            accidentalCalculator.ActiveKeyInstruction = keyInstruction;
+                        }
                     }
                 }
             }

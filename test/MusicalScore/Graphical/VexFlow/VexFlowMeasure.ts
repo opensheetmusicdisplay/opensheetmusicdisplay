@@ -6,6 +6,7 @@ import {MusicSheetReader} from "../../../../src/MusicalScore/ScoreIO/MusicSheetR
 import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasure";
 import {StaffMeasure} from "../../../../src/MusicalScore/Graphical/StaffMeasure";
+import {Instrument} from "../../../../src/MusicalScore/Instrument";
 
 
 describe("VexFlow Measure Test", () => {
@@ -39,7 +40,7 @@ describe("VexFlow Measure Test", () => {
 
     it("prepareGraphicalMusicSheet", (done: MochaDone) => {
         let calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
-        
+
         let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
         let doc: Document = ((window as any).__xml__)[path];
         chai.expect(doc).to.not.be.undefined;
@@ -53,7 +54,10 @@ describe("VexFlow Measure Test", () => {
 
     it("Simple Measure", (done: MochaDone) => {
         let sheet: MusicSheet = new MusicSheet();
-        let measure: SourceMeasure = new SourceMeasure(1);
+        let instrument: Instrument = new Instrument(0, "instr", sheet, undefined);
+        instrument.createStaves(1);
+        sheet.Instruments.push(instrument);
+        let measure: SourceMeasure = new SourceMeasure(sheet.getCompleteNumberOfStaves());
         sheet.addMeasure(measure);
         let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
