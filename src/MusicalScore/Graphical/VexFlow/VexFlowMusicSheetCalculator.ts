@@ -116,6 +116,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         musicSystemBuilder.initialize(this.graphicalMusicSheet, measureList, numberOfStaffLines, this.symbolFactory);
         musicSystemBuilder.buildMusicSystems();
         this.checkMeasuresForWholeRestNotes();
+        this.calculateSystemYLayout();
     }
 
     protected updateStaffLineBorders(staffLine: StaffLine): void {

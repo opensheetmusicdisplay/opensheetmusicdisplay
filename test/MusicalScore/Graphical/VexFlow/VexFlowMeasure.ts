@@ -7,17 +7,17 @@ import {TestUtils} from "../../../Util/TestUtils";
 
 describe("VexFlow Measure", () => {
 
-    it("GraphicalMusicSheet", (done: MochaDone) => {
-        let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
-        let score: IXmlElement = TestUtils.getScore(path);
-        chai.expect(score).to.not.be.undefined;
-        let calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
-        let reader: MusicSheetReader = new MusicSheetReader();
-        let sheet: MusicSheet = reader.createMusicSheet(score, path);
-        let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
-        console.log(gms);
-        done();
-    });
+    //it("GraphicalMusicSheet", (done: MochaDone) => {
+    //    let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
+    //    let score: IXmlElement = TestUtils.getScore(path);
+    //    chai.expect(score).to.not.be.undefined;
+    //    let calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
+    //    let reader: MusicSheetReader = new MusicSheetReader();
+    //    let sheet: MusicSheet = reader.createMusicSheet(score, path);
+    //    let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
+    //    console.log(gms);
+    //    done();
+    //});
 
     //it("Simple Measure", (done: MochaDone) => {
     //    let sheet: MusicSheet = new MusicSheet();

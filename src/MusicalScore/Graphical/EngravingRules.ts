@@ -147,7 +147,7 @@ export class EngravingRules {
         this.sheetComposerHeight = 2.0;
         this.sheetAuthorHeight = 2.0;
         this.pagePlacementEnum = PagePlacementEnum.Down;
-        this.pageHeight = 100000.0;
+        this.pageHeight = 100001.0;
         this.pageTopMargin = 5.0;
         this.pageBottomMargin = 5.0;
         this.pageLeftMargin = 5.0;
