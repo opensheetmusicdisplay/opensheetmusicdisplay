@@ -20,8 +20,6 @@ export class SourceStaffEntry {
   private voiceEntries: VoiceEntry[] = [];
   private staffEntryLink: StaffEntryLink;
   private instructions: AbstractNotationInstruction[] = [];
-  //private graceVoiceEntriesBefore: VoiceEntry[] = [];
-  //private graceVoiceEntriesAfter: VoiceEntry[] = [];
   private chordSymbolContainer: ChordSymbolContainer;
   public get ParentStaff(): Staff {
     return this.parentStaff;
@@ -65,26 +63,28 @@ export class SourceStaffEntry {
   public set ChordContainer(value: ChordSymbolContainer) {
     this.chordSymbolContainer = value;
   }
-  //public removeAllInstructionsOfType<T>(): number {
-  //  let i: number = 0;
-  //  let ret: number = 0;
-  //  while (i < this.instructions.length) {
-  //    if (this.instructions[i] instanceof T) {
-  //      this.instructions.splice(i, 1);
-  //      ret++;
-  //    } else { i++; }
-  //  }
-  //  return ret;
-  //}
-  //public removeFirstInstructionOfType<T>(): boolean {
-  //  for (let i: number = 0; i < this.instructions.length; i++) {
-  //    if (this.instructions[i] instanceof T) {
-  //      this.instructions.splice(i, 1);
-  //      return true;
-  //    }
-  //  }
-  //  return false;
-  //}
+  public removeAllInstructionsOfType<T>(): number {
+   let i: number = 0;
+   let ret: number = 0;
+   while (i < this.instructions.length) {
+       let instruction: Object = this.instructions[i];
+       if (<T>instruction !== undefined) {
+           this.instructions.splice(i, 1);
+           ret++;
+       }  else { i++; }
+   }
+   return ret;
+  }
+  public removeFirstInstructionOfType<T>(): boolean {
+   for (let i: number = 0; i < this.instructions.length; i++) {
+       let instruction: Object = this.instructions[i];
+       if (<T>instruction !== undefined) {
+          this.instructions.splice(i, 1);
+          return true;
+       }
+   }
+   return false;
+  }
   public removeAllInstructionsOfTypeClefInstruction(): number {
     let i: number = 0;
     let ret: number = 0;

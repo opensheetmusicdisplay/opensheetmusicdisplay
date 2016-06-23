@@ -19,7 +19,7 @@ import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
 import {Logging} from "../../Common/logging";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
-
+import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
 //type repetitionInstructionReader = any;
@@ -78,7 +78,7 @@ export class InstrumentReader {
   private activeRhythm: RhythmInstruction;
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
-  private abstractInstructions: { [n: number]: AbstractNotationInstruction; } = {};
+  private abstractInstructions: Dictionary<number, AbstractNotationInstruction> = new Dictionary<number, AbstractNotationInstruction>();
   private openChordSymbolContainer: ChordSymbolContainer;
   // (*) private expressionReaders: ExpressionReader[];
   private currentVoiceGenerator: VoiceGenerator;
@@ -706,85 +706,81 @@ export class InstrumentReader {
   }
 
   private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
-    // FIXME TODO
-    // Logging.debug("saveAbstractInstructionList still to implement! See InstrumentReader.ts");
-  }
-
-  /*private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
-    for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
-      let keyValuePair: KeyValuePairClass<number, AbstractNotationInstruction> = this.abstractInstructions[i];
-      if (keyValuePair.value instanceof ClefInstruction) {
-        let clefInstruction: ClefInstruction = <ClefInstruction>keyValuePair.value;
-        if (this.currentXmlMeasureIndex === 0 || (keyValuePair.key <= this.activeClefs.length && clefInstruction !== this.activeClefs[keyValuePair.key - 1])) {
-          if (!beginOfMeasure && this.currentStaffEntry !== undefined && !this.currentStaffEntry.hasNotes() && keyValuePair.key - 1
-          === this.instrument.Staves.IndexOf(this.currentStaffEntry.ParentStaff)) {
+    for (let i: number = this.abstractInstructions.keys().length - 1; i >= 0; i--) {
+      let key: number = this.abstractInstructions.keys()[i];
+      let value: AbstractNotationInstruction = this.abstractInstructions.getValue(key);
+      if (value instanceof ClefInstruction) {
+        let clefInstruction: ClefInstruction = <ClefInstruction>value;
+        if (this.currentXmlMeasureIndex === 0 || (key <= this.activeClefs.length && clefInstruction !== this.activeClefs[key - 1])) {
+          if (!beginOfMeasure && this.currentStaffEntry !== undefined && !this.currentStaffEntry.hasNotes() && key - 1
+          === this.instrument.Staves.indexOf(this.currentStaffEntry.ParentStaff)) {
             let newClefInstruction: ClefInstruction = clefInstruction;
             newClefInstruction.Parent = this.currentStaffEntry;
             this.currentStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
-            this.currentStaffEntry.Instructions.Add(newClefInstruction);
-            this.activeClefs[keyValuePair.key - 1] = clefInstruction;
-            this.abstractInstructions.Remove(keyValuePair);
+            this.currentStaffEntry.Instructions.push(newClefInstruction);
+            this.activeClefs[key - 1] = clefInstruction;
+            this.abstractInstructions.remove(key);
           } else if (beginOfMeasure) {
             let firstStaffEntry: SourceStaffEntry;
             if (this.currentMeasure !== undefined) {
               let newClefInstruction: ClefInstruction = clefInstruction;
               if (this.currentXmlMeasureIndex === 0) {
-                if (this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1] === undefined) {
+                if (this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] === undefined) {
                   firstStaffEntry = new SourceStaffEntry(undefined, undefined);
-                  this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1] = firstStaffEntry;
+                  this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] = firstStaffEntry;
                   newClefInstruction.Parent = firstStaffEntry;
-                  firstStaffEntry.Instructions.Add(newClefInstruction);
-                  this.activeClefsHaveBeenInitialized[keyValuePair.key - 1] = true;
-                } else if (this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1]
+                  firstStaffEntry.Instructions.push(newClefInstruction);
+                  this.activeClefsHaveBeenInitialized[key - 1] = true;
+                } else if (this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1]
                 !==
-                undefined && !(this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1].Instructions[0]
+                undefined && !(this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1].Instructions[0]
                  instanceof ClefInstruction)) {
-                  firstStaffEntry = this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1];
+                  firstStaffEntry = this.currentMeasure.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1];
                   newClefInstruction.Parent = firstStaffEntry;
                   firstStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
-                  firstStaffEntry.Instructions.Insert(0, newClefInstruction);
-                  this.activeClefsHaveBeenInitialized[keyValuePair.key - 1] = true;
+                  firstStaffEntry.Instructions.splice(0, 0, newClefInstruction);
+                  this.activeClefsHaveBeenInitialized[key - 1] = true;
                 } else {
-                  firstStaffEntry = new SourceStaffEntry(undefined, undefined);
-                  this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1] = lastStaffEntry;
+                  let lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
+                  this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] = lastStaffEntry;
                   newClefInstruction.Parent = lastStaffEntry;
-                  lastStaffEntry.Instructions.Add(newClefInstruction);
+                  lastStaffEntry.Instructions.push(newClefInstruction);
                 }
-              } else if (!this.activeClefsHaveBeenInitialized[keyValuePair.key - 1]) {
-                let first: SourceMeasure = this.musicSheet2.SourceMeasures[0];
-                if (first.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1] === undefined) {
+              } else if (!this.activeClefsHaveBeenInitialized[key - 1]) {
+                let first: SourceMeasure = this.musicSheet.SourceMeasures[0];
+                if (first.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] === undefined) {
                   firstStaffEntry = new SourceStaffEntry(undefined, undefined);
                 } else {
-                  firstStaffEntry = first.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1];
+                  firstStaffEntry = first.FirstInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1];
                   firstStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
                 }
                 newClefInstruction.Parent = firstStaffEntry;
-                firstStaffEntry.Instructions.Insert(0, newClefInstruction);
-                this.activeClefsHaveBeenInitialized[keyValuePair.key - 1] = true;
+                firstStaffEntry.Instructions.splice(0, 0, newClefInstruction);
+                this.activeClefsHaveBeenInitialized[key - 1] = true;
               } else {
                 let lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
-                this.previousMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + keyValuePair.key - 1] = lastStaffEntry;
+                this.previousMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] = lastStaffEntry;
                 newClefInstruction.Parent = lastStaffEntry;
-                lastStaffEntry.Instructions.Add(newClefInstruction);
+                lastStaffEntry.Instructions.push(newClefInstruction);
               }
-              this.activeClefs[keyValuePair.key - 1] = clefInstruction;
-              this.abstractInstructions.Remove(keyValuePair);
+              this.activeClefs[key - 1] = clefInstruction;
+              this.abstractInstructions.remove(key);
             }
           }
         }
-        if (keyValuePair.key <= this.activeClefs.length && clefInstruction === this.activeClefs[keyValuePair.key - 1])
-          this.abstractInstructions.Remove(keyValuePair);
+        if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1])
+          this.abstractInstructions.remove(key);
       }
-      if (keyValuePair.value instanceof KeyInstruction) {
-        let keyInstruction: KeyInstruction = <KeyInstruction>keyValuePair.value;
+      if (value instanceof KeyInstruction) {
+        let keyInstruction: KeyInstruction = <KeyInstruction>value;
         if (this.activeKey === undefined || this.activeKey.Key !== keyInstruction.Key) {
           this.activeKey = keyInstruction;
-          this.abstractInstructions.Remove(keyValuePair);
+          this.abstractInstructions.remove(key);
           let sourceMeasure: SourceMeasure;
           if (!this.activeKeyHasBeenInitialized) {
             this.activeKeyHasBeenInitialized = true;
             if (this.currentXmlMeasureIndex > 0) {
-              sourceMeasure = this.musicSheet2.SourceMeasures[0];
+              sourceMeasure = this.musicSheet.SourceMeasures[0];
             } else {
               sourceMeasure = this.currentMeasure;
             }
@@ -795,21 +791,21 @@ export class InstrumentReader {
             for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + numberOfStaves; j++) {
               let newKeyInstruction: KeyInstruction = keyInstruction;
               if (sourceMeasure.FirstInstructionsStaffEntries[j] === undefined) {
-                firstStaffEntry = new SourceStaffEntry(undefined, undefined);
+                let firstStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
                 sourceMeasure.FirstInstructionsStaffEntries[j] = firstStaffEntry;
                 newKeyInstruction.Parent = firstStaffEntry;
-                firstStaffEntry.Instructions.Add(newKeyInstruction);
+                firstStaffEntry.Instructions.push(newKeyInstruction);
               } else {
-                firstStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[j];
+                let firstStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[j];
                 newKeyInstruction.Parent = firstStaffEntry;
                 firstStaffEntry.removeFirstInstructionOfTypeKeyInstruction();
                 if (firstStaffEntry.Instructions.length === 0) {
-                  firstStaffEntry.Instructions.Add(newKeyInstruction);
+                  firstStaffEntry.Instructions.push(newKeyInstruction);
                 } else {
                   if (firstStaffEntry.Instructions[0] instanceof ClefInstruction) {
-                    firstStaffEntry.Instructions.Insert(1, newKeyInstruction);
+                    firstStaffEntry.Instructions.splice(1, 0, newKeyInstruction);
                   } else {
-                    firstStaffEntry.Instructions.Insert(0, newKeyInstruction);
+                    firstStaffEntry.Instructions.splice(0, 0, newKeyInstruction);
                   }
                 }
               }
@@ -817,16 +813,17 @@ export class InstrumentReader {
           }
         }
         if (this.activeKey !== undefined && this.activeKey === keyInstruction)
-          this.abstractInstructions.Remove(keyValuePair);
+          this.abstractInstructions.remove(key);
       }
-      if (keyValuePair.value instanceof RhythmInstruction) {
-        let rhythmInstruction: RhythmInstruction = <RhythmInstruction>keyValuePair.value;
+      if (value instanceof RhythmInstruction) {
+        let rhythmInstruction: RhythmInstruction = <RhythmInstruction>value;
         if (this.activeRhythm === undefined || this.activeRhythm !== rhythmInstruction) {
           this.activeRhythm = rhythmInstruction;
-          this.abstractInstructions.Remove(keyValuePair);
+          this.abstractInstructions.remove(key);
           if (this.currentMeasure !== undefined) {
             for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + numberOfStaves; j++) {
               let newRhythmInstruction: RhythmInstruction = rhythmInstruction;
+              let firstStaffEntry: SourceStaffEntry;
               if (this.currentMeasure.FirstInstructionsStaffEntries[j] === undefined) {
                 firstStaffEntry = new SourceStaffEntry(undefined, undefined);
                 this.currentMeasure.FirstInstructionsStaffEntries[j] = firstStaffEntry;
@@ -835,16 +832,16 @@ export class InstrumentReader {
                 firstStaffEntry.removeFirstInstructionOfType<RhythmInstruction>();
               }
               newRhythmInstruction.Parent = firstStaffEntry;
-              firstStaffEntry.Instructions.Add(newRhythmInstruction);
+              firstStaffEntry.Instructions.push(newRhythmInstruction);
             }
           }
         }
         if (this.activeRhythm !== undefined && this.activeRhythm === rhythmInstruction)
-          this.abstractInstructions.Remove(keyValuePair);
+          this.abstractInstructions.remove(key);
       }
     }
   }
-  */
+
   private saveClefInstructionAtEndOfMeasure(): void {
     for (let key in this.abstractInstructions) {
       if (this.abstractInstructions.hasOwnProperty(key)) {

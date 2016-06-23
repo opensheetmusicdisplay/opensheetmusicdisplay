@@ -13,6 +13,9 @@ import {Voice} from "./VoiceData/Voice";
 import {MusicSheetErrors} from "../Common/DataObjects/MusicSheetErrors";
 import {MultiTempoExpression} from "./VoiceData/Expressions/multiTempoExpression";
 import {EngravingRules} from "./Graphical/EngravingRules";
+import {NoteState} from "./Graphical/DrawingEnums";
+import {Note} from "./VoiceData/Note";
+import {VoiceEntry} from "./VoiceData/VoiceEntry";
 
 // FIXME
 //type MusicSheetParameters = any;
@@ -47,7 +50,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public pageWidth: number;
     public rules: EngravingRules;
 
-    //private idString: string = "kjgdfuilhsda�oihfsvjh";
+    private idString: string = "kjgdfuilhsdaöoihfsvjh";
     private sourceMeasures: SourceMeasure[] = [];
     private repetitions: Repetition[] = [];
     private dynListStaves: DynamicsContainer[][] = [];
@@ -74,7 +77,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private hasBeenOpenedForTheFirstTime: boolean = false;
     private currentEnrolledPosition: Fraction = new Fraction(0, 1);
     // (*) private musicSheetParameterObject: MusicSheetParameterObject = undefined;
-    // (*) private engravingRules: EngravingRules;
+    private engravingRules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
 
     public static getIndexFromStaff(staff: Staff): number {
@@ -197,12 +200,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public set Lyricist(value: Label) {
         this.lyricist = value;
     }
-    // (*) public get Rules(): EngravingRules {
-    //    return this.engravingRules;
-    //}
-    // (*) public set Rules(value: EngravingRules) {
-    //    this.engravingRules = value;
-    //}
+    public get Rules(): EngravingRules {
+       return this.engravingRules;
+    }
+    public set Rules(value: EngravingRules) {
+       this.engravingRules = value;
+    }
     public get SheetErrors(): MusicSheetErrors {
         return this.musicSheetErrors;
     }
@@ -289,19 +292,19 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public getLastSourceMeasure(): SourceMeasure {
         return this.sourceMeasures[this.sourceMeasures.length - 1];
     }
-    // (*) public resetAllNoteStates(): void {
-    //    let iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
-    //    while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
-    //        for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
-    //            let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
-    //            for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-    //                let note: Note = voiceEntry.Notes[idx2];
-    //                note.State = NoteState.Normal;
-    //            }
-    //        }
-    //        iterator.moveToNext();
-    //    }
-    //}
+    public resetAllNoteStates(): void {
+       let iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
+       while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
+           for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
+               let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
+               for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
+                   let note: Note = voiceEntry.Notes[idx2];
+                   note.state = NoteState.Normal;
+               }
+           }
+           iterator.moveToNext();
+       }
+    }
     public getMusicSheetInstrumentIndex(instrument: Instrument): number {
         return this.Instruments.indexOf(instrument);
     }
@@ -436,22 +439,22 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //public set MusicSheetParameterChanged(value: MusicSheetParameterChangedDelegate) {
     //    this.musicSheetParameterChangedDelegate = value;
     //}
-    //public get FullNameString(): string {
-    //    return this.ComposerString + " " + this.TitleString;
-    //}
-    //public get IdString(): string {
-    //    return this.idString;
-    //}
-    //public set IdString(value: string) {
-    //    this.idString = value;
-    //}
-    //public Dispose(): void {
+    public get FullNameString(): string {
+       return this.ComposerString + " " + this.TitleString;
+    }
+    public get IdString(): string {
+       return this.idString;
+    }
+    public set IdString(value: string) {
+       this.idString = value;
+    }
+    // public Dispose(): void {
     //    this.MusicSheetParameterChanged = undefined;
-    //    for (let idx: number = 0, len: number = this.IInstruments.length; idx < len; ++idx) {
-    //        let instrument: IInstrument = this.IInstruments[idx];
-    //        instrument.Dispose(); // FIXME
+    //    for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
+    //        let instrument: Instrument = this.instruments[idx];
+    //        instrument.dispose(); // FIXME
     //    }
-    //}
+    // }
     public getEnrolledSelectionStartTimeStampWorkaround(): Fraction {
         let iter: MusicPartManagerIterator = this.MusicPartManager.getIterator(this.SelectionStart);
         return Fraction.createFromFraction(iter.CurrentEnrolledTimestamp);

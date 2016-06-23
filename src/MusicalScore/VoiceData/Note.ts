@@ -7,6 +7,7 @@ import {Tuplet} from "./Tuplet";
 import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
+import {NoteState} from "../Graphical/DrawingEnums";
 
 // import Vex = require("vexflow");
 
@@ -25,7 +26,7 @@ export class Note {
     }
 
     public halfTone: number;
-
+    public state: NoteState;
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;
