@@ -29,6 +29,8 @@ import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 //import {VexFlowMeasure} from "./VexFlowMeasure";
 
 import Vex = require("vexflow");
+import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
+import {VexFlowConverter} from "./VexFlowConverter";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -78,10 +80,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
             formatter.joinVoices(voices);
         }
-        let width: number = formatter.preCalculateMinTotalWidth(allVoices);
+        let firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
+        let width: number = formatter.preCalculateMinTotalWidth(allVoices) / firstMeasure.unit;
         for (let measure of measures) {
             measure.minimumStaffEntriesWidth = width;
+            (measure as VexFlowMeasure).formatVoices = undefined;
         }
+        firstMeasure.formatVoices = (w: number) => {
+            formatter.format(allVoices, w);
+        };
         return width;
     }
 
@@ -140,7 +147,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param graphicalStaffEntry
      */
     protected layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        return;
+        let vfnotes: { [voiceID: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).mynotes;
+        console.log("Unfortunately empty: ", vfnotes);
+        let measure: VexFlowMeasure = graphicalStaffEntry.parentMeasure as VexFlowMeasure;
+        let voices: { [voiceID: number]: Vex.Flow.Voice; } = measure.voices;
+        for (let id in vfnotes) {
+            if (vfnotes.hasOwnProperty(id)) {
+                if (!(id in voices)) {
+                    voices[id] = new Vex.Flow.Voice({
+                        beat_value: measure.parentSourceMeasure.Duration.Denominator,
+                        num_beats: measure.parentSourceMeasure.Duration.Numerator,
+                        resolution: Vex.Flow.RESOLUTION,
+                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
+                }
+                voices[id].addTickable(VexFlowConverter.StaveNote(vfnotes[id]));
+            }
+        }
     }
 
     /**
@@ -151,14 +173,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             if (!this.leadSheet) {
+                let globalY: number = 0;
                 for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                    //let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                    let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                     // calculate y positions of stafflines within system
-                    // ...
+                    let y: number = 0;
+                    for (let line of musicSystem.StaffLines) {
+                        line.PositionAndShape.RelativePosition.y = y;
+                        y += 10;
+                    }
+                    // set y positions of systems using the previous system and a fixed distance.
+                    musicSystem.PositionAndShape.BorderBottom = y + 10;
+                    musicSystem.PositionAndShape.RelativePosition.y = globalY;
+                    globalY += y + 10;
                 }
             }
-            // set y positions of systems using the previous system and a fixed distance.
-            // ...
         }
     }
 

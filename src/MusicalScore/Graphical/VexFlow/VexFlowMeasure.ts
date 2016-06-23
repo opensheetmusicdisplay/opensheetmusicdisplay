@@ -1,3 +1,4 @@
+import Vex = require("vexflow");
 import {StaffMeasure} from "../StaffMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
@@ -8,9 +9,6 @@ import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
-//import {Fraction} from "../../../Common/DataObjects/fraction";
-
-import Vex = require("vexflow");
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -21,9 +19,17 @@ export class VexFlowMeasure extends StaffMeasure {
         //this.duration = this.parentSourceMeasure.Duration;
     }
 
+    public octaveOffset: number = 3; // FIXME
     public voices: { [voiceID: number]: Vex.Flow.Voice; };
+    public formatVoices: (width: number) => void;
+    public unit: number = 10.0;
     private stave: Vex.Flow.Stave;
     //private duration: Fraction;
+
+    public setAbsoluteCoordinates(x: number, y: number): void {
+        this.stave.setX(x);
+        this.stave.setY(y);
+    }
 
     /**
      * Reset all the geometric values and parameters of this measure and put it in an initialized state.
@@ -67,6 +73,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtBegin(clef: ClefInstruction): void {
+        this.octaveOffset = clef.OctaveOffset;
         let vfclef: string = VexFlowConverter.Clef(clef);
         this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
         this.increaseBeginInstructionWidth();
@@ -113,16 +120,6 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     /**
-     * Set the x-position relative to the staffline.
-     * (y-Position is always 0 relative to the staffline)
-     * @param x
-     */
-    public setPositionInStaffline(x: number): void {
-        // Already implemented in VexFlow, it does _not_ call .format()
-        this.stave.setX(x);
-    }
-
-    /**
      * Sets the overall x-width of the measure.
      * @param width
      */
@@ -132,7 +129,13 @@ export class VexFlowMeasure extends StaffMeasure {
         // modifiers like clefs. In PS, width is the total width of the stave.
         // @Andrea: The following could be improved by storing the values in this object.
         //          Now it calls .format() implicitly.
-        this.stave.setWidth(width - this.beginInstructionsWidth - this.endInstructionsWidth);
+        //
+        super.setWidth(width);
+        this.stave.setWidth(width * this.unit);
+        if (this.formatVoices) {
+            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * this.unit);
+            this.formatVoices = undefined;
+        }
     }
 
     /**
@@ -141,26 +144,11 @@ export class VexFlowMeasure extends StaffMeasure {
      * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
      */
     public layoutSymbols(): void {
-        // This is already done in the MusicSystemBuilder!
-        //this.setWidth(this.minimumStaffEntriesWidth * this.staffEntriesScaleFactor);
         this.stave.format();
     }
 
     public addGraphicalStaffEntry(entry: VexFlowStaffEntry): void {
         super.addGraphicalStaffEntry(entry);
-        let vfnotes: { [voiceID: number]: Vex.Flow.StaveNote; } = entry.vfnotes;
-        for (let id in vfnotes) {
-            if (vfnotes.hasOwnProperty(id)) {
-                if (!(id in this.voices)) {
-                    this.voices[id] = new Vex.Flow.Voice({
-                        beat_value: this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: this.parentSourceMeasure.Duration.Numerator,
-                        resolution: Vex.Flow.RESOLUTION,
-                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
-                }
-                this.voices[id].addTickable(vfnotes[id]);
-            }
-        }
     }
 
     public addGraphicalStaffEntryAtTimestamp(entry: VexFlowStaffEntry): void {
@@ -182,10 +170,11 @@ export class VexFlowMeasure extends StaffMeasure {
     private increaseBeginInstructionWidth(): void {
         let modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
         let modifier: Vex.Flow.StaveModifier = modifiers[modifiers.length - 1];
-        let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
+        //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
+        let padding: number = modifier.getPadding(20);
         //modifier.getPadding(this.begModifiers);
         let width: number = modifier.getWidth();
-        this.beginInstructionsWidth += padding + width;
+        this.beginInstructionsWidth += (padding + width) / this.unit;
     }
 
     private increaseEndInstructionWidth(): void {
@@ -193,6 +182,6 @@ export class VexFlowMeasure extends StaffMeasure {
         let modifier: Vex.Flow.StaveModifier = modifiers[modifiers.length - 1];
         let padding: number = 0; //modifier.getPadding(this.endModifiers++);
         let width: number = modifier.getWidth();
-        this.endInstructionsWidth += padding + width;
+        this.endInstructionsWidth += (padding + width) / this.unit;
     }
 }

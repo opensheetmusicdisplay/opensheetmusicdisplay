@@ -1,22 +1,35 @@
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
-import {StaffMeasure} from "../StaffMeasure";
 import {VexFlowMeasure} from "./VexFlowMeasure";
+import {GraphicalMusicSheet} from "../GraphicalMusicSheet";
 /**
  * Created by Matthias on 22.06.2016.
  */
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     constructor() {
         super();
+        // Create the canvas in the document:
+        this.canvas = document.createElement("canvas");
+        document.body.appendChild(this.canvas);
+        // FIXME: units
+        this.canvas.width = this.canvas.height = 10 * 100;
     }
 
-    protected drawMeasure(measure: StaffMeasure): void {
-        //let vfMeasure: VexFlowMeasure = <VexFlowMeasure> measure;
-        //throw new Error("not implemented");
-        let canvas: HTMLCanvasElement = document.createElement("canvas");
-        document.body.appendChild(canvas);
-        canvas.width = canvas.height = 100;
-        return (measure as VexFlowMeasure).draw(canvas);
+    private canvas: HTMLCanvasElement;
+
+    public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        let h1: Element = document.createElement("h1");
+        h1.textContent = "VexFlowMusicSheetDrawer Output";
+        document.body.appendChild(h1);
+        super.drawSheet(graphicalMusicSheet);
+    }
+
+    protected drawMeasure(measure: VexFlowMeasure): void {
+        measure.setAbsoluteCoordinates(
+            measure.PositionAndShape.AbsolutePosition.x * (measure as VexFlowMeasure).unit,
+            measure.PositionAndShape.AbsolutePosition.y * (measure as VexFlowMeasure).unit
+        );
+        return measure.draw(this.canvas);
     }
 
     protected applyScreenTransformation(rectangle: RectangleF2D): RectangleF2D {
