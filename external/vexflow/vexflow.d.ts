@@ -113,7 +113,7 @@ declare namespace Vex {
     }
 
     export class Beam {
-      constructor(notes: StaveNote[]);
+      constructor(notes: StaveNote[], auto_stem: boolean);
       public setContext(ctx: CanvasContext): Beam;
       public draw(): void;
     }

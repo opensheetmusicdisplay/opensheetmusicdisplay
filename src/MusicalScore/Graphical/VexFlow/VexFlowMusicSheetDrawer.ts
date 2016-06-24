@@ -23,7 +23,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     private renderer: Vex.Flow.Renderer;
     private ctx: Vex.Flow.CanvasContext;
-    private counter: number = 0;
 
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // FIXME units
@@ -39,7 +38,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawMeasure(measure: VexFlowMeasure): void {
         measure.setAbsoluteCoordinates(
             measure.PositionAndShape.AbsolutePosition.x * (measure as VexFlowMeasure).unit,
-            measure.PositionAndShape.AbsolutePosition.y * (measure as VexFlowMeasure).unit + (this.counter += 5)
+            measure.PositionAndShape.AbsolutePosition.y * (measure as VexFlowMeasure).unit
         );
         return measure.draw(this.ctx);
     }

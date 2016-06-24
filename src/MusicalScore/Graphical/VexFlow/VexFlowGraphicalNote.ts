@@ -8,11 +8,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     constructor(note: Note, parent: GraphicalStaffEntry, activeClef: ClefInstruction) {
         super(note, parent);
         if (note.Pitch) {
-            this.vfpitch = VexFlowConverter.pitch(note.Pitch, activeClef.OctaveOffset);
+            this.vfpitch = VexFlowConverter.pitch(note.Pitch, activeClef);
         } else {
             this.vfpitch = undefined;
         }
     }
 
-    public vfpitch: [string, string];
+    public vfpitch: [string, string, ClefInstruction];
 }

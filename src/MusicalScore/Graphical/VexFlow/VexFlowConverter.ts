@@ -11,6 +11,7 @@ import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
 import {NoteEnum} from "../../../Common/DataObjects/pitch";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {GraphicalNote} from "../GraphicalNote";
+import Clef = Vex.Flow.Clef;
 
 export class VexFlowConverter {
     private static majorMap: {[_: number]: string; } = {
@@ -47,9 +48,9 @@ export class VexFlowConverter {
      * @param pitch
      * @returns {string[]}
      */
-    public static pitch(pitch: Pitch, octaveOffset: number): [string, string] {
+    public static pitch(pitch: Pitch, clef: ClefInstruction): [string, string, ClefInstruction] {
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        let octave: number = pitch.Octave + octaveOffset + 3;
+        let octave: number = pitch.Octave + clef.OctaveOffset + 3; // FIXME + 3
         let acc: string = "";
 
         switch (pitch.Accidental) {
@@ -69,15 +70,16 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        return [fund + acc + "/" + octave, acc];
+        return [fund + acc + "/" + octave, acc, clef];
     }
 
-    public static StaveNote(notes: GraphicalNote[], clef: string): Vex.Flow.StaveNote {
+    public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];
         let duration: string = VexFlowConverter.duration(notes[0].sourceNote.Length);
         let accidentals: string[] = [];
+        let vfclef: string;
         for (let note of notes) {
-            let res: [string, string] = (note as VexFlowGraphicalNote).vfpitch;
+            let res: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             if (res === undefined) {
                 keys = ["b/4"];
                 accidentals = [];
@@ -86,10 +88,13 @@ export class VexFlowConverter {
             }
             keys.push(res[0]);
             accidentals.push(res[1]);
+            if (!vfclef) {
+                vfclef = VexFlowConverter.Clef(res[2]);
+            }
         }
         let vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
             auto_stem: true,
-            clef: clef,
+            clef: vfclef,
             duration: duration,
             keys: keys,
         });

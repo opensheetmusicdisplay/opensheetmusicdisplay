@@ -28,7 +28,6 @@ export class VexFlowMeasure extends StaffMeasure {
     public unit: number = 10.0;
 
     private stave: Vex.Flow.Stave;
-    private vfclef: string;
 
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; } = {};
@@ -81,8 +80,8 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addClefAtBegin(clef: ClefInstruction): void {
         this.octaveOffset = clef.OctaveOffset;
-        this.vfclef = VexFlowConverter.Clef(clef);
-        this.stave.addClef(this.vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
+        let vfclef: string = VexFlowConverter.Clef(clef);
+        this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
         this.increaseBeginInstructionWidth();
     }
 
@@ -141,7 +140,6 @@ export class VexFlowMeasure extends StaffMeasure {
         this.stave.setWidth(width * this.unit);
         if (this.formatVoices) {
             this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * this.unit);
-            this.formatVoices = undefined;
         }
     }
 
@@ -213,7 +211,7 @@ export class VexFlowMeasure extends StaffMeasure {
                     for (let entry of beam[1]) {
                         notes.push((entry as VexFlowStaffEntry).vfNotes[voiceID]);
                     }
-                    vfbeams.push(new Vex.Flow.Beam(notes));
+                    vfbeams.push(new Vex.Flow.Beam(notes, true));
                 }
             }
         }
@@ -231,7 +229,7 @@ export class VexFlowMeasure extends StaffMeasure {
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
                 }
-                let vfnote: Vex.Flow.StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID], this.vfclef);
+                let vfnote: Vex.Flow.StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
                 (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
                 vfVoices[voiceID].addTickable(vfnote);
             }

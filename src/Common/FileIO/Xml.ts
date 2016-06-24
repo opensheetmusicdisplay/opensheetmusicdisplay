@@ -22,6 +22,8 @@ export class IXmlElement {
         // Look for a value
         if (elem.childNodes.length === 1 && elem.childNodes[0].nodeType === Node.TEXT_NODE) {
             this.value = elem.childNodes[0].nodeValue;
+        } else {
+            this.value = "";
         }
     }
 
