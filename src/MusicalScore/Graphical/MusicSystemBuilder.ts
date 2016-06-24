@@ -316,9 +316,8 @@ export class MusicSystemBuilder {
                 let staffIndex: number = this.visibleStaffIndices[i];
                 let graphicalMeasure: StaffMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(firstSourceMeasure, staffIndex);
                 this.activeClefs[i] = <ClefInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[0];
-                let keyInstruction: KeyInstruction = new KeyInstruction(
-                    <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1]
-                );
+                let keyInstruction: KeyInstruction = KeyInstruction.copy(
+                    <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1]);
                 keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
                 this.activeKeys[i] = keyInstruction;
                 this.activeRhythm[i] = <RhythmInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
