@@ -97,7 +97,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
         let graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef);
         // Adds the note to the right (graphical) voice (mynotes)
         let voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
-        let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).mynotes;
+        let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
         if (!(voiceID in mynotes)) {
             mynotes[voiceID] = [];
         }

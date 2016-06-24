@@ -9,21 +9,27 @@ import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
+import {Beam} from "../../VoiceData/Beam";
+import {GraphicalNote} from "../GraphicalNote";
+import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;
         this.stave = new Vex.Flow.Stave(0, 0, 0);
-        this.voices = {};
+        this.vfVoices = {};
         //this.duration = this.parentSourceMeasure.Duration;
     }
 
     public octaveOffset: number = 3; // FIXME
-    public voices: { [voiceID: number]: Vex.Flow.Voice; };
+    public vfVoices: { [voiceID: number]: Vex.Flow.Voice; };
     public formatVoices: (width: number) => void;
     public unit: number = 10.0;
     private stave: Vex.Flow.Stave;
+
+    private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
+    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; } = {};
     //private duration: Fraction;
 
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -156,13 +162,77 @@ export class VexFlowMeasure extends StaffMeasure {
         // TODO
     }
 
-    public draw(canvas: HTMLCanvasElement): void {
-        let renderer: Vex.Flow.Renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
-        let ctx: any = renderer.getContext();
+    public draw(ctx: Vex.Flow.CanvasContext): void {
         this.stave.setContext(ctx).draw();
-        for (let voiceID in this.voices) {
-            if (this.voices.hasOwnProperty(voiceID)) {
-                this.voices[voiceID].draw(ctx, this.stave);
+        for (let voiceID in this.vfVoices) {
+            if (this.vfVoices.hasOwnProperty(voiceID)) {
+                this.vfVoices[voiceID].draw(ctx, this.stave);
+            }
+        }
+        for (let voiceID in this.vfbeams) {
+            if (this.vfbeams.hasOwnProperty(voiceID)) {
+                for (let beam of this.vfbeams[voiceID]) {
+                    beam.setContext(ctx).draw();
+                }
+            }
+        }
+    }
+
+    public handleBeam(graphicalNote: GraphicalNote, beam: Beam): void {
+        let voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
+        let beams: [Beam, VexFlowStaffEntry[]][] = this.beams[voiceID];
+        if (beams === undefined) {
+            beams = this.beams[voiceID] = [];
+        }
+        let data: [Beam, VexFlowStaffEntry[]];
+        for (let mybeam of beams) {
+            if (mybeam[0] === beam) {
+                data = mybeam;
+            }
+        }
+        if (data === undefined) {
+            data = [beam, []];
+            beams.push(data);
+        }
+        let parent: VexFlowStaffEntry = graphicalNote.parentStaffEntry as VexFlowStaffEntry;
+        if (data[1].indexOf(parent) === -1) {
+            data[1].push(parent);
+        }
+    }
+
+    public finalizeBeams(): void {
+        for (let voiceID in this.beams) {
+            if (this.beams.hasOwnProperty(voiceID)) {
+                let vfbeams: Vex.Flow.Beam[] = this.vfbeams[voiceID];
+                if (vfbeams === undefined) {
+                    vfbeams = this.vfbeams[voiceID] = [];
+                }
+                for (let beam of this.beams[voiceID]) {
+                    let notes: Vex.Flow.StaveNote[] = [];
+                    for (let entry of beam[1]) {
+                        notes.push((entry as VexFlowStaffEntry).vfNotes[voiceID]);
+                    }
+                    vfbeams.push(new Vex.Flow.Beam(notes));
+                }
+            }
+        }
+    }
+
+    public layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
+        let gnotes: { [voiceID: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
+        let vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = this.vfVoices;
+        for (let voiceID in gnotes) {
+            if (gnotes.hasOwnProperty(voiceID)) {
+                if (!(voiceID in vfVoices)) {
+                    vfVoices[voiceID] = new Vex.Flow.Voice({
+                        beat_value: this.parentSourceMeasure.Duration.Denominator,
+                        num_beats: this.parentSourceMeasure.Duration.Numerator,
+                        resolution: Vex.Flow.RESOLUTION,
+                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
+                }
+                let vfnote: Vex.Flow.StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
+                (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
+                vfVoices[voiceID].addTickable(vfnote);
             }
         }
     }

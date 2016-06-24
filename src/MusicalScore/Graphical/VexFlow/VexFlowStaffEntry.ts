@@ -8,5 +8,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         super(measure, sourceStaffEntry, staffEntryParent);
     }
 
-    public mynotes: { [id: number]: GraphicalNote[]; } = {};
+    // The Graphical Notes belonging to this StaffEntry, sorted by voiceID
+    public graphicalNotes: { [voiceID: number]: GraphicalNote[]; } = {};
+    // The corresponding VexFlow.StaveNotes
+    public vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = {};
 }
