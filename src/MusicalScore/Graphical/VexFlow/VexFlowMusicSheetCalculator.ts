@@ -29,8 +29,6 @@ import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 //import {VexFlowMeasure} from "./VexFlowMeasure";
 
 import Vex = require("vexflow");
-import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
-import {VexFlowConverter} from "./VexFlowConverter";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -61,12 +59,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @returns the minimum required x width of the source measure (=list of staff measures)
      */
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
-        // layout the measures in x.
-        // return the minimum required x width of this vertically aligned measure set:
+        // Finalize beams
+        for (let measure of measures) {
+            (measure as VexFlowMeasure).finalizeBeams();
+        }
+        // Format the voices
         let allVoices: Vex.Flow.Voice[] = [];
         let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
         for (let measure of measures) {
-            let mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).voices;
+            let mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
             let voices: Vex.Flow.Voice[] = [];
             for (let voiceID in mvoices) {
                 if (mvoices.hasOwnProperty(voiceID)) {
@@ -148,22 +149,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param graphicalStaffEntry
      */
     protected layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        let vfnotes: { [voiceID: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).mynotes;
-        console.log("Unfortunately empty: ", vfnotes);
-        let measure: VexFlowMeasure = graphicalStaffEntry.parentMeasure as VexFlowMeasure;
-        let voices: { [voiceID: number]: Vex.Flow.Voice; } = measure.voices;
-        for (let id in vfnotes) {
-            if (vfnotes.hasOwnProperty(id)) {
-                if (!(id in voices)) {
-                    voices[id] = new Vex.Flow.Voice({
-                        beat_value: measure.parentSourceMeasure.Duration.Denominator,
-                        num_beats: measure.parentSourceMeasure.Duration.Numerator,
-                        resolution: Vex.Flow.RESOLUTION,
-                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
-                }
-                voices[id].addTickable(VexFlowConverter.StaveNote(vfnotes[id]));
-            }
-        }
+        (graphicalStaffEntry.parentMeasure as VexFlowMeasure).layoutStaffEntry(graphicalStaffEntry);
     }
 
     /**
@@ -236,7 +222,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param openBeams a list of all currently open beams
      */
     protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
-        return;
+        (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
     }
 
     protected handleVoiceEntryLyrics(lyricsEntries: Dictionary<number, LyricsEntry>, voiceEntry: VoiceEntry,

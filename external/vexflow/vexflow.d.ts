@@ -65,7 +65,7 @@ declare namespace Vex {
       public getNumLines(): number;
       public getLineForY(y: number): number;
       public getModifiers(pos: any, cat: any): Clef[]; // FIXME
-      public setContext(ctx: any): Stave;
+      public setContext(ctx: CanvasContext): Stave;
       public addModifier(mod: any, pos: any): void;
       public draw(): void;
       public addTimeSignature(sig: string): void;
@@ -98,7 +98,7 @@ declare namespace Vex {
 
       public static Backends: any;
       public resize(a: number, b: number): void;
-      public getContext(): any;
+      public getContext(): CanvasContext;
     }
 
     export class TimeSignature {
@@ -110,6 +110,16 @@ declare namespace Vex {
 
     export class Accidental {
       constructor(type: string);
+    }
+
+    export class Beam {
+      constructor(notes: StaveNote[]);
+      public setContext(ctx: CanvasContext): Beam;
+      public draw(): void;
+    }
+
+    export class CanvasContext {
+
     }
 
   }

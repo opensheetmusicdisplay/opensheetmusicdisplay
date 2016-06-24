@@ -50,7 +50,6 @@ export class VexFlowConverter {
     public static pitch(pitch: Pitch, octaveOffset: number): [string, string] {
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         let octave: number = pitch.Octave + octaveOffset + 3;
-        console.log("pitch", pitch.Octave, octaveOffset);
         let acc: string = "";
 
         switch (pitch.Accidental) {
@@ -89,6 +88,8 @@ export class VexFlowConverter {
             accidentals.push(res[1]);
         }
         let vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
+            auto_stem: true,
+            clef: "treble", // FIXME!!
             duration: duration,
             keys: keys,
         });
@@ -121,6 +122,7 @@ export class VexFlowConverter {
                 break;
             default:
         }
+        console.log("CLEF", clef, type);
         return type;
     }
 
@@ -158,7 +160,6 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        //console.log("keySignature", key, ret);
         return ret;
     }
 }

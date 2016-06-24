@@ -19,4 +19,5 @@ describe("VexFlow Music Sheet Drawer", () => {
         (new VexFlowMusicSheetDrawer()).drawSheet(gms);
         done();
     });
+
 });

@@ -1,3 +1,4 @@
+import Vex = require("vexflow");
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -8,29 +9,39 @@ import {GraphicalMusicSheet} from "../GraphicalMusicSheet";
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     constructor() {
         super();
-        // Create the canvas in the document:
-        this.canvas = document.createElement("canvas");
-        document.body.appendChild(this.canvas);
-    }
-
-    private canvas: HTMLCanvasElement;
-
-    public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        // Create heading (FIXME)
         let h1: Element = document.createElement("h1");
         h1.textContent = "VexFlowMusicSheetDrawer Output";
         document.body.appendChild(h1);
+        // Create the canvas in the document:
+        let canvas: HTMLCanvasElement = document.createElement("canvas");
+        document.body.appendChild(canvas);
+        this.renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
+        this.ctx = this.renderer.getContext();
+
+    }
+
+    private renderer: Vex.Flow.Renderer;
+    private ctx: Vex.Flow.CanvasContext;
+    private counter: number = 0;
+
+    public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // FIXME units
+        // FIXME actual page size
         let unit: number = 10;
-        this.canvas.width = this.canvas.height = unit * graphicalMusicSheet.ParentMusicSheet.pageWidth;
+        this.renderer.resize(
+            unit * graphicalMusicSheet.ParentMusicSheet.pageWidth,
+            unit * graphicalMusicSheet.ParentMusicSheet.pageWidth
+        );
         super.drawSheet(graphicalMusicSheet);
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
         measure.setAbsoluteCoordinates(
             measure.PositionAndShape.AbsolutePosition.x * (measure as VexFlowMeasure).unit,
-            measure.PositionAndShape.AbsolutePosition.y * (measure as VexFlowMeasure).unit
+            measure.PositionAndShape.AbsolutePosition.y * (measure as VexFlowMeasure).unit + (this.counter += 5)
         );
-        return measure.draw(this.canvas);
+        return measure.draw(this.ctx);
     }
 
     protected applyScreenTransformation(rectangle: RectangleF2D): RectangleF2D {

@@ -19,7 +19,7 @@ import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
 import {Logging} from "../../Common/logging";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
+//import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
 //type repetitionInstructionReader = any;
@@ -78,7 +78,7 @@ export class InstrumentReader {
   private activeRhythm: RhythmInstruction;
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
-  private abstractInstructions: Dictionary<number, AbstractNotationInstruction> = new Dictionary<number, AbstractNotationInstruction>();
+  private abstractInstructions: [number, AbstractNotationInstruction][] = [];
   private openChordSymbolContainer: ChordSymbolContainer;
   // (*) private expressionReaders: ExpressionReader[];
   private currentVoiceGenerator: VoiceGenerator;
@@ -522,8 +522,8 @@ export class InstrumentReader {
             line = parseInt(lineNode.value, 10);
           } catch (ex) {
             errorMsg = ITextTranslation.translateText(
-              "ReaderErrorMessages/ClefLineError",
-              "Invalid clef line given -> using default clef line."
+                "ReaderErrorMessages/ClefLineError",
+                "Invalid clef line given -> using default clef line."
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             line = 2;
@@ -540,8 +540,8 @@ export class InstrumentReader {
                 clefOctaveOffset = -1;
               }
               errorMsg = ITextTranslation.translateText(
-                "ReaderErrorMessages/ClefError",
-                "Unsupported clef found -> using default clef."
+                  "ReaderErrorMessages/ClefError",
+                  "Unsupported clef found -> using default clef."
               );
               this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
               clefEnum = ClefEnum.G;
@@ -549,8 +549,8 @@ export class InstrumentReader {
             }
           } catch (e) {
             errorMsg = ITextTranslation.translateText(
-              "ReaderErrorMessages/ClefError",
-              "Invalid clef found -> using default clef."
+                "ReaderErrorMessages/ClefError",
+                "Invalid clef found -> using default clef."
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             clefEnum = ClefEnum.G;
@@ -565,8 +565,8 @@ export class InstrumentReader {
             clefOctaveOffset = parseInt(clefOctaveNode.value, 10);
           } catch (e) {
             errorMsg = ITextTranslation.translateText(
-              "ReaderErrorMessages/ClefOctaveError",
-              "Invalid clef octave found -> using default clef octave."
+                "ReaderErrorMessages/ClefOctaveError",
+                "Invalid clef octave found -> using default clef octave."
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             clefOctaveOffset = 0;
@@ -578,8 +578,8 @@ export class InstrumentReader {
             staffNumber = parseInt(nodeList.attributes()[0].value, 10);
           } catch (err) {
             errorMsg = ITextTranslation.translateText(
-              "ReaderErrorMessages/ClefError",
-              "Invalid clef found -> using default clef."
+                "ReaderErrorMessages/ClefError",
+                "Invalid clef found -> using default clef."
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             staffNumber = 1;
@@ -587,7 +587,7 @@ export class InstrumentReader {
         }
 
         let clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
-        this.abstractInstructions[staffNumber] = clefInstruction;
+        this.abstractInstructions.push([staffNumber, clefInstruction]);
       }
     }
     if (node.element("key") !== undefined && this.instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
@@ -598,8 +598,8 @@ export class InstrumentReader {
           key = parseInt(keyNode.value, 10);
         } catch (ex) {
           errorMsg = ITextTranslation.translateText(
-            "ReaderErrorMessages/KeyError",
-            "Invalid key found -> set to default."
+              "ReaderErrorMessages/KeyError",
+              "Invalid key found -> set to default."
           );
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           key = 0;
@@ -615,8 +615,8 @@ export class InstrumentReader {
           keyEnum = KeyEnum[modeNode.value];
         } catch (ex) {
           errorMsg = ITextTranslation.translateText(
-            "ReaderErrorMessages/KeyError",
-            "Invalid key found -> set to default."
+              "ReaderErrorMessages/KeyError",
+              "Invalid key found -> set to default."
           );
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           keyEnum = KeyEnum.major;
@@ -625,7 +625,7 @@ export class InstrumentReader {
 
       }
       let keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
-      this.abstractInstructions[1] = keyInstruction;
+      this.abstractInstructions.push([1, keyInstruction]);
     }
     if (node.element("time") !== undefined) {
       let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
@@ -696,19 +696,20 @@ export class InstrumentReader {
         if ((num === 4 && denom === 4) || (num === 2 && denom === 2)) {
           symbolEnum = RhythmSymbolEnum.NONE;
         }
-        this.abstractInstructions[1] = new RhythmInstruction(
+        this.abstractInstructions.push([1, new RhythmInstruction(
             new Fraction(num, denom, false), num, denom, symbolEnum
-        );
+        )]);
       } else {
-        this.abstractInstructions[1] = new RhythmInstruction(new Fraction(4, 4, false), 4, 4, RhythmSymbolEnum.NONE);
+        this.abstractInstructions.push([1, new RhythmInstruction(new Fraction(4, 4, false), 4, 4, RhythmSymbolEnum.NONE)]);
       }
     }
   }
 
   private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
-    for (let i: number = this.abstractInstructions.keys().length - 1; i >= 0; i--) {
-      let key: number = this.abstractInstructions.keys()[i];
-      let value: AbstractNotationInstruction = this.abstractInstructions.getValue(key);
+    for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
+      let pair: [number, AbstractNotationInstruction] = this.abstractInstructions[i];
+      let key: number = pair[0];
+      let value: AbstractNotationInstruction = pair[1];
       if (value instanceof ClefInstruction) {
         let clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (this.currentXmlMeasureIndex === 0 || (key <= this.activeClefs.length && clefInstruction !== this.activeClefs[key - 1])) {
@@ -719,7 +720,7 @@ export class InstrumentReader {
             this.currentStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
             this.currentStaffEntry.Instructions.push(newClefInstruction);
             this.activeClefs[key - 1] = clefInstruction;
-            this.abstractInstructions.remove(key);
+            this.abstractInstructions.splice(i, 1);
           } else if (beginOfMeasure) {
             let firstStaffEntry: SourceStaffEntry;
             if (this.currentMeasure !== undefined) {
@@ -764,19 +765,19 @@ export class InstrumentReader {
                 lastStaffEntry.Instructions.push(newClefInstruction);
               }
               this.activeClefs[key - 1] = clefInstruction;
-              this.abstractInstructions.remove(key);
+              this.abstractInstructions.splice(i, 1);
             }
           }
         }
         if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
-          this.abstractInstructions.remove(key);
+          this.abstractInstructions.splice(i, 1);
         }
       }
       if (value instanceof KeyInstruction) {
         let keyInstruction: KeyInstruction = <KeyInstruction>value;
         if (this.activeKey === undefined || this.activeKey.Key !== keyInstruction.Key) {
           this.activeKey = keyInstruction;
-          this.abstractInstructions.remove(key);
+          this.abstractInstructions.splice(i, 1);
           let sourceMeasure: SourceMeasure;
           if (!this.activeKeyHasBeenInitialized) {
             this.activeKeyHasBeenInitialized = true;
@@ -814,14 +815,14 @@ export class InstrumentReader {
           }
         }
         if (this.activeKey !== undefined && this.activeKey === keyInstruction) {
-          this.abstractInstructions.remove(key);
+          this.abstractInstructions.splice(i, 1);
         }
       }
       if (value instanceof RhythmInstruction) {
         let rhythmInstruction: RhythmInstruction = <RhythmInstruction>value;
         if (this.activeRhythm === undefined || this.activeRhythm !== rhythmInstruction) {
           this.activeRhythm = rhythmInstruction;
-          this.abstractInstructions.remove(key);
+          this.abstractInstructions.splice(i, 1);
           if (this.currentMeasure !== undefined) {
             for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + numberOfStaves; j++) {
               let newRhythmInstruction: RhythmInstruction = rhythmInstruction;
@@ -839,33 +840,32 @@ export class InstrumentReader {
           }
         }
         if (this.activeRhythm !== undefined && this.activeRhythm === rhythmInstruction) {
-          this.abstractInstructions.remove(key);
+          this.abstractInstructions.splice(i, 1);
         }
       }
     }
   }
 
   private saveClefInstructionAtEndOfMeasure(): void {
-    for (let key in this.abstractInstructions) {
-      if (this.abstractInstructions.hasOwnProperty(key)) {
-        let value: AbstractNotationInstruction = this.abstractInstructions[key];
-        if (value instanceof ClefInstruction) {
+    for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
+      let key: number = this.abstractInstructions[i][0];
+      let value: AbstractNotationInstruction = this.abstractInstructions[i][1];
+      if (value instanceof ClefInstruction) {
           let clefInstruction: ClefInstruction = <ClefInstruction>value;
           if (
-            (this.activeClefs[+key - 1] === undefined) ||
-            (clefInstruction.ClefType !== this.activeClefs[+key - 1].ClefType || (
-              clefInstruction.ClefType === this.activeClefs[+key - 1].ClefType &&
-              clefInstruction.Line !== this.activeClefs[+key - 1].Line
+            (this.activeClefs[key - 1] === undefined) ||
+            (clefInstruction.ClefType !== this.activeClefs[key - 1].ClefType || (
+              clefInstruction.ClefType === this.activeClefs[key - 1].ClefType &&
+              clefInstruction.Line !== this.activeClefs[key - 1].Line
             ))) {
             let lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
-            this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + (+key) - 1] = lastStaffEntry;
+            this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] = lastStaffEntry;
             let newClefInstruction: ClefInstruction = clefInstruction;
             newClefInstruction.Parent = lastStaffEntry;
             lastStaffEntry.Instructions.push(newClefInstruction);
-            this.activeClefs[+key - 1] = clefInstruction;
-            delete this.abstractInstructions[+key]; // FIXME Andrea: might hurt performance?
+            this.activeClefs[key - 1] = clefInstruction;
+            this.abstractInstructions.splice(i, 1);
           }
-        }
       }
     }
   }
