@@ -11,8 +11,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Create the canvas in the document:
         this.canvas = document.createElement("canvas");
         document.body.appendChild(this.canvas);
-        // FIXME: units
-        this.canvas.width = this.canvas.height = 10 * 100;
     }
 
     private canvas: HTMLCanvasElement;
@@ -21,6 +19,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         let h1: Element = document.createElement("h1");
         h1.textContent = "VexFlowMusicSheetDrawer Output";
         document.body.appendChild(h1);
+        // FIXME units
+        let unit: number = 10;
+        this.canvas.width = this.canvas.height = unit * graphicalMusicSheet.ParentMusicSheet.pageWidth;
         super.drawSheet(graphicalMusicSheet);
     }
 

@@ -80,11 +80,11 @@ export class MusicSystem extends GraphicalObject {
     }
 
     public calculateBorders(rules: EngravingRules): void {
-        throw new Error("not implemented");
+        // empty
     }
 
     public alignBeginInstructions(): void {
-        throw new Error("not implemented");
+        // empty
     }
 
     public GetLeftBorderAbsoluteXPosition(): number {
