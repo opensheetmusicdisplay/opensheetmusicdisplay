@@ -26,11 +26,12 @@ export class VexFlowMeasure extends StaffMeasure {
     public vfVoices: { [voiceID: number]: Vex.Flow.Voice; };
     public formatVoices: (width: number) => void;
     public unit: number = 10.0;
+
     private stave: Vex.Flow.Stave;
+    private vfclef: string;
 
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; } = {};
-    //private duration: Fraction;
 
     public setAbsoluteCoordinates(x: number, y: number): void {
         this.stave.setX(x);
@@ -80,8 +81,8 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addClefAtBegin(clef: ClefInstruction): void {
         this.octaveOffset = clef.OctaveOffset;
-        let vfclef: string = VexFlowConverter.Clef(clef);
-        this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
+        this.vfclef = VexFlowConverter.Clef(clef);
+        this.stave.addClef(this.vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
         this.increaseBeginInstructionWidth();
     }
 
@@ -230,7 +231,7 @@ export class VexFlowMeasure extends StaffMeasure {
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
                 }
-                let vfnote: Vex.Flow.StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
+                let vfnote: Vex.Flow.StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID], this.vfclef);
                 (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
                 vfVoices[voiceID].addTickable(vfnote);
             }

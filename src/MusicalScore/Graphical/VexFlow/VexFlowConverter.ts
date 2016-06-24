@@ -72,7 +72,7 @@ export class VexFlowConverter {
         return [fund + acc + "/" + octave, acc];
     }
 
-    public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
+    public static StaveNote(notes: GraphicalNote[], clef: string): Vex.Flow.StaveNote {
         let keys: string[] = [];
         let duration: string = VexFlowConverter.duration(notes[0].sourceNote.Length);
         let accidentals: string[] = [];
@@ -89,7 +89,7 @@ export class VexFlowConverter {
         }
         let vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
             auto_stem: true,
-            clef: "treble", // FIXME!!
+            clef: clef,
             duration: duration,
             keys: keys,
         });
