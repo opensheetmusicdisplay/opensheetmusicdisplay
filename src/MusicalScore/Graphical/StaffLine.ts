@@ -9,7 +9,7 @@ import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
-export class StaffLine extends GraphicalObject {
+export abstract class StaffLine extends GraphicalObject {
     protected measures: StaffMeasure[] = [];
     protected staffLines: GraphicalLine[] = new Array(5);
     protected parentMusicSystem: MusicSystem;

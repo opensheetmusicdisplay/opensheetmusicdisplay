@@ -15,7 +15,7 @@ import {SystemLinesEnum} from "./SystemLinesEnum";
 import {BoundingBox} from "./BoundingBox";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
-export class StaffMeasure extends GraphicalObject {
+export abstract class StaffMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
     protected lastInstructionStaffEntry: GraphicalStaffEntry;
 

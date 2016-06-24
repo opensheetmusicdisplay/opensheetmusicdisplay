@@ -9,7 +9,7 @@ import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
 
-export class GraphicalNote extends GraphicalObject {
+export abstract class GraphicalNote extends GraphicalObject {
     constructor(note: Note, parent: GraphicalStaffEntry) {
         super();
         this.sourceNote = note;

@@ -15,8 +15,10 @@ import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
+import {GraphicalComment} from "./GraphicalComment";
+import {GraphicalMarkedArea} from "./GraphicalMarkedArea";
 
-export class MusicSystem extends GraphicalObject {
+export abstract class MusicSystem extends GraphicalObject {
     public needsToBeRedrawn: boolean = true;
     protected parent: GraphicalMusicPage;
     protected id: number;
@@ -26,7 +28,11 @@ export class MusicSystem extends GraphicalObject {
     protected measureNumberLabels: GraphicalLabel[] = [];
     protected maxLabelLength: number;
     protected objectsToRedraw: [Object[], Object][] = [];
-
+    protected instrumentBrackets: GraphicalObject[] = [];
+    protected groupBrackets: GraphicalObject[] = [];
+    protected graphicalMarkedAreas: GraphicalMarkedArea[] = [];
+    protected graphicalComments: GraphicalComment[] = [];
+    protected
     constructor(parent: GraphicalMusicPage, id: number) {
         super();
         this.parent = parent;
@@ -61,6 +67,22 @@ export class MusicSystem extends GraphicalObject {
 
     public get ObjectsToRedraw(): [Object[], Object][] {
         return this.objectsToRedraw;
+    }
+
+    public get InstrumentBrackets(): GraphicalObject[] {
+        return this.instrumentBrackets;
+    }
+
+    public get GroupBrackets(): GraphicalObject[] {
+        return this.groupBrackets;
+    }
+
+    public get GraphicalMarkedAreas(): GraphicalMarkedArea[] {
+        return this.graphicalMarkedAreas;
+    }
+
+    public get GraphicalComments(): GraphicalComment[] {
+        return this.graphicalComments;
     }
 
     public get Id(): number {

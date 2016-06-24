@@ -1,7 +1,7 @@
 ﻿import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
 
-export class AbstractGraphicalInstruction extends GraphicalObject {
+export abstract class AbstractGraphicalInstruction extends GraphicalObject {
     protected parent: GraphicalStaffEntry;
     constructor(parent: GraphicalStaffEntry) {
         super();
