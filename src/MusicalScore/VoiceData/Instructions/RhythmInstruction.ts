@@ -9,6 +9,7 @@ export class RhythmInstruction extends AbstractNotationInstruction {
         this.denominator = denominator;
         this.symbolEnum = rhythmSymbolEnum;
     }
+
     private numerator: number;
     private denominator: number;
     private rhythm: Fraction;
@@ -17,18 +18,23 @@ export class RhythmInstruction extends AbstractNotationInstruction {
     public get Rhythm(): Fraction {
         return this.rhythm;
     }
+
     public set Rhythm(value: Fraction) {
         this.rhythm = value;
     }
+
     public get SymbolEnum(): RhythmSymbolEnum {
         return this.symbolEnum;
     }
+
     public set SymbolEnum(value: RhythmSymbolEnum) {
         this.symbolEnum = value;
     }
+
     public clone(): RhythmInstruction {
         return new RhythmInstruction(this.rhythm.clone(), this.numerator, this.denominator, this.symbolEnum);
     }
+
     public OperatorEquals(rhythm2: RhythmInstruction): boolean {
         let rhythm1: RhythmInstruction = this;
         if (rhythm1 === rhythm2) {
