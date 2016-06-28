@@ -51,25 +51,36 @@ export class VexFlowConverter {
         let octave: number = pitch.Octave + clef.OctaveOffset + 3; // FIXME + 3
         let acc: string = "";
 
-        // switch (pitch.Accidental) {
-        //     case AccidentalEnum.NONE:
-        //         break;
-        //     case AccidentalEnum.FLAT:
-        //         acc = "b";
-        //         break;
-        //     case AccidentalEnum.SHARP:
-        //         acc = "#";
-        //         break;
-        //     case AccidentalEnum.DOUBLESHARP:
-        //         acc = "##";
-        //         break;
-        //     case AccidentalEnum.DOUBLEFLAT:
-        //         acc = "bb";
-        //         break;
-        //     default:
-        // }
         return [fund + acc + "/" + octave, acc, clef];
     }
+
+    /**
+     * Converts AccidentalEnum to vexFlow accidental string
+     * @param accidental
+     * @returns {string}
+     */
+    public static accidental(accidental: AccidentalEnum): string {
+        let acc: string = "";
+        switch (accidental) {
+            case AccidentalEnum.NONE:
+                break;
+            case AccidentalEnum.FLAT:
+                acc = "b";
+                break;
+            case AccidentalEnum.SHARP:
+                acc = "#";
+                break;
+            case AccidentalEnum.DOUBLESHARP:
+                acc = "##";
+                break;
+            case AccidentalEnum.DOUBLEFLAT:
+                acc = "bb";
+                break;
+            default:
+        }
+        return acc;
+    }
+
 
     public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];

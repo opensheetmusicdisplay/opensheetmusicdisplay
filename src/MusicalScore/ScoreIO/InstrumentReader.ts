@@ -787,8 +787,7 @@ export class InstrumentReader {
                             this.abstractInstructions.splice(i, 1);
                         }
                     }
-                }
-                else if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
+                } else if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
                     this.abstractInstructions.splice(i, 1);
                 }
             }
@@ -832,8 +831,7 @@ export class InstrumentReader {
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     this.abstractInstructions.splice(i, 1);
                 }
             }
@@ -857,8 +855,7 @@ export class InstrumentReader {
                             firstStaffEntry.Instructions.push(newRhythmInstruction);
                         }
                     }
-                }
-                else {
+                } else {
                     this.abstractInstructions.splice(i, 1);
                 }
             }
