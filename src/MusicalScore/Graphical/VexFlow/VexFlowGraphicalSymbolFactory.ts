@@ -127,7 +127,9 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param graceScalingFactor
      */
     public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
-        return;
+        let note: VexFlowGraphicalNote = <VexFlowGraphicalNote> graphicalNote;
+        // ToDo: set accidental here from pitch.Accidental
+        //note.vfpitch = 
     }
 
     /**
