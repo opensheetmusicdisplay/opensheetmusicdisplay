@@ -76,7 +76,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 }
             }
             if (voices.length === 0) {
-                console.log("Found a measure with no voices... Continuing anyway.", mvoices);
+                console.warn("Found a measure with no voices... Continuing anyway.", mvoices);
                 continue;
             }
             formatter.joinVoices(voices);
@@ -118,6 +118,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         musicSystemBuilder.buildMusicSystems();
         this.checkMeasuresForWholeRestNotes();
         this.calculateSystemYLayout();
+        for (let page of this.graphicalMusicSheet.MusicPages) {
+            for (let system of page.MusicSystems) {
+                //system.setMusicSystemLabelsYPosition();
+                if (!this.leadSheet) {
+                    system.setYPositionsToVerticalLineObjectsAndCreateLines(this.rules);
+                    system.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
+                    //system.createInstrumentBrackets(this.graphicalMusicSheet.ParentMusicSheet.Instruments, this.rules.StaffHeight);
+                    //system.createGroupBrackets(this.graphicalMusicSheet.ParentMusicSheet.InstrumentalGroups, this.rules.StaffHeight, 0);
+                    //system.alignBeginInstructions();
+                } else if (system === system.Parent.MusicSystems[0]) {
+                    system.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
+                }
+                //system.calculateBorders(this.rules);
+            }
+        }
     }
 
     protected updateStaffLineBorders(staffLine: StaffLine): void {

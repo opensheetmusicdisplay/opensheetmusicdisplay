@@ -11,6 +11,7 @@ import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
 import {NoteEnum} from "../../../Common/DataObjects/pitch";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {GraphicalNote} from "../GraphicalNote";
+import {SystemLinesEnum} from "../SystemLinesEnum";
 
 export class VexFlowConverter {
     private static majorMap: {[_: number]: string; } = {
@@ -168,5 +169,9 @@ export class VexFlowConverter {
             default:
         }
         return ret;
+    }
+
+    public static line(lineType: SystemLinesEnum): any {
+        return Vex.Flow.StaveConnector.type.DOUBLE;
     }
 }

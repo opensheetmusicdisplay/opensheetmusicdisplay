@@ -6,6 +6,10 @@ import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {SystemLinePosition} from "../SystemLinePosition";
 import {StaffMeasure} from "../StaffMeasure";
 import {SystemLine} from "../SystemLine";
+import {VexFlowMeasure} from "./VexFlowMeasure";
+import {VexFlowConverter} from "./VexFlowConverter";
+
+//import Vex = require("vexflow");
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
@@ -18,8 +22,18 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param lineWidth
      * @param systemLabelsRightMargin
      */
-    public createSystemLeftVerticalLineObject(lineWidth: number, systemLabelsRightMargin: number): void {
-        return;
+    public createSystemLeftLine(lineWidth: number, systemLabelsRightMargin: number): void {
+        //let len: number = this.graphicalMeasures.length;
+        //if (len > 1) {
+        //    (this.graphicalMeasures[0][0] as VexFlowMeasure).connectTo(
+        //        this.graphicalMeasures[len - 1][0] as VexFlowMeasure,
+        //        Vex.Flow.StaveConnector.type.SINGLE
+        //    );
+        //}
+        //(this.systemLines as VexFlowMeasure).connectTo(
+        //    this.graphicalMeasures[len - 1][0] as VexFlowMeasure,
+        //    Vex.Flow.StaveConnector.type.SINGLE
+        //);
     }
 
     /**
@@ -46,7 +60,7 @@ export class VexFlowMusicSystem extends MusicSystem {
     public createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
                             musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
         // ToDo: create line in Vexflow
-
+        (topMeasure as VexFlowMeasure).connectTo(bottomMeasure as VexFlowMeasure, VexFlowConverter.line(lineType));
         return new SystemLine(lineType, linePosition, this, topMeasure, bottomMeasure);
     }
 

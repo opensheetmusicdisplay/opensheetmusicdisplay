@@ -122,6 +122,14 @@ declare namespace Vex {
 
     }
 
+    export class StaveConnector {
+      constructor(top: Stave, bottom: Stave);
+      public static type: any;
+      public setType(type: any): StaveConnector;
+      public setContext(ctx: CanvasContext): StaveConnector;
+      public draw(): void;
+    }
+
   }
 }
 

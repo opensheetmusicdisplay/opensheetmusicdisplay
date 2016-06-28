@@ -12,6 +12,9 @@ import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
+import StaveConnector = Vex.Flow.StaveConnector;
+import StaveModifier = Vex.Flow.StaveModifier;
+import StaveNote = Vex.Flow.StaveNote;
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -28,6 +31,7 @@ export class VexFlowMeasure extends StaffMeasure {
     public unit: number = 10.0;
 
     private stave: Vex.Flow.Stave;
+    private connectors: Vex.Flow.StaveConnector[] = [];
 
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; } = {};
@@ -172,6 +176,9 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
             }
         }
+        for (let connector of this.connectors) {
+            connector.setContext(ctx).draw();
+        }
     }
 
     public handleBeam(graphicalNote: GraphicalNote, beam: Beam): void {
@@ -226,16 +233,26 @@ export class VexFlowMeasure extends StaffMeasure {
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
                 }
-                let vfnote: Vex.Flow.StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
+                let vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
                 (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
                 vfVoices[voiceID].addTickable(vfnote);
             }
         }
     }
 
+    public connectTo(bottom: VexFlowMeasure, lineType: any): void {
+        let connector: StaveConnector = new Vex.Flow.StaveConnector(this.stave, bottom.getVFStave());
+        connector.setType(lineType);
+        this.connectors.push(connector);
+    }
+
+    public getVFStave(): Vex.Flow.Stave {
+        return this.stave;
+    }
+
     private increaseBeginInstructionWidth(): void {
-        let modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
-        let modifier: Vex.Flow.StaveModifier = modifiers[modifiers.length - 1];
+        let modifiers: StaveModifier[] = this.stave.getModifiers();
+        let modifier: StaveModifier = modifiers[modifiers.length - 1];
         //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
         let padding: number = modifier.getPadding(20);
         //modifier.getPadding(this.begModifiers);
@@ -244,8 +261,8 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     private increaseEndInstructionWidth(): void {
-        let modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
-        let modifier: Vex.Flow.StaveModifier = modifiers[modifiers.length - 1];
+        let modifiers: StaveModifier[] = this.stave.getModifiers();
+        let modifier: StaveModifier = modifiers[modifiers.length - 1];
         let padding: number = 0; //modifier.getPadding(this.endModifiers++);
         let width: number = modifier.getWidth();
         this.endInstructionsWidth += (padding + width) / this.unit;
