@@ -4,7 +4,7 @@
   "description": "Open Sheet Music Display library",
   "main": "build/osmd.min.js",
   "scripts": {
-    "prestart": "alias grunt=\"'PATH=$(npm bin):$PATH' grunt\"",
+    "start": "alias grunt=\"'PATH=$(npm bin):$PATH' grunt\"",
     "test": "grunt npmtest",
     "prepublish": "grunt publish"
   },
