@@ -253,7 +253,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             let rhythmInstruction: RhythmInstruction = rhythmInstructions[index].clone();
             for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
                 if (
-                    this.currentMeasure.FirstInstructionsStaffEntries[i] !== undefined && !(this._lastElement(this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions) instanceof RhythmInstruction)
+                    this.currentMeasure.FirstInstructionsStaffEntries[i] !== undefined &&
+                    !(this._lastElement(this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions) instanceof RhythmInstruction)
                 ) {
                     this.currentMeasure.FirstInstructionsStaffEntries[i].removeAllInstructionsOfTypeRhythmInstruction();
                     this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions.push(rhythmInstruction.clone());
@@ -361,7 +362,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 for (let staffIndex: number = 0; staffIndex < this.musicSheet.Instruments[i].Staves.length; staffIndex++) {
                     if (!this.staffMeasureIsEmpty(firstStaffIndexOfInstrument + staffIndex)) {
                         this.currentMeasure.setErrorInStaffMeasure(firstStaffIndexOfInstrument + staffIndex, true);
-                        let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MissingNotesError", "Given Notes don't correspond to measure duration.");
+                        let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MissingNotesError",
+                                                                              "Given Notes don't correspond to measure duration.");
                         this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     }
                 }

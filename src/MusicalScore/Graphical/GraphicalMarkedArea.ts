@@ -1,7 +1,8 @@
 ﻿import {GraphicalLabel} from "./GraphicalLabel";
 import {GraphicalRectangle} from "./GraphicalRectangle";
 export class GraphicalMarkedArea {
-    constructor(systemRectangle: GraphicalRectangle, labelRectangle: GraphicalRectangle = null, label: GraphicalLabel = null, settingsLabel: GraphicalLabel = null) {
+    constructor(systemRectangle: GraphicalRectangle, labelRectangle: GraphicalRectangle = undefined, label: GraphicalLabel = undefined,
+                settingsLabel: GraphicalLabel = undefined) {
         this.systemRectangle = systemRectangle;
         this.labelRectangle = labelRectangle;
         this.label = label;

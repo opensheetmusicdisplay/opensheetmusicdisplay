@@ -20,6 +20,7 @@ import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/collectionUtil";
+import {SystemLinePosition} from "./SystemLinePosition";
 
 export class MusicSystemBuilder {
     private measureList: StaffMeasure[][];
@@ -719,39 +720,40 @@ export class MusicSystemBuilder {
         for (let visStaffIdx: number = 0, len: number = currentSystem.StaffLines.length; visStaffIdx < len; ++visStaffIdx) {
             let staffLine: StaffLine = currentSystem.StaffLines[visStaffIdx];
             let currentXPosition: number = 0.0;
-            for (let i: number = 0; i < staffLine.Measures.length; i++) {
-                let measure: StaffMeasure = staffLine.Measures[i];
+            for (let measureIndex: number = 0; measureIndex < staffLine.Measures.length; measureIndex++) {
+                let measure: StaffMeasure = staffLine.Measures[measureIndex];
                 measure.setPositionInStaffline(currentXPosition);
                 measure.setWidth(measure.beginInstructionsWidth + measure.minimumStaffEntriesWidth * scalingFactor + measure.endInstructionsWidth);
-                if (i < this.currentSystemParams.systemMeasures.length) {
-                    let startLine: SystemLinesEnum = this.currentSystemParams.systemMeasures[i].beginLine;
+                if (measureIndex < this.currentSystemParams.systemMeasures.length) {
+                    let startLine: SystemLinesEnum = this.currentSystemParams.systemMeasures[measureIndex].beginLine;
                     let lineWidth: number = measure.getLineWidth(SystemLinesEnum.BoldThinDots);
                     switch (startLine) {
                         case SystemLinesEnum.BoldThinDots:
                             let xPosition: number = currentXPosition;
-                            if (i === 0) {
+                            if (measureIndex === 0) {
                                 xPosition = currentXPosition + measure.beginInstructionsWidth - lineWidth;
                             }
-                            currentSystem.createVerticalLineForMeasure(xPosition, SystemLinesEnum.BoldThinDots, lineWidth, visStaffIdx);
+
+                            currentSystem.createVerticalLineForMeasure(xPosition, lineWidth, startLine, SystemLinePosition.MeasureBegin, measureIndex, measure);
                             break;
                         default:
                     }
                 }
                 measure.staffEntriesScaleFactor = scalingFactor;
                 measure.layoutSymbols();
-                let nextMeasureHasRepStartLine: boolean = i + 1 < this.currentSystemParams.systemMeasures.length
-                    && this.currentSystemParams.systemMeasures[i + 1].beginLine === SystemLinesEnum.BoldThinDots;
+                let nextMeasureHasRepStartLine: boolean = measureIndex + 1 < this.currentSystemParams.systemMeasures.length
+                    && this.currentSystemParams.systemMeasures[measureIndex + 1].beginLine === SystemLinesEnum.BoldThinDots;
                 if (!nextMeasureHasRepStartLine) {
                     let endLine: SystemLinesEnum = SystemLinesEnum.SingleThin;
-                    if (i < this.currentSystemParams.systemMeasures.length) {
-                        endLine = this.currentSystemParams.systemMeasures[i].endLine;
+                    if (measureIndex < this.currentSystemParams.systemMeasures.length) {
+                        endLine = this.currentSystemParams.systemMeasures[measureIndex].endLine;
                     }
                     let lineWidth: number = measure.getLineWidth(endLine);
                     let xPos: number = measure.PositionAndShape.RelativePosition.x + measure.PositionAndShape.BorderRight - lineWidth;
                     if (endLine === SystemLinesEnum.DotsBoldBoldDots) {
                         xPos -= lineWidth / 2;
                     }
-                    currentSystem.createVerticalLineForMeasure(xPos, endLine, lineWidth, visStaffIdx);
+                    currentSystem.createVerticalLineForMeasure(xPos, lineWidth, endLine, SystemLinePosition.MeasureEnd, measureIndex, measure);
                 }
                 currentXPosition = measure.PositionAndShape.RelativePosition.x + measure.PositionAndShape.BorderRight;
             }
