@@ -54,17 +54,17 @@ export class VexFlowMeasure extends StaffMeasure {
         // FIXME: See values in VexFlow's stavebarline.js
         switch (line) {
             case SystemLinesEnum.SingleThin:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.DoubleThin:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.ThinBold:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.BoldThinDots:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.DotsThinBold:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.DotsBoldBoldDots:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.None:
                 return 0;
             default:
