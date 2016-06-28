@@ -35,7 +35,7 @@ export abstract class MusicSystem extends GraphicalObject {
     protected groupBrackets: GraphicalObject[] = [];
     protected graphicalMarkedAreas: GraphicalMarkedArea[] = [];
     protected graphicalComments: GraphicalComment[] = [];
-    protected systemLines: SystemLine[]  = [];
+    protected systemLines: SystemLine[] = [];
     protected rules: EngravingRules;
 
     constructor(parent: GraphicalMusicPage, id: number) {
@@ -99,8 +99,31 @@ export abstract class MusicSystem extends GraphicalObject {
         return this.id;
     }
 
+    /**
+     * This method creates the left vertical Line connecting all staves of the MusicSystem.
+     * @param lineWidth
+     * @param systemLabelsRightMargin
+     */
     public createSystemLeftLine(lineWidth: number, systemLabelsRightMargin: number): void {
-        throw new Error("not implemented");
+        let xPosition: number = -lineWidth / 2;
+        if (this === this.parent.MusicSystems[0] && this.parent === this.parent.Parent.MusicPages[0]) {
+            xPosition = this.maxLabelLength + systemLabelsRightMargin - lineWidth / 2;
+        }
+        let top: StaffMeasure = this.staffLines[0].Measures[0];
+        let bottom: StaffMeasure = undefined;
+        if (this.staffLines.length > 1) {
+            bottom = this.staffLines[this.staffLines.length - 1].Measures[0];
+        }
+        let leftSystemLine: SystemLine = this.createSystemLine(xPosition, lineWidth, SystemLinesEnum.SingleThin,
+                                                               SystemLinePosition.MeasureBegin, this, top, bottom);
+        this.SystemLines.push(leftSystemLine);
+        this.boundingBox.ChildElements.push(leftSystemLine.PositionAndShape);
+        leftSystemLine.PositionAndShape.RelativePosition = new PointF2D(xPosition, 0);
+        leftSystemLine.PositionAndShape.BorderLeft = 0;
+        leftSystemLine.PositionAndShape.BorderRight = lineWidth;
+        leftSystemLine.PositionAndShape.BorderTop = 0;
+        leftSystemLine.PositionAndShape.BorderBottom = this.boundingBox.Size.height;
+        this.createLinesForSystemLine(leftSystemLine);
     }
 
     /**
@@ -117,17 +140,11 @@ export abstract class MusicSystem extends GraphicalObject {
         let staffLine: StaffLine = measure.ParentStaffLine;
         let staffLineRelative: PointF2D = new PointF2D(staffLine.PositionAndShape.RelativePosition.x,
                                                        staffLine.PositionAndShape.RelativePosition.y);
-        let staves: Staff[]  = staffLine.ParentStaff.ParentInstrument.Staves;
+        let staves: Staff[] = staffLine.ParentStaff.ParentInstrument.Staves;
         if (staffLine.ParentStaff === staves[0]) {
             let bottomMeasure: StaffMeasure = undefined;
             if (staves.length > 1) {
-                let last: Staff = staves[staves.length - 1];
-                for (let line of staffLine.ParentMusicSystem.staffLines) {
-                    if (line.ParentStaff === last) {
-                        bottomMeasure = line.Measures[measureIndex];
-                        break;
-                    }
-                }
+                bottomMeasure = this.getBottomStaffLine(staffLine).Measures[measureIndex];
             }
             let singleVerticalLineAfterMeasure: SystemLine = this.createSystemLine(xPosition, lineWidth, lineType, linePosition, this, measure, bottomMeasure);
             let systemXPosition: number = staffLineRelative.x + xPosition;
@@ -139,23 +156,8 @@ export abstract class MusicSystem extends GraphicalObject {
         }
     }
 
-    /**
-     * This method creates all the graphical lines and dots needed to render a system line (e.g. bold-thin-dots..).
-     * @param xPosition
-     * @param lineWidth
-     * @param lineType
-     * @param linePosition indicates if the line belongs to start or end of measure
-     * @param musicSystem
-     * @param topMeasure
-     * @param bottomMeasure
-     */
-    public createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
-                            musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
-        throw new Error("not implemented");
-    }
-
     public setYPositionsToVerticalLineObjectsAndCreateLines(rules: EngravingRules): void {
-        throw new Error("not implemented");
+        // empty
     }
 
     public calculateBorders(rules: EngravingRules): void {
@@ -336,6 +338,41 @@ export abstract class MusicSystem extends GraphicalObject {
             return true;
         }
         return false;
+    }
+
+    public getBottomStaffLine(topStaffLine: StaffLine): StaffLine {
+        let staves: Staff[] = topStaffLine.ParentStaff.ParentInstrument.Staves;
+        let last: Staff = staves[staves.length - 1];
+        for (let line of topStaffLine.ParentMusicSystem.staffLines) {
+            if (line.ParentStaff === last) {
+                return line;
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Here the system line is generated, which acts as the container of graphical lines and dots that will be finally rendered.
+     * It holds al the logical parameters of the system line.
+     * @param xPosition The x position within the system
+     * @param lineWidth The total x width
+     * @param lineType The line type enum
+     * @param linePosition indicates if the line belongs to start or end of measure
+     * @param musicSystem
+     * @param topMeasure
+     * @param bottomMeasure
+     */
+    protected createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
+                               musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
+        throw new Error("not implemented");
+    }
+
+    /// <summary>
+    /// This method creates all the graphical lines and dots needed to render a system line (e.g. bold-thin-dots..).
+    /// </summary>
+    /// <param name="psSystemLine"></param>
+    protected createLinesForSystemLine(systemLine: SystemLine): void {
+        //Empty
     }
 
     protected calcInstrumentsBracketsWidth(): number {
