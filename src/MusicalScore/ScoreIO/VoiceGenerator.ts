@@ -648,7 +648,7 @@ export class VoiceGenerator {
         return this.openTupletNumber;
     }
     private handleTimeModificationNode(noteNode: IXmlElement): void {
-        if (Object.keys(this.tupletDict).length !== 0) {
+        if (this.openTupletNumber in this.tupletDict) {
             try {
                 let tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
                 let notes: Note[] = CollectionUtil.last(tuplet.Notes);

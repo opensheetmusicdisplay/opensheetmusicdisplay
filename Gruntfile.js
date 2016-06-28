@@ -114,14 +114,6 @@ module.exports = function (grunt) {
         typings: {
             install: {}
         },
-        // Documentation
-        docco: {
-            src: src,
-            options: {
-                layout: 'linear',
-                output: 'build/docs'
-            }
-        },
         // Cleaning task setup
         clean: {
             options: {
@@ -141,7 +133,6 @@ module.exports = function (grunt) {
 
     // Load Npm tasks
     grunt.loadNpmTasks('grunt-karma');
-    grunt.loadNpmTasks('grunt-docco');
     grunt.loadNpmTasks('grunt-tslint');
     grunt.loadNpmTasks('grunt-typings');
     grunt.loadNpmTasks('grunt-browserify');
@@ -154,10 +145,11 @@ module.exports = function (grunt) {
     grunt.registerTask('all',     ['typings', 'default']);
     grunt.registerTask('start',   ['typings']);
     grunt.registerTask('default', ['browserify', 'lint', 'karma:ci', 'uglify']);
+    grunt.registerTask('npmtest', ['typings', 'test']);
     grunt.registerTask('test',    ['browserify:debug', 'lint', 'karma:ci']);
     grunt.registerTask('fasttest', ['browserify:debug', 'karma:ci']);
     grunt.registerTask('rebuild', ['clean', 'default']);
-    grunt.registerTask('publish', ['clean', 'browserify:dist', 'docco']);
+    grunt.registerTask('publish', ['clean', 'typings', 'browserify', 'uglify']);
     grunt.registerTask('lint',    ['jshint', 'tslint']);
     // Fix these in the future:
     // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);

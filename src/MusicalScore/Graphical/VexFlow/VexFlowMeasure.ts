@@ -26,15 +26,14 @@ export class VexFlowMeasure extends StaffMeasure {
     public vfVoices: { [voiceID: number]: Vex.Flow.Voice; };
     public formatVoices: (width: number) => void;
     public unit: number = 10.0;
+
     private stave: Vex.Flow.Stave;
 
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; } = {};
-    //private duration: Fraction;
 
     public setAbsoluteCoordinates(x: number, y: number): void {
-        this.stave.setX(x);
-        this.stave.setY(y);
+        this.stave.setX(x).setY(y);
     }
 
     /**
@@ -55,17 +54,17 @@ export class VexFlowMeasure extends StaffMeasure {
         // FIXME: See values in VexFlow's stavebarline.js
         switch (line) {
             case SystemLinesEnum.SingleThin:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.DoubleThin:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.ThinBold:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.BoldThinDots:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.DotsThinBold:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.DotsBoldBoldDots:
-                return 5;
+                return 5 / this.unit;
             case SystemLinesEnum.None:
                 return 0;
             default:
@@ -130,17 +129,14 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param width
      */
     public setWidth(width: number): void {
-        // Widths in PS and VexFlow work differently.
-        // In VexFlow, width is only the width of the actual voices, without considering
-        // modifiers like clefs. In PS, width is the total width of the stave.
-        // @Andrea: The following could be improved by storing the values in this object.
-        //          Now it calls .format() implicitly.
-        //
         super.setWidth(width);
+        // Set the width of the Vex.Flow.Stave
         this.stave.setWidth(width * this.unit);
+        // If this is the first stave in the vertical measure, call the format
+        // method to set the width of all the voices
         if (this.formatVoices) {
+            // The width of the voices does not include the instructions (StaveModifiers)
             this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * this.unit);
-            this.formatVoices = undefined;
         }
     }
 
@@ -212,7 +208,7 @@ export class VexFlowMeasure extends StaffMeasure {
                     for (let entry of beam[1]) {
                         notes.push((entry as VexFlowStaffEntry).vfNotes[voiceID]);
                     }
-                    vfbeams.push(new Vex.Flow.Beam(notes));
+                    vfbeams.push(new Vex.Flow.Beam(notes, true));
                 }
             }
         }

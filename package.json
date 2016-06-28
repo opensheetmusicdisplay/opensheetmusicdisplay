@@ -2,10 +2,11 @@
   "name": "opensheetmusicdisplay",
   "version": "0.0.0",
   "description": "Open Sheet Music Display library",
-  "main": "",
+  "main": "build/osmd.min.js",
   "scripts": {
-    "start": "grunt start",
-    "test": "grunt test"
+    "start": "alias grunt=\"'PATH=$(npm bin):$PATH' grunt\"",
+    "test": "grunt npmtest",
+    "prepublish": "grunt publish"
   },
   "repository": {
     "type": "git",
@@ -25,7 +26,6 @@
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
     "browserify": "",
-    "chai": "^3.4.1",
     "es6-promise": "",
     "grunt": "",
     "grunt-browserify": "",
@@ -33,20 +33,10 @@
     "grunt-contrib-jshint": "",
     "grunt-contrib-uglify": "",
     "grunt-contrib-watch": "",
-    "grunt-docco": "",
-    "grunt-karma": "",
     "grunt-tslint": "",
     "grunt-typings": "",
+    "grunt-karma": "",
     "jszip": "",
-    "karma": "",
-    "karma-chai": "",
-    "karma-chrome-launcher": "",
-    "karma-firefox-launcher": "",
-    "karma-mocha": "",
-    "karma-mocha-reporter": "",
-    "karma-phantomjs-launcher": "",
-    "mocha": "^2.5.2",
-    "phantomjs-prebuilt": "",
     "tsify": "",
     "tslint": "3.8.0",
     "typescript": "",
@@ -54,7 +44,17 @@
     "vexflow": ""
   },
   "devDependencies": {
+    "chai": "^3.4.1",
+    "karma": "",
+    "karma-chai": "",
+    "karma-chrome-launcher": "",
+    "karma-firefox-launcher": "",
+    "karma-mocha": "",
+    "karma-mocha-reporter": "",
+    "karma-phantomjs-launcher": "",
     "karma-xml2js-preprocessor": "",
-    "karma-base64-to-js-preprocessor": ""
+    "karma-base64-to-js-preprocessor": "",
+    "mocha": "^2.5.2",
+    "phantomjs-prebuilt": ""
   }
 }

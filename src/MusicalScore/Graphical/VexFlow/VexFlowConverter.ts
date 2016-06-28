@@ -24,21 +24,20 @@ export class VexFlowConverter {
 
     public static duration(fraction: Fraction): string {
         let dur: number = fraction.RealValue;
-        switch (dur) {
-            case 0.25:
-                return "q";
-            case 0.5:
-                return "h";
-            case 1:
-                return "w";
-            case 0.125:
-                return "8";
-            case 0.0625:
-                return "16";
-            // FIXME TODO
-            default:
-                return "16";
+        if (dur === 1) {
+            return "w";
+        } else if (dur < 1 && dur >= 0.5) {
+            return "h";
+        } else if (dur < 0.5 && dur >= 0.25) {
+            return "q";
+        } else if (dur < 0.25 && dur >= 0.125) {
+            return "8";
+        } else if (dur < 0.125 && dur >= 0.0625) {
+            return "16";
+        } else if (dur < 0.0625 && dur >= 0.03125) {
+            return "32";
         }
+        return "128";
     }
 
     /**
@@ -47,9 +46,9 @@ export class VexFlowConverter {
      * @param pitch
      * @returns {string[]}
      */
-    public static pitch(pitch: Pitch, octaveOffset: number): [string, string] {
+    public static pitch(pitch: Pitch, clef: ClefInstruction): [string, string, ClefInstruction] {
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        let octave: number = pitch.Octave + octaveOffset + 3;
+        let octave: number = pitch.Octave + clef.OctaveOffset + 3; // FIXME + 3
         let acc: string = "";
 
         switch (pitch.Accidental) {
@@ -69,15 +68,17 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        return [fund + acc + "/" + octave, acc];
+        return [fund + acc + "/" + octave, acc, clef];
     }
 
     public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];
-        let duration: string = VexFlowConverter.duration(notes[0].sourceNote.Length);
+        let frac: Fraction = notes[0].sourceNote.Length;
+        let duration: string = VexFlowConverter.duration(frac);
         let accidentals: string[] = [];
+        let vfclef: string;
         for (let note of notes) {
-            let res: [string, string] = (note as VexFlowGraphicalNote).vfpitch;
+            let res: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             if (res === undefined) {
                 keys = ["b/4"];
                 accidentals = [];
@@ -86,11 +87,18 @@ export class VexFlowConverter {
             }
             keys.push(res[0]);
             accidentals.push(res[1]);
+            if (!vfclef) {
+                vfclef = VexFlowConverter.Clef(res[2]);
+            }
         }
         let vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
             auto_stem: true,
-            clef: "treble", // FIXME!!
+            clef: vfclef,
             duration: duration,
+            duration_override: {
+                denominator: frac.Denominator,
+                numerator: frac.Numerator,
+            },
             keys: keys,
         });
         for (let i: number = 0, len: number = keys.length; i < len; i += 1) {
@@ -122,7 +130,6 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        console.log("CLEF", clef, type);
         return type;
     }
 

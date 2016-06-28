@@ -8,6 +8,7 @@ import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
+import {MusicSymbol} from "../Graphical/MusicSymbol";
 
 export class Note {
 
@@ -158,6 +159,22 @@ export class Note {
         }
         return false;
     }
+
+    //public calculateTailSymbol(): number {
+    //    let length: number = this.Length.RealValue;
+    //    if (this.NoteTuplet) {
+    //        length = this.NoteTuplet.Fractions[this.NoteTuplet.getNoteIndex(this)].RealValue;
+    //    }
+    //    if (length < 0.25 && length >= 0.125) {
+    //        return 8;
+    //    } else if (length < 0.125 && length >= 0.0625) {
+    //        return 16;
+    //    } else if (length < 0.0625 && length >= 0.03125) {
+    //        return 32;
+    //    } else {
+    //        return 64;
+    //    }
+    //}
 }
 
 export enum Appearance {
