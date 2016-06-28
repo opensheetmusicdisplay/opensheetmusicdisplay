@@ -11,7 +11,6 @@ import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
 import {NoteEnum} from "../../../Common/DataObjects/pitch";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {GraphicalNote} from "../GraphicalNote";
-import Clef = Vex.Flow.Clef;
 
 export class VexFlowConverter {
     private static majorMap: {[_: number]: string; } = {
