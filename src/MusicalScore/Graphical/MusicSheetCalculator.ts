@@ -364,12 +364,12 @@ export abstract class MusicSheetCalculator {
                 musicSystem.setMusicSystemLabelsYPosition();
                 if (!this.leadSheet) {
                     musicSystem.setYPositionsToVerticalLineObjectsAndCreateLines(this.rules);
-                    musicSystem.createSystemLeftVerticalLineObject(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
+                    musicSystem.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
                     musicSystem.createInstrumentBrackets(this.graphicalMusicSheet.ParentMusicSheet.Instruments, this.rules.StaffHeight);
                     musicSystem.createGroupBrackets(this.graphicalMusicSheet.ParentMusicSheet.InstrumentalGroups, this.rules.StaffHeight, 0);
                     musicSystem.alignBeginInstructions();
                 } else if (musicSystem === musicSystem.Parent.MusicSystems[0]) {
-                    musicSystem.createSystemLeftVerticalLineObject(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
+                    musicSystem.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
                 }
                 musicSystem.calculateBorders(this.rules);
             }

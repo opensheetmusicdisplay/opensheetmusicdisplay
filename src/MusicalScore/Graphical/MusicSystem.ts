@@ -17,6 +17,9 @@ import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
 import {GraphicalComment} from "./GraphicalComment";
 import {GraphicalMarkedArea} from "./GraphicalMarkedArea";
+import {SystemLine} from "./SystemLine";
+import {SystemLinePosition} from "./SystemLinePosition";
+import {Staff} from "../VoiceData/Staff";
 
 export abstract class MusicSystem extends GraphicalObject {
     public needsToBeRedrawn: boolean = true;
@@ -32,13 +35,16 @@ export abstract class MusicSystem extends GraphicalObject {
     protected groupBrackets: GraphicalObject[] = [];
     protected graphicalMarkedAreas: GraphicalMarkedArea[] = [];
     protected graphicalComments: GraphicalComment[] = [];
-    protected
+    protected systemLines: SystemLine[]  = [];
+    protected rules: EngravingRules;
+
     constructor(parent: GraphicalMusicPage, id: number) {
         super();
         this.parent = parent;
         this.id = id;
         this.boundingBox = new BoundingBox(this, parent.PositionAndShape);
         this.maxLabelLength = 0.0;
+        this.rules = this.parent.Parent.ParentMusicSheet.Rules;
     }
 
     public get Parent(): GraphicalMusicPage {
@@ -85,15 +91,66 @@ export abstract class MusicSystem extends GraphicalObject {
         return this.graphicalComments;
     }
 
+    public get SystemLines(): SystemLine[] {
+        return this.systemLines;
+    }
+
     public get Id(): number {
         return this.id;
     }
 
-    public createSystemLeftVerticalLineObject(lineWidth: number, systemLabelsRightMargin: number): void {
+    public createSystemLeftLine(lineWidth: number, systemLabelsRightMargin: number): void {
         throw new Error("not implemented");
     }
 
-    public createVerticalLineForMeasure(position: number, lineType: SystemLinesEnum, lineWidth: number, index: number): void {
+    /**
+     * This method creates the vertical Lines after the End of all StaffLine's Measures
+     * @param xPosition
+     * @param lineWidth
+     * @param lineType
+     * @param linePosition indicates if the line belongs to start or end of measure
+     * @param measureIndex the measure index within the staffline
+     * @param measure
+     */
+    public createVerticalLineForMeasure(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
+                                        measureIndex: number, measure: StaffMeasure): void {
+        let staffLine: StaffLine = measure.ParentStaffLine;
+        let staffLineRelative: PointF2D = new PointF2D(staffLine.PositionAndShape.RelativePosition.x,
+                                                       staffLine.PositionAndShape.RelativePosition.y);
+        let staves: Staff[]  = staffLine.ParentStaff.ParentInstrument.Staves;
+        if (staffLine.ParentStaff === staves[0]) {
+            let bottomMeasure: StaffMeasure = undefined;
+            if (staves.length > 1) {
+                let last: Staff = staves[staves.length - 1];
+                for (let line of staffLine.ParentMusicSystem.staffLines) {
+                    if (line.ParentStaff === last) {
+                        bottomMeasure = line.Measures[measureIndex];
+                        break;
+                    }
+                }
+            }
+            let singleVerticalLineAfterMeasure: SystemLine = this.createSystemLine(xPosition, lineWidth, lineType, linePosition, this, measure, bottomMeasure);
+            let systemXPosition: number = staffLineRelative.x + xPosition;
+            singleVerticalLineAfterMeasure.PositionAndShape.RelativePosition = new PointF2D(systemXPosition, 0);
+            singleVerticalLineAfterMeasure.PositionAndShape.BorderLeft = 0;
+            singleVerticalLineAfterMeasure.PositionAndShape.BorderRight = lineWidth;
+            this.SystemLines.push(singleVerticalLineAfterMeasure);
+            this.boundingBox.ChildElements.push(singleVerticalLineAfterMeasure.PositionAndShape);
+        }
+    }
+
+    /**
+     * This method creates all the graphical lines and dots needed to render a system line (e.g. bold-thin-dots..).
+     * @param xPosition
+     * @param lineWidth
+     * @param lineType
+     * @param linePosition indicates if the line belongs to start or end of measure
+     * @param musicSystem
+     * @param topMeasure
+     * @param bottomMeasure
+     */
+    public createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
+                            musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
         throw new Error("not implemented");
     }
 

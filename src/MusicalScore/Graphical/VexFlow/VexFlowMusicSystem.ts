@@ -3,6 +3,9 @@ import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {EngravingRules} from "../EngravingRules";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
+import {SystemLinePosition} from "../SystemLinePosition";
+import {StaffMeasure} from "../StaffMeasure";
+import {SystemLine} from "../SystemLine";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
@@ -28,6 +31,23 @@ export class VexFlowMusicSystem extends MusicSystem {
      */
     public createVerticalLineForMeasure(position: number, lineType: SystemLinesEnum, lineWidth: number, index: number): void {
         return;
+    }
+
+    /**
+     * This method creates all the graphical lines and dots needed to render a system line (e.g. bold-thin-dots..).
+     * @param xPosition
+     * @param lineWidth
+     * @param lineType
+     * @param linePosition indicates if the line belongs to start or end of measure
+     * @param musicSystem
+     * @param topMeasure
+     * @param bottomMeasure
+     */
+    public createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
+                            musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
+        // ToDo: create line in Vexflow
+
+        return new SystemLine(lineType, linePosition, this, topMeasure, bottomMeasure);
     }
 
     /**
