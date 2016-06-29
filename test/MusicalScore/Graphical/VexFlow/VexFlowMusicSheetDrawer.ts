@@ -5,6 +5,7 @@ import {MusicSheetReader} from "../../../../src/MusicalScore/ScoreIO/MusicSheetR
 import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {TestUtils} from "../../../Util/TestUtils";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
+import {VexFlowTextMeasurer} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 
 describe("VexFlow Music Sheet Drawer", () => {
 
@@ -17,7 +18,7 @@ describe("VexFlow Music Sheet Drawer", () => {
         let reader: MusicSheetReader = new MusicSheetReader();
         let sheet: MusicSheet = reader.createMusicSheet(score, path);
         let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
-        (new VexFlowMusicSheetDrawer()).drawSheet(gms);
+        (new VexFlowMusicSheetDrawer(new VexFlowTextMeasurer())).drawSheet(gms);
         done();
     });
 

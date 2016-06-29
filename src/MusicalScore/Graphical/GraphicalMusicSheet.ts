@@ -21,6 +21,8 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {Logging} from "../../Common/logging";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
+import {SelectionStartSymbol} from "./SelectionStartSymbol";
+import {SelectionEndSymbol} from "./SelectionEndSymbol";
 
 export class GraphicalMusicSheet {
     constructor(musicSheet: MusicSheet, calculator: MusicSheetCalculator) {
@@ -44,6 +46,8 @@ export class GraphicalMusicSheet {
     private composer: GraphicalLabel;
     private lyricist: GraphicalLabel;
     private cursors: GraphicalLine[] = [];
+    private selectionStartSymbol: SelectionStartSymbol;
+    private selectionEndSymbol: SelectionEndSymbol;
     private minAllowedSystemWidth: number;
     //private systemImages: Dictionary<MusicSystem, SystemImageProperties> = new Dictionary<MusicSystem, SystemImageProperties>();
     private numberOfStaves: number;
@@ -119,6 +123,14 @@ export class GraphicalMusicSheet {
 
     public get Cursors(): GraphicalLine[] {
         return this.cursors;
+    }
+
+    public get SelectionStartSymbol(): SelectionStartSymbol {
+        return this.selectionStartSymbol;
+    }
+
+    public get SelectionEndSymbol(): SelectionEndSymbol {
+        return this.selectionEndSymbol;
     }
 
     public get MinAllowedSystemWidth(): number {
