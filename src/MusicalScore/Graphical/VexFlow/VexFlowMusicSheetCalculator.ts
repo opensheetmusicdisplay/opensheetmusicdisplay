@@ -29,6 +29,7 @@ import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 //import {VexFlowMeasure} from "./VexFlowMeasure";
 
 import Vex = require("vexflow");
+import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -118,20 +119,41 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         musicSystemBuilder.buildMusicSystems();
         this.checkMeasuresForWholeRestNotes();
         this.calculateSystemYLayout();
-        for (let page of this.graphicalMusicSheet.MusicPages) {
-            for (let system of page.MusicSystems) {
-                //system.setMusicSystemLabelsYPosition();
+        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
+            let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                musicSystem.setMusicSystemLabelsYPosition();
                 if (!this.leadSheet) {
-                    system.setYPositionsToVerticalLineObjectsAndCreateLines(this.rules);
-                    system.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
-                    //system.createInstrumentBrackets(this.graphicalMusicSheet.ParentMusicSheet.Instruments, this.rules.StaffHeight);
-                    //system.createGroupBrackets(this.graphicalMusicSheet.ParentMusicSheet.InstrumentalGroups, this.rules.StaffHeight, 0);
-                    //system.alignBeginInstructions();
-                } else if (system === system.Parent.MusicSystems[0]) {
-                    system.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
+                    musicSystem.setYPositionsToVerticalLineObjectsAndCreateLines(this.rules);
+                    musicSystem.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
+                    musicSystem.createInstrumentBrackets(this.graphicalMusicSheet.ParentMusicSheet.Instruments, this.rules.StaffHeight);
+                    musicSystem.createGroupBrackets(this.graphicalMusicSheet.ParentMusicSheet.InstrumentalGroups, this.rules.StaffHeight, 0);
+                    musicSystem.alignBeginInstructions();
+                } else if (musicSystem === musicSystem.Parent.MusicSystems[0]) {
+                    musicSystem.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
                 }
-                //system.calculateBorders(this.rules);
+                musicSystem.calculateBorders(this.rules);
             }
+            let distance: number = graphicalMusicPage.MusicSystems[0].PositionAndShape.BorderTop;
+            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                // let newPosition: PointF2D = new PointF2D(musicSystem.PositionAndShape.RelativePosition.x,
+                // musicSystem.PositionAndShape.RelativePosition.y - distance);
+                musicSystem.PositionAndShape.RelativePosition =
+                    new PointF2D(musicSystem.PositionAndShape.RelativePosition.x, musicSystem.PositionAndShape.RelativePosition.y - distance);
+            }
+            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
+                    let staffLine: StaffLine = musicSystem.StaffLines[idx3];
+                    staffLine.addActivitySymbolClickArea();
+                }
+            }
+            if (graphicalMusicPage === this.graphicalMusicSheet.MusicPages[0]) {
+                this.calculatePageLabels(graphicalMusicPage);
+            }
+            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders();
         }
     }
 

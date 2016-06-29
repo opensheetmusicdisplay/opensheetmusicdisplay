@@ -9,7 +9,7 @@ import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 describe("VexFlow Music Sheet Drawer", () => {
 
     it(".drawSheet (Clementi pt. 1)", (done: MochaDone) => {
-        let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
+        let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part2.xml";
         // "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
         let score: IXmlElement = TestUtils.getScore(path);
         chai.expect(score).to.not.be.undefined;

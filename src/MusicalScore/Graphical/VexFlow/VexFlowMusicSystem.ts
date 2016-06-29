@@ -1,7 +1,6 @@
-﻿import {MusicSystem} from "../MusicSystem";
+import {MusicSystem} from "../MusicSystem";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {SystemLinesEnum} from "../SystemLinesEnum";
-import {EngravingRules} from "../EngravingRules";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {SystemLinePosition} from "../SystemLinePosition";
 import {StaffMeasure} from "../StaffMeasure";
@@ -18,36 +17,6 @@ export class VexFlowMusicSystem extends MusicSystem {
     }
 
     /**
-     * This method creates the left vertical Line of the MusicSystem.
-     * @param lineWidth
-     * @param systemLabelsRightMargin
-     */
-    public createSystemLeftLine(lineWidth: number, systemLabelsRightMargin: number): void {
-        //let len: number = this.graphicalMeasures.length;
-        //if (len > 1) {
-        //    (this.graphicalMeasures[0][0] as VexFlowMeasure).connectTo(
-        //        this.graphicalMeasures[len - 1][0] as VexFlowMeasure,
-        //        Vex.Flow.StaveConnector.type.SINGLE
-        //    );
-        //}
-        //(this.systemLines as VexFlowMeasure).connectTo(
-        //    this.graphicalMeasures[len - 1][0] as VexFlowMeasure,
-        //    Vex.Flow.StaveConnector.type.SINGLE
-        //);
-    }
-
-    /**
-     * This method creates the vertical Line Objects after the End of all StaffLine's Measures
-     * @param position
-     * @param lineType
-     * @param lineWidth
-     * @param index
-     */
-    public createVerticalLineForMeasure(position: number, lineType: SystemLinesEnum, lineWidth: number, index: number): void {
-        return;
-    }
-
-    /**
      * This method creates all the graphical lines and dots needed to render a system line (e.g. bold-thin-dots..).
      * @param xPosition
      * @param lineWidth
@@ -57,19 +26,11 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param topMeasure
      * @param bottomMeasure
      */
-    public createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
-                            musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
+    protected createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
+                               musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
         // ToDo: create line in Vexflow
         (topMeasure as VexFlowMeasure).connectTo(bottomMeasure as VexFlowMeasure, VexFlowConverter.line(lineType));
         return new SystemLine(lineType, linePosition, this, topMeasure, bottomMeasure);
-    }
-
-    /**
-     * This method sets the y-Positions of vertical Line Objects and creates the Lines within.
-     * @param rules
-     */
-    public setYPositionsToVerticalLineObjectsAndCreateLines(rules: EngravingRules): void {
-        return;
     }
 
     /**

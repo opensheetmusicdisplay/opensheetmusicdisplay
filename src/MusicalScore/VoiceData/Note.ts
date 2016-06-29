@@ -8,7 +8,6 @@ import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
-import {MusicSymbol} from "../Graphical/MusicSymbol";
 
 export class Note {
 

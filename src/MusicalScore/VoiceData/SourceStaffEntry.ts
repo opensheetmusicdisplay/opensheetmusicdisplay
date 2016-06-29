@@ -77,31 +77,30 @@ export class SourceStaffEntry {
         this.chordSymbolContainer = value;
     }
 
-    public removeAllInstructionsOfType<T>(): number {
-        let i: number = 0;
-        let ret: number = 0;
-        while (i < this.instructions.length) {
-            let instruction: Object = this.instructions[i];
-            if (<T>instruction !== undefined) {
-                this.instructions.splice(i, 1);
-                ret++;
-            } else {
-                i++;
-            }
-        }
-        return ret;
-    }
-
-    public removeFirstInstructionOfType<T>(): boolean {
-        for (let i: number = 0; i < this.instructions.length; i++) {
-            let instruction: Object = this.instructions[i];
-            if (<T>instruction !== undefined) {
-                this.instructions.splice(i, 1);
-                return true;
-            }
-        }
-        return false;
-    }
+    // public removeAllInstructionsOfType(type: AbstractNotationInstruction): number {
+    //     let i: number = 0;
+    //     let ret: number = 0;
+    //     while (i < this.instructions.length) {
+    //         let instruction: AbstractNotationInstruction = this.instructions[i];
+    //         if (instruction instanceof type) {
+    //             this.instructions.splice(i, 1);
+    //             ret++;
+    //         } else {
+    //             i++;
+    //         }
+    //     }
+    //     return ret;
+    // }
+    //
+    // public removeFirstInstructionOfType(type: AbstractNotationInstruction): boolean {
+    //     for (let i: number = 0; i < this.instructions.length; i++) {
+    //         if (this.instructions[i] instanceof type) {
+    //             this.instructions.splice(i, 1);
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
 
     public removeAllInstructionsOfTypeClefInstruction(): number {
         let i: number = 0;
@@ -163,6 +162,16 @@ export class SourceStaffEntry {
             }
         }
         return ret;
+    }
+
+    public removeFirstInstructionOfTypeRhythmInstruction(): boolean {
+        for (let i: number = 0; i < this.instructions.length; i++) {
+            if (this.instructions[i] instanceof RhythmInstruction) {
+                this.instructions.splice(i, 1);
+                return true;
+            }
+        }
+        return false;
     }
 
     public calculateMinNoteLength(): Fraction {

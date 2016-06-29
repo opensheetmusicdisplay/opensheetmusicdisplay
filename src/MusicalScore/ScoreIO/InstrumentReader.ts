@@ -735,7 +735,7 @@ export class InstrumentReader {
                         === this.instrument.Staves.indexOf(this.currentStaffEntry.ParentStaff)) {
                         let newClefInstruction: ClefInstruction = clefInstruction;
                         newClefInstruction.Parent = this.currentStaffEntry;
-                        this.currentStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
+                        this.currentStaffEntry.removeFirstInstructionOfTypeClefInstruction();
                         this.currentStaffEntry.Instructions.push(newClefInstruction);
                         this.activeClefs[key - 1] = clefInstruction;
                         this.abstractInstructions.splice(i, 1);
@@ -757,7 +757,7 @@ export class InstrumentReader {
                                     undefined && !(firstSse.Instructions[0] instanceof ClefInstruction)) {
                                     firstStaffEntry = firstSse;
                                     newClefInstruction.Parent = firstStaffEntry;
-                                    firstStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
+                                    firstStaffEntry.removeFirstInstructionOfTypeClefInstruction();
                                     firstStaffEntry.Instructions.splice(0, 0, newClefInstruction);
                                     this.activeClefsHaveBeenInitialized[key - 1] = true;
                                 } else {
@@ -772,7 +772,7 @@ export class InstrumentReader {
                                     firstStaffEntry = new SourceStaffEntry(undefined, undefined);
                                 } else {
                                     firstStaffEntry = first.FirstInstructionsStaffEntries[sseIndex];
-                                    firstStaffEntry.removeFirstInstructionOfType<ClefInstruction>();
+                                    firstStaffEntry.removeFirstInstructionOfTypeClefInstruction();
                                 }
                                 newClefInstruction.Parent = firstStaffEntry;
                                 firstStaffEntry.Instructions.splice(0, 0, newClefInstruction);
@@ -787,8 +787,7 @@ export class InstrumentReader {
                             this.abstractInstructions.splice(i, 1);
                         }
                     }
-                }
-                if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
+                } else if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
                     this.abstractInstructions.splice(i, 1);
                 }
             }
@@ -832,8 +831,7 @@ export class InstrumentReader {
                             }
                         }
                     }
-                }
-                if (this.activeKey !== undefined && this.activeKey === keyInstruction) {
+                } else {
                     this.abstractInstructions.splice(i, 1);
                 }
             }
@@ -851,14 +849,13 @@ export class InstrumentReader {
                                 this.currentMeasure.FirstInstructionsStaffEntries[j] = firstStaffEntry;
                             } else {
                                 firstStaffEntry = this.currentMeasure.FirstInstructionsStaffEntries[j];
-                                firstStaffEntry.removeFirstInstructionOfType<RhythmInstruction>();
+                                firstStaffEntry.removeFirstInstructionOfTypeRhythmInstruction();
                             }
                             newRhythmInstruction.Parent = firstStaffEntry;
                             firstStaffEntry.Instructions.push(newRhythmInstruction);
                         }
                     }
-                }
-                if (this.activeRhythm !== undefined && this.activeRhythm === rhythmInstruction) {
+                } else {
                     this.abstractInstructions.splice(i, 1);
                 }
             }

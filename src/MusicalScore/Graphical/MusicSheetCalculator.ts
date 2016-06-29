@@ -827,6 +827,53 @@ export abstract class MusicSheetCalculator {
         return posX;
     }
 
+    protected calculatePageLabels(page: GraphicalMusicPage): void {
+        let relative: PointF2D = new PointF2D();
+        let firstSystemAbsoluteTopMargin: number = 10;
+        if (page.MusicSystems.length > 0) {
+            let firstMusicSystem: MusicSystem = page.MusicSystems[0];
+            firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
+        }
+        if (this.graphicalMusicSheet.Title !== undefined) {
+            let title: GraphicalLabel = this.graphicalMusicSheet.Title;
+            title.PositionAndShape.Parent = page.PositionAndShape;
+            page.PositionAndShape.ChildElements.push(title.PositionAndShape);
+            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
+            relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
+            title.PositionAndShape.RelativePosition = relative;
+            page.Labels.push(title);
+        }
+        if (this.graphicalMusicSheet.Subtitle !== undefined) {
+            let subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
+            subtitle.PositionAndShape.Parent = page.PositionAndShape;
+            page.PositionAndShape.ChildElements.push(subtitle.PositionAndShape);
+            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
+            relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
+            subtitle.PositionAndShape.RelativePosition = relative;
+            page.Labels.push(subtitle);
+        }
+        if (this.graphicalMusicSheet.Composer !== undefined) {
+            let composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
+            composer.PositionAndShape.Parent = page.PositionAndShape;
+            page.PositionAndShape.ChildElements.push(composer.PositionAndShape);
+            composer.setLabelPositionAndShapeBorders();
+            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
+            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
+            composer.PositionAndShape.RelativePosition = relative;
+            page.Labels.push(composer);
+        }
+        if (this.graphicalMusicSheet.Lyricist !== undefined) {
+            let lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
+            lyricist.PositionAndShape.Parent = page.PositionAndShape;
+            page.PositionAndShape.ChildElements.push(lyricist.PositionAndShape);
+            lyricist.setLabelPositionAndShapeBorders();
+            relative.x = this.rules.PageLeftMargin;
+            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
+            lyricist.PositionAndShape.RelativePosition = relative;
+            page.Labels.push(lyricist);
+        }
+    }
+
     private createAccidentalCalculators(): AccidentalCalculator[] {
         let accidentalCalculators: AccidentalCalculator[] = [];
         let firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
@@ -1027,53 +1074,6 @@ export abstract class MusicSheetCalculator {
             graphicalStaffEntry.PositionAndShape.ChildElements.push(graphicalNote.PositionAndShape);
         }
         return measure;
-    }
-
-    private calculatePageLabels(page: GraphicalMusicPage): void {
-        let relative: PointF2D = new PointF2D();
-        let firstSystemAbsoluteTopMargin: number = 10;
-        if (page.MusicSystems.length > 0) {
-            let firstMusicSystem: MusicSystem = page.MusicSystems[0];
-            firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
-        }
-        if (this.graphicalMusicSheet.Title !== undefined) {
-            let title: GraphicalLabel = this.graphicalMusicSheet.Title;
-            title.PositionAndShape.Parent = page.PositionAndShape;
-            page.PositionAndShape.ChildElements.push(title.PositionAndShape);
-            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
-            relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
-            title.PositionAndShape.RelativePosition = relative;
-            page.Labels.push(title);
-        }
-        if (this.graphicalMusicSheet.Subtitle !== undefined) {
-            let subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
-            subtitle.PositionAndShape.Parent = page.PositionAndShape;
-            page.PositionAndShape.ChildElements.push(subtitle.PositionAndShape);
-            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
-            relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
-            subtitle.PositionAndShape.RelativePosition = relative;
-            page.Labels.push(subtitle);
-        }
-        if (this.graphicalMusicSheet.Composer !== undefined) {
-            let composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
-            composer.PositionAndShape.Parent = page.PositionAndShape;
-            page.PositionAndShape.ChildElements.push(composer.PositionAndShape);
-            composer.setLabelPositionAndShapeBorders();
-            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
-            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
-            composer.PositionAndShape.RelativePosition = relative;
-            page.Labels.push(composer);
-        }
-        if (this.graphicalMusicSheet.Lyricist !== undefined) {
-            let lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
-            lyricist.PositionAndShape.Parent = page.PositionAndShape;
-            page.PositionAndShape.ChildElements.push(lyricist.PositionAndShape);
-            lyricist.setLabelPositionAndShapeBorders();
-            relative.x = this.rules.PageLeftMargin;
-            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
-            lyricist.PositionAndShape.RelativePosition = relative;
-            page.Labels.push(lyricist);
-        }
     }
 
     private checkVoiceEntriesForTechnicalInstructions(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
