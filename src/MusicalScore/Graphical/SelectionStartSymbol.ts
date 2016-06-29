@@ -14,7 +14,7 @@ export class SelectionStartSymbol extends GraphicalObject {
         let lineThickness: number = 0.4;
         let height: number = CollectionUtil.last(system.StaffLines).PositionAndShape.RelativePosition.y + 4;
         this.verticalLine = new GraphicalLine(new PointF2D(xCoordinate, yCoordinate), new PointF2D(xCoordinate, yCoordinate + height), lineThickness, OutlineAndFillStyleEnum.SelectionSymbol);
-        for (let idx: number = 0, len = system.StaffLines.length; idx < len; ++idx) {
+        for (let idx: number = 0, len: number = system.StaffLines.length; idx < len; ++idx) {
             let staffLine: StaffLine = system.StaffLines[idx];
             let anchor: PointF2D = new PointF2D(xCoordinate, yCoordinate + staffLine.PositionAndShape.RelativePosition.y);
             let arrowPoints: PointF2D[] = new Array(7);

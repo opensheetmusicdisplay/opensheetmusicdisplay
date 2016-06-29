@@ -6,6 +6,8 @@ import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphica
 import {TestUtils} from "../../../Util/TestUtils";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {VexFlowTextMeasurer} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
+import {Fraction} from "../../../../src/Common/DataObjects/fraction";
+import {OutlineAndFillStyleEnum} from "../../../../src/MusicalScore/Graphical/DrawingEnums";
 
 describe("VexFlow Music Sheet Drawer", () => {
 
@@ -18,6 +20,7 @@ describe("VexFlow Music Sheet Drawer", () => {
         let reader: MusicSheetReader = new MusicSheetReader();
         let sheet: MusicSheet = reader.createMusicSheet(score, path);
         let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
+        gms.Cursors.push(gms.calculateCursorLineAtTimestamp(new Fraction(), OutlineAndFillStyleEnum.PlaybackCursor));
         (new VexFlowMusicSheetDrawer(new VexFlowTextMeasurer())).drawSheet(gms);
         done();
     });

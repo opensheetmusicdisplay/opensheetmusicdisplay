@@ -27,8 +27,8 @@ import {GraphicalObject} from "./GraphicalObject";
 
 export abstract class MusicSheetDrawer {
     public drawingParameters: DrawingParameters = new DrawingParameters();
-    public SplitScreenLineColor: number;
-    public MidiPlaybackAvailable: boolean;
+    public splitScreenLineColor: number;
+    public midiPlaybackAvailable: boolean;
 
     protected rules: EngravingRules;
     protected graphicalMusicSheet: GraphicalMusicSheet;
@@ -38,7 +38,7 @@ export abstract class MusicSheetDrawer {
     constructor(textMeasurer: ITextMeasurer,
                 isPreviewImageDrawer: boolean = false) {
         this.textMeasurer = textMeasurer;
-        this.SplitScreenLineColor = -1;
+        this.splitScreenLineColor = -1;
         if (isPreviewImageDrawer) {
             this.drawingParameters.setForThumbmail();
         } else {
@@ -253,7 +253,7 @@ export abstract class MusicSheetDrawer {
     protected getSystemAbsBoundingRect(system: MusicSystem): RectangleF2D {
         let relBoundingRect: RectangleF2D = system.PositionAndShape.BoundingRectangle;
         let absBoundingRectWithMargin: RectangleF2D = new RectangleF2D(system.PositionAndShape.AbsolutePosition.x + system.PositionAndShape.BorderLeft - 1,
-            system.PositionAndShape.AbsolutePosition.y + system.PositionAndShape.BorderTop - 1,
+                                                                       system.PositionAndShape.AbsolutePosition.y + system.PositionAndShape.BorderTop - 1,
             (relBoundingRect.width + 6), (relBoundingRect.height + 2));
         return absBoundingRectWithMargin;
     }
@@ -328,7 +328,8 @@ export abstract class MusicSheetDrawer {
         this.drawSymbol(graphicalOctaveShift.octaveSymbol, MusicSymbolDrawingStyle.Normal, graphicalOctaveShift.PositionAndShape.AbsolutePosition);
         let absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
         if (graphicalOctaveShift.dashesStart.x < graphicalOctaveShift.dashesEnd.x) {
-            let horizontalLine: GraphicalLine = new GraphicalLine(graphicalOctaveShift.dashesStart, graphicalOctaveShift.dashesEnd, this.rules.OctaveShiftLineWidth);
+            let horizontalLine: GraphicalLine = new GraphicalLine(graphicalOctaveShift.dashesStart, graphicalOctaveShift.dashesEnd,
+                                                                  this.rules.OctaveShiftLineWidth);
             this.drawLineAsHorizontalRectangleWithOffset(horizontalLine, absolutePos, <number>GraphicalLayers.Notes);
         }
         if (!graphicalOctaveShift.endsOnDifferentStaffLine || graphicalOctaveShift.isSecondPart) {
@@ -348,8 +349,9 @@ export abstract class MusicSheetDrawer {
     protected drawStaffLines(staffLine: StaffLine): void {
         if (staffLine.StaffLines !== undefined) {
             let position: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
-            for (let i: number = 0; i < 5; i++)
+            for (let i: number = 0; i < 5; i++) {
                 this.drawLineAsHorizontalRectangleWithOffset(staffLine.StaffLines[i], position, <number>GraphicalLayers.Notes);
+            }
         }
     }
 
@@ -440,34 +442,28 @@ export abstract class MusicSheetDrawer {
         let borderRight: number = staffLine.PositionAndShape.BorderRight;
         if (parentInst.highlight && this.drawingParameters.drawHighlights) {
             this.drawLineAsHorizontalRectangle(new GraphicalLine(new PointF2D(absX, absY),
-                new PointF2D(absX + borderRight, absY), 4,
-                OutlineAndFillStyleEnum.Highlighted), <number>GraphicalLayers.Highlight);
+                                               new PointF2D(absX + borderRight, absY), 4,
+                                               OutlineAndFillStyleEnum.Highlighted), <number>GraphicalLayers.Highlight);
         }
         let style: MusicSymbolDrawingStyle = MusicSymbolDrawingStyle.Disabled;
         let symbol: MusicSymbol = MusicSymbol.PLAY;
         let drawSymbols: boolean = this.drawingParameters.drawActivitySymbols;
         switch (this.phonicScoreMode) {
             case PhonicScoreModes.Midi:
-            {
                 symbol = MusicSymbol.PLAY;
-                if (this.MidiPlaybackAvailable && staffLine.ParentStaff.audible) {
+                if (this.midiPlaybackAvailable && staffLine.ParentStaff.audible) {
                     style = MusicSymbolDrawingStyle.PlaybackSymbols;
                 }
                 break;
-            }
             case PhonicScoreModes.Following:
-            {
                 symbol = MusicSymbol.MIC;
                 if (staffLine.ParentStaff.following) {
                     style = MusicSymbolDrawingStyle.FollowSymbols;
                 }
                 break;
-            }
             default:
-            {
                 drawSymbols = false;
                 break;
-            }
         }
         if (drawSymbols) {
             let p: PointF2D = new PointF2D(absX + borderRight + 2, absY);
@@ -480,8 +476,8 @@ export abstract class MusicSheetDrawer {
                 let absYPSI: number = measurePSI.AbsolutePosition.y + 2;
                 if (measure.hasError && this.graphicalMusicSheet.ParentMusicSheet.DrawErroneousMeasures) {
                     this.drawLineAsHorizontalRectangle(new GraphicalLine(new PointF2D(absXPSI, absYPSI),
-                        new PointF2D(absXPSI + measurePSI.BorderRight, absYPSI), 4,
-                        OutlineAndFillStyleEnum.ErrorUnderlay), <number>GraphicalLayers.MeasureError);
+                                                       new PointF2D(absXPSI + measurePSI.BorderRight, absYPSI), 4,
+                                                       OutlineAndFillStyleEnum.ErrorUnderlay), <number>GraphicalLayers.MeasureError);
                 }
             }
         }

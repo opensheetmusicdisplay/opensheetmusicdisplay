@@ -25,25 +25,17 @@ export class GraphicalOctaveShift extends GraphicalObject {
     private setSymbol(): void {
         switch (this.getOctaveShift.Type) {
             case OctaveEnum.VA8:
-            {
                 this.octaveSymbol = MusicSymbol.VA8;
                 break;
-            }
             case OctaveEnum.VB8:
-            {
                 this.octaveSymbol = MusicSymbol.VB8;
                 break;
-            }
             case OctaveEnum.MA15:
-            {
                 this.octaveSymbol = MusicSymbol.MA15;
                 break;
-            }
             case OctaveEnum.MB15:
-            {
                 this.octaveSymbol = MusicSymbol.MB15;
                 break;
-            }
             default:
                 throw new ArgumentOutOfRangeException("");
         }
