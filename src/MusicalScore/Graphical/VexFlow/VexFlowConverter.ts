@@ -183,6 +183,22 @@ export class VexFlowConverter {
     }
 
     public static line(lineType: SystemLinesEnum): any {
-        return Vex.Flow.StaveConnector.type.DOUBLE;
+        switch (lineType) {
+            case SystemLinesEnum.SingleThin:
+                return Vex.Flow.StaveConnector.type.SINGLE;
+            case SystemLinesEnum.DoubleThin:
+                return Vex.Flow.StaveConnector.type.DOUBLE;
+            case SystemLinesEnum.ThinBold:
+                return Vex.Flow.StaveConnector.type.SINGLE;
+            case SystemLinesEnum.BoldThinDots:
+                return Vex.Flow.StaveConnector.type.DOUBLE;
+            case SystemLinesEnum.DotsThinBold:
+                return Vex.Flow.StaveConnector.type.DOUBLE;
+            case SystemLinesEnum.DotsBoldBoldDots:
+                return Vex.Flow.StaveConnector.type.DOUBLE;
+            case SystemLinesEnum.None:
+                return Vex.Flow.StaveConnector.type.NONE;
+            default:
+        }
     }
 }

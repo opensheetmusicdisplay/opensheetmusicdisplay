@@ -20,22 +20,28 @@ export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;
-        this.stave = new Vex.Flow.Stave(0, 0, 0);
-        this.vfVoices = {};
-        //this.duration = this.parentSourceMeasure.Duration;
+        this.resetLayout();
     }
 
-    public octaveOffset: number = 3; // FIXME
-    public vfVoices: { [voiceID: number]: Vex.Flow.Voice; };
+    // octaveOffset according to active clef
+    public octaveOffset: number = 3;
+    // The VexFlow Voices in the measure
+    public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
+    // Call this function (if present) to x-format all the voices in the measure
     public formatVoices: (width: number) => void;
+    // The unit
     public unit: number = 10.0;
 
+    // The VexFlow Stave (one measure in one line)
     private stave: Vex.Flow.Stave;
+    // VexFlow StaveConnectors (vertical lines)
     private connectors: Vex.Flow.StaveConnector[] = [];
-
+    // Intermediate object to construct beams
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
+    // VexFlow Beams
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; } = {};
 
+    // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
         this.stave.setX(x).setY(y);
     }
@@ -45,6 +51,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * This is needed to evaluate a measure a second time by system builder.
      */
     public resetLayout(): void {
+        this.stave = new Vex.Flow.Stave(0, 0, 0);
         this.beginInstructionsWidth = 0;
         this.endInstructionsWidth = 0;
     }
@@ -56,21 +63,12 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public getLineWidth(line: SystemLinesEnum): number {
         // FIXME: See values in VexFlow's stavebarline.js
-        switch (line) {
-            case SystemLinesEnum.SingleThin:
-                return 5 / this.unit;
-            case SystemLinesEnum.DoubleThin:
-                return 5 / this.unit;
-            case SystemLinesEnum.ThinBold:
-                return 5 / this.unit;
-            case SystemLinesEnum.BoldThinDots:
-                return 5 / this.unit;
-            case SystemLinesEnum.DotsThinBold:
-                return 5 / this.unit;
-            case SystemLinesEnum.DotsBoldBoldDots:
-                return 5 / this.unit;
-            case SystemLinesEnum.None:
-                return 0;
+        let vfline: any = VexFlowConverter.line(line);
+        switch (vfline) {
+            case Vex.Flow.StaveConnector.type.SINGLE:
+                return 1.0 / this.unit;
+            case Vex.Flow.StaveConnector.type.DOUBLE:
+                return 3.0 / this.unit;
             default:
                 return 0;
         }
@@ -153,22 +151,29 @@ export class VexFlowMeasure extends StaffMeasure {
         this.stave.format();
     }
 
-    public addGraphicalStaffEntry(entry: VexFlowStaffEntry): void {
-        super.addGraphicalStaffEntry(entry);
-    }
+    //public addGraphicalStaffEntry(entry: VexFlowStaffEntry): void {
+    //    super.addGraphicalStaffEntry(entry);
+    //}
+    //
+    //public addGraphicalStaffEntryAtTimestamp(entry: VexFlowStaffEntry): void {
+    //    super.addGraphicalStaffEntryAtTimestamp(entry);
+    //    // TODO
+    //}
 
-    public addGraphicalStaffEntryAtTimestamp(entry: VexFlowStaffEntry): void {
-        super.addGraphicalStaffEntryAtTimestamp(entry);
-        // TODO
-    }
-
+    /**
+     * Draw this measure on a VexFlow CanvasContext
+     * @param ctx
+     */
     public draw(ctx: Vex.Flow.CanvasContext): void {
+        // Draw stave lines
         this.stave.setContext(ctx).draw();
+        // Draw all voices
         for (let voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
                 this.vfVoices[voiceID].draw(ctx, this.stave);
             }
         }
+        // Draw beams
         for (let voiceID in this.vfbeams) {
             if (this.vfbeams.hasOwnProperty(voiceID)) {
                 for (let beam of this.vfbeams[voiceID]) {
@@ -176,11 +181,17 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
             }
         }
+        // Draw vertical lines
         for (let connector of this.connectors) {
             connector.setContext(ctx).draw();
         }
     }
 
+    /**
+     * Add a note to a beam
+     * @param graphicalNote
+     * @param beam
+     */
     public handleBeam(graphicalNote: GraphicalNote, beam: Beam): void {
         let voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
         let beams: [Beam, VexFlowStaffEntry[]][] = this.beams[voiceID];
@@ -203,6 +214,9 @@ export class VexFlowMeasure extends StaffMeasure {
         }
     }
 
+    /**
+     * Complete the creation of VexFlow Beams in this measure
+     */
     public finalizeBeams(): void {
         for (let voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
@@ -213,7 +227,7 @@ export class VexFlowMeasure extends StaffMeasure {
                 for (let beam of this.beams[voiceID]) {
                     let notes: Vex.Flow.StaveNote[] = [];
                     for (let entry of beam[1]) {
-                        notes.push((entry as VexFlowStaffEntry).vfNotes[voiceID]);
+                        notes.push((<VexFlowStaffEntry>entry).vfNotes[voiceID]);
                     }
                     vfbeams.push(new Vex.Flow.Beam(notes, true));
                 }
@@ -240,8 +254,13 @@ export class VexFlowMeasure extends StaffMeasure {
         }
     }
 
-    public connectTo(bottom: VexFlowMeasure, lineType: any): void {
-        let connector: StaveConnector = new Vex.Flow.StaveConnector(this.stave, bottom.getVFStave());
+    /**
+     * Creates a line from 'top' to this measure, of type 'lineType'
+     * @param top
+     * @param lineType
+     */
+    public lineTo(top: VexFlowMeasure, lineType: any): void {
+        let connector: StaveConnector = new Vex.Flow.StaveConnector(top.getVFStave(), this.stave);
         connector.setType(lineType);
         this.connectors.push(connector);
     }
@@ -255,7 +274,6 @@ export class VexFlowMeasure extends StaffMeasure {
         let modifier: StaveModifier = modifiers[modifiers.length - 1];
         //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
         let padding: number = modifier.getPadding(20);
-        //modifier.getPadding(this.begModifiers);
         let width: number = modifier.getWidth();
         this.beginInstructionsWidth += (padding + width) / this.unit;
     }
@@ -263,7 +281,7 @@ export class VexFlowMeasure extends StaffMeasure {
     private increaseEndInstructionWidth(): void {
         let modifiers: StaveModifier[] = this.stave.getModifiers();
         let modifier: StaveModifier = modifiers[modifiers.length - 1];
-        let padding: number = 0; //modifier.getPadding(this.endModifiers++);
+        let padding: number = 0;
         let width: number = modifier.getWidth();
         this.endInstructionsWidth += (padding + width) / this.unit;
     }
