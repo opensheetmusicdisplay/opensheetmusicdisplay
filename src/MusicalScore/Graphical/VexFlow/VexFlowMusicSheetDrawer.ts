@@ -7,15 +7,8 @@ import {GraphicalMusicSheet} from "../GraphicalMusicSheet";
  * Created by Matthias on 22.06.2016.
  */
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
-    constructor() {
+    constructor(canvas: HTMLCanvasElement) {
         super();
-        // Create heading (FIXME)
-        let h1: Element = document.createElement("h1");
-        h1.textContent = "VexFlowMusicSheetDrawer Output";
-        document.body.appendChild(h1);
-        // Create the canvas in the document:
-        let canvas: HTMLCanvasElement = document.createElement("canvas");
-        document.body.appendChild(canvas);
         this.renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
         this.ctx = this.renderer.getContext();
 
