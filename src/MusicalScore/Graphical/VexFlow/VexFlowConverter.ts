@@ -49,10 +49,10 @@ export class VexFlowConverter {
      */
     public static pitch(pitch: Pitch, clef: ClefInstruction): [string, string, ClefInstruction] {
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        let octave: number = pitch.Octave + clef.OctaveOffset + 3; // FIXME + 3
-        let acc: string = "";
-
-        return [fund + acc + "/" + octave, acc, clef];
+        // The octave seems to need a shift of three FIXME?
+        let octave: number = pitch.Octave + clef.OctaveOffset + 3;
+        let acc: string = VexFlowConverter.accidental(pitch.Accidental);
+        return [fund + "b/" + octave, acc, clef];
     }
 
     /**
@@ -61,7 +61,7 @@ export class VexFlowConverter {
      * @returns {string}
      */
     public static accidental(accidental: AccidentalEnum): string {
-        let acc: string = "";
+        let acc: string;
         switch (accidental) {
             case AccidentalEnum.NONE:
                 break;
@@ -85,15 +85,14 @@ export class VexFlowConverter {
 
     public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];
+        let accidentals: string[] = [];
         let frac: Fraction = notes[0].sourceNote.Length;
         let duration: string = VexFlowConverter.duration(frac);
-        let accidentals: string[] = [];
         let vfclef: string;
         for (let note of notes) {
             let res: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             if (res === undefined) {
                 keys = ["b/4"];
-                accidentals = [];
                 duration += "r";
                 break;
             }
@@ -113,10 +112,10 @@ export class VexFlowConverter {
             },
             keys: keys,
         });
-        for (let i: number = 0, len: number = keys.length; i < len; i += 1) {
-            let acc: string = accidentals[i];
-            if (acc) {
-                vfnote.addAccidental(i, new Vex.Flow.Accidental(acc));
+        for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
+            (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
+            if (accidentals[i]) {
+                vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i]));
             }
         }
         return vfnote;

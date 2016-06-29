@@ -52,8 +52,10 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public resetLayout(): void {
         this.stave = new Vex.Flow.Stave(0, 0, 0);
-        this.beginInstructionsWidth = 0;
-        this.endInstructionsWidth = 0;
+        // Take into account some space for the begin and end lines of the stave
+        // Will be changed when repetitions will be implemented
+        this.beginInstructionsWidth = 20 / this.unit;
+        this.endInstructionsWidth = 20 / this.unit;
     }
 
     /**
@@ -242,8 +244,8 @@ export class VexFlowMeasure extends StaffMeasure {
             if (gnotes.hasOwnProperty(voiceID)) {
                 if (!(voiceID in vfVoices)) {
                     vfVoices[voiceID] = new Vex.Flow.Voice({
-                        beat_value: this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: this.parentSourceMeasure.Duration.Numerator,
+                        beat_value: 4, //this.parentSourceMeasure.Duration.Denominator,
+                        num_beats: 3, //this.parentSourceMeasure.Duration.Numerator,
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
                 }

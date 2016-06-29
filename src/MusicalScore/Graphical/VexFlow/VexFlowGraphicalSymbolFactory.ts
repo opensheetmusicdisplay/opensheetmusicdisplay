@@ -18,6 +18,7 @@ import {GraphicalNote} from "../GraphicalNote";
 import {Pitch} from "../../../Common/DataObjects/pitch";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import {VexFlowConverter} from "./VexFlowConverter";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -128,8 +129,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
         // ToDo: set accidental here from pitch.Accidental
-        // let note: VexFlowGraphicalNote = <VexFlowGraphicalNote> graphicalNote;
-        //note.vfpitch = 
+        let note: VexFlowGraphicalNote = <VexFlowGraphicalNote> graphicalNote;
+        note.setPitch(pitch);
     }
 
     /**
