@@ -28,10 +28,8 @@ export class AccidentalCalculator {
 
     public doCalculationsAtEndOfMeasure(): void {
         this.currentInMeasureNoteAlterationsDict.clear();
-        for (let key in this.keySignatureNoteAlterationsDict) {
-            if (this.keySignatureNoteAlterationsDict.hasOwnProperty(key)) {
-                this.currentInMeasureNoteAlterationsDict[key] = this.keySignatureNoteAlterationsDict[key];
-            }
+        for (let key of this.keySignatureNoteAlterationsDict.keys()) {
+            this.currentInMeasureNoteAlterationsDict.setValue(key, this.keySignatureNoteAlterationsDict.getValue(key));
         }
     }
 
@@ -42,21 +40,21 @@ export class AccidentalCalculator {
         let pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;
         let pitchKeyGivenInMeasureDict: boolean = this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey);
         if (
-            (pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict[pitchKey] !== pitch.Accidental)
+            (pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.Accidental)
             || (!pitchKeyGivenInMeasureDict && pitch.Accidental !== AccidentalEnum.NONE)
         ) {
             if (this.currentAlterationsComparedToKeyInstructionDict.indexOf(pitchKey) === -1) {
                 this.currentAlterationsComparedToKeyInstructionDict.push(pitchKey);
             }
-            this.currentInMeasureNoteAlterationsDict[pitchKey] = pitch.Accidental;
+            this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
         } else if (
             this.currentAlterationsComparedToKeyInstructionDict.indexOf(pitchKey) !== -1
-            && ((pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict[pitchKey] !== pitch.Accidental)
+            && ((pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.Accidental)
             || (!pitchKeyGivenInMeasureDict && pitch.Accidental === AccidentalEnum.NONE))
         ) {
             delete this.currentAlterationsComparedToKeyInstructionDict[pitchKey];
-            this.currentInMeasureNoteAlterationsDict[pitchKey] = pitch.Accidental;
+            this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
         }
     }
@@ -73,7 +71,7 @@ export class AccidentalCalculator {
         this.currentAlterationsComparedToKeyInstructionDict.length = 0;
         for (let octave: number = -9; octave < 9; octave++) {
             for (let i: number = 0; i < noteEnums.length; i++) {
-                this.keySignatureNoteAlterationsDict[<number>noteEnums[i] + octave * 12] = keyAccidentalType;
+                this.keySignatureNoteAlterationsDict.setValue(<number>noteEnums[i] + octave * 12, keyAccidentalType);
             }
         }
         this.doCalculationsAtEndOfMeasure();

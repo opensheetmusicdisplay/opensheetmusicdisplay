@@ -52,7 +52,7 @@ export class VexFlowConverter {
         // The octave seems to need a shift of three FIXME?
         let octave: number = pitch.Octave + clef.OctaveOffset + 3;
         let acc: string = VexFlowConverter.accidental(pitch.Accidental);
-        return [fund + "b/" + octave, acc, clef];
+        return [fund + "n/" + octave, acc, clef];
     }
 
     /**
@@ -64,6 +64,7 @@ export class VexFlowConverter {
         let acc: string;
         switch (accidental) {
             case AccidentalEnum.NONE:
+                acc = "n";
                 break;
             case AccidentalEnum.FLAT:
                 acc = "b";
