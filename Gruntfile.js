@@ -64,7 +64,7 @@ module.exports = function (grunt) {
                 mangleProperties: true,
                 preserveComments: 'all'
             },
-            my_target: {
+            bundle: {
                 files: {
                     'build/osmd.min.js': ['build/osmd.js']
                 }
@@ -124,6 +124,7 @@ module.exports = function (grunt) {
                     '<%= outputDir.build %>',
                     '<%= outputDir.dist %>',
                     'node-modules',
+                    'typings',
                     '.tscache',
                     'src/**/*.js', 'test/**/*.js'
                 ]
@@ -149,8 +150,9 @@ module.exports = function (grunt) {
     grunt.registerTask('test',    ['browserify:debug', 'lint', 'karma:ci']);
     grunt.registerTask('fasttest', ['browserify:debug', 'karma:ci']);
     grunt.registerTask('rebuild', ['clean', 'default']);
-    grunt.registerTask('publish', ['clean', 'typings', 'browserify', 'uglify']);
+    grunt.registerTask('publish', ['clean', 'typings', 'browserify:dist', 'uglify:bundle']);
     grunt.registerTask('lint',    ['jshint', 'tslint']);
+
     // Fix these in the future:
     // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
     // grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
