@@ -43,6 +43,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     public calculate(): void {
         this.clearSystemsAndMeasures();
         this.clearRecreatedObjects();
+        this.calculateSheetLabelBoundingBoxes();
         this.calculateXLayout(this.graphicalMusicSheet, this.maxInstrNameLabelLength());
         this.graphicalMusicSheet.MusicPages.length = 0;
         this.calculateMusicSystems();
