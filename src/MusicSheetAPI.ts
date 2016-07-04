@@ -1,4 +1,3 @@
-import Vex = require("vexflow");
 import {IXmlElement} from "./Common/FileIO/Xml";
 import {VexFlowMusicSheetCalculator} from "./MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {MusicSheetReader} from "./MusicalScore/ScoreIO/MusicSheetReader";

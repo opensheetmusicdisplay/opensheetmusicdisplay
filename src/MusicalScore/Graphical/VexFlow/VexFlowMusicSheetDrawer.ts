@@ -2,7 +2,6 @@ import Vex = require("vexflow");
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
-import {GraphicalMusicSheet} from "../GraphicalMusicSheet";
 import {ITextMeasurer} from "../../Interfaces/ITextMeasurer";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "../GraphicalLabel";
