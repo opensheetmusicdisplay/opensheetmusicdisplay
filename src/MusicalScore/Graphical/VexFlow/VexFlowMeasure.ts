@@ -59,7 +59,7 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     public clean(): void {
-        this.beams = {};
+        //this.beams = {};
         //this.vfbeams = {};
         this.connectors = [];
         console.log("clean!");

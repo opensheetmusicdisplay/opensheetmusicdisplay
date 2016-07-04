@@ -33,7 +33,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     public calculatePixelDistance(unitDistance: number): number {
         // ToDo: implement!
-        return unitDistance;
+        return unitDistance * 10.0;
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
