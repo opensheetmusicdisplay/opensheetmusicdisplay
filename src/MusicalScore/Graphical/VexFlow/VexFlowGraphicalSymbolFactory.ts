@@ -18,7 +18,6 @@ import {GraphicalNote} from "../GraphicalNote";
 import {Pitch} from "../../../Common/DataObjects/pitch";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
-import {VexFlowConverter} from "./VexFlowConverter";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
