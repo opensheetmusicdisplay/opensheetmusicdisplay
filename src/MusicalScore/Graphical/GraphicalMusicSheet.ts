@@ -21,6 +21,9 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {Logging} from "../../Common/logging";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
+import {SelectionStartSymbol} from "./SelectionStartSymbol";
+import {SelectionEndSymbol} from "./SelectionEndSymbol";
+import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 
 export class GraphicalMusicSheet {
     constructor(musicSheet: MusicSheet, calculator: MusicSheetCalculator) {
@@ -44,6 +47,8 @@ export class GraphicalMusicSheet {
     private composer: GraphicalLabel;
     private lyricist: GraphicalLabel;
     private cursors: GraphicalLine[] = [];
+    private selectionStartSymbol: SelectionStartSymbol;
+    private selectionEndSymbol: SelectionEndSymbol;
     private minAllowedSystemWidth: number;
     //private systemImages: Dictionary<MusicSystem, SystemImageProperties> = new Dictionary<MusicSystem, SystemImageProperties>();
     private numberOfStaves: number;
@@ -119,6 +124,14 @@ export class GraphicalMusicSheet {
 
     public get Cursors(): GraphicalLine[] {
         return this.cursors;
+    }
+
+    public get SelectionStartSymbol(): SelectionStartSymbol {
+        return this.selectionStartSymbol;
+    }
+
+    public get SelectionEndSymbol(): SelectionEndSymbol {
+        return this.selectionEndSymbol;
     }
 
     public get MinAllowedSystemWidth(): number {
@@ -658,14 +671,26 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
-    public calculateXPositionFromTimestamp(timeStamp: Fraction, currentMusicSystem: MusicSystem): number {
+    public calculateCursorLineAtTimestamp(musicTimestamp: Fraction, styleEnum: OutlineAndFillStyleEnum): GraphicalLine {
+        let result: [number, MusicSystem] = this.calculateXPositionFromTimestamp(musicTimestamp);
+        let xPos: number = result[0];
+        let correspondingMusicSystem: MusicSystem = result[1];
+        if (correspondingMusicSystem === undefined || correspondingMusicSystem.StaffLines.length === 0) {
+            return undefined;
+        }
+        let yCoordinate: number = correspondingMusicSystem.PositionAndShape.AbsolutePosition.y;
+        let height: number = CollectionUtil.last(correspondingMusicSystem.StaffLines).PositionAndShape.RelativePosition.y + 4;
+        return new GraphicalLine(new PointF2D(xPos, yCoordinate), new PointF2D(xPos, yCoordinate + height), 3, styleEnum);
+    }
+
+    public calculateXPositionFromTimestamp(timeStamp: Fraction): [number, MusicSystem] {
+        let currentMusicSystem: MusicSystem = undefined;
         let fractionalIndex: number = this.GetInterpolatedIndexInVerticalContainers(timeStamp);
         let previousStaffEntry: GraphicalStaffEntry = this.findClosestLeftStaffEntry(fractionalIndex, true);
         let nextStaffEntry: GraphicalStaffEntry = this.findClosestRightStaffEntry(fractionalIndex, true);
         let currentTimeStamp: number = timeStamp.RealValue;
         if (previousStaffEntry === undefined && nextStaffEntry === undefined) {
-            currentMusicSystem = undefined;
-            return 0;
+            return [0, undefined];
         }
         let previousStaffEntryMusicSystem: MusicSystem = undefined;
         if (previousStaffEntry !== undefined) {
@@ -705,7 +730,7 @@ export class GraphicalMusicSheet {
             }
             fraction = Math.min(1, Math.max(0, fraction));
             let interpolatedXPosition: number = previousStaffEntryPositionX + fraction * (nextStaffEntryPositionX - previousStaffEntryPositionX);
-            return interpolatedXPosition;
+            return [interpolatedXPosition, currentMusicSystem];
         } else {
             let nextSystemLeftBorderTimeStamp: number = nextStaffEntry.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.RealValue;
             let fraction: number;
@@ -727,7 +752,7 @@ export class GraphicalMusicSheet {
                 fraction = Math.min(1, Math.max(0, fraction));
                 interpolatedXPosition = nextSystemLeftBorderX + fraction * (nextStaffEntryPositionX - nextSystemLeftBorderX);
             }
-            return interpolatedXPosition;
+            return [interpolatedXPosition, currentMusicSystem];
         }
     }
 

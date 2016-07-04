@@ -26,7 +26,6 @@ import {Tuplet} from "../../VoiceData/Tuplet";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
-//import {VexFlowMeasure} from "./VexFlowMeasure";
 
 import Vex = require("vexflow");
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
@@ -36,6 +35,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         super(new VexFlowGraphicalSymbolFactory());
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
     }
+
+    protected clearRecreatedObjects(): void {
+        super.clearRecreatedObjects();
+        for (let staffMeasures of this.graphicalMusicSheet.MeasureList) {
+            for (let staffMeasure of staffMeasures) {
+                (<VexFlowMeasure>staffMeasure).clean();
+            }
+        }
+    }
+
+    //protected clearSystemsAndMeasures(): void {
+    //    for (let measure of measures) {
+    //
+    //    }
+    //}
 
     /**
      * The main method for the Calculator.

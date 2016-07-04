@@ -51,11 +51,18 @@ export class VexFlowMeasure extends StaffMeasure {
      * This is needed to evaluate a measure a second time by system builder.
      */
     public resetLayout(): void {
-        this.stave = new Vex.Flow.Stave(0, 0, 0);
         // Take into account some space for the begin and end lines of the stave
         // Will be changed when repetitions will be implemented
         this.beginInstructionsWidth = 20 / this.unit;
         this.endInstructionsWidth = 20 / this.unit;
+        this.stave = new Vex.Flow.Stave(0, 0, 0);
+    }
+
+    public clean(): void {
+        this.beams = {};
+        //this.vfbeams = {};
+        this.connectors = [];
+        console.log("clean!");
     }
 
     /**
