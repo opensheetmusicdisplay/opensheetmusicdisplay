@@ -26,6 +26,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         this.renderer.resize(x, y);
     }
 
+    public translate(x: number, y: number): void {
+        // FIXME
+        (this.ctx as any).vexFlowCanvasContext.translate(x, y);
+    }
+
     /**
      * Converts a distance from unit to pixel space.
      * @param unitDistance the distance in units
@@ -56,6 +61,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
                           bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
         // ToDo: implement!
+        let ctx: CanvasRenderingContext2D = (this.ctx as any).vexFlowCanvasContext;
+        ctx.font = Math.floor(graphicalLabel.Label.fontHeight * 10) + "px 'Times New Roman'";
+        console.log(graphicalLabel.Label.text, screenPosition.x, screenPosition.y);
+        ctx.fillText(graphicalLabel.Label.text, screenPosition.x, screenPosition.y);
     }
 
     /**
@@ -76,7 +85,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     protected applyScreenTransformation(point: PointF2D): PointF2D {
         // ToDo: implement!
-        return point;
+        return new PointF2D(point.x * 10.0, point.y * 10.0);
     }
 
     /**
@@ -85,7 +94,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @returns {RectangleF2D}
      */
     protected applyScreenTransformationForRect(rectangle: RectangleF2D): RectangleF2D {
-        // ToDo: implement!
-        return rectangle;
+        // FIXME Check if correct
+        return new RectangleF2D(rectangle.x * 10, rectangle.y * 10, rectangle.width * 10, rectangle.height * 10);
     }
 }

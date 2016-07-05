@@ -65,6 +65,8 @@ export class MusicSheetAPI {
             this.width,
             height
         );
+        // Fix the label problem
+        this.drawer.translate(0, 100);
         this.drawer.scale(this.zoom);
         this.drawer.drawSheet(this.graphic);
     }

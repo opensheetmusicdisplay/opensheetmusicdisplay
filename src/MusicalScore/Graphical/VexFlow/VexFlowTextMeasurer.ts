@@ -6,7 +6,15 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
  */
 
 export class VexFlowTextMeasurer implements ITextMeasurer {
+    constructor() {
+        let canvas: HTMLCanvasElement = document.createElement("canvas");
+        this.context = canvas.getContext("2d");
+        this.context.font = "20px 'Times New Roman'";
+    }
+    private context: CanvasRenderingContext2D;
+
     public computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles): number {
-        return text.length / 2;
+        let size: any = this.context.measureText(text);
+        return size.width / 20;
     }
 }

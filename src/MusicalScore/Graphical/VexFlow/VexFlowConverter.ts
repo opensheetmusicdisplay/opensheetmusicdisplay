@@ -25,7 +25,7 @@ export class VexFlowConverter {
 
     public static duration(fraction: Fraction): string {
         let dur: number = fraction.RealValue;
-        if (dur === 1) {
+        if (dur >= 1) {
             return "w";
         } else if (dur < 1 && dur >= 0.5) {
             return "h";
@@ -132,7 +132,7 @@ export class VexFlowConverter {
                 type = "bass";
                 break;
             case ClefEnum.C:
-                type = "baritone-c";
+                type = "alto";
                 break;
             case ClefEnum.percussion:
                 type = "percussion";

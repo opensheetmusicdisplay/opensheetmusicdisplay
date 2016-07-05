@@ -724,7 +724,7 @@ export class VoiceGenerator {
                                     maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
                                 }
                                 let i: number = this.currentVoiceEntry.Notes.indexOf(this.currentNote);
-                                if (i !== -1) { delete this.currentVoiceEntry.Notes[i]; }
+                                if (i !== -1) { this.currentVoiceEntry.Notes.splice(i, 1); }
                                 if (
                                     this.currentVoiceEntry.Articulations.length === 1
                                     && this.currentVoiceEntry.Articulations[0] === ArticulationEnum.fermata
@@ -817,7 +817,7 @@ export class VoiceGenerator {
                     }
                     // delete currentNote from Notes:
                     let i: number = this.currentVoiceEntry.Notes.indexOf(this.currentNote);
-                    if (i !== -1) { delete this.currentVoiceEntry.Notes[i]; }
+                    if (i !== -1) { this.currentVoiceEntry.Notes.splice(i, 1); }
                 }
             }
         }
