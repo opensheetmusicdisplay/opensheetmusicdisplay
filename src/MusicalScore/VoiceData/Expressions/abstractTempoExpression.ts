@@ -1,0 +1,50 @@
+import {PlacementEnum} from "./abstractExpression";
+import {MultiTempoExpression} from "./multiTempoExpression";
+
+export abstract class AbstractTempoExpression {
+    constructor(label: string, placement: PlacementEnum, staffNumber: number, parentMultiTempoExpression: MultiTempoExpression) {
+        this.label = label;
+        this.placement = placement;
+        this.staffNumber = staffNumber;
+        this.parentMultiTempoExpression = parentMultiTempoExpression;
+    }
+
+    protected label: string;
+    protected placement: PlacementEnum;
+    protected staffNumber: number;
+    protected parentMultiTempoExpression: MultiTempoExpression;
+
+    public get Label(): string {
+        return this.label;
+    }
+    public set Label(value: string) {
+        this.label = value;
+    }
+    public get Placement(): PlacementEnum {
+        return this.placement;
+    }
+    public set Placement(value: PlacementEnum) {
+        this.placement = value;
+    }
+    public get StaffNumber(): number {
+        return this.staffNumber;
+    }
+    public set StaffNumber(value: number) {
+        this.staffNumber = value;
+    }
+    public get ParentMultiTempoExpression(): MultiTempoExpression {
+        return this.parentMultiTempoExpression;
+    }
+
+    protected static isStringInStringList(wordsToFind: string[], inputString: string): boolean {
+        for (let wordToFind of wordsToFind) {
+            if (AbstractTempoExpression.stringContainsSeparatedWord(inputString.toLowerCase().trim(), wordToFind.toLowerCase().trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private static stringContainsSeparatedWord(str: string, word: string): boolean {
+        return (str === word || str.indexOf(" " + word) !== -1 || str.indexOf(word + " ") !== -1);
+    }
+}

@@ -1,58 +1,60 @@
 {
-    "name": "opensheetmusicdisplay",
-    "version": "0.0.0",
-    "description": "Open Sheet Music Display library",
-    "main": "build.js",
-    "directories": {
-        "doc": "docs",
-        "test": "test"
-    },
-    "scripts": {
-        "start": "grunt typings",
-        "test": "grunt test"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
-    },
-    "keywords": [
-        "sheet",
-        "music",
-        "vexflow",
-        "musicxml"
-    ],
-    "author": "PhonicScore",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
-    },
-    "homepage": "http://opensheetmusicdisplay.org",
-    "dependencies": {
-        "browserify": "",
-        "tsify": "",
-        "tslint": "",
-        "chai": "",
-        "mocha": "",
-        "typescript": "",
-        "phantomjs-prebuilt": "",
-
-        "grunt": "",
-        "grunt-browserify": "",
-        "grunt-contrib-clean": "",
-        "grunt-contrib-watch": "",
-        "grunt-tslint": "",
-        "grunt-contrib-uglify": "",
-        "grunt-karma": "",
-        "grunt-typings": "",
-
-        "karma": "",
-        "karma-chai": "",
-        "karma-chrome-launcher": "",
-        "karma-firefox-launcher": "",
-        "karma-mocha": "",
-        "karma-mocha-reporter": "",
-        "karma-phantomjs-launcher": "",
-
-        "vexflow": ""
-    }
+  "name": "opensheetmusicdisplay",
+  "version": "0.0.0",
+  "description": "Open Sheet Music Display library",
+  "main": "build/osmd.min.js",
+  "scripts": {
+    "start": "echo",
+    "test": "$(npm bin)/grunt npmtest",
+    "prepublish": "$(npm bin)/grunt publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
+  },
+  "keywords": [
+    "sheet",
+    "music",
+    "vexflow",
+    "musicxml"
+  ],
+  "author": "PhonicScore",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
+  },
+  "homepage": "http://opensheetmusicdisplay.org",
+  "dependencies": {
+    "es6-promise": "",
+    "jszip": "",
+    "vexflow": ""
+  },
+  "devDependencies": {
+    "browserify": "",
+    "chai": "^3.4.1",
+    "grunt": "^1.0.1",
+    "grunt-browserify": "",
+    "grunt-contrib-clean": "",
+    "grunt-contrib-jshint": "",
+    "grunt-contrib-uglify": "",
+    "grunt-contrib-watch": "",
+    "grunt-karma": "",
+    "grunt-tslint": "",
+    "grunt-typings": "",
+    "karma": "",
+    "karma-base64-to-js-preprocessor": "",
+    "karma-chai": "",
+    "karma-chrome-launcher": "",
+    "karma-firefox-launcher": "",
+    "karma-mocha": "",
+    "karma-mocha-reporter": "",
+    "karma-phantomjs-launcher": "",
+    "karma-xml2js-preprocessor": "",
+    "mocha": "^2.5.2",
+    "phantomjs-prebuilt": "",
+    "tsify": "",
+    "tslint": "3.8.0",
+    "typescript": "",
+    "typescript-collections": ""
+  }
 }

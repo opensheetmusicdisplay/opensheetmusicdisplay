@@ -3,14 +3,16 @@ import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects
 describe("Pitch Unit Tests:", () => {
     describe("transpose Pitch", () => {
         let pitch: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
-        let transposedFundamentalAndOctave: number[] = Pitch.CalculateTransposedHalfTone(pitch, 12);
-        let higherTransposedFundamentalAndOctave: number[] = Pitch.CalculateTransposedHalfTone(pitch, 26);
+        let transposedFundamentalAndOctave: {value: number; overflow: number; } =
+          Pitch.CalculateTransposedHalfTone(pitch, 12);
+        let higherTransposedFundamentalAndOctave: {value: number; overflow: number; } =
+          Pitch.CalculateTransposedHalfTone(pitch, 26);
 
         it("should be 1 octave higher and same fundamental", (done: MochaDone) => {
-            chai.expect(transposedFundamentalAndOctave[1]).to.equal(1);
-            chai.expect(transposedFundamentalAndOctave[0]).to.equal(pitch.FundamentalNote);
-            chai.expect(higherTransposedFundamentalAndOctave[1]).to.equal(2);
-            chai.expect(higherTransposedFundamentalAndOctave[0]).to.equal(pitch.FundamentalNote + 2);
+            chai.expect(transposedFundamentalAndOctave.overflow).to.equal(1);
+            chai.expect(transposedFundamentalAndOctave.value).to.equal(pitch.FundamentalNote);
+            chai.expect(higherTransposedFundamentalAndOctave.overflow).to.equal(2);
+            chai.expect(higherTransposedFundamentalAndOctave.value).to.equal(pitch.FundamentalNote + 2);
             done();
         });
     });
@@ -74,7 +76,7 @@ describe("Pitch Unit Tests:", () => {
         for (let i: number = 0; i < Pitch.pitchEnumValues.length; i++) {
             for (let j: number = 0; j < accidentals.length; j++) {
                 pitch = new Pitch(Pitch.pitchEnumValues[i], octave, accidentals[j]);
-                calcedPitch = Pitch.getPitchFromFrequency(pitch.Frequency);
+                calcedPitch = Pitch.fromFrequency(pitch.Frequency);
 
                 it( "calcedPitch equals original, " +
                     `note: ${pitch.FundamentalNote}, octave: ${pitch.Octave}, accidental; ${pitch.Accidental}`,
@@ -103,7 +105,7 @@ describe("Pitch Unit Tests:", () => {
             for (let j: number = 0; j < accidentals.length; j++) {
                 pitch = new Pitch(Pitch.pitchEnumValues[i], octave, accidentals[j]);
                 let halftone: number = pitch.getHalfTone();
-                calcedPitch = Pitch.getPitchFromHalftone(halftone);
+                calcedPitch = Pitch.fromHalftone(halftone);
 
                 it( "calcedPitch equals original, " +
                     `note: ${pitch.FundamentalNote}, octave: ${pitch.Octave}, accidental; ${pitch.Accidental}`,

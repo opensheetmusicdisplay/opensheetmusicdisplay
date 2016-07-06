@@ -1,37 +1,42 @@
-import { XmlElement } from "../../../src/Common/FileIO/Xml.ts";
+import { IXmlElement } from "../../../src/Common/FileIO/Xml.ts";
 
-let xml_test_data: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 2.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\"><score-partwise>  <identification>    <encoding>      <software>Example Software Name</software>      <encoding-date>2016-04-04</encoding-date>      </encoding>    </identification>   <credit page=\"1\"> <credit-words justify=\"center\" valign=\"top\">Example Credit Words</credit-words> </credit>  </score-partwise>";
+// Test XML simple document
+let xmlTestData: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 2.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">\
+<score-partwise>  <identification>    <encoding>      <software>Example Software name</software>      \
+<encoding-date>2016-04-04</encoding-date>      </encoding>    </identification>   <credit page=\"1\"> \
+<credit-words justify=\"center\" valign=\"top\">Example Credit Words</credit-words> </credit>  </score-partwise>";
 
 
 describe("XML Unit Tests", () => {
   let parser: DOMParser = new DOMParser();
-  let doc: Document = parser.parseFromString(xml_test_data, "text/xml");
-  let documentElement: XmlElement = new XmlElement(doc.documentElement);
+  let doc: Document = parser.parseFromString(xmlTestData, "text/xml");
+  let documentElement: IXmlElement = new IXmlElement(doc.documentElement);
 
-  it("XmlElement Tests", (done: MochaDone) => {
-    // Test Name attribute
-    chai.expect(documentElement.Name).to.equal("score-partwise");
-    // Test Element method
-    chai.should().exist(documentElement.Element("identification"));
-    // Test Value attribute
+  it("IXmlElement Tests", (done: MochaDone) => {
+    // Test name attribute
+    chai.expect(documentElement.name).to.equal("score-partwise");
+    // Test element method
+    chai.should().exist(documentElement.element("identification"));
+    // Test value attribute
     chai.expect(documentElement
-      .Element("identification")
-      .Element("encoding")
-      .Element("software").Value).to.equal("Example Software Name");
-      done();
+      .element("identification")
+      .element("encoding")
+      .element("software").value).to.equal("Example Software name");
+    done();
   });
-  it("XmlAttribute Tests", (done: MochaDone) => {
-    // Test Attributes method
+  it("IXmlAttribute Tests", (done: MochaDone) => {
+    // Test attributes method
     chai.expect(
-      documentElement.Element("credit").Attributes()[0].Name
+      documentElement.element("credit").attributes()[0].name
     ).to.equal("page");
 
-    let creditWords: XmlElement =
-      documentElement.Element("credit").Element("credit-words");
-    // Test Attributes method
-    chai.expect(creditWords.Attributes().length).to.equal(2);
-    // Test Value attribute
-    chai.expect(creditWords.Attribute("justify").Value).to.equal("center");
+    let creditWords: IXmlElement =
+      documentElement.element("credit").element("credit-words");
+    // Test attributes method
+    chai.expect(creditWords.attributes().length).to.equal(2);
+    // Test value attribute
+    chai.expect(creditWords.attribute("justify").value).to.equal("center");
     done();
   });
 });
