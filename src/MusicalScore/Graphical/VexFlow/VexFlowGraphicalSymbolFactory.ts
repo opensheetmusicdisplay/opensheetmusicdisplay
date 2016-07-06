@@ -120,9 +120,10 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     }
 
     /**
-     * Adds an accidental to a graphical note.
+     * Sets a pitch which will be used for rendering the given graphical note (not changing the original pitch of the note!!!).
+     * Will be only called if the displayed accidental is different from the original (e.g. a C# with C# as key instruction)
      * @param graphicalNote
-     * @param pitch
+     * @param pitch The pitch which will be rendered.
      * @param grace
      * @param graceScalingFactor
      */
