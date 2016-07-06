@@ -154,7 +154,7 @@ export abstract class MusicSheetCalculator {
         this.createGraphicalTies();
         this.calculateSheetLabelBoundingBoxes();
         this.calculateXLayout(this.graphicalMusicSheet, this.maxInstrNameLabelLength());
-        this.graphicalMusicSheet.MusicPages = [];
+        this.graphicalMusicSheet.MusicPages.length = 0;
         this.calculateMusicSystems();
         this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
@@ -1144,7 +1144,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    private createGraphicalTies(): void {
+    protected createGraphicalTies(): void {
         for (let measureIndex: number = 0; measureIndex < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; measureIndex++) {
             let sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[measureIndex];
             for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {

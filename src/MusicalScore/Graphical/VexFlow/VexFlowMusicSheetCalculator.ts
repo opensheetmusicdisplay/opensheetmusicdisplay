@@ -52,20 +52,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     //}
 
     /**
-     * The main method for the Calculator.
-     */
-    public calculate(): void {
-        this.clearSystemsAndMeasures();
-        this.clearRecreatedObjects();
-        this.calculateSheetLabelBoundingBoxes();
-        this.calculateXLayout(this.graphicalMusicSheet, this.maxInstrNameLabelLength());
-        this.graphicalMusicSheet.MusicPages.length = 0;
-        this.calculateMusicSystems();
-        this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
-        GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
-    }
-
-    /**
      * Calculates the x layout of the staff entries within the staff measures belonging to one source measure.
      * All staff entries are x-aligned throughout all vertically aligned staff measures.
      * This method is called within calculateXLayout.
@@ -107,69 +93,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             formatter.format(allVoices, w);
         };
         return width;
-    }
-
-    /**
-     * Creates the music systems and calculates their layout.
-     */
-    protected calculateMusicSystems(): void {
-        let measureList: StaffMeasure[][] = [];
-        for (let mlist of this.graphicalMusicSheet.MeasureList) {
-            let list: StaffMeasure[] = [];
-            for (let m of mlist) {
-                if (m.isVisible()) {
-                    list.push(m);
-                }
-            }
-            measureList.push(list);
-        }
-        let numberOfStaffLines: number = 0;
-        for (let idx: number = 0, len: number = measureList.length; idx < len; ++idx) {
-            let gmlist: StaffMeasure[] = measureList[idx];
-            numberOfStaffLines = Math.max(gmlist.length, numberOfStaffLines);
-        }
-        if (numberOfStaffLines === 0) { return; }
-        let musicSystemBuilder: MusicSystemBuilder = new MusicSystemBuilder();
-        musicSystemBuilder.initialize(this.graphicalMusicSheet, measureList, numberOfStaffLines, this.symbolFactory);
-        musicSystemBuilder.buildMusicSystems();
-        this.checkMeasuresForWholeRestNotes();
-        this.calculateSystemYLayout();
-        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                musicSystem.setMusicSystemLabelsYPosition();
-                if (!this.leadSheet) {
-                    musicSystem.setYPositionsToVerticalLineObjectsAndCreateLines(this.rules);
-                    musicSystem.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
-                    musicSystem.createInstrumentBrackets(this.graphicalMusicSheet.ParentMusicSheet.Instruments, this.rules.StaffHeight);
-                    musicSystem.createGroupBrackets(this.graphicalMusicSheet.ParentMusicSheet.InstrumentalGroups, this.rules.StaffHeight, 0);
-                    musicSystem.alignBeginInstructions();
-                } else if (musicSystem === musicSystem.Parent.MusicSystems[0]) {
-                    musicSystem.createSystemLeftLine(this.rules.SystemThinLineWidth, this.rules.SystemLabelsRightMargin);
-                }
-                musicSystem.calculateBorders(this.rules);
-            }
-            let distance: number = graphicalMusicPage.MusicSystems[0].PositionAndShape.BorderTop;
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                // let newPosition: PointF2D = new PointF2D(musicSystem.PositionAndShape.RelativePosition.x,
-                // musicSystem.PositionAndShape.RelativePosition.y - distance);
-                musicSystem.PositionAndShape.RelativePosition =
-                    new PointF2D(musicSystem.PositionAndShape.RelativePosition.x, musicSystem.PositionAndShape.RelativePosition.y - distance);
-            }
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    let staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                    staffLine.addActivitySymbolClickArea();
-                }
-            }
-            if (graphicalMusicPage === this.graphicalMusicSheet.MusicPages[0]) {
-                this.calculatePageLabels(graphicalMusicPage);
-            }
-            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders();
-        }
     }
 
     protected updateStaffLineBorders(staffLine: StaffLine): void {
