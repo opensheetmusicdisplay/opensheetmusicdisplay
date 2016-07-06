@@ -1,8 +1,6 @@
 import {MusicSheetCalculator} from "../MusicSheetCalculator";
 import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
-import {GraphicalMusicSheet} from "../GraphicalMusicSheet";
 import {StaffMeasure} from "../StaffMeasure";
-import {MusicSystemBuilder} from "../MusicSystemBuilder";
 import {StaffLine} from "../StaffLine";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {MusicSystem} from "../MusicSystem";
@@ -28,7 +26,6 @@ import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
 import Vex = require("vexflow");
-import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {

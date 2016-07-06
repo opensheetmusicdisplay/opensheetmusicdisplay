@@ -874,6 +874,32 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    protected createGraphicalTies(): void {
+        for (let measureIndex: number = 0; measureIndex < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; measureIndex++) {
+            let sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[measureIndex];
+            for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
+                for (let j: number = 0; j < sourceMeasure.VerticalSourceStaffEntryContainers.length; j++) {
+                    let sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[j].StaffEntries[staffIndex];
+                    if (sourceStaffEntry !== undefined) {
+                        let startStaffEntry: GraphicalStaffEntry = this.graphicalMusicSheet.findGraphicalStaffEntryFromMeasureList(
+                            staffIndex, measureIndex, sourceStaffEntry
+                        );
+                        for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
+                            let voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
+                            for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
+                                let note: Note = voiceEntry.Notes[idx2];
+                                if (note.NoteTie !== undefined) {
+                                    let tie: Tie = note.NoteTie;
+                                    this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private createAccidentalCalculators(): AccidentalCalculator[] {
         let accidentalCalculators: AccidentalCalculator[] = [];
         let firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
@@ -1082,7 +1108,6 @@ export abstract class MusicSheetCalculator {
             this.symbolFactory.createGraphicalTechnicalInstruction(technicalInstruction, graphicalStaffEntry);
         }
     }
-
     private checkNoteForAccidental(graphicalNote: GraphicalNote, accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
                                    octaveEnum: OctaveEnum, grace: boolean = false): void {
         let pitch: Pitch = graphicalNote.sourceNote.Pitch;
@@ -1102,6 +1127,7 @@ export abstract class MusicSheetCalculator {
         }
         accidentalCalculator.checkAccidental(graphicalNote, pitch, grace, scalingFactor);
     }
+
     // needed to disable linter, as it doesn't recognize the existing usage of this method.
     // ToDo: check if a newer version doesn't have the problem.
     /* tslint:disable:no-unused-variable */
@@ -1138,32 +1164,6 @@ export abstract class MusicSheetCalculator {
                     if (graphicalStaffEntry.parentMeasure !== undefined && graphicalStaffEntry.notes.length > 0 && graphicalStaffEntry.notes[0].length > 0) {
                         this.layoutVoiceEntries(graphicalStaffEntry);
                         this.layoutStaffEntry(graphicalStaffEntry);
-                    }
-                }
-            }
-        }
-    }
-
-    protected createGraphicalTies(): void {
-        for (let measureIndex: number = 0; measureIndex < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; measureIndex++) {
-            let sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[measureIndex];
-            for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
-                for (let j: number = 0; j < sourceMeasure.VerticalSourceStaffEntryContainers.length; j++) {
-                    let sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[j].StaffEntries[staffIndex];
-                    if (sourceStaffEntry !== undefined) {
-                        let startStaffEntry: GraphicalStaffEntry = this.graphicalMusicSheet.findGraphicalStaffEntryFromMeasureList(
-                            staffIndex, measureIndex, sourceStaffEntry
-                        );
-                        for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
-                            let voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
-                            for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-                                let note: Note = voiceEntry.Notes[idx2];
-                                if (note.NoteTie !== undefined) {
-                                    let tie: Tie = note.NoteTie;
-                                    this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
-                                }
-                            }
-                        }
                     }
                 }
             }
