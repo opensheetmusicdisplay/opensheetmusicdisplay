@@ -12,6 +12,9 @@ import {NoteEnum} from "../../../Common/DataObjects/pitch";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {GraphicalNote} from "../GraphicalNote";
 import {SystemLinesEnum} from "../SystemLinesEnum";
+import {FontStyles} from "../../../Common/Enums/FontStyles";
+import {Fonts} from "../../../Common/Enums/Fonts";
+import {OutlineAndFillStyleEnum} from "../DrawingEnums";
 
 export class VexFlowConverter {
     private static majorMap: {[_: number]: string; } = {
@@ -200,5 +203,44 @@ export class VexFlowConverter {
                 return Vex.Flow.StaveConnector.type.NONE;
             default:
         }
+    }
+
+    public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular, font: Fonts = Fonts.TimesNewRoman): string {
+        let style: string = "normal";
+        let weight: string = "normal";
+        let family: string = "'Times New Roman'";
+
+        switch (fontStyle) {
+            case FontStyles.Bold:
+                weight = "bold";
+                break;
+            case FontStyles.Italic:
+                style = "italic";
+                break;
+            case FontStyles.BoldItalic:
+                style = "italic";
+                weight = "bold";
+                break;
+            case FontStyles.Underlined:
+                // TODO
+                break;
+            default:
+                break;
+        }
+
+        switch (font) {
+            case Fonts.Kokila:
+                // TODO Not Supported
+                break;
+            default:
+        }
+
+
+        return  style + " " + weight + " " + Math.floor(fontSize) + "px " + family;
+    }
+
+    public static style(styleId: OutlineAndFillStyleEnum): string {
+        // TODO
+        return "black";
     }
 }
