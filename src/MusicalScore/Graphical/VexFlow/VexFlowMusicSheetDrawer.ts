@@ -28,7 +28,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     public translate(x: number, y: number): void {
         // FIXME
-        (this.ctx as any).vexFlowCanvasContext.translate(x, y);
+        //(this.ctx as any).vexFlowCanvasContext.translate(x, y);
     }
 
     /**
@@ -63,8 +63,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // ToDo: implement!
         let ctx: CanvasRenderingContext2D = (this.ctx as any).vexFlowCanvasContext;
         ctx.font = Math.floor(graphicalLabel.Label.fontHeight * 10) + "px 'Times New Roman'";
-        console.log(graphicalLabel.Label.text, screenPosition.x, screenPosition.y);
-        ctx.fillText(graphicalLabel.Label.text, screenPosition.x, screenPosition.y);
+        ctx.fillText(graphicalLabel.Label.text, screenPosition.x, screenPosition.y + heightInPixel);
     }
 
     /**

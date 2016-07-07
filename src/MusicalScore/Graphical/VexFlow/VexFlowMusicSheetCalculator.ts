@@ -136,7 +136,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                     let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                     // calculate y positions of stafflines within system
-                    let y: number = 0;
+                    let y: number = 10;
                     for (let line of musicSystem.StaffLines) {
                         line.PositionAndShape.RelativePosition.y = y;
                         y += 10;

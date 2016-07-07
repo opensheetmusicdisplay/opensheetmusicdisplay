@@ -55,7 +55,10 @@ export class VexFlowMeasure extends StaffMeasure {
         // Will be changed when repetitions will be implemented
         this.beginInstructionsWidth = 20 / this.unit;
         this.endInstructionsWidth = 20 / this.unit;
-        this.stave = new Vex.Flow.Stave(0, 0, 0);
+        this.stave = new Vex.Flow.Stave(0, 0, 0, {
+            space_above_staff_ln: 0,
+            space_below_staff_ln: 0,
+        });
     }
 
     public clean(): void {

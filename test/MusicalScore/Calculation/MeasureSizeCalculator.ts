@@ -6,7 +6,7 @@ import Vex = require("vexflow");
 
 describe("Measure Size Calculator Tests", () => {
   // Initialization
-  let stave: Vex.Flow.Stave = new Vex.Flow.Stave(0, 0, 0);
+  let stave: Vex.Flow.Stave = new Vex.Flow.Stave(0, 0, 0, {});
   let voices: Vex.Flow.Voice[];
   let formatter: Vex.Flow.Formatter;
   let voice: Vex.Flow.Voice;
@@ -65,7 +65,7 @@ describe("Measure Size Calculator Tests", () => {
 
     visual((renderer: any, ctx: any): void => {
       renderer.resize(420, 120);
-      let stave2: Vex.Flow.Stave = new Vex.Flow.Stave(10, 0, 410);
+      let stave2: Vex.Flow.Stave = new Vex.Flow.Stave(10, 0, 410, {});
       stave2.setContext(ctx);
       for (let t in Vex.Flow.Clef.types) {
         if (Vex.Flow.Clef.types.hasOwnProperty(t)) {

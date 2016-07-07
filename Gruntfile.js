@@ -36,6 +36,16 @@ module.exports = function (grunt) {
                     banner: "<%= banner %>"
                 }
             },
+            debugDemo: {
+                src: [].concat(typings, src),
+                dest: '<%= outputDir.build %>/osmd-demo.js',
+                options: {
+                    banner: "<%= banner %>",
+                    browserifyOptions: {
+                        debug: true
+                    }
+                }
+            },
             debug: {
                 src: [].concat(typings, src, test),
                 dest: '<%= outputDir.build %>/osmd-debug.js',

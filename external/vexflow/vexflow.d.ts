@@ -44,7 +44,7 @@ declare namespace Vex {
     }
 
     export class Stave {
-      constructor(x: number, y: number, width: number);
+      constructor(x: number, y: number, width: number, options: any);
 
       public x: number;
       public start_x: number;

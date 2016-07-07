@@ -20,6 +20,10 @@ export class GraphicalLabel extends Clickable {
         return this.label;
     }
 
+    public toString(): string {
+        return this.label.text;
+    }
+
     public setLabelPositionAndShapeBorders(): void {
         if (this.Label.text.trim() === "") {
             return;
