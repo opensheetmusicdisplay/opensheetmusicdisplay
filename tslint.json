@@ -119,7 +119,7 @@
       "check-function"
     ],
     "variable-name": [
-      false,
+      true,
       "check-format",
       "ban-keywords"
     ],

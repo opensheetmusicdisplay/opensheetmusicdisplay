@@ -1,72 +1,71 @@
-export class XmlAttribute {
-  public Name: string;
-  public Value: string;
+export type IXmlAttribute = Attr;
 
-  constructor(attr: Attr) {
-    this.Name = attr.name;
-    this.Value = attr.value;
-  };
-}
+export class IXmlElement {
+    public name: string;
+    public value: string;
+    public hasAttributes: boolean = false;
+    public firstAttribute: IXmlAttribute;
+    public hasElements: boolean;
 
-export class XmlElement {
-  public Name: string;
-  public Value: string;
-  public HasAttributes: boolean = false;
-  public FirstAttribute: XmlAttribute;
-  public HasElements: boolean;
+    private attrs: IXmlAttribute[];
+    private elem: Element;
 
-  private _attrs: XmlAttribute[];
-  private _elem: Element;
+    constructor(elem: Element) {
+        this.elem = elem;
+        this.name = elem.nodeName.toLowerCase();
 
-  constructor(elem: Element) {
-    this._elem = elem;
-    this.Name = elem.nodeName;
-
-    if (elem.hasAttributes()) {
-      this.HasAttributes = true;
-      this.FirstAttribute = new XmlAttribute(elem.attributes[0]);
-      }
-    this.HasElements = elem.hasChildNodes();
-    // Look for a value
-    if (
-      elem.childNodes.length === 1 &&
-      elem.childNodes[0].nodeType === Node.TEXT_NODE
-    ) {
-      this.Value = elem.childNodes[0].nodeValue;
-    }
-  }
-
-  public Attribute(attributeName: string): XmlAttribute {
-    return new XmlAttribute(this._elem.attributes.getNamedItem(attributeName));
-  }
-
-  public Attributes(): XmlAttribute[] {
-    if (typeof this._attrs === "undefined") {
-      let attributes: NamedNodeMap = this._elem.attributes;
-      let attrs: XmlAttribute[] = new Array();
-      for (let i: number = 0; i < attributes.length; i += 1) {
-        attrs.push(new XmlAttribute(attributes[i]));
-      }
-      this._attrs = attrs;
-    }
-    return this._attrs;
-  }
-
-  public Element(elementName: string): XmlElement {
-    return this.Elements(elementName)[0];
-  }
-
-  public Elements(nodeName: string): XmlElement[] {
-    let nodes: NodeList = this._elem.childNodes;
-    let ret: XmlElement[] = new Array();
-    let nameUnset: boolean = typeof nodeName === "undefined";
-    for (let i: number = 0; i < nodes.length; i += 1) {
-      let node: Node = nodes[i];
-      if (node.nodeType === Node.ELEMENT_NODE &&
-        (nameUnset || node.nodeName === nodeName)) {
-          ret.push(new XmlElement(<Element> node));
+        if (elem.hasAttributes()) {
+            this.hasAttributes = true;
+            this.firstAttribute = elem.attributes[0];
+        }
+        this.hasElements = elem.hasChildNodes();
+        // Look for a value
+        if (elem.childNodes.length === 1 && elem.childNodes[0].nodeType === Node.TEXT_NODE) {
+            this.value = elem.childNodes[0].nodeValue;
+        } else {
+            this.value = "";
         }
     }
-    return ret;
-  }
+
+    public attribute(attributeName: string): IXmlAttribute {
+        return this.elem.attributes.getNamedItem(attributeName);
+    }
+
+    public attributes(): IXmlAttribute[] {
+        if (typeof this.attrs === "undefined") {
+            let attributes: NamedNodeMap = this.elem.attributes;
+            let attrs: IXmlAttribute[] = [];
+            for (let i: number = 0; i < attributes.length; i += 1) {
+                attrs.push(attributes[i]);
+            }
+            this.attrs = attrs;
+        }
+        return this.attrs;
+    }
+
+    public element(elementName: string): IXmlElement {
+        return this.elements(elementName)[0];
+    }
+
+    public elements(nodeName?: string): IXmlElement[] {
+        let nodes: NodeList = this.elem.childNodes;
+        let ret: IXmlElement[] = [];
+        let nameUnset: boolean = nodeName === undefined;
+        if (!nameUnset) {
+            nodeName = nodeName.toLowerCase();
+        }
+        // console.log("-", nodeName, nodes.length, this.elem.childElementCount, this.elem.getElementsByTagName(nodeName).length);
+        // if (nodeName === "measure") {
+        //   console.log(this.elem);
+        // }
+        for (let i: number = 0; i < nodes.length; i += 1) {
+            let node: Node = nodes[i];
+            //console.log("node: ", this.elem.nodeName, ">>", node.nodeName, node.nodeType === Node.ELEMENT_NODE);
+            if (node.nodeType === Node.ELEMENT_NODE &&
+                (nameUnset || node.nodeName.toLowerCase() === nodeName)) {
+                ret.push(new IXmlElement(node as Element));
+            }
+        }
+        return ret;
+    }
 }
