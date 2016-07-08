@@ -64,7 +64,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
         // Format the voices
         let allVoices: Vex.Flow.Voice[] = [];
-        let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
+        let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
+            align_rests: true,
+        });
         for (let measure of measures) {
             let mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
             let voices: Vex.Flow.Voice[] = [];
@@ -81,7 +83,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             formatter.joinVoices(voices);
         }
         let firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
-        let width: number = formatter.preCalculateMinTotalWidth(allVoices) / firstMeasure.unit;
+        // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
+        // FIXME: a more relaxed formatting of voices
+        let width: number = formatter.preCalculateMinTotalWidth(allVoices) / 10.0 + 5.0;
         for (let measure of measures) {
             measure.minimumStaffEntriesWidth = width;
             (measure as VexFlowMeasure).formatVoices = undefined;
