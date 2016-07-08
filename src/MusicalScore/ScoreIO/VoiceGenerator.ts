@@ -28,7 +28,7 @@ import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {CollectionUtil} from "../../Util/collectionUtil";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
-type SlurReader = any;
+export type SlurReader = any;
 
 export class VoiceGenerator {
     constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
