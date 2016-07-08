@@ -5,7 +5,6 @@
   "main": "dist/src/MusicSheetApi.js",
   "typings": "dist/src/MusicSheetApi",
   "scripts": {
-    "start": "",
     "test": "grunt npmtest",
     "postinstall": "typings install",
     "prepublish": "tsc"
