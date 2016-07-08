@@ -39,7 +39,7 @@ export class VexFlowMeasure extends StaffMeasure {
     // Intermediate object to construct beams
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     // VexFlow Beams
-    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; } = {};
+    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -63,7 +63,7 @@ export class VexFlowMeasure extends StaffMeasure {
 
     public clean(): void {
         //this.beams = {};
-        //this.vfbeams = {};
+        //this.vfbeams = undefined;
         this.connectors = [];
         console.log("clean!");
     }
@@ -230,6 +230,10 @@ export class VexFlowMeasure extends StaffMeasure {
      * Complete the creation of VexFlow Beams in this measure
      */
     public finalizeBeams(): void {
+        // The following line resets the created Vex.Flow Beams and
+        // created them brand new. Is this needed? And more importantly,
+        // should the old beams be removed manually by the notes?
+        this.vfbeams = {};
         for (let voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
                 let vfbeams: Vex.Flow.Beam[] = this.vfbeams[voiceID];
@@ -258,8 +262,8 @@ export class VexFlowMeasure extends StaffMeasure {
             if (gnotes.hasOwnProperty(voiceID)) {
                 if (!(voiceID in vfVoices)) {
                     vfVoices[voiceID] = new Vex.Flow.Voice({
-                        beat_value: 4, //this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: 3, //this.parentSourceMeasure.Duration.Numerator,
+                        beat_value: this.parentSourceMeasure.Duration.Denominator,
+                        num_beats: this.parentSourceMeasure.Duration.Numerator,
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
                 }
