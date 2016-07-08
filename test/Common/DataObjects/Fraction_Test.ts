@@ -1,7 +1,12 @@
 /**
  * Created by Oliver on 16.03.2016.
  */
+<<<<<<< HEAD:test/Common/DataObjects/Fraction_Test.ts
 import { Fraction } from "../../../src/Common/DataObjects/Fraction";
+=======
+import chai = require("chai");
+import { Fraction } from "../../../src/Common/DataObjects/fraction";
+>>>>>>> Started working on plugin infrastructure for OSMD. #1:test/Common/DataObjects/fraction_Test.ts
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {Logging} from "../../../src/Common/Logging";
 

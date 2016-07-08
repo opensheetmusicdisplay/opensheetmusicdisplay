@@ -1,3 +1,4 @@
+import chai = require("chai");
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
 import { TestUtils } from "../../Util/TestUtils";
 import { MXLHelper } from "../../../src/Common/FileIO/Mxl";

@@ -17,6 +17,7 @@ export class GraphicalLabel extends Clickable {
         this.label.fontHeight = textHeight;
         this.label.textAlignment = alignment;
     }
+<<<<<<< HEAD:src/MusicalScore/Graphical/GraphicalLabel.ts
 
     public get Label(): Label {
         return this.label;
@@ -30,6 +31,19 @@ export class GraphicalLabel extends Clickable {
      * Calculate GraphicalLabel's Borders according to its Alignment
      */
     public setLabelPositionAndShapeBorders(): void {
+=======
+    Object.defineProperty(GraphicalLabel.prototype, "Label", {
+        get: function () {
+            return this.label;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    GraphicalLabel.prototype.toString = function () {
+        return this.label.text;
+    };
+    GraphicalLabel.prototype.setLabelPositionAndShapeBorders = function () {
+>>>>>>> Started working on plugin infrastructure for OSMD. #1:dist/src/MusicalScore/Graphical/GraphicalLabel.js
         if (this.Label.text.trim() === "") {
             return;
         }
