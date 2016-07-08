@@ -43,7 +43,7 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 //  }
 //}
 
-type repetitionInstructionReader = any;
+export type repetitionInstructionReader = any;
 
 export class InstrumentReader {
     constructor(repetitionInstructionReader: repetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {

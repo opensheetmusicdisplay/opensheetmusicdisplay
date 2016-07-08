@@ -107,9 +107,4 @@ export class MusicSheetAPI {
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
     }
-
 }
-
-(<any>window).osmd = {
-    "MusicSheet":  MusicSheetAPI,
-};
