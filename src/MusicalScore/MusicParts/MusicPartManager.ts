@@ -102,7 +102,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
 }
 
 
-class TimestampTransform {
+export class TimestampTransform {
     constructor(sourceTimestamp: Fraction, enrolledTimestamp: Fraction, repetition: Repetition, curRepetitionIteration: number) {
         this.$from = sourceTimestamp;
         this.to = enrolledTimestamp;

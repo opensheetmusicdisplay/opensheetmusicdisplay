@@ -2,8 +2,7 @@ import Vex = require("vexflow");
 import StaveNote = Vex.Flow.StaveNote;
 
 // The type PositionAndShapeInfo is still to be ported in TypeScript
-type PositionAndShapeInfo = any;
-declare var PositionAndShapeInfo: any;
+export type PositionAndShapeInfo = any;
 
 /* TODO
  * Complete support for StaveModifiers
@@ -73,7 +72,7 @@ export class MeasureSizeCalculator {
   // Returns the shape of all the note heads inside a StaveNote.
   // Remember: in VexFlow, StaveNote correspond to PhonicScore's VoiceEntries.
   public static getVexFlowStaveNoteShape(note: StaveNote): PositionAndShapeInfo {
-    let info: any = new PositionAndShapeInfo();
+    let info: PositionAndShapeInfo = {};
     let bounds: any = note.getNoteHeadBounds();
     let beginX: number = note.getNoteHeadBeginX();
     let endX: number = note.getNoteHeadEndX();
