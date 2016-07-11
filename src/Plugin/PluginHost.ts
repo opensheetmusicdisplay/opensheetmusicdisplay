@@ -21,7 +21,7 @@ export class PluginHost {
             this.registeredPlugins.add(plugin);
             plugin.registerEvents(this.eventSource);
         } else {
-            throw("Plugin already registered.");
+            throw new Error("Plugin already registered.");
         }
     }
 
