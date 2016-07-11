@@ -1,5 +1,4 @@
 import chai = require("chai");
-import spies = require("chai-spies");
 
 import { IEventSource, IPlugin } from "../../src/Plugin";
 
