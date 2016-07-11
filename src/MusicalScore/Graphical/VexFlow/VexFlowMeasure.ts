@@ -13,7 +13,6 @@ import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
-import StaveModifier = Vex.Flow.StaveModifier;
 import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/logging";
 
