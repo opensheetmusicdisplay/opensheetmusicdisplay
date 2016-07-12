@@ -22,7 +22,7 @@ describe("OSMD plugin infrastructure", () => {
     });
 
     beforeEach((done): void => {
-        osmd = new MusicSheetAPI();
+        osmd = new MusicSheetAPI(document.documentElement);
         done();
     });
 

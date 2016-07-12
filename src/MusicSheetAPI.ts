@@ -7,6 +7,7 @@ import {VexFlowMusicSheetDrawer} from "./MusicalScore/Graphical/VexFlow/VexFlowM
 import {MusicSheet} from "./MusicalScore/MusicSheet";
 import {Fraction} from "./Common/DataObjects/fraction";
 import {OutlineAndFillStyleEnum} from "./MusicalScore/Graphical/DrawingEnums";
+import {SizeF2D} from "./Common/DataObjects/SizeF2D";
 import {Event, IEvent, IEventSource, IPlugin, PluginHost} from "./Plugin";
 
 export class MusicSheetAPI implements IEventSource {
@@ -17,6 +18,9 @@ export class MusicSheetAPI implements IEventSource {
         this.container.appendChild(this.titles);
         this.container.appendChild(this.canvas);
         this.drawer = new VexFlowMusicSheetDrawer(this.titles, this.canvas);
+
+        // Initialize plugin host 
+        this.pluginHost = new PluginHost(this);
     }
 
     private container: HTMLElement;
