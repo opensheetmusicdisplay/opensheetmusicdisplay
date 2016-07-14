@@ -5,7 +5,7 @@
 
 export class Logging {
     public static debug(...args: any[]): void {
-        console.log("[OSMD] DEBUG: ", args.join(" "));
+        console.debug("[OSMD] ", args.join(" "));
     }
     public static log(...args: any[]): void {
         console.log("[OSMD] ", args.join(" "));
