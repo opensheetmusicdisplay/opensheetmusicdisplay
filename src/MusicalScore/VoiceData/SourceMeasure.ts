@@ -402,11 +402,13 @@ export class SourceMeasure {
     }
 
     private getLastSourceStaffEntryForInstrument(instrumentIndex: number): SourceStaffEntry {
+        let entry: SourceStaffEntry;
         for (let i: number = this.verticalSourceStaffEntryContainers.length - 1; i >= 0; i--) {
-            if (this.verticalSourceStaffEntryContainers[i][instrumentIndex] !== undefined) {
-                return this.verticalSourceStaffEntryContainers[i][instrumentIndex];
+            entry = this.verticalSourceStaffEntryContainers[i].StaffEntries[instrumentIndex];
+            if (entry) {
+                break;
             }
         }
-        return undefined;
+        return entry;
     }
 }

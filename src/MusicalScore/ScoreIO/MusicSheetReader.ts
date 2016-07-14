@@ -152,22 +152,15 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
             }
             if (couldReadMeasure) {
-                //Logging.debug("couldReadMeasure: 1");
                 this.musicSheet.addMeasure(this.currentMeasure);
-                //Logging.debug("couldReadMeasure: 2");
                 this.checkIfRhythmInstructionsAreSetAndEqual(instrumentReaders);
-                //Logging.debug("couldReadMeasure: 3");
                 this.checkSourceMeasureForundefinedEntries();
-                //Logging.debug("couldReadMeasure: 4");
                 this.setSourceMeasureDuration(instrumentReaders, sourceMeasureCounter);
-                //Logging.debug("couldReadMeasure: 5");
                 MusicSheetReader.doCalculationsAfterDurationHasBeenSet(instrumentReaders);
-                //Logging.debug("couldReadMeasure: 6");
                 this.currentMeasure.AbsoluteTimestamp = this.currentFraction.clone();
                 this.musicSheet.SheetErrors.finalizeMeasure(this.currentMeasure.MeasureNumber);
                 this.currentFraction.Add(this.currentMeasure.Duration);
                 this.previousMeasure = this.currentMeasure;
-                //Logging.debug("couldReadMeasure: 7");
             }
         }
 
@@ -321,26 +314,24 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private setSourceMeasureDuration(instrumentReaders: InstrumentReader[], sourceMeasureCounter: number): void {
         let activeRhythm: Fraction = new Fraction(0, 1);
         let instrumentsMaxTieNoteFractions: Fraction[] = [];
-        for (let idx: number = 0, len: number = instrumentReaders.length; idx < len; ++idx) {
-            let instrumentReader: InstrumentReader = instrumentReaders[idx];
+        for (let instrumentReader of instrumentReaders) {
             instrumentsMaxTieNoteFractions.push(instrumentReader.MaxTieNoteFraction);
             let activeRythmMeasure: Fraction = instrumentReader.ActiveRhythm.Rhythm;
-            if (activeRhythm < activeRythmMeasure) {
+            if (activeRhythm.lt(activeRythmMeasure)) {
                 activeRhythm = new Fraction(activeRythmMeasure.Numerator, activeRythmMeasure.Denominator, false);
             }
         }
         let instrumentsDurations: Fraction[] = this.currentMeasure.calculateInstrumentsDuration(this.musicSheet, instrumentsMaxTieNoteFractions);
         let maxInstrumentDuration: Fraction = new Fraction(0, 1);
-        for (let idx: number = 0, len: number = instrumentsDurations.length; idx < len; ++idx) {
-            let instrumentsDuration: Fraction = instrumentsDurations[idx];
-            if (maxInstrumentDuration < instrumentsDuration) {
+        for (let instrumentsDuration of instrumentsDurations) {
+            if (maxInstrumentDuration.lt(instrumentsDuration)) {
                 maxInstrumentDuration = instrumentsDuration;
             }
         }
         if (Fraction.Equal(maxInstrumentDuration, activeRhythm)) {
             this.checkFractionsForEquivalence(maxInstrumentDuration, activeRhythm);
         } else {
-            if (maxInstrumentDuration < activeRhythm) {
+            if (maxInstrumentDuration.lt(activeRhythm)) {
                 maxInstrumentDuration = this.currentMeasure.reverseCheck(this.musicSheet, maxInstrumentDuration);
                 this.checkFractionsForEquivalence(maxInstrumentDuration, activeRhythm);
             }
@@ -355,7 +346,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             let instrumentsDuration: Fraction = instrumentsDurations[i];
             if (
                 (this.currentMeasure.ImplicitMeasure && instrumentsDuration !== maxInstrumentDuration) ||
-                instrumentsDuration !== activeRhythm && // FIXME
+                !Fraction.Equal(instrumentsDuration, activeRhythm) &&
                 !this.allInstrumentsHaveSameDuration(instrumentsDurations, maxInstrumentDuration)
             ) {
                 let firstStaffIndexOfInstrument: number = this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.musicSheet.Instruments[i]);

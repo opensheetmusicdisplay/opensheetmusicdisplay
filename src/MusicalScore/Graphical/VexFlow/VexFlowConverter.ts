@@ -241,6 +241,6 @@ export class VexFlowConverter {
 
     public static style(styleId: OutlineAndFillStyleEnum): string {
         // TODO
-        return "black";
+        return "purple";
     }
 }

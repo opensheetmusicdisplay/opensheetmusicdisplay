@@ -65,7 +65,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public getAbsoluteTimestamp(): Fraction {
-        let result: Fraction = Fraction.createFromFraction(this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp);
+        let result: Fraction = this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.clone();
         if (this.relInMeasureTimestamp !== undefined) {
             result.Add(this.relInMeasureTimestamp);
         }

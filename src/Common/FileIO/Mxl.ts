@@ -1,6 +1,7 @@
 import { IXmlElement } from "./Xml";
 import { Promise } from "es6-promise";
 import JSZip = require("jszip");
+//import { JSZip } from "jzsip";
 
 // Usage for extractSheetMusicFromMxl:
 // extractSheetFromMxl(" *** binary content *** ").then(
@@ -15,7 +16,7 @@ import JSZip = require("jszip");
 export function extractSheetFromMxl(data: string): Promise<any> {
   "use strict";
   // _zip_ must be of type 'any' for now, since typings for JSZip are not up-to-date
-  let zip: any = new JSZip();
+  let zip: JSZip.JSZip = new JSZip();
   // asynchronously load zip file and process it - with Promises
   return zip.loadAsync(data).then(
     (_: any) => {

@@ -41,6 +41,7 @@ declare namespace Vex {
       public getNoteHeadBeginX(): number;
       public getNoteHeadEndX(): number;
       public addAccidental(index: number, accidental: Accidental): StaveNote;
+      public setStyle(style: any): void;
     }
 
     export class Stave {
