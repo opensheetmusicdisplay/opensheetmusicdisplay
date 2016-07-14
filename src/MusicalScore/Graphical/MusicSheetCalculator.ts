@@ -49,7 +49,7 @@ import {AccidentalCalculator} from "./AccidentalCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {Staff} from "../VoiceData/Staff";
 import {OctaveShift} from "../VoiceData/Expressions/ContinuousExpressions/octaveShift";
-import {Logging} from "../../Common/logging";
+import {Logging} from "../../Common/Logging";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
 
@@ -266,12 +266,12 @@ export abstract class MusicSheetCalculator {
     }
 
     protected clearRecreatedObjects(): void {
-        Logging.log("clearRecreatedObjects not implemented");
+        Logging.debug("clearRecreatedObjects not implemented");
     }
 
     protected handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry,
                                    staffEntryLinks: StaffEntryLink[]): void {
-        Logging.log("handleStaffEntryLink not implemented");
+        Logging.debug("handleStaffEntryLink not implemented");
     }
 
     protected calculateMusicSystems(): void {
@@ -396,19 +396,19 @@ export abstract class MusicSheetCalculator {
     }
 
     protected updateSkyBottomLine(staffLine: StaffLine): void {
-        Logging.log("updateSkyBottomLine not implemented");
+        Logging.debug("updateSkyBottomLine not implemented");
     }
 
     protected calculateSkyBottomLine(staffLine: StaffLine): void {
-        Logging.log("calculateSkyBottomLine not implemented");
+        Logging.debug("calculateSkyBottomLine not implemented");
     }
 
     protected calculateMarkedAreas(): void {
-        Logging.log("calculateMarkedAreas not implemented");
+        Logging.debug("calculateMarkedAreas not implemented");
     }
 
     protected calculateComments(): void {
-        Logging.log("calculateComments not implemented");
+        Logging.debug("calculateComments not implemented");
     }
 
     protected optimizeStaffLineDynamicExpressionsPositions(): void {

@@ -1,5 +1,6 @@
 import {Instrument} from "./Instrument";
 import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
+import {Logging} from "../Common/Logging";
 
 export class SubInstrument {
     constructor(parentInstrument: Instrument) {
@@ -107,7 +108,7 @@ export class SubInstrument {
                 }
             }
         } catch (e) {
-            console.log("Error parsing MIDI Instrument. Default to Grand Piano."); // FIXME
+            Logging.error("Error parsing MIDI Instrument. Default to Grand Piano.");
         }
         return "unnamed";
     }

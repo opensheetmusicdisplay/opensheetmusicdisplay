@@ -26,6 +26,7 @@ import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
 import Vex = require("vexflow");
+import {Logging} from "../../../Common/Logging";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -77,7 +78,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 }
             }
             if (voices.length === 0) {
-                console.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+                Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
                 continue;
             }
             formatter.joinVoices(voices);

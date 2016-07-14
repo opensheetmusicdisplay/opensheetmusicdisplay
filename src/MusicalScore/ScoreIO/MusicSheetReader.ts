@@ -6,7 +6,7 @@ import {IXmlElement} from "../../Common/FileIO/Xml";
 import {Instrument} from "../Instrument";
 import {ITextTranslation} from "../Interfaces/ITextTranslation";
 import {MusicSheetReadingException} from "../Exceptions";
-import {Logging} from "../../Common/logging";
+import {Logging} from "../../Common/Logging";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
@@ -118,11 +118,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
 
         let partInst: IXmlElement[] = root.elements("part");
-        console.log(partInst.length + " parts");
         let partList: IXmlElement[] = partlistNode.elements();
-        //Logging.debug("Starting initializeReading");
         this.initializeReading(partList, partInst, instrumentReaders);
-        //Logging.debug("Done initializeReading");
         let couldReadMeasure: boolean = true;
         this.currentFraction = new Fraction(0, 1);
         let guitarPro: boolean = false;

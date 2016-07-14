@@ -14,7 +14,7 @@ import {ContinuousDynamicExpression} from "../VoiceData/Expressions/ContinuousEx
 import {InstantaniousDynamicExpression} from "../VoiceData/Expressions/instantaniousDynamicExpression";
 import {MultiTempoExpression} from "../VoiceData/Expressions/multiTempoExpression";
 import {AbstractExpression} from "../VoiceData/Expressions/abstractExpression";
-import {Logging} from "../../Common/logging";
+import {Logging} from "../../Common/Logging";
 
 export class MusicPartManagerIterator {
     constructor(manager: MusicPartManager, startTimestamp?: Fraction, endTimestamp?: Fraction) {

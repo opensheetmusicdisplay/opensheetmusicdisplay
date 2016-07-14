@@ -18,7 +18,7 @@ import {Instrument} from "../Instrument";
 import {BoundingBox} from "./BoundingBox";
 import {Note} from "../VoiceData/Note";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
-import {Logging} from "../../Common/logging";
+import {Logging} from "../../Common/Logging";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
