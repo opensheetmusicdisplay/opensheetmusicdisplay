@@ -6,6 +6,8 @@ import {MusicSheetCalculator} from "./../MusicalScore/Graphical/MusicSheetCalcul
 import {VexFlowMusicSheetDrawer} from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import {MusicSheet} from "./../MusicalScore/MusicSheet";
 import {Cursor} from "./Cursor";
+import {openMxl} from "../Common/FileIO/Mxl";
+import {Promise} from "es6-promise";
 
 export class OSMD {
     /**
@@ -16,8 +18,11 @@ export class OSMD {
         // Store container element
         if (typeof container === "string") {
             this.container = document.getElementById(<string>container);
-        } else if ("appendChild" in <any>container) {
+        } else if (container && "appendChild" in <any>container) {
             this.container = <HTMLElement>container;
+        }
+        if (!this.container) {
+            throw new Error("Please pass a valid div container to OSMD");
         }
         // Create the elements inside the container
         this.heading = document.createElement("div");
@@ -43,25 +48,28 @@ export class OSMD {
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
-    private unit: number = 10.0;
 
     /**
      * Load a MusicXML file
      * @param content is either the url of a file, or the root node of a MusicXML document, or the string content of a .xml/.mxl file
      */
-    public load(content: string|Document): void {
+    public load(content: string|Document): Promise<void> {
         this.reset();
         let path: string = "Unknown path";
         if (typeof content === "string") {
             let str: string = <string>content;
             if (str.substr(0, 4) === "http") {
                 path = str;
-                str = this.loadURL(path);
+                str = this.openURL(path);
             }
             if (str.substr(0, 4) === "\x04\x03\x4b\x50") {
-                // This is a zip file, open the mx
-                // TODO
-                throw new Error("Not implemented: loading of mxl files!");
+                // This is a zip file, unpack it first
+                return openMxl(str).then(
+                    this.load,
+                    (err: any) => {
+                        throw new Error("extractSheetFromMxl: " + err.message);
+                    }
+                );
             }
             if (str.substr(0, 5) === "<?xml") {
                 // Parse the string representing an xml file
@@ -83,6 +91,7 @@ export class OSMD {
         this.sheet = reader.createMusicSheet(score, path);
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
+        return Promise.resolve();
     }
 
     /**
@@ -95,17 +104,15 @@ export class OSMD {
         }
         let width: number = this.container.offsetWidth;
         if (isNaN(width)) {
-            throw new Error("OSMD: Before rendering a music sheet, please set the width of the container");
+            throw new Error("OSMD: Before rendering a music sheet, please give the container a width");
         }
         // Set page width
-        this.sheet.pageWidth = width / this.zoom / this.unit;
+        this.sheet.pageWidth = width / this.zoom / 10.0;
         // Calculate again
         this.graphic.reCalculate();
         // Update Sheet Page
-        let height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * this.unit * this.zoom;
+        let height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
         this.drawer.resize(width, height);
-        // Fix the label problem
-        // this.drawer.translate(0, 100);
         this.drawer.scale(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
@@ -114,13 +121,9 @@ export class OSMD {
     }
 
 
-    private loadURL(url: string): string {
-        throw new Error("Loading from URL not implemented.");
+    private openURL(url: string): string {
+        throw new Error("OSMD: Not implemented: Load sheet from URL");
     }
-
-    //private loadMXL(content: string): Document {
-    //    return undefined;
-    //}
 
     private resetHeadings(): void {
         // Empty this.headings
@@ -136,7 +139,6 @@ export class OSMD {
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;
-        this.unit = 10.0;
         this.resetHeadings();
     }
 }

@@ -1,7 +1,4 @@
-/**
- * Created by acondolu on 26/04/16.
- */
-
+/* tslint:disable:no-console */
 
 export class Logging {
     public static debug(...args: any[]): void {
