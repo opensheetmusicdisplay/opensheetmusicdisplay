@@ -57,10 +57,12 @@ export class Cursor {
             let gse: VexFlowStaffEntry =
                 <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
             if (idx === 0) {
-                x = gse.getXinpx();
+                x = gse.getX();
                 let musicSystem: MusicSystem = gse.parentMeasure.parentMusicSystem;
-                y = musicSystem.PositionAndShape.AbsolutePosition.y;
-                height = musicSystem.PositionAndShape.BorderBottom;
+                y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
+                let endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
+                    musicSystem.StaffLines[musicSystem.StaffLines.length - 1].PositionAndShape.RelativePosition.y + 4.0;
+                height = endY - y;
             }
             // The following code is not necessary (for now); it highlights the current notes.
             //let vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = gse.vfNotes;
@@ -76,16 +78,17 @@ export class Cursor {
         // Update the graphical cursor
         // The following is the legacy cursor rendered on the canvas:
         // // let cursor: GraphicalLine = new GraphicalLine(new PointF2D(x, y), new PointF2D(x, y + height), 3, OutlineAndFillStyleEnum.PlaybackCursor);
+
         // This the current HTML Cursor:
         let cursorElement: HTMLImageElement = this.cursorElement;
+        cursorElement.style.top = (y * 10.0 * this.osmd.zoom) + "px";
+        cursorElement.style.left = ((x - 1.5) * 10.0 * this.osmd.zoom) + "px";
         cursorElement.height = (height * 10.0 * this.osmd.zoom);
         let newWidth: number = 3 * 10.0 * this.osmd.zoom;
         if (newWidth !== cursorElement.width) {
             cursorElement.width = newWidth;
             this.updateStyle(newWidth);
         }
-        cursorElement.style.top = (y * 10.0 * this.osmd.zoom) + "px";
-        cursorElement.style.left = (x * this.osmd.zoom - (1.5 * 10.0 * this.osmd.zoom)) + "px";
 
         // Show cursors
         // // Old cursor: this.graphic.Cursors.push(cursor);
@@ -124,7 +127,7 @@ export class Cursor {
         // Previous does not seem to be implemented in the MusicPartManager iterator...
     }
 
-    private updateStyle(width: number, color: string = "blue"): void {
+    private updateStyle(width: number, color: string = "#33e02f"): void {
         // Create a dummy canvas to generate the gradient for the cursor
         // FIXME This approach needs to be improved
         let c: HTMLCanvasElement = document.createElement("canvas");
@@ -135,7 +138,8 @@ export class Cursor {
         // Generate the gradient
         let gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
         gradient.addColorStop(0, "white"); // it was: "transparent"
-        gradient.addColorStop(0.5, color);
+        gradient.addColorStop(0.2, color);
+        gradient.addColorStop(0.8, color);
         gradient.addColorStop(1, "white"); // it was: "transparent"
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, width, 1);

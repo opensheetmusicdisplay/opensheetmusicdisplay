@@ -13,8 +13,11 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
     // The corresponding VexFlow.StaveNotes
     public vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = {};
 
-
-    public getXinpx(): number {
+    /**
+     *
+     * @returns {number} the x-position (in units) of this Staff Entry
+     */
+    public getX(): number {
         let x: number = 0;
         let n: number = 0;
         let vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = this.vfNotes;
@@ -24,7 +27,6 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 n += 1;
             }
         }
-        console.log(x, n);
-        return x / n;
+        return x / n / 10.0;
     }
 }
