@@ -8,17 +8,21 @@ import {MusicSheet} from "./../MusicalScore/MusicSheet";
 import {Cursor} from "./Cursor";
 import {openMxl} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
+import {handleResize} from "./ResizeHandler";
 
 export class OSMD {
     /**
      * The easy way of displaying a MusicXML sheet music file
-     * @param container is either the id, or the actual "div" element which will host the music sheet
+     * @param container is either the ID, or the actual "div" element which will host the music sheet
+     * @autoResize automatically resize the sheet to full page width on window resize
      */
-    constructor(container: string|HTMLElement) {
+    constructor(container: string|HTMLElement, autoResize: boolean = false) {
         // Store container element
         if (typeof container === "string") {
+            // ID passed
             this.container = document.getElementById(<string>container);
         } else if (container && "appendChild" in <any>container) {
+            // Element passed
             this.container = <HTMLElement>container;
         }
         if (!this.container) {
@@ -37,6 +41,9 @@ export class OSMD {
         this.drawer = new VexFlowMusicSheetDrawer(this.heading, this.canvas);
         // Create the cursor
         this.cursor = new Cursor(inner, this);
+        if (autoResize) {
+            this.autoResize();
+        }
     }
 
     public cursor: Cursor;
@@ -140,5 +147,25 @@ export class OSMD {
         this.graphic = undefined;
         this.zoom = 1.0;
         this.resetHeadings();
+    }
+
+    private autoResize(): void {
+        let self: OSMD = this;
+        handleResize(
+            () => {
+                // empty
+            },
+            () => {
+                let width: number = Math.max(
+                    document.documentElement.clientWidth,
+                    document.body.scrollWidth,
+                    document.documentElement.scrollWidth,
+                    document.body.offsetWidth,
+                    document.documentElement.offsetWidth
+                );
+                self.container.style.width = width + "px";
+                self.render();
+            }
+        );
     }
 }

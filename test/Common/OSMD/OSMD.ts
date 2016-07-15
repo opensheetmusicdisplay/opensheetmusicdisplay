@@ -11,4 +11,12 @@ describe("OSMD Main Export", () => {
         done();
     });
 
+    it("container", (done: MochaDone) => {
+        let div: HTMLElement = document.createElement("div");
+        chai.expect(() => {
+            return new OSMD(div);
+        }).to.not.throw(Error);
+        done();
+    });
+
 });
