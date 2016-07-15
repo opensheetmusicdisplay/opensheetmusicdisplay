@@ -58,10 +58,7 @@ module.exports = function (config) {
         logLevel: config.LOG_INFO,
 
         client: {
-            captureConsole: true,
-            mocha: {
-                bail: true
-            }
+            captureConsole: true
         },
 
         // enable / disable watching file and executing tests whenever any file changes

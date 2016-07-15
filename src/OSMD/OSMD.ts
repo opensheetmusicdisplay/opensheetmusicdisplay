@@ -7,7 +7,7 @@ import {VexFlowMusicSheetDrawer} from "./../MusicalScore/Graphical/VexFlow/VexFl
 import {MusicSheet} from "./../MusicalScore/MusicSheet";
 import {Cursor} from "./Cursor";
 import {openMxl} from "../Common/FileIO/Mxl";
-import {Promise} from "es6-promise";
+//import {Promise} from "es6-promise";
 import {handleResize} from "./ResizeHandler";
 
 export class OSMD {
@@ -60,23 +60,28 @@ export class OSMD {
      * Load a MusicXML file
      * @param content is either the url of a file, or the root node of a MusicXML document, or the string content of a .xml/.mxl file
      */
-    public load(content: string|Document): Promise<void> {
+    public load(content: string|Document): void {
+        // Warning! This function is asynchronous! No error handling is done here.
+        // FIXME TODO Refactor with Promises
         this.reset();
         let path: string = "Unknown path";
         if (typeof content === "string") {
             let str: string = <string>content;
             if (str.substr(0, 4) === "http") {
+                // Retrieve the file at the url
                 path = str;
-                str = this.openURL(path);
+                this.openURL(path);
+                return;
             }
             if (str.substr(0, 4) === "\x04\x03\x4b\x50") {
                 // This is a zip file, unpack it first
-                return openMxl(str).then(
+                openMxl(str).then(
                     this.load,
                     (err: any) => {
-                        throw new Error("extractSheetFromMxl: " + err.message);
+                        throw new Error("OSMD: Invalid MXL file");
                     }
                 );
+                return;
             }
             if (str.substr(0, 5) === "<?xml") {
                 // Parse the string representing an xml file
@@ -85,12 +90,12 @@ export class OSMD {
             }
         }
 
-        if (!content || !("nodeName" in <any>content)) {
-            throw new Error("Could not ");
+        if (!content || !(<any>content).nodeName) {
+            throw new Error("OSMD: Document provided is not valid");
         }
         let elem: Element = (<Document>content).getElementsByTagName("score-partwise")[0];
         if (elem === undefined) {
-            throw new Error("Invalid partwise MusicXML document");
+            throw new Error("OSMD: Document is not valid partwise MusicXML");
         }
         let score: IXmlElement = new IXmlElement(elem);
         let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
@@ -98,7 +103,7 @@ export class OSMD {
         this.sheet = reader.createMusicSheet(score, path);
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
-        return Promise.resolve();
+        return; // Promise.resolve();
     }
 
     /**
@@ -127,13 +132,26 @@ export class OSMD {
         this.cursor.update();
     }
 
-
+    /**
+     *
+     * @param url
+     */
     private openURL(url: string): string {
         throw new Error("OSMD: Not implemented: Load sheet from URL");
+        //let JSZipUtils: any;
+        //let self: OSMD = this;
+        //JSZipUtils.getBinaryContent(url, function (err, data) {
+        //    if(err) {
+        //        throw err;
+        //    }
+        //    return self.load(data);
+        //});
     }
 
+    /**
+     * Clear all the titles from the headings element
+     */
     private resetHeadings(): void {
-        // Empty this.headings
         while (this.heading.firstChild) {
             this.heading.removeChild(this.heading.firstChild);
         }
@@ -141,6 +159,7 @@ export class OSMD {
 
     /**
      * Initialize this object to default values
+     * FIXME: Probably unnecessary
      */
     private reset(): void {
         this.sheet = undefined;
@@ -149,6 +168,9 @@ export class OSMD {
         this.resetHeadings();
     }
 
+    /**
+     * Attach the appropriate handler to the window.onResize event
+     */
     private autoResize(): void {
         let self: OSMD = this;
         handleResize(
