@@ -14,7 +14,7 @@ var Exceptions_1 = require("../Exceptions");
 var pitch_1 = require("../../Common/DataObjects/pitch");
 var pitch_2 = require("../../Common/DataObjects/pitch");
 var StaffEntryLink_1 = require("../VoiceData/StaffEntryLink");
-var logging_1 = require("../../Common/logging");
+var Logging_1 = require("../../Common/Logging");
 var pitch_3 = require("../../Common/DataObjects/pitch");
 var collectionUtil_1 = require("../../Util/collectionUtil");
 var VoiceGenerator = (function () {
@@ -275,7 +275,7 @@ var VoiceGenerator = (function () {
                             }
                         }
                         catch (ex) {
-                            logging_1.Logging.log("VoiceGenerator.addSingleNote read Step: ", ex.message);
+                            Logging_1.Logging.log("VoiceGenerator.addSingleNote read Step: ", ex.message);
                         }
                     }
                 }
@@ -299,7 +299,7 @@ var VoiceGenerator = (function () {
                 }
             }
             catch (ex) {
-                logging_1.Logging.log("VoiceGenerator.addSingleNote: ", ex);
+                Logging_1.Logging.log("VoiceGenerator.addSingleNote: ", ex);
             }
         }
         noteOctave -= pitch_3.Pitch.OctaveXmlDifference;

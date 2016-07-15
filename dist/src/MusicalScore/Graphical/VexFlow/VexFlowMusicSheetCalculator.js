@@ -8,6 +8,7 @@ var MusicSheetCalculator_1 = require("../MusicSheetCalculator");
 var VexFlowGraphicalSymbolFactory_1 = require("./VexFlowGraphicalSymbolFactory");
 var VexFlowTextMeasurer_1 = require("./VexFlowTextMeasurer");
 var Vex = require("vexflow");
+var Logging_1 = require("../../../Common/Logging");
 var VexFlowMusicSheetCalculator = (function (_super) {
     __extends(VexFlowMusicSheetCalculator, _super);
     function VexFlowMusicSheetCalculator() {
@@ -46,7 +47,9 @@ var VexFlowMusicSheetCalculator = (function (_super) {
         }
         // Format the voices
         var allVoices = [];
-        var formatter = new Vex.Flow.Formatter();
+        var formatter = new Vex.Flow.Formatter({
+            align_rests: true,
+        });
         for (var _a = 0, measures_2 = measures; _a < measures_2.length; _a++) {
             var measure = measures_2[_a];
             var mvoices = measure.vfVoices;
@@ -58,13 +61,15 @@ var VexFlowMusicSheetCalculator = (function (_super) {
                 }
             }
             if (voices.length === 0) {
-                console.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+                Logging_1.Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
                 continue;
             }
             formatter.joinVoices(voices);
         }
         var firstMeasure = measures[0];
-        var width = formatter.preCalculateMinTotalWidth(allVoices) / firstMeasure.unit;
+        // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
+        // FIXME: a more relaxed formatting of voices
+        var width = formatter.preCalculateMinTotalWidth(allVoices) / 10.0 + 5.0;
         for (var _b = 0, measures_3 = measures; _b < measures_3.length; _b++) {
             var measure = measures_3[_b];
             measure.minimumStaffEntriesWidth = width;
@@ -114,16 +119,16 @@ var VexFlowMusicSheetCalculator = (function (_super) {
                 for (var idx2 = 0, len2 = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                     var musicSystem = graphicalMusicPage.MusicSystems[idx2];
                     // calculate y positions of stafflines within system
-                    var y = 0;
+                    var y = 10;
                     for (var _i = 0, _a = musicSystem.StaffLines; _i < _a.length; _i++) {
                         var line = _a[_i];
                         line.PositionAndShape.RelativePosition.y = y;
                         y += 10;
                     }
                     // set y positions of systems using the previous system and a fixed distance.
-                    musicSystem.PositionAndShape.BorderBottom = y + 10;
+                    musicSystem.PositionAndShape.BorderBottom = y + 0;
                     musicSystem.PositionAndShape.RelativePosition.y = globalY;
-                    globalY += y + 10;
+                    globalY += y + 0;
                 }
             }
         }

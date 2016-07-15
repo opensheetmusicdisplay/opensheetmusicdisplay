@@ -4,6 +4,7 @@
  */
 var fraction_1 = require("../../../src/Common/DataObjects/fraction");
 var Dictionary_1 = require("typescript-collections/dist/lib/Dictionary");
+var Logging_1 = require("../../../src/Common/Logging");
 describe("Fraction Unit Tests:", function () {
     describe("Construct Fraction, check properties", function () {
         var f1 = new fraction_1.Fraction(2, 6);
@@ -51,7 +52,7 @@ describe("Fraction Unit Tests:", function () {
                 var key = keys[i];
                 var value = values[i];
                 //console.log(values[i].toString() + "== " + dict.getValue(key));
-                console.log(values[i].toString() + "== " + dict.getValue(new fraction_1.Fraction(key.Numerator, key.Denominator)));
+                Logging_1.Logging.debug(values[i].toString() + "== " + dict.getValue(new fraction_1.Fraction(key.Numerator, key.Denominator)));
                 // chai.expect(dict.getValue(key)).to.equal(value);
                 chai.expect(dict.getValue(new fraction_1.Fraction(key.Numerator, key.Denominator))).to.equal(value);
             }

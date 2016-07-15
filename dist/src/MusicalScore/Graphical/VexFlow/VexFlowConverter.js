@@ -6,6 +6,8 @@ var KeyInstruction_1 = require("../../VoiceData/Instructions/KeyInstruction");
 var pitch_1 = require("../../../Common/DataObjects/pitch");
 var pitch_2 = require("../../../Common/DataObjects/pitch");
 var SystemLinesEnum_1 = require("../SystemLinesEnum");
+var FontStyles_1 = require("../../../Common/Enums/FontStyles");
+var Fonts_1 = require("../../../Common/Enums/Fonts");
 var VexFlowConverter = (function () {
     function VexFlowConverter() {
     }
@@ -184,6 +186,41 @@ var VexFlowConverter = (function () {
                 return Vex.Flow.StaveConnector.type.NONE;
             default:
         }
+    };
+    VexFlowConverter.font = function (fontSize, fontStyle, font) {
+        if (fontStyle === void 0) { fontStyle = FontStyles_1.FontStyles.Regular; }
+        if (font === void 0) { font = Fonts_1.Fonts.TimesNewRoman; }
+        var style = "normal";
+        var weight = "normal";
+        var family = "'Times New Roman'";
+        switch (fontStyle) {
+            case FontStyles_1.FontStyles.Bold:
+                weight = "bold";
+                break;
+            case FontStyles_1.FontStyles.Italic:
+                style = "italic";
+                break;
+            case FontStyles_1.FontStyles.BoldItalic:
+                style = "italic";
+                weight = "bold";
+                break;
+            case FontStyles_1.FontStyles.Underlined:
+                // TODO
+                break;
+            default:
+                break;
+        }
+        switch (font) {
+            case Fonts_1.Fonts.Kokila:
+                // TODO Not Supported
+                break;
+            default:
+        }
+        return style + " " + weight + " " + Math.floor(fontSize) + "px " + family;
+    };
+    VexFlowConverter.style = function (styleId) {
+        // TODO
+        return "purple";
     };
     VexFlowConverter.majorMap = {
         "0": "C", 1: "G", 2: "D", 3: "A", 4: "E", 5: "B", 6: "F#", 7: "C#",

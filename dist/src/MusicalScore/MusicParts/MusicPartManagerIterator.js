@@ -3,6 +3,7 @@ var fraction_1 = require("../../Common/DataObjects/fraction");
 var DynamicsContainer_1 = require("../VoiceData/HelperObjects/DynamicsContainer");
 var RhythmInstruction_1 = require("../VoiceData/Instructions/RhythmInstruction");
 var continuousDynamicExpression_1 = require("../VoiceData/Expressions/ContinuousExpressions/continuousDynamicExpression");
+var Logging_1 = require("../../Common/Logging");
 var MusicPartManagerIterator = (function () {
     function MusicPartManagerIterator(manager, startTimestamp, endTimestamp) {
         this.currentMeasureIndex = 0;
@@ -51,7 +52,7 @@ var MusicPartManagerIterator = (function () {
             this.currentTempoChangingExpression = this.activeTempoExpression;
         }
         catch (err) {
-            console.log("MusicPartManagerIterator: Exception." + err); // FIXME
+            Logging_1.Logging.log("MusicPartManagerIterator: " + err);
         }
     }
     Object.defineProperty(MusicPartManagerIterator.prototype, "EndReached", {
