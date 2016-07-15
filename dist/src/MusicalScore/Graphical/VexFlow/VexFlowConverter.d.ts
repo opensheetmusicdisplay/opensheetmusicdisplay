@@ -7,6 +7,9 @@ import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 import { AccidentalEnum } from "../../../Common/DataObjects/pitch";
 import { GraphicalNote } from "../GraphicalNote";
 import { SystemLinesEnum } from "../SystemLinesEnum";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
+import { Fonts } from "../../../Common/Enums/Fonts";
+import { OutlineAndFillStyleEnum } from "../DrawingEnums";
 export declare class VexFlowConverter {
     private static majorMap;
     private static minorMap;
@@ -29,4 +32,6 @@ export declare class VexFlowConverter {
     static TimeSignature(rhythm: RhythmInstruction): Vex.Flow.TimeSignature;
     static keySignature(key: KeyInstruction): string;
     static line(lineType: SystemLinesEnum): any;
+    static font(fontSize: number, fontStyle?: FontStyles, font?: Fonts): string;
+    static style(styleId: OutlineAndFillStyleEnum): string;
 }

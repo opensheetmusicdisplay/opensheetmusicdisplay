@@ -7,6 +7,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var SourceMusicPart_1 = require("./SourceMusicPart");
 var fraction_1 = require("../../Common/DataObjects/fraction");
 var PartListEntry_1 = require("./PartListEntry");
+var Logging_1 = require("../../Common/Logging");
 var Repetition = (function (_super) {
     __extends(Repetition, _super);
     function Repetition(musicSheet, virtualOverallRepetition) {
@@ -107,7 +108,7 @@ var Repetition = (function (_super) {
                 }
             }
             catch (err) {
-                console.log("Repetition: Exception."); // FIXME
+                Logging_1.Logging.error("Repetition: Exception.", err);
             }
         }
     };

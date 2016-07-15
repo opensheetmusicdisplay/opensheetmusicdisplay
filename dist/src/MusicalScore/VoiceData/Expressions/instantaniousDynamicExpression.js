@@ -8,7 +8,7 @@ var abstractExpression_1 = require("./abstractExpression");
 var dynamicExpressionSymbolEnum_1 = require("./dynamicExpressionSymbolEnum");
 //import {ArgumentOutOfRangeException} from "../../Exceptions";
 var Exceptions_1 = require("../../Exceptions");
-var logging_1 = require("../../../Common/logging");
+var Logging_1 = require("../../../Common/Logging");
 var InstantaniousDynamicExpression = (function (_super) {
     __extends(InstantaniousDynamicExpression, _super);
     function InstantaniousDynamicExpression(dynamicExpression, soundDynamics, placement, staffNumber) {
@@ -137,7 +137,7 @@ var InstantaniousDynamicExpression = (function (_super) {
         //    length += FontInfo.Info.getBoundingBox(symbol).Width;
         //}
         //return length;
-        logging_1.Logging.debug("[Andrea] instantaniousDynamicExpression: not implemented: calculateLength!");
+        Logging_1.Logging.debug("[Andrea] instantaniousDynamicExpression: not implemented: calculateLength!");
         return 0.0;
     };
     InstantaniousDynamicExpression.dynamicToRelativeVolumeDict = {

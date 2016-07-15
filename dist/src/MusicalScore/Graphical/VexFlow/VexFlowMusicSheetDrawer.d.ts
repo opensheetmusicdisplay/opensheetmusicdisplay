@@ -1,17 +1,25 @@
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";
-import { ITextMeasurer } from "../../Interfaces/ITextMeasurer";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { GraphicalLabel } from "../GraphicalLabel";
-/**
- * Created by Matthias on 22.06.2016.
- */
 export declare class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private renderer;
+    private vfctx;
     private ctx;
-    constructor(canvas: HTMLCanvasElement, textMeasurer: ITextMeasurer, isPreviewImageDrawer?: boolean);
+    private titles;
+    private zoom;
+    constructor(titles: HTMLElement, canvas: HTMLCanvasElement, isPreviewImageDrawer?: boolean);
+    /**
+     * Zoom the rendering areas
+     * @param k is the zoom factor
+     */
     scale(k: number): void;
+    /**
+     * Resize the rendering areas
+     * @param x
+     * @param y
+     */
     resize(x: number, y: number): void;
     translate(x: number, y: number): void;
     /**

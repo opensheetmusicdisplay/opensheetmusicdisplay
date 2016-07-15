@@ -1,5 +1,6 @@
 "use strict";
 var ClefInstruction_1 = require("./VoiceData/Instructions/ClefInstruction");
+var Logging_1 = require("../Common/Logging");
 var SubInstrument = (function () {
     function SubInstrument(parentInstrument) {
         this.parentInstrument = parentInstrument;
@@ -46,7 +47,7 @@ var SubInstrument = (function () {
             }
         }
         catch (e) {
-            console.log("Error parsing MIDI Instrument. Default to Grand Piano."); // FIXME
+            Logging_1.Logging.error("Error parsing MIDI Instrument. Default to Grand Piano.");
         }
         return "unnamed";
     };

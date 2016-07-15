@@ -21,13 +21,14 @@ var VerticalGraphicalStaffEntryContainer = (function () {
         get: function () {
             return this.absoluteTimestamp;
         },
-        set: function (value) {
-            this.absoluteTimestamp = value;
-        },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(VerticalGraphicalStaffEntryContainer.prototype, "StaffEntries", {
+        //
+        //public set AbsoluteTimestamp(value: Fraction) {
+        //    this.absoluteTimestamp = value;
+        //}
         get: function () {
             return this.staffEntries;
         },

@@ -6,7 +6,7 @@ var InstrumentReader_1 = require("./InstrumentReader");
 var Instrument_1 = require("../Instrument");
 var ITextTranslation_1 = require("../Interfaces/ITextTranslation");
 var Exceptions_1 = require("../Exceptions");
-var logging_1 = require("../../Common/logging");
+var Logging_1 = require("../../Common/Logging");
 var RhythmInstruction_1 = require("../VoiceData/Instructions/RhythmInstruction");
 var RhythmInstruction_2 = require("../VoiceData/Instructions/RhythmInstruction");
 var SourceStaffEntry_1 = require("../VoiceData/SourceStaffEntry");
@@ -36,7 +36,7 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
             return this._createMusicSheet(root, path);
         }
         catch (e) {
-            logging_1.Logging.log("MusicSheetReader.CreateMusicSheet", e);
+            Logging_1.Logging.log("MusicSheetReader.CreateMusicSheet", e);
         }
     };
     MusicSheetReader /*implements IMusicSheetReader*/.prototype._removeFromArray = function (list, elem) {
@@ -92,11 +92,8 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
             throw new Exceptions_1.MusicSheetReadingException("Undefined partListNode");
         }
         var partInst = root.elements("part");
-        console.log(partInst.length + " parts");
         var partList = partlistNode.elements();
-        //Logging.debug("Starting initializeReading");
         this.initializeReading(partList, partInst, instrumentReaders);
-        //Logging.debug("Done initializeReading");
         var couldReadMeasure = true;
         this.currentFraction = new fraction_1.Fraction(0, 1);
         var guitarPro = false;
@@ -126,17 +123,11 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
                 }
             }
             if (couldReadMeasure) {
-                //Logging.debug("couldReadMeasure: 1");
                 this.musicSheet.addMeasure(this.currentMeasure);
-                //Logging.debug("couldReadMeasure: 2");
                 this.checkIfRhythmInstructionsAreSetAndEqual(instrumentReaders);
-                //Logging.debug("couldReadMeasure: 3");
                 this.checkSourceMeasureForundefinedEntries();
-                //Logging.debug("couldReadMeasure: 4");
                 this.setSourceMeasureDuration(instrumentReaders, sourceMeasureCounter);
-                //Logging.debug("couldReadMeasure: 5");
                 MusicSheetReader.doCalculationsAfterDurationHasBeenSet(instrumentReaders);
-                //Logging.debug("couldReadMeasure: 6");
                 this.currentMeasure.AbsoluteTimestamp = this.currentFraction.clone();
                 this.musicSheet.SheetErrors.finalizeMeasure(this.currentMeasure.MeasureNumber);
                 this.currentFraction.Add(this.currentMeasure.Duration);
@@ -276,19 +267,19 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
     MusicSheetReader /*implements IMusicSheetReader*/.prototype.setSourceMeasureDuration = function (instrumentReaders, sourceMeasureCounter) {
         var activeRhythm = new fraction_1.Fraction(0, 1);
         var instrumentsMaxTieNoteFractions = [];
-        for (var idx = 0, len = instrumentReaders.length; idx < len; ++idx) {
-            var instrumentReader = instrumentReaders[idx];
+        for (var _i = 0, instrumentReaders_3 = instrumentReaders; _i < instrumentReaders_3.length; _i++) {
+            var instrumentReader = instrumentReaders_3[_i];
             instrumentsMaxTieNoteFractions.push(instrumentReader.MaxTieNoteFraction);
             var activeRythmMeasure = instrumentReader.ActiveRhythm.Rhythm;
-            if (activeRhythm < activeRythmMeasure) {
+            if (activeRhythm.lt(activeRythmMeasure)) {
                 activeRhythm = new fraction_1.Fraction(activeRythmMeasure.Numerator, activeRythmMeasure.Denominator, false);
             }
         }
         var instrumentsDurations = this.currentMeasure.calculateInstrumentsDuration(this.musicSheet, instrumentsMaxTieNoteFractions);
         var maxInstrumentDuration = new fraction_1.Fraction(0, 1);
-        for (var idx = 0, len = instrumentsDurations.length; idx < len; ++idx) {
-            var instrumentsDuration = instrumentsDurations[idx];
-            if (maxInstrumentDuration < instrumentsDuration) {
+        for (var _a = 0, instrumentsDurations_1 = instrumentsDurations; _a < instrumentsDurations_1.length; _a++) {
+            var instrumentsDuration = instrumentsDurations_1[_a];
+            if (maxInstrumentDuration.lt(instrumentsDuration)) {
                 maxInstrumentDuration = instrumentsDuration;
             }
         }
@@ -296,7 +287,7 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
             this.checkFractionsForEquivalence(maxInstrumentDuration, activeRhythm);
         }
         else {
-            if (maxInstrumentDuration < activeRhythm) {
+            if (maxInstrumentDuration.lt(activeRhythm)) {
                 maxInstrumentDuration = this.currentMeasure.reverseCheck(this.musicSheet, maxInstrumentDuration);
                 this.checkFractionsForEquivalence(maxInstrumentDuration, activeRhythm);
             }
@@ -310,7 +301,7 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
         for (var i = 0; i < instrumentsDurations.length; i++) {
             var instrumentsDuration = instrumentsDurations[i];
             if ((this.currentMeasure.ImplicitMeasure && instrumentsDuration !== maxInstrumentDuration) ||
-                instrumentsDuration !== activeRhythm &&
+                !fraction_1.Fraction.Equal(instrumentsDuration, activeRhythm) &&
                     !this.allInstrumentsHaveSameDuration(instrumentsDurations, maxInstrumentDuration)) {
                 var firstStaffIndexOfInstrument = this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.musicSheet.Instruments[i]);
                 for (var staffIndex = 0; staffIndex < this.musicSheet.Instruments[i].Staves.length; staffIndex++) {
@@ -402,7 +393,7 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
                 this.musicSheet.Title = new Label_1.Label(filenameSplits[0]);
             }
             catch (ex) {
-                logging_1.Logging.log("MusicSheetReader.pushSheetLabels: ", ex);
+                Logging_1.Logging.log("MusicSheetReader.pushSheetLabels: ", ex);
             }
         }
     };
@@ -648,7 +639,7 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
                                                 subInstrument.volume = result / 127.0;
                                             }
                                             catch (ex) {
-                                                logging_1.Logging.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
+                                                Logging_1.Logging.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
                                             }
                                         }
                                         else if (instrumentElement.name === "pan") {
@@ -657,18 +648,18 @@ var MusicSheetReader /*implements IMusicSheetReader*/ = (function () {
                                                 subInstrument.pan = result / 64.0;
                                             }
                                             catch (ex) {
-                                                logging_1.Logging.debug("ExpressionReader.readExpressionParameters", "read pan", ex);
+                                                Logging_1.Logging.debug("ExpressionReader.readExpressionParameters", "read pan", ex);
                                             }
                                         }
                                     }
                                     catch (ex) {
-                                        logging_1.Logging.log("MusicSheetReader.createInstrumentGroups midi settings: ", ex);
+                                        Logging_1.Logging.log("MusicSheetReader.createInstrumentGroups midi settings: ", ex);
                                     }
                                 }
                             }
                         }
                         catch (ex) {
-                            logging_1.Logging.log("MusicSheetReader.createInstrumentGroups: ", ex);
+                            Logging_1.Logging.log("MusicSheetReader.createInstrumentGroups: ", ex);
                         }
                     }
                     if (instrument.SubInstruments.length === 0) {

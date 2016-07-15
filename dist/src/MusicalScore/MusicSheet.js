@@ -6,6 +6,7 @@ var Voice_1 = require("./VoiceData/Voice");
 var MusicSheetErrors_1 = require("../Common/DataObjects/MusicSheetErrors");
 var EngravingRules_1 = require("./Graphical/EngravingRules");
 var DrawingEnums_1 = require("./Graphical/DrawingEnums");
+var Logging_1 = require("../Common/Logging");
 // FIXME
 //type MusicSheetParameters = any;
 //type MultiTempoExpression = any;
@@ -46,7 +47,9 @@ var MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ = (fu
         this.hasBeenOpenedForTheFirstTime = false;
         this.currentEnrolledPosition = new fraction_1.Fraction(0, 1);
         this.rules = EngravingRules_1.EngravingRules.Rules;
-        // (*) this.playbackSettings = new PlaybackSettings(new Fraction(4, 4, false), 100);
+        this.playbackSettings = new PlaybackSettings();
+        // FIXME:
+        this.playbackSettings.rhythm = new fraction_1.Fraction(4, 4, false);
         this.userStartTempoInBPM = 100;
         this.pageWidth = 120;
         this.MusicPartManager = new MusicPartManager_1.MusicPartManager(this);
@@ -472,7 +475,7 @@ var MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ = (fu
                 return this.getFirstSourceMeasure().MeasureNumber;
             }
             catch (ex) {
-                console.log(/* FIXME LogLevel.NORMAL, */ "MusicSheet.FirstMeasureNumber: ", ex);
+                Logging_1.Logging.log("MusicSheet.FirstMeasureNumber: ", ex);
                 return 0;
             }
         },
@@ -485,7 +488,7 @@ var MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ = (fu
                 return this.getLastSourceMeasure().MeasureNumber;
             }
             catch (ex) {
-                console.log(/* FIXME LogLevel.NORMAL, */ "MusicSheet.LastMeasureNumber: ", ex);
+                Logging_1.Logging.log("MusicSheet.LastMeasureNumber: ", ex);
                 return 0;
             }
         },

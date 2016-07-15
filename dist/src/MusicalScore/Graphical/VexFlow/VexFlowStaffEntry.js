@@ -14,6 +14,22 @@ var VexFlowStaffEntry = (function (_super) {
         // The corresponding VexFlow.StaveNotes
         this.vfNotes = {};
     }
+    /**
+     *
+     * @returns {number} the x-position (in units) of this Staff Entry
+     */
+    VexFlowStaffEntry.prototype.getX = function () {
+        var x = 0;
+        var n = 0;
+        var vfNotes = this.vfNotes;
+        for (var voiceId in vfNotes) {
+            if (vfNotes.hasOwnProperty(voiceId)) {
+                x += (vfNotes[voiceId].getNoteHeadBeginX() + vfNotes[voiceId].getNoteHeadEndX()) / 2;
+                n += 1;
+            }
+        }
+        return x / n / 10.0;
+    };
     return VexFlowStaffEntry;
 }(GraphicalStaffEntry_1.GraphicalStaffEntry));
 exports.VexFlowStaffEntry = VexFlowStaffEntry;

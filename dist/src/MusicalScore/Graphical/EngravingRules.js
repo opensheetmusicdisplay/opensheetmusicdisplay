@@ -1,7 +1,7 @@
 "use strict";
 var GraphicalMusicPage_1 = require("./GraphicalMusicPage");
 //import {MusicSymbol} from "./MusicSymbol";
-var logging_1 = require("../../Common/logging");
+var Logging_1 = require("../../Common/Logging");
 var EngravingRules = (function () {
     function EngravingRules() {
         this.noteDistances = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
@@ -138,7 +138,7 @@ var EngravingRules = (function () {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
         }
         catch (ex) {
-            logging_1.Logging.log("EngravingRules()", ex);
+            Logging_1.Logging.log("EngravingRules()", ex);
         }
     }
     Object.defineProperty(EngravingRules, "Rules", {

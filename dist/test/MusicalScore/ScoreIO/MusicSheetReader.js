@@ -34,7 +34,6 @@ describe("Music Sheet Reader Tests", function () {
     });
     it("Measures", function (done) {
         chai.expect(sheet.SourceMeasures.length).to.equal(38);
-        console.log("First Measure: ", sheet.SourceMeasures[0]);
         done();
     });
     it("Instruments", function (done) {

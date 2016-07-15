@@ -6,5 +6,6 @@ export declare class GraphicalLabel extends Clickable {
     private label;
     constructor(label: Label, textHeight: number, alignment: TextAlignment, parent?: BoundingBox);
     Label: Label;
+    toString(): string;
     setLabelPositionAndShapeBorders(): void;
 }
