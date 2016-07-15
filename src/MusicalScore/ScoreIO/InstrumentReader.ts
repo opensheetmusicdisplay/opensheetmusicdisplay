@@ -17,7 +17,7 @@ import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
 import {KeyEnum} from "../VoiceData/Instructions/KeyInstruction";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
-import {Logging} from "../../Common/logging";
+import {Logging} from "../../Common/Logging";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 

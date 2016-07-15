@@ -10,4 +10,9 @@ export declare class VexFlowStaffEntry extends GraphicalStaffEntry {
     vfNotes: {
         [voiceID: number]: Vex.Flow.StaveNote;
     };
+    /**
+     *
+     * @returns {number} the x-position (in units) of this Staff Entry
+     */
+    getX(): number;
 }

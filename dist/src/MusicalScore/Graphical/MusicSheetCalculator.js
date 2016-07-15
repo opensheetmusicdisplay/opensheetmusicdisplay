@@ -17,7 +17,7 @@ var BoundingBox_1 = require("./BoundingBox");
 var OctaveShiftParams_1 = require("./OctaveShiftParams");
 var AccidentalCalculator_1 = require("./AccidentalCalculator");
 var ClefInstruction_3 = require("../VoiceData/Instructions/ClefInstruction");
-var logging_1 = require("../../Common/logging");
+var Logging_1 = require("../../Common/Logging");
 var Dictionary_1 = require("typescript-collections/dist/lib/Dictionary");
 var collectionUtil_1 = require("../../Util/collectionUtil");
 var MusicSheetCalculator = (function () {
@@ -189,10 +189,10 @@ var MusicSheetCalculator = (function () {
         throw new Error("abstract, not implemented");
     };
     MusicSheetCalculator.prototype.clearRecreatedObjects = function () {
-        logging_1.Logging.log("clearRecreatedObjects not implemented");
+        Logging_1.Logging.debug("clearRecreatedObjects not implemented");
     };
     MusicSheetCalculator.prototype.handleStaffEntryLink = function (graphicalStaffEntry, staffEntryLinks) {
-        logging_1.Logging.log("handleStaffEntryLink not implemented");
+        Logging_1.Logging.debug("handleStaffEntryLink not implemented");
     };
     MusicSheetCalculator.prototype.calculateMusicSystems = function () {
         if (this.graphicalMusicSheet.MeasureList === undefined) {
@@ -314,16 +314,16 @@ var MusicSheetCalculator = (function () {
         }
     };
     MusicSheetCalculator.prototype.updateSkyBottomLine = function (staffLine) {
-        logging_1.Logging.log("updateSkyBottomLine not implemented");
+        Logging_1.Logging.debug("updateSkyBottomLine not implemented");
     };
     MusicSheetCalculator.prototype.calculateSkyBottomLine = function (staffLine) {
-        logging_1.Logging.log("calculateSkyBottomLine not implemented");
+        Logging_1.Logging.debug("calculateSkyBottomLine not implemented");
     };
     MusicSheetCalculator.prototype.calculateMarkedAreas = function () {
-        logging_1.Logging.log("calculateMarkedAreas not implemented");
+        Logging_1.Logging.debug("calculateMarkedAreas not implemented");
     };
     MusicSheetCalculator.prototype.calculateComments = function () {
-        logging_1.Logging.log("calculateComments not implemented");
+        Logging_1.Logging.debug("calculateComments not implemented");
     };
     MusicSheetCalculator.prototype.optimizeStaffLineDynamicExpressionsPositions = function () {
         return;

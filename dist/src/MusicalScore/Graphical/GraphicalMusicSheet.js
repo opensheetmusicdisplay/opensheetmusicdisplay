@@ -6,7 +6,7 @@ var ClefInstruction_1 = require("../VoiceData/Instructions/ClefInstruction");
 var KeyInstruction_1 = require("../VoiceData/Instructions/KeyInstruction");
 var fraction_1 = require("../../Common/DataObjects/fraction");
 var BoundingBox_1 = require("./BoundingBox");
-var logging_1 = require("../../Common/logging");
+var Logging_1 = require("../../Common/Logging");
 var Dictionary_1 = require("typescript-collections/dist/lib/Dictionary");
 var collectionUtil_1 = require("../../Util/collectionUtil");
 var GraphicalMusicSheet = (function () {
@@ -292,19 +292,18 @@ var GraphicalMusicSheet = (function () {
     };
     GraphicalMusicSheet.prototype.getOrCreateVerticalContainer = function (timestamp) {
         if (this.verticalGraphicalStaffEntryContainers.length === 0 ||
-            timestamp > collectionUtil_1.CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp) {
+            timestamp.lt(collectionUtil_1.CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp)) {
             var verticalGraphicalStaffEntryContainer = new VerticalGraphicalStaffEntryContainer_1.VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
             this.verticalGraphicalStaffEntryContainers.push(verticalGraphicalStaffEntryContainer);
             return verticalGraphicalStaffEntryContainer;
         }
-        var i;
-        for (; i >= 0; i--) {
-            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp < timestamp) {
+        for (var i = this.verticalGraphicalStaffEntryContainers.length - 1; i >= 0; i--) {
+            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp.lt(timestamp)) {
                 var verticalGraphicalStaffEntryContainer = new VerticalGraphicalStaffEntryContainer_1.VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
                 this.verticalGraphicalStaffEntryContainers.splice(i + 1, 0, verticalGraphicalStaffEntryContainer);
                 return verticalGraphicalStaffEntryContainer;
             }
-            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp === timestamp) {
+            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp.Equals(timestamp)) {
                 return this.verticalGraphicalStaffEntryContainers[i];
             }
         }
@@ -325,21 +324,21 @@ var GraphicalMusicSheet = (function () {
         var foundIndex;
         var leftTS = undefined;
         var rightTS = undefined;
-        if (musicTimestamp <= containers[containers.length - 1].AbsoluteTimestamp) {
+        if (musicTimestamp.lte(containers[containers.length - 1].AbsoluteTimestamp)) {
             while (rightIndex - leftIndex > 1) {
-                var middleIndex = (rightIndex + leftIndex) / 2;
-                if (containers[leftIndex].AbsoluteTimestamp === musicTimestamp) {
+                var middleIndex = Math.floor((rightIndex + leftIndex) / 2);
+                if (containers[leftIndex].AbsoluteTimestamp.Equals(musicTimestamp)) {
                     rightIndex = leftIndex;
                     break;
                 }
-                else if (containers[rightIndex].AbsoluteTimestamp === musicTimestamp) {
+                else if (containers[rightIndex].AbsoluteTimestamp.Equals(musicTimestamp)) {
                     leftIndex = rightIndex;
                     break;
                 }
-                else if (containers[middleIndex].AbsoluteTimestamp === musicTimestamp) {
+                else if (containers[middleIndex].AbsoluteTimestamp.Equals(musicTimestamp)) {
                     return this.verticalGraphicalStaffEntryContainers.indexOf(containers[middleIndex]);
                 }
-                else if (containers[middleIndex].AbsoluteTimestamp > musicTimestamp) {
+                else if (musicTimestamp.lt(containers[middleIndex].AbsoluteTimestamp)) {
                     rightIndex = middleIndex;
                 }
                 else {
@@ -547,7 +546,7 @@ var GraphicalMusicSheet = (function () {
             return this.GetClickableLabel(positionOnMusicSheet);
         }
         catch (ex) {
-            logging_1.Logging.log("GraphicalMusicSheet.tryGetClickableObject", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
+            Logging_1.Logging.log("GraphicalMusicSheet.tryGetClickableObject", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
         }
         return undefined;
     };
@@ -560,7 +559,7 @@ var GraphicalMusicSheet = (function () {
             return entry.getAbsoluteTimestamp();
         }
         catch (ex) {
-            logging_1.Logging.log("GraphicalMusicSheet.tryGetTimeStampFromPosition", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
+            Logging_1.Logging.log("GraphicalMusicSheet.tryGetTimeStampFromPosition", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
         }
         return undefined;
     };
@@ -584,7 +583,7 @@ var GraphicalMusicSheet = (function () {
             }
         }
         catch (ex) {
-            logging_1.Logging.log("GraphicalMusicSheet.getStaffEntry", ex);
+            Logging_1.Logging.log("GraphicalMusicSheet.getStaffEntry", ex);
         }
         return staffEntry;
     };

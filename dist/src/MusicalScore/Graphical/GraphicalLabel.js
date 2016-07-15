@@ -26,6 +26,9 @@ var GraphicalLabel = (function (_super) {
         enumerable: true,
         configurable: true
     });
+    GraphicalLabel.prototype.toString = function () {
+        return this.label.text;
+    };
     GraphicalLabel.prototype.setLabelPositionAndShapeBorders = function () {
         if (this.Label.text.trim() === "") {
             return;

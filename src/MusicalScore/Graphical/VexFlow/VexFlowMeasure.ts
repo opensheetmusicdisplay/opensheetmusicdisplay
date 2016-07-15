@@ -13,8 +13,8 @@ import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
-import StaveModifier = Vex.Flow.StaveModifier;
 import StaveNote = Vex.Flow.StaveNote;
+import {Logging} from "../../../Common/Logging";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -29,8 +29,6 @@ export class VexFlowMeasure extends StaffMeasure {
     public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
     // Call this function (if present) to x-format all the voices in the measure
     public formatVoices: (width: number) => void;
-    // The unit
-    public unit: number = 10.0;
 
     // The VexFlow Stave (one measure in one line)
     private stave: Vex.Flow.Stave;
@@ -39,7 +37,7 @@ export class VexFlowMeasure extends StaffMeasure {
     // Intermediate object to construct beams
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     // VexFlow Beams
-    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; } = {};
+    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -53,19 +51,21 @@ export class VexFlowMeasure extends StaffMeasure {
     public resetLayout(): void {
         // Take into account some space for the begin and end lines of the stave
         // Will be changed when repetitions will be implemented
-        this.beginInstructionsWidth = 20 / this.unit;
-        this.endInstructionsWidth = 20 / this.unit;
+        //this.beginInstructionsWidth = 20 / 10.0;
+        //this.endInstructionsWidth = 20 / 10.0;
         this.stave = new Vex.Flow.Stave(0, 0, 0, {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
         });
+        this.updateInstructionWidth();
     }
 
     public clean(): void {
         //this.beams = {};
-        //this.vfbeams = {};
+        //this.vfbeams = undefined;
         this.connectors = [];
-        console.log("clean!");
+        // Clean up instructions
+        this.resetLayout();
     }
 
     /**
@@ -78,9 +78,9 @@ export class VexFlowMeasure extends StaffMeasure {
         let vfline: any = VexFlowConverter.line(line);
         switch (vfline) {
             case Vex.Flow.StaveConnector.type.SINGLE:
-                return 1.0 / this.unit;
+                return 1.0 / 10.0;
             case Vex.Flow.StaveConnector.type.DOUBLE:
-                return 3.0 / this.unit;
+                return 3.0 / 10.0;
             default:
                 return 0;
         }
@@ -95,7 +95,7 @@ export class VexFlowMeasure extends StaffMeasure {
         this.octaveOffset = clef.OctaveOffset;
         let vfclef: string = VexFlowConverter.Clef(clef);
         this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
-        this.increaseBeginInstructionWidth();
+        this.updateInstructionWidth();
     }
 
     /**
@@ -124,7 +124,7 @@ export class VexFlowMeasure extends StaffMeasure {
             timeSig,
             Vex.Flow.Modifier.Position.BEGIN
         );
-        this.increaseBeginInstructionWidth();
+        this.updateInstructionWidth();
     }
 
     /**
@@ -135,7 +135,7 @@ export class VexFlowMeasure extends StaffMeasure {
     public addClefAtEnd(clef: ClefInstruction): void {
         let vfclef: string = VexFlowConverter.Clef(clef);
         this.stave.setEndClef(vfclef, undefined, undefined);
-        this.increaseEndInstructionWidth();
+        this.updateInstructionWidth();
     }
 
     /**
@@ -145,12 +145,14 @@ export class VexFlowMeasure extends StaffMeasure {
     public setWidth(width: number): void {
         super.setWidth(width);
         // Set the width of the Vex.Flow.Stave
-        this.stave.setWidth(width * this.unit);
+        this.stave.setWidth(width * 10.0);
+        // Force the width of the Begin Instructions
+        this.stave.setNoteStartX(this.beginInstructionsWidth * 10.0);
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
             // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * this.unit);
+            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * 10.0);
         }
     }
 
@@ -230,6 +232,10 @@ export class VexFlowMeasure extends StaffMeasure {
      * Complete the creation of VexFlow Beams in this measure
      */
     public finalizeBeams(): void {
+        // The following line resets the created Vex.Flow Beams and
+        // created them brand new. Is this needed? And more importantly,
+        // should the old beams be removed manually by the notes?
+        this.vfbeams = {};
         for (let voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
                 let vfbeams: Vex.Flow.Beam[] = this.vfbeams[voiceID];
@@ -244,7 +250,7 @@ export class VexFlowMeasure extends StaffMeasure {
                     if (notes.length > 1) {
                         vfbeams.push(new Vex.Flow.Beam(notes, true));
                     } else {
-                        console.log("Warning! Beam with no notes! Trying to ignore, but this is a serious problem.");
+                        Logging.log("Warning! Beam with no notes! Trying to ignore, but this is a serious problem.");
                     }
                 }
             }
@@ -258,8 +264,8 @@ export class VexFlowMeasure extends StaffMeasure {
             if (gnotes.hasOwnProperty(voiceID)) {
                 if (!(voiceID in vfVoices)) {
                     vfVoices[voiceID] = new Vex.Flow.Voice({
-                        beat_value: 4, //this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: 3, //this.parentSourceMeasure.Duration.Numerator,
+                        beat_value: this.parentSourceMeasure.Duration.Denominator,
+                        num_beats: this.parentSourceMeasure.Duration.Numerator,
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
                 }
@@ -285,20 +291,27 @@ export class VexFlowMeasure extends StaffMeasure {
         return this.stave;
     }
 
-    private increaseBeginInstructionWidth(): void {
-        let modifiers: StaveModifier[] = this.stave.getModifiers();
-        let modifier: StaveModifier = modifiers[modifiers.length - 1];
-        //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
-        let padding: number = modifier.getPadding(20);
-        let width: number = modifier.getWidth();
-        this.beginInstructionsWidth += (padding + width) / this.unit;
-    }
+    //private increaseBeginInstructionWidth(): void {
+    //    let modifiers: StaveModifier[] = this.stave.getModifiers();
+    //    let modifier: StaveModifier = modifiers[modifiers.length - 1];
+    //    //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
+    //    let padding: number = modifier.getPadding(20);
+    //    let width: number = modifier.getWidth();
+    //    this.beginInstructionsWidth += (padding + width) / 10.0;
+    //}
+    //
+    //private increaseEndInstructionWidth(): void {
+    //    let modifiers: StaveModifier[] = this.stave.getModifiers();
+    //    let modifier: StaveModifier = modifiers[modifiers.length - 1];
+    //    let padding: number = 0;
+    //    let width: number = modifier.getWidth();
+    //    this.endInstructionsWidth += (padding + width) / 10.0;
+    //
+    //}
 
-    private increaseEndInstructionWidth(): void {
-        let modifiers: StaveModifier[] = this.stave.getModifiers();
-        let modifier: StaveModifier = modifiers[modifiers.length - 1];
-        let padding: number = 0;
-        let width: number = modifier.getWidth();
-        this.endInstructionsWidth += (padding + width) / this.unit;
+    private updateInstructionWidth(): void {
+        this.stave.format();
+        this.beginInstructionsWidth = this.stave.getNoteStartX() / 10.0;
+        this.endInstructionsWidth = this.stave.getNoteEndX() / 10.0;
     }
 }

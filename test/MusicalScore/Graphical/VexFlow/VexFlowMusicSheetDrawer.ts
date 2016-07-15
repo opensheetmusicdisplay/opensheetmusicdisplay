@@ -5,7 +5,6 @@ import {MusicSheetReader} from "../../../../src/MusicalScore/ScoreIO/MusicSheetR
 import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {TestUtils} from "../../../Util/TestUtils";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
-import {VexFlowTextMeasurer} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 import {Fraction} from "../../../../src/Common/DataObjects/fraction";
 import {OutlineAndFillStyleEnum} from "../../../../src/MusicalScore/Graphical/DrawingEnums";
 
@@ -24,12 +23,12 @@ describe("VexFlow Music Sheet Drawer", () => {
 
         // Create heading in the test page
         let h1: Element = document.createElement("h1");
-        h1.textContent = "VexFlowMusicSheetDrawer Output";
+        h1.textContent = "VexFlowMusicSheetDrawer Test Output";
         document.body.appendChild(h1);
         // Create the canvas in the document:
         let canvas: HTMLCanvasElement = document.createElement("canvas");
         document.body.appendChild(canvas);
-        (new VexFlowMusicSheetDrawer(canvas, new VexFlowTextMeasurer())).drawSheet(gms);
+        (new VexFlowMusicSheetDrawer(document.body, canvas)).drawSheet(gms);
         done();
     });
 

@@ -44,7 +44,6 @@ describe("Music Sheet Reader Tests", () => {
 
     it("Measures", (done: MochaDone) => {
         chai.expect(sheet.SourceMeasures.length).to.equal(38);
-        console.log("First Measure: ", sheet.SourceMeasures[0]);
         done();
     });
 

@@ -22,7 +22,7 @@ import {NoteEnum} from "../../Common/DataObjects/pitch";
 import {Staff} from "../VoiceData/Staff";
 import {StaffEntryLink} from "../VoiceData/StaffEntryLink";
 import {VerticalSourceStaffEntryContainer} from "../VoiceData/VerticalSourceStaffEntryContainer";
-import {Logging} from "../../Common/logging";
+import {Logging} from "../../Common/Logging";
 import {Pitch} from "../../Common/DataObjects/pitch";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {CollectionUtil} from "../../Util/collectionUtil";

@@ -18,7 +18,7 @@ import {Instrument} from "../Instrument";
 import {BoundingBox} from "./BoundingBox";
 import {Note} from "../VoiceData/Note";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
-import {Logging} from "../../Common/logging";
+import {Logging} from "../../Common/Logging";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/collectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
@@ -300,21 +300,20 @@ export class GraphicalMusicSheet {
 
     public getOrCreateVerticalContainer(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
         if (this.verticalGraphicalStaffEntryContainers.length === 0 ||
-            timestamp > CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp) {
+            timestamp .lt(CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp)) {
             let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer =
                 new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
             this.verticalGraphicalStaffEntryContainers.push(verticalGraphicalStaffEntryContainer);
             return verticalGraphicalStaffEntryContainer;
         }
-        let i: number;
-        for (; i >= 0; i--) {
-            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp < timestamp) {
+        for (let i: number = this.verticalGraphicalStaffEntryContainers.length - 1; i >= 0; i--) {
+            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp.lt(timestamp)) {
                 let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer =
                     new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
                 this.verticalGraphicalStaffEntryContainers.splice(i + 1, 0, verticalGraphicalStaffEntryContainer);
                 return verticalGraphicalStaffEntryContainer;
             }
-            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp === timestamp) {
+            if (this.verticalGraphicalStaffEntryContainers[i].AbsoluteTimestamp.Equals(timestamp)) {
                 return this.verticalGraphicalStaffEntryContainers[i];
             }
         }
@@ -340,18 +339,18 @@ export class GraphicalMusicSheet {
         let foundIndex: number;
         let leftTS: Fraction = undefined;
         let rightTS: Fraction = undefined;
-        if (musicTimestamp <= containers[containers.length - 1].AbsoluteTimestamp) {
+        if (musicTimestamp.lte(containers[containers.length - 1].AbsoluteTimestamp)) {
             while (rightIndex - leftIndex > 1) {
-                let middleIndex: number = (rightIndex + leftIndex) / 2;
-                if (containers[leftIndex].AbsoluteTimestamp === musicTimestamp) {
+                let middleIndex: number = Math.floor((rightIndex + leftIndex) / 2);
+                if (containers[leftIndex].AbsoluteTimestamp.Equals(musicTimestamp)) {
                     rightIndex = leftIndex;
                     break;
-                } else if (containers[rightIndex].AbsoluteTimestamp === musicTimestamp) {
+                } else if (containers[rightIndex].AbsoluteTimestamp.Equals(musicTimestamp)) {
                     leftIndex = rightIndex;
                     break;
-                } else if (containers[middleIndex].AbsoluteTimestamp === musicTimestamp) {
+                } else if (containers[middleIndex].AbsoluteTimestamp.Equals(musicTimestamp)) {
                     return this.verticalGraphicalStaffEntryContainers.indexOf(containers[middleIndex]);
-                } else if (containers[middleIndex].AbsoluteTimestamp > musicTimestamp) {
+                } else if (musicTimestamp.lt(containers[middleIndex].AbsoluteTimestamp)) {
                     rightIndex = middleIndex;
                 } else {
                     leftIndex = middleIndex;

@@ -3,7 +3,7 @@ import {MultiExpression} from "./multiExpression";
 import {DynamicExpressionSymbolEnum} from "./dynamicExpressionSymbolEnum";
 //import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {InvalidEnumArgumentException} from "../../Exceptions";
-import {Logging} from "../../../Common/logging";
+import {Logging} from "../../../Common/Logging";
 
 export class InstantaniousDynamicExpression extends AbstractExpression {
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number) {

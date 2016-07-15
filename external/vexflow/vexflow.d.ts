@@ -3,7 +3,7 @@ declare namespace Vex {
     const RESOLUTION: any;
 
     export class Formatter {
-      constructor();
+      constructor(opts?: any);
 
       public hasMinTotalWidth: boolean;
       public minTotalWidth: number;
@@ -41,17 +41,15 @@ declare namespace Vex {
       public getNoteHeadBeginX(): number;
       public getNoteHeadEndX(): number;
       public addAccidental(index: number, accidental: Accidental): StaveNote;
+      public setStyle(style: any): void;
     }
 
     export class Stave {
       constructor(x: number, y: number, width: number, options: any);
 
-      public x: number;
-      public start_x: number;
-      public end_x: number;
-
       public setX(x: number): Stave;
       public setY(y: number): Stave;
+      public getX(): number;
       public addClef(clefSpec: string, size: any, annotation: any, position: any): void;
       public setEndClef(clefSpec: string, size: any, annotation: any): void;
       public getModifiers(): StaveModifier[];
@@ -60,6 +58,7 @@ declare namespace Vex {
       public setWidth(width: number): Stave;
       public getNoteStartX(): number;
       public getNoteEndX(): number;
+      public setNoteStartX(x: number): Stave;
       public format(): void;
       public getSpacingBetweenLines(): number;
       public getNumLines(): number;

@@ -4,6 +4,7 @@ import {Fraction} from "../../Common/DataObjects/fraction";
 import {MusicSheet} from "../MusicSheet";
 import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
 import {PartListEntry} from "./PartListEntry";
+import {Logging} from "../../Common/Logging";
 
 export class Repetition extends PartListEntry /*implements IRepetition*/ {
     constructor(musicSheet: MusicSheet, virtualOverallRepetition: boolean) {
@@ -83,7 +84,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
                     this.numberOfEndings = endingNumber;
                 }
             } catch (err) {
-                console.log("Repetition: Exception."); // FIXME
+                Logging.error("Repetition: Exception.", err);
             }
 
         }

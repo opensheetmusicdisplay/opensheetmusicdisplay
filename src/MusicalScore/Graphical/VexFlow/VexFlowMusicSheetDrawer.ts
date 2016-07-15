@@ -2,23 +2,26 @@ import Vex = require("vexflow");
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
-import {ITextMeasurer} from "../../Interfaces/ITextMeasurer";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "../GraphicalLabel";
 import {VexFlowConverter} from "./VexFlowConverter";
+import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private renderer: Vex.Flow.Renderer;
     private vfctx: Vex.Flow.CanvasContext;
     private ctx: CanvasRenderingContext2D;
+    private titles: HTMLElement;
+    private zoom: number = 1.0;
 
-    constructor(canvas: HTMLCanvasElement, textMeasurer: ITextMeasurer, isPreviewImageDrawer: boolean = false) {
-        super(textMeasurer, isPreviewImageDrawer);
+    constructor(titles: HTMLElement, canvas: HTMLCanvasElement, isPreviewImageDrawer: boolean = false) {
+        super(new VexFlowTextMeasurer(), isPreviewImageDrawer);
         this.renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
         this.vfctx = this.renderer.getContext();
         // The following is a hack to retrieve the actual canvas' drawing context
         // Not supposed to work forever....
         this.ctx = (this.vfctx as any).vexFlowCanvasContext;
+        this.titles = titles;
     }
 
     /**
@@ -26,6 +29,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param k is the zoom factor
      */
     public scale(k: number): void {
+        this.zoom = k;
         this.vfctx.scale(k, k);
     }
 
@@ -71,6 +75,20 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
                           bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
+        if (screenPosition.y < 0) {
+            // Temportary solution for title labels
+            let div: HTMLElement = document.createElement("div");
+            div.style.fontSize = (graphicalLabel.Label.fontHeight * this.zoom * 10.0) + "px";
+            //span.style.width = (bitmapWidth * this.zoom * 1.1) + "px";
+            //span.style.height = (bitmapHeight * this.zoom * 1.1) + "px";
+            //span.style.overflow = "hidden";
+            div.style.fontFamily = "Times New Roman";
+            //span.style.marginLeft = (screenPosition.x * this.zoom) + "px";
+            div.style.textAlign = "center";
+            div.appendChild(document.createTextNode(graphicalLabel.Label.text));
+            this.titles.appendChild(div);
+            return;
+        }
         let ctx: CanvasRenderingContext2D = (this.vfctx as any).vexFlowCanvasContext;
         let old: string = ctx.font;
         ctx.font = VexFlowConverter.font(

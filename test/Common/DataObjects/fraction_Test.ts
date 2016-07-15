@@ -3,6 +3,7 @@
  */
 import { Fraction } from "../../../src/Common/DataObjects/fraction";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import {Logging} from "../../../src/Common/Logging";
 
 describe("Fraction Unit Tests:", () => {
     describe("Construct Fraction, check properties", () => {
@@ -57,7 +58,7 @@ describe("Fraction Unit Tests:", () => {
                 let value: Fraction = values[i];
 
                 //console.log(values[i].toString() + "== " + dict.getValue(key));
-                console.log(values[i].toString() + "== " + dict.getValue(new Fraction(key.Numerator, key.Denominator)));
+                Logging.debug(values[i].toString() + "== " + dict.getValue(new Fraction(key.Numerator, key.Denominator)));
                 // chai.expect(dict.getValue(key)).to.equal(value);
                 chai.expect(dict.getValue(new Fraction(key.Numerator, key.Denominator))).to.equal(value);
             }

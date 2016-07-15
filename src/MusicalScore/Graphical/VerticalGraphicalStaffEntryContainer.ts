@@ -9,7 +9,7 @@ export class VerticalGraphicalStaffEntryContainer {
         }
     }
 
-    public relativeInMeasureTimestamp: Fraction;
+    //public relativeInMeasureTimestamp: Fraction;
     private index: number;
     private absoluteTimestamp: Fraction;
     private staffEntries: GraphicalStaffEntry[] = [];
@@ -25,10 +25,10 @@ export class VerticalGraphicalStaffEntryContainer {
     public get AbsoluteTimestamp(): Fraction {
         return this.absoluteTimestamp;
     }
-
-    public set AbsoluteTimestamp(value: Fraction) {
-        this.absoluteTimestamp = value;
-    }
+    //
+    //public set AbsoluteTimestamp(value: Fraction) {
+    //    this.absoluteTimestamp = value;
+    //}
 
     public get StaffEntries(): GraphicalStaffEntry[] {
         return this.staffEntries;

@@ -16,6 +16,7 @@ import {EngravingRules} from "./Graphical/EngravingRules";
 import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
+import {Logging} from "../Common/Logging";
 
 // FIXME
 //type MusicSheetParameters = any;
@@ -39,7 +40,9 @@ export class PlaybackSettings {
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
         this.rules = EngravingRules.Rules;
-        // (*) this.playbackSettings = new PlaybackSettings(new Fraction(4, 4, false), 100);
+        this.playbackSettings = new PlaybackSettings();
+        // FIXME:
+        this.playbackSettings.rhythm = new Fraction(4, 4, false);
         this.userStartTempoInBPM = 100;
         this.pageWidth = 120;
         this.MusicPartManager = new MusicPartManager(this);
@@ -385,7 +388,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         try {
             return this.getFirstSourceMeasure().MeasureNumber;
         } catch (ex) {
-            console.log(/* FIXME LogLevel.NORMAL, */ "MusicSheet.FirstMeasureNumber: ", ex);
+            Logging.log("MusicSheet.FirstMeasureNumber: ", ex);
             return 0;
         }
 
@@ -394,7 +397,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         try {
             return this.getLastSourceMeasure().MeasureNumber;
         } catch (ex) {
-            console.log(/* FIXME LogLevel.NORMAL, */ "MusicSheet.LastMeasureNumber: ", ex);
+            Logging.log("MusicSheet.LastMeasureNumber: ", ex);
             return 0;
         }
 
