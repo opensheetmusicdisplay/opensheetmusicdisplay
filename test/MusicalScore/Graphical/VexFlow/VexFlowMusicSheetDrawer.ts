@@ -11,13 +11,13 @@ import {OutlineAndFillStyleEnum} from "../../../../src/MusicalScore/Graphical/Dr
 describe("VexFlow Music Sheet Drawer", () => {
 
     it(".drawSheet (Clementi pt. 1)", (done: MochaDone) => {
-        let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part2.xml";
-        // "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
-        let score: IXmlElement = TestUtils.getScore(path);
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
         chai.expect(score).to.not.be.undefined;
+        let partwise: Element = TestUtils.getPartWiseElement(score);
+        chai.expect(partwise).to.not.be.undefined;
         let calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
         let reader: MusicSheetReader = new MusicSheetReader();
-        let sheet: MusicSheet = reader.createMusicSheet(score, path);
+        let sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), "path");
         let gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
         gms.Cursors.push(gms.calculateCursorLineAtTimestamp(new Fraction(), OutlineAndFillStyleEnum.PlaybackCursor));
 

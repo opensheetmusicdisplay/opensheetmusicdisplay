@@ -8,12 +8,12 @@ let xmlTestData: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 <credit-words justify=\"center\" valign=\"top\">Example Credit Words</credit-words> </credit>  </score-partwise>";
 
 
-describe("XML Unit Tests", () => {
+describe("XML interface", () => {
   let parser: DOMParser = new DOMParser();
   let doc: Document = parser.parseFromString(xmlTestData, "text/xml");
   let documentElement: IXmlElement = new IXmlElement(doc.documentElement);
 
-  it("IXmlElement Tests", (done: MochaDone) => {
+  it("test IXmlElement", (done: MochaDone) => {
     // Test name attribute
     chai.expect(documentElement.name).to.equal("score-partwise");
     // Test element method
@@ -25,7 +25,8 @@ describe("XML Unit Tests", () => {
       .element("software").value).to.equal("Example Software name");
     done();
   });
-  it("IXmlAttribute Tests", (done: MochaDone) => {
+
+  it("test IXmlAttribute", (done: MochaDone) => {
     // Test attributes method
     chai.expect(
       documentElement.element("credit").attributes()[0].name

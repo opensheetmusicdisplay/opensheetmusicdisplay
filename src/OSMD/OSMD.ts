@@ -6,8 +6,8 @@ import {MusicSheetCalculator} from "./../MusicalScore/Graphical/MusicSheetCalcul
 import {VexFlowMusicSheetDrawer} from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import {MusicSheet} from "./../MusicalScore/MusicSheet";
 import {Cursor} from "./Cursor";
-import {openMxl} from "../Common/FileIO/Mxl";
-//import {Promise} from "es6-promise";
+import {MXLtoXMLstring} from "../Common/FileIO/Mxl";
+import {Promise} from "es6-promise";
 import {handleResize} from "./ResizeHandler";
 
 export class OSMD {
@@ -60,7 +60,7 @@ export class OSMD {
      * Load a MusicXML file
      * @param content is either the url of a file, or the root node of a MusicXML document, or the string content of a .xml/.mxl file
      */
-    public load(content: string|Document): void {
+    public load(content: string|Document): Promise<{}> {
         // Warning! This function is asynchronous! No error handling is done here.
         // FIXME TODO Refactor with Promises
         this.reset();
@@ -70,18 +70,22 @@ export class OSMD {
             if (str.substr(0, 4) === "http") {
                 // Retrieve the file at the url
                 path = str;
-                this.openURL(path);
-                return;
+                return this.openURL(path).then(
+                    (s: string) => { return {}; },
+                    (exc: Error) => { throw exc; }
+                );
             }
-            if (str.substr(0, 4) === "\x04\x03\x4b\x50") {
+            if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
                 // This is a zip file, unpack it first
-                openMxl(str).then(
-                    this.load,
+                let self: OSMD = this;
+                return MXLtoXMLstring(str).then(
+                    (str: string) => {
+                        return self.load(str);
+                    },
                     (err: any) => {
                         throw new Error("OSMD: Invalid MXL file");
                     }
                 );
-                return;
             }
             if (str.substr(0, 5) === "<?xml") {
                 // Parse the string representing an xml file
@@ -91,11 +95,19 @@ export class OSMD {
         }
 
         if (!content || !(<any>content).nodeName) {
-            throw new Error("OSMD: Document provided is not valid");
+            return Promise.reject(new Error("OSMD: Document provided is not valid"));
         }
-        let elem: Element = (<Document>content).getElementsByTagName("score-partwise")[0];
-        if (elem === undefined) {
-            throw new Error("OSMD: Document is not valid partwise MusicXML");
+        let children: NodeList = (<Document>content).childNodes;
+        let elem: Element;
+        for (let i: number = 0, length: number = children.length; i < length; i += 1) {
+            let node: Node = children[i];
+            if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === "score-partwise") {
+                elem = <Element>node;
+                break;
+            }
+        }
+        if (!elem) {
+            return Promise.reject(new Error("OSMD: Document is not a valid 'partwise' MusicXML"));
         }
         let score: IXmlElement = new IXmlElement(elem);
         let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
@@ -103,7 +115,7 @@ export class OSMD {
         this.sheet = reader.createMusicSheet(score, path);
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
-        return; // Promise.resolve();
+        return Promise.resolve({});
     }
 
     /**
@@ -115,9 +127,12 @@ export class OSMD {
             throw new Error("OSMD: Before rendering a music sheet, please load a MusicXML file");
         }
         let width: number = this.container.offsetWidth;
-        if (isNaN(width)) {
-            throw new Error("OSMD: Before rendering a music sheet, please give the container a width");
-        }
+        // Before introducing the following optimization (maybe irrelevant), tests
+        // have to be modified to ensure that width is > 0 when executed
+        //if (isNaN(width) || width === 0) {
+        //    return;
+        //}
+
         // Set page width
         this.sheet.pageWidth = width / this.zoom / 10.0;
         // Calculate again
@@ -136,8 +151,8 @@ export class OSMD {
      *
      * @param url
      */
-    private openURL(url: string): string {
-        throw new Error("OSMD: Not implemented: Load sheet from URL");
+    private openURL(url: string): Promise<string> {
+        return Promise.reject(new Error("OSMD: Not implemented: Load sheet from URL"));
         //let JSZipUtils: any;
         //let self: OSMD = this;
         //JSZipUtils.getBinaryContent(url, function (err, data) {

@@ -11,6 +11,9 @@ export class IXmlElement {
     private elem: Element;
 
     constructor(elem: Element) {
+        if (elem === undefined) {
+            throw new Error("IXmlElement: expected Element, got undefined");
+        }
         this.elem = elem;
         this.name = elem.nodeName.toLowerCase();
 
@@ -32,7 +35,7 @@ export class IXmlElement {
     }
 
     public attributes(): IXmlAttribute[] {
-        if (typeof this.attrs === "undefined") {
+        if (!this.attrs) {
             let attributes: NamedNodeMap = this.elem.attributes;
             let attrs: IXmlAttribute[] = [];
             for (let i: number = 0; i < attributes.length; i += 1) {
@@ -44,7 +47,13 @@ export class IXmlElement {
     }
 
     public element(elementName: string): IXmlElement {
-        return this.elements(elementName)[0];
+        let nodes: NodeList = this.elem.childNodes;
+        for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
+            let node: Node = nodes[i];
+            if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === elementName) {
+                return new IXmlElement(node as Element);
+            }
+        }
     }
 
     public elements(nodeName?: string): IXmlElement[] {
@@ -54,15 +63,11 @@ export class IXmlElement {
         if (!nameUnset) {
             nodeName = nodeName.toLowerCase();
         }
-        // console.log("-", nodeName, nodes.length, this.elem.childElementCount, this.elem.getElementsByTagName(nodeName).length);
-        // if (nodeName === "measure") {
-        //   console.log(this.elem);
-        // }
         for (let i: number = 0; i < nodes.length; i += 1) {
             let node: Node = nodes[i];
-            //console.log("node: ", this.elem.nodeName, ">>", node.nodeName, node.nodeType === Node.ELEMENT_NODE);
             if (node.nodeType === Node.ELEMENT_NODE &&
-                (nameUnset || node.nodeName.toLowerCase() === nodeName)) {
+                (nameUnset || node.nodeName.toLowerCase() === nodeName)
+            ) {
                 ret.push(new IXmlElement(node as Element));
             }
         }

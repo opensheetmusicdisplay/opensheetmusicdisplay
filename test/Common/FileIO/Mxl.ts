@@ -1,25 +1,20 @@
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
-import { extractSheetFromMxl } from "../../../src/Common/FileIO/Mxl.ts";
-
+import { MXLtoIXmlElement } from "../../../src/Common/FileIO/Mxl.ts";
+import { TestUtils } from "../../Util/TestUtils";
 
 describe("MXL Tests", () => {
-  // Load the mxl file
-  function getSheet(filename: string): string {
-    return ((window as any).__raw__)[filename];
-  }
-
   // Generates a test for a mxl file name
   function testFile(scoreName: string): void {
     it(scoreName, (done: MochaDone) => {
       // Load the xml file content
-      let mxl: string = getSheet("test/data/" + scoreName + ".mxl");
+      let mxl: string = TestUtils.getMXL(scoreName);
       chai.expect(mxl).to.not.be.undefined;
       // Extract XML from MXL
       // Warning: the sheet is loaded asynchronously,
       // (with Promises), thus we need a little fix
       // in the end with 'then(null, done)' to
       // make Mocha work asynchronously
-      extractSheetFromMxl(mxl).then(
+      MXLtoIXmlElement(mxl).then(
         (score: IXmlElement) => {
           chai.expect(score).to.not.be.undefined;
           chai.expect(score.name).to.equal("score-partwise");
@@ -38,7 +33,7 @@ describe("MXL Tests", () => {
 
   // Test failure
   it("Corrupted file", (done: MochaDone) => {
-    extractSheetFromMxl("").then(
+    MXLtoIXmlElement("").then(
       (score: IXmlElement) => {
         chai.expect(score).to.not.be.undefined;
         chai.expect(score.name).to.equal("score-partwise");
@@ -47,5 +42,4 @@ describe("MXL Tests", () => {
       (exc: any) => { done(); }
     );
   });
-
 });

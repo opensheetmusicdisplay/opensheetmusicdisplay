@@ -12,7 +12,7 @@ import JSZip = require("jszip");
 //     // Handle it here.
 //   }
 // )
-export function extractSheetFromMxl(data: string): Promise<any> {
+export function MXLtoIXmlElement(data: string): Promise<IXmlElement> {
   "use strict";
   let zip: JSZip.JSZip = new JSZip();
   // asynchronously load zip file and process it - with Promises
@@ -45,7 +45,7 @@ export function extractSheetFromMxl(data: string): Promise<any> {
     }
   ).then(
     (content: IXmlElement) => {
-      return Promise.resolve(content);
+      return content;
     },
     (err: any) => {
       throw new Error("extractSheetFromMxl: " + err.message);
@@ -53,13 +53,23 @@ export function extractSheetFromMxl(data: string): Promise<any> {
   );
 }
 
-export function openMxl(data: string): Promise<any> {
+export function MXLtoXMLstring(data: string): Promise<string> {
     "use strict";
     let zip: JSZip.JSZip = new JSZip();
     // asynchronously load zip file and process it - with Promises
     return zip.loadAsync(data).then(
         (_: any) => {
             return zip.file("META-INF/container.xml").async("string");
+        },
+        (err: any) => {
+            throw err;
+        }
+    ).then(
+        (content: string) => {
+            let parser: DOMParser = new DOMParser();
+            let doc: Document = parser.parseFromString(content, "text/xml");
+            let rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
+            return zip.file(rootFile).async("string");
         },
         (err: any) => {
             throw err;

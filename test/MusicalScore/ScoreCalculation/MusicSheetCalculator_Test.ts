@@ -13,7 +13,7 @@ import {TestUtils} from "../../Util/TestUtils";
 
 describe("Music Sheet Calculator Tests", () => {
     // Initialize variables
-    let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
+    let filename: string = "MuzioClementi_SonatinaOpus36No1_Part1";
     let reader: MusicSheetReader = new MusicSheetReader();
     let calculator: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
     let score: IXmlElement;
@@ -33,10 +33,12 @@ describe("Music Sheet Calculator Tests", () => {
 
     it("Do Calculation", (done: MochaDone) => {
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
-        // Load the xml file
-        score = TestUtils.getScore(path);
+        // Load the XML file
+        let xml: Document = TestUtils.getScore(filename);
+        chai.expect(xml).to.not.be.undefined;
+        score = new IXmlElement(TestUtils.getPartWiseElement(xml));
         chai.expect(score).to.not.be.undefined;
-        sheet = reader.createMusicSheet(score, path);
+        sheet = reader.createMusicSheet(score, "path-of-" + filename);
 
         let graphicalSheet: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calculator);
         graphicalSheet.reCalculate();
