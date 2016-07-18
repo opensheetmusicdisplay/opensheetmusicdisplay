@@ -4,7 +4,6 @@ var GraphicalMusicSheet_1 = require("../../../../src/MusicalScore/Graphical/Grap
 var MusicSheetReader_1 = require("../../../../src/MusicalScore/ScoreIO/MusicSheetReader");
 var VexFlowMusicSheetCalculator_1 = require("../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator");
 var TestUtils_1 = require("../../../Util/TestUtils");
-var VexFlowTextMeasurer_1 = require("../../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer");
 var fraction_1 = require("../../../../src/Common/DataObjects/fraction");
 var DrawingEnums_1 = require("../../../../src/MusicalScore/Graphical/DrawingEnums");
 describe("VexFlow Music Sheet Drawer", function () {
@@ -20,12 +19,12 @@ describe("VexFlow Music Sheet Drawer", function () {
         gms.Cursors.push(gms.calculateCursorLineAtTimestamp(new fraction_1.Fraction(), DrawingEnums_1.OutlineAndFillStyleEnum.PlaybackCursor));
         // Create heading in the test page
         var h1 = document.createElement("h1");
-        h1.textContent = "VexFlowMusicSheetDrawer Output";
+        h1.textContent = "VexFlowMusicSheetDrawer Test Output";
         document.body.appendChild(h1);
         // Create the canvas in the document:
         var canvas = document.createElement("canvas");
         document.body.appendChild(canvas);
-        (new VexFlowMusicSheetDrawer_1.VexFlowMusicSheetDrawer(canvas, new VexFlowTextMeasurer_1.VexFlowTextMeasurer())).drawSheet(gms);
+        (new VexFlowMusicSheetDrawer_1.VexFlowMusicSheetDrawer(document.body, canvas)).drawSheet(gms);
         done();
     });
 });

@@ -57,7 +57,7 @@ var GraphicalStaffEntry = (function (_super) {
         configurable: true
     });
     GraphicalStaffEntry.prototype.getAbsoluteTimestamp = function () {
-        var result = fraction_1.Fraction.createFromFraction(this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp);
+        var result = this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.clone();
         if (this.relInMeasureTimestamp !== undefined) {
             result.Add(this.relInMeasureTimestamp);
         }

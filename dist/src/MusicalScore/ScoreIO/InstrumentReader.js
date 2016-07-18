@@ -10,7 +10,7 @@ var Exceptions_1 = require("../Exceptions");
 var ClefInstruction_2 = require("../VoiceData/Instructions/ClefInstruction");
 var RhythmInstruction_2 = require("../VoiceData/Instructions/RhythmInstruction");
 var KeyInstruction_2 = require("../VoiceData/Instructions/KeyInstruction");
-var logging_1 = require("../../Common/logging");
+var Logging_1 = require("../../Common/Logging");
 var ClefInstruction_3 = require("../VoiceData/Instructions/ClefInstruction");
 var InstrumentReader = (function () {
     function InstrumentReader(repetitionInstructionReader, xmlMeasureList, instrument) {
@@ -83,7 +83,7 @@ var InstrumentReader = (function () {
                         if (xmlNode.element("staff") !== undefined) {
                             noteStaff = parseInt(xmlNode.element("staff").value, 10);
                             if (isNaN(noteStaff)) {
-                                logging_1.Logging.debug("InstrumentReader.readNextXmlMeasure.get staff number");
+                                Logging_1.Logging.debug("InstrumentReader.readNextXmlMeasure.get staff number");
                                 noteStaff = 1;
                             }
                         }
@@ -117,7 +117,7 @@ var InstrumentReader = (function () {
                         else {
                             var errorMsg = ITextTranslation_1.ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
                             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                            logging_1.Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
+                            Logging_1.Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
                             continue;
                         }
                     }
@@ -169,7 +169,7 @@ var InstrumentReader = (function () {
                         this.divisions = parseInt(divisionsNode.value, 10);
                         if (isNaN(this.divisions)) {
                             var errorMsg = ITextTranslation_1.ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
-                            logging_1.Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
+                            Logging_1.Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
                             this.divisions = this.readDivisionsFromNotes();
                             if (this.divisions > 0) {
                                 this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
@@ -256,7 +256,7 @@ var InstrumentReader = (function () {
             }
             var errorMsg = ITextTranslation_1.ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-            logging_1.Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
+            Logging_1.Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
         }
         this.previousMeasure = this.currentMeasure;
         this.currentXmlMeasureIndex += 1;
@@ -424,7 +424,7 @@ var InstrumentReader = (function () {
                         errorMsg = ITextTranslation_1.ITextTranslation.translateText("ReaderErrorMessages/ClefLineError", "Invalid clef line given -> using default clef line.");
                         this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                         line = 2;
-                        logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+                        Logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
                     }
                 }
                 var signNode = nodeList.element("sign");
@@ -446,7 +446,7 @@ var InstrumentReader = (function () {
                         this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                         clefEnum = ClefInstruction_2.ClefEnum.G;
                         line = 2;
-                        logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, e);
+                        Logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, e);
                     }
                 }
                 var clefOctaveNode = nodeList.element("clef-octave-change");
@@ -485,7 +485,7 @@ var InstrumentReader = (function () {
                     errorMsg = ITextTranslation_1.ITextTranslation.translateText("ReaderErrorMessages/KeyError", "Invalid key found -> set to default.");
                     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     key = 0;
-                    logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+                    Logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
                 }
             }
             var keyEnum = KeyInstruction_2.KeyEnum.none;
@@ -501,7 +501,7 @@ var InstrumentReader = (function () {
                     errorMsg = ITextTranslation_1.ITextTranslation.translateText("ReaderErrorMessages/KeyError", "Invalid key found -> set to default.");
                     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     keyEnum = KeyInstruction_2.KeyEnum.major;
-                    logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+                    Logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
                 }
             }
             var keyInstruction = new KeyInstruction_1.KeyInstruction(undefined, key, keyEnum);
@@ -575,7 +575,7 @@ var InstrumentReader = (function () {
                     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     num = 4;
                     denom = 4;
-                    logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+                    Logging_1.Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
                 }
                 if ((num === 4 && denom === 4) || (num === 2 && denom === 2)) {
                     symbolEnum = RhythmInstruction_2.RhythmSymbolEnum.NONE;
@@ -818,7 +818,7 @@ var InstrumentReader = (function () {
                                 noteDuration = parseInt(durationNode.value, 10);
                             }
                             catch (ex) {
-                                logging_1.Logging.debug("InstrumentReader.readDivisionsFromNotes", ex);
+                                Logging_1.Logging.debug("InstrumentReader.readDivisionsFromNotes", ex);
                                 continue;
                             }
                             switch (type) {

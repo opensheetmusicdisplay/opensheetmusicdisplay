@@ -14,7 +14,6 @@ var JSZip = require("jszip");
 // )
 function extractSheetFromMxl(data) {
     "use strict";
-    // _zip_ must be of type 'any' for now, since typings for JSZip are not up-to-date
     var zip = new JSZip();
     // asynchronously load zip file and process it - with Promises
     return zip.loadAsync(data).then(function (_) {
@@ -42,3 +41,14 @@ function extractSheetFromMxl(data) {
     });
 }
 exports.extractSheetFromMxl = extractSheetFromMxl;
+function openMxl(data) {
+    "use strict";
+    var zip = new JSZip();
+    // asynchronously load zip file and process it - with Promises
+    return zip.loadAsync(data).then(function (_) {
+        return zip.file("META-INF/container.xml").async("string");
+    }, function (err) {
+        throw err;
+    });
+}
+exports.openMxl = openMxl;

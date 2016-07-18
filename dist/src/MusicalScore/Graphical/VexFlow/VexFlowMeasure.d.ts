@@ -17,7 +17,6 @@ export declare class VexFlowMeasure extends StaffMeasure {
         [voiceID: number]: Vex.Flow.Voice;
     };
     formatVoices: (width: number) => void;
-    unit: number;
     private stave;
     private connectors;
     private beams;
@@ -95,6 +94,5 @@ export declare class VexFlowMeasure extends StaffMeasure {
      */
     lineTo(top: VexFlowMeasure, lineType: any): void;
     getVFStave(): Vex.Flow.Stave;
-    private increaseBeginInstructionWidth();
-    private increaseEndInstructionWidth();
+    private updateInstructionWidth();
 }
