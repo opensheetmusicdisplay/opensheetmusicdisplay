@@ -12,7 +12,7 @@ var JSZip = require("jszip");
 //     // Handle it here.
 //   }
 // )
-function extractSheetFromMxl(data) {
+function MXLtoIXmlElement(data) {
     "use strict";
     var zip = new JSZip();
     // asynchronously load zip file and process it - with Promises
@@ -35,13 +35,13 @@ function extractSheetFromMxl(data) {
     }, function (err) {
         throw err;
     }).then(function (content) {
-        return es6_promise_1.Promise.resolve(content);
+        return content;
     }, function (err) {
         throw new Error("extractSheetFromMxl: " + err.message);
     });
 }
-exports.extractSheetFromMxl = extractSheetFromMxl;
-function openMxl(data) {
+exports.MXLtoIXmlElement = MXLtoIXmlElement;
+function MXLtoXMLstring(data) {
     "use strict";
     var zip = new JSZip();
     // asynchronously load zip file and process it - with Promises
@@ -49,6 +49,13 @@ function openMxl(data) {
         return zip.file("META-INF/container.xml").async("string");
     }, function (err) {
         throw err;
+    }).then(function (content) {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(content, "text/xml");
+        var rootFile = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
+        return zip.file(rootFile).async("string");
+    }, function (err) {
+        throw err;
     });
 }
-exports.openMxl = openMxl;
+exports.MXLtoXMLstring = MXLtoXMLstring;

@@ -1,4 +1,5 @@
 import { Cursor } from "./Cursor";
+import { Promise } from "es6-promise";
 export declare class OSMD {
     /**
      * The easy way of displaying a MusicXML sheet music file
@@ -18,7 +19,7 @@ export declare class OSMD {
      * Load a MusicXML file
      * @param content is either the url of a file, or the root node of a MusicXML document, or the string content of a .xml/.mxl file
      */
-    load(content: string | Document): void;
+    load(content: string | Document): Promise<{}>;
     /**
      * Render the music sheet in the container
      */

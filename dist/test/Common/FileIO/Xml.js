@@ -6,11 +6,11 @@ var xmlTestData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 <score-partwise>  <identification>    <encoding>      <software>Example Software name</software>      \
 <encoding-date>2016-04-04</encoding-date>      </encoding>    </identification>   <credit page=\"1\"> \
 <credit-words justify=\"center\" valign=\"top\">Example Credit Words</credit-words> </credit>  </score-partwise>";
-describe("XML Unit Tests", function () {
+describe("XML interface", function () {
     var parser = new DOMParser();
     var doc = parser.parseFromString(xmlTestData, "text/xml");
     var documentElement = new Xml_ts_1.IXmlElement(doc.documentElement);
-    it("IXmlElement Tests", function (done) {
+    it("test IXmlElement", function (done) {
         // Test name attribute
         chai.expect(documentElement.name).to.equal("score-partwise");
         // Test element method
@@ -22,7 +22,7 @@ describe("XML Unit Tests", function () {
             .element("software").value).to.equal("Example Software name");
         done();
     });
-    it("IXmlAttribute Tests", function (done) {
+    it("test IXmlAttribute", function (done) {
         // Test attributes method
         chai.expect(documentElement.element("credit").attributes()[0].name).to.equal("page");
         var creditWords = documentElement.element("credit").element("credit-words");

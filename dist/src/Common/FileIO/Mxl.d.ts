@@ -1,3 +1,4 @@
+import { IXmlElement } from "./Xml";
 import { Promise } from "es6-promise";
-export declare function extractSheetFromMxl(data: string): Promise<any>;
-export declare function openMxl(data: string): Promise<any>;
+export declare function MXLtoIXmlElement(data: string): Promise<IXmlElement>;
+export declare function MXLtoXMLstring(data: string): Promise<string>;

@@ -9,6 +9,7 @@ import {Cursor} from "./Cursor";
 import {MXLtoXMLstring} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {handleResize} from "./ResizeHandler";
+import {ajax} from "./AJAX";
 
 export class OSMD {
     /**
@@ -62,22 +63,12 @@ export class OSMD {
      */
     public load(content: string|Document): Promise<{}> {
         // Warning! This function is asynchronous! No error handling is done here.
-        // FIXME TODO Refactor with Promises
         this.reset();
-        let path: string = "Unknown path";
         if (typeof content === "string") {
             let str: string = <string>content;
-            if (str.substr(0, 4) === "http") {
-                // Retrieve the file at the url
-                path = str;
-                return this.openURL(path).then(
-                    (s: string) => { return {}; },
-                    (exc: Error) => { throw exc; }
-                );
-            }
+            let self: OSMD = this;
             if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
                 // This is a zip file, unpack it first
-                let self: OSMD = this;
                 return MXLtoXMLstring(str).then(
                     (str: string) => {
                         return self.load(str);
@@ -91,11 +82,18 @@ export class OSMD {
                 // Parse the string representing an xml file
                 let parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(str, "text/xml");
+            } else if (str.length < 2083) {
+                // Assume now 'str' is a URL
+                // Retrieve the file at the given URL
+                return ajax(str).then(
+                    (s: string) => { return self.load(s); },
+                    (exc: Error) => { throw exc; }
+                );
             }
         }
 
         if (!content || !(<any>content).nodeName) {
-            return Promise.reject(new Error("OSMD: Document provided is not valid"));
+            return Promise.reject(new Error("OSMD: The document which was provided is invalid"));
         }
         let children: NodeList = (<Document>content).childNodes;
         let elem: Element;
@@ -112,7 +110,7 @@ export class OSMD {
         let score: IXmlElement = new IXmlElement(elem);
         let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         let reader: MusicSheetReader = new MusicSheetReader();
-        this.sheet = reader.createMusicSheet(score, path);
+        this.sheet = reader.createMusicSheet(score, "Unknown path");
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         return Promise.resolve({});
@@ -145,22 +143,6 @@ export class OSMD {
         this.drawer.drawSheet(this.graphic);
         // Update the cursor position
         this.cursor.update();
-    }
-
-    /**
-     *
-     * @param url
-     */
-    private openURL(url: string): Promise<string> {
-        return Promise.reject(new Error("OSMD: Not implemented: Load sheet from URL"));
-        //let JSZipUtils: any;
-        //let self: OSMD = this;
-        //JSZipUtils.getBinaryContent(url, function (err, data) {
-        //    if(err) {
-        //        throw err;
-        //    }
-        //    return self.load(data);
-        //});
     }
 
     /**

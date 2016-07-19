@@ -78,6 +78,37 @@ describe("OSMD Main Export", () => {
         );
     });
 
+    it("load MXL Document by URL", (done: MochaDone) => {
+        let url: string = "base/test/data/MozartTrio.mxl";
+        let div: HTMLElement = document.createElement("div");
+        let osmd: OSMD = new OSMD(div);
+        osmd.load(url).then(
+            (_: {}) => {
+                osmd.render();
+                done();
+            },
+            done
+        );
+    });
+
+    it("load MXL Document by invalid URL", (done: MochaDone) => {
+        let url: string = "http://www.google.com";
+        let div: HTMLElement = document.createElement("div");
+        let osmd: OSMD = new OSMD(div);
+        osmd.load(url).then(
+            (_: {}) => {
+                done(new Error("Invalid URL appears to be loaded correctly"));
+            },
+            (exc: Error) => {
+                if (exc.message.toLowerCase().match(/url/)) {
+                    done();
+                } else {
+                    done(new Error("Unexpected error: " + exc.message));
+                }
+            }
+        );
+    });
+
     it("load invalid XML string", (done: MochaDone) => {
         let xml: string = "<?xml";
         let div: HTMLElement = document.createElement("div");

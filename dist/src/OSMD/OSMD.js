@@ -6,7 +6,7 @@ var GraphicalMusicSheet_1 = require("./../MusicalScore/Graphical/GraphicalMusicS
 var VexFlowMusicSheetDrawer_1 = require("./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer");
 var Cursor_1 = require("./Cursor");
 var Mxl_1 = require("../Common/FileIO/Mxl");
-//import {Promise} from "es6-promise";
+var es6_promise_1 = require("es6-promise");
 var ResizeHandler_1 = require("./ResizeHandler");
 var OSMD = (function () {
     /**
@@ -60,15 +60,16 @@ var OSMD = (function () {
             if (str.substr(0, 4) === "http") {
                 // Retrieve the file at the url
                 path = str;
-                this.openURL(path);
-                return;
+                return this.openURL(path).then(function (s) { return {}; }, function (exc) { throw exc; });
             }
-            if (str.substr(0, 4) === "\x04\x03\x4b\x50") {
+            if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
                 // This is a zip file, unpack it first
-                Mxl_1.openMxl(str).then(this.load, function (err) {
+                var self_1 = this;
+                return Mxl_1.MXLtoXMLstring(str).then(function (str) {
+                    return self_1.load(str);
+                }, function (err) {
                     throw new Error("OSMD: Invalid MXL file");
                 });
-                return;
             }
             if (str.substr(0, 5) === "<?xml") {
                 // Parse the string representing an xml file
@@ -77,11 +78,19 @@ var OSMD = (function () {
             }
         }
         if (!content || !content.nodeName) {
-            throw new Error("OSMD: Document provided is not valid");
+            return es6_promise_1.Promise.reject(new Error("OSMD: Document provided is not valid"));
         }
-        var elem = content.getElementsByTagName("score-partwise")[0];
-        if (elem === undefined) {
-            throw new Error("OSMD: Document is not valid partwise MusicXML");
+        var children = content.childNodes;
+        var elem;
+        for (var i = 0, length_1 = children.length; i < length_1; i += 1) {
+            var node = children[i];
+            if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === "score-partwise") {
+                elem = node;
+                break;
+            }
+        }
+        if (!elem) {
+            return es6_promise_1.Promise.reject(new Error("OSMD: Document is not a valid 'partwise' MusicXML"));
         }
         var score = new Xml_1.IXmlElement(elem);
         var calc = new VexFlowMusicSheetCalculator_1.VexFlowMusicSheetCalculator();
@@ -89,7 +98,7 @@ var OSMD = (function () {
         this.sheet = reader.createMusicSheet(score, path);
         this.graphic = new GraphicalMusicSheet_1.GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
-        return; // Promise.resolve();
+        return es6_promise_1.Promise.resolve({});
     };
     /**
      * Render the music sheet in the container
@@ -100,9 +109,11 @@ var OSMD = (function () {
             throw new Error("OSMD: Before rendering a music sheet, please load a MusicXML file");
         }
         var width = this.container.offsetWidth;
-        if (isNaN(width)) {
-            throw new Error("OSMD: Before rendering a music sheet, please give the container a width");
-        }
+        // Before introducing the following optimization (maybe irrelevant), tests
+        // have to be modified to ensure that width is > 0 when executed
+        //if (isNaN(width) || width === 0) {
+        //    return;
+        //}
         // Set page width
         this.sheet.pageWidth = width / this.zoom / 10.0;
         // Calculate again
@@ -121,7 +132,7 @@ var OSMD = (function () {
      * @param url
      */
     OSMD.prototype.openURL = function (url) {
-        throw new Error("OSMD: Not implemented: Load sheet from URL");
+        return es6_promise_1.Promise.reject(new Error("OSMD: Not implemented: Load sheet from URL"));
         //let JSZipUtils: any;
         //let self: OSMD = this;
         //JSZipUtils.getBinaryContent(url, function (err, data) {

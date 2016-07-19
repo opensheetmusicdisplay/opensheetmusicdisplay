@@ -4,17 +4,18 @@ var GraphicalMusicSheet_1 = require("../../../../src/MusicalScore/Graphical/Grap
 var MusicSheetReader_1 = require("../../../../src/MusicalScore/ScoreIO/MusicSheetReader");
 var VexFlowMusicSheetCalculator_1 = require("../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator");
 var TestUtils_1 = require("../../../Util/TestUtils");
+var Xml_1 = require("../../../../src/Common/FileIO/Xml");
 var fraction_1 = require("../../../../src/Common/DataObjects/fraction");
 var DrawingEnums_1 = require("../../../../src/MusicalScore/Graphical/DrawingEnums");
 describe("VexFlow Music Sheet Drawer", function () {
     it(".drawSheet (Clementi pt. 1)", function (done) {
-        var path = "test/data/MuzioClementi_SonatinaOpus36No1_Part2.xml";
-        // "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
-        var score = TestUtils_1.TestUtils.getScore(path);
+        var score = TestUtils_1.TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
         chai.expect(score).to.not.be.undefined;
+        var partwise = TestUtils_1.TestUtils.getPartWiseElement(score);
+        chai.expect(partwise).to.not.be.undefined;
         var calc = new VexFlowMusicSheetCalculator_1.VexFlowMusicSheetCalculator();
         var reader = new MusicSheetReader_1.MusicSheetReader();
-        var sheet = reader.createMusicSheet(score, path);
+        var sheet = reader.createMusicSheet(new Xml_1.IXmlElement(partwise), "path");
         var gms = new GraphicalMusicSheet_1.GraphicalMusicSheet(sheet, calc);
         gms.Cursors.push(gms.calculateCursorLineAtTimestamp(new fraction_1.Fraction(), DrawingEnums_1.OutlineAndFillStyleEnum.PlaybackCursor));
         // Create heading in the test page

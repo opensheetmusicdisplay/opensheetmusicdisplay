@@ -1,22 +1,19 @@
 "use strict";
 var Mxl_ts_1 = require("../../../src/Common/FileIO/Mxl.ts");
+var TestUtils_1 = require("../../Util/TestUtils");
 describe("MXL Tests", function () {
-    // Load the mxl file
-    function getSheet(filename) {
-        return (window.__raw__)[filename];
-    }
     // Generates a test for a mxl file name
     function testFile(scoreName) {
         it(scoreName, function (done) {
             // Load the xml file content
-            var mxl = getSheet("test/data/" + scoreName + ".mxl");
+            var mxl = TestUtils_1.TestUtils.getMXL(scoreName);
             chai.expect(mxl).to.not.be.undefined;
             // Extract XML from MXL
             // Warning: the sheet is loaded asynchronously,
             // (with Promises), thus we need a little fix
             // in the end with 'then(null, done)' to
             // make Mocha work asynchronously
-            Mxl_ts_1.extractSheetFromMxl(mxl).then(function (score) {
+            Mxl_ts_1.MXLtoIXmlElement(mxl).then(function (score) {
                 chai.expect(score).to.not.be.undefined;
                 chai.expect(score.name).to.equal("score-partwise");
                 done();
@@ -31,7 +28,7 @@ describe("MXL Tests", function () {
     }
     // Test failure
     it("Corrupted file", function (done) {
-        Mxl_ts_1.extractSheetFromMxl("").then(function (score) {
+        Mxl_ts_1.MXLtoIXmlElement("").then(function (score) {
             chai.expect(score).to.not.be.undefined;
             chai.expect(score.name).to.equal("score-partwise");
             done(new Error("Empty zip file was loaded correctly. How is that even possible?"));
