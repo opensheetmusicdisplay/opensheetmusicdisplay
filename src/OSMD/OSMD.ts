@@ -10,6 +10,7 @@ import {MXLtoXMLstring} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {handleResize} from "./ResizeHandler";
 import {ajax} from "./AJAX";
+import {Logging} from "../Common/Logging";
 
 export class OSMD {
     /**
@@ -74,6 +75,7 @@ export class OSMD {
                         return self.load(str);
                     },
                     (err: any) => {
+                        Logging.debug(err);
                         throw new Error("OSMD: Invalid MXL file");
                     }
                 );
@@ -163,6 +165,8 @@ export class OSMD {
         this.graphic = undefined;
         this.zoom = 1.0;
         this.resetHeadings();
+        this.canvas.width = 0;
+        this.canvas.height = 0;
     }
 
     /**

@@ -19,7 +19,7 @@ export function ajax(url: string): Promise<string> {
     return new Promise((resolve: (value: string) => void, reject: (error: any) => void) => {
         xhttp.onreadystatechange = () => {
             if (xhttp.readyState === XMLHttpRequest.DONE) {
-                if (xhttp.status === 200) {
+                if (xhttp.status === 200 || xhttp.status === 0) {
                     resolve(xhttp.responseText);
                 } else {
                     //reject(new Error("AJAX error: '" + xhttp.statusText + "'"));

@@ -22,7 +22,7 @@ export class VexFlowMeasure extends StaffMeasure {
         this.minimumStaffEntriesWidth = -1;
         this.resetLayout();
     }
-
+    private realBegin: number = 0;
     // octaveOffset according to active clef
     public octaveOffset: number = 3;
     // The VexFlow Voices in the measure
@@ -147,7 +147,7 @@ export class VexFlowMeasure extends StaffMeasure {
         // Set the width of the Vex.Flow.Stave
         this.stave.setWidth(width * 10.0);
         // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.beginInstructionsWidth * 10.0);
+        //this.stave.setNoteStartX(this.beginInstructionsWidth * 10.0);
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
@@ -162,7 +162,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
      */
     public layoutSymbols(): void {
-        this.stave.format();
+        //this.stave.format();
     }
 
     //public addGraphicalStaffEntry(entry: VexFlowStaffEntry): void {
@@ -179,6 +179,8 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param ctx
      */
     public draw(ctx: Vex.Flow.CanvasContext): void {
+        // Force the width of the Begin Instructions
+        this.stave.setNoteStartX(this.stave.getNoteStartX() + 10.0 * (- this.realBegin + this.beginInstructionsWidth));
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
@@ -311,6 +313,7 @@ export class VexFlowMeasure extends StaffMeasure {
 
     private updateInstructionWidth(): void {
         this.stave.format();
+        this.realBegin = this.stave.getNoteStartX() / 10.0;
         this.beginInstructionsWidth = this.stave.getNoteStartX() / 10.0;
         this.endInstructionsWidth = this.stave.getNoteEndX() / 10.0;
     }
