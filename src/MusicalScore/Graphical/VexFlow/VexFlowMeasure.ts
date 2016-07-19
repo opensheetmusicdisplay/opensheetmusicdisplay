@@ -22,7 +22,7 @@ export class VexFlowMeasure extends StaffMeasure {
         this.minimumStaffEntriesWidth = -1;
         this.resetLayout();
     }
-    private realBegin: number = 0;
+
     // octaveOffset according to active clef
     public octaveOffset: number = 3;
     // The VexFlow Voices in the measure
@@ -38,6 +38,8 @@ export class VexFlowMeasure extends StaffMeasure {
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     // VexFlow Beams
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
+    // The actual, unmodified beginInstructionWidth
+    private realBegin: number = 0;
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
