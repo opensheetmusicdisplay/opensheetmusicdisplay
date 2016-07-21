@@ -38,8 +38,6 @@ export class VexFlowMeasure extends StaffMeasure {
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     // VexFlow Beams
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
-    // The actual, unmodified beginInstructionWidth
-    private realBegin: number = 0;
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -108,11 +106,12 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
      */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
-        let keySig: Vex.Flow.KeySignature = new Vex.Flow.KeySignature(
+        this.stave.setKeySignature(
             VexFlowConverter.keySignature(currentKey),
-            VexFlowConverter.keySignature(previousKey)
+            VexFlowConverter.keySignature(previousKey),
+            undefined
         );
-        this.stave.addModifier(keySig, Vex.Flow.Modifier.Position.BEGIN);
+        this.updateInstructionWidth();
     }
 
     /**
@@ -182,7 +181,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public draw(ctx: Vex.Flow.CanvasContext): void {
         // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.stave.getNoteStartX() + 10.0 * (- this.realBegin + this.beginInstructionsWidth));
+        this.stave.setNoteStartX(this.stave.getX() + 10.0 * this.beginInstructionsWidth);
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
@@ -314,9 +313,8 @@ export class VexFlowMeasure extends StaffMeasure {
     //}
 
     private updateInstructionWidth(): void {
-        this.stave.format();
-        this.realBegin = this.stave.getNoteStartX() / 10.0;
-        this.beginInstructionsWidth = this.stave.getNoteStartX() / 10.0;
-        this.endInstructionsWidth = this.stave.getNoteEndX() / 10.0;
+        //this.stave.format();
+        this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / 10.0;
+        this.endInstructionsWidth = (this.stave.getNoteEndX() - this.stave.getX()) / 10.0;
     }
 }

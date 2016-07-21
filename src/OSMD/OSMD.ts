@@ -161,6 +161,7 @@ export class OSMD {
      * FIXME: Probably unnecessary
      */
     private reset(): void {
+        this.cursor.hide();
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;

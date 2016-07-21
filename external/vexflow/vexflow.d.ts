@@ -59,6 +59,7 @@ declare namespace Vex {
       public getNoteStartX(): number;
       public getNoteEndX(): number;
       public setNoteStartX(x: number): Stave;
+      public setKeySignature(keySpec: any, cancelKeySpec: any, position: any): Stave;
       public format(): void;
       public getSpacingBetweenLines(): number;
       public getNumLines(): number;
