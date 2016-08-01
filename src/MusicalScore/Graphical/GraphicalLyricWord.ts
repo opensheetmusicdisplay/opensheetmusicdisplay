@@ -1,4 +1,4 @@
-﻿import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
+import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
 import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
 
 export class GraphicalLyricWord {

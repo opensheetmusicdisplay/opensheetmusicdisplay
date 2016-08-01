@@ -1,7 +1,7 @@
-﻿import {Pitch} from "../../Common/DataObjects/pitch";
+import {Pitch} from "../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
-import {AccidentalEnum} from "../../Common/DataObjects/pitch";
+import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 export class ChordSymbolContainer {
     private rootPitch: Pitch;
     private chordKind: ChordSymbolEnum;

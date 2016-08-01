@@ -1,11 +1,11 @@
-﻿import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {StaffLine} from "./StaffLine";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import {GraphicalLine} from "./GraphicalLine";
 import {MusicSystem} from "./MusicSystem";
 import {GraphicalObject} from "./GraphicalObject";
 import {BoundingBox} from "./BoundingBox";
-import {CollectionUtil} from "../../Util/collectionUtil";
+import {CollectionUtil} from "../../Util/CollectionUtil";
 
 export class SelectionStartSymbol extends GraphicalObject {
     constructor(system: MusicSystem, xPosition: number) {

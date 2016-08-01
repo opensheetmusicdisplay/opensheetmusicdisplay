@@ -1,6 +1,6 @@
-import {ContinuousDynamicExpression} from "../Expressions/ContinuousExpressions/continuousDynamicExpression";
-import {InstantaniousDynamicExpression} from "../Expressions/instantaniousDynamicExpression";
-import {MultiExpression} from "../Expressions/multiExpression";
+import {ContinuousDynamicExpression} from "../Expressions/ContinuousExpressions/ContinuousDynamicExpression";
+import {InstantaniousDynamicExpression} from "../Expressions/InstantaniousDynamicExpression";
+import {MultiExpression} from "../Expressions/MultiExpression";
 
 export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
     constructor(dynamicExpression: ContinuousDynamicExpression|InstantaniousDynamicExpression, staffNumber: number) {

@@ -1,8 +1,8 @@
-import {AbstractTempoExpression} from "./abstractTempoExpression";
-import {PlacementEnum} from "./abstractExpression";
+import {AbstractTempoExpression} from "./AbstractTempoExpression";
+import {PlacementEnum} from "./AbstractExpression";
 import {ArgumentOutOfRangeException} from "../../Exceptions";
-import {Fraction} from "../../../Common/DataObjects/fraction";
-import {MultiTempoExpression} from "./multiTempoExpression";
+import {Fraction} from "../../../Common/DataObjects/Fraction";
+import {MultiTempoExpression} from "./MultiTempoExpression";
 
 export class InstantaniousTempoExpression extends AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number, soundTempo: number, parentMultiTempoExpression: MultiTempoExpression) {

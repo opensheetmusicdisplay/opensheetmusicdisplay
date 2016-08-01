@@ -1,6 +1,6 @@
 import {MusicSheet} from "../MusicSheet";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
-import {Fraction} from "../../Common/DataObjects/fraction";
+import {Fraction} from "../../Common/DataObjects/Fraction";
 import {InstrumentReader} from "./InstrumentReader";
 import {IXmlElement} from "../../Common/FileIO/Xml";
 import {Instrument} from "../Instrument";

@@ -1,7 +1,7 @@
-import {Pitch} from "../../../Common/DataObjects/pitch";
+import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {AbstractNotationInstruction} from "./AbstractNotationInstruction";
-import {NoteEnum} from "../../../Common/DataObjects/pitch";
-import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
+import {NoteEnum} from "../../../Common/DataObjects/Pitch";
+import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import {ArgumentOutOfRangeException} from "../../Exceptions";
 
 export class ClefInstruction extends AbstractNotationInstruction {
