@@ -1,4 +1,4 @@
-﻿import {GraphicalMusicPage} from "../Graphical/GraphicalMusicPage";
+import {GraphicalMusicPage} from "../Graphical/GraphicalMusicPage";
 import {MusicSystem} from "../Graphical/MusicSystem";
 import {Staff} from "../VoiceData/Staff";
 import {StaffLine} from "../Graphical/StaffLine";
@@ -8,9 +8,9 @@ import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {GraphicalStaffEntry} from "../Graphical/GraphicalStaffEntry";
 import {Note} from "../VoiceData/Note";
 import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
-import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/octaveShift";
+import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {GraphicalNote} from "../Graphical/GraphicalNote";
-import {Pitch} from "../../Common/DataObjects/pitch";
+import {Pitch} from "../../Common/DataObjects/Pitch";
 import {TechnicalInstruction} from "../VoiceData/Instructions/TechnicalInstruction";
 export interface IGraphicalSymbolFactory {
     createMusicSystem(page: GraphicalMusicPage, systemIndex: number): MusicSystem;

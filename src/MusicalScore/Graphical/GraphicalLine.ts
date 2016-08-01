@@ -1,4 +1,4 @@
-﻿import {OutlineAndFillStyleEnum} from "./DrawingEnums";
+import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
 export class GraphicalLine {

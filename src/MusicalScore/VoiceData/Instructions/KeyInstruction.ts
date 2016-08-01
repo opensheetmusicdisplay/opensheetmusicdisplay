@@ -1,8 +1,8 @@
 import {AbstractNotationInstruction} from "./AbstractNotationInstruction";
 import {SourceStaffEntry} from "../SourceStaffEntry";
-import {NoteEnum} from "../../../Common/DataObjects/pitch";
-import {AccidentalEnum} from "../../../Common/DataObjects/pitch";
-import {Pitch} from "../../../Common/DataObjects/pitch";
+import {NoteEnum} from "../../../Common/DataObjects/Pitch";
+import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
+import {Pitch} from "../../../Common/DataObjects/Pitch";
 
 
 export class KeyInstruction extends AbstractNotationInstruction {

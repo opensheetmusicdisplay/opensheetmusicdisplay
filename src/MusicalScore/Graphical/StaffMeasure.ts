@@ -7,7 +7,7 @@ import {GraphicalObject} from "./GraphicalObject";
 import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
-import {Fraction} from "../../Common/DataObjects/fraction";
+import {Fraction} from "../../Common/DataObjects/Fraction";
 import {Voice} from "../VoiceData/Voice";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {GraphicalNote} from "./GraphicalNote";

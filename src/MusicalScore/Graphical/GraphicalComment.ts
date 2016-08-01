@@ -1,4 +1,4 @@
-﻿import {GraphicalLabel} from "./GraphicalLabel";
+import {GraphicalLabel} from "./GraphicalLabel";
 export class GraphicalComment {
     constructor(label: GraphicalLabel, settingsLabel: GraphicalLabel) {
         this.label = label;

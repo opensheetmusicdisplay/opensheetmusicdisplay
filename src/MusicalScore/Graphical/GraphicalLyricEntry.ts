@@ -1,4 +1,4 @@
-﻿import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
+import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
 import {GraphicalLyricWord} from "./GraphicalLyricWord";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";

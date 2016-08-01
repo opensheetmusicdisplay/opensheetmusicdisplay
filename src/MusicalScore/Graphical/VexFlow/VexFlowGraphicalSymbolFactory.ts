@@ -1,4 +1,4 @@
-﻿import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
+import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";
@@ -13,9 +13,9 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
-import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/octaveShift";
+import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {GraphicalNote} from "../GraphicalNote";
-import {Pitch} from "../../../Common/DataObjects/pitch";
+import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 

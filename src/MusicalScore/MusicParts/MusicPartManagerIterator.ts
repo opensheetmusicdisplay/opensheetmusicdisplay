@@ -1,5 +1,5 @@
 import {MusicPartManager} from "./MusicPartManager";
-import {Fraction} from "../../Common/DataObjects/fraction";
+import {Fraction} from "../../Common/DataObjects/Fraction";
 import {Repetition} from "../MusicSource/Repetition";
 import {DynamicsContainer} from "../VoiceData/HelperObjects/DynamicsContainer";
 import {MappingSourceMusicPart} from "../MusicSource/MappingSourceMusicPart";
@@ -10,10 +10,10 @@ import {VerticalSourceStaffEntryContainer} from "../VoiceData/VerticalSourceStaf
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
-import {ContinuousDynamicExpression} from "../VoiceData/Expressions/ContinuousExpressions/continuousDynamicExpression";
-import {InstantaniousDynamicExpression} from "../VoiceData/Expressions/instantaniousDynamicExpression";
-import {MultiTempoExpression} from "../VoiceData/Expressions/multiTempoExpression";
-import {AbstractExpression} from "../VoiceData/Expressions/abstractExpression";
+import {ContinuousDynamicExpression} from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
+import {InstantaniousDynamicExpression} from "../VoiceData/Expressions/InstantaniousDynamicExpression";
+import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpression";
+import {AbstractExpression} from "../VoiceData/Expressions/AbstractExpression";
 import {Logging} from "../../Common/Logging";
 
 export class MusicPartManagerIterator {

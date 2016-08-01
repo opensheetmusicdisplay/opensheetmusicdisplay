@@ -1,4 +1,4 @@
-﻿import {Tie} from "../VoiceData/Tie";
+import {Tie} from "../VoiceData/Tie";
 import {GraphicalNote} from "./GraphicalNote";
 
 export class GraphicalTie {

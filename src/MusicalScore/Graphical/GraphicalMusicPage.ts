@@ -1,4 +1,4 @@
-﻿import {BoundingBox} from "./BoundingBox";
+import {BoundingBox} from "./BoundingBox";
 import {GraphicalObject} from "./GraphicalObject";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {MusicSystem} from "./MusicSystem";
