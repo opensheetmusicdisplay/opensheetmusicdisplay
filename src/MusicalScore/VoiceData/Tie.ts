@@ -1,6 +1,6 @@
 import {Note} from "./Note";
 import {Beam} from "./Beam";
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 import {Tuplet} from "./Tuplet";
 
 export class Tie {

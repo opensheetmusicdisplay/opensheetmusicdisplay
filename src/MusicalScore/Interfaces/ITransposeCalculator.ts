@@ -1,4 +1,4 @@
-import {Pitch} from "../../Common/DataObjects/Pitch";
+﻿import {Pitch} from "../../Common/DataObjects/pitch";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 
 export interface ITransposeCalculator {

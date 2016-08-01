@@ -1,5 +1,5 @@
 import {SourceMusicPart} from "./SourceMusicPart";
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 import {Repetition} from "./Repetition";
 import {PartListEntry} from "./PartListEntry";
 

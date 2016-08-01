@@ -1,4 +1,4 @@
-export enum SystemLinePosition {
+﻿export enum SystemLinePosition {
     MeasureBegin,
     MeasureEnd
 }

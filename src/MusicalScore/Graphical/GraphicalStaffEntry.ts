@@ -1,6 +1,6 @@
-import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
+﻿import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {BoundingBox} from "./BoundingBox";
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 import {VerticalGraphicalStaffEntryContainer} from "./VerticalGraphicalStaffEntryContainer";
 import {Note} from "../VoiceData/Note";
 import {Slur} from "../VoiceData/Expressions/ContinuousExpressions/Slur";
@@ -15,7 +15,7 @@ import {GraphicalChordSymbolContainer} from "./GraphicalChordSymbolContainer";
 import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
 import {AbstractGraphicalInstruction} from "./AbstractGraphicalInstruction";
 import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
-import {CollectionUtil} from "../../Util/CollectionUtil";
+import {CollectionUtil} from "../../Util/collectionUtil";
 
 export abstract class GraphicalStaffEntry extends GraphicalObject {
     constructor(parentMeasure: StaffMeasure, sourceStaffEntry: SourceStaffEntry = undefined, staffEntryParent: GraphicalStaffEntry = undefined) {

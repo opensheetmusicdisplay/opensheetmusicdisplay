@@ -1,7 +1,7 @@
-import {Fraction} from "../../../../Common/DataObjects/Fraction";
-import {PlacementEnum} from "../AbstractExpression";
-import {MultiTempoExpression} from "../MultiTempoExpression";
-import {AbstractTempoExpression} from "../AbstractTempoExpression";
+import {Fraction} from "../../../../Common/DataObjects/fraction";
+import {PlacementEnum} from "../abstractExpression";
+import {MultiTempoExpression} from "../multiTempoExpression";
+import {AbstractTempoExpression} from "../abstractTempoExpression";
 
 export class ContinuousTempoExpression extends AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number, parentMultiTempoExpression: MultiTempoExpression) {

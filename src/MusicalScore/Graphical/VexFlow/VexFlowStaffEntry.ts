@@ -1,4 +1,4 @@
-import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
+﻿import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {SourceStaffEntry} from "../../VoiceData/SourceStaffEntry";
 import {GraphicalNote} from "../GraphicalNote";

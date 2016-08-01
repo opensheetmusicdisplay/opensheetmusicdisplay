@@ -1,14 +1,14 @@
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 import {Voice} from "./Voice";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 import {Note} from "./Note";
-import {Pitch} from "../../Common/DataObjects/Pitch";
+import {Pitch} from "../../Common/DataObjects/pitch";
 import {LyricsEntry} from "./Lyrics/LyricsEntry";
 import {TechnicalInstruction} from "./Instructions/TechnicalInstruction";
 import {OrnamentContainer} from "./OrnamentContainer";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {OrnamentEnum} from "./OrnamentContainer";
-import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
+import {AccidentalEnum} from "../../Common/DataObjects/pitch";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 export class VoiceEntry {

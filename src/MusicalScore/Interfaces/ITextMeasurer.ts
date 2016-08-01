@@ -1,4 +1,4 @@
-import {Fonts} from "../../Common/Enums/Fonts";
+﻿import {Fonts} from "../../Common/Enums/Fonts";
 import {FontStyles} from "../../Common/Enums/FontStyles";
 
 export interface ITextMeasurer {

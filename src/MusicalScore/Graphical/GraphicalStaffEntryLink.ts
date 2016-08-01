@@ -1,4 +1,4 @@
-import {StaffEntryLink} from "../VoiceData/StaffEntryLink";
+﻿import {StaffEntryLink} from "../VoiceData/StaffEntryLink";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalNote} from "./GraphicalNote";
 

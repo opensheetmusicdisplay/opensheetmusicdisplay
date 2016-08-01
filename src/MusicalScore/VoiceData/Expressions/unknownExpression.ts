@@ -1,4 +1,4 @@
-import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
+import {PlacementEnum, AbstractExpression} from "./abstractExpression";
 import {TextAlignment} from "../../../Common/Enums/TextAlignment";
 
 export class UnknownExpression extends AbstractExpression {

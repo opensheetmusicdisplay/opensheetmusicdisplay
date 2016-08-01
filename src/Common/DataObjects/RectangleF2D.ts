@@ -1,4 +1,4 @@
-import {SizeF2D} from "./SizeF2D";
+﻿import {SizeF2D} from "./SizeF2D";
 import {PointF2D} from "./PointF2D";
 
 export class RectangleF2D {

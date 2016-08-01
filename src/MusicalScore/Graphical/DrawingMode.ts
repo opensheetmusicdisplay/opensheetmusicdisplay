@@ -1,4 +1,4 @@
-export enum DrawingMode {
+﻿export enum DrawingMode {
     All,
     NoOverlays,
     Leadsheet

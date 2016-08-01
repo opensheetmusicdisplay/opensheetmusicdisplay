@@ -1,4 +1,4 @@
-import {StaffMeasure} from "./StaffMeasure";
+﻿import {StaffMeasure} from "./StaffMeasure";
 import {StaffLine} from "./StaffLine";
 import {MusicSystem} from "./MusicSystem";
 import {SystemLinePosition} from "./SystemLinePosition";

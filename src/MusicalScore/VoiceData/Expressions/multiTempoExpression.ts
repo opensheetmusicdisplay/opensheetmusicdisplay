@@ -1,10 +1,10 @@
-import {Fraction} from "../../../Common/DataObjects/Fraction";
+import {Fraction} from "../../../Common/DataObjects/fraction";
 import {SourceMeasure} from "../SourceMeasure";
-import {InstantaniousTempoExpression} from "./InstantaniousTempoExpression";
-import {PlacementEnum} from "./AbstractExpression";
+import {InstantaniousTempoExpression} from "./instantaniousTempoExpression";
+import {PlacementEnum} from "./abstractExpression";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
-import {AbstractTempoExpression} from "./AbstractTempoExpression";
-import {ContinuousTempoExpression} from "./ContinuousExpressions/ContinuousTempoExpression";
+import {AbstractTempoExpression} from "./abstractTempoExpression";
+import {ContinuousTempoExpression} from "./ContinuousExpressions/continuousTempoExpression";
 
 export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>*/ {
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {

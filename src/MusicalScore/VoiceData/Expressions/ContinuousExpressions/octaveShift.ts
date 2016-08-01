@@ -1,4 +1,4 @@
-import {MultiExpression} from "../MultiExpression";
+import {MultiExpression} from "../multiExpression";
 
 export class OctaveShift {
     constructor(type: string, octave: number) {

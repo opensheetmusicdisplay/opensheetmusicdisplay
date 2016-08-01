@@ -1,5 +1,5 @@
-import {GraphicalObject} from "./GraphicalObject";
-import {OctaveShift, OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+﻿import {GraphicalObject} from "./GraphicalObject";
+import {OctaveShift, OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/octaveShift";
 import {BoundingBox} from "./BoundingBox";
 import {MusicSymbol} from "./MusicSymbol";
 import {ArgumentOutOfRangeException} from "../Exceptions";

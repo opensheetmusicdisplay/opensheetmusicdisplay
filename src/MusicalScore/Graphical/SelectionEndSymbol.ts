@@ -1,11 +1,11 @@
-import {GraphicalObject} from "./GraphicalObject";
+﻿import {GraphicalObject} from "./GraphicalObject";
 import {MusicSystem} from "./MusicSystem";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import {StaffLine} from "./StaffLine";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {BoundingBox} from "./BoundingBox";
 import {GraphicalLine} from "./GraphicalLine";
-import {CollectionUtil} from "../../Util/CollectionUtil";
+import {CollectionUtil} from "../../Util/collectionUtil";
 
 export class SelectionEndSymbol extends GraphicalObject {
     constructor(system: MusicSystem, xPosition: number) {

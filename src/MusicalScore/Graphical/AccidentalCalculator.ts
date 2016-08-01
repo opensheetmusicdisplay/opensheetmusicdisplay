@@ -1,9 +1,9 @@
-import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
-import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
+﻿import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
+import {AccidentalEnum} from "../../Common/DataObjects/pitch";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {GraphicalNote} from "./GraphicalNote";
-import {Pitch} from "../../Common/DataObjects/Pitch";
-import {NoteEnum} from "../../Common/DataObjects/Pitch";
+import {Pitch} from "../../Common/DataObjects/pitch";
+import {NoteEnum} from "../../Common/DataObjects/pitch";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 export class AccidentalCalculator {

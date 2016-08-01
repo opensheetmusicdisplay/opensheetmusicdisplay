@@ -1,4 +1,4 @@
-import {StaffLine} from "../StaffLine";
+﻿import {StaffLine} from "../StaffLine";
 import {MusicSystem} from "../MusicSystem";
 import {Staff} from "../../VoiceData/Staff";
 

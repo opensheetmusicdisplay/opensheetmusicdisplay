@@ -1,6 +1,6 @@
-import {PlacementEnum, AbstractExpression} from "../AbstractExpression";
-import {MultiExpression} from "../MultiExpression";
-import {Fraction} from "../../../../Common/DataObjects/Fraction";
+import {PlacementEnum, AbstractExpression} from "../abstractExpression";
+import {MultiExpression} from "../multiExpression";
+import {Fraction} from "../../../../Common/DataObjects/fraction";
 
 export class ContinuousDynamicExpression extends AbstractExpression {
     //constructor(placement: PlacementEnum, staffNumber: number, label: string) {

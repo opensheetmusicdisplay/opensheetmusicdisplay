@@ -1,4 +1,4 @@
-import {StaffMeasure} from "./StaffMeasure";
+﻿import {StaffMeasure} from "./StaffMeasure";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {EngravingRules} from "./EngravingRules";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
@@ -19,7 +19,7 @@ import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
-import {CollectionUtil} from "../../Util/CollectionUtil";
+import {CollectionUtil} from "../../Util/collectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
 
 export class MusicSystemBuilder {

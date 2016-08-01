@@ -1,7 +1,7 @@
 import { MusicSheet } from "../MusicSheet";
 import { PartListEntry } from "../MusicSource/PartListEntry";
 import { Repetition } from "../MusicSource/Repetition";
-import { Fraction } from "../../Common/DataObjects/Fraction";
+import { Fraction } from "../../Common/DataObjects/fraction";
 import { MusicPartManagerIterator } from "./MusicPartManagerIterator";
 
 export class MusicPartManager /*implements ISelectionListener*/ {

@@ -1,5 +1,5 @@
 import {Note} from "./Note";
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 
 export class Tuplet {
     constructor(tupletLabelNumber: number) {

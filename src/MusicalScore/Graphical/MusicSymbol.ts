@@ -1,4 +1,4 @@
-export enum MusicSymbol {
+﻿export enum MusicSymbol {
     Unused_first_Symbol,
     BLACK_HEAD,
     UPWARDS_TAIL,

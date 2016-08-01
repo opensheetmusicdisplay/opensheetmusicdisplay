@@ -1,4 +1,4 @@
-import {ArgumentOutOfRangeException} from "../Exceptions";
+﻿import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";

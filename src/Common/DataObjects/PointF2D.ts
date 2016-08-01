@@ -1,4 +1,4 @@
-export class PointF2D {
+﻿export class PointF2D {
     public x: number = 0;
     public y: number = 0;
 

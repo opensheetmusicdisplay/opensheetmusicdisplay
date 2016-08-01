@@ -1,4 +1,4 @@
-import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
+﻿import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
 
 export abstract class AbstractGraphicalInstruction extends GraphicalObject {

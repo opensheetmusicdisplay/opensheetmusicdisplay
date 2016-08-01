@@ -1,4 +1,4 @@
-export class DrawingParameters {
+﻿export class DrawingParameters {
     public drawHighlights: boolean;
     public drawErrors: boolean;
     public drawSelectionStartSymbol: boolean;

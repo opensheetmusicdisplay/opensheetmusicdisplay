@@ -1,5 +1,5 @@
 import {AbstractNotationInstruction} from "./AbstractNotationInstruction";
-import {Fraction} from "../../../Common/DataObjects/Fraction";
+import {Fraction} from "../../../Common/DataObjects/fraction";
 
 export class RhythmInstruction extends AbstractNotationInstruction {
     constructor(rhythm: Fraction, numerator: number, denominator: number, rhythmSymbolEnum: RhythmSymbolEnum) {

@@ -8,7 +8,7 @@ import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 import {IXmlElement} from "../../Common/FileIO/Xml";
 import {ITextTranslation} from "../Interfaces/ITextTranslation";
 import {MusicSheetReadingException} from "../Exceptions";

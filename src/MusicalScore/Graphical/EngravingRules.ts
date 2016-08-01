@@ -1,4 +1,4 @@
-import {PagePlacementEnum} from "./GraphicalMusicPage";
+﻿import {PagePlacementEnum} from "./GraphicalMusicPage";
 //import {MusicSymbol} from "./MusicSymbol";
 import {Logging} from "../../Common/Logging";
 

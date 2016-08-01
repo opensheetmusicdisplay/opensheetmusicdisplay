@@ -1,4 +1,4 @@
-export class SizeF2D {
+﻿export class SizeF2D {
     public width: number;
     public height: number;
 

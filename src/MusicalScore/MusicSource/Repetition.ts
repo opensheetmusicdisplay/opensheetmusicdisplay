@@ -1,6 +1,6 @@
 import {SourceMusicPart} from "./SourceMusicPart";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 import {MusicSheet} from "../MusicSheet";
 import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
 import {PartListEntry} from "./PartListEntry";

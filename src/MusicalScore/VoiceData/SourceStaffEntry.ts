@@ -1,4 +1,4 @@
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
 import {Staff} from "./Staff";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";

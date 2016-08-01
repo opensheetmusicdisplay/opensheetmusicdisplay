@@ -1,5 +1,5 @@
-import {PlacementEnum} from "./AbstractExpression";
-import {MultiTempoExpression} from "./MultiTempoExpression";
+import {PlacementEnum} from "./abstractExpression";
+import {MultiTempoExpression} from "./multiTempoExpression";
 
 export abstract class AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number, parentMultiTempoExpression: MultiTempoExpression) {

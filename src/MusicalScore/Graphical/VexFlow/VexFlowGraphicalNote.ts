@@ -4,7 +4,7 @@ import {Note} from "../../VoiceData/Note";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
-import {Pitch} from "../../../Common/DataObjects/Pitch";
+import {Pitch} from "../../../Common/DataObjects/pitch";
 
 export class VexFlowGraphicalNote extends GraphicalNote {
     constructor(note: Note, parent: GraphicalStaffEntry, activeClef: ClefInstruction) {

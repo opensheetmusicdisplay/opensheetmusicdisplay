@@ -1,4 +1,4 @@
-import {Label} from "../Label";
+﻿import {Label} from "../Label";
 import {TextAlignment} from "../../Common/Enums/TextAlignment";
 import {Clickable} from "./Clickable";
 import {BoundingBox} from "./BoundingBox";

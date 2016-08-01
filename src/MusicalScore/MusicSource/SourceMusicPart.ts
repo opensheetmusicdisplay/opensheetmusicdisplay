@@ -1,6 +1,6 @@
 import {PartListEntry} from "./PartListEntry";
 import {Repetition} from "./Repetition";
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Fraction} from "../../Common/DataObjects/fraction";
 import {MusicSheet} from "../MusicSheet";
 
 export class SourceMusicPart extends PartListEntry {

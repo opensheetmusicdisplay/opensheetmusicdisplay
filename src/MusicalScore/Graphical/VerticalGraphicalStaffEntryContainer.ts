@@ -1,4 +1,4 @@
-import {Fraction} from "../../Common/DataObjects/Fraction";
+﻿import {Fraction} from "../../Common/DataObjects/fraction";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 
 export class VerticalGraphicalStaffEntryContainer {

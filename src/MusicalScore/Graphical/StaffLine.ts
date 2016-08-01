@@ -1,4 +1,4 @@
-import {Staff} from "../VoiceData/Staff";
+﻿import {Staff} from "../VoiceData/Staff";
 import {BoundingBox} from "./BoundingBox";
 import {Instrument} from "../Instrument";
 import {GraphicalLine} from "./GraphicalLine";
