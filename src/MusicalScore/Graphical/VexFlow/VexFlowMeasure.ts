@@ -15,6 +15,7 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/Logging";
+import {UnitInPixels} from "./VexFlowMusicSheetDrawer";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -51,8 +52,8 @@ export class VexFlowMeasure extends StaffMeasure {
     public resetLayout(): void {
         // Take into account some space for the begin and end lines of the stave
         // Will be changed when repetitions will be implemented
-        //this.beginInstructionsWidth = 20 / 10.0;
-        //this.endInstructionsWidth = 20 / 10.0;
+        //this.beginInstructionsWidth = 20 / UnitInPixels;
+        //this.endInstructionsWidth = 20 / UnitInPixels;
         this.stave = new Vex.Flow.Stave(0, 0, 0, {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
@@ -78,9 +79,9 @@ export class VexFlowMeasure extends StaffMeasure {
         let vfline: any = VexFlowConverter.line(line);
         switch (vfline) {
             case Vex.Flow.StaveConnector.type.SINGLE:
-                return 1.0 / 10.0;
+                return 1.0 / UnitInPixels;
             case Vex.Flow.StaveConnector.type.DOUBLE:
-                return 3.0 / 10.0;
+                return 3.0 / UnitInPixels;
             default:
                 return 0;
         }
@@ -146,14 +147,14 @@ export class VexFlowMeasure extends StaffMeasure {
     public setWidth(width: number): void {
         super.setWidth(width);
         // Set the width of the Vex.Flow.Stave
-        this.stave.setWidth(width * 10.0);
+        this.stave.setWidth(width * UnitInPixels);
         // Force the width of the Begin Instructions
-        //this.stave.setNoteStartX(this.beginInstructionsWidth * 10.0);
+        //this.stave.setNoteStartX(this.beginInstructionsWidth * UnitInPixels);
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
             // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * 10.0);
+            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * UnitInPixels);
         }
     }
 
@@ -181,7 +182,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public draw(ctx: Vex.Flow.CanvasContext): void {
         // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.stave.getX() + 10.0 * this.beginInstructionsWidth);
+        this.stave.setNoteStartX(this.stave.getX() + UnitInPixels * this.beginInstructionsWidth);
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
@@ -300,7 +301,7 @@ export class VexFlowMeasure extends StaffMeasure {
     //    //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
     //    let padding: number = modifier.getPadding(20);
     //    let width: number = modifier.getWidth();
-    //    this.beginInstructionsWidth += (padding + width) / 10.0;
+    //    this.beginInstructionsWidth += (padding + width) / UnitInPixels;
     //}
     //
     //private increaseEndInstructionWidth(): void {
@@ -308,13 +309,13 @@ export class VexFlowMeasure extends StaffMeasure {
     //    let modifier: StaveModifier = modifiers[modifiers.length - 1];
     //    let padding: number = 0;
     //    let width: number = modifier.getWidth();
-    //    this.endInstructionsWidth += (padding + width) / 10.0;
+    //    this.endInstructionsWidth += (padding + width) / UnitInPixels;
     //
     //}
 
     private updateInstructionWidth(): void {
         //this.stave.format();
-        this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / 10.0;
-        this.endInstructionsWidth = (this.stave.getNoteEndX() - this.stave.getX()) / 10.0;
+        this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / UnitInPixels;
+        this.endInstructionsWidth = (this.stave.getNoteEndX() - this.stave.getX()) / UnitInPixels;
     }
 }

@@ -27,6 +27,7 @@ import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
 import Vex = require("vexflow");
 import {Logging} from "../../../Common/Logging";
+import {UnitInPixels} from "./VexFlowMusicSheetDrawer";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -86,7 +87,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         let firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
         // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
         // FIXME: a more relaxed formatting of voices
-        let width: number = formatter.preCalculateMinTotalWidth(allVoices) / 10.0 + 5.0;
+        let width: number = formatter.preCalculateMinTotalWidth(allVoices) / UnitInPixels + 5.0;
         for (let measure of measures) {
             measure.minimumStaffEntriesWidth = width;
             (measure as VexFlowMeasure).formatVoices = undefined;
