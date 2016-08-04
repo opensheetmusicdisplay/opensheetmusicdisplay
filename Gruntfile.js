@@ -36,8 +36,8 @@ module.exports = function (grunt) {
                     banner: "<%= banner %>"
                 }
             },
-            debugDemo: {
-                src: [].concat(typings, src),
+            demo: {
+                src: [].concat(typings, src, ['demo/inject.ts']),
                 dest: '<%= outputDir.build %>/osmd-demo.js',
                 options: {
                     banner: "<%= banner %>",
@@ -136,7 +136,26 @@ module.exports = function (grunt) {
                     'src/**/*.js', 'test/**/*.js'
                 ]
             }
+        },
+        // http-server
+        'http-server': {
+            'demo': {
+                root: '.',
+                port: 8000,
+                host: '0.0.0.0',
+                showDir : true,
+                autoIndex: true,
+                // server default file extension
+                // ext: 'html',
+                runInBackground: false,
+                openBrowser : true,
+                // customize url to serve specific pages
+                customPages: {
+                    '/': 'demo/demo.html'
+                }
+            }
         }
+
     });
 
     // Load Npm tasks
@@ -148,6 +167,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-http-server');
 
     // Register tasks
     grunt.registerTask('all',     ['typings', 'default']);
@@ -159,6 +179,7 @@ module.exports = function (grunt) {
     grunt.registerTask('rebuild', ['clean', 'default']);
     grunt.registerTask('publish', ['clean', 'typings', 'browserify:dist', 'uglify:bundle']);
     grunt.registerTask('lint',    ['jshint', 'tslint']);
+    grunt.registerTask('demo',    ['browserify:demo', 'http-server:demo']);
 
     // Fix these in the future:
     // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
