@@ -26,9 +26,15 @@ describe("VexFlow Music Sheet Drawer", () => {
         h1.textContent = "VexFlowMusicSheetDrawer Test Output";
         document.body.appendChild(h1);
         // Create the canvas in the document:
+        let titles: HTMLElement = document.createElement("div");
+        document.body.appendChild(titles);
         let canvas: HTMLCanvasElement = document.createElement("canvas");
         document.body.appendChild(canvas);
-        (new VexFlowMusicSheetDrawer(document.body, canvas)).drawSheet(gms);
+        (new VexFlowMusicSheetDrawer(titles, canvas)).drawSheet(gms);
+        // Clean up document.body
+        document.body.removeChild(h1);
+        document.body.removeChild(titles);
+        document.body.removeChild(canvas);
         done();
     });
 

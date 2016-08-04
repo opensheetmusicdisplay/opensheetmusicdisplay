@@ -4,6 +4,7 @@ import {TestUtils} from "../../Util/TestUtils";
 
 
 describe("OSMD Main Export", () => {
+    let container1: HTMLElement;
 
     it("no container", (done: MochaDone) => {
         chai.expect(() => {
@@ -134,6 +135,46 @@ describe("OSMD Main Export", () => {
             return osmd.render();
         }).to.throw(/load/);
         done();
+    });
+
+    before((): void => {
+        // Create the container for the "test width" test
+        container1 = document.createElement("div");
+        document.body.appendChild(container1);
+    });
+    after((): void => {
+        // Destroy the container for the "test width" test
+        document.body.removeChild(container1);
+    });
+
+    it("test width 500", (done: MochaDone) => {
+        let div: HTMLElement = container1;
+        div.style.width = "500px";
+        let osmd: OSMD = new OSMD(div);
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
+        osmd.load(score).then(
+            (_: {}) => {
+                osmd.render();
+                chai.expect(div.offsetWidth).to.equal(500);
+                done();
+            },
+            done
+        ).catch(done);
+    });
+
+    it("test width 200", (done: MochaDone) => {
+        let div: HTMLElement = container1;
+        div.style.width = "200px";
+        let osmd: OSMD = new OSMD(div);
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
+        osmd.load(score).then(
+            (_: {}) => {
+                osmd.render();
+                chai.expect(div.offsetWidth).to.equal(200);
+                done();
+            },
+            done
+        ).catch(done);
     });
 
 });
