@@ -746,7 +746,7 @@ export abstract class MusicSheetCalculator {
             let voice2Note1IsRest: boolean = false;
             let voice2Notes: GraphicalNote[] = graphicalStaffEntry.notes[1];
             if (voice2Notes.length > 0) {
-                let voice2Note1: GraphicalNote = voice1Notes[0];
+                let voice2Note1: GraphicalNote = voice2Notes[0];
                 voice2Note1IsRest = voice2Note1.sourceNote.Pitch === undefined;
             }
             if (voice1Note1IsRest && voice2Note1IsRest) {
