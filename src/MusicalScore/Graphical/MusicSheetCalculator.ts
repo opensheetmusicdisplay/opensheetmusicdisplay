@@ -107,7 +107,7 @@ export abstract class MusicSheetCalculator {
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = graphicalMusicSheet.ParentMusicSheet.rules;
         this.prepareGraphicalMusicSheet();
-        this.calculate();
+        //this.calculate();
     }
 
     public prepareGraphicalMusicSheet(): void {
@@ -828,7 +828,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculatePageLabels(page: GraphicalMusicPage): void {
-        let relative: PointF2D = new PointF2D();
+
         let firstSystemAbsoluteTopMargin: number = 10;
         if (page.MusicSystems.length > 0) {
             let firstMusicSystem: MusicSystem = page.MusicSystems[0];
@@ -838,6 +838,7 @@ export abstract class MusicSheetCalculator {
             let title: GraphicalLabel = this.graphicalMusicSheet.Title;
             title.PositionAndShape.Parent = page.PositionAndShape;
             page.PositionAndShape.ChildElements.push(title.PositionAndShape);
+            let relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
             title.PositionAndShape.RelativePosition = relative;
@@ -847,6 +848,7 @@ export abstract class MusicSheetCalculator {
             let subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
             page.PositionAndShape.ChildElements.push(subtitle.PositionAndShape);
+            let relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
             subtitle.PositionAndShape.RelativePosition = relative;
@@ -857,6 +859,7 @@ export abstract class MusicSheetCalculator {
             composer.PositionAndShape.Parent = page.PositionAndShape;
             page.PositionAndShape.ChildElements.push(composer.PositionAndShape);
             composer.setLabelPositionAndShapeBorders();
+            let relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
             relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
             composer.PositionAndShape.RelativePosition = relative;
@@ -867,6 +870,7 @@ export abstract class MusicSheetCalculator {
             lyricist.PositionAndShape.Parent = page.PositionAndShape;
             page.PositionAndShape.ChildElements.push(lyricist.PositionAndShape);
             lyricist.setLabelPositionAndShapeBorders();
+            let relative: PointF2D = new PointF2D();
             relative.x = this.rules.PageLeftMargin;
             relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
             lyricist.PositionAndShape.RelativePosition = relative;

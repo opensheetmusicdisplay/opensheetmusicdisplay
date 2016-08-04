@@ -75,20 +75,20 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
                           bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
-        if (screenPosition.y < 0) {
-            // Temportary solution for title labels
-            let div: HTMLElement = document.createElement("div");
-            div.style.fontSize = (graphicalLabel.Label.fontHeight * this.zoom * 10.0) + "px";
-            //span.style.width = (bitmapWidth * this.zoom * 1.1) + "px";
-            //span.style.height = (bitmapHeight * this.zoom * 1.1) + "px";
-            //span.style.overflow = "hidden";
-            div.style.fontFamily = "Times New Roman";
-            //span.style.marginLeft = (screenPosition.x * this.zoom) + "px";
-            div.style.textAlign = "center";
-            div.appendChild(document.createTextNode(graphicalLabel.Label.text));
-            this.titles.appendChild(div);
-            return;
-        }
+        // if (screenPosition.y < 0) {
+        //     // Temportary solution for title labels
+        //     let div: HTMLElement = document.createElement("div");
+        //     div.style.fontSize = (graphicalLabel.Label.fontHeight * this.zoom * 10.0) + "px";
+        //     //span.style.width = (bitmapWidth * this.zoom * 1.1) + "px";
+        //     //span.style.height = (bitmapHeight * this.zoom * 1.1) + "px";
+        //     //span.style.overflow = "hidden";
+        //     div.style.fontFamily = "Times New Roman";
+        //     //span.style.marginLeft = (screenPosition.x * this.zoom) + "px";
+        //     div.style.textAlign = "center";
+        //     div.appendChild(document.createTextNode(graphicalLabel.Label.text));
+        //     this.titles.appendChild(div);
+        //     return;
+        // }
         let ctx: CanvasRenderingContext2D = (this.vfctx as any).vexFlowCanvasContext;
         let old: string = ctx.font;
         ctx.font = VexFlowConverter.font(

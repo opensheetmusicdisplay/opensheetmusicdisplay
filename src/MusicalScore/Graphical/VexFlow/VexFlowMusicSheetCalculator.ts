@@ -137,11 +137,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             if (!this.leadSheet) {
-                let globalY: number = 0;
+                let globalY: number = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
+                    this.rules.TitleBottomDistance;
                 for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                     let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                     // calculate y positions of stafflines within system
-                    let y: number = 10;
+                    let y: number = 0;
                     for (let line of musicSystem.StaffLines) {
                         line.PositionAndShape.RelativePosition.y = y;
                         y += 10;
@@ -149,7 +150,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     // set y positions of systems using the previous system and a fixed distance.
                     musicSystem.PositionAndShape.BorderBottom = y + 0;
                     musicSystem.PositionAndShape.RelativePosition.y = globalY;
-                    globalY += y + 0;
+                    globalY += y + 5;
                 }
             }
         }
