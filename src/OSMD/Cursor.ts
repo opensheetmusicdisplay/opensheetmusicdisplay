@@ -27,6 +27,7 @@ export class Cursor {
 
     public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
         this.iterator = manager.getIterator();
+        this.iterator.moveToNext();
         this.graphic = graphic;
         this.hidden = true;
         this.hide();

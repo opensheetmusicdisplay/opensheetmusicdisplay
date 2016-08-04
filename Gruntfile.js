@@ -173,7 +173,7 @@ module.exports = function (grunt) {
     grunt.registerTask('lint',      ['jshint', 'tslint']);
     grunt.registerTask('start',     ['typings']);
     grunt.registerTask('all',       ['typings', 'default']);
-    grunt.registerTask('default',   ['browserify:dist', 'uglify']);
+    grunt.registerTask('default',   ['browserify', 'uglify']);
     grunt.registerTask('npm-test',  ['typings', 'test']);
     grunt.registerTask('test',      ['browserify:debug', 'lint', 'karma:ci']);
     grunt.registerTask('fast-test', ['browserify:debug', 'karma:ci']);
