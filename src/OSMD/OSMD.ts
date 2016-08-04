@@ -11,6 +11,9 @@ import {Promise} from "es6-promise";
 import {handleResize} from "./ResizeHandler";
 import {ajax} from "./AJAX";
 import {Logging} from "../Common/Logging";
+import {GraphicalLine} from "../MusicalScore/Graphical/GraphicalLine";
+import {Fraction} from "../Common/DataObjects/Fraction";
+import {OutlineAndFillStyleEnum} from "../MusicalScore/Graphical/DrawingEnums";
 
 export class OSMD {
     /**
@@ -137,6 +140,8 @@ export class OSMD {
         this.sheet.pageWidth = width / this.zoom / 10.0;
         // Calculate again
         this.graphic.reCalculate();
+        this.graphic.Cursors.length = 0;
+        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(7,1), OutlineAndFillStyleEnum.PlaybackCursor));
         // Update Sheet Page
         let height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
         this.drawer.resize(width, height);

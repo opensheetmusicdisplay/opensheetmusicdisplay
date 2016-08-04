@@ -149,6 +149,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     }
                     // set y positions of systems using the previous system and a fixed distance.
                     musicSystem.PositionAndShape.BorderBottom = y + 0;
+                    musicSystem.PositionAndShape.RelativePosition.x = this.rules.PageLeftMargin + this.rules.SystemLeftMargin;
                     musicSystem.PositionAndShape.RelativePosition.y = globalY;
                     globalY += y + 5;
                 }
