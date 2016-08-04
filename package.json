@@ -5,7 +5,7 @@
   "main": "dist/src/OSMD/OSMD.js",
   "typings": "dist/src/OSMD/OSMD",
   "scripts": {
-    "test": "grunt npmtest",
+    "test": "grunt npm-test",
     "postinstall": "typings install",
     "prepublish": "tsc"
   },

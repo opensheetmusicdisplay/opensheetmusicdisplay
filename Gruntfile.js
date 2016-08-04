@@ -130,8 +130,8 @@ module.exports = function (grunt) {
                 src: [
                     '<%= outputDir.build %>',
                     '<%= outputDir.dist %>',
-                    'node_modules',
-                    'typings',
+                    // 'node_modules',
+                    // 'typings',
                     '.tscache',
                     'src/**/*.js', 'test/**/*.js'
                 ]
@@ -170,16 +170,17 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-http-server');
 
     // Register tasks
-    grunt.registerTask('all',     ['typings', 'default']);
-    grunt.registerTask('start',   ['typings']);
-    grunt.registerTask('default', ['browserify', 'lint', 'karma:ci', 'uglify']);
-    grunt.registerTask('npmtest', ['typings', 'test']);
-    grunt.registerTask('test',    ['browserify:debug', 'lint', 'karma:ci']);
-    grunt.registerTask('fasttest', ['browserify:debug', 'karma:ci']);
-    grunt.registerTask('rebuild', ['clean', 'default']);
-    grunt.registerTask('publish', ['clean', 'typings', 'browserify:dist', 'uglify:bundle']);
-    grunt.registerTask('lint',    ['jshint', 'tslint']);
-    grunt.registerTask('demo',    ['browserify:demo', 'http-server:demo']);
+    grunt.registerTask('lint',      ['jshint', 'tslint']);
+    grunt.registerTask('start',     ['typings']);
+    grunt.registerTask('all',       ['typings', 'default']);
+    grunt.registerTask('default',   ['browserify:dist', 'uglify']);
+    grunt.registerTask('npm-test',  ['typings', 'test']);
+    grunt.registerTask('test',      ['browserify:debug', 'lint', 'karma:ci']);
+    grunt.registerTask('fast-test', ['browserify:debug', 'karma:ci']);
+    grunt.registerTask('rebuild',   ['clean', 'default']);
+    grunt.registerTask('publish',   ['clean', 'typings', 'browserify:dist', 'uglify:bundle']);
+    grunt.registerTask('debug-build', ['browserify:demo']);
+    grunt.registerTask('debug-browser', ['http-server:demo']);
 
     // Fix these in the future:
     // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
