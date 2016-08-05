@@ -170,14 +170,14 @@ export class OSMD {
                 // empty
             },
             () => {
-                let width: number = Math.max(
-                    document.documentElement.clientWidth,
-                    document.body.scrollWidth,
-                    document.documentElement.scrollWidth,
-                    document.body.offsetWidth,
-                    document.documentElement.offsetWidth
-                );
-                self.container.style.width = width + "px";
+                //let width: number = Math.max(
+                //    document.documentElement.clientWidth,
+                //    document.body.scrollWidth,
+                //    document.documentElement.scrollWidth,
+                //    document.body.offsetWidth,
+                //    document.documentElement.offsetWidth
+                //);
+                //self.container.style.width = width + "px";
                 self.render();
             }
         );
