@@ -1,4 +1,4 @@
-import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects/pitch";
+import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects/Pitch";
 
 describe("Pitch Unit Tests:", () => {
     describe("transpose Pitch", () => {

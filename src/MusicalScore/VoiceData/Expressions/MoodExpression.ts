@@ -1,4 +1,4 @@
-import {PlacementEnum, AbstractExpression} from "./abstractExpression";
+import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
 
 export class MoodExpression extends AbstractExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number) {

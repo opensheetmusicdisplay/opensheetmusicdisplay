@@ -1,4 +1,4 @@
-import {Fraction} from "../../Common/DataObjects/fraction";
+import {Fraction} from "../../Common/DataObjects/Fraction";
 import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 import {RepetitionInstruction} from "./Instructions/RepetitionInstruction";
@@ -6,8 +6,8 @@ import {Staff} from "./Staff";
 import {VoiceEntry} from "./VoiceEntry";
 import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
-import {MultiExpression} from "./Expressions/multiExpression";
-import {MultiTempoExpression} from "./Expressions/multiTempoExpression";
+import {MultiExpression} from "./Expressions/MultiExpression";
+import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";

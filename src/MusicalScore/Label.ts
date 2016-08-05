@@ -1,5 +1,5 @@
 import {TextAlignment} from "../Common/Enums/TextAlignment";
-import {OSMDColor} from "../Common/DataObjects/osmdColor";
+import {OSMDColor} from "../Common/DataObjects/OSMDColor";
 import {Fonts} from "../Common/Enums/Fonts";
 import {FontStyles} from "../Common/Enums/FontStyles";
 

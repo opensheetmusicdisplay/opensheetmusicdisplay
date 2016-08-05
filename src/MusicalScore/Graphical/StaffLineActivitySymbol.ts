@@ -1,4 +1,4 @@
-﻿import {GraphicalObject} from "./GraphicalObject";
+import {GraphicalObject} from "./GraphicalObject";
 import {StaffLine} from "./StaffLine";
 import {BoundingBox} from "./BoundingBox";
 

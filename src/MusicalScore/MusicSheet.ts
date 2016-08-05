@@ -1,4 +1,4 @@
-import {Fraction} from "../Common/DataObjects/fraction";
+import {Fraction} from "../Common/DataObjects/Fraction";
 import {MusicPartManager} from "./MusicParts/MusicPartManager";
 import {SourceMeasure} from "./VoiceData/SourceMeasure";
 import {Repetition} from "./MusicSource/Repetition";
@@ -11,7 +11,7 @@ import {MusicPartManagerIterator} from "./MusicParts/MusicPartManagerIterator";
 import {VerticalSourceStaffEntryContainer} from "./VoiceData/VerticalSourceStaffEntryContainer";
 import {Voice} from "./VoiceData/Voice";
 import {MusicSheetErrors} from "../Common/DataObjects/MusicSheetErrors";
-import {MultiTempoExpression} from "./VoiceData/Expressions/multiTempoExpression";
+import {MultiTempoExpression} from "./VoiceData/Expressions/MultiTempoExpression";
 import {EngravingRules} from "./Graphical/EngravingRules";
 import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";

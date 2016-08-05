@@ -1,4 +1,4 @@
-﻿import {EngravingRules} from "./EngravingRules";
+import {EngravingRules} from "./EngravingRules";
 import {ITextMeasurer} from "../Interfaces/ITextMeasurer";
 import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 import {BoundingBox} from "./BoundingBox";

@@ -1,4 +1,4 @@
-import {AccidentalEnum} from "../../Common/DataObjects/pitch";
+import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 
 export class OrnamentContainer {
     constructor(ornament: OrnamentEnum) {

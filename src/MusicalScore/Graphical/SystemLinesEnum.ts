@@ -1,4 +1,4 @@
-﻿export enum SystemLinesEnum {
+export enum SystemLinesEnum {
     SingleThin = 0,
     DoubleThin = 1,
     ThinBold = 2,

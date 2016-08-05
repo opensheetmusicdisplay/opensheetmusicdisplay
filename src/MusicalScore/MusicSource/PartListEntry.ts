@@ -1,5 +1,5 @@
 import {MusicSheet} from "../MusicSheet";
-import {Fraction} from "../../Common/DataObjects/fraction";
+import {Fraction} from "../../Common/DataObjects/Fraction";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 
 export abstract class PartListEntry {

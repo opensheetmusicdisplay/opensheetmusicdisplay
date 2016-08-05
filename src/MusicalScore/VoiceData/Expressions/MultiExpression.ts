@@ -1,12 +1,12 @@
 import {SourceMeasure} from "../SourceMeasure";
-import {Fraction} from "../../../Common/DataObjects/fraction";
-import {InstantaniousDynamicExpression} from "./instantaniousDynamicExpression";
-import {ContinuousDynamicExpression} from "./ContinuousExpressions/continuousDynamicExpression";
-import {OctaveShift} from "./ContinuousExpressions/octaveShift";
-import {MoodExpression} from "./moodExpression";
-import {UnknownExpression} from "./unknownExpression";
-import {AbstractExpression} from "./abstractExpression";
-import {PlacementEnum} from "./abstractExpression";
+import {Fraction} from "../../../Common/DataObjects/Fraction";
+import {InstantaniousDynamicExpression} from "./InstantaniousDynamicExpression";
+import {ContinuousDynamicExpression} from "./ContinuousExpressions/ContinuousDynamicExpression";
+import {OctaveShift} from "./ContinuousExpressions/OctaveShift";
+import {MoodExpression} from "./MoodExpression";
+import {UnknownExpression} from "./UnknownExpression";
+import {AbstractExpression} from "./AbstractExpression";
+import {PlacementEnum} from "./AbstractExpression";
 
 export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {

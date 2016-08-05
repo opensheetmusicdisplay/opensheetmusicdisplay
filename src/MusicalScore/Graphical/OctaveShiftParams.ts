@@ -1,5 +1,5 @@
-﻿import {Fraction} from "../../Common/DataObjects/fraction";
-import {OctaveShift} from "../VoiceData/Expressions/ContinuousExpressions/octaveShift";
+import {Fraction} from "../../Common/DataObjects/Fraction";
+import {OctaveShift} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 
 export class OctaveShiftParams {
     constructor(openOctaveShift: OctaveShift, absoluteStartTimestamp: Fraction, absoluteEndTimestamp: Fraction) {

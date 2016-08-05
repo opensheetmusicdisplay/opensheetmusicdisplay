@@ -1,6 +1,6 @@
-import {PlacementEnum, AbstractExpression} from "./abstractExpression";
-import {MultiExpression} from "./multiExpression";
-import {DynamicExpressionSymbolEnum} from "./dynamicExpressionSymbolEnum";
+import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
+import {MultiExpression} from "./MultiExpression";
+import {DynamicExpressionSymbolEnum} from "./DynamicExpressionSymbolEnum";
 //import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {InvalidEnumArgumentException} from "../../Exceptions";
 import {Logging} from "../../../Common/Logging";

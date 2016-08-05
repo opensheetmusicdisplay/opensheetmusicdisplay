@@ -1,4 +1,4 @@
-﻿export enum OutlineAndFillStyleEnum {
+export enum OutlineAndFillStyleEnum {
     BaseWritingColor,
     FollowingCursor,
     AlternativeFollowingCursor,

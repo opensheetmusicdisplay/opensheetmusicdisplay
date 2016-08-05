@@ -1,5 +1,5 @@
 import {SourceMeasure} from "./SourceMeasure";
-import {Fraction} from "../../Common/DataObjects/fraction";
+import {Fraction} from "../../Common/DataObjects/Fraction";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 
 export class VerticalSourceStaffEntryContainer {
