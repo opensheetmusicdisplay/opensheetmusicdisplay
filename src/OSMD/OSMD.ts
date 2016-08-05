@@ -33,16 +33,14 @@ export class OSMD {
             throw new Error("Please pass a valid div container to OSMD");
         }
         // Create the elements inside the container
-        this.heading = document.createElement("div");
         this.canvas = document.createElement("canvas");
         this.canvas.style.zIndex = "0";
         let inner: HTMLElement = document.createElement("div");
         inner.style.position = "relative";
-        this.container.appendChild(this.heading);
         inner.appendChild(this.canvas);
         this.container.appendChild(inner);
         // Create the drawer
-        this.drawer = new VexFlowMusicSheetDrawer(this.heading, this.canvas);
+        this.drawer = new VexFlowMusicSheetDrawer(this.canvas);
         // Create the cursor
         this.cursor = new Cursor(inner, this);
         if (autoResize) {
@@ -54,7 +52,6 @@ export class OSMD {
     public zoom: number = 1.0;
 
     private container: HTMLElement;
-    private heading: HTMLElement;
     private canvas: HTMLCanvasElement;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
@@ -124,7 +121,6 @@ export class OSMD {
      * Render the music sheet in the container
      */
     public render(): void {
-        this.resetHeadings();
         if (!this.graphic) {
             throw new Error("OSMD: Before rendering a music sheet, please load a MusicXML file");
         }
@@ -152,15 +148,6 @@ export class OSMD {
     }
 
     /**
-     * Clear all the titles from the headings element
-     */
-    private resetHeadings(): void {
-        while (this.heading.firstChild) {
-            this.heading.removeChild(this.heading.firstChild);
-        }
-    }
-
-    /**
      * Initialize this object to default values
      * FIXME: Probably unnecessary
      */
@@ -169,7 +156,6 @@ export class OSMD {
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;
-        this.resetHeadings();
         this.canvas.width = 0;
         this.canvas.height = 0;
     }
