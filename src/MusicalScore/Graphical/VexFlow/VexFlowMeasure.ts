@@ -15,7 +15,7 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/Logging";
-import {UnitInPixels} from "./VexFlowMusicSheetDrawer";
+import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -79,9 +79,9 @@ export class VexFlowMeasure extends StaffMeasure {
         let vfline: any = VexFlowConverter.line(line);
         switch (vfline) {
             case Vex.Flow.StaveConnector.type.SINGLE:
-                return 1.0 / UnitInPixels;
+                return 1.0 / unitInPixels;
             case Vex.Flow.StaveConnector.type.DOUBLE:
-                return 3.0 / UnitInPixels;
+                return 3.0 / unitInPixels;
             default:
                 return 0;
         }
@@ -147,14 +147,14 @@ export class VexFlowMeasure extends StaffMeasure {
     public setWidth(width: number): void {
         super.setWidth(width);
         // Set the width of the Vex.Flow.Stave
-        this.stave.setWidth(width * UnitInPixels);
+        this.stave.setWidth(width * unitInPixels);
         // Force the width of the Begin Instructions
         //this.stave.setNoteStartX(this.beginInstructionsWidth * UnitInPixels);
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
             // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * UnitInPixels);
+            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
         }
     }
 
@@ -182,7 +182,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public draw(ctx: Vex.Flow.CanvasContext): void {
         // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.stave.getX() + UnitInPixels * this.beginInstructionsWidth);
+        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
@@ -315,7 +315,7 @@ export class VexFlowMeasure extends StaffMeasure {
 
     private updateInstructionWidth(): void {
         //this.stave.format();
-        this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / UnitInPixels;
-        this.endInstructionsWidth = (this.stave.getNoteEndX() - this.stave.getX()) / UnitInPixels;
+        this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
+        this.endInstructionsWidth = (this.stave.getNoteEndX() - this.stave.getX()) / unitInPixels;
     }
 }

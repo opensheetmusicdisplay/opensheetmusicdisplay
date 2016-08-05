@@ -7,7 +7,7 @@ import {GraphicalLabel} from "../GraphicalLabel";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
-export const UnitInPixels = 10;
+export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private renderer: Vex.Flow.Renderer;
@@ -55,13 +55,13 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @returns {number} the distance in pixels
      */
     public calculatePixelDistance(unitDistance: number): number {
-        return unitDistance * UnitInPixels;
+        return unitDistance * unitInPixels;
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
         measure.setAbsoluteCoordinates(
-            measure.PositionAndShape.AbsolutePosition.x * UnitInPixels,
-            measure.PositionAndShape.AbsolutePosition.y * UnitInPixels
+            measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
+            measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
         return measure.draw(this.vfctx);
     }
@@ -94,7 +94,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         let ctx: CanvasRenderingContext2D = (this.vfctx as any).vexFlowCanvasContext;
         let old: string = ctx.font;
         ctx.font = VexFlowConverter.font(
-            graphicalLabel.Label.fontHeight * UnitInPixels,
+            graphicalLabel.Label.fontHeight * unitInPixels,
             graphicalLabel.Label.fontStyle,
             graphicalLabel.Label.font
         );
@@ -122,7 +122,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @returns {PointF2D}
      */
     protected applyScreenTransformation(point: PointF2D): PointF2D {
-        return new PointF2D(point.x * UnitInPixels, point.y * UnitInPixels);
+        return new PointF2D(point.x * unitInPixels, point.y * unitInPixels);
     }
 
     /**
@@ -131,6 +131,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @returns {RectangleF2D}
      */
     protected applyScreenTransformationForRect(rectangle: RectangleF2D): RectangleF2D {
-        return new RectangleF2D(rectangle.x * UnitInPixels, rectangle.y * UnitInPixels, rectangle.width * UnitInPixels, rectangle.height * UnitInPixels);
+        return new RectangleF2D(rectangle.x * unitInPixels, rectangle.y * unitInPixels, rectangle.width * unitInPixels, rectangle.height * unitInPixels);
     }
 }
