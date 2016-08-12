@@ -6,6 +6,7 @@ export class InstrumentalGroup {
         this.musicSheet = musicSheet;
         this.parent = parent;
     }
+
     private name: string;
     private musicSheet: MusicSheet;
     private parent: InstrumentalGroup;

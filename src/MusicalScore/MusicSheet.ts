@@ -18,30 +18,21 @@ import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
 import {Logging} from "../Common/Logging";
 
-// FIXME
-//type MusicSheetParameters = any;
-//type MultiTempoExpression = any;
-//type PlaybackSettings = any;
-//type MusicSheetParameterObject = any;
-//type EngravingRules = any;
-//type MusicSheetErrors = any;
-//type IPhonicScoreInterface = any;
-//type MusicSheetParameterChangedDelegate = any;
-//type IInstrument = any;
-//type ISettableInstrument = any;
-//type IRepetition = any;
-
-// FIXME Andrea: Commented out some things, have a look at (*)
+// FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
 export class PlaybackSettings {
     public rhythm: Fraction;
 }
 
+/**
+ * This is the representation of a complete piece of sheet music.
+ * It includes the contents of a MusicXML file after the reading.
+ */
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
         this.rules = EngravingRules.Rules;
         this.playbackSettings = new PlaybackSettings();
-        // FIXME:
+        // FIXME?
         this.playbackSettings.rhythm = new Fraction(4, 4, false);
         this.userStartTempoInBPM = 100;
         this.pageWidth = 120;
@@ -365,7 +356,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //        }
     //        return repetitions;
     //    } catch (ex) {
-    //        console.log(/*Logger.DefaultLogger.LogError(LogLevel.NORMAL, FIXME */ "MusicSheet.IRepetitions get: ", ex);
+    //        Logging.log("MusicSheet.IRepetitions get: ", ex);
     //        return undefined;
     //    }
     //
@@ -451,11 +442,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public set IdString(value: string) {
        this.idString = value;
     }
+    // (*)
     // public Dispose(): void {
     //    this.MusicSheetParameterChanged = undefined;
     //    for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
     //        let instrument: Instrument = this.instruments[idx];
-    //        instrument.dispose(); // FIXME
+    //        instrument.dispose();
     //    }
     // }
     public getEnrolledSelectionStartTimeStampWorkaround(): Fraction {

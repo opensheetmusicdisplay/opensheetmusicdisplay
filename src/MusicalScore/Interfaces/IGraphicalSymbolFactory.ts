@@ -12,6 +12,7 @@ import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveS
 import {GraphicalNote} from "../Graphical/GraphicalNote";
 import {Pitch} from "../../Common/DataObjects/Pitch";
 import {TechnicalInstruction} from "../VoiceData/Instructions/TechnicalInstruction";
+
 export interface IGraphicalSymbolFactory {
     createMusicSystem(page: GraphicalMusicPage, systemIndex: number): MusicSystem;
     createStaffLine(parentSystem: MusicSystem, parentStaff: Staff): StaffLine;

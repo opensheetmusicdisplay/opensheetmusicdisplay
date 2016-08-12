@@ -6,8 +6,7 @@ import {EngravingRules} from "./EngravingRules";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 
 /**
- * A text label on the graphical music sheet.
- * It is used e.g. for titles, composer names, instrument names and dynamic instructions.
+ * The graphical counterpart of a Label
  */
 export class GraphicalLabel extends Clickable {
     private label: Label;

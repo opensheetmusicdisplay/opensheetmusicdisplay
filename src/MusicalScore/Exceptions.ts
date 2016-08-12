@@ -1,3 +1,4 @@
+
 export class MusicSheetReadingException implements Error {
     public name: string;
     public message: string;
