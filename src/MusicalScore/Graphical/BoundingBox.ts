@@ -3,6 +3,9 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 
+/**
+ * A bounding box delimits an area on the 2D plane.
+ */
 export class BoundingBox {
     protected isSymbol: boolean = false;
     protected relativePositionHasBeenSet: boolean = false;

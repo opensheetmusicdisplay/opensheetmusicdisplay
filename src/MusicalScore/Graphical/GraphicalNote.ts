@@ -9,6 +9,9 @@ import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
 
+/**
+ * The graphical counterpart of a Note
+ */
 export class GraphicalNote extends GraphicalObject {
     constructor(note: Note, parent: GraphicalStaffEntry) {
         super();

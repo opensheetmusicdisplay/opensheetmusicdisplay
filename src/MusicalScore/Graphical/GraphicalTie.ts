@@ -1,6 +1,9 @@
 import {Tie} from "../VoiceData/Tie";
 import {GraphicalNote} from "./GraphicalNote";
 
+/**
+ * The graphical counterpart of a Tie
+ */
 export class GraphicalTie {
     private tie: Tie;
     private startNote: GraphicalNote;
