@@ -8,8 +8,6 @@ import {SystemLine} from "../SystemLine";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowConverter} from "./VexFlowConverter";
 
-//import Vex = require("vexflow");
-
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
         super(parent, id);

@@ -5,6 +5,9 @@ import {BoundingBox} from "./BoundingBox";
 import {EngravingRules} from "./EngravingRules";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 
+/**
+ * The graphical counterpart of a Label
+ */
 export class GraphicalLabel extends Clickable {
     private label: Label;
 

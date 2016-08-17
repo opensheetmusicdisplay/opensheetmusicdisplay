@@ -52,6 +52,9 @@ import {Logging} from "../../Common/Logging";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 
+/**
+ * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
+ */
 export abstract class MusicSheetCalculator {
     public static transposeCalculator: ITransposeCalculator;
     protected static textMeasurer: ITextMeasurer;

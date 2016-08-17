@@ -15,6 +15,9 @@ import {SystemLinesEnum} from "./SystemLinesEnum";
 import {BoundingBox} from "./BoundingBox";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
+/**
+ * Represents a measure in the music sheet (one measure in one staff line)
+ */
 export abstract class StaffMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
     protected lastInstructionStaffEntry: GraphicalStaffEntry;

@@ -17,6 +17,9 @@ import {AbstractGraphicalInstruction} from "./AbstractGraphicalInstruction";
 import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 
+/**
+ * The graphical counterpart of a SourceStaffEntry
+ */
 export abstract class GraphicalStaffEntry extends GraphicalObject {
     constructor(parentMeasure: StaffMeasure, sourceStaffEntry: SourceStaffEntry = undefined, staffEntryParent: GraphicalStaffEntry = undefined) {
         super();

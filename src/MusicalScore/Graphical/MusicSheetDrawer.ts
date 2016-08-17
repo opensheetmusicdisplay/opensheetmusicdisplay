@@ -25,6 +25,9 @@ import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalOctaveShift} from "./GraphicalOctaveShift";
 import {GraphicalObject} from "./GraphicalObject";
 
+/**
+ * Class used to draw a GraphicalMusicSheet (with the .drawSheet method)
+ */
 export abstract class MusicSheetDrawer {
     public drawingParameters: DrawingParameters = new DrawingParameters();
     public splitScreenLineColor: number;

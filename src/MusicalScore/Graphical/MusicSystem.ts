@@ -21,6 +21,9 @@ import {SystemLine} from "./SystemLine";
 import {SystemLinePosition} from "./SystemLinePosition";
 import {Staff} from "../VoiceData/Staff";
 
+/**
+ * A MusicSystem contains the StaffLines for all instruments, until a line break
+ */
 export abstract class MusicSystem extends GraphicalObject {
     public needsToBeRedrawn: boolean = true;
     protected parent: GraphicalMusicPage;

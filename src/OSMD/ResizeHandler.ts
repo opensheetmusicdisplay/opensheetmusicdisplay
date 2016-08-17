@@ -1,11 +1,7 @@
 /**
- * Created by acondolu on 15/07/16.
- */
-
-/**
  * Helper function for managing window's onResize events
- * @param startCallback
- * @param endCallback
+ * @param startCallback is the function called when resizing starts
+ * @param endCallback is the function called when resizing (kind-of) ends
  */
 export function handleResize(startCallback: () => void, endCallback: () => void): void {
     "use strict";
@@ -14,7 +10,7 @@ export function handleResize(startCallback: () => void, endCallback: () => void)
     let delta: number = 200;
 
     function resizeEnd(): void {
-        //timeout = undefined;
+        timeout = undefined;
         window.clearTimeout(timeout);
         if ((new Date()).getTime() - rtime < delta) {
             timeout = window.setTimeout(resizeEnd, delta);

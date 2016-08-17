@@ -291,6 +291,10 @@ export class VexFlowMeasure extends StaffMeasure {
         this.connectors.push(connector);
     }
 
+    /**
+     * Return the VexFlow Stave corresponding to this StaffMeasure
+     * @returns {Vex.Flow.Stave}
+     */
     public getVFStave(): Vex.Flow.Stave {
         return this.stave;
     }
@@ -313,8 +317,11 @@ export class VexFlowMeasure extends StaffMeasure {
     //
     //}
 
+    /**
+     * After re-running the formatting on the VexFlow Stave, update the
+     * space needed by Instructions (in VexFlow: StaveModifiers)
+     */
     private updateInstructionWidth(): void {
-        //this.stave.format();
         this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
         this.endInstructionsWidth = (this.stave.getNoteEndX() - this.stave.getX()) / unitInPixels;
     }

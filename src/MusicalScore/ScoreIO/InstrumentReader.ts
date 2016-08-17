@@ -45,6 +45,10 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 
 export type repetitionInstructionReader = any;
 
+/**
+ * An InstrumentReader is used during the reading phase to keep parsing new measures from the MusicXML file
+ * with the readNextXmlMeasure method.
+ */
 export class InstrumentReader {
     constructor(repetitionInstructionReader: repetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
         // (*) this.repetitionInstructionReader = repetitionInstructionReader;

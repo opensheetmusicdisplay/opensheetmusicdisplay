@@ -6,6 +6,9 @@ import {Pitch} from "../../Common/DataObjects/Pitch";
 import {NoteEnum} from "../../Common/DataObjects/Pitch";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
+/**
+ * Compute the accidentals for notes according to the current key instruction
+ */
 export class AccidentalCalculator {
     private symbolFactory: IGraphicalSymbolFactory;
     private keySignatureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();

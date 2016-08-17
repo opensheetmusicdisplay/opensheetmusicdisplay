@@ -9,6 +9,10 @@ import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
+/**
+ * A StaffLine contains the measures in one line of the music sheet
+ * (one instrument, one line, until a line break)
+ */
 export abstract class StaffLine extends GraphicalObject {
     protected measures: StaffMeasure[] = [];
     protected staffLines: GraphicalLine[] = new Array(5);

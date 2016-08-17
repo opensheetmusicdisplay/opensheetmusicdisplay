@@ -8,6 +8,9 @@ import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 
+/**
+ * The VexFlow version of a [[GraphicalNote]].
+ */
 export class VexFlowGraphicalNote extends GraphicalNote {
     constructor(note: Note, parent: GraphicalStaffEntry, activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined) {
         super(note, parent, graphicalNoteLength);
@@ -18,10 +21,18 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         }
     }
 
+    // The pitch of this note as given by VexFlowConverter.pitch
     public vfpitch: [string, string, ClefInstruction];
+    // The corresponding VexFlow StaveNote (plus its index in the chord)
     private vfnote: [Vex.Flow.StaveNote, number];
+    // The current clef
     private clef: ClefInstruction;
 
+    /**
+     * Update the pitch of this note. Necessary in order to display correctly
+     * accidentals, this is called by VexFlowGraphicalSymbolFactory.addGraphicalAccidental.
+     * @param pitch
+     */
     public setPitch(pitch: Pitch): void {
         if (this.vfnote) {
             let acc: string = VexFlowConverter.accidental(pitch.Accidental);
@@ -35,14 +46,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     }
 
     /**
-     * Set the corresponding VexFlow StaveNote together with its index
+     * Set the VexFlow StaveNote corresponding to this GraphicalNote, together with its index in the chord.
      * @param note
      * @param index
      */
     public setIndex(note: Vex.Flow.StaveNote, index: number): void {
         this.vfnote = [note, index];
-        //if (this.vfpitch && this.vfpitch[1]) {
-        //    note.addAccidental(index, new Vex.Flow.Accidental(this.vfpitch[1]));
-        //}
     }
 }

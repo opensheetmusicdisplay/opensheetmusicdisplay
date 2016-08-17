@@ -25,6 +25,9 @@ import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 
+/**
+ * The graphical counterpart of a [[MusicSheet]]
+ */
 export class GraphicalMusicSheet {
     constructor(musicSheet: MusicSheet, calculator: MusicSheetCalculator) {
         this.musicSheet = musicSheet;

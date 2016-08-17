@@ -16,7 +16,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
 
     /**
      *
-     * @returns {number} the x-position (in units) of this Staff Entry
+     * @returns {number} the x-position (in units) of this StaffEntry
      */
     public getX(): number {
         let x: number = 0;
@@ -27,6 +27,9 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 x += (vfNotes[voiceId].getNoteHeadBeginX() + vfNotes[voiceId].getNoteHeadEndX()) / 2;
                 n += 1;
             }
+        }
+        if (n === 0) {
+            return 0;
         }
         return x / n / unitInPixels;
     }
