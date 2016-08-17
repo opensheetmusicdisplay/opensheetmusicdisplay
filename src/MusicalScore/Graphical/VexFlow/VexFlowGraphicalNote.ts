@@ -25,7 +25,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     // The pitch of this note as given by VexFlowConverter.pitch
     public vfpitch: [string, string, ClefInstruction];
     // The corresponding VexFlow StaveNote (plus its index in the chord)
-    private vfnote: [Vex.Flow.StaveNote, number];
+    public vfnote: [Vex.Flow.StaveNote, number];
     // The current clef
     private clef: ClefInstruction;
 

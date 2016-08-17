@@ -81,10 +81,8 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 let note: Note = graphicalNote.sourceNote;
-                if (
-                    note.Pitch !== undefined && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
-                    && note.Pitch.Octave === tieNote.Pitch.Octave && note.getAbsoluteTimestamp() === tieNote.getAbsoluteTimestamp()
-                ) {
+                if (note.Pitch !== undefined && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
+                    && note.Pitch.Octave === tieNote.Pitch.Octave && note.getAbsoluteTimestamp().Equals(tieNote.getAbsoluteTimestamp())) {
                     return graphicalNote;
                 }
             }

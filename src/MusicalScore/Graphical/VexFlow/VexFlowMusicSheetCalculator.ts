@@ -28,6 +28,7 @@ import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 import Vex = require("vexflow");
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
+import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -172,7 +173,29 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
-        return;
+        let startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
+        let vfStartNote: Vex.Flow.StaveNote = undefined;
+        if (startNote !== undefined) {
+            vfStartNote = startNote.vfnote[0];
+            let measure: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            measure.vfTies.push()
+        }
+
+        let endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
+        let vfEndNote: Vex.Flow.StaveNote = undefined;
+        if (endNote !== undefined) {
+            vfEndNote = endNote.vfnote[0];
+        }
+        let vfTie = new Vex.Flow.StaveTie({
+            first_note: vfStartNote,
+            last_note : vfEndNote
+        });
+        let tieAnchorNote: VexFlowGraphicalNote = startNote;
+        if (startNote !== undefined) {
+            tieAnchorNote = endNote;
+        }
+        let measure: VexFlowMeasure = (tieAnchorNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        measure.vfTies.push(vfTie);
     }
 
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {

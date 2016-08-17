@@ -30,6 +30,8 @@ export class VexFlowMeasure extends StaffMeasure {
     public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
     // Call this function (if present) to x-format all the voices in the measure
     public formatVoices: (width: number) => void;
+    // The VexFlow Ties in the measure
+    public vfTies: Vex.Flow.StaveTie[] = [];
 
     // The VexFlow Stave (one measure in one line)
     private stave: Vex.Flow.Stave;
@@ -199,6 +201,12 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
             }
         }
+
+        // Draw ties
+        for (let tie of this.vfTies) {
+            tie.setContext(ctx).draw();
+        }
+
         // Draw vertical lines
         for (let connector of this.connectors) {
             connector.setContext(ctx).draw();
