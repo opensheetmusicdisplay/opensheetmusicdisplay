@@ -18,6 +18,7 @@ import {GraphicalNote} from "../GraphicalNote";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import {Fraction} from "../../../Common/DataObjects/Fraction";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -91,10 +92,10 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift   The currently active octave transposition enum, needed for positioning the note vertically
      * @returns {GraphicalNote}
      */
-    public createNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
-                      activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
+    public createNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
+                      activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined): GraphicalNote {
         // Creates the note:
-        let graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef);
+        let graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift, graphicalNoteLength);
         // Adds the note to the right (graphical) voice (mynotes)
         let voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
         let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
@@ -114,7 +115,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift
      * @returns {GraphicalNote}
      */
-    public createGraceNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
+    public createGraceNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
                            activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
         return new GraphicalNote(note, graphicalStaffEntry);
     }

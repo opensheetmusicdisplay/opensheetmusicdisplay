@@ -5,10 +5,12 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
+import {Fraction} from "../../../Common/DataObjects/Fraction";
+import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 
 export class VexFlowGraphicalNote extends GraphicalNote {
-    constructor(note: Note, parent: GraphicalStaffEntry, activeClef: ClefInstruction) {
-        super(note, parent);
+    constructor(note: Note, parent: GraphicalStaffEntry, activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined) {
+        super(note, parent, graphicalNoteLength);
         this.clef = activeClef;
         if (note.Pitch) {
             this.vfpitch = VexFlowConverter.pitch(note.Pitch, this.clef);

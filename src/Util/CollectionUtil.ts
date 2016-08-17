@@ -23,10 +23,10 @@ export class CollectionUtil {
      * @param dict
      * @param iterationFunction
      */
-    public static removeDictElementIfTrue<T, V>(dict: Dictionary<T, V>, iterationFunction: (key: T, value: V) => boolean): void {
+    public static removeDictElementIfTrue<S, T, V>(thisPointer: S, dict: Dictionary<T, V>, iterationFunction: (thisPointer: S, key: T, value: V) => boolean): void {
         let toDeleteEntries: T[] = [];
         dict.forEach(function (key: T, value: V): void {
-            let shallDelete: boolean = iterationFunction(key, value);
+            let shallDelete: boolean = iterationFunction(thisPointer, key, value);
             if (shallDelete) {
                 toDeleteEntries.push(key);
             }

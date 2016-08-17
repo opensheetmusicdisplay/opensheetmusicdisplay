@@ -98,6 +98,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         return width;
     }
 
+    protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
+                                 startNote: GraphicalNote, endNote: GraphicalNote): GraphicalTie {
+        return new GraphicalTie(tie, startNote, endNote);
+    }
+
+
     protected updateStaffLineBorders(staffLine: StaffLine): void {
         return;
     }
@@ -165,10 +171,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         return;
     }
 
-    protected handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number): void {
-        return;
-    }
-
     protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
         return;
     }
@@ -189,9 +191,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         return;
     }
 
-    protected createGraphicalTieNote(beams: Beam[], activeClef: ClefInstruction,
-                                     octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction, numberOfDots: number,
-                                     openTie: Tie, isLastTieNote: boolean): void {
+    protected handleTiedGraphicalNote(  tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
+                                        octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
+                                        openTie: Tie, isLastTieNote: boolean): void {
         return;
     }
 

@@ -10,16 +10,28 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
 
 export class GraphicalNote extends GraphicalObject {
-    constructor(note: Note, parent: GraphicalStaffEntry) {
+    constructor(note: Note, parent: GraphicalStaffEntry, graphicalNoteLength: Fraction = undefined) {
         super();
         this.sourceNote = note;
         this.parentStaffEntry = parent;
         this.PositionAndShape = new BoundingBox(this, parent.PositionAndShape);
+        if (graphicalNoteLength !== undefined) {
+            this.graphicalNoteLength = graphicalNoteLength;
+        } else {
+            if (note.NoteTie !== undefined) {
+                this.graphicalNoteLength = note.calculateNoteLengthWithoutTie();
+            } else {
+                this.graphicalNoteLength = note.Length;
+            }
+        }
+
+        this.numberOfDots = this.calculateNumberOfNeededDots(this.graphicalNoteLength);
     }
 
     public sourceNote: Note;
     public graphicalNoteLength: Fraction;
     public parentStaffEntry: GraphicalStaffEntry;
+    public numberOfDots: number;
 
     public get ParentList(): GraphicalNote[] {
         for (let idx: number = 0, len: number = this.parentStaffEntry.notes.length; idx < len; ++idx) {
@@ -37,5 +49,13 @@ export class GraphicalNote extends GraphicalObject {
             transposedPitch = MusicSheetCalculator.transposeCalculator.transposePitch(this.sourceNote.Pitch, keyInstruction, halfTones);
         }
         return transposedPitch;
+    }
+
+    private calculateNumberOfNeededDots(fraction: Fraction): number {
+        let dotCount: number = 0;
+        if (this.sourceNote === undefined || this.sourceNote.NoteTuplet === undefined) {
+            dotCount = Math.floor(Math.log(fraction.Numerator) / Math.LN2);
+        }
+        return Math.min(3, dotCount);
     }
 }

@@ -90,7 +90,7 @@ export class VexFlowConverter {
     public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];
         let accidentals: string[] = [];
-        let frac: Fraction = notes[0].sourceNote.Length;
+        let frac: Fraction = notes[0].graphicalNoteLength;
         let duration: string = VexFlowConverter.duration(frac);
         let vfclef: string;
         for (let note of notes) {

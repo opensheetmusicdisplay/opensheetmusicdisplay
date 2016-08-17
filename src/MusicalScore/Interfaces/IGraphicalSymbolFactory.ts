@@ -12,6 +12,7 @@ import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveS
 import {GraphicalNote} from "../Graphical/GraphicalNote";
 import {Pitch} from "../../Common/DataObjects/Pitch";
 import {TechnicalInstruction} from "../VoiceData/Instructions/TechnicalInstruction";
+import {Fraction} from "../../Common/DataObjects/Fraction";
 export interface IGraphicalSymbolFactory {
     createMusicSystem(page: GraphicalMusicPage, systemIndex: number): MusicSystem;
     createStaffLine(parentSystem: MusicSystem, parentStaff: Staff): StaffLine;
@@ -19,9 +20,9 @@ export interface IGraphicalSymbolFactory {
     createExtraStaffMeasure(staffLine: StaffLine): StaffMeasure;
     createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: StaffMeasure): GraphicalStaffEntry;
     createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: StaffMeasure): GraphicalStaffEntry;
-    createNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry, activeClef: ClefInstruction,
-        octaveShift: OctaveEnum): GraphicalNote;
-    createGraceNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry, activeClef: ClefInstruction,
+    createNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry, activeClef: ClefInstruction,
+        octaveShift: OctaveEnum, graphicalNoteLength: Fraction): GraphicalNote;
+    createGraceNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry, activeClef: ClefInstruction,
         octaveShift: OctaveEnum): GraphicalNote;
     addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void;
     addFermataAtTiedEndNote(tiedNote: Note, graphicalStaffEntry: GraphicalStaffEntry): void;
