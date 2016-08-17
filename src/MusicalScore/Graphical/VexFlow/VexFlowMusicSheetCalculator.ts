@@ -178,7 +178,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (startNote !== undefined) {
             vfStartNote = startNote.vfnote[0];
             let measure: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
-            measure.vfTies.push()
+            measure.vfTies.push();
         }
 
         let endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
@@ -186,9 +186,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (endNote !== undefined) {
             vfEndNote = endNote.vfnote[0];
         }
-        let vfTie = new Vex.Flow.StaveTie({
+        let vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
             first_note: vfStartNote,
-            last_note : vfEndNote
+            last_note : vfEndNote,
         });
         let tieAnchorNote: VexFlowGraphicalNote = startNote;
         if (startNote !== undefined) {
