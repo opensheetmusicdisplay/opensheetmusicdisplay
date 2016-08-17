@@ -12,7 +12,8 @@ import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/Octa
  * The VexFlow version of a [[GraphicalNote]].
  */
 export class VexFlowGraphicalNote extends GraphicalNote {
-    constructor(note: Note, parent: GraphicalStaffEntry, activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined) {
+    constructor(note: Note, parent: GraphicalStaffEntry, activeClef: ClefInstruction,
+                octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined) {
         super(note, parent, graphicalNoteLength);
         this.clef = activeClef;
         if (note.Pitch) {

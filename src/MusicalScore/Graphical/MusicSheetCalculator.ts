@@ -591,7 +591,8 @@ export abstract class MusicSheetCalculator {
 
     protected handleOpenTies(measure: StaffMeasure, beams: Beam[], tieTimestampListDict: Dictionary<Tie, Fraction[]>,
                              activeClef: ClefInstruction, octaveShiftParams: OctaveShiftParams): void {
-        CollectionUtil.removeDictElementIfTrue(this, tieTimestampListDict, function (thisPointer: MusicSheetCalculator, openTie: Tie, tieTimestamps: Fraction[]): boolean {
+        CollectionUtil.removeDictElementIfTrue( this, tieTimestampListDict,
+                                                function (thisPointer: MusicSheetCalculator, openTie: Tie, tieTimestamps: Fraction[]): boolean {
             // for (let m: number = tieTimestampListDict.size() - 1; m >= 0; m--) {
             //     let keyValuePair: KeyValuePair<Tie, Fraction[]> = tieTimestampListDict.ElementAt(m);
             //     let openTie: Tie = keyValuePair.Key;
@@ -629,16 +630,16 @@ export abstract class MusicSheetCalculator {
                         let isLastTieNote: boolean = k === tieTimestamps.length - 1;
                         let tieFraction: Fraction = openTie.Fractions[k];
                         // GraphicalNote points to tieStartNote, but must get the correct Length (eg the correct Fraction of tieStartNote's Length)
-                        let tiedGraphicalNote: GraphicalNote = thisPointer.symbolFactory.createNote(   openTie.Start, graphicalStaffEntry, activeClef,
-                                                                                                octaveShiftValue, tieFraction);
+                        let tiedGraphicalNote: GraphicalNote = thisPointer.symbolFactory.createNote(openTie.Start, graphicalStaffEntry, activeClef,
+                                                                                                    octaveShiftValue, tieFraction);
 
                         let graphicalNotes: GraphicalNote[] =
                             graphicalStaffEntry.findOrCreateGraphicalNotesListFromGraphicalNote(tiedGraphicalNote);
                         graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(graphicalNotes, tiedGraphicalNote);
                         graphicalStaffEntry.PositionAndShape.ChildElements.push(tiedGraphicalNote.PositionAndShape);
 
-                        thisPointer.handleTiedGraphicalNote(   tiedGraphicalNote, beams, activeClef, octaveShiftValue, graphicalStaffEntry, tieFraction,
-                                                        openTie, isLastTieNote);
+                        thisPointer.handleTiedGraphicalNote(tiedGraphicalNote, beams, activeClef, octaveShiftValue, graphicalStaffEntry, tieFraction,
+                                                            openTie, isLastTieNote);
 
                         let tieStartNote: Note = openTie.Start;
                         if (isLastTieNote && tieStartNote.ParentVoiceEntry.Articulations.length === 1 &&
