@@ -449,7 +449,7 @@ export class VoiceGenerator {
                         let voiceEntry: VoiceEntry = nextStaffEntry.VoiceEntries[idx];
                         if (voiceEntry.ParentVoice === this.voice) {
                             let candidateNote: Note = voiceEntry.Notes[0];
-                            if (candidateNote.Length <= new Fraction(1, 8)) {
+                            if (candidateNote.Length.lte(new Fraction(1, 8))) {
                                 this.openBeam.addNoteToBeam(candidateNote);
                                 this.openBeam = undefined;
                             } else {
@@ -654,7 +654,7 @@ export class VoiceGenerator {
                 let notes: Note[] = CollectionUtil.last(tuplet.Notes);
                 let lastTupletVoiceEntry: VoiceEntry = notes[0].ParentVoiceEntry;
                 let noteList: Note[];
-                if (lastTupletVoiceEntry.Timestamp === this.currentVoiceEntry.Timestamp) {
+                if (lastTupletVoiceEntry.Timestamp.Equals(this.currentVoiceEntry.Timestamp)) {
                     noteList = notes;
                 } else {
                     noteList = [];

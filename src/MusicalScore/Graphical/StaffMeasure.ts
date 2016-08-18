@@ -128,7 +128,7 @@ export abstract class StaffMeasure extends GraphicalObject {
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.relInMeasureTimestamp === relativeTimestamp) {
+            if (graphicalStaffEntry.relInMeasureTimestamp.Equals(relativeTimestamp)) {
                 return graphicalStaffEntry;
             }
         }
@@ -138,7 +138,7 @@ export abstract class StaffMeasure extends GraphicalObject {
     public findGraphicalStaffEntryFromVerticalContainerTimestamp(absoluteTimestamp: Fraction): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.sourceStaffEntry.VerticalContainerParent.getAbsoluteTimestamp() === absoluteTimestamp) {
+            if (graphicalStaffEntry.sourceStaffEntry.VerticalContainerParent.getAbsoluteTimestamp().Equals(absoluteTimestamp)) {
                 return graphicalStaffEntry;
             }
         }
@@ -151,7 +151,7 @@ export abstract class StaffMeasure extends GraphicalObject {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             duration.Add(graphicalStaffEntry.findStaffEntryMinNoteLength());
         }
-        return duration === this.parentSourceMeasure.Duration;
+        return duration.Equals(this.parentSourceMeasure.Duration);
     }
 
     public hasMultipleVoices(): boolean {
@@ -202,7 +202,7 @@ export abstract class StaffMeasure extends GraphicalObject {
                     }
                 }
             }
-            if (voiceDuration > duration) {
+            if (duration.lt(voiceDuration)) {
                 duration = Fraction.createFromFraction(voiceDuration);
             }
         }
@@ -216,11 +216,11 @@ export abstract class StaffMeasure extends GraphicalObject {
 
     public addGraphicalStaffEntryAtTimestamp(staffEntry: GraphicalStaffEntry): void {
         if (staffEntry !== undefined) {
-            if (this.staffEntries.length === 0 || this.staffEntries[this.staffEntries.length - 1].relInMeasureTimestamp < staffEntry.relInMeasureTimestamp) {
+            if (this.staffEntries.length === 0 || this.staffEntries[this.staffEntries.length - 1].relInMeasureTimestamp.lt(staffEntry.relInMeasureTimestamp)) {
                 this.staffEntries.push(staffEntry);
             } else {
                 for (let i: number = this.staffEntries.length - 1; i >= 0; i--) {
-                    if (this.staffEntries[i].relInMeasureTimestamp < staffEntry.relInMeasureTimestamp) {
+                    if (this.staffEntries[i].relInMeasureTimestamp.lt(staffEntry.relInMeasureTimestamp)) {
                         this.staffEntries.splice(i + 1, 0, staffEntry);
                         break;
                     }

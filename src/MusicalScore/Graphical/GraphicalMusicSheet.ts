@@ -303,7 +303,7 @@ export class GraphicalMusicSheet {
 
     public getOrCreateVerticalContainer(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
         if (this.verticalGraphicalStaffEntryContainers.length === 0 ||
-            timestamp .lt(CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp)) {
+            (CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp).lt(timestamp)) {
             let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer =
                 new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
             this.verticalGraphicalStaffEntryContainers.push(verticalGraphicalStaffEntryContainer);
@@ -820,7 +820,7 @@ export class GraphicalMusicSheet {
                 let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx2];
                 for (let idx3: number = 0, len3: number = graphicalNotes.length; idx3 < len3; ++idx3) {
                     let note: GraphicalNote = graphicalNotes[idx3];
-                    if (note.graphicalNoteLength > maxLength) {
+                    if (maxLength.lt(note.graphicalNoteLength)) {
                         maxLength = note.graphicalNoteLength;
                     }
                 }

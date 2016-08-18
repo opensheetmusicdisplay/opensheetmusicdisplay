@@ -372,7 +372,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             return true;
         }
         if (this.previousMeasure !== undefined) {
-            return Fraction.plus(this.previousMeasure.Duration, maxInstrumentDuration).CompareTo(activeRhythm) === 0;
+            return Fraction.plus(this.previousMeasure.Duration, maxInstrumentDuration).Equals(activeRhythm);
         }
         return false;
     }
@@ -381,7 +381,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         let counter: number = 0;
         for (let idx: number = 0, len: number = instrumentsDurations.length; idx < len; ++idx) {
             let instrumentsDuration: Fraction = instrumentsDurations[idx];
-            if (instrumentsDuration === maxInstrumentDuration) {
+            if (instrumentsDuration.Equals(maxInstrumentDuration)) {
                 counter++;
             }
         }

@@ -112,7 +112,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
                 let note: Note = graphicalNote.sourceNote;
                 if (
                     note.Pitch !== undefined && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
-                    && note.Pitch.Octave === tieNote.Pitch.Octave && this.getAbsoluteTimestamp() === tieNote.getAbsoluteTimestamp()
+                    && note.Pitch.Octave === tieNote.Pitch.Octave && this.getAbsoluteTimestamp().Equals(tieNote.getAbsoluteTimestamp())
                 ) {
                     return graphicalNote;
                 }
@@ -139,7 +139,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             let graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                if (graphicalNote.sourceNote === baseNote && this.getAbsoluteTimestamp() === baseNote.getAbsoluteTimestamp()) {
+                if (graphicalNote.sourceNote === baseNote && this.getAbsoluteTimestamp().Equals(baseNote.getAbsoluteTimestamp())) {
                     return graphicalNote;
                 }
             }
@@ -213,7 +213,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 let calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
-                if (calNoteLen < minLength && calNoteLen.Numerator > 0) {
+                if (calNoteLen.lt(minLength) && calNoteLen.Numerator > 0) {
                     minLength = calNoteLen;
                 }
             }
@@ -228,7 +228,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 let calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
-                if (calNoteLen > maxLength && calNoteLen.Numerator > 0) {
+                if (maxLength.lt(calNoteLen)  && calNoteLen.Numerator > 0) {
                     maxLength = calNoteLen;
                 }
             }

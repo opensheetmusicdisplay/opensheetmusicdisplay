@@ -383,24 +383,24 @@ export class MusicPartManagerIterator {
         while (
           this.currentDynamicEntryIndex > 0 && (
             this.currentDynamicEntryIndex >= timeSortedDynamics.length ||
-            timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp >= this.CurrentSourceTimestamp
+            this.CurrentSourceTimestamp.lte(timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp)
           )
         ) {
             this.currentDynamicEntryIndex--;
         }
         while (
           this.currentDynamicEntryIndex < timeSortedDynamics.length &&
-          timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp < this.CurrentSourceTimestamp
+          timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp.lt(this.CurrentSourceTimestamp)
         ) {
             this.currentDynamicEntryIndex++;
         }
         while (
           this.currentDynamicEntryIndex < timeSortedDynamics.length
-          && timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp === this.CurrentSourceTimestamp
+          && timeSortedDynamics[this.currentDynamicEntryIndex].parMultiExpression().AbsoluteTimestamp.Equals(this.CurrentSourceTimestamp)
         ) {
             let dynamicsContainer: DynamicsContainer = timeSortedDynamics[this.currentDynamicEntryIndex];
             let staffIndex: number = dynamicsContainer.staffNumber;
-            if (this.CurrentSourceTimestamp === dynamicsContainer.parMultiExpression().AbsoluteTimestamp) {
+            if (this.CurrentSourceTimestamp.Equals(dynamicsContainer.parMultiExpression().AbsoluteTimestamp)) {
                 if (dynamicsContainer.continuousDynamicExpression !== undefined) {
                     this.activeDynamicExpressions[staffIndex] = dynamicsContainer.continuousDynamicExpression;
                 } else if (dynamicsContainer.instantaneousDynamicExpression !== undefined) {
@@ -418,12 +418,12 @@ export class MusicPartManagerIterator {
                     let continuousDynamic: ContinuousDynamicExpression = <ContinuousDynamicExpression>this.activeDynamicExpressions[staffIndex];
                     startTime = continuousDynamic.StartMultiExpression.AbsoluteTimestamp;
                     endTime = continuousDynamic.EndMultiExpression.AbsoluteTimestamp;
-                    if (this.CurrentSourceTimestamp >= startTime && this.CurrentSourceTimestamp <= endTime) {
+                    if (startTime.lte(this.CurrentSourceTimestamp) && this.CurrentSourceTimestamp.lte(endTime)) {
                         this.currentDynamicChangingExpressions.push(new DynamicsContainer(continuousDynamic, staffIndex));
                     }
                 } else {
                     let instantaniousDynamic: InstantaniousDynamicExpression = <InstantaniousDynamicExpression>this.activeDynamicExpressions[staffIndex];
-                    if (this.CurrentSourceTimestamp === instantaniousDynamic.ParentMultiExpression.AbsoluteTimestamp) {
+                    if (this.CurrentSourceTimestamp.Equals(instantaniousDynamic.ParentMultiExpression.AbsoluteTimestamp)) {
                         this.currentDynamicChangingExpressions.push(new DynamicsContainer(instantaniousDynamic, staffIndex));
                     }
                 }
@@ -433,21 +433,21 @@ export class MusicPartManagerIterator {
 
         while (this.currentTempoEntryIndex > 0 && (
           this.currentTempoEntryIndex >= timeSortedTempoExpressions.length
-          || timeSortedTempoExpressions[this.currentTempoEntryIndex].AbsoluteTimestamp >= this.CurrentSourceTimestamp
+          || this.CurrentSourceTimestamp.lte(timeSortedTempoExpressions[this.currentTempoEntryIndex].AbsoluteTimestamp)
         )) {
             this.currentTempoEntryIndex--;
         }
 
         while (
           this.currentTempoEntryIndex < timeSortedTempoExpressions.length &&
-          timeSortedTempoExpressions[this.currentTempoEntryIndex].AbsoluteTimestamp < this.CurrentSourceTimestamp
+          timeSortedTempoExpressions[this.currentTempoEntryIndex].AbsoluteTimestamp.lt(this.CurrentSourceTimestamp)
         ) {
             this.currentTempoEntryIndex++;
         }
 
         while (
           this.currentTempoEntryIndex < timeSortedTempoExpressions.length
-          && timeSortedTempoExpressions[this.currentTempoEntryIndex].AbsoluteTimestamp === this.CurrentSourceTimestamp
+          && timeSortedTempoExpressions[this.currentTempoEntryIndex].AbsoluteTimestamp.Equals(this.CurrentSourceTimestamp)
         ) {
             this.activeTempoExpression = timeSortedTempoExpressions[this.currentTempoEntryIndex];
             this.currentTempoEntryIndex++;
@@ -458,8 +458,8 @@ export class MusicPartManagerIterator {
             if (this.activeTempoExpression.ContinuousTempo !== undefined) {
                 endTime = this.activeTempoExpression.ContinuousTempo.AbsoluteEndTimestamp;
             }
-            if (   this.CurrentSourceTimestamp >= this.activeTempoExpression.AbsoluteTimestamp
-                || this.CurrentSourceTimestamp <= endTime
+            if (   this.activeTempoExpression.AbsoluteTimestamp.lte(this.CurrentSourceTimestamp)
+                || this.CurrentSourceTimestamp.lte(endTime)
             ) {
                 this.currentTempoChangingExpression = this.activeTempoExpression;
             }

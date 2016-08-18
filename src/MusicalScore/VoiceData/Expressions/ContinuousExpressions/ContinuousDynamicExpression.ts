@@ -101,7 +101,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
             );
         }
         if (currentAbsoluteTimestamp.lt(continuousAbsoluteStartTimestamp)) { return -1; }
-        if (currentAbsoluteTimestamp.lt(continuousAbsoluteEndTimestamp)) { return -2; }
+        if (continuousAbsoluteEndTimestamp.lt(currentAbsoluteTimestamp)) { return -2; }
         let interpolationRatio: number =
             Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue
             / Fraction.minus(continuousAbsoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;

@@ -1079,8 +1079,8 @@ export abstract class MusicSheetCalculator {
                 let octaveShiftValue: OctaveEnum = OctaveEnum.NONE;
                 if (openOctaveShifts[staffIndex] !== undefined) {
                     let octaveShiftParams: OctaveShiftParams = openOctaveShifts[staffIndex];
-                    if (sourceStaffEntry.AbsoluteTimestamp >= octaveShiftParams.getAbsoluteStartTimestamp &&
-                        sourceStaffEntry.AbsoluteTimestamp <= octaveShiftParams.getAbsoluteEndTimestamp) {
+                    if (octaveShiftParams.getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp)  &&
+                        sourceStaffEntry.AbsoluteTimestamp.lte(octaveShiftParams.getAbsoluteEndTimestamp)) {
                         octaveShiftValue = octaveShiftParams.getOpenOctaveShift.Type;
                     }
                 }
@@ -1295,7 +1295,7 @@ export abstract class MusicSheetCalculator {
                             for (let idx6: number = 0, len6: number = graphicalStaffEntry.sourceStaffEntry.VoiceEntries.length; idx6 < len6; ++idx6) {
                                 let voiceEntry: VoiceEntry = graphicalStaffEntry.sourceStaffEntry.VoiceEntries[idx6];
                                 if (voiceEntry.OrnamentContainer !== undefined) {
-                                    if (voiceEntry.hasTie() && graphicalStaffEntry.relInMeasureTimestamp !== voiceEntry.Timestamp) {
+                                    if (voiceEntry.hasTie() && !graphicalStaffEntry.relInMeasureTimestamp.Equals(voiceEntry.Timestamp)) {
                                         continue;
                                     }
                                     this.layoutOrnament(voiceEntry.OrnamentContainer, voiceEntry, graphicalStaffEntry);

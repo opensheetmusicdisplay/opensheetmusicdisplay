@@ -72,7 +72,7 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
             this.parentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp, this.parentMultiTempoExpression.Timestamp
         );
         if (currentAbsoluteTimestamp.lt(continuousAbsoluteStartTimestamp)) { return -1; }
-        if (currentAbsoluteTimestamp.lt(this.absoluteEndTimestamp)) { return -2; }
+        if (this.absoluteEndTimestamp.lt(currentAbsoluteTimestamp)) { return -2; }
         let interpolationRatio: number =
             Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue
             / Fraction.minus(this.absoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;

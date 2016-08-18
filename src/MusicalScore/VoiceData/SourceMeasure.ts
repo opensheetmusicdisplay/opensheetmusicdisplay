@@ -279,6 +279,7 @@ export class SourceMeasure {
                 maxDuration = instrumentsDuration;
             }
         }
+
         return Fraction.max(maxDuration, maxInstDuration);
     }
 

@@ -181,10 +181,10 @@ export class SourceStaffEntry {
             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                 let note: Note = voiceEntry.Notes[idx2];
                 if (note.NoteTie !== undefined) {
-                    if (duration > note.calculateNoteLengthWithoutTie()) {
+                    if (note.calculateNoteLengthWithoutTie().lt(duration)) {
                         duration = note.calculateNoteLengthWithoutTie();
                     }
-                } else if (duration > note.Length) {
+                } else if (note.Length.lt(duration)) {
                     duration = note.Length;
                 }
             }
