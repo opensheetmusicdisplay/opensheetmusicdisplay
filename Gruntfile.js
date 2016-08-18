@@ -127,7 +127,8 @@ module.exports = function (grunt) {
                     module: 'commonjs',
                     out: './docs',
                     name: 'opensheetmusicdisplay',
-                    target: 'es5'
+                    target: 'es5',
+                    mode: 'file'
                 },
                 src: ['./src/**/*.ts', './external/**/*.ts', './typings/**/*.ts']
             }
@@ -191,7 +192,7 @@ module.exports = function (grunt) {
     grunt.registerTask('test',      ['browserify:debug', 'lint', 'karma:ci']);
     grunt.registerTask('fast-test', ['browserify:debug', 'karma:ci']);
     grunt.registerTask('rebuild',   ['clean', 'default']);
-    grunt.registerTask('publish',   ['clean', 'typings', 'browserify:dist', 'uglify:bundle']);
+    grunt.registerTask('publish',   ['clean', 'typings', 'browserify:dist', 'uglify:bundle', 'docs']);
     grunt.registerTask('debug-build', ['browserify:demo']);
     grunt.registerTask('debug-browser', ['http-server:demo']);
 

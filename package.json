@@ -7,7 +7,7 @@
   "scripts": {
     "test": "grunt npm-test",
     "postinstall": "typings install",
-    "prepublish": "tsc"
+    "prepublish": "tsc && grunt publish"
   },
   "repository": {
     "type": "git",
