@@ -5,8 +5,6 @@ import {MusicSheetReader} from "../../../../src/MusicalScore/ScoreIO/MusicSheetR
 import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {TestUtils} from "../../../Util/TestUtils";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
-import {Fraction} from "../../../../src/Common/DataObjects/Fraction";
-import {OutlineAndFillStyleEnum} from "../../../../src/MusicalScore/Graphical/DrawingEnums";
 
 describe("VexFlow Music Sheet Drawer", () => {
 
