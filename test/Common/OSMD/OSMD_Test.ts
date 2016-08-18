@@ -1,5 +1,6 @@
 import chai = require("chai");
 import {OSMD} from "../../../src/OSMD/OSMD";
+import {TestUtils} from "../../Util/TestUtils";
 
 
 describe("OSMD Main Export", () => {
@@ -20,7 +21,7 @@ describe("OSMD Main Export", () => {
         done();
     });
 
-    /*it("load MXL from string", (done: MochaDone) => {
+    it("load MXL from string", (done: MochaDone) => {
         let mxl: string = TestUtils.getMXL("MozartTrio");
         let div: HTMLElement = document.createElement("div");
         let osmd: OSMD = new OSMD(div);
@@ -31,7 +32,7 @@ describe("OSMD Main Export", () => {
             },
             done
         );
-    });*/
+    });
 
     it("load invalid MXL from string", (done: MochaDone) => {
         let mxl: string = "\x50\x4b\x03\x04";
@@ -51,7 +52,7 @@ describe("OSMD Main Export", () => {
         );
     });
 
-    /*it("load XML string", (done: MochaDone) => {
+    it("load XML string", (done: MochaDone) => {
         let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
         let xml: string = new XMLSerializer().serializeToString(score);
         let div: HTMLElement = document.createElement("div");
@@ -63,9 +64,9 @@ describe("OSMD Main Export", () => {
             },
             done
         );
-    });*/
+    });
 
-    /*it("load XML Document", (done: MochaDone) => {
+    it("load XML Document", (done: MochaDone) => {
         let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
         let div: HTMLElement = document.createElement("div");
         let osmd: OSMD = new OSMD(div);
@@ -76,9 +77,9 @@ describe("OSMD Main Export", () => {
             },
             done
         );
-    });*/
+    });
 
-    /*it("load MXL Document by URL", (done: MochaDone) => {
+    it("load MXL Document by URL", (done: MochaDone) => {
         let url: string = "base/test/data/MozartTrio.mxl";
         let div: HTMLElement = document.createElement("div");
         let osmd: OSMD = new OSMD(div);
@@ -89,7 +90,7 @@ describe("OSMD Main Export", () => {
             },
             done
         );
-    });*/
+    });
 
     it("load MXL Document by invalid URL", (done: MochaDone) => {
         let url: string = "http://www.google.com";
@@ -146,7 +147,7 @@ describe("OSMD Main Export", () => {
         document.body.removeChild(container1);
     });
 
-    /*it("test width 500", (done: MochaDone) => {
+    it("test width 500", (done: MochaDone) => {
         let div: HTMLElement = container1;
         div.style.width = "500px";
         let osmd: OSMD = new OSMD(div);
@@ -159,9 +160,9 @@ describe("OSMD Main Export", () => {
             },
             done
         ).catch(done);
-    });*/
+    });
 
-    /*it("test width 200", (done: MochaDone) => {
+    it("test width 200", (done: MochaDone) => {
         let div: HTMLElement = container1;
         div.style.width = "200px";
         let osmd: OSMD = new OSMD(div);
@@ -174,5 +175,5 @@ describe("OSMD Main Export", () => {
             },
             done
         ).catch(done);
-    });*/
+    });
 });
