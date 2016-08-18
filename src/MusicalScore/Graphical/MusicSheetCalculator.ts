@@ -397,19 +397,23 @@ export abstract class MusicSheetCalculator {
     }
 
     protected updateSkyBottomLine(staffLine: StaffLine): void {
-        Logging.debug("updateSkyBottomLine not implemented");
+        //Logging.debug("updateSkyBottomLine not implemented");
+        return;
     }
 
     protected calculateSkyBottomLine(staffLine: StaffLine): void {
-        Logging.debug("calculateSkyBottomLine not implemented");
+        //Logging.debug("calculateSkyBottomLine not implemented");
+        return;
     }
 
     protected calculateMarkedAreas(): void {
-        Logging.debug("calculateMarkedAreas not implemented");
+        //Logging.debug("calculateMarkedAreas not implemented");
+        return;
     }
 
     protected calculateComments(): void {
-        Logging.debug("calculateComments not implemented");
+        //Logging.debug("calculateComments not implemented");
+        return;
     }
 
     protected optimizeStaffLineDynamicExpressionsPositions(): void {

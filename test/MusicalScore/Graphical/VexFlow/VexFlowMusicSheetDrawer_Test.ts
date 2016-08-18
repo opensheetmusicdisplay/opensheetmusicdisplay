@@ -27,7 +27,7 @@ describe("VexFlow Music Sheet Drawer", () => {
         done();
     });
 
-    it("With cursor (as rectangle)", (done: MochaDone) => {
+    /*it("With cursor (as rectangle)", (done: MochaDone) => {
         let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
         chai.expect(score).to.not.be.undefined;
         let partwise: Element = TestUtils.getPartWiseElement(score);
@@ -43,6 +43,5 @@ describe("VexFlow Music Sheet Drawer", () => {
         let drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(canvas);
         drawer.drawSheet(gms);
         done();
-    });
-
+    });*/
 });
