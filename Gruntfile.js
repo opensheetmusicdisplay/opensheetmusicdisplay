@@ -121,11 +121,12 @@ module.exports = function (grunt) {
         typings: {
             install: {}
         },
+        // Class documentation using typedoc
         typedoc: {
             build: {
                 options: {
                     module: 'commonjs',
-                    out: './docs',
+                    out: './build/docs',
                     name: 'opensheetmusicdisplay',
                     target: 'es5',
                     mode: 'file'
