@@ -114,6 +114,7 @@ export class VexFlowConverter {
         let frac: Fraction = notes[0].graphicalNoteLength;
         let duration: string = VexFlowConverter.duration(frac);
         let vfclef: string;
+        let numDots: number = 0;
         for (let note of notes) {
             let res: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             if (res === undefined) {
@@ -126,6 +127,12 @@ export class VexFlowConverter {
             if (!vfclef) {
                 vfclef = VexFlowConverter.Clef(res[2]);
             }
+            if (numDots < note.numberOfDots) {
+                numDots = note.numberOfDots;
+            }
+        }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            duration += "d";
         }
         let vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
             auto_stem: true,
@@ -142,6 +149,9 @@ export class VexFlowConverter {
             if (accidentals[i]) {
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i]));
             }
+        }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            vfnote.addDotToAll();
         }
         return vfnote;
     }

@@ -177,8 +177,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         let vfStartNote: Vex.Flow.StaveNote = undefined;
         if (startNote !== undefined) {
             vfStartNote = startNote.vfnote[0];
-            let measure: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
-            measure.vfTies.push();
         }
 
         let endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
@@ -186,16 +184,29 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (endNote !== undefined) {
             vfEndNote = endNote.vfnote[0];
         }
-        let vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-            first_note: vfStartNote,
-            last_note : vfEndNote,
-        });
-        let tieAnchorNote: VexFlowGraphicalNote = startNote;
-        if (startNote !== undefined) {
-            tieAnchorNote = endNote;
+
+
+        if (tieIsAtSystemBreak) {
+            // split tie into two ties:
+            let vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+                first_note: vfStartNote,
+            });
+            let measure1: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            measure1.vfTies.push(vfTie1);
+
+            let vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+                last_note : vfEndNote,
+            });
+            let measure2: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            measure2.vfTies.push(vfTie2);
+        } else {
+            let vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+                first_note: vfStartNote,
+                last_note : vfEndNote,
+            });
+            let measure: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            measure.vfTies.push(vfTie);
         }
-        let measure: VexFlowMeasure = (tieAnchorNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
-        measure.vfTies.push(vfTie);
     }
 
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {

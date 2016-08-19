@@ -59,6 +59,8 @@ declare namespace Vex {
             public addAccidental(index: number, accidental: Accidental): StaveNote;
 
             public setStyle(style: any): void;
+
+            public addDotToAll(): void;
         }
 
         export class StaveTie {
