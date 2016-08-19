@@ -66,6 +66,7 @@ export class VexFlowMeasure extends StaffMeasure {
     public clean(): void {
         //this.beams = {};
         //this.vfbeams = undefined;
+        this.vfTies.length = 0;
         this.connectors = [];
         // Clean up instructions
         this.resetLayout();

@@ -267,7 +267,6 @@ export abstract class MusicSheetCalculator {
     }
 
     protected clearRecreatedObjects(): void {
-        Logging.debug("clearRecreatedObjects not implemented");
     }
 
     protected handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry,
