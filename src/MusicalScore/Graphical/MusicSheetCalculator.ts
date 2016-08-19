@@ -267,6 +267,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected clearRecreatedObjects(): void {
+        return;
     }
 
     protected handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry,
