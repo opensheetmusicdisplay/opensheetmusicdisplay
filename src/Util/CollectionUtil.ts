@@ -46,7 +46,7 @@ export class CollectionUtil {
                                   element: T,
                                   cmp: (elem1: T, elem2: T) => number,
                                   startIndex: number = 0,
-                                  endIndex: number = array.length): number {
+                                  endIndex: number = array.length - 1): number {
         let mid: number = 1;
         while (startIndex < endIndex) {
             mid = Math.floor((startIndex + endIndex) / 2);

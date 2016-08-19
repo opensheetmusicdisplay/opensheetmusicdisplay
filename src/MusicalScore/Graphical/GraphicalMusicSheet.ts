@@ -327,8 +327,7 @@ export class GraphicalMusicSheet {
         let index: number = CollectionUtil.binarySearch(this.verticalGraphicalStaffEntryContainers,
                                                         new VerticalGraphicalStaffEntryContainer(0, timestamp),
                                                         VerticalGraphicalStaffEntryContainer.compareByTimestamp,
-                                                        startIndex,
-                                                        this.verticalGraphicalStaffEntryContainers.length - startIndex);
+                                                        startIndex);
         if (index >= 0) {
             return this.verticalGraphicalStaffEntryContainers[index];
         }

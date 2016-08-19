@@ -2,7 +2,7 @@ import {Note} from "./Note";
 import {Beam} from "./Beam";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {Tuplet} from "./Tuplet";
-import {BaseIdClass} from "./BaseIdClass";
+import {BaseIdClass} from "../../Util/BaseIdClass";
 
 export class Tie extends BaseIdClass {
 
