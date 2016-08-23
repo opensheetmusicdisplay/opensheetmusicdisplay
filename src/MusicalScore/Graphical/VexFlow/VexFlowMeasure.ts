@@ -16,6 +16,7 @@ import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
+import {Tuplet} from "../../VoiceData/Tuplet";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -41,6 +42,10 @@ export class VexFlowMeasure extends StaffMeasure {
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     // VexFlow Beams
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
+    // Intermediate object to construct tuplets
+    private tuplets: { [voiceID: number]: [Tuplet, VexFlowStaffEntry[]][]; } = {};
+    // VexFlow Tuplets
+    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -64,8 +69,6 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     public clean(): void {
-        //this.beams = {};
-        //this.vfbeams = undefined;
         this.vfTies.length = 0;
         this.connectors = [];
         // Clean up instructions
@@ -153,12 +156,7 @@ export class VexFlowMeasure extends StaffMeasure {
         this.stave.setWidth(width * unitInPixels);
         // Force the width of the Begin Instructions
         //this.stave.setNoteStartX(this.beginInstructionsWidth * UnitInPixels);
-        // If this is the first stave in the vertical measure, call the format
-        // method to set the width of all the voices
-        if (this.formatVoices) {
-            // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
-        }
+
     }
 
     /**
@@ -184,6 +182,13 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param ctx
      */
     public draw(ctx: Vex.Flow.CanvasContext): void {
+        // If this is the first stave in the vertical measure, call the format
+        // method to set the width of all the voices
+        if (this.formatVoices) {
+            // The width of the voices does not include the instructions (StaveModifiers)
+            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
+        }
+
         // Force the width of the Begin Instructions
         this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
         // Draw stave lines
@@ -199,6 +204,15 @@ export class VexFlowMeasure extends StaffMeasure {
             if (this.vfbeams.hasOwnProperty(voiceID)) {
                 for (let beam of this.vfbeams[voiceID]) {
                     beam.setContext(ctx).draw();
+                }
+            }
+        }
+
+        // Draw tuplets
+        for (let voiceID in this.vftuplets) {
+            if (this.vftuplets.hasOwnProperty(voiceID)) {
+                for (let tuplet of this.vftuplets[voiceID]) {
+                    tuplet.setContext(ctx).draw();
                 }
             }
         }
@@ -236,8 +250,30 @@ export class VexFlowMeasure extends StaffMeasure {
             beams.push(data);
         }
         let parent: VexFlowStaffEntry = graphicalNote.parentStaffEntry as VexFlowStaffEntry;
-        if (data[1].indexOf(parent) === -1) {
+        if (data[1].indexOf(parent) < 0) {
             data[1].push(parent);
+        }
+    }
+
+    public handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet): void {
+        let voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
+        let tuplets: [Tuplet, VexFlowStaffEntry[]][] = this.tuplets[voiceID];
+        if (tuplets === undefined) {
+            tuplets = this.tuplets[voiceID] = [];
+        }
+        let currentTupletBuilder: [Tuplet, VexFlowStaffEntry[]];
+        for (let t of tuplets) {
+            if (t[0] === tuplet) {
+                currentTupletBuilder = t;
+            }
+        }
+        if (currentTupletBuilder === undefined) {
+            currentTupletBuilder = [tuplet, []];
+            tuplets.push(currentTupletBuilder);
+        }
+        let parent: VexFlowStaffEntry = graphicalNote.parentStaffEntry as VexFlowStaffEntry;
+        if (currentTupletBuilder[1].indexOf(parent) < 0) {
+            currentTupletBuilder[1].push(parent);
         }
     }
 
@@ -270,21 +306,73 @@ export class VexFlowMeasure extends StaffMeasure {
         }
     }
 
-    public layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        let gnotes: { [voiceID: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
-        let vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = this.vfVoices;
-        for (let voiceID in gnotes) {
-            if (gnotes.hasOwnProperty(voiceID)) {
-                if (!(voiceID in vfVoices)) {
-                    vfVoices[voiceID] = new Vex.Flow.Voice({
-                        beat_value: this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: this.parentSourceMeasure.Duration.Numerator,
-                        resolution: Vex.Flow.RESOLUTION,
-                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
+    /**
+     * Complete the creation of VexFlow Tuplets in this measure
+     */
+    public finalizeTuplets(): void {
+        // The following line resets the created Vex.Flow Tuplets and
+        // created them brand new. Is this needed? And more importantly,
+        // should the old tuplets be removed manually by the notes?
+        this.vftuplets = {};
+        for (let voiceID in this.tuplets) {
+            if (this.tuplets.hasOwnProperty(voiceID)) {
+                let vftuplets: Vex.Flow.Tuplet[] = this.vftuplets[voiceID];
+                if (vftuplets === undefined) {
+                    vftuplets = this.vftuplets[voiceID] = [];
                 }
-                let vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
-                (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
-                vfVoices[voiceID].addTickable(vfnote);
+                for (let tuplet of this.tuplets[voiceID]) {
+                    let notes: Vex.Flow.StaveNote[] = [];
+                    for (let entry of tuplet[1]) {
+                        notes.push((<VexFlowStaffEntry>entry).vfNotes[voiceID]);
+                    }
+                    if (notes.length > 1) {
+                        vftuplets.push(new Vex.Flow.Tuplet(notes));
+                    } else {
+                        Logging.log("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
+                    }
+                }
+            }
+        }
+    }
+
+    public layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
+        return;
+    }
+
+    public staffMeasureCreatedCalculations(): void {
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
+
+            // create vex flow Notes:
+            let gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
+            for (let voiceID in gnotes) {
+                if (gnotes.hasOwnProperty(voiceID)) {
+                    let vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
+                    (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
+                }
+            }
+        }
+
+        this.finalizeBeams();
+        this.finalizeTuplets();
+
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
+            let gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
+            // create vex flow voices and add tickables to it:
+            let vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = this.vfVoices;
+            for (let voiceID in gnotes) {
+                if (gnotes.hasOwnProperty(voiceID)) {
+                    if (!(voiceID in vfVoices)) {
+                        vfVoices[voiceID] = new Vex.Flow.Voice({
+                            beat_value: this.parentSourceMeasure.Duration.Denominator,
+                            num_beats: this.parentSourceMeasure.Duration.Numerator,
+                            resolution: Vex.Flow.RESOLUTION,
+                        }).setMode(Vex.Flow.Voice.Mode.SOFT);
+                    }
+
+                    vfVoices[voiceID].addTickable(graphicalStaffEntry.vfNotes[voiceID]);
+                }
             }
         }
     }

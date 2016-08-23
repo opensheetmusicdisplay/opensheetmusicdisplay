@@ -267,6 +267,12 @@ export abstract class MusicSheetCalculator {
     }
 
     protected clearRecreatedObjects(): void {
+        // Clear StaffEntries with GraphicalTies
+        for (let idx: number = 0, len: number = this.staffEntriesWithGraphicalTies.length; idx < len; ++idx) {
+            let staffEntriesWithGraphicalTie: GraphicalStaffEntry = this.staffEntriesWithGraphicalTies[idx];
+            staffEntriesWithGraphicalTie.GraphicalTies.length = 0;
+        }
+        this.staffEntriesWithGraphicalTies.length = 0;
         return;
     }
 
@@ -473,6 +479,10 @@ export abstract class MusicSheetCalculator {
 
     protected calculateTempoExpressionsForSingleMultiTempoExpression(sourceMeasure: SourceMeasure, multiTempoExpression: MultiTempoExpression,
                                                                      measureIndex: number): void {
+        return;
+    }
+
+    protected staffMeasureCreatedCalculations(measure: StaffMeasure): void {
         return;
     }
 
@@ -1017,6 +1027,7 @@ export abstract class MusicSheetCalculator {
                 sourceMeasure, tieTimestampListDictList[staffIndex], openTuplets, openBeams,
                 accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
             );
+            this.staffMeasureCreatedCalculations(measure);
             verticalMeasureList.push(measure);
         }
         this.graphicalMusicSheet.sourceToGraphicalMeasureLinks.setValue(sourceMeasure, verticalMeasureList);

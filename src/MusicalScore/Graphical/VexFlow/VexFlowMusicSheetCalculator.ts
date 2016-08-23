@@ -62,14 +62,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
         // Finalize beams
-        for (let measure of measures) {
+        /*for (let measure of measures) {
             (measure as VexFlowMeasure).finalizeBeams();
-        }
+            (measure as VexFlowMeasure).finalizeTuplets();
+        }*/
         // Format the voices
         let allVoices: Vex.Flow.Voice[] = [];
         let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
             align_rests: true,
         });
+
         for (let measure of measures) {
             let mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
             let voices: Vex.Flow.Voice[] = [];
@@ -77,6 +79,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 if (mvoices.hasOwnProperty(voiceID)) {
                     voices.push(mvoices[voiceID]);
                     allVoices.push(mvoices[voiceID]);
+
                 }
             }
             if (voices.length === 0) {
@@ -85,17 +88,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
             formatter.joinVoices(voices);
         }
-        let firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
-        // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
-        // FIXME: a more relaxed formatting of voices
-        let width: number = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
-        for (let measure of measures) {
-            measure.minimumStaffEntriesWidth = width;
-            (measure as VexFlowMeasure).formatVoices = undefined;
+
+        let width: number = 200;
+        if (allVoices.length > 0) {
+            let firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
+            // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
+            // FIXME: a more relaxed formatting of voices
+            width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+            for (let measure of measures) {
+                measure.minimumStaffEntriesWidth = width;
+                (measure as VexFlowMeasure).formatVoices = undefined;
+            }
+            firstMeasure.formatVoices = (w: number) => {
+                formatter.format(allVoices, w);
+            };
         }
-        firstMeasure.formatVoices = (w: number) => {
-            formatter.format(allVoices, w);
-        };
+
         return width;
     }
 
@@ -111,6 +119,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
         return;
+    }
+
+    protected staffMeasureCreatedCalculations(measure: StaffMeasure): void {
+        (measure as VexFlowMeasure).staffMeasureCreatedCalculations();
     }
 
     /**
@@ -261,6 +273,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param openTuplets a list of all currently open tuplets
      */
     protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
-        return;
+        (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleTuplet(graphicalNote, tuplet);
     }
 }

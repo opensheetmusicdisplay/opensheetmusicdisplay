@@ -174,6 +174,14 @@ declare namespace Vex {
             public draw(): void;
         }
 
+        export class Tuplet {
+            constructor(notes: StaveNote[]);
+
+            public setContext(ctx: CanvasContext): Tuplet;
+
+            public draw(): void;
+        }
+
         export class CanvasContext {
             public scale(x: number, y: number): CanvasContext;
         }

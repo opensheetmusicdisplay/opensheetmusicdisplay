@@ -96,13 +96,16 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                       activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined): GraphicalNote {
         // Creates the note:
         let graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift, graphicalNoteLength);
-        // Adds the note to the right (graphical) voice (mynotes)
-        let voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
-        let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
-        if (!(voiceID in mynotes)) {
-            mynotes[voiceID] = [];
+        if (note.ParentVoiceEntry !== undefined) {
+            // Adds the note to the right (graphical) voice (mynotes)
+            let voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
+            let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
+            if (!(voiceID in mynotes)) {
+                mynotes[voiceID] = [];
+            }
+            mynotes[voiceID].push(graphicalNote);
         }
-        mynotes[voiceID].push(graphicalNote);
+
         return graphicalNote;
     }
 
@@ -117,7 +120,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createGraceNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
                            activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
-        return new GraphicalNote(note, graphicalStaffEntry);
+        return new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift);
     }
 
     /**
@@ -130,7 +133,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
         // ToDo: set accidental here from pitch.Accidental
-        let note: VexFlowGraphicalNote = <VexFlowGraphicalNote> graphicalNote;
+        let note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
         note.setPitch(pitch);
     }
 
