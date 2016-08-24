@@ -1,13 +1,21 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
   <head>
-    <title>OSMD Demo</title>
+    <meta charset="utf-8">
+
+    <title>OpenSheetMusicDisplay Demo</title>
+    <meta name="description" content="A showcase for OpenSheetMusicDisplay.">
+    <meta name="author" content="OpenSheetMusicDisplay contributors">
+
+    <!-- Include opensheetmusicdisplay -->
     <script src="osmd-demo.js"></script>
+
+    <!-- Include code and styles for this demo -->
     <script src="demo.js"></script>
     <link href="demo.css" media="all" rel="stylesheet" />
   </head>
   <body>
-    <h1>Open Sheet Music Display Demo</h1>
+    <h1>OpenSheetMusicDisplay Demo</h1>
     <table cellspacing="0">
       <tr>
         <td class="bignum">1</td>
@@ -16,7 +24,7 @@
             Select a sample from the list below...
           </p>
           <select id="select"></select>
-          <p>... or just drag'n'drop your MusicXML file on this page.</p>
+          <p>... or just drop your MusicXML file on this page.</p>
         </td>
       </tr>
       <tr>

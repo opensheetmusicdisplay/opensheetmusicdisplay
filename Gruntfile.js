@@ -165,7 +165,7 @@ module.exports = function (grunt) {
         // http-server
         'http-server': {
             'demo': {
-                root: 'demo',
+                root: 'build/demo',
                 port: 8000,
                 host: '0.0.0.0',
                 showDir : true,

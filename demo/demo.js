@@ -4,7 +4,7 @@
     // The MusicSheet object
     var sheet,
     // The folder of the demo files
-        folder = "/test/data/",
+        folder = "sheets/",
     // The available demos
         demos = {
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1",
@@ -16,7 +16,6 @@
             "C. Gounod - Meditation": "CharlesGounod_Meditation",
             "J.S. Bach - Praeludium In C Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1",
             "J. Haydn - Concertante Cello": "JosephHaydn_ConcertanteCello",
-            "P. Koen - Fugue in G Major": "PeterKoen-FugueInGMajor",
             "S. Joplin - Elite Syncopations": "ScottJoplin_EliteSyncopations",
             "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer"
         },
