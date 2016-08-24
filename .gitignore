@@ -1,6 +1,9 @@
 # Build
 build
 
+# Dist
+dist
+
 # Logs
 logs
 *.log

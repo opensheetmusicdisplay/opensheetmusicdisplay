@@ -9,6 +9,19 @@
     "postinstall": "typings install",
     "prepublish": "tsc && grunt publish"
   },
+  "files": [
+    "dist",
+    "AUTHORS",
+    "karma.conf.js",
+    "src",
+    "test",
+    "external",
+    "demo",
+    "tsconfig",
+    "tslint.json",
+    "typings.json",
+    "Gruntfile.js"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
