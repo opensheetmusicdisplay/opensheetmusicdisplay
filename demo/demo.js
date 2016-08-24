@@ -242,6 +242,6 @@
         reader.onload = function (res) {
             selectOnChange(res.target.result);
         };
-        reader.readAsBinaryString(event.dataTransfer.files[0]);
+        reader.readAsText(event.dataTransfer.files[0]);
     });
 }());
