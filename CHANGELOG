@@ -6,28 +6,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- Better tests for `OSMD`
-- Support for Promises in loading sheet music
-- Support for loading MusicXML files by URL
-- Small fixes for correct x-layouting
-- Added tests for container's width
-- Included demo for better debugging
-- Better grunt tasks
-- Cursor on first StaffEntry by default
-- Proper title display
-- Added documentation for VexFlow and other graphical objects
 - Added ties
+- Added documentation for VexFlow and other graphical objects
+- Proper title display
+- Cursor on first StaffEntry by default
+- Better grunt tasks
+- Included demo for better debugging
+- Added tests for container's width
+- Small fixes for correct x-layouting
+- Support for loading MusicXML files by URL
+- Support for Promises in loading sheet music
+- Better tests for `OSMD`
 
 ### Changed
-- Renamed files to reflect class names
-- Removed workaround for title labels
 - Renamed test files according to '_Test' convention
+- Removed workaround for title labels
+- Renamed files to reflect class names
 
 ### Bugs
-- Fixed bug with response HTTP status
-- Fixed bug with beginInstructionWidth
-- Fixed a bug in calculator
 - Fixed bug in measure number calculation
+- Fixed a bug in calculator
+- Fixed bug with beginInstructionWidth
+- Fixed bug with response HTTP status
 
 ## [0.0.1-alpha.1] - 2016-07-15
 ### Added
