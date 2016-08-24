@@ -1,0 +1,48 @@
+# Change Log
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) 
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [Unreleased]
+### Added
+- Better tests for `OSMD`
+- Support for Promises in loading sheet music
+- Support for loading MusicXML files by URL
+- Small fixes for correct x-layouting
+- Added tests for container's width
+- Included demo for better debugging
+- Better grunt tasks
+- Cursor on first StaffEntry by default
+- Proper title display
+- Added documentation for VexFlow and other graphical objects
+- Added ties
+
+### Changed
+- Renamed files to reflect class names
+- Removed workaround for title labels
+- Renamed test files according to '_Test' convention
+
+### Bugs
+- Fixed bug with response HTTP status
+- Fixed bug with beginInstructionWidth
+- Fixed a bug in calculator
+- Fixed bug in measure number calculation
+
+## [0.0.1-alpha.1] - 2016-07-15
+### Added
+- Auto resize to window width
+- Preliminary MXL support from URLs
+- Tests for OSMD
+- Implemented a basic cursor object to browse the sheet
+- Public API: Rename `MusicSheetAPI` (renamed to `OSMD`)
+- Fallback title display
+- Better usage of VexFlow measure size
+- Fixed duplicated beams when redrawing
+
+## [0.0.1-alpha.0] - 2016-07-08
+### Added
+- First public pre-release
+
+[Unreleased]: https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.0.1-alpha.1...HEAD
+[0.0.1-alpha.1]: https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.0.1-alpha.0...0.0.1-alpha.1
