@@ -85,7 +85,7 @@ export class OSMD {
                 let parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(str, "text/xml");
             } else if (str.length < 2083) {
-                // Assume now 'str' is a URL
+                // Assume now "str" is a URL
                 // Retrieve the file at the given URL
                 return ajax(str).then(
                     (s: string) => { return self.load(s); },
@@ -115,7 +115,7 @@ export class OSMD {
         this.sheet = reader.createMusicSheet(score, "Unknown path");
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
-        log.info("Loaded sheet successfully.");
+        log.info(`Loaded sheet ${this.sheet.TitleString} successfully.`);
         return Promise.resolve({});
     }
 
@@ -147,6 +147,35 @@ export class OSMD {
         this.drawer.drawSheet(this.graphic);
         // Update the cursor position
         this.cursor.update();
+    }
+
+    /**
+     * Sets the logging level for this OSMD instance. By default, this is set to `warn`.
+     *
+     * @param: content can be `trace`, `debug`, `info`, `warn` or `error`.
+     */
+    public setLogLevel(level: string): void {
+        switch(level) {
+            case "trace":
+                log.setDefaultLevel(LogLevel.TRACE);
+                break;
+            case "debug":
+                log.setDefaultLevel(LogLevel.DEBUG);
+                break;
+            case "info":
+                log.setDefaultLevel(LogLevel.INFO);
+                break;
+            case "warn":
+                log.setDefaultLevel(LogLevel.WARN);
+                break;
+            case "error":
+                log.setDefaultLevel(LogLevel.ERROR);
+                break;
+            default:
+                log.warn(`Could not set log level to ${level}. Using warn instead.`);
+                log.setDefaultLevel(LogLevel.WARN);
+                break;
+        }
     }
 
     /**
