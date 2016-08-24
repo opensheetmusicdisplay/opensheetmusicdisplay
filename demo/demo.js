@@ -93,7 +93,7 @@
                 canvas.width = width;
                 try {
                 sheet.render();
-                } catch (e) {};
+                } catch (e) {}
                 enable();
             }
         );
@@ -116,7 +116,6 @@
     }
 
     function Resize(startCallback, endCallback) {
-      "use strict";
 
       var rtime;
       var timeout = false;

@@ -155,7 +155,7 @@ export class OSMD {
      * @param: content can be `trace`, `debug`, `info`, `warn` or `error`.
      */
     public setLogLevel(level: string): void {
-        switch(level) {
+        switch (level) {
             case "trace":
                 log.setDefaultLevel(LogLevel.TRACE);
                 break;
