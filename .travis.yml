@@ -16,4 +16,4 @@ deploy:
     branch: master
     repo: opensheetmusicdisplay/opensheetmusicdisplay
 after_deploy:
-  - ./bin/publish_docs.sh
+  - ./bin/publish_gh_page.sh
