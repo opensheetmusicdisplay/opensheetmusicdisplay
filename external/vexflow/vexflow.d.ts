@@ -58,6 +58,8 @@ declare namespace Vex {
 
             public addAccidental(index: number, accidental: Accidental): StaveNote;
 
+            public addAnnotation(index: number, annotation: Annotation): StaveNote;
+
             public setStyle(style: any): void;
 
             public addDotToAll(): void;
@@ -132,7 +134,7 @@ declare namespace Vex {
         }
 
         export class Clef extends StaveModifier {
-            constructor(type: any);
+            constructor(type: string, size: number, annotation: string);
 
             public static category: string;
             public static types: { [type: string]: any; };
@@ -163,6 +165,10 @@ declare namespace Vex {
         }
 
         export class Accidental {
+            constructor(type: string);
+        }
+
+        export class Annotation {
             constructor(type: string);
         }
 
