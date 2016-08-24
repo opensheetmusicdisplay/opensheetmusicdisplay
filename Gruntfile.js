@@ -121,6 +121,19 @@ module.exports = function (grunt) {
         typings: {
             install: {}
         },
+        // Class documentation using typedoc
+        typedoc: {
+            build: {
+                options: {
+                    module: 'commonjs',
+                    out: './build/docs',
+                    name: 'opensheetmusicdisplay',
+                    target: 'es5',
+                    mode: 'file'
+                },
+                src: ['./src/**/*.ts', './external/**/*.ts', './typings/**/*.ts']
+            }
+        },
         // Cleaning task setup
         clean: {
             options: {
@@ -168,6 +181,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-http-server');
+    grunt.loadNpmTasks('grunt-typedoc');
 
     // Register tasks
     grunt.registerTask('lint',      ['jshint', 'tslint']);
@@ -175,10 +189,11 @@ module.exports = function (grunt) {
     grunt.registerTask('all',       ['typings', 'default']);
     grunt.registerTask('default',   ['browserify', 'uglify']);
     grunt.registerTask('npm-test',  ['typings', 'test']);
+    grunt.registerTask('docs',      ['typedoc']);
     grunt.registerTask('test',      ['browserify:debug', 'lint', 'karma:ci']);
     grunt.registerTask('fast-test', ['browserify:debug', 'karma:ci']);
     grunt.registerTask('rebuild',   ['clean', 'default']);
-    grunt.registerTask('publish',   ['clean', 'typings', 'browserify:dist', 'uglify:bundle']);
+    grunt.registerTask('publish',   ['clean', 'typings', 'browserify:dist', 'uglify:bundle', 'docs']);
     grunt.registerTask('debug-build', ['browserify:demo']);
     grunt.registerTask('debug-browser', ['http-server:demo']);
 
