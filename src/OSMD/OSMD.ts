@@ -13,6 +13,7 @@ import {ajax} from "./AJAX";
 import {Logging} from "../Common/Logging";
 import {Fraction} from "../Common/DataObjects/Fraction";
 import {OutlineAndFillStyleEnum} from "../MusicalScore/Graphical/DrawingEnums";
+import * as log from "loglevel";
 
 export class OSMD {
     /**
@@ -114,6 +115,7 @@ export class OSMD {
         this.sheet = reader.createMusicSheet(score, "Unknown path");
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
+        log.info("Loaded sheet successfully.");
         return Promise.resolve({});
     }
 

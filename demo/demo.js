@@ -52,6 +52,10 @@
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
 
+        // Set up logging
+        log.setDefaultLevel('trace');
+        log.debug("Logging system set up.");
+
         // Hide error
         error();
 
