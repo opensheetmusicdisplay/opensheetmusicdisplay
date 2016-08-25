@@ -226,6 +226,9 @@ export class VexFlowMeasure extends StaffMeasure {
         for (let connector of this.connectors) {
             connector.setContext(ctx).draw();
         }
+
+        // now we can finally set the vexflow x positions back into the osmd object model:
+        this.setStaffEntriesXPositions();
     }
 
     /**
@@ -298,6 +301,9 @@ export class VexFlowMeasure extends StaffMeasure {
                     }
                     if (notes.length > 1) {
                         vfbeams.push(new Vex.Flow.Beam(notes, true));
+                        for (let note of notes) {
+                            (<Vex.Flow.StaveNote> note).setStyle({fillStyle: "green", strokeStyle: "green"});
+                        }
                     } else {
                         Logging.log("Warning! Beam with no notes! Trying to ignore, but this is a serious problem.");
                     }
@@ -421,5 +427,22 @@ export class VexFlowMeasure extends StaffMeasure {
     private updateInstructionWidth(): void {
         this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
         this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
+    }
+
+    /**
+     * sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
+     * The positions are needed for cursor placement and mouse/tap interactions
+     */
+    private setStaffEntriesXPositions(): void {
+        for (let idx3: number = 0, len3: number = this.staffEntries.length; idx3 < len3; ++idx3) {
+            let gse: VexFlowStaffEntry = (<VexFlowStaffEntry> this.staffEntries[idx3]);
+            let measure: StaffMeasure = gse.parentMeasure;
+            let x: number =
+                gse.getX() -
+                measure.PositionAndShape.RelativePosition.x -
+                measure.ParentStaffLine.PositionAndShape.RelativePosition.x -
+                measure.parentMusicSystem.PositionAndShape.RelativePosition.x;
+            gse.PositionAndShape.RelativePosition.x = x;
+        }
     }
 }

@@ -323,6 +323,6 @@ export class VexFlowConverter {
      */
     public static style(styleId: OutlineAndFillStyleEnum): string {
         // TODO To be implemented
-        return "purple";
+        return "lightgreen";
     }
 }
