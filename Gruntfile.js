@@ -31,25 +31,29 @@ module.exports = function (grunt) {
         // Browserify
         browserify: {
             dist: {
-                src: [].concat(typings, src),
+                src: ['src/OSMD/OSMD.ts'],
                 dest: '<%= outputDir.build %>/osmd.js',
-                options: {
-                    banner: "<%= banner %>"
-                }
-            },
-            demo: {
-                src: [].concat(typings, src, ['demo/inject.ts']),
-                dest: '<%= outputDir.build %>/demo/osmd-demo.js',
                 options: {
                     banner: "<%= banner %>",
                     browserifyOptions: {
-                        debug: true
+                        standalone: 'opensheetmusicdisplay'
                     }
                 }
             },
             debug: {
-                src: [].concat(typings, src, test),
+                src: ['src/OSMD/OSMD.ts'],
                 dest: '<%= outputDir.build %>/osmd-debug.js',
+                options: {
+                    banner: "<%= banner %>",
+                    browserifyOptions: {
+                        debug: true,
+                        standalone: 'opensheetmusicdisplay'                        
+                    }
+                }
+            },
+            test: {
+                src: [].concat(typings, src, test),
+                dest: '<%= outputDir.build %>/osmd-test.js',
                 options: {
                     banner: "<%= banner %>",
                     browserifyOptions: {
@@ -69,8 +73,7 @@ module.exports = function (grunt) {
                 },
                 banner: banner,
                 mangle: true,
-                mangleProperties: true,
-                preserveComments: 'all'
+                mangleProperties: true
             },
             bundle: {
                 files: {
@@ -158,7 +161,8 @@ module.exports = function (grunt) {
             demo: {
                 files: [
                     { src: ['*'], dest: '<%= outputDir.build %>/demo/sheets/', cwd: './test/data/', expand: true },
-                    { src: ['*.js', '*.css', '*.html'], cwd: './demo/', expand: true, dest: '<%= outputDir.build %>/demo/' }
+                    { src: ['*.js', '*.css', '*.html'], cwd: './demo/', expand: true, dest: '<%= outputDir.build %>/demo/' },
+                    { src: ['osmd-debug.js'], cwd: './build/', expand: true, dest: '<%= outputDir.build %>/demo/' }
                 ]
             }
         },
@@ -198,8 +202,8 @@ module.exports = function (grunt) {
     grunt.registerTask('docs',        'Builds class documentation to /build/docs',   ['typedoc']);
 
     // Build tasks
-    grunt.registerTask('build:demo',  'Builds the demo.',                            ['browserify:demo', 'copy:demo']);
-    grunt.registerTask('build:test',  'Builds the tests',                            ['browserify:debug']);
+    grunt.registerTask('build:demo',  'Builds the demo.',                            ['browserify:debug', 'copy:demo']);
+    grunt.registerTask('build:test',  'Builds the tests',                            ['browserify:test']);
     grunt.registerTask('build:dist',  'Builds for distribution on npm and Bower.',   ['browserify:dist', 'uglify', 'ts']);
 
     // Tests
