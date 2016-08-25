@@ -15,7 +15,7 @@ module.exports = function (config) {
         exclude: [],
 
         files: [{
-            pattern: 'build/osmd-debug.js'
+            pattern: 'build/osmd-test.js'
         }, {
             pattern: 'src/**/*.ts',
             included: false
