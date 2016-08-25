@@ -105,7 +105,6 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
             }
             mynotes[voiceID].push(graphicalNote);
         }
-
         return graphicalNote;
     }
 

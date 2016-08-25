@@ -142,7 +142,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addClefAtEnd(clef: ClefInstruction): void {
         let vfclef: {type: string, annotation: string} = VexFlowConverter.Clef(clef);
-        this.stave.setEndClef(vfclef.type, undefined, vfclef.annotation);
+        this.stave.setEndClef(vfclef.type, "small", vfclef.annotation);
         this.updateInstructionWidth();
     }
 
@@ -420,6 +420,6 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     private updateInstructionWidth(): void {
         this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
-        this.endInstructionsWidth = (this.stave.getNoteEndX() - this.stave.getX()) / unitInPixels;
+        this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
     }
 }
