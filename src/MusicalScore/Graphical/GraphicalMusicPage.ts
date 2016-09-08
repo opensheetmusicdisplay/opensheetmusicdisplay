@@ -41,12 +41,19 @@ export class GraphicalMusicPage extends GraphicalObject {
         this.parent = value;
     }
 
+    /**
+     * This method calculates the absolute Position of each GraphicalMusicPage according to a given placement
+     * @param pageIndex
+     * @param rules
+     * @returns {PointF2D}
+     */
     public setMusicPageAbsolutePosition(pageIndex: number, rules: EngravingRules): PointF2D {
         if (rules.PagePlacement === PagePlacementEnum.Down) {
             return new PointF2D(0.0, pageIndex * rules.PageHeight);
         } else if (rules.PagePlacement === PagePlacementEnum.Right) {
             return new PointF2D(pageIndex * this.parent.ParentMusicSheet.pageWidth, 0.0);
         } else {
+            // placement RightDown
             if (pageIndex % 2 === 0) {
                 if (pageIndex === 0) {
                     return new PointF2D(0.0, pageIndex * rules.PageHeight);
@@ -63,6 +70,7 @@ export class GraphicalMusicPage extends GraphicalObject {
         }
     }
 }
+
 export enum PagePlacementEnum {
     Down,
     Right,

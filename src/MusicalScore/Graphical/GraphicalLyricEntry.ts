@@ -6,6 +6,9 @@ import {Label} from "../Label";
 import {TextAlignment} from "../../Common/Enums/TextAlignment";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
+/**
+ * The graphical counterpart of a [[LyricEntry]]
+ */
 export class GraphicalLyricEntry {
     private lyricsEntry: LyricsEntry;
     private graphicalLyricWord: GraphicalLyricWord;
