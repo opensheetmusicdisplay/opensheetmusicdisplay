@@ -29,6 +29,9 @@ export class AccidentalCalculator {
         this.reactOnKeyInstructionChange();
     }
 
+    /**
+     * This method is called after each Measure
+     */
     public doCalculationsAtEndOfMeasure(): void {
         this.currentInMeasureNoteAlterationsDict.clear();
         for (let key of this.keySignatureNoteAlterationsDict.keys()) {

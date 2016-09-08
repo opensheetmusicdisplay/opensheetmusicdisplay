@@ -1,5 +1,12 @@
+/**
+ * IXmlAttribute is just Attr
+ */
 export type IXmlAttribute = Attr;
 
+/**
+ * Just a wrapper for an XML Element object.
+ * It facilitates handling of XML elements by OSMD
+ */
 export class IXmlElement {
     public name: string;
     public value: string;
@@ -10,6 +17,10 @@ export class IXmlElement {
     private attrs: IXmlAttribute[];
     private elem: Element;
 
+    /**
+     * Wraps 'elem' Element in a IXmlElement
+     * @param elem
+     */
     constructor(elem: Element) {
         if (elem === undefined) {
             throw new Error("IXmlElement: expected Element, got undefined");
@@ -30,10 +41,19 @@ export class IXmlElement {
         }
     }
 
+    /**
+     * Get the attribute with the given name
+     * @param attributeName
+     * @returns {Attr}
+     */
     public attribute(attributeName: string): IXmlAttribute {
         return this.elem.attributes.getNamedItem(attributeName);
     }
 
+    /**
+     * Get all attributes
+     * @returns {IXmlAttribute[]}
+     */
     public attributes(): IXmlAttribute[] {
         if (!this.attrs) {
             let attributes: NamedNodeMap = this.elem.attributes;
@@ -46,6 +66,11 @@ export class IXmlElement {
         return this.attrs;
     }
 
+    /**
+     * Get the first child element with the given node name
+     * @param elementName
+     * @returns {IXmlElement}
+     */
     public element(elementName: string): IXmlElement {
         let nodes: NodeList = this.elem.childNodes;
         for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
@@ -56,6 +81,11 @@ export class IXmlElement {
         }
     }
 
+    /**
+     * Get the children with the given node name (if given, otherwise all child elements)
+     * @param nodeName
+     * @returns {IXmlElement[]}
+     */
     public elements(nodeName?: string): IXmlElement[] {
         let nodes: NodeList = this.elem.childNodes;
         let ret: IXmlElement[] = [];

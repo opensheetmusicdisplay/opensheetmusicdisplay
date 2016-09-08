@@ -1,12 +1,21 @@
-// FIXME: Check the operators' names
-// FIXME: This class should probably be immutable?
+// TODO: Check the operators' names
+// TODO: This class should probably be immutable?
 
+/**
+ * A class representing mathematical fractions, which have a numerator and a denominator.
+ */
 export class Fraction {
     private static maximumAllowedNumber: number = 46340;
     private numerator: number = 0;
     private denominator: number = 1;
     private realValue: number;
 
+    /**
+     * Returns the maximum of two fractions (does not clone)
+     * @param f1
+     * @param f2
+     * @returns {Fraction}
+     */
     public static max(f1: Fraction, f2: Fraction): Fraction {
         if (f1.RealValue > f2.RealValue) {
             return f1;
@@ -16,10 +25,14 @@ export class Fraction {
     }
 
     public static Equal(f1: Fraction, f2: Fraction): boolean {
-        // FIXME
         return f1.Denominator === f2.Denominator && f1.Numerator === f2.Numerator;
     }
 
+    /**
+     * The same as Fraction.clone
+     * @param fraction
+     * @returns {Fraction}
+     */
     public static createFromFraction(fraction: Fraction): Fraction {
         return new Fraction(fraction.numerator, fraction.denominator);
     }
@@ -56,6 +69,13 @@ export class Fraction {
         return a;
     }
 
+    /**
+     *
+     * @param numerator
+     * @param denominator
+     * @param simplify - If simplify is true, then the fraction is simplified
+     *      to make both the numerator and denominator coprime, and less than maximumAllowedNumber.
+     */
     constructor(numerator: number = 0, denominator: number = 1, simplify: boolean = true) {
         this.numerator = numerator;
         this.denominator = denominator;

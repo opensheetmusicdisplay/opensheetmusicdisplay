@@ -1,16 +1,23 @@
+/**
+ * Represents a color in RGBA
+ */
 export class OSMDColor {
     public alpha: number;
     public red: number;
     public green: number;
     public blue: number;
 
-    // FIXME:
     /*constructor(alpha: number, red: number, green: number, blue: number) {
         this.alpha = alpha;
         this.red = red;
         this.green = green;
         this.blue = blue;
     }*/
+
+    /*
+     * Color names are based on the definitions at https://msdn.microsoft.com/de-de/library/aa358802(vs.85).aspx
+     * ...but changed a bit by the famous Mc Overacre
+     */
     constructor(red: number, green: number, blue: number) {
         this.alpha = 255;
         this.red = red;
@@ -41,6 +48,7 @@ export class OSMDColor {
     public static get DarkBlue(): OSMDColor {
         return new OSMDColor(0, 0, 140);
     }
+
     // For debugging:
     public static get Debug1(): OSMDColor {
         return new OSMDColor(200, 0, 140);
@@ -53,7 +61,6 @@ export class OSMDColor {
     }
 
     public toString(): string {
-        // FIXME RGBA
-        return "rgb(" + this.red + "," + this.green + "," + this.blue + ")";
+        return "rgb(" + this.red + "," + this.green + "," + this.blue + "," + this.alpha + ")";
     }
 }

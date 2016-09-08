@@ -1,3 +1,4 @@
+// The value of the enum indicates the number of halftoneSteps from one note to the next
 export enum NoteEnum {
     C = 0,
     D = 2,
@@ -16,6 +17,7 @@ export enum AccidentalEnum {
     DOUBLESHARP = 2
 }
 
+// This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.
 export class Pitch {
     public static pitchEnumValues: NoteEnum[] = [
         NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B,
@@ -181,6 +183,7 @@ export class Pitch {
         return this.halfTone;
     }
 
+    // This method returns a new Pitch transposed by the given factor
     public getTransposedPitch(factor: number): Pitch {
         if (factor > 12) {
             throw new Error("rewrite this method to handle bigger octave changes or don't use is with bigger octave changes!");
@@ -234,6 +237,7 @@ export class Pitch {
         return !(p1 === p2);
     }
 
+    // This method returns a new Pitch factor-Halftones higher than the current Pitch
     private getHigherPitchByTransposeFactor(factor: number): Pitch {
         let noteEnumIndex: number = Pitch.pitchEnumValues.indexOf(this.fundamentalNote);
         let newOctave: number = this.octave;
