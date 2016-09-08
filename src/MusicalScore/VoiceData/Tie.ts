@@ -2,9 +2,12 @@ import {Note} from "./Note";
 import {Beam} from "./Beam";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {Tuplet} from "./Tuplet";
+import {BaseIdClass} from "../../Util/BaseIdClass";
 
-export class Tie {
+export class Tie extends BaseIdClass {
+
     constructor(note: Note) {
+        super();
         this.start = note;
     }
     private start: Note;
@@ -14,6 +17,7 @@ export class Tie {
     private fractions: Fraction[] = [];
     private noteHasBeenCreated: boolean[] = [];
     private baseNoteYPosition: number;
+
     public get Start(): Note {
         return this.start;
     }
@@ -67,6 +71,7 @@ export class Tie {
         for (let idx: number = 0, len: number = this.noteHasBeenCreated.length; idx < len; ++idx) {
             if (!this.noteHasBeenCreated[idx]) { return false; }
         }
+
         return true;
     }
 }

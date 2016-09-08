@@ -1,12 +1,12 @@
 import {VexFlowMusicSheetDrawer} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
+import {OutlineAndFillStyleEnum} from "../../../../src/MusicalScore/Graphical/DrawingEnums";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
 import {MusicSheetReader} from "../../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {TestUtils} from "../../../Util/TestUtils";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {Fraction} from "../../../../src/Common/DataObjects/Fraction";
-import {OutlineAndFillStyleEnum} from "../../../../src/MusicalScore/Graphical/DrawingEnums";
 
 describe("VexFlow Music Sheet Drawer", () => {
 
@@ -27,7 +27,7 @@ describe("VexFlow Music Sheet Drawer", () => {
         done();
     });
 
-    it("With cursor (as rectangle)", (done: MochaDone) => {
+    it.skip("With cursor (as rectangle)", (done: MochaDone) => {
         let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
         chai.expect(score).to.not.be.undefined;
         let partwise: Element = TestUtils.getPartWiseElement(score);
@@ -44,5 +44,4 @@ describe("VexFlow Music Sheet Drawer", () => {
         drawer.drawSheet(gms);
         done();
     });
-
 });

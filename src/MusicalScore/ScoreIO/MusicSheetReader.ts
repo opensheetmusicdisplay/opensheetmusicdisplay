@@ -152,7 +152,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 this.musicSheet.addMeasure(this.currentMeasure);
                 this.checkIfRhythmInstructionsAreSetAndEqual(instrumentReaders);
                 this.checkSourceMeasureForundefinedEntries();
-                this.setSourceMeasureDuration(instrumentReaders, sourceMeasureCounter);
+                sourceMeasureCounter = this.setSourceMeasureDuration(instrumentReaders, sourceMeasureCounter);
                 MusicSheetReader.doCalculationsAfterDurationHasBeenSet(instrumentReaders);
                 this.currentMeasure.AbsoluteTimestamp = this.currentFraction.clone();
                 this.musicSheet.SheetErrors.finalizeMeasure(this.currentMeasure.MeasureNumber);
@@ -308,7 +308,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return false;
     }
 
-    private setSourceMeasureDuration(instrumentReaders: InstrumentReader[], sourceMeasureCounter: number): void {
+    private setSourceMeasureDuration(instrumentReaders: InstrumentReader[], sourceMeasureCounter: number): number {
         let activeRhythm: Fraction = new Fraction(0, 1);
         let instrumentsMaxTieNoteFractions: Fraction[] = [];
         for (let instrumentReader of instrumentReaders) {
@@ -357,6 +357,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 }
             }
         }
+        return sourceMeasureCounter;
     }
 
     private checkFractionsForEquivalence(maxInstrumentDuration: Fraction, activeRhythm: Fraction): void {
@@ -367,11 +368,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     }
 
     private checkIfMeasureIsImplicit(maxInstrumentDuration: Fraction, activeRhythm: Fraction): boolean {
-        if (this.previousMeasure === undefined && maxInstrumentDuration < activeRhythm) {
+        if (this.previousMeasure === undefined && maxInstrumentDuration.lt(activeRhythm)) {
             return true;
         }
         if (this.previousMeasure !== undefined) {
-            return Fraction.plus(this.previousMeasure.Duration, maxInstrumentDuration).CompareTo(activeRhythm) === 0;
+            return Fraction.plus(this.previousMeasure.Duration, maxInstrumentDuration).Equals(activeRhythm);
         }
         return false;
     }
@@ -380,7 +381,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         let counter: number = 0;
         for (let idx: number = 0, len: number = instrumentsDurations.length; idx < len; ++idx) {
             let instrumentsDuration: Fraction = instrumentsDurations[idx];
-            if (instrumentsDuration === maxInstrumentDuration) {
+            if (instrumentsDuration.Equals(maxInstrumentDuration)) {
                 counter++;
             }
         }

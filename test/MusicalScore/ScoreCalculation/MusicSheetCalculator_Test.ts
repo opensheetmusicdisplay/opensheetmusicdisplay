@@ -32,6 +32,7 @@ describe("Music Sheet Calculator Tests", () => {
     });
 
     it("Do Calculation", (done: MochaDone) => {
+        this.timeout = 10000;
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
         // Load the XML file
         let xml: Document = TestUtils.getScore(filename);

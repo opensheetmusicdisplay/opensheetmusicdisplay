@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>OpenSheetMusicDisplay Demo</title>
+    <meta name="description" content="A showcase for OpenSheetMusicDisplay.">
+    <meta name="author" content="OpenSheetMusicDisplay contributors">
+
+    <!-- Include opensheetmusicdisplay -->
+    <script src="osmd-demo.js"></script>
+
+    <!-- Include code and styles for this demo -->
+    <script src="demo.js"></script>
+    <link href="demo.css" media="all" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>OpenSheetMusicDisplay Demo</h1>
+    <table cellspacing="0">
+      <tr>
+        <td class="bignum">1</td>
+        <td>
+          <p>
+            Select a sample from the list below...
+          </p>
+          <select id="select"></select>
+          <p>... or just drop your MusicXML file on this page.</p>
+        </td>
+      </tr>
+      <tr>
+        <td class="bignum">2</td>
+        <td>
+          <p>Current width: <span id="size-str">???</span>px</p>
+          <p>Zoom factor: <span id="zoom-str">???</span>%</p>
+          <p>
+            Zoom controls:
+            <input type="button" value="zoom in" id="zoom-in-btn"/>
+            <input type="button" value="zoom out" id="zoom-out-btn"/>
+          </p>
+          <p>Cursor controls:
+            <input type="button" value="show" id="show-cursor-btn"/>
+            <input type="button" value="hide" id="hide-cursor-btn"/>
+            <input type="button" value="next" id="next-cursor-btn"/>
+          </p>
+        </td>
+      </tr>
+      <tr id="error-tr">
+        <td></td>
+        <td id="error-td"></td>
+      </tr>
+    </table>
+  </body>
+</html>

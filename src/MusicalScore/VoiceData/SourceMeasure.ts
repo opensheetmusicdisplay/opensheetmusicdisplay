@@ -11,9 +11,11 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
+import {BaseIdClass} from "../../Util/BaseIdClass";
 
-export class SourceMeasure {
+export class SourceMeasure extends BaseIdClass {
     constructor(completeNumberOfStaves: number) {
+        super();
         this.completeNumberOfStaves = completeNumberOfStaves;
         this.implicitMeasure = false;
         this.breakSystemAfter = false;
@@ -279,6 +281,7 @@ export class SourceMeasure {
                 maxDuration = instrumentsDuration;
             }
         }
+
         return Fraction.max(maxDuration, maxInstDuration);
     }
 

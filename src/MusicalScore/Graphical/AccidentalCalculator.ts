@@ -12,7 +12,7 @@ import Dictionary from "typescript-collections/dist/lib/Dictionary";
 export class AccidentalCalculator {
     private symbolFactory: IGraphicalSymbolFactory;
     private keySignatureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
-    private currentAlterationsComparedToKeyInstructionDict: number[] = [];
+    private currentAlterationsComparedToKeyInstructionList: number[] = [];
     private currentInMeasureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
     private activeKeyInstruction: KeyInstruction;
 
@@ -44,24 +44,54 @@ export class AccidentalCalculator {
             return;
         }
         let pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;
-        let pitchKeyGivenInMeasureDict: boolean = this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey);
+        /*let pitchKeyGivenInMeasureDict: boolean = this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey);
         if (
             (pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.Accidental)
             || (!pitchKeyGivenInMeasureDict && pitch.Accidental !== AccidentalEnum.NONE)
         ) {
-            if (this.currentAlterationsComparedToKeyInstructionDict.indexOf(pitchKey) === -1) {
-                this.currentAlterationsComparedToKeyInstructionDict.push(pitchKey);
+            if (this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) === -1) {
+                this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
             }
             this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
         } else if (
-            this.currentAlterationsComparedToKeyInstructionDict.indexOf(pitchKey) !== -1
+            this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) !== -1
             && ((pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.Accidental)
             || (!pitchKeyGivenInMeasureDict && pitch.Accidental === AccidentalEnum.NONE))
         ) {
-            delete this.currentAlterationsComparedToKeyInstructionDict[pitchKey];
+            this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
             this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+        }*/
+
+        let isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;
+        if (this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey)) {
+            if (isInCurrentAlterationsToKeyList) {
+                this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
+            }
+            if (this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.Accidental) {
+                if (this.keySignatureNoteAlterationsDict.containsKey(pitchKey) &&
+                    this.keySignatureNoteAlterationsDict.getValue(pitchKey) !== pitch.Accidental) {
+                    this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
+                    this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
+                } else {
+                    this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
+                }
+                this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+            }
+        } else {
+            if (pitch.Accidental !== AccidentalEnum.NONE) {
+                if (!isInCurrentAlterationsToKeyList) {
+                    this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
+                }
+                this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
+                this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+            } else {
+                if (isInCurrentAlterationsToKeyList) {
+                    this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
+                    this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+                }
+            }
         }
     }
 
@@ -74,7 +104,7 @@ export class AccidentalCalculator {
             keyAccidentalType = AccidentalEnum.FLAT;
         }
         this.keySignatureNoteAlterationsDict.clear();
-        this.currentAlterationsComparedToKeyInstructionDict.length = 0;
+        this.currentAlterationsComparedToKeyInstructionList.length = 0;
         for (let octave: number = -9; octave < 9; octave++) {
             for (let i: number = 0; i < noteEnums.length; i++) {
                 this.keySignatureNoteAlterationsDict.setValue(<number>noteEnums[i] + octave * 12, keyAccidentalType);

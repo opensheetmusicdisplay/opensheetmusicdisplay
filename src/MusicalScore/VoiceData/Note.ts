@@ -117,21 +117,6 @@ export class Note {
         }
         return originalLength;
     }
-    public calculateNoteLengthWithDots(): Fraction {
-        // FIXME is this function the same as this.calculateNoteLengthWithoutTie?
-        if (this.tie !== undefined) {
-            return this.calculateNoteLengthWithoutTie();
-        }
-        return this.length;
-    }
-    public calculateNumberOfNeededDots(fraction: Fraction = this.length): number {
-        // FIXME (Andrea) Test if correct
-        if (this.tuplet === undefined) {
-            return Math.floor(Math.log(fraction.Numerator) / Math.LN2);
-        } else {
-            return 0;
-        }
-    }
     public ToString(): string {
         if (this.pitch !== undefined) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
@@ -174,6 +159,15 @@ export class Note {
     //        return 64;
     //    }
     //}
+
+    private calculateNumberOfNeededDots(fraction: Fraction = this.length): number {
+        // FIXME (Andrea) Test if correct
+        if (this.tuplet === undefined) {
+            return Math.floor(Math.log(fraction.Numerator) / Math.LN2);
+        } else {
+            return 0;
+        }
+    }
 }
 
 export enum Appearance {

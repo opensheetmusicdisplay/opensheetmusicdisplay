@@ -18,6 +18,7 @@ import {GraphicalNote} from "../GraphicalNote";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import {Fraction} from "../../../Common/DataObjects/Fraction";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -91,17 +92,19 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift   The currently active octave transposition enum, needed for positioning the note vertically
      * @returns {GraphicalNote}
      */
-    public createNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
-                      activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
+    public createNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
+                      activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined): GraphicalNote {
         // Creates the note:
-        let graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef);
-        // Adds the note to the right (graphical) voice (mynotes)
-        let voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
-        let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
-        if (!(voiceID in mynotes)) {
-            mynotes[voiceID] = [];
+        let graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift, graphicalNoteLength);
+        if (note.ParentVoiceEntry !== undefined) {
+            // Adds the note to the right (graphical) voice (mynotes)
+            let voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
+            let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
+            if (!(voiceID in mynotes)) {
+                mynotes[voiceID] = [];
+            }
+            mynotes[voiceID].push(graphicalNote);
         }
-        mynotes[voiceID].push(graphicalNote);
         return graphicalNote;
     }
 
@@ -114,9 +117,9 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift
      * @returns {GraphicalNote}
      */
-    public createGraceNote(note: Note, numberOfDots: number, graphicalStaffEntry: GraphicalStaffEntry,
+    public createGraceNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
                            activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
-        return new GraphicalNote(note, graphicalStaffEntry);
+        return new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift);
     }
 
     /**
@@ -129,7 +132,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
         // ToDo: set accidental here from pitch.Accidental
-        let note: VexFlowGraphicalNote = <VexFlowGraphicalNote> graphicalNote;
+        let note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
         note.setPitch(pitch);
     }
 

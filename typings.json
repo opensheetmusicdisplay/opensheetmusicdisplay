@@ -1,7 +1,8 @@
 {
   "globalDependencies": {
     "chai": "registry:dt/chai#3.4.0+20160317120654",
-    "mocha": "registry:dt/mocha#2.2.5+20160317120654"
+    "mocha": "registry:dt/mocha#2.2.5+20160317120654",
+    "shortid": "registry:dt/shortid#0.0.0+20160316155526"
   },
   "dependencies": {
     "es6-promise": "registry:npm/es6-promise#3.0.0+20160211003958",

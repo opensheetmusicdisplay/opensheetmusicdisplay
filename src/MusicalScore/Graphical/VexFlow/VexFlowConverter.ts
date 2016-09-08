@@ -70,7 +70,7 @@ export class VexFlowConverter {
     public static pitch(pitch: Pitch, clef: ClefInstruction): [string, string, ClefInstruction] {
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         // The octave seems to need a shift of three FIXME?
-        let octave: number = pitch.Octave + clef.OctaveOffset + 3;
+        let octave: number = pitch.Octave - clef.OctaveOffset + 3;
         let acc: string = VexFlowConverter.accidental(pitch.Accidental);
         return [fund + "n/" + octave, acc, clef];
     }
@@ -111,9 +111,10 @@ export class VexFlowConverter {
     public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];
         let accidentals: string[] = [];
-        let frac: Fraction = notes[0].sourceNote.Length;
+        let frac: Fraction = notes[0].graphicalNoteLength;
         let duration: string = VexFlowConverter.duration(frac);
-        let vfclef: string;
+        let vfClefType: string = undefined;
+        let numDots: number = 0;
         for (let note of notes) {
             let res: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             if (res === undefined) {
@@ -123,13 +124,21 @@ export class VexFlowConverter {
             }
             keys.push(res[0]);
             accidentals.push(res[1]);
-            if (!vfclef) {
-                vfclef = VexFlowConverter.Clef(res[2]);
+            if (!vfClefType) {
+                let vfClef: {type: string, annotation: string} = VexFlowConverter.Clef(res[2]);
+                vfClefType = vfClef.type;
+            }
+            if (numDots < note.numberOfDots) {
+                numDots = note.numberOfDots;
             }
         }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            duration += "d";
+        }
+
         let vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
             auto_stem: true,
-            clef: vfclef,
+            clef: vfClefType,
             duration: duration,
             duration_override: {
                 denominator: frac.Denominator,
@@ -137,12 +146,17 @@ export class VexFlowConverter {
             },
             keys: keys,
         });
+
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i]));
             }
         }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            vfnote.addDotToAll();
+        }
+
         return vfnote;
     }
 
@@ -152,8 +166,10 @@ export class VexFlowConverter {
      * @returns {string}
      * @constructor
      */
-    public static Clef(clef: ClefInstruction): string {
+    public static Clef(clef: ClefInstruction): {type: string, annotation: string} {
         let type: string;
+        let annotation: string = undefined;
+
         switch (clef.ClefType) {
             case ClefEnum.G:
                 type = "treble";
@@ -172,7 +188,17 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        return type;
+
+        switch (clef.OctaveOffset) {
+            case 1:
+                annotation = "8va";
+                break;
+            case -1:
+                annotation = "8vb";
+                break;
+            default:
+        }
+        return {type, annotation};
     }
 
     /**
@@ -297,6 +323,6 @@ export class VexFlowConverter {
      */
     public static style(styleId: OutlineAndFillStyleEnum): string {
         // TODO To be implemented
-        return "purple";
+        return "lightgreen";
     }
 }

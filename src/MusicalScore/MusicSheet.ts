@@ -463,7 +463,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             let sm: SourceMeasure = this.sourceMeasures[idx];
             for (let idx2: number = 0, len2: number = sm.VerticalSourceStaffEntryContainers.length; idx2 < len2; ++idx2) {
                 let vssec: VerticalSourceStaffEntryContainer = sm.VerticalSourceStaffEntryContainers[idx2];
-                if (Fraction.Equal(timeStamp, vssec.getAbsoluteTimestamp())) {
+                if (timeStamp.Equals(vssec.getAbsoluteTimestamp())) {
                     return sm;
                 }
             }
