@@ -2,6 +2,7 @@ import {Pitch} from "../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
+
 export class ChordSymbolContainer {
     private rootPitch: Pitch;
     private chordKind: ChordSymbolEnum;
@@ -192,7 +193,9 @@ export class ChordSymbolContainer {
         }
         return text;
     }
+
 }
+
 export class Degree {
     constructor(value: number, alteration: AccidentalEnum, text: ChordDegreeText) {
         this.value = value;
