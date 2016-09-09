@@ -8,6 +8,7 @@ import {BoundingBox} from "./BoundingBox";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 
 export class SelectionStartSymbol extends GraphicalObject {
+
     constructor(system: MusicSystem, xPosition: number) {
         super();
         let xCoordinate: number = xPosition;

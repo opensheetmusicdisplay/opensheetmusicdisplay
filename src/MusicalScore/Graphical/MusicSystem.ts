@@ -22,7 +22,7 @@ import {SystemLinePosition} from "./SystemLinePosition";
 import {Staff} from "../VoiceData/Staff";
 
 /**
- * A MusicSystem contains the StaffLines for all instruments, until a line break
+ * A MusicSystem contains the [[StaffLine]]s for all instruments, until a line break
  */
 export abstract class MusicSystem extends GraphicalObject {
     public needsToBeRedrawn: boolean = true;
@@ -103,7 +103,7 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     /**
-     * This method creates the left vertical Line connecting all staves of the MusicSystem.
+     * Create the left vertical Line connecting all staves of the [[MusicSystem]].
      * @param lineWidth
      * @param systemLabelsRightMargin
      */
@@ -130,7 +130,7 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     /**
-     * This method creates the vertical Lines after the End of all StaffLine's Measures
+     * Create the vertical Lines after the End of all [[StaffLine]]'s Measures
      * @param xPosition
      * @param lineWidth
      * @param lineType
@@ -159,6 +159,10 @@ export abstract class MusicSystem extends GraphicalObject {
         }
     }
 
+    /**
+     * Set the y-Positions of all the system lines in the system and creates the graphical Lines and dots within.
+     * @param rules
+     */
     public setYPositionsToVerticalLineObjectsAndCreateLines(rules: EngravingRules): void {
         // empty
     }
@@ -196,6 +200,11 @@ export abstract class MusicSystem extends GraphicalObject {
         return Fraction.plus(m.AbsoluteTimestamp, m.Duration);
     }
 
+    /**
+     * Create an InstrumentBracket for each multiStave Instrument.
+     * @param instruments
+     * @param staffHeight
+     */
     public createInstrumentBrackets(instruments: Instrument[], staffHeight: number): void {
         for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
             let instrument: Instrument = instruments[idx];
@@ -225,6 +234,12 @@ export abstract class MusicSystem extends GraphicalObject {
         }
     }
 
+    /**
+     * Create a GroupBracket for an [[InstrumentalGroup]].
+     * @param instrumentGroups
+     * @param staffHeight
+     * @param recursionDepth
+     */
     public createGroupBrackets(instrumentGroups: InstrumentalGroup[], staffHeight: number, recursionDepth: number): void {
         for (let idx: number = 0, len: number = instrumentGroups.length; idx < len; ++idx) {
             let instrumentGroup: InstrumentalGroup = instrumentGroups[idx];
@@ -264,6 +279,12 @@ export abstract class MusicSystem extends GraphicalObject {
         }
     }
 
+    /**
+     * Create the Instrument's Labels (only for the first [[MusicSystem]] of the first MusicPage).
+     * @param instrumentLabelTextHeight
+     * @param systemLabelsRightMargin
+     * @param labelMarginBorderFactor
+     */
     public createMusicSystemLabel(instrumentLabelTextHeight: number, systemLabelsRightMargin: number, labelMarginBorderFactor: number): void {
         if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
             let instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.getVisibleInstruments();
@@ -275,8 +296,13 @@ export abstract class MusicSystem extends GraphicalObject {
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(graphicalLabel, instrument);
                 this.boundingBox.ChildElements.push(graphicalLabel.PositionAndShape);
+
+                // X-Position will be 0 (Label starts at the same PointF_2D with MusicSystem)
+                // Y-Position will be calculated after the y-Spacing
                 graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
             }
+
+            // calculate maxLabelLength (needed for X-Spacing)
             this.maxLabelLength = 0.0;
             let labels: GraphicalLabel[] = this.labels.keys();
             for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
@@ -289,6 +315,9 @@ export abstract class MusicSystem extends GraphicalObject {
         }
     }
 
+    /**
+     * Set the Y-Positions for the MusicSystem's Labels.
+     */
     public setMusicSystemLabelsYPosition(): void {
         if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
             this.labels.forEach((key: GraphicalLabel, value: Instrument): void => {
@@ -314,6 +343,11 @@ export abstract class MusicSystem extends GraphicalObject {
         }
     }
 
+    /**
+     * Check if two "adjacent" StaffLines have BOTH a StaffEntry with a StaffEntryLink.
+     * This is needed for the y-spacing algorithm.
+     * @returns {boolean}
+     */
     public checkStaffEntriesForStaffEntryLink(): boolean {
         let first: boolean = false;
         let second: boolean = false;
@@ -370,10 +404,10 @@ export abstract class MusicSystem extends GraphicalObject {
         throw new Error("not implemented");
     }
 
-    /// <summary>
-    /// This method creates all the graphical lines and dots needed to render a system line (e.g. bold-thin-dots..).
-    /// </summary>
-    /// <param name="psSystemLine"></param>
+    /**
+     * Create all the graphical lines and dots needed to render a system line (e.g. bold-thin-dots..).
+     * @param systemLine
+     */
     protected createLinesForSystemLine(systemLine: SystemLine): void {
         //Empty
     }
@@ -419,6 +453,10 @@ export abstract class MusicSystem extends GraphicalObject {
         return undefined;
     }
 
+    /**
+     * Update the xPosition of the [[MusicSystem]]'s [[StaffLine]]'s due to [[Label]] positioning.
+     * @param systemLabelsRightMargin
+     */
     private updateMusicSystemStaffLineXPosition(systemLabelsRightMargin: number): void {
         for (let idx: number = 0, len: number = this.StaffLines.length; idx < len; ++idx) {
             let staffLine: StaffLine = this.StaffLines[idx];

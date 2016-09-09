@@ -396,6 +396,8 @@ export abstract class MusicSheetCalculator {
         if (allMeasures === undefined) {
             return;
         }
+
+        // visible 2D-MeasureList
         let visibleMeasureList: StaffMeasure[][] = [];
         for (let idx: number = 0, len: number = allMeasures.length; idx < len; ++idx) {
             let staffMeasures: StaffMeasure[] = allMeasures[idx];
@@ -409,7 +411,9 @@ export abstract class MusicSheetCalculator {
             visibleMeasureList.push(visibleStaffMeasures);
         }
 
+        // find out how many StaffLine Instances we need
         let numberOfStaffLines: number = 0;
+
         for (let idx: number = 0, len: number = visibleMeasureList.length; idx < len; ++idx) {
             let gmlist: StaffMeasure[] = visibleMeasureList[idx];
             numberOfStaffLines = Math.max(gmlist.length, numberOfStaffLines);
@@ -418,18 +422,30 @@ export abstract class MusicSheetCalculator {
         if (numberOfStaffLines === 0) {
             return;
         }
+
+        // build the MusicSystems
         let musicSystemBuilder: MusicSystemBuilder = new MusicSystemBuilder();
         musicSystemBuilder.initialize(this.graphicalMusicSheet, visibleMeasureList, numberOfStaffLines, this.symbolFactory);
         musicSystemBuilder.buildMusicSystems();
+
+        // check for Measures with only WholeRestNotes and correct their X-Position (middle of Measure)
         this.checkMeasuresForWholeRestNotes();
         if (!this.leadSheet) {
+            // calculate Beam Placement
             this.calculateBeams();
+            // possible Displacement of RestNotes
             this.optimizeRestPlacement();
+            // possible Displacement of RestNotes
             this.calculateStaffEntryArticulationMarks();
+            // calculate Ties
             this.calculateTieCurves();
         }
+        // calculate Sky- and BottomLine
+        // will have reasonable values only between ObjectsBorders (eg StaffEntries)
         this.calculateSkyBottomLines();
+        // calculate TupletsNumbers
         this.calculateTupletNumbers();
+        // calculate MeasureNumbers
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
@@ -437,26 +453,42 @@ export abstract class MusicSheetCalculator {
                 this.calculateMeasureNumberPlacement(musicSystem);
             }
         }
+        // calculate Slurs
         if (!this.leadSheet) {
             this.calculateSlurs();
         }
+        // calculate StaffEntry Ornaments
+        // (must come after Slurs)
         if (!this.leadSheet) {
             this.calculateOrnaments();
         }
+        // update Sky- and BottomLine with borderValues 0.0 and 4.0 respectively
+        // (must also come after Slurs)
         this.updateSkyBottomLines();
+        // calculate StaffEntry ChordSymbols
         this.calculateChordSymbols();
         if (!this.leadSheet) {
+            // calculate all Instantanious/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
+            // place neighbouring DynamicExpressions at the same height
             this.optimizeStaffLineDynamicExpressionsPositions();
+            // calculate all Mood and Unknown Expression
             this.calculateMoodAndUnknownExpressions();
+            // calculate all OctaveShifts
             this.calculateOctaveShifts();
+            // calucalte RepetitionInstructions (Dal Segno, Coda, etc)
             this.calculateWordRepetitionInstructions();
         }
+        // calculate endings last, so they appear above measure numbers
         this.calculateRepetitionEndings();
+        // calcualte all Tempo Expressions
         if (!this.leadSheet) {
             this.calculateTempoExpressions();
         }
+        // calculate all LyricWords Positions
         this.calculateLyricsPosition();
+        // update all StaffLine's Borders
+        // create temporary Object, just to call the methods (in order to avoid declaring them static)
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
@@ -467,9 +499,16 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+        // calculate Comments for each Staffline
         this.calculateComments();
+        // Y-spacing
         this.calculateSystemYLayout();
+        // calculate marked Areas for Systems
         this.calculateMarkedAreas();
+
+        // the following must be done after Y-spacing, when the MusicSystems's final Dimensions are set
+        // set the final yPositions of Objects such as SystemLabels and SystemLinesContainers,
+        // create all System Lines, Brackets and MeasureNumbers (for all systems and for all pages)
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
@@ -501,9 +540,11 @@ export abstract class MusicSheetCalculator {
                     staffLine.addActivitySymbolClickArea();
                 }
             }
+            // calculate all Labels's Positions for the first Page
             if (graphicalMusicPage === this.graphicalMusicSheet.MusicPages[0]) {
                 this.calculatePageLabels(graphicalMusicPage);
             }
+            // calculate TopBottom Borders for all elements recursively
             graphicalMusicPage.PositionAndShape.calculateTopBottomBorders();
         }
     }
@@ -528,6 +569,9 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
+    /**
+     * Iterate through all the [[StaffLine]]s in order to check for possible optimizations in the placement of the [[GraphicalExpression]]s.
+     */
     protected optimizeStaffLineDynamicExpressionsPositions(): void {
         return;
     }
@@ -536,6 +580,12 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
+    /**
+     * Do layout on staff measures with only consist of a full rest.
+     * @param rest
+     * @param gse
+     * @param measure
+     */
     protected layoutMeasureWithWholeRest(rest: GraphicalNote, gse: GraphicalStaffEntry,
                                          measure: StaffMeasure): void {
         return;
@@ -578,6 +628,15 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
+    /**
+     * Calculate a single GraphicalRepetition.
+     * @param start
+     * @param end
+     * @param numberText
+     * @param offset
+     * @param leftOpen
+     * @param rightOpen
+     */
     protected layoutSingleRepetitionEnding(start: StaffMeasure, end: StaffMeasure, numberText: string,
                                            offset: number, leftOpen: boolean, rightOpen: boolean): void {
         return;

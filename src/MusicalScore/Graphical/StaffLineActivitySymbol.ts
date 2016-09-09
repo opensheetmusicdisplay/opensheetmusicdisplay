@@ -3,6 +3,7 @@ import {StaffLine} from "./StaffLine";
 import {BoundingBox} from "./BoundingBox";
 
 export class StaffLineActivitySymbol extends GraphicalObject {
+
     constructor(staffLine: StaffLine) {
         super();
         this.parentStaffLine = staffLine;
@@ -13,5 +14,7 @@ export class StaffLineActivitySymbol extends GraphicalObject {
         this.boundingBox.BorderLeft = -1.5;
         this.boundingBox.BorderTop = -1.5;
     }
+
     public parentStaffLine: StaffLine;
+
 }
