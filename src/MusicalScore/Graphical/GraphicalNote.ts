@@ -10,7 +10,7 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
 
 /**
- * The graphical counterpart of a Note
+ * The graphical counterpart of a [[Note]]
  */
 export class GraphicalNote extends GraphicalObject {
     constructor(note: Note, parent: GraphicalStaffEntry, graphicalNoteLength: Fraction = undefined) {
@@ -54,6 +54,11 @@ export class GraphicalNote extends GraphicalObject {
         return transposedPitch;
     }
 
+    /**
+     * Return the number of dots needed to represent the given fraction.
+     * @param fraction
+     * @returns {number}
+     */
     private calculateNumberOfNeededDots(fraction: Fraction): number {
         let dotCount: number = 0;
         if (this.sourceNote === undefined || this.sourceNote.NoteTuplet === undefined) {

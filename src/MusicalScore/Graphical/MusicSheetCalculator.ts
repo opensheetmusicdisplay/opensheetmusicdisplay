@@ -58,11 +58,13 @@ import {CollectionUtil} from "../../Util/CollectionUtil";
 export abstract class MusicSheetCalculator {
     public static transposeCalculator: ITransposeCalculator;
     protected static textMeasurer: ITextMeasurer;
+
     protected staffEntriesWithGraphicalTies: GraphicalStaffEntry[] = [];
     protected staffEntriesWithOrnaments: GraphicalStaffEntry[] = [];
     protected staffEntriesWithChordSymbols: GraphicalStaffEntry[] = [];
     protected staffLinesWithLyricWords: StaffLine[] = [];
     protected staffLinesWithGraphicalExpressions: StaffLine[] = [];
+
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected rules: EngravingRules;
     protected symbolFactory: IGraphicalSymbolFactory;
@@ -112,27 +114,48 @@ export abstract class MusicSheetCalculator {
         //this.calculate();
     }
 
+    /**
+     * Build the 2D [[GraphicalMeasure]] ist needed for the [[MusicSheetCalculator]].
+     * Internally it creates [[GraphicalMeasure]]s, [[GraphicalStaffEntry]]'s and [[GraphicalNote]]s.
+     */
     public prepareGraphicalMusicSheet(): void {
-        //this.graphicalMusicSheet.SystemImages.length = 0;
+        // Clear the stored system images dict - all systems have to be redrawn.
+        // Not necessary now. TODO Check
+        // this.graphicalMusicSheet.SystemImages.length = 0;
         let musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
+
         this.staffEntriesWithGraphicalTies = [];
         this.staffEntriesWithOrnaments = [];
         this.staffEntriesWithChordSymbols = [];
         this.staffLinesWithLyricWords = [];
         this.staffLinesWithGraphicalExpressions = [];
+
         this.graphicalMusicSheet.Initialize();
         let measureList: StaffMeasure[][] = this.graphicalMusicSheet.MeasureList;
+
+        // one AccidentalCalculator for each Staff (regardless of Instrument)
         let accidentalCalculators: AccidentalCalculator[] = this.createAccidentalCalculators();
+
+        // List of Active ClefInstructions
         let activeClefs: ClefInstruction[] = this.graphicalMusicSheet.initializeActiveClefs();
+
+        // LyricWord - GraphicalLyricWord Lists
         let lyricWords: LyricWord[] = [];
+
         let completeNumberOfStaves: number = musicSheet.getCompleteNumberOfStaves();
+
+        // Octave Shifts List
         let openOctaveShifts: OctaveShiftParams[] = [];
+
+        // TieList - timestampsArray
         let tieTimestampListDictList: Dictionary<Tie, Fraction[]>[] = [];
         for (let i: number = 0; i < completeNumberOfStaves; i++) {
             let tieTimestampListDict: Dictionary<Tie, Fraction[]> = new Dictionary<Tie, Fraction[]>();
             tieTimestampListDictList.push(tieTimestampListDict);
             openOctaveShifts.push(undefined);
         }
+
+        // go through all SourceMeasures (taking into account normal SourceMusicParts and Repetitions)
         for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
             let sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
             let graphicalMeasures: StaffMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
@@ -150,19 +173,38 @@ export abstract class MusicSheetCalculator {
         this.setIndecesToVerticalGraphicalContainers();
     }
 
+    /**
+     * The main method for the Calculator.
+     */
     public calculate(): void {
         this.clearSystemsAndMeasures();
+
+        // delete graphicalObjects that will be recalculated and create the GraphicalObjects that strech over a single StaffEntry new.
         this.clearRecreatedObjects();
+
         this.createGraphicalTies();
+
+        // calculate SheetLabelBoundingBoxes
         this.calculateSheetLabelBoundingBoxes();
         this.calculateXLayout(this.graphicalMusicSheet, this.maxInstrNameLabelLength());
+
+        // create List<MusicPage>
         this.graphicalMusicSheet.MusicPages.length = 0;
+
+        // create new MusicSystems and StaffLines (as many as necessary) and populate them with Measures from measureList
         this.calculateMusicSystems();
+
+        // Add some white space at the end of the piece:
         this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
+
+        // transform Relative to Absolute Positions
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
     }
 
     public calculateXLayout(graphicalMusicSheet: GraphicalMusicSheet, maxInstrNameLabelLength: number): void {
+        // for each inner List in big Measure List calculate new Positions for the StaffEntries
+        // and adjust Measures sizes
+        // calculate max measure length for maximum zoom in.
         let minLength: number = 0;
         let maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
         if (this.graphicalMusicSheet.MeasureList.length > 0) {
@@ -180,6 +222,11 @@ export abstract class MusicSheetCalculator {
         this.graphicalMusicSheet.MinAllowedSystemWidth = minLength;
     }
 
+    /**
+     * Calculates the x layout of the staff entries within the staff measures belonging to one source measure.
+     * All staff entries are x-aligned throughout all the measures.
+     * @param measures - The minimum required x width of the source measure
+     */
     protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
         throw new Error("abstract, not implemented");
     }
@@ -188,6 +235,9 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Called for every source measure when generating the list of staff measures for it.
+     */
     protected initStaffMeasuresCreation(): void {
         throw new Error("abstract, not implemented");
     }
@@ -196,6 +246,17 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.
+     * @param tiedGraphicalNote
+     * @param beams
+     * @param activeClef
+     * @param octaveShiftValue
+     * @param graphicalStaffEntry
+     * @param duration
+     * @param openTie
+     * @param isLastTieNote
+     */
     protected handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
                                       octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
                                       openTie: Tie, isLastTieNote: boolean): void {
@@ -240,32 +301,69 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Iterate through all Measures and calculates the MeasureNumberLabels.
+     * @param musicSystem
+     */
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Calculate the shape (Bézier curve) for this tie.
+     * @param tie
+     * @param tieIsAtSystemBreak
+     */
     protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Calculate the Lyrics YPositions for a single [[StaffLine]].
+     * @param staffLine
+     * @param lyricVersesNumber
+     */
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Calculate a single OctaveShift for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
                                          measureIndex: number, staffIndex: number): void {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Calculate all the [[RepetitionInstruction]]s for a single [[SourceMeasure]].
+     * @param repetitionInstruction
+     * @param measureIndex
+     */
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
                                                  measureIndex: number): void {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Calculate all the Mood and Unknown Expressions for a single [[MultiExpression]].
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
     protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * Delete all Objects that must be recalculated.
+     * If graphicalMusicSheet.reCalculate has been called, then this method will be called to reset or remove all flexible
+     * graphical music symbols (e.g. Ornaments, Lyrics, Slurs) graphicalMusicSheet will have MusicPages, they will have MusicSystems etc...
+     */
     protected clearRecreatedObjects(): void {
         // Clear StaffEntries with GraphicalTies
         for (let idx: number = 0, len: number = this.staffEntriesWithGraphicalTies.length; idx < len; ++idx) {
@@ -276,11 +374,19 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
+    /**
+     * This method handles a [[StaffEntryLink]].
+     * @param graphicalStaffEntry
+     * @param staffEntryLinks
+     */
     protected handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry,
                                    staffEntryLinks: StaffEntryLink[]): void {
         Logging.debug("handleStaffEntryLink not implemented");
     }
 
+    /**
+     * Store the newly computed [[Measure]]s in newly created [[MusicSystem]]s.
+     */
     protected calculateMusicSystems(): void {
         if (this.graphicalMusicSheet.MeasureList === undefined) {
             return;
