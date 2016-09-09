@@ -28,6 +28,9 @@ import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
+/**
+ * To be implemented
+ */
 export type SlurReader = any;
 
 export class VoiceGenerator {

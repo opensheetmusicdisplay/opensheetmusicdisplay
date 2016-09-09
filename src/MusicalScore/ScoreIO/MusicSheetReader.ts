@@ -18,7 +18,13 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {Label} from "../Label";
 
+/**
+ * To be implemented
+ */
 type RepetitionInstructionReader = any;
+/**
+ * To be implemented
+ */
 type RepetitionCalculator = any;
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {

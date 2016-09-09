@@ -6,10 +6,9 @@ import {MusicSheetCalculator} from "./../MusicalScore/Graphical/MusicSheetCalcul
 import {VexFlowMusicSheetDrawer} from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import {MusicSheet} from "./../MusicalScore/MusicSheet";
 import {Cursor} from "./Cursor";
-import {MXLtoXMLstring} from "../Common/FileIO/Mxl";
+import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
-import {handleResize} from "./ResizeHandler";
-import {ajax} from "./AJAX";
+import {AJAX} from "./AJAX";
 import {Logging} from "../Common/Logging";
 import {Fraction} from "../Common/DataObjects/Fraction";
 import {OutlineAndFillStyleEnum} from "../MusicalScore/Graphical/DrawingEnums";
@@ -69,7 +68,7 @@ export class OSMD {
             let self: OSMD = this;
             if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
                 // This is a zip file, unpack it first
-                return MXLtoXMLstring(str).then(
+                return MXLHelper.MXLtoXMLstring(str).then(
                     (str: string) => {
                         return self.load(str);
                     },
@@ -86,7 +85,7 @@ export class OSMD {
             } else if (str.length < 2083) {
                 // Assume now 'str' is a URL
                 // Retrieve the file at the given URL
-                return ajax(str).then(
+                return AJAX.ajax(str).then(
                     (s: string) => { return self.load(s); },
                     (exc: Error) => { throw exc; }
                 );
@@ -172,11 +171,13 @@ export class OSMD {
      */
     private autoResize(): void {
         let self: OSMD = this;
-        handleResize(
+        this.handleResize(
             () => {
                 // empty
             },
             () => {
+                // The following code is probably not needed
+                // (the width should adapt itself to the max allowed)
                 //let width: number = Math.max(
                 //    document.documentElement.clientWidth,
                 //    document.body.scrollWidth,
@@ -188,5 +189,45 @@ export class OSMD {
                 self.render();
             }
         );
+    }
+
+    /**
+     * Helper function for managing window's onResize events
+     * @param startCallback is the function called when resizing starts
+     * @param endCallback is the function called when resizing (kind-of) ends
+     */
+    private handleResize(startCallback: () => void, endCallback: () => void): void {
+        let rtime: number;
+        let timeout: number = undefined;
+        let delta: number = 200;
+
+        function resizeEnd(): void {
+            timeout = undefined;
+            window.clearTimeout(timeout);
+            if ((new Date()).getTime() - rtime < delta) {
+                timeout = window.setTimeout(resizeEnd, delta);
+            } else {
+                endCallback();
+            }
+        }
+
+        function resizeStart(): void {
+            rtime = (new Date()).getTime();
+            if (!timeout) {
+                startCallback();
+                rtime = (new Date()).getTime();
+                timeout = window.setTimeout(resizeEnd, delta);
+            }
+        }
+
+        if ((<any>window).attachEvent) {
+            // Support IE<9
+            (<any>window).attachEvent("onresize", resizeStart);
+        } else {
+            window.addEventListener("resize", resizeStart);
+        }
+
+        window.setTimeout(startCallback, 0);
+        window.setTimeout(endCallback, 1);
     }
 }

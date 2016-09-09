@@ -1,6 +1,6 @@
 import { IXmlElement } from "../../../src/Common/FileIO/Xml";
-import { MXLtoIXmlElement } from "../../../src/Common/FileIO/Mxl.ts";
 import { TestUtils } from "../../Util/TestUtils";
+import { MXLHelper } from "../../../src/Common/FileIO/Mxl";
 
 describe("MXL Tests", () => {
   // Generates a test for a mxl file name
@@ -14,7 +14,7 @@ describe("MXL Tests", () => {
       // (with Promises), thus we need a little fix
       // in the end with 'then(null, done)' to
       // make Mocha work asynchronously
-      MXLtoIXmlElement(mxl).then(
+      MXLHelper.MXLtoIXmlElement(mxl).then(
         (score: IXmlElement) => {
           chai.expect(score).to.not.be.undefined;
           chai.expect(score.name).to.equal("score-partwise");
@@ -33,7 +33,7 @@ describe("MXL Tests", () => {
 
   // Test failure
   it("Corrupted file", (done: MochaDone) => {
-    MXLtoIXmlElement("").then(
+    MXLHelper.MXLtoIXmlElement("").then(
       (score: IXmlElement) => {
         chai.expect(score).to.not.be.undefined;
         chai.expect(score.name).to.equal("score-partwise");

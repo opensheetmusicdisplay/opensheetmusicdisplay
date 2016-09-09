@@ -43,6 +43,9 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 //  }
 //}
 
+/**
+ * To be implemented
+ */
 export type repetitionInstructionReader = any;
 
 /**

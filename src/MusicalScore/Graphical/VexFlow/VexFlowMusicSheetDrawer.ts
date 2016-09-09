@@ -7,6 +7,11 @@ import {GraphicalLabel} from "../GraphicalLabel";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
+/**
+ * This is a global contant which denotes the height in pixels of the space between two lines of the stave
+ * (when zoom = 1.0)
+ * @type number
+ */
 export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {

@@ -1,5 +1,5 @@
 /**
- * IXmlAttribute is just Attr
+ * IXmlAttribute is just the standard Attr
  */
 export type IXmlAttribute = Attr;
 
