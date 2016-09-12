@@ -4,7 +4,9 @@ import {NoteEnum} from "../../../Common/DataObjects/Pitch";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
 
-
+/**
+ * A [[KeyInstruction]] is a key signature denoting which notes are to be sharpened or flattened.
+ */
 export class KeyInstruction extends AbstractNotationInstruction {
     constructor(sourceStaffEntry: SourceStaffEntry = undefined, key: number = 0, mode: KeyEnum = KeyEnum.major) {
         super(sourceStaffEntry);

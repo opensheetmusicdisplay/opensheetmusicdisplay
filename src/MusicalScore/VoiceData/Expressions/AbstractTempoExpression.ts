@@ -2,6 +2,7 @@ import {PlacementEnum} from "./AbstractExpression";
 import {MultiTempoExpression} from "./MultiTempoExpression";
 
 export abstract class AbstractTempoExpression {
+
     constructor(label: string, placement: PlacementEnum, staffNumber: number, parentMultiTempoExpression: MultiTempoExpression) {
         this.label = label;
         this.placement = placement;
@@ -47,4 +48,5 @@ export abstract class AbstractTempoExpression {
     private static stringContainsSeparatedWord(str: string, word: string): boolean {
         return (str === word || str.indexOf(" " + word) !== -1 || str.indexOf(word + " ") !== -1);
     }
+
 }

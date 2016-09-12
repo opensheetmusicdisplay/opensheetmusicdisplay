@@ -27,6 +27,7 @@ import {GraphicalObject} from "./GraphicalObject";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
+ *
  * The drawing is implemented with a top-down approach, starting from a music sheet, going through pages, systems, staffs...
  * ... and ending in notes, beams, accidentals and other symbols.
  * It's worth to say, that this class just draws the symbols and graphical elements, using the positions that have been computed before.

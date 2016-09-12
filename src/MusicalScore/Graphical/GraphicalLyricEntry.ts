@@ -7,7 +7,7 @@ import {TextAlignment} from "../../Common/Enums/TextAlignment";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
 /**
- * The graphical counterpart of a [[LyricEntry]]
+ * The graphical counterpart of a [[LyricsEntry]]
  */
 export class GraphicalLyricEntry {
     private lyricsEntry: LyricsEntry;

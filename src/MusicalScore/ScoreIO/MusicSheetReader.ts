@@ -58,6 +58,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
     }
 
+    /**
+     * Read a music XML file and saves the values in the MusicSheet class.
+     * @param root
+     * @param path
+     * @returns {MusicSheet}
+     */
     public createMusicSheet(root: IXmlElement, path: string): MusicSheet {
         try {
             return this._createMusicSheet(root, path);
@@ -157,7 +163,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             if (couldReadMeasure) {
                 this.musicSheet.addMeasure(this.currentMeasure);
                 this.checkIfRhythmInstructionsAreSetAndEqual(instrumentReaders);
-                this.checkSourceMeasureForundefinedEntries();
+                this.checkSourceMeasureForNullEntries();
                 sourceMeasureCounter = this.setSourceMeasureDuration(instrumentReaders, sourceMeasureCounter);
                 MusicSheetReader.doCalculationsAfterDurationHasBeenSet(instrumentReaders);
                 this.currentMeasure.AbsoluteTimestamp = this.currentFraction.clone();
@@ -221,6 +227,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
     }
 
+    /**
+     * Check if all (should there be any apart from the first Measure) [[RhythmInstruction]]s in the [[SourceMeasure]] are the same.
+     *
+     * If not, then the max [[RhythmInstruction]] (Fraction) is set to all staves.
+     * Also, if it happens to have the same [[RhythmInstruction]]s in RealValue but given in Symbol AND Fraction, then the Fraction prevails.
+     * @param instrumentReaders
+     */
     private checkIfRhythmInstructionsAreSetAndEqual(instrumentReaders: InstrumentReader[]): void {
         let rhythmInstructions: RhythmInstruction[] = [];
         for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
@@ -302,6 +315,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
     }
 
+    /**
+     * True in case of 4/4 and COMMON TIME (or 2/2 and CUT TIME)
+     * @param rhythmInstructions
+     * @returns {boolean}
+     */
     private areRhythmInstructionsMixed(rhythmInstructions: RhythmInstruction[]): boolean {
         for (let i: number = 1; i < rhythmInstructions.length; i++) {
             if (
@@ -314,6 +332,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return false;
     }
 
+    /**
+     * Set the [[Measure]]'s duration taking into account the longest [[Instrument]] duration and the active Rhythm read from XML.
+     * @param instrumentReaders
+     * @param sourceMeasureCounter
+     * @returns {number}
+     */
     private setSourceMeasureDuration(instrumentReaders: InstrumentReader[], sourceMeasureCounter: number): number {
         let activeRhythm: Fraction = new Fraction(0, 1);
         let instrumentsMaxTieNoteFractions: Fraction[] = [];
@@ -366,6 +390,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return sourceMeasureCounter;
     }
 
+    /**
+     * Check the Fractions for Equivalence and if so, sets maxInstrumentDuration's members accordingly.
+     * *
+     * Example: if maxInstrumentDuration = 1/1 and sourceMeasureDuration = 4/4, maxInstrumentDuration becomes 4/4.
+     * @param maxInstrumentDuration
+     * @param activeRhythm
+     */
     private checkFractionsForEquivalence(maxInstrumentDuration: Fraction, activeRhythm: Fraction): void {
         if (activeRhythm.Denominator > maxInstrumentDuration.Denominator) {
             let factor: number = activeRhythm.Denominator / maxInstrumentDuration.Denominator;
@@ -373,6 +404,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
     }
 
+    /**
+     * Handle the case of an implicit [[SourceMeasure]].
+     * @param maxInstrumentDuration
+     * @param activeRhythm
+     * @returns {boolean}
+     */
     private checkIfMeasureIsImplicit(maxInstrumentDuration: Fraction, activeRhythm: Fraction): boolean {
         if (this.previousMeasure === undefined && maxInstrumentDuration.lt(activeRhythm)) {
             return true;
@@ -383,6 +420,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return false;
     }
 
+    /**
+     * Check the Duration of all the given Instruments.
+     * @param instrumentsDurations
+     * @param maxInstrumentDuration
+     * @returns {boolean}
+     */
     private allInstrumentsHaveSameDuration(instrumentsDurations: Fraction[], maxInstrumentDuration: Fraction): boolean {
         let counter: number = 0;
         for (let idx: number = 0, len: number = instrumentsDurations.length; idx < len; ++idx) {
@@ -404,7 +447,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return (counter === this.currentMeasure.VerticalSourceStaffEntryContainers.length);
     }
 
-    private checkSourceMeasureForundefinedEntries(): void {
+    /**
+     * Check a [[SourceMeasure]] for possible empty / undefined entries ([[VoiceEntry]], [[SourceStaffEntry]], VerticalContainer)
+     * (caused from TieAlgorithm removing EndTieNote) and removes them if completely empty / null
+     */
+    private checkSourceMeasureForNullEntries(): void {
         for (let i: number = this.currentMeasure.VerticalSourceStaffEntryContainers.length - 1; i >= 0; i--) {
             for (let j: number = this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries.length - 1; j >= 0; j--) {
                 let sourceStaffEntry: SourceStaffEntry = this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries[j];
@@ -436,6 +483,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
     }
 
+    /**
+     * Read the XML file and creates the main sheet Labels.
+     * @param root
+     * @param filePath
+     */
     private pushSheetLabels(root: IXmlElement, filePath: string): void {
         this.readComposer(root);
         this.readTitle(root);
@@ -640,6 +692,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
     }
 
+    /**
+     * Build the [[InstrumentalGroup]]s and [[Instrument]]s.
+     * @param entryList
+     * @returns {{}}
+     */
     private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument; } {
         let instrumentId: number = 0;
         let instrumentDict: { [_: string]: Instrument; } = {};
@@ -774,6 +831,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return instrumentDict;
     }
 
+    /**
+     * Read from each xmlInstrumentPart the first xmlMeasure in order to find out the [[Instrument]]'s number of Staves
+     * @param partInst
+     * @returns {number} - Complete number of Staves for all Instruments.
+     */
     private getCompleteNumberOfStavesFromXml(partInst: IXmlElement[]): number {
         let num: number = 0;
         for (let partNode of partInst) {
@@ -802,6 +864,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return num;
     }
 
+    /**
+     * Read from XML for a single [[Instrument]] the first xmlMeasure in order to find out the Instrument's number of Staves.
+     * @param partNode
+     * @returns {number}
+     */
     private getInstrumentNumberOfStavesFromXml(partNode: IXmlElement): number {
         let num: number = 0;
         let xmlMeasure: IXmlElement = partNode.element("measure");
@@ -825,4 +892,5 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         return num;
     }
+
 }

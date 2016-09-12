@@ -73,6 +73,13 @@ export class VoiceGenerator {
     public set OctaveShift(value: number) {
         this.currentOctaveShift = value;
     }
+
+    /**
+     * Create new [[VoiceEntry]], add it to given [[SourceStaffEntry]] and if given so, to [[Voice]].
+     * @param musicTimestamp
+     * @param parentStaffEntry
+     * @param addToVoice
+     */
     public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean): void {
         this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry);
         if (addToVoice) {
@@ -82,6 +89,22 @@ export class VoiceGenerator {
             parentStaffEntry.VoiceEntries.push(this.currentVoiceEntry);
         }
     }
+
+    /**
+     * Create [[Note]]s and handle Lyrics, Articulations, Beams, Ties, Slurs, Tuplets.
+     * @param noteNode
+     * @param noteDuration
+     * @param divisions
+     * @param restNote
+     * @param graceNote
+     * @param parentStaffEntry
+     * @param parentMeasure
+     * @param measureStartAbsoluteTimestamp
+     * @param maxTieNoteFraction
+     * @param chord
+     * @param guitarPro
+     * @returns {Note}
+     */
     public read(
         noteNode: IXmlElement, noteDuration: number, divisions: number, restNote: boolean, graceNote: boolean,
         parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
@@ -144,6 +167,11 @@ export class VoiceGenerator {
 
         return this.currentNote;
     }
+
+    /**
+     * Handle the GraceNotes that appear before the Measure's End
+     * and aren't assigned to any normal (with [[VoiceEntries]]) [[SourceStaffEntry]]s yet.
+     */
     public checkForOpenGraceNotes(): void {
         if (
             this.currentStaffEntry !== undefined
@@ -174,6 +202,15 @@ export class VoiceGenerator {
             }
         }
     }
+
+    /**
+     * Create a new [[StaffEntryLink]] and sets the currenstStaffEntry accordingly.
+     * @param index
+     * @param currentStaff
+     * @param currentStaffEntry
+     * @param currentMeasure
+     * @returns {SourceStaffEntry}
+     */
     public checkForStaffEntryLink(
         index: number, currentStaff: Staff, currentStaffEntry: SourceStaffEntry, currentMeasure: SourceMeasure
     ): SourceStaffEntry {
@@ -212,6 +249,12 @@ export class VoiceGenerator {
     public hasVoiceEntry(): boolean {
         return this.currentVoiceEntry !== undefined;
     }
+
+    /**
+     *
+     * @param type
+     * @returns {Fraction} - a Note's Duration from a given type (type must be valid).
+     */
     public getNoteDurationFromType(type: string): Fraction {
         switch (type) {
             case "1024th":
@@ -266,6 +309,17 @@ export class VoiceGenerator {
     //    if ((ornaNode = notationNode.element("ornaments")) !== undefined)
     //        this.articulationReader.addOrnament(ornaNode, currentVoiceEntry);
     //}
+
+    /**
+     * Create a new [[Note]] and adds it to the currentVoiceEntry
+     * @param node
+     * @param noteDuration
+     * @param divisions
+     * @param graceNote
+     * @param chord
+     * @param guitarPro
+     * @returns {Note}
+     */
     private addSingleNote(
         node: IXmlElement, noteDuration: number, divisions: number, graceNote: boolean, chord: boolean, guitarPro: boolean
     ): Note {
@@ -355,6 +409,13 @@ export class VoiceGenerator {
         }
         return note;
     }
+
+    /**
+     * Create a new rest note and add it to the currentVoiceEntry.
+     * @param noteDuration
+     * @param divisions
+     * @returns {Note}
+     */
     private addRestNote(noteDuration: number, divisions: number): Note {
         let restFraction: Fraction = new Fraction(noteDuration, divisions);
         let restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
@@ -364,6 +425,13 @@ export class VoiceGenerator {
         }
         return restNote;
     }
+
+    /**
+     * Handle the currentVoiceBeam.
+     * @param node
+     * @param note
+     * @param grace
+     */
     private createBeam(node: IXmlElement, note: Note, grace: boolean): void {
         try {
             let beamNode: IXmlElement = node.element("beam");
@@ -431,6 +499,10 @@ export class VoiceGenerator {
         }
 
     }
+
+    /**
+     * Check for open [[Beam]]s at end of [[SourceMeasure]] and closes them explicity.
+     */
     private handleOpenBeam(): void {
         if (this.openBeam.Notes.length === 1) {
             let beamNote: Note = this.openBeam.Notes[0];
@@ -520,6 +592,13 @@ export class VoiceGenerator {
             note.ParentVoiceEntry = graceVoiceEntry;
         }
     }
+
+    /**
+     * Create a [[Tuplet]].
+     * @param node
+     * @param tupletNodeList
+     * @returns {number}
+     */
     private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
         if (tupletNodeList !== undefined && tupletNodeList.length > 1) {
             let timeModNode: IXmlElement = node.element("time-modification");
@@ -650,6 +729,11 @@ export class VoiceGenerator {
         }
         return this.openTupletNumber;
     }
+
+    /**
+     * Handle the time-modification [[IXmlElement]] for the [[Tuplet]] case (tupletNotes not at begin/end of [[Tuplet]]).
+     * @param noteNode
+     */
     private handleTimeModificationNode(noteNode: IXmlElement): void {
         if (this.openTupletNumber in this.tupletDict) {
             try {
@@ -825,6 +909,11 @@ export class VoiceGenerator {
             }
         }
     }
+
+    /**
+     * Find the next free int (starting from 0) to use as key in TieDict.
+     * @returns {number}
+     */
     private getNextAvailableNumberForTie(): number {
         let keys: string[] = Object.keys(this.openTieDict);
         if (keys.length === 0) { return 1; }
@@ -836,6 +925,12 @@ export class VoiceGenerator {
         }
         return +(keys[keys.length - 1]) + 1;
     }
+
+    /**
+     * Search the tieDictionary for the corresponding candidateNote to the currentNote (same FundamentalNote && Octave).
+     * @param candidateNote
+     * @returns {number}
+     */
     private findCurrentNoteInTieDict(candidateNote: Note): number {
         let openTieDict: { [_: number]: Tie; } = this.openTieDict;
         for (let key in openTieDict) {
@@ -848,6 +943,12 @@ export class VoiceGenerator {
         }
         return -1;
     }
+
+    /**
+     * Calculate the normal duration of a [[Tuplet]] note.
+     * @param xmlNode
+     * @returns {any}
+     */
     private getTupletNoteDurationFromType(xmlNode: IXmlElement): Fraction {
         if (xmlNode.element("type") !== undefined) {
             let typeNode: IXmlElement = xmlNode.element("type");

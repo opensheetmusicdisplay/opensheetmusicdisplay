@@ -7,6 +7,7 @@ import {AbstractTempoExpression} from "./AbstractTempoExpression";
 import {ContinuousTempoExpression} from "./ContinuousExpressions/ContinuousTempoExpression";
 
 export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>*/ {
+
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {
         this.sourceMeasure = sourceMeasure;
         this.timestamp = timestamp;
