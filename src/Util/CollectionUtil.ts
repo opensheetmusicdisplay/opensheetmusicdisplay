@@ -1,5 +1,8 @@
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
+/**
+ * This class implements static methods to perform useful operations on lists, dictionaries, ...
+ */
 export class CollectionUtil {
 
     public static contains2(array: any[], object: any): boolean {

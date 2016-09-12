@@ -2,6 +2,7 @@ import {Voice} from "./Voice";
 import {Instrument} from "../Instrument";
 
 export class Staff {
+
     constructor(parentInstrument: Instrument, instrumentStaffId: number) {
         this.parentInstrument = parentInstrument;
         this.id = instrumentStaffId;
@@ -36,4 +37,5 @@ export class Staff {
     public set Volume(value: number) {
         this.volume = value;
     }
+
 }

@@ -1,3 +1,6 @@
+/**
+ * Some useful Maths methods.
+ */
 export class PSMath {
 
     public static log(base: number, x: number): number {
@@ -29,6 +32,7 @@ export class PSMath {
         }
         return <number>(sumWeigtedValues / sumWeights);
     }
+
 }
 
 

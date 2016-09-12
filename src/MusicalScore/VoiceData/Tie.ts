@@ -4,12 +4,16 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
 import {Tuplet} from "./Tuplet";
 import {BaseIdClass} from "../../Util/BaseIdClass";
 
+/**
+ * A [[Tie]] connects two notes of the same pitch and name, indicating that they have to be played as a single note.
+ */
 export class Tie extends BaseIdClass {
 
     constructor(note: Note) {
         super();
         this.start = note;
     }
+
     private start: Note;
     private tieBeam: Beam;
     private beamStartTimestamp: Fraction;
@@ -61,17 +65,16 @@ export class Tie extends BaseIdClass {
         this.baseNoteYPosition = value;
     }
     public initializeBoolList(): void {
-        this.noteHasBeenCreated = [];
-        for (let idx: number = 0, len: number = this.fractions.length; idx < len; ++idx) {
-            // let fraction: Fraction = this.fractions[idx];
-            this.noteHasBeenCreated.push(false);
-        }
+        this.noteHasBeenCreated = new Array(this.fractions.length);
     }
     public allGraphicalNotesHaveBeenCreated(): boolean {
-        for (let idx: number = 0, len: number = this.noteHasBeenCreated.length; idx < len; ++idx) {
-            if (!this.noteHasBeenCreated[idx]) { return false; }
+        for (let b of this.noteHasBeenCreated) {
+            if (!b) {
+                return false;
+            }
         }
 
         return true;
     }
+
 }

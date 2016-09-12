@@ -7,6 +7,7 @@ import { SubInstrument } from "./SubInstrument";
 import { MidiInstrument } from "./VoiceData/Instructions/ClefInstruction";
 
 export class Instrument extends InstrumentalGroup {
+
     constructor(id: number, idString: string, musicSheet: MusicSheet, parent: InstrumentalGroup) {
         super(undefined, musicSheet, parent);
         this.id = id;
@@ -238,4 +239,5 @@ export class Instrument extends InstrumentalGroup {
             this.staves.push(new Staff(this, i + 1));
         }
     }
+
 }

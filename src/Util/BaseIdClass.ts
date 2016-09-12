@@ -1,5 +1,8 @@
 import * as shortid from "shortid";
 
+/**
+ * Support for the unique id generator.
+ */
 export abstract class BaseIdClass {
 
     protected instanceId: string;
@@ -11,4 +14,5 @@ export abstract class BaseIdClass {
     public toString(): string {
         return this.instanceId;
     }
+
 }

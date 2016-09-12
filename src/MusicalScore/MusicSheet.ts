@@ -74,6 +74,11 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private engravingRules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
 
+    /**
+     * Get the global index within the music sheet for this staff.
+     * @param staff
+     * @returns {number}
+     */
     public static getIndexFromStaff(staff: Staff): number {
         return staff.idInMusicSheet;
     }
@@ -237,6 +242,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             }
         }
     }
+
+    /**
+     *
+     * @param staffIndexInMusicSheet - The global staff index, iterating through all staves of all instruments.
+     * @returns {Staff}
+     */
     public getStaffFromIndex(staffIndexInMusicSheet: number): Staff {
         return this.staves[staffIndexInMusicSheet];
     }
@@ -266,6 +277,13 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return num;
     }
+
+    /**
+     * Return a sourceMeasureList, where the given indices correspond to the whole SourceMeasureList of the MusicSheet.
+     * @param start
+     * @param end
+     * @returns {SourceMeasure[]}
+     */
     public getListOfMeasuresFromIndeces(start: number, end: number): SourceMeasure[] {
         let measures: SourceMeasure[] = [];
         for (let i: number = start; i <= end; i++) {
@@ -310,6 +328,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return staffLineIndex;
     }
+
+    /**
+     * Set to the index-given Repetition a new (set from user) value.
+     * @param index
+     * @param value
+     */
     public setRepetitionNewUserNumberOfRepetitions(index: number, value: number): void {
         let repIndex: number = 0;
         for (let i: number = 0; i < this.repetitions.length; i++) {
@@ -323,6 +347,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             }
         }
     }
+
+    /**
+     * Return the [[Repetition]] from the given index.
+     * @param index
+     * @returns {any}
+     */
     public getRepetitionByIndex(index: number): Repetition {
         let repIndex: number = 0;
         for (let i: number = 0; i < this.repetitions.length; i++) {
@@ -458,6 +488,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         let lastMeasure: SourceMeasure = this.getLastSourceMeasure();
         return Fraction.plus(lastMeasure.AbsoluteTimestamp, lastMeasure.Duration);
     }
+
+    /**
+     * Works only if the [[SourceMeasure]]s are already filled with VerticalStaffEntryContainers!
+     * @param timeStamp
+     * @returns {SourceMeasure}
+     */
     public getSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
         for (let idx: number = 0, len: number = this.sourceMeasures.length; idx < len; ++idx) {
             let sm: SourceMeasure = this.sourceMeasures[idx];

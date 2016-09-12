@@ -8,18 +8,22 @@ import {FontStyles} from "../Common/Enums/FontStyles";
  * It is used e.g. for titles, composer names, instrument names and dynamic instructions.
  */
 export class Label {
+
     constructor(text: string = "", alignment: TextAlignment = TextAlignment.LeftBottom, font: Fonts = Fonts.TimesNewRoman) {
         this.text = text;
         this.textAlignment = alignment;
         this.font = font;
     }
+
     public text: string;
     public color: OSMDColor;
     public font: Fonts;
     public fontStyle: FontStyles;
     public fontHeight: number;
     public textAlignment: TextAlignment;
+
     public ToString(): string {
         return this.text;
     }
+
 }

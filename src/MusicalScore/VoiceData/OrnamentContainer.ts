@@ -1,12 +1,15 @@
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 
 export class OrnamentContainer {
+
     constructor(ornament: OrnamentEnum) {
         this.ornament = ornament;
     }
+
     private ornament: OrnamentEnum;
     private accidentalAbove: AccidentalEnum = AccidentalEnum.NONE;
     private accidentalBelow: AccidentalEnum = AccidentalEnum.NONE;
+
     public get GetOrnament(): OrnamentEnum {
         return this.ornament;
     }
@@ -22,6 +25,7 @@ export class OrnamentContainer {
     public set AccidentalBelow(value: AccidentalEnum) {
         this.accidentalBelow = value;
     }
+
 }
 
 export enum OrnamentEnum {
