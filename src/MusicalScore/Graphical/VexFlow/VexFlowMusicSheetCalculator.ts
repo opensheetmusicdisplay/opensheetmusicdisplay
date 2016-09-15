@@ -126,7 +126,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     /**
-     * Can be used to calculate stem directions, helper(ledger) lines, and overlapping note x-displacement.
+     * Can be used to calculate articulations, stem directions, helper(ledger) lines, and overlapping note x-displacement.
      * Is Excecuted per voice entry of a staff entry.
      * After that layoutStaffEntry is called.
      * @param voiceEntry
