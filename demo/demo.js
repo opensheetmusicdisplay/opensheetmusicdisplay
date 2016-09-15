@@ -1,10 +1,9 @@
 /*jslint browser:true */
 (function () {
     "use strict";
-    // The MusicSheet object
-    var sheet,
+    var OSMD;
     // The folder of the demo files
-        folder = "sheets/",
+    var folder = "sheets/",
     // The available demos
         demos = {
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1",
@@ -78,8 +77,9 @@
             scale();
         };
 
-        // Create sheet object and canvas
-        sheet = new window.OSMD(canvas);
+        // Create OSMD object and canvas
+        OSMD = new opensheetmusicdisplay.OSMD(canvas);
+        OSMD.setLogLevel('info');
         document.body.appendChild(canvas);
 
         // Set resize event handler
@@ -91,7 +91,7 @@
                 var width = document.body.clientWidth;
                 canvas.width = width;
                 try {
-                sheet.render();
+                OSMD.render();
                 } catch (e) {}
                 enable();
             }
@@ -100,21 +100,22 @@
         window.addEventListener("keydown", function(e) {
             var event = window.event ? window.event : e;
             if (event.keyCode === 39) {
-                sheet.cursor.next();
+                OSMD.cursor.next();
             }
         });
         nextCursorBtn.addEventListener("click", function() {
-            sheet.cursor.next();
+            OSMD.cursor.next();
         });
         hideCursorBtn.addEventListener("click", function() {
-            sheet.cursor.hide();
+            OSMD.cursor.hide();
         });
         showCursorBtn.addEventListener("click", function() {
-            sheet.cursor.show();
+            OSMD.cursor.show();
         });
     }
 
     function Resize(startCallback, endCallback) {
+
       var rtime;
       var timeout = false;
       var delta = 200;
@@ -149,9 +150,9 @@
             str = folder + select.value + ".xml";
         }
         zoom = 1.0;
-        sheet.load(str).then(
+        OSMD.load(str).then(
             function() {
-                return sheet.render();
+                return OSMD.render();
             },
             function(e) {
                 error("Error reading sheet: " + e);
@@ -183,8 +184,8 @@
     function scale() {
         disable();
         window.setTimeout(function(){
-            sheet.zoom = zoom;
-            sheet.render();
+            OSMD.zoom = zoom;
+            OSMD.render();
             enable();
         }, 0);
     }

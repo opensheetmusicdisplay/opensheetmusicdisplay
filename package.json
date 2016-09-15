@@ -41,6 +41,7 @@
   "dependencies": {
     "es6-promise": "^3.2.1",
     "jszip": "^3.0.0",
+    "loglevel": "^1.4.1",
     "shortid": "^2.2.6",
     "typescript-collections": "^1.1.2",
     "vexflow": "^1.2.53"
