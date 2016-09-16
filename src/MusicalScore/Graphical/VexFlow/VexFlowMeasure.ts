@@ -301,9 +301,10 @@ export class VexFlowMeasure extends StaffMeasure {
                     }
                     if (notes.length > 1) {
                         vfbeams.push(new Vex.Flow.Beam(notes, true));
-                        for (let note of notes) {
-                            (<Vex.Flow.StaveNote> note).setStyle({fillStyle: "green", strokeStyle: "green"});
-                        }
+                        // just a test for coloring the notes:
+                        // for (let note of notes) {
+                        //     (<Vex.Flow.StaveNote> note).setStyle({fillStyle: "green", strokeStyle: "green"});
+                        // }
                     } else {
                         Logging.log("Warning! Beam with no notes! Trying to ignore, but this is a serious problem.");
                     }
