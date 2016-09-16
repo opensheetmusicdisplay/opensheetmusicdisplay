@@ -220,15 +220,7 @@ export abstract class MusicSystem extends GraphicalObject {
                     }
                 }
                 if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
-                    let rightUpper: PointF2D = new PointF2D(
-                        firstStaffLine.PositionAndShape.RelativePosition.x,
-                        firstStaffLine.PositionAndShape.RelativePosition.y
-                    );
-                    let rightLower: PointF2D = new PointF2D(
-                        lastStaffLine.PositionAndShape.RelativePosition.x,
-                        lastStaffLine.PositionAndShape.RelativePosition.y + staffHeight
-                    );
-                    this.createInstrumentBracket(rightUpper, rightLower);
+                    this.createInstrumentBracket(firstStaffLine, lastStaffLine);
                 }
             }
         }
@@ -261,16 +253,8 @@ export abstract class MusicSystem extends GraphicalObject {
                     lastStaffLine = staffLine;
                 }
             }
-            if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
-                let rightUpper: PointF2D = new PointF2D(
-                    firstStaffLine.PositionAndShape.RelativePosition.x,
-                    firstStaffLine.PositionAndShape.RelativePosition.y
-                );
-                let rightLower: PointF2D = new PointF2D(
-                    lastStaffLine.PositionAndShape.RelativePosition.x,
-                    lastStaffLine.PositionAndShape.RelativePosition.y + staffHeight
-                );
-                this.createGroupBracket(rightUpper, rightLower, staffHeight, recursionDepth);
+            if (firstStaffLine !== undefined && firstStaffLine !== undefined) {
+                this.createGroupBracket(firstStaffLine, firstStaffLine, recursionDepth);
             }
             if (instrumentGroup.InstrumentalGroups.length < 1) {
                 continue;
@@ -416,11 +400,11 @@ export abstract class MusicSystem extends GraphicalObject {
         throw new Error("not implemented");
     }
 
-    protected createInstrumentBracket(rightUpper: PointF2D, rightLower: PointF2D): void {
+    protected createInstrumentBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
         throw new Error("not implemented");
     }
 
-    protected createGroupBracket(rightUpper: PointF2D, rightLower: PointF2D, staffHeight: number, recursionDepth: number): void {
+    protected createGroupBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine, recursionDepth: number): void {
         throw new Error("not implemented");
     }
 

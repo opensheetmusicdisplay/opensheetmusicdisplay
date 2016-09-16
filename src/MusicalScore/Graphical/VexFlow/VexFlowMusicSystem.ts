@@ -1,12 +1,12 @@
 import {MusicSystem} from "../MusicSystem";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {SystemLinesEnum} from "../SystemLinesEnum";
-import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {SystemLinePosition} from "../SystemLinePosition";
 import {StaffMeasure} from "../StaffMeasure";
 import {SystemLine} from "../SystemLine";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowConverter} from "./VexFlowConverter";
+import {StaffLine} from "../StaffLine";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
@@ -47,7 +47,7 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param rightUpper the upper right corner point of the bracket to create
      * @param rightLower the lower right corner point of the bracket to create
      */
-    protected createInstrumentBracket(rightUpper: PointF2D, rightLower: PointF2D): void {
+    protected createInstrumentBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
         return;
     }
 
@@ -60,7 +60,7 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param staffHeight
      * @param recursionDepth
      */
-    protected createGroupBracket(rightUpper: PointF2D, rightLower: PointF2D, staffHeight: number, recursionDepth: number): void {
+    protected createGroupBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine, recursionDepth: number): void {
         return;
     }
 }
