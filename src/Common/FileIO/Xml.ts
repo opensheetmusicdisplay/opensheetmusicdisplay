@@ -1,5 +1,12 @@
+/**
+ * IXmlAttribute is just the standard Attr
+ */
 export type IXmlAttribute = Attr;
 
+/**
+ * Just a wrapper for an XML Element object.
+ * It facilitates handling of XML elements by OSMD
+ */
 export class IXmlElement {
     public name: string;
     public value: string;
@@ -10,7 +17,14 @@ export class IXmlElement {
     private attrs: IXmlAttribute[];
     private elem: Element;
 
+    /**
+     * Wraps 'elem' Element in a IXmlElement
+     * @param elem
+     */
     constructor(elem: Element) {
+        if (elem === undefined) {
+            throw new Error("IXmlElement: expected Element, got undefined");
+        }
         this.elem = elem;
         this.name = elem.nodeName.toLowerCase();
 
@@ -27,12 +41,21 @@ export class IXmlElement {
         }
     }
 
+    /**
+     * Get the attribute with the given name
+     * @param attributeName
+     * @returns {Attr}
+     */
     public attribute(attributeName: string): IXmlAttribute {
         return this.elem.attributes.getNamedItem(attributeName);
     }
 
+    /**
+     * Get all attributes
+     * @returns {IXmlAttribute[]}
+     */
     public attributes(): IXmlAttribute[] {
-        if (typeof this.attrs === "undefined") {
+        if (!this.attrs) {
             let attributes: NamedNodeMap = this.elem.attributes;
             let attrs: IXmlAttribute[] = [];
             for (let i: number = 0; i < attributes.length; i += 1) {
@@ -43,10 +66,26 @@ export class IXmlElement {
         return this.attrs;
     }
 
+    /**
+     * Get the first child element with the given node name
+     * @param elementName
+     * @returns {IXmlElement}
+     */
     public element(elementName: string): IXmlElement {
-        return this.elements(elementName)[0];
+        let nodes: NodeList = this.elem.childNodes;
+        for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
+            let node: Node = nodes[i];
+            if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === elementName) {
+                return new IXmlElement(node as Element);
+            }
+        }
     }
 
+    /**
+     * Get the children with the given node name (if given, otherwise all child elements)
+     * @param nodeName
+     * @returns {IXmlElement[]}
+     */
     public elements(nodeName?: string): IXmlElement[] {
         let nodes: NodeList = this.elem.childNodes;
         let ret: IXmlElement[] = [];
@@ -54,15 +93,11 @@ export class IXmlElement {
         if (!nameUnset) {
             nodeName = nodeName.toLowerCase();
         }
-        // console.log("-", nodeName, nodes.length, this.elem.childElementCount, this.elem.getElementsByTagName(nodeName).length);
-        // if (nodeName === "measure") {
-        //   console.log(this.elem);
-        // }
         for (let i: number = 0; i < nodes.length; i += 1) {
             let node: Node = nodes[i];
-            //console.log("node: ", this.elem.nodeName, ">>", node.nodeName, node.nodeType === Node.ELEMENT_NODE);
             if (node.nodeType === Node.ELEMENT_NODE &&
-                (nameUnset || node.nodeName.toLowerCase() === nodeName)) {
+                (nameUnset || node.nodeName.toLowerCase() === nodeName)
+            ) {
                 ret.push(new IXmlElement(node as Element));
             }
         }

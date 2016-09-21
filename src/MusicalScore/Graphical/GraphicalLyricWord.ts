@@ -1,6 +1,9 @@
 import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
 import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
 
+/**
+ * The graphical counterpart of a [[LyricWord]]
+ */
 export class GraphicalLyricWord {
     private lyricWord: LyricWord;
     private graphicalLyricsEntries: GraphicalLyricEntry[] = [];

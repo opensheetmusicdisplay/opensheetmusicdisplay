@@ -17,6 +17,9 @@ import {AbstractGraphicalInstruction} from "./AbstractGraphicalInstruction";
 import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 
+/**
+ * The graphical counterpart of a [[SourceStaffEntry]].
+ */
 export abstract class GraphicalStaffEntry extends GraphicalObject {
     constructor(parentMeasure: StaffMeasure, sourceStaffEntry: SourceStaffEntry = undefined, staffEntryParent: GraphicalStaffEntry = undefined) {
         super();
@@ -39,6 +42,8 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
 
     public graphicalChordContainer: GraphicalChordSymbolContainer;
     public graphicalLink: GraphicalStaffEntryLink;
+
+    // Extra member needed, as tie notes have no direct source entry with the right time stamp.
     public relInMeasureTimestamp: Fraction;
     public sourceStaffEntry: SourceStaffEntry;
     public parentMeasure: StaffMeasure;
@@ -64,6 +69,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return this.lyricsEntries;
     }
 
+    /**
+     * Calculate the absolute Timestamp.
+     * @returns {Fraction}
+     */
     public getAbsoluteTimestamp(): Fraction {
         let result: Fraction = this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.clone();
         if (this.relInMeasureTimestamp !== undefined) {
@@ -72,16 +81,19 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return result;
     }
 
+    /**
+     * Search through all the GraphicalNotes to find the suitable one for a TieEndNote.
+     * @param tieNote
+     * @returns {any}
+     */
     public findEndTieGraphicalNoteFromNote(tieNote: Note): GraphicalNote {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
             let graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 let note: Note = graphicalNote.sourceNote;
-                if (
-                    note.Pitch !== undefined && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
-                    && note.Pitch.Octave === tieNote.Pitch.Octave && note.getAbsoluteTimestamp() === tieNote.getAbsoluteTimestamp()
-                ) {
+                if (note.Pitch !== undefined && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
+                    && note.Pitch.Octave === tieNote.Pitch.Octave && note.getAbsoluteTimestamp().Equals(tieNote.getAbsoluteTimestamp())) {
                     return graphicalNote;
                 }
             }
@@ -89,6 +101,12 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return undefined;
     }
 
+    /**
+     * Search through all [[GraphicalNote]]s to find the suitable one for an StartSlurNote (that 's also an EndTieNote).
+     * @param tieNote
+     * @param slur
+     * @returns {any}
+     */
     public findEndTieGraphicalNoteFromNoteWithStartingSlur(tieNote: Note, slur: Slur): GraphicalNote {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
             let graphicalNotes: GraphicalNote[] = this.notes[idx];
@@ -103,6 +121,11 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return undefined;
     }
 
+    /**
+     * Search through all GraphicalNotes to find the suitable one for an EndSlurNote (that 's also an EndTieNote).
+     * @param tieNote
+     * @returns {any}
+     */
     public findEndTieGraphicalNoteFromNoteWithEndingSlur(tieNote: Note): GraphicalNote {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
             let graphicalNotes: GraphicalNote[] = this.notes[idx];
@@ -111,7 +134,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
                 let note: Note = graphicalNote.sourceNote;
                 if (
                     note.Pitch !== undefined && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
-                    && note.Pitch.Octave === tieNote.Pitch.Octave && this.getAbsoluteTimestamp() === tieNote.getAbsoluteTimestamp()
+                    && note.Pitch.Octave === tieNote.Pitch.Octave && this.getAbsoluteTimestamp().Equals(tieNote.getAbsoluteTimestamp())
                 ) {
                     return graphicalNote;
                 }
@@ -138,7 +161,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             let graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                if (graphicalNote.sourceNote === baseNote && this.getAbsoluteTimestamp() === baseNote.getAbsoluteTimestamp()) {
+                if (graphicalNote.sourceNote === baseNote && this.getAbsoluteTimestamp().Equals(baseNote.getAbsoluteTimestamp())) {
                     return graphicalNote;
                 }
             }
@@ -156,6 +179,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return new Fraction(0, 1);
     }
 
+    /**
+     * Find the Linked GraphicalNotes which belong exclusively to the StaffEntry (in case of Linked StaffEntries).
+     * @param notLinkedNotes
+     */
     public findLinkedNotes(notLinkedNotes: GraphicalNote[]): void {
         if (this.sourceStaffEntry !== undefined && this.sourceStaffEntry.Link !== undefined) {
             for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
@@ -170,6 +197,11 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         }
     }
 
+    /**
+     * Find the [[StaffEntry]]'s [[GraphicalNote]]s that correspond to the given [[VoiceEntry]]'s [[Note]]s.
+     * @param voiceEntry
+     * @returns {any}
+     */
     public findVoiceEntryGraphicalNotes(voiceEntry: VoiceEntry): GraphicalNote[] {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
             let graphicalNotes: GraphicalNote[] = this.notes[idx];
@@ -183,6 +215,11 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return undefined;
     }
 
+    /**
+     * Check if the given [[VoiceEntry]] is part of the [[StaffEntry]]'s Linked [[VoiceEntry]].
+     * @param voiceEntry
+     * @returns {boolean}
+     */
     public isVoiceEntryPartOfLinkedVoiceEntry(voiceEntry: VoiceEntry): boolean {
         if (this.sourceStaffEntry.Link !== undefined) {
             for (let idx: number = 0, len: number = this.sourceStaffEntry.Link.LinkStaffEntries.length; idx < len; ++idx) {
@@ -205,6 +242,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return this.notes[0][0].sourceNote.ParentVoiceEntry.ParentVoice;
     }
 
+    /**
+     * Return the [[StaffEntry]]'s Minimum NoteLength.
+     * @returns {Fraction}
+     */
     public findStaffEntryMinNoteLength(): Fraction {
         let minLength: Fraction = new Fraction(Number.MAX_VALUE, 1);
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
@@ -212,7 +253,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 let calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
-                if (calNoteLen < minLength && calNoteLen.Numerator > 0) {
+                if (calNoteLen.lt(minLength) && calNoteLen.Numerator > 0) {
                     minLength = calNoteLen;
                 }
             }
@@ -227,7 +268,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 let calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
-                if (calNoteLen > maxLength && calNoteLen.Numerator > 0) {
+                if (maxLength.lt(calNoteLen)  && calNoteLen.Numerator > 0) {
                     maxLength = calNoteLen;
                 }
             }
@@ -235,6 +276,11 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return maxLength;
     }
 
+    /**
+     * Find or creates the list of [[GraphicalNote]]s in case of a [[VoiceEntry]] (not from TiedNote).
+     * @param voiceEntry
+     * @returns {GraphicalNote[]}
+     */
     public findOrCreateGraphicalNotesListFromVoiceEntry(voiceEntry: VoiceEntry): GraphicalNote[] {
         let graphicalNotes: GraphicalNote[];
         if (this.notes.length === 0) {
@@ -252,6 +298,11 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return graphicalNotes;
     }
 
+    /**
+     * Find or creates the list of [[GraphicalNote]]s in case of a TiedNote.
+     * @param graphicalNote
+     * @returns {GraphicalNote[]}
+     */
     public findOrCreateGraphicalNotesListFromGraphicalNote(graphicalNote: GraphicalNote): GraphicalNote[] {
         let graphicalNotes: GraphicalNote[];
         let tieStartSourceStaffEntry: SourceStaffEntry = graphicalNote.sourceNote.ParentStaffEntry;
@@ -274,6 +325,13 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return graphicalNotes;
     }
 
+    /**
+     * Insert the [[GraphicalNote]] to the correct index of the [[GraphicalNote]]s list,
+     * so that the order of the [[GraphicalNote]]'s in the list corresponds to the [[VoiceEntry]]'s [[Note]]s order.
+     * (needed when adding Tie-EndNotes).
+     * @param graphicalNotes
+     * @param graphicalNote
+     */
     public addGraphicalNoteToListAtCorrectYPosition(graphicalNotes: GraphicalNote[], graphicalNote: GraphicalNote): void {
         if (graphicalNotes.length === 0 ||
             graphicalNote.PositionAndShape.RelativePosition.y < CollectionUtil.last(graphicalNotes).PositionAndShape.RelativePosition.Y) {

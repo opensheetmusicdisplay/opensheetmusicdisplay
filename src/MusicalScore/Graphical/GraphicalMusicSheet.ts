@@ -25,6 +25,9 @@ import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 
+/**
+ * The graphical counterpart of a [[MusicSheet]]
+ */
 export class GraphicalMusicSheet {
     constructor(musicSheet: MusicSheet, calculator: MusicSheetCalculator) {
         this.musicSheet = musicSheet;
@@ -158,6 +161,10 @@ export class GraphicalMusicSheet {
         this.leadSheet = value;
     }
 
+    /**
+     * Calculate the Absolute Positions from the Relative Positions.
+     * @param graphicalMusicSheet
+     */
     public static transformRelativeToAbsolutePosition(graphicalMusicSheet: GraphicalMusicSheet): void {
         for (let i: number = 0; i < graphicalMusicSheet.MusicPages.length; i++) {
             let pageAbsolute: PointF2D = graphicalMusicSheet.MusicPages[i].setMusicPageAbsolutePosition(i, graphicalMusicSheet.ParentMusicSheet.rules);
@@ -198,6 +205,14 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    /**
+     * Search the MeasureList for a certain GraphicalStaffEntry with the given SourceStaffEntry,
+     * at a certain verticalIndex (eg a corresponnding Staff), starting at a specific horizontalIndex (eg specific GraphicalMeasure).
+     * @param staffIndex
+     * @param measureIndex
+     * @param sourceStaffEntry
+     * @returns {any}
+     */
     public findGraphicalStaffEntryFromMeasureList(staffIndex: number, measureIndex: number, sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
         for (let i: number = measureIndex; i < this.measureList.length; i++) {
             let graphicalMeasure: StaffMeasure = this.measureList[i][staffIndex];
@@ -211,6 +226,13 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    /**
+     * Return the next (to the right) not null GraphicalStaffEntry from a given Index.
+     * @param staffIndex
+     * @param measureIndex
+     * @param graphicalStaffEntry
+     * @returns {any}
+     */
     public findNextGraphicalStaffEntry(staffIndex: number, measureIndex: number, graphicalStaffEntry: GraphicalStaffEntry): GraphicalStaffEntry {
         let graphicalMeasure: StaffMeasure = graphicalStaffEntry.parentMeasure;
         let graphicalStaffEntryIndex: number = graphicalMeasure.staffEntries.indexOf(graphicalStaffEntry);
@@ -262,6 +284,10 @@ export class GraphicalMusicSheet {
         return orderedMeasures;
     }
 
+    /**
+     * Return the active Clefs at the start of the first SourceMeasure.
+     * @returns {ClefInstruction[]}
+     */
     public initializeActiveClefs(): ClefInstruction[] {
         let activeClefs: ClefInstruction[] = [];
         let firstSourceMeasure: SourceMeasure = this.musicSheet.getFirstSourceMeasure();
@@ -298,9 +324,14 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    /**
+     * Create the VerticalContainer and adds it to the List at the correct Timestamp position.
+     * @param timestamp
+     * @returns {any}
+     */
     public getOrCreateVerticalContainer(timestamp: Fraction): VerticalGraphicalStaffEntryContainer {
         if (this.verticalGraphicalStaffEntryContainers.length === 0 ||
-            timestamp .lt(CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp)) {
+            (CollectionUtil.getLastElement(this.verticalGraphicalStaffEntryContainers).AbsoluteTimestamp).lt(timestamp)) {
             let verticalGraphicalStaffEntryContainer: VerticalGraphicalStaffEntryContainer =
                 new VerticalGraphicalStaffEntryContainer(this.numberOfStaves, timestamp);
             this.verticalGraphicalStaffEntryContainers.push(verticalGraphicalStaffEntryContainer);
@@ -320,18 +351,32 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    /**
+     * Does a binary search on the container list and returns the VerticalContainer with the given Timestamp.
+     * The search begins at startIndex, if given.
+     * If the timestamp cannot be found, null is returned.
+     * @param timestamp - The timestamp for which the container shall be found.
+     * @param startIndex - The index from which the search starts in the container list.
+     * @returns {any}
+     * @constructor
+     */
     public GetVerticalContainerFromTimestamp(timestamp: Fraction, startIndex: number = 0): VerticalGraphicalStaffEntryContainer {
         let index: number = CollectionUtil.binarySearch(this.verticalGraphicalStaffEntryContainers,
                                                         new VerticalGraphicalStaffEntryContainer(0, timestamp),
                                                         VerticalGraphicalStaffEntryContainer.compareByTimestamp,
-                                                        startIndex,
-                                                        this.verticalGraphicalStaffEntryContainers.length - startIndex);
+                                                        startIndex);
         if (index >= 0) {
             return this.verticalGraphicalStaffEntryContainers[index];
         }
         return undefined;
     }
 
+    /**
+     * Perform a binary search for the absolute given Timestamp in all the GraphicalVerticalContainers.
+     * @param musicTimestamp
+     * @returns {number}
+     * @constructor
+     */
     public GetInterpolatedIndexInVerticalContainers(musicTimestamp: Fraction): number {
         let containers: VerticalGraphicalStaffEntryContainer[] = this.verticalGraphicalStaffEntryContainers;
         let leftIndex: number = 0;
@@ -356,6 +401,8 @@ export class GraphicalMusicSheet {
                     leftIndex = middleIndex;
                 }
             }
+
+            // no interpolation needed
             if (leftIndex === rightIndex) {
                 return this.verticalGraphicalStaffEntryContainers.indexOf(containers[leftIndex]);
             }
@@ -368,10 +415,18 @@ export class GraphicalMusicSheet {
         }
         let diff: number = rightTS.RealValue - leftTS.RealValue;
         let diffTS: number = rightTS.RealValue - musicTimestamp.RealValue;
+
+        // estimate the interpolated index
         foundIndex = rightIndex - (diffTS / diff);
         return Math.min(foundIndex, this.verticalGraphicalStaffEntryContainers.length);
     }
 
+    /**
+     * Get a List with the indeces of all the visible GraphicalMeasures and calculates their
+     * corresponding indices in the first SourceMeasure, taking into account Instruments with multiple Staves.
+     * @param visibleMeasures
+     * @returns {number[]}
+     */
     public getVisibleStavesIndecesFromSourceMeasure(visibleMeasures: StaffMeasure[]): number[] {
         let visibleInstruments: Instrument[] = [];
         let visibleStavesIndeces: number[] = [];
@@ -392,6 +447,12 @@ export class GraphicalMusicSheet {
         return visibleStavesIndeces;
     }
 
+    /**
+     * Returns the GraphicalMeasure with the given SourceMeasure as Parent at the given Index.
+     * @param sourceMeasure
+     * @param index
+     * @returns {any}
+     */
     public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, index: number): StaffMeasure {
         for (let i: number = 0; i < this.measureList.length; i++) {
             if (this.measureList[i][0].parentSourceMeasure === sourceMeasure) {
@@ -418,12 +479,16 @@ export class GraphicalMusicSheet {
     public GetNearesNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
         let initialSearchArea: number = 10;
         let foundNotes: GraphicalNote[] = [];
+
+        // Prepare search area
         let region: BoundingBox = new BoundingBox();
         region.BorderLeft = clickPosition.x - initialSearchArea;
         region.BorderTop = clickPosition.y - initialSearchArea;
         region.BorderRight = clickPosition.x + initialSearchArea;
         region.BorderBottom = clickPosition.y + initialSearchArea;
         region.AbsolutePosition = new PointF2D(0, 0);
+
+        // Search for StaffEntries in region
         for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
             let entries: GraphicalNote[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalNote>(region);
@@ -440,6 +505,8 @@ export class GraphicalMusicSheet {
                 }
             }
         }
+
+        // Get closest entry
         let closest: GraphicalNote = undefined;
         for (let idx: number = 0, len: number = foundNotes.length; idx < len; ++idx) {
             let note: GraphicalNote = foundNotes[idx];
@@ -459,12 +526,15 @@ export class GraphicalMusicSheet {
         if (closest !== undefined) {
             return closest;
         }
+        // TODO No staff entry was found. Feedback?
+        // throw new ArgumentException("No staff entry found");
         return undefined;
     }
 
     public GetClickableLabel(clickPosition: PointF2D): GraphicalLabel {
         let initialSearchAreaX: number = 4;
         let initialSearchAreaY: number = 4;
+        // Prepare search area
         let region: BoundingBox = new BoundingBox();
         region.BorderLeft = clickPosition.x - initialSearchAreaX;
         region.BorderTop = clickPosition.y - initialSearchAreaY;
@@ -489,12 +559,14 @@ export class GraphicalMusicSheet {
     public GetNearestStaffEntry(clickPosition: PointF2D): GraphicalStaffEntry {
         let initialSearchArea: number = 10;
         let foundEntries: GraphicalStaffEntry[] = [];
+        // Prepare search area
         let region: BoundingBox = new BoundingBox(undefined);
         region.BorderLeft = clickPosition.x - initialSearchArea;
         region.BorderTop = clickPosition.y - initialSearchArea;
         region.BorderRight = clickPosition.x + initialSearchArea;
         region.BorderBottom = clickPosition.y + initialSearchArea;
         region.AbsolutePosition = new PointF2D(0, 0);
+        // Search for StaffEntries in region
         for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
             let graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
             let entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalStaffEntry>(region, false);
@@ -507,6 +579,7 @@ export class GraphicalMusicSheet {
                 }
             }
         }
+        // Get closest entry
         let closest: GraphicalStaffEntry = undefined;
         for (let idx: number = 0, len: number = foundEntries.length; idx < len; ++idx) {
             let gse: GraphicalStaffEntry = foundEntries[idx];
@@ -526,6 +599,8 @@ export class GraphicalMusicSheet {
         if (closest !== undefined) {
             return closest;
         }
+        // TODO No staff entry was found. Feedback?
+        // throw new ArgumentException("No staff entry found");
         return undefined;
     }
 
@@ -583,6 +658,11 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    /**
+     * Get visible staffentry for the container given by the index.
+     * @param index
+     * @returns {GraphicalStaffEntry}
+     */
     public getStaffEntry(index: number): GraphicalStaffEntry {
         let container: VerticalGraphicalStaffEntryContainer = this.VerticalGraphicalStaffEntryContainers[index];
         let staffEntry: GraphicalStaffEntry = undefined;
@@ -607,6 +687,12 @@ export class GraphicalMusicSheet {
         return staffEntry;
     }
 
+    /**
+     * Returns the index of the closest previous (earlier) vertical container which has at least some visible staff entry, with respect to the given index.
+     * @param index
+     * @returns {number}
+     * @constructor
+     */
     public GetPreviousVisibleContainerIndex(index: number): number {
         for (let i: number = index - 1; i >= 0; i--) {
             let entries: GraphicalStaffEntry[] = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
@@ -620,6 +706,12 @@ export class GraphicalMusicSheet {
         return -1;
     }
 
+    /**
+     * Returns the index of the closest next (later) vertical container which has at least some visible staff entry, with respect to the given index.
+     * @param index
+     * @returns {number}
+     * @constructor
+     */
     public GetNextVisibleContainerIndex(index: number): number {
         for (let i: number = index + 1; i < this.verticalGraphicalStaffEntryContainers.length; ++i) {
             let entries: GraphicalStaffEntry[] = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
@@ -806,6 +898,11 @@ export class GraphicalMusicSheet {
         return (deltaX * deltaX) + (deltaY * deltaY);
     }
 
+    /**
+     * Return the longest StaffEntry duration from a GraphicalVerticalContainer.
+     * @param index
+     * @returns {Fraction}
+     */
     private getLongestStaffEntryDuration(index: number): Fraction {
         let maxLength: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.verticalGraphicalStaffEntryContainers[index].StaffEntries.length; idx < len; ++idx) {
@@ -817,7 +914,7 @@ export class GraphicalMusicSheet {
                 let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx2];
                 for (let idx3: number = 0, len3: number = graphicalNotes.length; idx3 < len3; ++idx3) {
                     let note: GraphicalNote = graphicalNotes[idx3];
-                    if (note.graphicalNoteLength > maxLength) {
+                    if (maxLength.lt(note.graphicalNoteLength)) {
                         maxLength = note.graphicalNoteLength;
                     }
                 }

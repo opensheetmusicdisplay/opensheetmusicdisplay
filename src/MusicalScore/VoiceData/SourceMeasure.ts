@@ -11,9 +11,21 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
+import {BaseIdClass} from "../../Util/BaseIdClass";
 
-export class SourceMeasure {
+/**
+ * The Source Measure represents the source data of a unique measure, including all instruments with their staves.
+ * There exists one source measure per XML measure or per paper sheet measure (e.g. the source measures are not doubled in repetitions)
+ */
+export class SourceMeasure extends BaseIdClass {
+
+    /**
+     * The data entries and data lists will be filled with null values according to the total number of staves,
+     * so that existing objects can be referred to by staff index.
+     * @param completeNumberOfStaves
+     */
     constructor(completeNumberOfStaves: number) {
+        super();
         this.completeNumberOfStaves = completeNumberOfStaves;
         this.implicitMeasure = false;
         this.breakSystemAfter = false;
@@ -135,9 +147,16 @@ export class SourceMeasure {
         return undefined;
     }
 
+    /**
+     * Check at the given timestamp if a VerticalContainer exists, if not creates a new, timestamp-ordered one,
+     * and at the given index, if a [[SourceStaffEntry]] exists, and if not, creates a new one.
+     * @param inMeasureTimestamp
+     * @param inSourceMeasureStaffIndex
+     * @param staff
+     * @returns {{createdNewContainer: boolean, staffEntry: SourceStaffEntry}}
+     */
     public findOrCreateStaffEntry(inMeasureTimestamp: Fraction, inSourceMeasureStaffIndex: number,
                                   staff: Staff): {createdNewContainer: boolean, staffEntry: SourceStaffEntry} {
-        // FIXME Andrea: debug & Test
         let staffEntry: SourceStaffEntry = undefined;
         // Find:
         let existingVerticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer;
@@ -193,6 +212,13 @@ export class SourceMeasure {
         return {createdNewContainer: true, staffEntry: staffEntry};
     }
 
+    /**
+     * Check if a VerticalContainer, a staffEntry and a voiceEntry exist at the given timestamp.
+     * If not, create the necessary entries.
+     * @param sse
+     * @param voice
+     * @returns {{createdVoiceEntry: boolean, voiceEntry: VoiceEntry}}
+     */
     public findOrCreateVoiceEntry(sse: SourceStaffEntry, voice: Voice): { createdVoiceEntry: boolean, voiceEntry: VoiceEntry } {
         let ve: VoiceEntry = undefined;
         let createdNewVoiceEntry: boolean = false;
@@ -210,6 +236,13 @@ export class SourceMeasure {
         return {createdVoiceEntry: createdNewVoiceEntry, voiceEntry: ve};
     }
 
+    /**
+     * Search for a non-null [[SourceStaffEntry]] at the given verticalIndex,
+     * starting from the given horizontalIndex and moving backwards. If none is found, then return undefined.
+     * @param verticalIndex
+     * @param horizontalIndex
+     * @returns {any}
+     */
     public getPreviousSourceStaffEntryFromIndex(verticalIndex: number, horizontalIndex: number): SourceStaffEntry {
         for (let i: number = horizontalIndex - 1; i >= 0; i--) {
             if (this.verticalSourceStaffEntryContainers[i][verticalIndex] !== undefined) {
@@ -219,6 +252,11 @@ export class SourceMeasure {
         return undefined;
     }
 
+    /**
+     * Return the index of the existing VerticalContainer at the given timestamp.
+     * @param musicTimestamp
+     * @returns {number}
+     */
     public getVerticalContainerIndexByTimestamp(musicTimestamp: Fraction): number {
         for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.length; idx < len; ++idx) {
             if (this.VerticalSourceStaffEntryContainers[idx].Timestamp.Equals(musicTimestamp)) {
@@ -228,6 +266,11 @@ export class SourceMeasure {
         return -1;
     }
 
+    /**
+     * Return the existing VerticalContainer at the given timestamp.
+     * @param musicTimestamp
+     * @returns {any}
+     */
     public getVerticalContainerByTimestamp(musicTimestamp: Fraction): VerticalSourceStaffEntryContainer {
         for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.length; idx < len; ++idx) {
             let verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = this.VerticalSourceStaffEntryContainers[idx];
@@ -238,6 +281,11 @@ export class SourceMeasure {
         return undefined;
     }
 
+    /**
+     * Check the [[SourceMeasure]] for a possible VerticalContainer with all of its [[StaffEntry]]s undefined,
+     * and if found, remove the VerticalContainer from the [[SourceMeasure]].
+     * @param index
+     */
     public checkForEmptyVerticalContainer(index: number): void {
         let undefinedCounter: number = 0;
         for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
@@ -250,6 +298,14 @@ export class SourceMeasure {
         }
     }
 
+    /**
+     * This method is used for handling a measure with the following error (in the procedure of finding out the Instrument's Duration):
+     * If the LastStaffEntry is missing (implied restNote or error), then go back the StaffEntries until you find a TiedNote (tie Start),
+     * which gives the correct MeasureDuration.
+     * @param musicSheet
+     * @param maxInstDuration
+     * @returns {Fraction}
+     */
     public reverseCheck(musicSheet: MusicSheet, maxInstDuration: Fraction): Fraction {
         let maxDuration: Fraction = new Fraction(0, 1);
         let instrumentsDurations: Fraction[] = [];
@@ -279,9 +335,16 @@ export class SourceMeasure {
                 maxDuration = instrumentsDuration;
             }
         }
+
         return Fraction.max(maxDuration, maxInstDuration);
     }
 
+    /**
+     * Calculate all the [[Instrument]]'s NotesDurations for this Measures.
+     * @param musicSheet
+     * @param instrumentMaxTieNoteFractions
+     * @returns {Fraction[]}
+     */
     public calculateInstrumentsDuration(musicSheet: MusicSheet, instrumentMaxTieNoteFractions: Fraction[]): Fraction[] {
         let instrumentsDurations: Fraction[] = [];
         for (let i: number = 0; i < musicSheet.Instruments.length; i++) {
@@ -314,6 +377,10 @@ export class SourceMeasure {
         return sourceStaffEntries;
     }
 
+    /**
+     *
+     * @returns {boolean} true iff some measure begin instructions have been found for at least one staff
+     */
     public hasBeginInstructions(): boolean {
         for (let staffIndex: number = 0, len: number = this.FirstInstructionsStaffEntries.length; staffIndex < len; staffIndex++) {
             let beginInstructionsStaffEntry: SourceStaffEntry = this.FirstInstructionsStaffEntries[staffIndex];
@@ -334,6 +401,10 @@ export class SourceMeasure {
         return false;
     }
 
+    /**
+     * Check if this measure is a Repetition Ending.
+     * @returns {boolean}
+     */
     public endsWithLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.LastRepetitionInstructions.length; idx < len; ++idx) {
             let instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
@@ -354,6 +425,10 @@ export class SourceMeasure {
         return false;
     }
 
+    /**
+     * Check if a Repetition starts at the next Measure.
+     * @returns {boolean}
+     */
     public beginsWithWordRepetition(): boolean {
         for (let idx: number = 0, len: number = this.FirstRepetitionInstructions.length; idx < len; ++idx) {
             let instruction: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
@@ -365,6 +440,10 @@ export class SourceMeasure {
         return false;
     }
 
+    /**
+     * Check if this Measure is a Repetition Ending.
+     * @returns {boolean}
+     */
     public endsWithWordRepetition(): boolean {
         for (let idx: number = 0, len: number = this.LastRepetitionInstructions.length; idx < len; ++idx) {
             let instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
@@ -401,6 +480,11 @@ export class SourceMeasure {
         return undefined;
     }
 
+    /**
+     * Return the first non-null [[SourceStaffEntry]] at the given InstrumentIndex.
+     * @param instrumentIndex
+     * @returns {SourceStaffEntry}
+     */
     private getLastSourceStaffEntryForInstrument(instrumentIndex: number): SourceStaffEntry {
         let entry: SourceStaffEntry;
         for (let i: number = this.verticalSourceStaffEntryContainers.length - 1; i >= 0; i--) {

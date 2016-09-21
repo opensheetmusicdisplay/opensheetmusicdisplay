@@ -1,12 +1,22 @@
 import {SizeF2D} from "./SizeF2D";
 import {PointF2D} from "./PointF2D";
 
+/**
+ * Represent a rectangle on a plane
+ */
 export class RectangleF2D {
     public x: number = 0;
     public y: number = 0;
     public width: number = 0;
     public height: number = 0;
 
+    /**
+     *
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     */
     constructor(x: number, y: number, width: number, height: number) {
         this.x = x;
         this.y = y;

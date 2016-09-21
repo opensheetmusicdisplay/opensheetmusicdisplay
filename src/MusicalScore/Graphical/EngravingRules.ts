@@ -139,13 +139,19 @@ export class EngravingRules {
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
+
     constructor() {
+        // global variables
         this.samplingUnit = EngravingRules.unit * 3;
+
+        // Page Label Variables
         this.sheetTitleHeight = 4.0;
         this.sheetSubtitleHeight = 2.0;
         this.sheetMinimumDistanceBetweenTitleAndSubtitle = 1.0;
         this.sheetComposerHeight = 2.0;
         this.sheetAuthorHeight = 2.0;
+
+        // Staff sizing Variables
         this.pagePlacementEnum = PagePlacementEnum.Down;
         this.pageHeight = 100001.0;
         this.pageTopMargin = 5.0;
@@ -156,6 +162,8 @@ export class EngravingRules {
         this.titleBottomDistance = 1.0;
         this.staffDistance = 7.0;
         this.betweenStaffDistance = 5.0;
+
+        // System Sizing and Label Variables
         this.staffHeight = 4.0;
         this.betweenStaffLinesDistance = EngravingRules.unit;
         this.systemDistance = 10.0;
@@ -167,9 +175,13 @@ export class EngravingRules {
         this.instrumentLabelTextHeight = 2;
         this.minimumAllowedDistanceBetweenSystems = 3.0;
         this.lastSystemMaxScalingFactor = 1.4;
+
+        // Beam Sizing Variables
         this.beamWidth = EngravingRules.unit / 2.0;
         this.beamSpaceWidth = EngravingRules.unit / 3.0;
         this.beamForwardLength = 1.25 * EngravingRules.unit;
+
+        // Beam Sizing Variables
         this.clefLeftMargin = 0.5;
         this.clefRightMargin = 0.75;
         this.betweenKeySymbolsDistance = 0.2;
@@ -177,11 +189,15 @@ export class EngravingRules {
         this.rhythmRightMargin = 1.25;
         this.inStaffClefScalingFactor = 0.8;
         this.distanceBetweenNaturalAndSymbolWhenCancelling = 0.4;
+
+        // Beam Sizing Variables
         this.noteHelperLinesOffset = 0.25;
         this.measureLeftMargin = 0.7;
         this.measureRightMargin = 0.0;
         this.distanceBetweenLastInstructionAndRepetitionBarline = 1.0;
         this.arpeggioDistance = 0.6;
+
+        // Stems Variables
         this.staccatoShorteningFactor = 2;
         this.idealStemLength = 3.0;
         this.stemNoteHeadBorderYOffset = 0.2;
@@ -191,8 +207,12 @@ export class EngravingRules {
         this.stemMaxLength = 4.5;
         this.beamSlopeMaxAngle = 10.0;
         this.stemMinAllowedDistanceBetweenNoteHeadAndBeamLine = 1.0;
+
+        // GraceNote Variables
         this.graceNoteScalingFactor = 0.6;
         this.graceNoteXOffset = 0.2;
+
+        // GraceNote Variables
         this.wedgeOpeningLength = 1.2;
         this.wedgeMeasureEndOpeningLength = 0.75;
         this.wedgeMeasureBeginOpeningLength = 0.75;
@@ -203,19 +223,27 @@ export class EngravingRules {
         this.distanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.wedgeMinLength = 2.0;
         this.distanceBetweenAdjacentDynamics = 0.75;
+
+        // GraceNote Variables
         this.tempoChangeMeasureValitidy = 4;
         this.tempoContinousFactor = 0.7;
+
+        // various
         this.staccatoScalingFactor = 0.8;
         this.betweenDotsDistance = 0.8;
         this.ornamentAccidentalScalingFactor = 0.65;
         this.chordSymbolTextHeight = 2.0;
         this.fingeringLabelFontHeight = 1.7;
+
+        // MeasureNumber- and TupletNumberLabel variables
         this.measureNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.measureNumberLabelOffset = 2;
         this.tupletNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.tupletNumberYOffset = 0.5;
         this.labelMarginBorderFactor = 0.1;
         this.tupletVerticalLineLength = 0.5;
+
+        // MeasureNumber- and TupletNumberLabel variables
         this.bezierCurveStepSize = 1000;
         this.calculateCurveParametersArrays();
         this.tieGhostObjectWidth = 0.75;
@@ -231,20 +259,28 @@ export class EngravingRules {
         this.slurTangentMinAngle = 30.0;
         this.slurTangentMaxAngle = 80.0;
         this.slursStartingAtSameStaffEntryYOffset = 0.8;
+
+        // MeasureNumber- and TupletNumberLabel variables
         this.repetitionEndingLabelHeight = 2.0;
         this.repetitionEndingLabelXOffset = 0.5;
         this.repetitionEndingLabelYOffset = 0.3;
         this.repetitionEndingLineYLowerOffset = 0.5;
         this.repetitionEndingLineYUpperOffset = 0.3;
+
+        // Lyrics
         this.lyricsHeight = 2.0;
         this.verticalBetweenLyricsDistance = 0.5;
         this.betweenSyllabelMaximumDistance = 10.0;
         this.minimumDistanceBetweenDashes = 5.0;
+
+        // expressions variables
         this.instantaniousTempoTextHeight = 2.3;
         this.continuousDynamicTextHeight = 2.3;
         this.moodTextHeight = 2.3;
         this.unknownTextHeight = 2.0;
         this.continuousTempoTextHeight = 2.3;
+
+        // Line Widths
         this.staffLineWidth = 0.12;
         this.ledgerLineWidth = 0.12;
         this.wedgeLineWidth = 0.12;
@@ -259,12 +295,17 @@ export class EngravingRules {
         this.octaveShiftLineWidth = 0.12;
         this.octaveShiftVerticalLineLength = EngravingRules.unit;
         this.graceLineWidth = this.staffLineWidth * this.GraceNoteScalingFactor;
+
+        // Line Widths
         this.minimumStaffLineDistance = 1.0;
         this.minimumCrossedBeamDifferenceMargin = 0.0001;
+
+        // xSpacing Variables
         this.displacedNoteMargin = 0.1;
         this.minNoteDistance = 2.0;
         this.subMeasureXSpacingThreshold = 35;
         this.measureDynamicsMaxScalingFactor = 2.5;
+
         this.populateDictionaries();
         try {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
@@ -1067,6 +1108,10 @@ export class EngravingRules {
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
     }
+
+    /**
+     * This method maps NoteDurations to Distances and DistancesScalingFactors.
+     */
     private populateDictionaries(): void {
         for (let i: number = 0; i < this.noteDistances.length; i++) {
             switch (i) {
@@ -1107,6 +1152,10 @@ export class EngravingRules {
             }
         }
     }
+
+    /**
+     * Calculate Curve-independend factors, to be used later in the Slur- and TieCurvePoints calculation
+     */
     private calculateCurveParametersArrays(): void {
         this.tPower3 = new Array(this.bezierCurveStepSize);
         this.oneMinusTPower3 = new Array(this.bezierCurveStepSize);

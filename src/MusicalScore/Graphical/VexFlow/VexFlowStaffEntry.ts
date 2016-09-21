@@ -2,6 +2,7 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {SourceStaffEntry} from "../../VoiceData/SourceStaffEntry";
 import {GraphicalNote} from "../GraphicalNote";
+import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -15,7 +16,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
 
     /**
      *
-     * @returns {number} the x-position (in units) of this Staff Entry
+     * @returns {number} the x-position (in units) of this StaffEntry
      */
     public getX(): number {
         let x: number = 0;
@@ -27,6 +28,9 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 n += 1;
             }
         }
-        return x / n / 10.0;
+        if (n === 0) {
+            return 0;
+        }
+        return x / n / unitInPixels;
     }
 }

@@ -4,7 +4,12 @@ import {BoundingBox} from "./BoundingBox";
 import {MusicSymbol} from "./MusicSymbol";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+
+/**
+ * The graphical counterpart of an [[OctaveShift]]
+ */
 export class GraphicalOctaveShift extends GraphicalObject {
+
     constructor(octaveShift: OctaveShift, parent: BoundingBox) {
         super();
         this.getOctaveShift = octaveShift;
@@ -40,4 +45,5 @@ export class GraphicalOctaveShift extends GraphicalObject {
                 throw new ArgumentOutOfRangeException("");
         }
     }
+
 }

@@ -1,0 +1,23 @@
+.bignum {
+  width: 1em;
+  text-align: center;
+  font-size: 4em;
+  color: white;
+  background-color: black;
+  padding: 0.3em;
+  border-right: 0.3em solid white;
+}
+
+#error-tr {
+  background-color: red;
+  text-align: center;
+}
+
+#error-td {
+  padding: 1em;
+  color: white;
+}
+
+table {
+    width: 100%;
+}

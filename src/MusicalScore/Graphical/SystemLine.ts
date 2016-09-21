@@ -6,7 +6,9 @@ import {SystemLinesEnum} from "./SystemLinesEnum";
 import {BoundingBox} from "./BoundingBox";
 import {GraphicalObject} from "./GraphicalObject";
 import {EngravingRules} from "./EngravingRules";
+
 export class SystemLine extends GraphicalObject {
+
     constructor(lineType: SystemLinesEnum, linePosition: SystemLinePosition, musicSystem: MusicSystem,
                 topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined) {
         super();
@@ -18,12 +20,20 @@ export class SystemLine extends GraphicalObject {
         this.parentTopStaffLine = topMeasure.ParentStaffLine;
         this.boundingBox = new BoundingBox(this, musicSystem.PositionAndShape);
     }
+
     public lineType: SystemLinesEnum;
     public linePosition: SystemLinePosition;
     public parentMusicSystem: MusicSystem;
     public parentTopStaffLine: StaffLine;
     public topMeasure: StaffMeasure;
     public bottomMeasure: StaffMeasure;
+
+    /**
+     * Return the width of the SystemLinesContainer for the given SystemLineType.
+     * @param rules
+     * @param systemLineType
+     * @returns {number}
+     */
     public static getObjectWidthForLineType(rules: EngravingRules, systemLineType: SystemLinesEnum): number {
         switch (systemLineType) {
             case SystemLinesEnum.SingleThin:
@@ -45,4 +55,5 @@ export class SystemLine extends GraphicalObject {
                 return 0;
         }
     }
+
 }

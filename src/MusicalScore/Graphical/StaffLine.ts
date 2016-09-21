@@ -9,6 +9,10 @@ import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
+/**
+ * A StaffLine contains the [[Measure]]s in one line of the music sheet
+ * (one instrument, one line, until a line break)
+ */
 export abstract class StaffLine extends GraphicalObject {
     protected measures: StaffMeasure[] = [];
     protected staffLines: GraphicalLine[] = new Array(5);
@@ -80,6 +84,10 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentMusicSystem.PositionAndShape.ChildElements.push(activitySymbol.PositionAndShape);
     }
 
+    /**
+     * True iff [[StaffLine]] belongs to an [[Instrument]] with more than one [[Staff]].
+     * @returns {boolean}
+     */
     public isPartOfMultiStaffInstrument(): boolean {
         let instrument: Instrument = this.parentStaff.ParentInstrument;
         if (instrument.Staves.length > 1) {
@@ -88,6 +96,11 @@ export abstract class StaffLine extends GraphicalObject {
         return false;
     }
 
+    /**
+     * Find the [[GraphicalStaffEntry]] closest to the given xPosition.
+     * @param xPosition
+     * @returns {GraphicalStaffEntry}
+     */
     public findClosestStaffEntry(xPosition: number): GraphicalStaffEntry {
         let closestStaffentry: GraphicalStaffEntry = undefined;
         let difference: number = Number.MAX_VALUE;

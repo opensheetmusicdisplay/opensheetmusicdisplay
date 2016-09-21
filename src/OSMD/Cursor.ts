@@ -6,7 +6,9 @@ import {MusicSystem} from "../MusicalScore/Graphical/MusicSystem";
 import {OSMD} from "./OSMD";
 import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet";
 
-
+/**
+ * A cursor which can iterate through the music sheet.
+ */
 export class Cursor {
     constructor(container: HTMLElement, osmd: OSMD) {
         this.container = container;
@@ -27,20 +29,25 @@ export class Cursor {
 
     public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
         this.iterator = manager.getIterator();
+        this.iterator.moveToNext();
         this.graphic = graphic;
         this.hidden = true;
         this.hide();
     }
 
+    /**
+     * Make the cursor visible
+     */
     public show(): void {
         this.hidden = false;
         this.update();
-        // Forcing the sheet to re-render is not necessary anymore
-        //this.osmd.render();
+        // Forcing the sheet to re-render is not necessary anymore,
+        // since the cursor is an HTML element.
+        // this.osmd.render();
     }
 
     public update(): void {
-        // Should NEVER call this.osmd.render()
+        // Warning! This should NEVER call this.osmd.render()
         if (this.hidden) {
             return;
         }
@@ -64,7 +71,8 @@ export class Cursor {
                     musicSystem.StaffLines[musicSystem.StaffLines.length - 1].PositionAndShape.RelativePosition.y + 4.0;
                 height = endY - y;
             }
-            // The following code is not necessary (for now); it highlights the current notes.
+            // The following code is not necessary (for now, but it could come useful later):
+            // it highlights the notes under the cursor.
             //let vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = gse.vfNotes;
             //for (let voiceId in vfNotes) {
             //    if (vfNotes.hasOwnProperty(voiceId)) {
@@ -90,7 +98,7 @@ export class Cursor {
             this.updateStyle(newWidth);
         }
 
-        // Show cursors
+        // Show cursor
         // // Old cursor: this.graphic.Cursors.push(cursor);
         this.cursorElement.style.display = "";
     }

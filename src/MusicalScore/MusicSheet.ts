@@ -18,30 +18,21 @@ import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
 import {Logging} from "../Common/Logging";
 
-// FIXME
-//type MusicSheetParameters = any;
-//type MultiTempoExpression = any;
-//type PlaybackSettings = any;
-//type MusicSheetParameterObject = any;
-//type EngravingRules = any;
-//type MusicSheetErrors = any;
-//type IPhonicScoreInterface = any;
-//type MusicSheetParameterChangedDelegate = any;
-//type IInstrument = any;
-//type ISettableInstrument = any;
-//type IRepetition = any;
-
-// FIXME Andrea: Commented out some things, have a look at (*)
+// FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
 export class PlaybackSettings {
     public rhythm: Fraction;
 }
 
+/**
+ * This is the representation of a complete piece of sheet music.
+ * It includes the contents of a MusicXML file after the reading.
+ */
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
         this.rules = EngravingRules.Rules;
         this.playbackSettings = new PlaybackSettings();
-        // FIXME:
+        // FIXME?
         this.playbackSettings.rhythm = new Fraction(4, 4, false);
         this.userStartTempoInBPM = 100;
         this.pageWidth = 120;
@@ -83,6 +74,11 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private engravingRules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
 
+    /**
+     * Get the global index within the music sheet for this staff.
+     * @param staff
+     * @returns {number}
+     */
     public static getIndexFromStaff(staff: Staff): number {
         return staff.idInMusicSheet;
     }
@@ -246,6 +242,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             }
         }
     }
+
+    /**
+     *
+     * @param staffIndexInMusicSheet - The global staff index, iterating through all staves of all instruments.
+     * @returns {Staff}
+     */
     public getStaffFromIndex(staffIndexInMusicSheet: number): Staff {
         return this.staves[staffIndexInMusicSheet];
     }
@@ -275,6 +277,13 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return num;
     }
+
+    /**
+     * Return a sourceMeasureList, where the given indices correspond to the whole SourceMeasureList of the MusicSheet.
+     * @param start
+     * @param end
+     * @returns {SourceMeasure[]}
+     */
     public getListOfMeasuresFromIndeces(start: number, end: number): SourceMeasure[] {
         let measures: SourceMeasure[] = [];
         for (let i: number = start; i <= end; i++) {
@@ -319,6 +328,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return staffLineIndex;
     }
+
+    /**
+     * Set to the index-given Repetition a new (set from user) value.
+     * @param index
+     * @param value
+     */
     public setRepetitionNewUserNumberOfRepetitions(index: number, value: number): void {
         let repIndex: number = 0;
         for (let i: number = 0; i < this.repetitions.length; i++) {
@@ -332,6 +347,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             }
         }
     }
+
+    /**
+     * Return the [[Repetition]] from the given index.
+     * @param index
+     * @returns {any}
+     */
     public getRepetitionByIndex(index: number): Repetition {
         let repIndex: number = 0;
         for (let i: number = 0; i < this.repetitions.length; i++) {
@@ -365,7 +386,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //        }
     //        return repetitions;
     //    } catch (ex) {
-    //        console.log(/*Logger.DefaultLogger.LogError(LogLevel.NORMAL, FIXME */ "MusicSheet.IRepetitions get: ", ex);
+    //        Logging.log("MusicSheet.IRepetitions get: ", ex);
     //        return undefined;
     //    }
     //
@@ -451,11 +472,12 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public set IdString(value: string) {
        this.idString = value;
     }
+    // (*)
     // public Dispose(): void {
     //    this.MusicSheetParameterChanged = undefined;
     //    for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
     //        let instrument: Instrument = this.instruments[idx];
-    //        instrument.dispose(); // FIXME
+    //        instrument.dispose();
     //    }
     // }
     public getEnrolledSelectionStartTimeStampWorkaround(): Fraction {
@@ -466,12 +488,18 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         let lastMeasure: SourceMeasure = this.getLastSourceMeasure();
         return Fraction.plus(lastMeasure.AbsoluteTimestamp, lastMeasure.Duration);
     }
+
+    /**
+     * Works only if the [[SourceMeasure]]s are already filled with VerticalStaffEntryContainers!
+     * @param timeStamp
+     * @returns {SourceMeasure}
+     */
     public getSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
         for (let idx: number = 0, len: number = this.sourceMeasures.length; idx < len; ++idx) {
             let sm: SourceMeasure = this.sourceMeasures[idx];
             for (let idx2: number = 0, len2: number = sm.VerticalSourceStaffEntryContainers.length; idx2 < len2; ++idx2) {
                 let vssec: VerticalSourceStaffEntryContainer = sm.VerticalSourceStaffEntryContainers[idx2];
-                if (Fraction.Equal(timeStamp, vssec.getAbsoluteTimestamp())) {
+                if (timeStamp.Equals(vssec.getAbsoluteTimestamp())) {
                     return sm;
                 }
             }

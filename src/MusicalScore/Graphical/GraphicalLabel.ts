@@ -5,9 +5,11 @@ import {BoundingBox} from "./BoundingBox";
 import {EngravingRules} from "./EngravingRules";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 
+/**
+ * The graphical counterpart of a Label
+ */
 export class GraphicalLabel extends Clickable {
     private label: Label;
-
     constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox = undefined) {
         super();
         this.label = label;
@@ -24,6 +26,9 @@ export class GraphicalLabel extends Clickable {
         return this.label.text;
     }
 
+    /**
+     * Calculate GraphicalLabel's Borders according to its Alignment
+     */
     public setLabelPositionAndShapeBorders(): void {
         if (this.Label.text.trim() === "") {
             return;
@@ -35,6 +40,7 @@ export class GraphicalLabel extends Clickable {
         let height: number = this.Label.fontHeight;
         let width: number = height * widthToHeightRatio;
         let psi: BoundingBox = this.PositionAndShape;
+
         switch (this.Label.textAlignment) {
             case TextAlignment.CenterBottom:
                 psi.BorderTop = -height;

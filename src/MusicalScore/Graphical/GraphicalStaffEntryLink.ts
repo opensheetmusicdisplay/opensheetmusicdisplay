@@ -2,6 +2,10 @@ import {StaffEntryLink} from "../VoiceData/StaffEntryLink";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalNote} from "./GraphicalNote";
 
+/**
+ * The graphical counterpart of a [[StaffEntryLink]].
+ * Used for linked voices.
+ */
 export class GraphicalStaffEntryLink {
     private staffEntryLink: StaffEntryLink;
     private graphicalLinkedStaffEntries: GraphicalStaffEntry[] = [];
@@ -26,6 +30,12 @@ export class GraphicalStaffEntryLink {
         }
         return true;
     }
+
+    /**
+     * Return all the [[GraphicalNote]]s that correspond to the [[LinkedVoiceEntry]] (the one saved in [[StaffEntryLink]]).
+     * @param graphicalStaffEntry
+     * @returns {any}
+     */
     public getLinkedStaffEntriesGraphicalNotes(graphicalStaffEntry: GraphicalStaffEntry): GraphicalNote[] {
         if (this.graphicalLinkedStaffEntries.indexOf(graphicalStaffEntry) !== -1) {
             let notes: GraphicalNote[] = [];

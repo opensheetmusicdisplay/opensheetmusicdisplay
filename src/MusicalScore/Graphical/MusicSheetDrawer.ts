@@ -25,6 +25,18 @@ import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalOctaveShift} from "./GraphicalOctaveShift";
 import {GraphicalObject} from "./GraphicalObject";
 
+/**
+ * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
+ *
+ * The drawing is implemented with a top-down approach, starting from a music sheet, going through pages, systems, staffs...
+ * ... and ending in notes, beams, accidentals and other symbols.
+ * It's worth to say, that this class just draws the symbols and graphical elements, using the positions that have been computed before.
+ * But in any case, some of these previous positioning algorithms need the sizes of the concrete symbols (NoteHeads, sharps, flats, keys...).
+ * Therefore, there are some static functions on the 'Bounding Boxes' section used to compute these symbol boxes at the
+ * beginning for the later use in positioning algorithms.
+ *
+ * This class also includes the resizing and positioning of the symbols due to user interaction like zooming or panning.
+ */
 export abstract class MusicSheetDrawer {
     public drawingParameters: DrawingParameters = new DrawingParameters();
     public splitScreenLineColor: number;
@@ -66,9 +78,11 @@ export abstract class MusicSheetDrawer {
                 }
             }
         }
+        // Draw the vertical ScrollIndicator
         if (this.drawingParameters.drawScrollIndicator) {
             this.drawScrollIndicator();
         }
+        // Draw all the pages
         for (let page of this.graphicalMusicSheet.MusicPages) {
             this.drawPage(page);
         }

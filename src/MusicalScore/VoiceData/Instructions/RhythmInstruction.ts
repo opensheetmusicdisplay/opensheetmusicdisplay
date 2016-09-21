@@ -1,6 +1,9 @@
 import {AbstractNotationInstruction} from "./AbstractNotationInstruction";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 
+/**
+ * A [[RhythmInstruction]] is the time signature which specifies the number of beats in each bar, and the value of one beat.
+ */
 export class RhythmInstruction extends AbstractNotationInstruction {
     constructor(rhythm: Fraction, numerator: number, denominator: number, rhythmSymbolEnum: RhythmSymbolEnum) {
         super(undefined); // FIXME no parent SourceStaffEntry

@@ -11,12 +11,22 @@ import {OrnamentEnum} from "./OrnamentContainer";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
+/**
+ * A [[VoiceEntry]] contains the notes in a voice at a timestamp.
+ */
 export class VoiceEntry {
+    /**
+     *
+     * @param timestamp - The relative timestamp within the source measure.
+     * @param parentVoice
+     * @param parentSourceStaffEntry
+     */
     constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry) {
         this.timestamp = timestamp;
         this.parentVoice = parentVoice;
         this.parentSourceStaffEntry = parentSourceStaffEntry;
     }
+
     public graceVoiceEntriesBefore: VoiceEntry[];
     public graceVoiceEntriesAfter: VoiceEntry[];
 
@@ -29,6 +39,7 @@ export class VoiceEntry {
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
     private arpeggiosNotesIndices: number[] = [];
     private ornamentContainer: OrnamentContainer;
+
     public get ParentSourceStaffEntry(): SourceStaffEntry {
         return this.parentSourceStaffEntry;
     }
@@ -65,6 +76,7 @@ export class VoiceEntry {
     public set OrnamentContainer(value: OrnamentContainer) {
         this.ornamentContainer = value;
     }
+
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {
         switch (articulation) {
             case ArticulationEnum.accent:
@@ -284,6 +296,7 @@ export class VoiceEntry {
         voiceEntry.Notes.push(note);
         voiceEntries.push(voiceEntry);
     }
+
 }
 
 export enum ArticulationEnum {

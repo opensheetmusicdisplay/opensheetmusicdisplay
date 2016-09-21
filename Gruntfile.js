@@ -1,6 +1,7 @@
 /*global module*/
 module.exports = function (grunt) {
     'use strict';
+
     // The banner on top of the build
     var banner = '/**\n' +
         ' * Open Sheet Music Display <%= pkg.version %> built on <%= grunt.template.today("yyyy-mm-dd") %>.\n' +
@@ -12,11 +13,11 @@ module.exports = function (grunt) {
             'typings/index.d.ts',
             // Additional manual typings:
             'external/vexflow/vexflow.d.ts'
-            // 'typings/fft.d.ts'
-        ],
+        ];
+
     // Paths
-        src = ['src/**/*.ts'],
-        test = ['test/**/*.ts'];
+    var src = ['src/**/*.ts'];
+    var test = ['test/**/*.ts'];
 
     // Grunt configuration following:
     grunt.initConfig({
@@ -30,25 +31,29 @@ module.exports = function (grunt) {
         // Browserify
         browserify: {
             dist: {
-                src: [].concat(typings, src),
+                src: ['src/OSMD/OSMD.ts'],
                 dest: '<%= outputDir.build %>/osmd.js',
-                options: {
-                    banner: "<%= banner %>"
-                }
-            },
-            debugDemo: {
-                src: [].concat(typings, src),
-                dest: '<%= outputDir.build %>/osmd-demo.js',
                 options: {
                     banner: "<%= banner %>",
                     browserifyOptions: {
-                        debug: true
+                        standalone: 'opensheetmusicdisplay'
                     }
                 }
             },
             debug: {
-                src: [].concat(typings, src, test),
+                src: ['src/OSMD/OSMD.ts'],
                 dest: '<%= outputDir.build %>/osmd-debug.js',
+                options: {
+                    banner: "<%= banner %>",
+                    browserifyOptions: {
+                        debug: true,
+                        standalone: 'opensheetmusicdisplay'                        
+                    }
+                }
+            },
+            test: {
+                src: [].concat(typings, src, test),
+                dest: '<%= outputDir.build %>/osmd-test.js',
                 options: {
                     banner: "<%= banner %>",
                     browserifyOptions: {
@@ -68,8 +73,7 @@ module.exports = function (grunt) {
                 },
                 banner: banner,
                 mangle: true,
-                mangleProperties: true,
-                preserveComments: 'all'
+                mangleProperties: true
             },
             bundle: {
                 files: {
@@ -86,14 +90,14 @@ module.exports = function (grunt) {
                     browsers: ['PhantomJS']
                 }
             },
-            debugWithFirefox: {
+            firefox: {
                 configFile: 'karma.conf.js',
                 options: {
                     singleRun: false,
                     browsers: ['Firefox']
                 }
             },
-            debugWithChrome: {
+            chrome: {
                 configFile: 'karma.conf.js',
                 options: {
                     singleRun: false,
@@ -113,13 +117,31 @@ module.exports = function (grunt) {
         // JsHint setup
         jshint: {
             all: [
-                'Gruntfile.js', 'karma.conf.js',
-                'submodules/**/*.json', 'submodules/**/*.js'
+                'Gruntfile.js', 'karma.conf.js', 'demo/**/*.js'
             ]
         },
         // TypeScript Type Definitions
         typings: {
             install: {}
+        },
+        // Class documentation using typedoc
+        typedoc: {
+            build: {
+                options: {
+                    module: 'commonjs',
+                    out: '<%= outputDir.build %>/docs',
+                    name: 'opensheetmusicdisplay',
+                    target: 'es5',
+                    mode: 'file'
+                },
+                src: ['./src/**/*.ts', './external/**/*.ts', './typings/**/*.ts']
+            }
+        },
+        // Typescript compilation for ES6 module (npm package)
+        ts: {
+          default : {
+            tsconfig: true
+          }
         },
         // Cleaning task setup
         clean: {
@@ -130,37 +152,63 @@ module.exports = function (grunt) {
                 src: [
                     '<%= outputDir.build %>',
                     '<%= outputDir.dist %>',
-                    'node_modules',
-                    'typings',
                     '.tscache',
-                    'src/**/*.js', 'test/**/*.js'
+                    'src/**/*.js', 'test/**/*.js' // if something went wrong, delete JS from TypeScript source directories
                 ]
             }
+        },
+        copy: {
+            demo: {
+                files: [
+                    { src: ['*'], dest: '<%= outputDir.build %>/demo/sheets/', cwd: './test/data/', expand: true },
+                    { src: ['*.js', '*.css', '*.html'], cwd: './demo/', expand: true, dest: '<%= outputDir.build %>/demo/' },
+                    { src: ['osmd-debug.js'], cwd: './build/', expand: true, dest: '<%= outputDir.build %>/demo/' }
+                ]
+            }
+        },
+        // http-server
+        'http-server': {
+            'demo': {
+                root: 'build/demo',
+                port: 8000,
+                host: '0.0.0.0',
+                showDir : true,
+                autoIndex: true,
+                runInBackground: false,
+                openBrowser : true
+            }
         }
+
     });
 
-    // Load Npm tasks
-    grunt.loadNpmTasks('grunt-karma');
-    grunt.loadNpmTasks('grunt-tslint');
-    grunt.loadNpmTasks('grunt-typings');
+    // Load npm tasks
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-http-server');
+    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-ts');
+    grunt.loadNpmTasks('grunt-tslint');
+    grunt.loadNpmTasks('grunt-typedoc');
+    grunt.loadNpmTasks('grunt-typings');
 
-    // Register tasks
-    grunt.registerTask('all',     ['typings', 'default']);
-    grunt.registerTask('start',   ['typings']);
-    grunt.registerTask('default', ['browserify', 'lint', 'karma:ci', 'uglify']);
-    grunt.registerTask('npmtest', ['typings', 'test']);
-    grunt.registerTask('test',    ['browserify:debug', 'lint', 'karma:ci']);
-    grunt.registerTask('fasttest', ['browserify:debug', 'karma:ci']);
-    grunt.registerTask('rebuild', ['clean', 'default']);
-    grunt.registerTask('publish', ['clean', 'typings', 'browserify:dist', 'uglify:bundle']);
-    grunt.registerTask('lint',    ['jshint', 'tslint']);
+    // Code quality
+    grunt.registerTask('lint',        'Lints all JavaScript and TypeScript files.',  ['jshint', 'tslint']);
 
-    // Fix these in the future:
-    // grunt.registerTask('test debug Firefox', ['browserify:debug', 'karma:debugWithFirefox']);
-    // grunt.registerTask('test debug Chrome', ['browserify:debug', 'karma:debugWithChrome']);
+    // Documentation
+    grunt.registerTask('docs',        'Builds class documentation to /build/docs',   ['typedoc']);
+
+    // Build tasks
+    grunt.registerTask('build:demo',  'Builds the demo.',                            ['browserify:debug', 'copy:demo']);
+    grunt.registerTask('build:test',  'Builds the tests',                            ['browserify:test']);
+    grunt.registerTask('build:dist',  'Builds for distribution on npm and Bower.',   ['browserify:dist', 'uglify', 'ts']);
+
+    // Tests
+    grunt.registerTask('test',        'Runs unit, regression and e2e tests.',        ['build:test', 'karma:ci']);
+
+    // Default task (if grunt is run without any argument, used in contiuous integration)
+    grunt.registerTask('default',     'Default task, running all other tasks. (CI)', ['lint', 'test', 'docs', 'build:demo', 'build:dist']);
 };

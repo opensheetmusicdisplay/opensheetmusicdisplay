@@ -15,6 +15,8 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/Logging";
+import {unitInPixels} from "./VexFlowMusicSheetDrawer";
+import {Tuplet} from "../../VoiceData/Tuplet";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -29,6 +31,8 @@ export class VexFlowMeasure extends StaffMeasure {
     public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
     // Call this function (if present) to x-format all the voices in the measure
     public formatVoices: (width: number) => void;
+    // The VexFlow Ties in the measure
+    public vfTies: Vex.Flow.StaveTie[] = [];
 
     // The VexFlow Stave (one measure in one line)
     private stave: Vex.Flow.Stave;
@@ -38,6 +42,10 @@ export class VexFlowMeasure extends StaffMeasure {
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     // VexFlow Beams
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
+    // Intermediate object to construct tuplets
+    private tuplets: { [voiceID: number]: [Tuplet, VexFlowStaffEntry[]][]; } = {};
+    // VexFlow Tuplets
+    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -51,8 +59,8 @@ export class VexFlowMeasure extends StaffMeasure {
     public resetLayout(): void {
         // Take into account some space for the begin and end lines of the stave
         // Will be changed when repetitions will be implemented
-        //this.beginInstructionsWidth = 20 / 10.0;
-        //this.endInstructionsWidth = 20 / 10.0;
+        //this.beginInstructionsWidth = 20 / UnitInPixels;
+        //this.endInstructionsWidth = 20 / UnitInPixels;
         this.stave = new Vex.Flow.Stave(0, 0, 0, {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
@@ -61,8 +69,7 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     public clean(): void {
-        //this.beams = {};
-        //this.vfbeams = undefined;
+        this.vfTies.length = 0;
         this.connectors = [];
         // Clean up instructions
         this.resetLayout();
@@ -78,9 +85,9 @@ export class VexFlowMeasure extends StaffMeasure {
         let vfline: any = VexFlowConverter.line(line);
         switch (vfline) {
             case Vex.Flow.StaveConnector.type.SINGLE:
-                return 1.0 / 10.0;
+                return 1.0 / unitInPixels;
             case Vex.Flow.StaveConnector.type.DOUBLE:
-                return 3.0 / 10.0;
+                return 3.0 / unitInPixels;
             default:
                 return 0;
         }
@@ -93,8 +100,8 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addClefAtBegin(clef: ClefInstruction): void {
         this.octaveOffset = clef.OctaveOffset;
-        let vfclef: string = VexFlowConverter.Clef(clef);
-        this.stave.addClef(vfclef, undefined, undefined, Vex.Flow.Modifier.Position.BEGIN);
+        let vfclef: {type: string, annotation: string} = VexFlowConverter.Clef(clef);
+        this.stave.addClef(vfclef.type, undefined, vfclef.annotation, Vex.Flow.Modifier.Position.BEGIN);
         this.updateInstructionWidth();
     }
 
@@ -106,11 +113,12 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
      */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
-        let keySig: Vex.Flow.KeySignature = new Vex.Flow.KeySignature(
+        this.stave.setKeySignature(
             VexFlowConverter.keySignature(currentKey),
-            VexFlowConverter.keySignature(previousKey)
+            VexFlowConverter.keySignature(previousKey),
+            undefined
         );
-        this.stave.addModifier(keySig, Vex.Flow.Modifier.Position.BEGIN);
+        this.updateInstructionWidth();
     }
 
     /**
@@ -133,8 +141,8 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtEnd(clef: ClefInstruction): void {
-        let vfclef: string = VexFlowConverter.Clef(clef);
-        this.stave.setEndClef(vfclef, undefined, undefined);
+        let vfclef: {type: string, annotation: string} = VexFlowConverter.Clef(clef);
+        this.stave.setEndClef(vfclef.type, "small", vfclef.annotation);
         this.updateInstructionWidth();
     }
 
@@ -145,15 +153,10 @@ export class VexFlowMeasure extends StaffMeasure {
     public setWidth(width: number): void {
         super.setWidth(width);
         // Set the width of the Vex.Flow.Stave
-        this.stave.setWidth(width * 10.0);
+        this.stave.setWidth(width * unitInPixels);
         // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.beginInstructionsWidth * 10.0);
-        // If this is the first stave in the vertical measure, call the format
-        // method to set the width of all the voices
-        if (this.formatVoices) {
-            // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((width - this.beginInstructionsWidth - this.endInstructionsWidth) * 10.0);
-        }
+        //this.stave.setNoteStartX(this.beginInstructionsWidth * UnitInPixels);
+
     }
 
     /**
@@ -162,7 +165,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
      */
     public layoutSymbols(): void {
-        this.stave.format();
+        //this.stave.format();
     }
 
     //public addGraphicalStaffEntry(entry: VexFlowStaffEntry): void {
@@ -179,6 +182,15 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param ctx
      */
     public draw(ctx: Vex.Flow.CanvasContext): void {
+        // If this is the first stave in the vertical measure, call the format
+        // method to set the width of all the voices
+        if (this.formatVoices) {
+            // The width of the voices does not include the instructions (StaveModifiers)
+            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
+        }
+
+        // Force the width of the Begin Instructions
+        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
@@ -195,10 +207,28 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
             }
         }
+
+        // Draw tuplets
+        for (let voiceID in this.vftuplets) {
+            if (this.vftuplets.hasOwnProperty(voiceID)) {
+                for (let tuplet of this.vftuplets[voiceID]) {
+                    tuplet.setContext(ctx).draw();
+                }
+            }
+        }
+
+        // Draw ties
+        for (let tie of this.vfTies) {
+            tie.setContext(ctx).draw();
+        }
+
         // Draw vertical lines
         for (let connector of this.connectors) {
             connector.setContext(ctx).draw();
         }
+
+        // now we can finally set the vexflow x positions back into the osmd object model:
+        this.setStaffEntriesXPositions();
     }
 
     /**
@@ -223,8 +253,30 @@ export class VexFlowMeasure extends StaffMeasure {
             beams.push(data);
         }
         let parent: VexFlowStaffEntry = graphicalNote.parentStaffEntry as VexFlowStaffEntry;
-        if (data[1].indexOf(parent) === -1) {
+        if (data[1].indexOf(parent) < 0) {
             data[1].push(parent);
+        }
+    }
+
+    public handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet): void {
+        let voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
+        let tuplets: [Tuplet, VexFlowStaffEntry[]][] = this.tuplets[voiceID];
+        if (tuplets === undefined) {
+            tuplets = this.tuplets[voiceID] = [];
+        }
+        let currentTupletBuilder: [Tuplet, VexFlowStaffEntry[]];
+        for (let t of tuplets) {
+            if (t[0] === tuplet) {
+                currentTupletBuilder = t;
+            }
+        }
+        if (currentTupletBuilder === undefined) {
+            currentTupletBuilder = [tuplet, []];
+            tuplets.push(currentTupletBuilder);
+        }
+        let parent: VexFlowStaffEntry = graphicalNote.parentStaffEntry as VexFlowStaffEntry;
+        if (currentTupletBuilder[1].indexOf(parent) < 0) {
+            currentTupletBuilder[1].push(parent);
         }
     }
 
@@ -249,6 +301,10 @@ export class VexFlowMeasure extends StaffMeasure {
                     }
                     if (notes.length > 1) {
                         vfbeams.push(new Vex.Flow.Beam(notes, true));
+                        // just a test for coloring the notes:
+                        // for (let note of notes) {
+                        //     (<Vex.Flow.StaveNote> note).setStyle({fillStyle: "green", strokeStyle: "green"});
+                        // }
                     } else {
                         Logging.log("Warning! Beam with no notes! Trying to ignore, but this is a serious problem.");
                     }
@@ -257,21 +313,73 @@ export class VexFlowMeasure extends StaffMeasure {
         }
     }
 
-    public layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        let gnotes: { [voiceID: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
-        let vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = this.vfVoices;
-        for (let voiceID in gnotes) {
-            if (gnotes.hasOwnProperty(voiceID)) {
-                if (!(voiceID in vfVoices)) {
-                    vfVoices[voiceID] = new Vex.Flow.Voice({
-                        beat_value: this.parentSourceMeasure.Duration.Denominator,
-                        num_beats: this.parentSourceMeasure.Duration.Numerator,
-                        resolution: Vex.Flow.RESOLUTION,
-                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
+    /**
+     * Complete the creation of VexFlow Tuplets in this measure
+     */
+    public finalizeTuplets(): void {
+        // The following line resets the created Vex.Flow Tuplets and
+        // created them brand new. Is this needed? And more importantly,
+        // should the old tuplets be removed manually by the notes?
+        this.vftuplets = {};
+        for (let voiceID in this.tuplets) {
+            if (this.tuplets.hasOwnProperty(voiceID)) {
+                let vftuplets: Vex.Flow.Tuplet[] = this.vftuplets[voiceID];
+                if (vftuplets === undefined) {
+                    vftuplets = this.vftuplets[voiceID] = [];
                 }
-                let vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
-                (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
-                vfVoices[voiceID].addTickable(vfnote);
+                for (let tuplet of this.tuplets[voiceID]) {
+                    let notes: Vex.Flow.StaveNote[] = [];
+                    for (let entry of tuplet[1]) {
+                        notes.push((<VexFlowStaffEntry>entry).vfNotes[voiceID]);
+                    }
+                    if (notes.length > 1) {
+                        vftuplets.push(new Vex.Flow.Tuplet(notes));
+                    } else {
+                        Logging.log("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
+                    }
+                }
+            }
+        }
+    }
+
+    public layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
+        return;
+    }
+
+    public staffMeasureCreatedCalculations(): void {
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
+
+            // create vex flow Notes:
+            let gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
+            for (let voiceID in gnotes) {
+                if (gnotes.hasOwnProperty(voiceID)) {
+                    let vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
+                    (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
+                }
+            }
+        }
+
+        this.finalizeBeams();
+        this.finalizeTuplets();
+
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            let graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
+            let gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
+            // create vex flow voices and add tickables to it:
+            let vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = this.vfVoices;
+            for (let voiceID in gnotes) {
+                if (gnotes.hasOwnProperty(voiceID)) {
+                    if (!(voiceID in vfVoices)) {
+                        vfVoices[voiceID] = new Vex.Flow.Voice({
+                            beat_value: this.parentSourceMeasure.Duration.Denominator,
+                            num_beats: this.parentSourceMeasure.Duration.Numerator,
+                            resolution: Vex.Flow.RESOLUTION,
+                        }).setMode(Vex.Flow.Voice.Mode.SOFT);
+                    }
+
+                    vfVoices[voiceID].addTickable(graphicalStaffEntry.vfNotes[voiceID]);
+                }
             }
         }
     }
@@ -287,6 +395,10 @@ export class VexFlowMeasure extends StaffMeasure {
         this.connectors.push(connector);
     }
 
+    /**
+     * Return the VexFlow Stave corresponding to this StaffMeasure
+     * @returns {Vex.Flow.Stave}
+     */
     public getVFStave(): Vex.Flow.Stave {
         return this.stave;
     }
@@ -297,7 +409,7 @@ export class VexFlowMeasure extends StaffMeasure {
     //    //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
     //    let padding: number = modifier.getPadding(20);
     //    let width: number = modifier.getWidth();
-    //    this.beginInstructionsWidth += (padding + width) / 10.0;
+    //    this.beginInstructionsWidth += (padding + width) / UnitInPixels;
     //}
     //
     //private increaseEndInstructionWidth(): void {
@@ -305,13 +417,33 @@ export class VexFlowMeasure extends StaffMeasure {
     //    let modifier: StaveModifier = modifiers[modifiers.length - 1];
     //    let padding: number = 0;
     //    let width: number = modifier.getWidth();
-    //    this.endInstructionsWidth += (padding + width) / 10.0;
+    //    this.endInstructionsWidth += (padding + width) / UnitInPixels;
     //
     //}
 
+    /**
+     * After re-running the formatting on the VexFlow Stave, update the
+     * space needed by Instructions (in VexFlow: StaveModifiers)
+     */
     private updateInstructionWidth(): void {
-        this.stave.format();
-        this.beginInstructionsWidth = this.stave.getNoteStartX() / 10.0;
-        this.endInstructionsWidth = this.stave.getNoteEndX() / 10.0;
+        this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
+        this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
+    }
+
+    /**
+     * sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
+     * The positions are needed for cursor placement and mouse/tap interactions
+     */
+    private setStaffEntriesXPositions(): void {
+        for (let idx3: number = 0, len3: number = this.staffEntries.length; idx3 < len3; ++idx3) {
+            let gse: VexFlowStaffEntry = (<VexFlowStaffEntry> this.staffEntries[idx3]);
+            let measure: StaffMeasure = gse.parentMeasure;
+            let x: number =
+                gse.getX() -
+                measure.PositionAndShape.RelativePosition.x -
+                measure.ParentStaffLine.PositionAndShape.RelativePosition.x -
+                measure.parentMusicSystem.PositionAndShape.RelativePosition.x;
+            gse.PositionAndShape.RelativePosition.x = x;
+        }
     }
 }

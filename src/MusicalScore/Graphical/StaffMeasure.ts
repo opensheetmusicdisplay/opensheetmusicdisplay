@@ -15,6 +15,9 @@ import {SystemLinesEnum} from "./SystemLinesEnum";
 import {BoundingBox} from "./BoundingBox";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
+/**
+ * Represents a measure in the music sheet (one measure in one staff line)
+ */
 export abstract class StaffMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
     protected lastInstructionStaffEntry: GraphicalStaffEntry;
@@ -41,9 +44,21 @@ export abstract class StaffMeasure extends GraphicalObject {
     public parentSourceMeasure: SourceMeasure;
     public staffEntries: GraphicalStaffEntry[];
     public parentMusicSystem: MusicSystem;
+    /**
+     * The x-width of possibly existing: repetition start line, clef, key, rhythm.
+     */
     public beginInstructionsWidth: number;
+    /**
+     * The minimum possible x-width of all staff entries without overlapping.
+     */
     public minimumStaffEntriesWidth: number;
+    /**
+     * Will be set by music system builder while building systems.
+     */
     public staffEntriesScaleFactor: number;
+    /**
+     * The x-width of possibly existing: repetition end line, clef.
+     */
     public endInstructionsWidth: number;
     public hasError: boolean;
 
@@ -86,38 +101,81 @@ export abstract class StaffMeasure extends GraphicalObject {
         }
     }
 
+    /**
+     * Reset all the geometric values and parameters of this measure and put it in an initialized state.
+     * This is needed to evaluate a measure a second time by system builder.
+     */
     public resetLayout(): void {
         throw new Error("not implemented");
     }
 
+    /**
+     * Return the x-width of a given measure line.
+     * @param line
+     */
     public getLineWidth(line: SystemLinesEnum): number {
         throw new Error("not implemented");
     }
 
+    /**
+     * Add the given clef to the begin of the measure.
+     * This has to update/increase BeginInstructionsWidth.
+     * @param clef
+     */
     public addClefAtBegin(clef: ClefInstruction): void {
         throw new Error("not implemented");
     }
 
+    /**
+     * Add the given key to the begin of the measure.
+     * This has to update/increase BeginInstructionsWidth.
+     * @param currentKey - The new valid key.
+     * @param previousKey - The old cancelled key. Needed to show which accidentals are not valid any more.
+     * @param currentClef - The valid clef. Needed to put the accidentals on the right y-positions.
+     */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
         throw new Error("not implemented");
     }
 
+    /**
+     * Add the given rhythm to the begin of the measure.
+     * This has to update/increase BeginInstructionsWidth.
+     * @param rhythm
+     */
     public addRhythmAtBegin(rhythm: RhythmInstruction): void {
         throw new Error("not implemented");
     }
 
+    /**
+     * Add the given clef to the end of the measure.
+     * This has to update/increase EndInstructionsWidth.
+     * @param clef
+     */
     public addClefAtEnd(clef: ClefInstruction): void {
         throw new Error("not implemented");
     }
 
+    /**
+     * Set the x-position relative to the staffline (y-Position is always 0 relative to the staffline).
+     * @param xPos
+     */
     public setPositionInStaffline(xPos: number): void {
         this.PositionAndShape.RelativePosition = new PointF2D(xPos, 0);
     }
 
+    /**
+     * Set the overall x-width of the measure.
+     * @param width
+     */
     public setWidth(width: number): void {
         this.PositionAndShape.BorderRight = width;
     }
 
+    /**
+     * This method is called after the StaffEntriesScaleFactor has been set.
+     * Here the final x-positions of the staff entries have to be set.
+     * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth).
+     */
     public layoutSymbols(): void {
         throw new Error("not implemented");
     }
@@ -125,32 +183,45 @@ export abstract class StaffMeasure extends GraphicalObject {
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.relInMeasureTimestamp === relativeTimestamp) {
+            if (graphicalStaffEntry.relInMeasureTimestamp.Equals(relativeTimestamp)) {
                 return graphicalStaffEntry;
             }
         }
         return undefined;
     }
 
+    /**
+     * Iterate from start to end and find the [[GraphicalStaffEntry]] with the same absolute timestamp.
+     * @param absoluteTimestamp
+     * @returns {any}
+     */
     public findGraphicalStaffEntryFromVerticalContainerTimestamp(absoluteTimestamp: Fraction): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.sourceStaffEntry.VerticalContainerParent.getAbsoluteTimestamp() === absoluteTimestamp) {
+            if (graphicalStaffEntry.sourceStaffEntry.VerticalContainerParent.getAbsoluteTimestamp().Equals(absoluteTimestamp)) {
                 return graphicalStaffEntry;
             }
         }
         return undefined;
     }
 
+    /**
+     * Check if the all the [[GraphicalMeasure]]'s [[StaffEntry]]s (their minimum Length) have the same duration with the [[SourceMeasure]].
+     * @returns {boolean}
+     */
     public hasSameDurationWithSourceMeasureParent(): boolean {
         let duration: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             duration.Add(graphicalStaffEntry.findStaffEntryMinNoteLength());
         }
-        return duration === this.parentSourceMeasure.Duration;
+        return duration.Equals(this.parentSourceMeasure.Duration);
     }
 
+    /**
+     * Check a whole [[Measure]] for the presence of multiple Voices (used for Stem direction).
+     * @returns {boolean}
+     */
     public hasMultipleVoices(): boolean {
         if (this.staffEntries.length === 0) {
             return false;
@@ -199,7 +270,7 @@ export abstract class StaffMeasure extends GraphicalObject {
                     }
                 }
             }
-            if (voiceDuration > duration) {
+            if (duration.lt(voiceDuration)) {
                 duration = Fraction.createFromFraction(voiceDuration);
             }
         }
@@ -211,13 +282,17 @@ export abstract class StaffMeasure extends GraphicalObject {
         this.PositionAndShape.ChildElements.push(graphicalStaffEntry.PositionAndShape);
     }
 
+    /**
+     * Add a [[StaffEntry]] (along with its [[BoundingBox]]) to the current Measure.
+     * @param staffEntry
+     */
     public addGraphicalStaffEntryAtTimestamp(staffEntry: GraphicalStaffEntry): void {
         if (staffEntry !== undefined) {
-            if (this.staffEntries.length === 0 || this.staffEntries[this.staffEntries.length - 1].relInMeasureTimestamp < staffEntry.relInMeasureTimestamp) {
+            if (this.staffEntries.length === 0 || this.staffEntries[this.staffEntries.length - 1].relInMeasureTimestamp.lt(staffEntry.relInMeasureTimestamp)) {
                 this.staffEntries.push(staffEntry);
             } else {
                 for (let i: number = this.staffEntries.length - 1; i >= 0; i--) {
-                    if (this.staffEntries[i].relInMeasureTimestamp < staffEntry.relInMeasureTimestamp) {
+                    if (this.staffEntries[i].relInMeasureTimestamp.lt(staffEntry.relInMeasureTimestamp)) {
                         this.staffEntries.splice(i + 1, 0, staffEntry);
                         break;
                     }
@@ -238,6 +313,10 @@ export abstract class StaffMeasure extends GraphicalObject {
         return sourceMeasure.beginsWithLineRepetition();
     }
 
+    /**
+     * Check if this Measure is a Repetition Ending.
+     * @returns {boolean}
+     */
     public endsWithLineRepetition(): boolean {
         let sourceMeasure: SourceMeasure = this.parentSourceMeasure;
         if (sourceMeasure === undefined) {
@@ -246,6 +325,10 @@ export abstract class StaffMeasure extends GraphicalObject {
         return sourceMeasure.endsWithLineRepetition();
     }
 
+    /**
+     * Check if a Repetition starts at the next Measure.
+     * @returns {boolean}
+     */
     public beginsWithWordRepetition(): boolean {
         let sourceMeasure: SourceMeasure = this.parentSourceMeasure;
         if (sourceMeasure === undefined) {
@@ -254,6 +337,9 @@ export abstract class StaffMeasure extends GraphicalObject {
         return sourceMeasure.beginsWithWordRepetition();
     }
 
+    /**
+     * Check if this Measure is a Repetition Ending.
+     */
     public endsWithWordRepetition(): boolean {
         let sourceMeasure: SourceMeasure = this.parentSourceMeasure;
         if (sourceMeasure === undefined) {

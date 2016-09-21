@@ -4,6 +4,9 @@ import {NoteEnum} from "../../../Common/DataObjects/Pitch";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import {ArgumentOutOfRangeException} from "../../Exceptions";
 
+/**
+ * A [[ClefInstruction]] is the clef placed at the beginning of the stave, which indicates the pitch of the notes.
+ */
 export class ClefInstruction extends AbstractNotationInstruction {
     constructor(clefType: ClefEnum = ClefEnum.G, octaveOffset: number = 0, line: number = 2) {
         super(undefined); // FIXME? Missing SourceStaffEntry!

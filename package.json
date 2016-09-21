@@ -1,14 +1,29 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "0.0.1-alpha.1",
+  "version": "0.1.0-beta",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "dist/src/OSMD/OSMD.js",
   "typings": "dist/src/OSMD/OSMD",
   "scripts": {
-    "test": "grunt npmtest",
-    "postinstall": "typings install",
-    "prepublish": "tsc"
+    "test": "grunt test",
+    "postinstall": "grunt typings",
+    "prepublish": "grunt build:dist"
   },
+  "files": [
+    "dist",
+    "AUTHORS",
+    "CHANGELOG.md",
+    "README.md",
+    "karma.conf.js",
+    "src",
+    "test",
+    "external",
+    "demo",
+    "tsconfig",
+    "tslint.json",
+    "typings.json",
+    "Gruntfile.js"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
@@ -28,6 +43,8 @@
   "dependencies": {
     "es6-promise": "^3.2.1",
     "jszip": "^3.0.0",
+    "loglevel": "^1.4.1",
+    "shortid": "^2.2.6",
     "typescript-collections": "^1.1.2",
     "vexflow": "^1.2.53"
   },
@@ -37,12 +54,17 @@
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
     "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-jshint": "^1.0.0",
     "grunt-contrib-uglify": "^2.0.0",
     "grunt-contrib-watch": "^1.0.0",
+    "grunt-http-server": "",
     "grunt-karma": "^2.0.0",
+    "grunt-ts": "^6.0.0-beta.3",
     "grunt-tslint": "^3.1.1",
+    "grunt-typedoc": "^0.2.4",
     "grunt-typings": "^0.1.5",
+    "http-server": "",
     "karma": "^1.1.1",
     "karma-base64-to-js-preprocessor": "0.0.1",
     "karma-chai": "^0.1.0",
@@ -56,6 +78,7 @@
     "phantomjs-prebuilt": "^2.1.8",
     "tsify": "^1.0.2",
     "tslint": "3.8.0",
+    "typedoc": "^0.4.4",
     "typescript": "^1.8.10",
     "typings": "^1.3.1"
   }

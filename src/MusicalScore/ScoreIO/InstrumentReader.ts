@@ -43,9 +43,17 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 //  }
 //}
 
+/**
+ * To be implemented
+ */
 export type repetitionInstructionReader = any;
 
+/**
+ * An InstrumentReader is used during the reading phase to keep parsing new measures from the MusicXML file
+ * with the readNextXmlMeasure method.
+ */
 export class InstrumentReader {
+
     constructor(repetitionInstructionReader: repetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
         // (*) this.repetitionInstructionReader = repetitionInstructionReader;
         this.xmlMeasureList = xmlMeasureList;
@@ -102,6 +110,13 @@ export class InstrumentReader {
         this.activeRhythm = value;
     }
 
+    /**
+     * Main CreateSheet: read the next XML Measure and save all data to the given [[SourceMeasure]].
+     * @param currentMeasure
+     * @param measureStartAbsoluteTimestamp - Using this instead of currentMeasure.AbsoluteTimestamp as it isn't set yet
+     * @param guitarPro
+     * @returns {boolean}
+     */
     public readNextXmlMeasure(currentMeasure: SourceMeasure, measureStartAbsoluteTimestamp: Fraction, guitarPro: boolean): boolean {
         if (this.currentXmlMeasureIndex >= this.xmlMeasureList.length) {
             return false;
@@ -384,6 +399,12 @@ export class InstrumentReader {
         }
     }
 
+    /**
+     * Get or create the passing [[VoiceGenerator]].
+     * @param voiceId
+     * @param staffId
+     * @returns {VoiceGenerator}
+     */
     private getOrCreateVoiceGenerator(voiceId: number, staffId: number): VoiceGenerator {
         let staff: Staff = this.instrument.Staves[staffId];
         let voiceGenerator: VoiceGenerator = this.voiceGeneratorsDict[voiceId];
@@ -416,7 +437,10 @@ export class InstrumentReader {
     //  //}
     //}
 
-
+    /**
+     * Create the default [[ClefInstruction]] for the given staff index.
+     * @param staffIndex
+     */
     private createDefaultClefInstruction(staffIndex: number): void {
         let first: SourceMeasure;
         if (this.musicSheet.SourceMeasures.length > 0) {
@@ -437,6 +461,9 @@ export class InstrumentReader {
         firstStaffEntry.Instructions.splice(0, 0, clefInstruction);
     }
 
+    /**
+     * Create the default [[KeyInstruction]] in case no [[KeyInstruction]] is given in the whole [[Instrument]].
+     */
     private createDefaultKeyInstruction(): void {
         let first: SourceMeasure;
         if (this.musicSheet.SourceMeasures.length > 0) {
@@ -464,6 +491,12 @@ export class InstrumentReader {
         }
     }
 
+    /**
+     * Check if the given attributesNode is at the begin of a XmlMeasure.
+     * @param parentNode
+     * @param attributesNode
+     * @returns {boolean}
+     */
     private isAttributesNodeAtBeginOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
         let children: IXmlElement[] = parentNode.elements();
         let attributesNodeIndex: number = children.indexOf(attributesNode); // FIXME | 0
@@ -480,6 +513,12 @@ export class InstrumentReader {
         return (attributesNodeIndex < firstNoteNodeIndex && firstNoteNodeIndex > 0) || (firstNoteNodeIndex < 0);
     }
 
+    /**
+     * Check if the given attributesNode is at the end of a XmlMeasure.
+     * @param parentNode
+     * @param attributesNode
+     * @returns {boolean}
+     */
     private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
         let childs: IXmlElement[] = parentNode.elements().slice();
         let attributesNodeIndex: number = 0;
@@ -499,6 +538,11 @@ export class InstrumentReader {
         return attributesNodeIndex > nextNoteNodeIndex;
     }
 
+    /**
+     * Called only when no noteDuration is given in XML.
+     * @param xmlNode
+     * @returns {Fraction}
+     */
     private getNoteDurationFromTypeNode(xmlNode: IXmlElement): Fraction {
         if (xmlNode.element("type") !== undefined) {
             let typeNode: IXmlElement = xmlNode.element("type");
@@ -510,6 +554,11 @@ export class InstrumentReader {
         return new Fraction(0, 4 * this.divisions);
     }
 
+    /**
+     * Add (the three basic) Notation Instructions to a list
+     * @param node
+     * @param guitarPro
+     */
     private addAbstractInstruction(node: IXmlElement, guitarPro: boolean): void {
         if (node.element("divisions") !== undefined) {
             if (node.elements().length === 1) {
@@ -723,6 +772,11 @@ export class InstrumentReader {
         }
     }
 
+    /**
+     * Save the current AbstractInstructions to the corresponding [[StaffEntry]]s.
+     * @param numberOfStaves
+     * @param beginOfMeasure
+     */
     private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
         for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
             let pair: [number, AbstractNotationInstruction] = this.abstractInstructions[i];
@@ -862,6 +916,9 @@ export class InstrumentReader {
         }
     }
 
+    /**
+     * Save any ClefInstruction given - exceptionally - at the end of the currentMeasure.
+     */
     private saveClefInstructionAtEndOfMeasure(): void {
         for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
             let key: number = this.abstractInstructions[i][0];
@@ -886,6 +943,11 @@ export class InstrumentReader {
         }
     }
 
+    /**
+     * In case of a [[Tuplet]], read NoteDuration from type.
+     * @param xmlNode
+     * @returns {Fraction}
+     */
     private getNoteDurationForTuplet(xmlNode: IXmlElement): Fraction {
         let duration: Fraction = new Fraction(0, 1);
         let typeDuration: Fraction = this.getNoteDurationFromTypeNode(xmlNode);
@@ -926,6 +988,15 @@ export class InstrumentReader {
     //  }
     //  return directionStaffNumber;
     //}
+
+    /**
+     * Calculate the divisions value from the type and duration of the first MeasureNote that makes sense
+     * (meaning itself hasn't any errors and it doesn't belong to a [[Tuplet]]).
+     *
+     * If all the MeasureNotes belong to a [[Tuplet]], then we read the next XmlMeasure (and so on...).
+     * If we have reached the end of the [[Instrument]] and still the divisions aren't set, we throw an exception
+     * @returns {number}
+     */
     private readDivisionsFromNotes(): number {
         let divisionsFromNote: number = 0;
         let xmlMeasureIndex: number = this.currentXmlMeasureIndex;

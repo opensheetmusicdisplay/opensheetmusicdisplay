@@ -1,7 +1,11 @@
 import {Note} from "./Note";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 
+/**
+ * Tuplets create irregular rhythms; e.g. triplets, quadruplets, quintuplets, etc.
+ */
 export class Tuplet {
+
     constructor(tupletLabelNumber: number) {
         this.tupletLabelNumber = tupletLabelNumber;
     }
@@ -34,6 +38,11 @@ export class Tuplet {
         this.fractions = value;
     }
 
+    /**
+     * Return the index of the first List (notes[0], notes[1],...).
+     * @param note
+     * @returns {number}
+     */
     public getNoteIndex(note: Note): number {
         for (let i: number = this.notes.length - 1; i >= 0; i--) {
             for (let j: number = 0; j < this.notes[i].length; j++) {
@@ -44,4 +53,5 @@ export class Tuplet {
         }
         return 0;
     }
+
 }

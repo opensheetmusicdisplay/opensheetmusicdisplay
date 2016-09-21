@@ -16,16 +16,33 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum} from "../DrawingEnums";
 
+/**
+ * Helper class, which contains static methods which actually convert
+ * from OSMD objects to VexFlow objects.
+ */
 export class VexFlowConverter {
+    /**
+     * Mapping from numbers of alterations on the key signature to major keys
+     * @type {[alterationsNo: number]: string; }
+     */
     private static majorMap: {[_: number]: string; } = {
         "0": "C", 1: "G", 2: "D", 3: "A", 4: "E", 5: "B", 6: "F#", 7: "C#",
         8: "G#", "-1": "F", "-8": "Fb", "-7": "Cb", "-6": "Gb", "-5": "Db", "-4": "Ab", "-3": "Eb", "-2": "Bb",
     };
+    /**
+     * Mapping from numbers of alterations on the key signature to minor keys
+     * @type {[alterationsNo: number]: string; }
+     */
     private static minorMap: {[_: number]: string; } = {
         "1": "E", "7": "A#", "0": "A", "6": "D#", "3": "F#", "-5": "Bb", "-4": "F", "-7": "Ab", "-6": "Eb",
         "-1": "D", "4": "C#", "-3": "C", "-2": "G", "2": "B", "5": "G#", "-8": "Db", "8": "E#",
     };
 
+    /**
+     * Convert a fraction to a string which represents a duration in VexFlow
+     * @param fraction a fraction representing the duration of a note
+     * @returns {string}
+     */
     public static duration(fraction: Fraction): string {
         let dur: number = fraction.RealValue;
         if (dur >= 1) {
@@ -53,13 +70,13 @@ export class VexFlowConverter {
     public static pitch(pitch: Pitch, clef: ClefInstruction): [string, string, ClefInstruction] {
         let fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         // The octave seems to need a shift of three FIXME?
-        let octave: number = pitch.Octave + clef.OctaveOffset + 3;
+        let octave: number = pitch.Octave - clef.OctaveOffset + 3;
         let acc: string = VexFlowConverter.accidental(pitch.Accidental);
         return [fund + "n/" + octave, acc, clef];
     }
 
     /**
-     * Converts AccidentalEnum to vexFlow accidental string
+     * Converts AccidentalEnum to a string which represents an accidental in VexFlow
      * @param accidental
      * @returns {string}
      */
@@ -86,13 +103,18 @@ export class VexFlowConverter {
         return acc;
     }
 
-
+    /**
+     * Convert a set of GraphicalNotes to a VexFlow StaveNote
+     * @param notes form a chord on the staff
+     * @returns {Vex.Flow.StaveNote}
+     */
     public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];
         let accidentals: string[] = [];
-        let frac: Fraction = notes[0].sourceNote.Length;
+        let frac: Fraction = notes[0].graphicalNoteLength;
         let duration: string = VexFlowConverter.duration(frac);
-        let vfclef: string;
+        let vfClefType: string = undefined;
+        let numDots: number = 0;
         for (let note of notes) {
             let res: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             if (res === undefined) {
@@ -102,13 +124,21 @@ export class VexFlowConverter {
             }
             keys.push(res[0]);
             accidentals.push(res[1]);
-            if (!vfclef) {
-                vfclef = VexFlowConverter.Clef(res[2]);
+            if (!vfClefType) {
+                let vfClef: {type: string, annotation: string} = VexFlowConverter.Clef(res[2]);
+                vfClefType = vfClef.type;
+            }
+            if (numDots < note.numberOfDots) {
+                numDots = note.numberOfDots;
             }
         }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            duration += "d";
+        }
+
         let vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
             auto_stem: true,
-            clef: vfclef,
+            clef: vfClefType,
             duration: duration,
             duration_override: {
                 denominator: frac.Denominator,
@@ -116,17 +146,30 @@ export class VexFlowConverter {
             },
             keys: keys,
         });
+
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i]));
             }
         }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            vfnote.addDotToAll();
+        }
+
         return vfnote;
     }
 
-    public static Clef(clef: ClefInstruction): string {
+    /**
+     * Convert a ClefInstruction to a string representing a clef type in VexFlow
+     * @param clef
+     * @returns {string}
+     * @constructor
+     */
+    public static Clef(clef: ClefInstruction): {type: string, annotation: string} {
         let type: string;
+        let annotation: string = undefined;
+
         switch (clef.ClefType) {
             case ClefEnum.G:
                 type = "treble";
@@ -145,9 +188,25 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        return type;
+
+        switch (clef.OctaveOffset) {
+            case 1:
+                annotation = "8va";
+                break;
+            case -1:
+                annotation = "8vb";
+                break;
+            default:
+        }
+        return {type, annotation};
     }
 
+    /**
+     * Convert a RhythmInstruction to a VexFlow TimeSignature object
+     * @param rhythm
+     * @returns {Vex.Flow.TimeSignature}
+     * @constructor
+     */
     public static TimeSignature(rhythm: RhythmInstruction): Vex.Flow.TimeSignature {
         let timeSpec: string;
         switch (rhythm.SymbolEnum) {
@@ -165,6 +224,11 @@ export class VexFlowConverter {
         return new Vex.Flow.TimeSignature(timeSpec);
     }
 
+    /**
+     * Convert a KeyInstruction to a string representing in VexFlow a key
+     * @param key
+     * @returns {string}
+     */
     public static keySignature(key: KeyInstruction): string {
         if (key === undefined) {
             return undefined;
@@ -185,7 +249,13 @@ export class VexFlowConverter {
         return ret;
     }
 
+    /**
+     * Converts a lineType to a VexFlow StaveConnector type
+     * @param lineType
+     * @returns {any}
+     */
     public static line(lineType: SystemLinesEnum): any {
+        // TODO Not all line types are correctly mapped!
         switch (lineType) {
             case SystemLinesEnum.SingleThin:
                 return Vex.Flow.StaveConnector.type.SINGLE;
@@ -205,6 +275,13 @@ export class VexFlowConverter {
         }
     }
 
+    /**
+     * Construct a string which can be used in a CSS font property
+     * @param fontSize
+     * @param fontStyle
+     * @param font
+     * @returns {string}
+     */
     public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular, font: Fonts = Fonts.TimesNewRoman): string {
         let style: string = "normal";
         let weight: string = "normal";
@@ -239,8 +316,13 @@ export class VexFlowConverter {
         return  style + " " + weight + " " + Math.floor(fontSize) + "px " + family;
     }
 
+    /**
+     * Convert OutlineAndFillStyle to CSS properties
+     * @param styleId
+     * @returns {string}
+     */
     public static style(styleId: OutlineAndFillStyleEnum): string {
-        // TODO
-        return "purple";
+        // TODO To be implemented
+        return "lightgreen";
     }
 }

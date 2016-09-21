@@ -1,15 +1,18 @@
 import { MusicSheet } from "./MusicSheet";
 
 export class InstrumentalGroup {
+
     constructor(name: string, musicSheet: MusicSheet, parent: InstrumentalGroup) {
         this.name = name;
         this.musicSheet = musicSheet;
         this.parent = parent;
     }
+
     private name: string;
     private musicSheet: MusicSheet;
     private parent: InstrumentalGroup;
     private instrumentalGroups: InstrumentalGroup[] = [];
+
     public get InstrumentalGroups(): InstrumentalGroup[] {
         return this.instrumentalGroups;
     }
@@ -25,4 +28,5 @@ export class InstrumentalGroup {
     public get GetMusicSheet(): MusicSheet {
         return this.musicSheet;
     }
+
 }

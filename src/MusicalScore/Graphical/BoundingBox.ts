@@ -3,6 +3,9 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 
+/**
+ * A bounding box delimits an area on the 2D plane.
+ */
 export class BoundingBox {
     protected isSymbol: boolean = false;
     protected relativePositionHasBeenSet: boolean = false;
@@ -201,6 +204,9 @@ export class BoundingBox {
         }
     }
 
+    /**
+     * This method calculates the Absolute Positions recursively
+     */
     public calculateAbsolutePositionsRecursiveWithoutTopelement(): void {
         this.absolutePosition.x = 0.0;
         this.absolutePosition.y = 0.0;
@@ -210,6 +216,11 @@ export class BoundingBox {
         }
     }
 
+    /**
+     * This method calculates the Absolute Positions recursively
+     * @param x
+     * @param y
+     */
     public calculateAbsolutePositionsRecursive(x: number, y: number): void {
         this.absolutePosition.x = this.relativePosition.x + x;
         this.absolutePosition.y = this.relativePosition.y + y;
@@ -219,6 +230,9 @@ export class BoundingBox {
         }
     }
 
+    /**
+     * This method calculates the BoundingBoxes
+     */
     public calculateBoundingBox(): void {
         if (this.childElements.length === 0) {
             return;
@@ -227,6 +241,8 @@ export class BoundingBox {
             let childElement: BoundingBox = this.ChildElements[idx];
             childElement.calculateBoundingBox();
         }
+
+        // initialize with max/min values
         let minLeft: number = Number.MAX_VALUE;
         let maxRight: number = Number.MIN_VALUE;
         let minTop: number = Number.MAX_VALUE;
@@ -235,6 +251,8 @@ export class BoundingBox {
         let maxMarginRight: number = Number.MIN_VALUE;
         let minMarginTop: number = Number.MAX_VALUE;
         let maxMarginBottom: number = Number.MIN_VALUE;
+
+        // apart from symbol elements, where we initialize with the symbol's borders
         if (this.isSymbol) {
             minLeft = this.borderLeft;
             maxRight = this.borderRight;
@@ -245,6 +263,8 @@ export class BoundingBox {
             minMarginTop = this.borderMarginTop;
             maxMarginBottom = this.borderMarginBottom;
         }
+
+        // ChildElements will have their borders calculated, so calculate current borders
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
             let childElement: BoundingBox = this.ChildElements[idx];
             minLeft = Math.min(minLeft, childElement.relativePosition.x + childElement.borderLeft);
@@ -256,6 +276,8 @@ export class BoundingBox {
             minMarginTop = Math.min(minMarginTop, childElement.relativePosition.y + childElement.borderMarginTop);
             maxMarginBottom = Math.max(maxMarginBottom, childElement.relativePosition.y + childElement.borderMarginBottom);
         }
+
+        // ChildElements will have their borders calculated, so calculate current borders
         this.borderLeft = minLeft;
         this.borderRight = maxRight;
         this.borderTop = minTop;
@@ -303,6 +325,12 @@ export class BoundingBox {
         this.calculateMarginRectangle();
     }
 
+    /**
+     * This method computes the first non-overlapping position in the placementPsi Element for the current (this) positionAndShapeInfo
+     * @param placementPsi
+     * @param direction
+     * @param position
+     */
     public computeNonOverlappingPositionWithMargin(placementPsi: BoundingBox, direction: ColDirEnum, position: PointF2D): void {
         this.RelativePosition = new PointF2D(position.x, position.y);
         this.setAbsolutePositionFromParent();
@@ -329,6 +357,11 @@ export class BoundingBox {
         while (hasBeenMoved);
     }
 
+    /**
+     * This method detects a collision (without margins)
+     * @param psi
+     * @returns {boolean}
+     */
     public collisionDetection(psi: BoundingBox): boolean {
         let overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderRight, psi.absolutePosition.x + psi.borderRight)
             - Math.max(this.AbsolutePosition.x + this.borderLeft, psi.absolutePosition.x + psi.borderLeft);
@@ -340,6 +373,11 @@ export class BoundingBox {
         return false;
     }
 
+    /**
+     * This method checks if the given Psi's Margins lie inside the current Psi's Margins.
+     * @param psi
+     * @returns {boolean}
+     */
     public liesInsideBorders(psi: BoundingBox): boolean {
         let leftBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderLeft)
             && (psi.absolutePosition.x + psi.borderLeft) <= (this.AbsolutePosition.x + this.borderRight);
@@ -368,6 +406,11 @@ export class BoundingBox {
         return false;
     }
 
+    /**
+     * This method detects a collision (margin-wide)
+     * @param psi
+     * @returns {boolean}
+     */
     public marginCollisionDetection(psi: BoundingBox): boolean {
         let overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderMarginRight, psi.absolutePosition.x + psi.borderMarginRight)
             - Math.max(this.AbsolutePosition.x + this.borderMarginLeft, psi.absolutePosition.x + psi.borderMarginLeft);
@@ -379,6 +422,11 @@ export class BoundingBox {
         return false;
     }
 
+    /**
+     * This method checks if the given Psi's Margins lie inside the current Psi's Margins
+     * @param psi
+     * @returns {boolean}
+     */
     public liesInsideMargins(psi: BoundingBox): boolean {
         let leftMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginLeft)
             && (psi.absolutePosition.x + psi.borderMarginLeft) <= (this.AbsolutePosition.x + this.borderMarginRight);
@@ -409,6 +457,12 @@ export class BoundingBox {
         return false;
     }
 
+    /**
+     * This method computes the first non-overlapping position in the placementPsi Element for the current (this) positionAndShapeInfo
+     * @param placementPsi
+     * @param direction
+     * @param position
+     */
     public computeNonOverlappingPosition(placementPsi: BoundingBox, direction: ColDirEnum, position: PointF2D): void {
         this.RelativePosition = new PointF2D(position.x, position.y);
         this.setAbsolutePositionFromParent();
@@ -431,8 +485,7 @@ export class BoundingBox {
                 default:
                     throw new ArgumentOutOfRangeException("direction");
             }
-        }
-        while (hasBeenMoved);
+        } while (hasBeenMoved); // as long as the element is moved
     }
 
     public getClickedObjectOfType<T>(clickPosition: PointF2D): T {
@@ -483,10 +536,22 @@ export class BoundingBox {
         this.boundingMarginRectangle = RectangleF2D.createFromLocationAndSize(this.upperLeftMarginCorner, this.marginSize);
     }
 
+    /**
+     * This method calculates the margin border along the given direction so that no collision takes place along this direction
+     * @param toBePlaced
+     * @param direction
+     */
     private calculateMarginPositionAlongDirection(toBePlaced: BoundingBox, direction: ColDirEnum): void {
+        // now this will be the "known" Element, about to get bigger with the toBePlaced
+        // eg toBePlaced will always be in the PositionAndShape hierarchy a Child of this
+        // example: this = StaffEntry, toBePlaced = Accidental
+
+        // logical return
         if (this === toBePlaced) {
             return;
         }
+
+        // check for collision only at symbols and return border
         if (this.isSymbol && this.marginCollisionDetection(toBePlaced)) {
             let shiftDistance: number = 0;
             switch (direction) {
@@ -514,16 +579,30 @@ export class BoundingBox {
                     throw new ArgumentOutOfRangeException("direction");
             }
         }
+
+        // perform check for all children iteratively and return border from children symbols
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
             let childElement: BoundingBox = this.ChildElements[idx];
             childElement.calculateMarginPositionAlongDirection(toBePlaced, direction);
         }
     }
 
+    /**
+     * This method calculates the border along the given direction so that no collision takes place along this direction
+     * @param toBePlaced
+     * @param direction
+     */
     private calculatePositionAlongDirection(toBePlaced: BoundingBox, direction: ColDirEnum): void {
+        // now this will be the "known" Element, about to get bigger with the toBePlaced
+        // eg toBePlaced will always be in the PositionAndShape hierarchy a Child of this
+        // example: this = StaffEntry, toBePlaced = Accidental
+
+        // logical return
         if (this === toBePlaced) {
             return;
         }
+
+        // check for collision only at symbols and return border
         if (this.isSymbol && this.collisionDetection(toBePlaced)) {
             let shiftDistance: number;
             switch (direction) {
@@ -551,6 +630,8 @@ export class BoundingBox {
                     throw new ArgumentOutOfRangeException("direction");
             }
         }
+
+        // perform check for all children iteratively and return border from children symbols
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
             let childElement: BoundingBox = this.ChildElements[idx];
             childElement.calculatePositionAlongDirection(toBePlaced, direction);

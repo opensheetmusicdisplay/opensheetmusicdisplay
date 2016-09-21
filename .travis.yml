@@ -15,3 +15,5 @@ deploy:
     tags: true
     branch: master
     repo: opensheetmusicdisplay/opensheetmusicdisplay
+after_deploy:
+  - ./bin/publish_gh_page.sh

@@ -10,6 +10,9 @@ import {ClefInstruction} from "./Instructions/ClefInstruction";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {RhythmInstruction} from "./Instructions/RhythmInstruction";
 
+/**
+ * A [[SourceStaffEntry]] is a container spanning all the [[VoiceEntry]]s at one timestamp for one [[StaffLine]].
+ */
 export class SourceStaffEntry {
     constructor(verticalContainerParent: VerticalSourceStaffEntryContainer, parentStaff: Staff) {
         this.verticalContainerParent = verticalContainerParent;
@@ -116,6 +119,11 @@ export class SourceStaffEntry {
         return ret;
     }
 
+    /**
+     * Similar to RemoveAllInstructionsOfType but faster,
+     * because it stops searching when the first instruction of the given type is found.
+     * @returns {boolean}
+     */
     public removeFirstInstructionOfTypeClefInstruction(): boolean {
         for (let i: number = 0; i < this.instructions.length; i++) {
             if (this.instructions[i] instanceof ClefInstruction) {
@@ -140,6 +148,11 @@ export class SourceStaffEntry {
         return ret;
     }
 
+    /**
+     * Similar to RemoveAllInstructionsOfType but faster,
+     * because it stops searching when the first instruction of the given type is found.
+     * @returns {boolean}
+     */
     public removeFirstInstructionOfTypeKeyInstruction(): boolean {
         for (let i: number = 0; i < this.instructions.length; i++) {
             if (this.instructions[i] instanceof KeyInstruction) {
@@ -174,6 +187,10 @@ export class SourceStaffEntry {
         return false;
     }
 
+    /**
+     * Calculate the [[SourceStaffEntry]]'s minimum NoteLength.
+     * @returns {Fraction}
+     */
     public calculateMinNoteLength(): Fraction {
         let duration: Fraction = new Fraction(Number.MAX_VALUE, 1);
         for (let idx: number = 0, len: number = this.VoiceEntries.length; idx < len; ++idx) {
@@ -181,10 +198,10 @@ export class SourceStaffEntry {
             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                 let note: Note = voiceEntry.Notes[idx2];
                 if (note.NoteTie !== undefined) {
-                    if (duration > note.calculateNoteLengthWithoutTie()) {
+                    if (note.calculateNoteLengthWithoutTie().lt(duration)) {
                         duration = note.calculateNoteLengthWithoutTie();
                     }
-                } else if (duration > note.Length) {
+                } else if (note.Length.lt(duration)) {
                     duration = note.Length;
                 }
             }

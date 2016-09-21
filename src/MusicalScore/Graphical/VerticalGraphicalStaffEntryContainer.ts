@@ -2,11 +2,10 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 
 export class VerticalGraphicalStaffEntryContainer {
+
     constructor(numberOfEntries: number, absoluteTimestamp: Fraction) {
         this.absoluteTimestamp = absoluteTimestamp;
-        for (let i: number = 0; i < numberOfEntries; i++) {
-            this.staffEntries.push(undefined);
-        }
+        this.staffEntries = new Array(numberOfEntries);
     }
 
     //public relativeInMeasureTimestamp: Fraction;
@@ -25,7 +24,7 @@ export class VerticalGraphicalStaffEntryContainer {
     public get AbsoluteTimestamp(): Fraction {
         return this.absoluteTimestamp;
     }
-    //
+
     //public set AbsoluteTimestamp(value: Fraction) {
     //    this.absoluteTimestamp = value;
     //}
@@ -51,6 +50,10 @@ export class VerticalGraphicalStaffEntryContainer {
         }
     }
 
+    /**
+     * Return the first non-null [[GraphicalStaffEntry]].
+     * @returns {any}
+     */
     public getFirstNonNullStaffEntry(): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];

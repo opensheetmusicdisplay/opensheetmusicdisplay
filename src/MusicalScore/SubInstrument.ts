@@ -3,6 +3,7 @@ import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
 import {Logging} from "../Common/Logging";
 
 export class SubInstrument {
+
     constructor(parentInstrument: Instrument) {
         this.parentInstrument = parentInstrument;
         this.fixedKey = -1;
@@ -10,6 +11,7 @@ export class SubInstrument {
         this.midiInstrumentID = SubInstrument.midiInstrument[this.name];
         this.volume = 1.0;
     }
+
     private static midiInstrument: { [key: string]: MidiInstrument; } = {
         "cello": MidiInstrument.Cello,
         "violon-c": MidiInstrument.Cello,
@@ -112,4 +114,5 @@ export class SubInstrument {
         }
         return "unnamed";
     }
+
 }

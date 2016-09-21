@@ -1,12 +1,19 @@
 import {Instrument} from "../Instrument";
 import {VoiceEntry} from "./VoiceEntry";
 
+/**
+ * A [[Voice]] contains all the [[VoiceEntry]]s in a voice in a [[StaffLine]].
+ */
 export class Voice {
+
     private voiceEntries: VoiceEntry[] = [];
     private parent: Instrument;
     private visible: boolean;
     private audible: boolean;
     private following: boolean;
+    /**
+     * The Id given in the MusicXMl file to distinguish the different voices. It is unique per instrument.
+     */
     private voiceId: number;
     private volume: number = 1;
 
@@ -51,4 +58,5 @@ export class Voice {
     public set Volume(value: number) {
         this.volume = value;
     }
+
 }

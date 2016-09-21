@@ -8,6 +8,7 @@ import {GraphicalLine} from "./GraphicalLine";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 
 export class SelectionEndSymbol extends GraphicalObject {
+
     constructor(system: MusicSystem, xPosition: number) {
         super();
         let xCoordinate: number = xPosition;

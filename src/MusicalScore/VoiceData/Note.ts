@@ -9,6 +9,9 @@ import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
 
+/**
+ * Represents a single pitch with a duration (length)
+ */
 export class Note {
 
     constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch) {
@@ -23,11 +26,17 @@ export class Note {
         }
     }
 
+    /**
+     * The transposed (!!!) HalfTone of this note.
+     */
     public halfTone: number;
     public state: NoteState;
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;
+    /**
+     * The untransposed (!!!) source data.
+     */
     private pitch: Pitch;
     private beam: Beam;
     private tuplet: Tuplet;
@@ -117,21 +126,6 @@ export class Note {
         }
         return originalLength;
     }
-    public calculateNoteLengthWithDots(): Fraction {
-        // FIXME is this function the same as this.calculateNoteLengthWithoutTie?
-        if (this.tie !== undefined) {
-            return this.calculateNoteLengthWithoutTie();
-        }
-        return this.length;
-    }
-    public calculateNumberOfNeededDots(fraction: Fraction = this.length): number {
-        // FIXME (Andrea) Test if correct
-        if (this.tuplet === undefined) {
-            return Math.floor(Math.log(fraction.Numerator) / Math.LN2);
-        } else {
-            return 0;
-        }
-    }
     public ToString(): string {
         if (this.pitch !== undefined) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
@@ -174,6 +168,21 @@ export class Note {
     //        return 64;
     //    }
     //}
+
+    /**
+     * Return the number of dots needed to represent the given [[Fraction]].
+     * @param fraction
+     * @returns {number}
+     */
+    private calculateNumberOfNeededDots(fraction: Fraction = this.length): number {
+        // FIXME (Andrea) Test if correct
+        if (this.tuplet === undefined) {
+            return Math.floor(Math.log(fraction.Numerator) / Math.LN2);
+        } else {
+            return 0;
+        }
+    }
+
 }
 
 export enum Appearance {

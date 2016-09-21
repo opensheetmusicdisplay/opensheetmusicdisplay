@@ -1,6 +1,10 @@
 import {Note} from "./Note";
 
+/**
+ * A [[Beam]] - the bar grouping multiple consecutive [[Note]]s.
+ */
 export class Beam {
+
     private notes: Note[] = [];
     private extendedNoteList: Note[] = [];
 
@@ -17,6 +21,10 @@ export class Beam {
         this.extendedNoteList = value;
     }
 
+    /**
+     * Perform all the appropriate actions for adding a singleNote to the Beam.
+     * @param note
+     */
     public addNoteToBeam(note: Note): void {
         if (note !== undefined) {
             note.NoteBeam = this;
@@ -24,6 +32,7 @@ export class Beam {
             this.extendedNoteList.push(note);
         }
     }
+
 }
 
 export enum BeamEnum {

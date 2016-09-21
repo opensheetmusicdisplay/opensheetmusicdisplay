@@ -1,3 +1,6 @@
+/**
+ * The supported styles to draw a rectangle on the music sheet
+ */
 export enum OutlineAndFillStyleEnum {
     BaseWritingColor,
     FollowingCursor,
@@ -33,10 +36,15 @@ export enum OutlineAndFillStyleEnum {
     Comment9,
     Comment10
 }
+
 export enum StyleSets {
     MarkedArea,
     Comment
 }
+
+/**
+ * The layers which one can draw on (not suppoerted)
+ */
 export enum GraphicalLayers {
     Background,
     Highlight,
@@ -48,6 +56,7 @@ export enum GraphicalLayers {
     Comment,
     Debug_above
 }
+
 export enum NoteState {
     Normal,
     Selected,

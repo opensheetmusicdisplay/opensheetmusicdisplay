@@ -1,3 +1,4 @@
+// Represent a point on a plane, with (x,y) coordinates
 export class PointF2D {
     public x: number = 0;
     public y: number = 0;

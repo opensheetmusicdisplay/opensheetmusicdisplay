@@ -31,6 +31,10 @@ export class MusicSystemBuilder {
     private numberOfVisibleStaffLines: number;
     private rules: EngravingRules;
     private measureListIndex: number;
+
+    /**
+     * Does the mapping from the currently visible staves to the global staff-list of the music sheet.
+     */
     private visibleStaffIndices: number[];
     private activeRhythm: RhythmInstruction[];
     private activeKeys: KeyInstruction[];
@@ -61,6 +65,8 @@ export class MusicSystemBuilder {
         let systemMaxWidth: number = this.getFullPageSystemWidth();
         this.measureListIndex = 0;
         this.currentSystemParams = new SystemBuildParameters();
+
+        // the first System - create also its Labels
         this.currentSystemParams.currentSystem = this.initMusicSystem();
         this.layoutSystemStaves();
         this.currentSystemParams.currentSystem.createMusicSystemLabel(
@@ -77,6 +83,7 @@ export class MusicSystemBuilder {
             }
         }
 
+        // go through measures and add to system until system gets too long -> finish system and start next system.
         while (this.measureListIndex < numberOfMeasures) {
             let staffMeasures: StaffMeasure[] = this.measureList[this.measureListIndex];
             for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
@@ -88,6 +95,12 @@ export class MusicSystemBuilder {
             let isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
             let currentMeasureBeginInstructionsWidth: number = this.rules.MeasureLeftMargin;
             let currentMeasureEndInstructionsWidth: number = 0;
+
+            // calculate the current Measure Width:
+            // The width of a measure is build up from
+            // 1. the begin instructions (clef, Key, Rhythm),
+            // 2. the staff entries (= notes) and
+            // 3. the end instructions (actually only clefs)
             let measureStartLine: SystemLinesEnum = this.getMeasureStartLine();
             currentMeasureBeginInstructionsWidth += this.getLineWidth(staffMeasures[0], measureStartLine, isSystemStartMeasure);
             if (!this.leadSheet) {
@@ -98,9 +111,13 @@ export class MusicSystemBuilder {
             for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++) {
                 currentMeasureVarWidth = Math.max(currentMeasureVarWidth, staffMeasures[i].minimumStaffEntriesWidth);
             }
+
+            // take into account the LineWidth after each Measure
             let measureEndLine: SystemLinesEnum = this.getMeasureEndLine();
             currentMeasureEndInstructionsWidth += this.getLineWidth(staffMeasures[0], measureEndLine, isSystemStartMeasure);
             let nextMeasureBeginInstructionWidth: number = this.rules.MeasureLeftMargin;
+
+            // Check if there are key or rhythm change instructions within the next measure:
             if (this.measureListIndex + 1 < this.measureList.length) {
                 let nextStaffMeasures: StaffMeasure[] = this.measureList[this.measureListIndex + 1];
                 let nextSourceMeasure: SourceMeasure = nextStaffMeasures[0].parentSourceMeasure;
@@ -118,13 +135,22 @@ export class MusicSystemBuilder {
                 this.updateActiveClefs(sourceMeasure, staffMeasures);
                 this.measureListIndex++;
             } else {
+                // finalize current system and prepare a new one
                 this.finalizeCurrentAndCreateNewSystem(staffMeasures, previousMeasureEndsSystem);
+                // don't increase measure index to check this measure now again
             }
             previousMeasureEndsSystem = sourceMeasureEndsSystem;
         }
         this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true);
     }
 
+    /**
+     * Set the Width of the staff-Measures of one source measure.
+     * @param staffMeasures
+     * @param width
+     * @param beginInstrWidth
+     * @param endInstrWidth
+     */
     private setMeasureWidth(staffMeasures: StaffMeasure[], width: number, beginInstrWidth: number, endInstrWidth: number): void {
         for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
             let measure: StaffMeasure = staffMeasures[idx];
@@ -138,6 +164,12 @@ export class MusicSystemBuilder {
         }
     }
 
+    /**
+     * When the actual source measure doesn't fit any more, this method finalizes the current system and
+     * opens up a new empty system, where the actual measure will be added in the next iteration.
+     * @param measures
+     * @param isPartEndingSystem
+     */
     private finalizeCurrentAndCreateNewSystem(measures: StaffMeasure[], isPartEndingSystem: boolean = false): void {
         this.adaptRepetitionLineWithIfNeeded();
         if (!isPartEndingSystem) {
@@ -164,6 +196,12 @@ export class MusicSystemBuilder {
         }
     }
 
+    /**
+     * If a line repetition is ending and a new line repetition is starting at the end of the system,
+     * the double repetition line has to be split into two: one at the currently ending system and
+     * one at the next system.
+     * (this should be refactored at some point to not use a combined end/start line but always separated lines)
+     */
     private adaptRepetitionLineWithIfNeeded(): void {
         let systemMeasures: MeasureBuildParameters[] = this.currentSystemParams.systemMeasures;
         if (systemMeasures.length >= 1) {
@@ -198,6 +236,11 @@ export class MusicSystemBuilder {
         this.currentSystemParams.systemMeasureIndex++;
     }
 
+    /**
+     * Create a new [[GraphicalMusicPage]]
+     * (for now only one long page is used per music sheet, as we scroll down and have no page flips)
+     * @returns {GraphicalMusicPage}
+     */
     private createMusicPage(): GraphicalMusicPage {
         let page: GraphicalMusicPage = new GraphicalMusicPage(this.graphicalMusicSheet);
         this.graphicalMusicSheet.MusicPages.push(page);
@@ -209,6 +252,10 @@ export class MusicSystemBuilder {
         return page;
     }
 
+    /**
+     * Initialize a new [[MusicSystem]].
+     * @returns {MusicSystem}
+     */
     private initMusicSystem(): MusicSystem {
         let musicSystem: MusicSystem = this.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
         this.currentMusicPage.MusicSystems.push(musicSystem);
@@ -217,6 +264,10 @@ export class MusicSystemBuilder {
         return musicSystem;
     }
 
+    /**
+     * Get the width the system should have for a given page width.
+     * @returns {number}
+     */
     private getFullPageSystemWidth(): number {
         return this.currentMusicPage.PositionAndShape.Size.width - this.rules.PageLeftMargin
             - this.rules.PageRightMargin - this.rules.SystemLeftMargin - this.rules.SystemRightMargin;
@@ -272,6 +323,12 @@ export class MusicSystemBuilder {
         boundingBox.BorderBottom = yOffsetSum;
     }
 
+    /**
+     * Calculate the [[StaffLine]](s) needed for a [[MusicSystem]].
+     * @param musicSystem
+     * @param relativeYPosition
+     * @param staff
+     */
     private addStaffLineToMusicSystem(musicSystem: MusicSystem, relativeYPosition: number, staff: Staff): void {
         if (musicSystem !== undefined) {
             let staffLine: StaffLine = this.symbolFactory.createStaffLine(musicSystem, staff);
@@ -309,6 +366,10 @@ export class MusicSystemBuilder {
         }
     }
 
+    /**
+     * Initialize the active Instructions from the first [[SourceMeasure]] of first [[SourceMusicPart]].
+     * @param measureList
+     */
     private initializeActiveInstructions(measureList: StaffMeasure[]): void {
         let firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
         if (firstSourceMeasure !== undefined) {
@@ -339,6 +400,13 @@ export class MusicSystemBuilder {
         return keyInstruction;
     }
 
+    /**
+     * Calculate the width needed for Instructions (Key, Clef, Rhythm, Repetition) for the measure.
+     * @param measures
+     * @param isSystemFirstMeasure
+     * @param isFirstSourceMeasure
+     * @returns {number}
+     */
     private addBeginInstructions(measures: StaffMeasure[], isSystemFirstMeasure: boolean, isFirstSourceMeasure: boolean): number {
         let measureCount: number = measures.length;
         if (measureCount === 0) {
@@ -360,6 +428,11 @@ export class MusicSystemBuilder {
         return totalBeginInstructionLengthX;
     }
 
+    /**
+     * Calculates the width needed for Instructions (Clef, Repetition) for the measure.
+     * @param measures
+     * @returns {number}
+     */
     private addEndInstructions(measures: StaffMeasure[]): number {
         let measureCount: number = measures.length;
         if (measureCount === 0) {
@@ -448,6 +521,13 @@ export class MusicSystemBuilder {
         return this.rules.MeasureRightMargin + measure.endInstructionsWidth;
     }
 
+    /**
+     * Track down and update the active ClefInstruction in Measure's StaffEntries.
+     * This has to be done after the measure is added to a system
+     * (otherwise already the check if the measure fits to the system would update the active clefs..)
+     * @param measure
+     * @param staffMeasures
+     */
     private updateActiveClefs(measure: SourceMeasure, staffMeasures: StaffMeasure[]): void {
         for (let visStaffIdx: number = 0, len: number = staffMeasures.length; visStaffIdx < len; visStaffIdx++) {
             let staffIndex: number = this.visibleStaffIndices[visStaffIdx];
@@ -489,6 +569,10 @@ export class MusicSystemBuilder {
         }
     }
 
+    /**
+     * Check if an extra Instruction [[Measure]] is needed.
+     * @param measures
+     */
     private checkAndCreateExtraInstructionMeasure(measures: StaffMeasure[]): void {
         let firstStaffEntries: SourceStaffEntry[] = measures[0].parentSourceMeasure.FirstInstructionsStaffEntries;
         let visibleInstructionEntries: SourceStaffEntry[] = [];
@@ -551,6 +635,10 @@ export class MusicSystemBuilder {
         return width;
     }
 
+    /**
+     * Add all current vertical Measures to currentSystem.
+     * @param staffMeasures
+     */
     private addStaveMeasuresToSystem(staffMeasures: StaffMeasure[]): void {
         if (staffMeasures[0] !== undefined) {
             let gmeasures: StaffMeasure[] = [];
@@ -568,6 +656,10 @@ export class MusicSystemBuilder {
         }
     }
 
+    /**
+     * Return the width of the corresponding [[SystemLine]] and set the corresponding [[SystemLineEnum]].
+     * @returns {SystemLinesEnum}
+     */
     private getMeasureStartLine(): SystemLinesEnum {
         let thisMeasureBeginsLineRep: boolean = this.thisMeasureBeginsLineRepetition();
         if (thisMeasureBeginsLineRep) {
@@ -599,6 +691,13 @@ export class MusicSystemBuilder {
         return SystemLinesEnum.SingleThin;
     }
 
+    /**
+     * Return the width of the corresponding [[SystemLine]] and sets the corresponding [[SystemLineEnum]].
+     * @param measure
+     * @param systemLineEnum
+     * @param isSystemStartMeasure
+     * @returns {number}
+     */
     private getLineWidth(measure: StaffMeasure, systemLineEnum: SystemLinesEnum, isSystemStartMeasure: boolean): number {
         let width: number = measure.getLineWidth(systemLineEnum);
         if (systemLineEnum === SystemLinesEnum.DotsBoldBoldDots) {
@@ -623,6 +722,10 @@ export class MusicSystemBuilder {
         return false;
     }
 
+    /**
+     * Check if at this [[Measure]] starts a [[Repetition]].
+     * @returns {boolean}
+     */
     private thisMeasureBeginsLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.measureList[this.measureListIndex].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[this.measureListIndex][idx];
@@ -633,6 +736,10 @@ export class MusicSystemBuilder {
         return false;
     }
 
+    /**
+     * Check if a [[Repetition]] starts at the next [[Measure]].
+     * @returns {boolean}
+     */
     private nextMeasureBeginsLineRepetition(): boolean {
         let nextMeasureIndex: number = this.measureListIndex + 1;
         if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length) {
@@ -647,6 +754,10 @@ export class MusicSystemBuilder {
         return false;
     }
 
+    /**
+     * Check if this [[Measure]] is a [[Repetition]] ending.
+     * @returns {boolean}
+     */
     private thisMeasureEndsLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.measureList[this.measureListIndex].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[this.measureListIndex][idx];
@@ -657,6 +768,10 @@ export class MusicSystemBuilder {
         return false;
     }
 
+    /**
+     * Check if a [[Repetition]] starts at the next [[Measure]].
+     * @returns {boolean}
+     */
     private nextMeasureBeginsWordRepetition(): boolean {
         let nextMeasureIndex: number = this.measureListIndex + 1;
         if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length) {
@@ -671,6 +786,10 @@ export class MusicSystemBuilder {
         return false;
     }
 
+    /**
+     * Check if this [[Measure]] is a [[Repetition]] ending.
+     * @returns {boolean}
+     */
     private thisMeasureEndsWordRepetition(): boolean {
         for (let idx: number = 0, len: number = this.measureList[this.measureListIndex].length; idx < len; ++idx) {
             let measure: StaffMeasure = this.measureList[this.measureListIndex][idx];
@@ -681,6 +800,10 @@ export class MusicSystemBuilder {
         return false;
     }
 
+    /**
+     * Check if the next [[Measure]] has a [[KeyInstruction]] change.
+     * @returns {boolean}
+     */
     private nextMeasureHasKeyInstructionChange(): boolean {
         return this.getNextMeasureKeyInstruction() !== undefined;
     }
@@ -698,6 +821,12 @@ export class MusicSystemBuilder {
         return undefined;
     }
 
+    /**
+     * Calculate the X ScalingFactor in order to strech the whole System.
+     * @param systemFixWidth
+     * @param systemVarWidth
+     * @returns {number}
+     */
     private calculateXScalingFactor(systemFixWidth: number, systemVarWidth: number): number {
         if (Math.abs(systemVarWidth - 0) < 0.00001 || Math.abs(systemFixWidth - 0) < 0.00001) {
             return 1.0;
@@ -709,6 +838,10 @@ export class MusicSystemBuilder {
         return scalingFactor;
     }
 
+    /**
+     * Stretch the whole System so that no white space is left at the end.
+     * @param isPartEndingSystem
+     */
     private stretchMusicSystem(isPartEndingSystem: boolean): void {
         let scalingFactor: number = this.calculateXScalingFactor(
             this.currentSystemParams.currentSystemFixWidth, this.currentSystemParams.currentSystemVarWidth
@@ -763,6 +896,10 @@ export class MusicSystemBuilder {
         }
     }
 
+    /**
+     * If the last [[MusicSystem]] doesn't need stretching, then this method decreases the System's Width,
+     * the [[StaffLine]]'s Width and the 5 [[StaffLine]]s length.
+     */
     private decreaseMusicSystemBorders(): void {
         let currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         let bb: BoundingBox = CollectionUtil.last(currentSystem.StaffLines[0].Measures).PositionAndShape;

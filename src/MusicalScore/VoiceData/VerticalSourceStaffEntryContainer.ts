@@ -2,13 +2,18 @@ import {SourceMeasure} from "./SourceMeasure";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 
+/**
+ * A [[VerticalSourceStaffEntryContainer]] contains the [[StaffEntry]]s at one timestamp through all the [[StaffLine]]s.
+ */
 export class VerticalSourceStaffEntryContainer {
+
     constructor(parentMeasure: SourceMeasure, timestamp: Fraction, size: number) {
         this.timestamp = timestamp;
         this.size = size;
         this.staffEntries = new Array(size);
         this.parentMeasure = parentMeasure;
     }
+
     private timestamp: Fraction;
     private size: number;
     private staffEntries: SourceStaffEntry[] = [];
@@ -48,4 +53,5 @@ export class VerticalSourceStaffEntryContainer {
     public getAbsoluteTimestamp(): Fraction {
         return Fraction.plus(this.timestamp, this.parentMeasure.AbsoluteTimestamp);
     }
+
 }

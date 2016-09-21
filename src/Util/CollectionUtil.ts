@@ -1,5 +1,8 @@
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
+/**
+ * This class implements static methods to perform useful operations on lists, dictionaries, ...
+ */
 export class CollectionUtil {
 
     public static contains2(array: any[], object: any): boolean {
@@ -23,10 +26,11 @@ export class CollectionUtil {
      * @param dict
      * @param iterationFunction
      */
-    public static removeDictElementIfTrue<T, V>(dict: Dictionary<T, V>, iterationFunction: (key: T, value: V) => boolean): void {
+    public static removeDictElementIfTrue<S, T, V>(thisPointer: S, dict: Dictionary<T, V>,
+                                                   iterationFunction: (thisPointer: S, key: T, value: V) => boolean): void {
         let toDeleteEntries: T[] = [];
         dict.forEach(function (key: T, value: V): void {
-            let shallDelete: boolean = iterationFunction(key, value);
+            let shallDelete: boolean = iterationFunction(thisPointer, key, value);
             if (shallDelete) {
                 toDeleteEntries.push(key);
             }
@@ -45,7 +49,7 @@ export class CollectionUtil {
                                   element: T,
                                   cmp: (elem1: T, elem2: T) => number,
                                   startIndex: number = 0,
-                                  endIndex: number = array.length): number {
+                                  endIndex: number = array.length - 1): number {
         let mid: number = 1;
         while (startIndex < endIndex) {
             mid = Math.floor((startIndex + endIndex) / 2);

@@ -9,10 +9,12 @@ import {AbstractExpression} from "./AbstractExpression";
 import {PlacementEnum} from "./AbstractExpression";
 
 export class MultiExpression /*implements IComparable<MultiExpression>*/ {
+
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {
         this.sourceMeasure = sourceMeasure;
         this.timestamp = timestamp;
     }
+
     private sourceMeasure: SourceMeasure;
     private staffNumber: number;
     private timestamp: Fraction;
@@ -191,6 +193,7 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
             }
         }
     }
+
 }
 
 export class MultiExpressionEntry {
