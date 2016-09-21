@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Add Github deploy key for opensheetmusicdisplay/opensheetmusicdisplay.github.io.git
-echo $GH_PAGES_DEPLOY_KEY > privatedeploykey
-chmod 400 ./privatedeploykey
-ssh-add ./privatedeploykey
-
 # Prepare files to be published
 grunt docs
 grunt build:demo
