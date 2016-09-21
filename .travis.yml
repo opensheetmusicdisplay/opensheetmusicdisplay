@@ -19,7 +19,9 @@ deploy:
 after_deploy:
 - eval "$(ssh-agent -s)"
 - chmod 600 bin/gh_pages_deploy_key
-- ssh-add bin/gh_pages_deploy_key  
+- ssh-add bin/gh_pages_deploy_key
+- git config user.email "travis@opensheetmusicdisplay.org"
+- git config user.name "travis"
 - chmod +x ./bin/publish_gh_page.sh
 - ./bin/publish_gh_page.sh
 before_install:
