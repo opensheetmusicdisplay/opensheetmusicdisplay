@@ -31,6 +31,7 @@
         zoomDiv,
         custom,
         nextCursorBtn,
+        resetCursorBtn,
         showCursorBtn,
         hideCursorBtn;
 
@@ -48,6 +49,7 @@
         zoomOut = document.getElementById("zoom-out-btn");
         canvas = document.createElement("div");
         nextCursorBtn = document.getElementById("next-cursor-btn");
+        resetCursorBtn = document.getElementById("reset-cursor-btn");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
 
@@ -105,6 +107,9 @@
         });
         nextCursorBtn.addEventListener("click", function() {
             OSMD.cursor.next();
+        });
+        resetCursorBtn.addEventListener("click", function() {
+            OSMD.cursor.reset();
         });
         hideCursorBtn.addEventListener("click", function() {
             OSMD.cursor.hide();
