@@ -6,6 +6,8 @@ import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "../GraphicalLabel";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
+import {MusicSystem} from "../MusicSystem";
+import {GraphicalObject} from "../GraphicalObject";
 
 /**
  * This is a global contant which denotes the height in pixels of the space between two lines of the stave
@@ -67,6 +69,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
         return measure.draw(this.vfctx);
+    }
+
+    protected drawInstrumentBrace(bracket: GraphicalObject, system: MusicSystem): void {
+        // empty
+    }
+
+    protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {
+        // empty
     }
 
     /**

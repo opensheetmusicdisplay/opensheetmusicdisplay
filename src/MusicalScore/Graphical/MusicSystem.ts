@@ -396,8 +396,21 @@ export abstract class MusicSystem extends GraphicalObject {
         //Empty
     }
 
-    protected calcInstrumentsBracketsWidth(): number {
-        throw new Error("not implemented");
+    /**
+     * Calculates the summed x-width of a possibly given Instrument Brace and/or Group Bracket(s).
+     * @returns {number} the x-width
+     */
+    protected calcBracketsWidth(): number {
+        let width: number = 0;
+        for (let idx: number = 0, len: number = this.GroupBrackets.length; idx < len; ++idx) {
+            let groupBracket: GraphicalObject = this.GroupBrackets[idx];
+            width = Math.max(width, groupBracket.PositionAndShape.Size.width);
+        }
+        for (let idx2: number = 0, len2: number = this.InstrumentBrackets.length; idx2 < len2; ++idx2) {
+            let instrumentBracket: GraphicalObject = this.InstrumentBrackets[idx2];
+            width = Math.max(width, instrumentBracket.PositionAndShape.Size.width);
+        }
+        return width;
     }
 
     protected createInstrumentBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
