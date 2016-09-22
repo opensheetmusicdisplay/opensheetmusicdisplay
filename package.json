@@ -1,6 +1,6 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "0.0.1-alpha.1",
+  "version": "0.1.0-beta.5",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "dist/src/OSMD/OSMD.js",
   "typings": "dist/src/OSMD/OSMD",
@@ -12,6 +12,8 @@
   "files": [
     "dist",
     "AUTHORS",
+    "CHANGELOG.md",
+    "README.md",
     "karma.conf.js",
     "src",
     "test",
