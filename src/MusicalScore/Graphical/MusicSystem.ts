@@ -414,11 +414,11 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     protected createInstrumentBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
-        throw new Error("not implemented");
+        // no impl here
     }
 
     protected createGroupBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine, recursionDepth: number): void {
-        throw new Error("not implemented");
+        // no impl here
     }
 
     private findFirstVisibleInstrumentInInstrumentalGroup(instrumentalGroup: InstrumentalGroup): Instrument {
