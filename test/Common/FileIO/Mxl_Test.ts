@@ -26,7 +26,7 @@ describe("MXL Tests", () => {
   }
 
   // Test all the following mxl files:
-  let scores: string[] = ["MozartTrio"];
+  let scores: string[] = ["MozartTrio.mxl"];
   for (let score of scores) {
     testFile(score);
   }

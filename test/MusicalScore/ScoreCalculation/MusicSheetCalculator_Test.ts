@@ -13,7 +13,7 @@ import {TestUtils} from "../../Util/TestUtils";
 
 describe("Music Sheet Calculator Tests", () => {
     // Initialize variables
-    let filename: string = "MuzioClementi_SonatinaOpus36No1_Part1";
+    let filename: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
     let reader: MusicSheetReader = new MusicSheetReader();
     let calculator: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
     let score: IXmlElement;

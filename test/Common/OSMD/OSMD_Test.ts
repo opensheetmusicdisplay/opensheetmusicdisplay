@@ -22,7 +22,7 @@ describe("OSMD Main Export", () => {
     });
 
     it("load MXL from string", (done: MochaDone) => {
-        let mxl: string = TestUtils.getMXL("MozartTrio");
+        let mxl: string = TestUtils.getMXL("MozartTrio.mxl");
         let div: HTMLElement = document.createElement("div");
         let osmd: OSMD = new OSMD(div);
         osmd.load(mxl).then(
@@ -53,7 +53,7 @@ describe("OSMD Main Export", () => {
     });
 
     it("load XML string", (done: MochaDone) => {
-        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         let xml: string = new XMLSerializer().serializeToString(score);
         let div: HTMLElement = document.createElement("div");
         let osmd: OSMD = new OSMD(div);
@@ -67,7 +67,7 @@ describe("OSMD Main Export", () => {
     });
 
     it("load XML Document", (done: MochaDone) => {
-        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         let div: HTMLElement = document.createElement("div");
         let osmd: OSMD = new OSMD(div);
         osmd.load(score).then(
@@ -151,7 +151,7 @@ describe("OSMD Main Export", () => {
         let div: HTMLElement = container1;
         div.style.width = "500px";
         let osmd: OSMD = new OSMD(div);
-        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         osmd.load(score).then(
             (_: {}) => {
                 osmd.render();
@@ -166,7 +166,7 @@ describe("OSMD Main Export", () => {
         let div: HTMLElement = container1;
         div.style.width = "200px";
         let osmd: OSMD = new OSMD(div);
-        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         osmd.load(score).then(
             (_: {}) => {
                 osmd.render();

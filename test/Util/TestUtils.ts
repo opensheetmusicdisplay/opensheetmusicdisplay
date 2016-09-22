@@ -6,12 +6,12 @@
 export class TestUtils {
 
     public static getScore(name: string): Document {
-        let path: string = "test/data/" + name + ".xml";
+        let path: string = "test/data/" + name;
         return ((window as any).__xml__)[path];
     }
 
     public static getMXL(scoreName: string): string {
-        let path: string = "test/data/" + scoreName + ".mxl";
+        let path: string = "test/data/" + scoreName;
         return ((window as any).__raw__)[path];
     }
 
