@@ -27,8 +27,6 @@ describe("XML interface", () => {
         "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
         "JosephHaydn_ConcertanteCello.xml",
         "mandoline - debussy.xml",
-        "MozartTrio.mxl",
-        "MozartTrio.mxl.base64",
         "MuzioClementi_SonatinaOpus36No1_Part1.xml",
         "MuzioClementi_SonatinaOpus36No1_Part2.xml",
         "MuzioClementi_SonatinaOpus36No3_Part1.xml",
