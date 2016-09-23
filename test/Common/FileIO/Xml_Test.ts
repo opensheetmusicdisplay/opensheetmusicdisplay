@@ -17,7 +17,7 @@ describe("XML interface", () => {
 
 
     // Test all the following xml files:
-    let scores: string[] = [
+    let xmlTestset: string[] = [
         "an chloe - mozart.xml",
         "AnDieFerneGeliebte_Beethoven.xml",
         "CharlesGounod_Meditation.xml",
@@ -27,8 +27,6 @@ describe("XML interface", () => {
         "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
         "JosephHaydn_ConcertanteCello.xml",
         "mandoline - debussy.xml",
-        "MozartTrio.mxl",
-        "MozartTrio.mxl.base64",
         "MuzioClementi_SonatinaOpus36No1_Part1.xml",
         "MuzioClementi_SonatinaOpus36No1_Part2.xml",
         "MuzioClementi_SonatinaOpus36No3_Part1.xml",
@@ -38,7 +36,7 @@ describe("XML interface", () => {
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
         "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
         "ActorPreludeSample.xml"];
-    for (let score of scores) {
+    for (let score of xmlTestset) {
         testFile(score);
     }
 
