@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 ### Bugfixes
 
+## [0.1.0] - 2016-09-23
+### Added
+- Added Reset button for cursor for demo
+- Added more xml files for demo and testing
+- Added unit tests for reading and calculating the xml files
+- Added logo as favicon and as img for demo site
+### Changed
+- html site layout of demo
+### Bugfixes
+- Fixed cursor functionality in demo
+
 ## [0.1.0-beta.5] - 2016-09-21
 ### Changed
 - Updated Github pages deployment ([645c428](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/645c42874ea1c43f62d163203d2b96aa6667accf))
