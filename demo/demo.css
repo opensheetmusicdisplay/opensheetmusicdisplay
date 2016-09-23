@@ -1,3 +1,11 @@
+p {
+  margin: 0px 8px 8px 8px;
+}
+
+select {
+  margin: 0px 8px 8px 8px;
+}
+
 .bignum {
   width: 1em;
   text-align: center;

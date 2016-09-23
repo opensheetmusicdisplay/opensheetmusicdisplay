@@ -11,7 +11,7 @@ import {Fraction} from "../../../../src/Common/DataObjects/Fraction";
 describe("VexFlow Music Sheet Drawer", () => {
 
     it(".drawSheet (Clementi pt. 1)", (done: MochaDone) => {
-        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         chai.expect(score).to.not.be.undefined;
         let partwise: Element = TestUtils.getPartWiseElement(score);
         chai.expect(partwise).to.not.be.undefined;
@@ -28,7 +28,7 @@ describe("VexFlow Music Sheet Drawer", () => {
     });
 
     it.skip("With cursor (as rectangle)", (done: MochaDone) => {
-        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1");
+        let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         chai.expect(score).to.not.be.undefined;
         let partwise: Element = TestUtils.getPartWiseElement(score);
         chai.expect(partwise).to.not.be.undefined;

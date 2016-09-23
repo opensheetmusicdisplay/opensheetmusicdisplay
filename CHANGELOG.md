@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 ### Bugfixes
 
+## [0.1.0] - 2016-09-23
+### Added
+- Added Reset button for cursor for demo
+- Added more xml files for demo and testing
+- Added unit tests for reading and calculating the xml files
+- Added logo as favicon and as img for demo site
+### Changed
+- html site layout of demo
+### Bugfixes
+- Fixed cursor functionality in demo
+
 ## [0.1.0-beta.5] - 2016-09-21
 ### Changed
 - Updated Github pages deployment ([645c428](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/645c42874ea1c43f62d163203d2b96aa6667accf))
@@ -31,14 +42,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.1.0-beta] - 2016-09-21
 ### Added
-- Brace and bracket generation using VexFlow ([fd40c22](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/fd40c22d813279ed714028250625cbbdfd5ad633))
+- Prepared for brace and bracket generation with VexFlow ([fd40c22](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/fd40c22d813279ed714028250625cbbdfd5ad633))
 - Class documentation ([73d319f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/73d319fb17b4663fcfa001343647b8b662c17cee))
 - OSMD is now usable via script tags  ([091dab9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/091dab9d82d6c477b7e88de2d424024696d126fa))
 - Set up `loglevel` as logging framework ([c00b5a8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c00b5a8ee789ece21bf8e8eb02cfa4f13b498e70))
 - Support for ocatvated clefs ([567b3b3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/567b3b3ec69fad492da68946039517804567cb25))
 - Demo is now automatically built and published to https://opensheetmusicdisplay.github.io/demo/ ([1c63f82](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1c63f82ea5c7b0ae978f43cf1cc60675026e4060))
 - Class documentation generated with typedoc, published to https://opensheetmusicdisplay.github.io/ ([bc91091](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/bc91091099f76ea5b9145f674bfcea2f36ca6712))
-- Added ties
+- Added rendering tuplets
+- Added rendering ties
+- Added rendering dots
 - Added documentation for VexFlow and other graphical objects
 - Proper title display
 - Cursor on first StaffEntry by default

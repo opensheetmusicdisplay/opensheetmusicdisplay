@@ -161,7 +161,7 @@ module.exports = function (grunt) {
             demo: {
                 files: [
                     { src: ['*'], dest: '<%= outputDir.build %>/demo/sheets/', cwd: './test/data/', expand: true },
-                    { src: ['*.js', '*.css', '*.html'], cwd: './demo/', expand: true, dest: '<%= outputDir.build %>/demo/' },
+                    { src: ['*.js', '*.css', '*.html', '*.ico'], cwd: './demo/', expand: true, dest: '<%= outputDir.build %>/demo/' },
                     { src: ['osmd-debug.js'], cwd: './build/', expand: true, dest: '<%= outputDir.build %>/demo/' }
                 ]
             }

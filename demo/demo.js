@@ -6,17 +6,24 @@
     var folder = "sheets/",
     // The available demos
         demos = {
-            "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1",
-            "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2",
-            "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1",
-            "M. Clementi - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2",
-            "J.S. Bach - Air": "JohannSebastianBach_Air",
-            "G.P. Telemann - Sonata, TWV 40:102 - 1. Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce",
-            "C. Gounod - Meditation": "CharlesGounod_Meditation",
-            "J.S. Bach - Praeludium In C Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1",
-            "J. Haydn - Concertante Cello": "JosephHaydn_ConcertanteCello",
-            "S. Joplin - Elite Syncopations": "ScottJoplin_EliteSyncopations",
-            "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer"
+            "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
+            "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
+            "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
+            "M. Clementi - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
+            "J.S. Bach - Air": "JohannSebastianBach_Air.xml",
+            "G.P. Telemann - Sonata, TWV 40:102 - 1. Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
+            "C. Gounod - Meditation": "CharlesGounod_Meditation.xml",
+            "J.S. Bach - Praeludium In C Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+            "J. Haydn - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
+            "S. Joplin - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
+            "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer.xml",
+            "ActorPreludeSample": "ActorPreludeSample.xml",
+            "an chloe - mozart": "an chloe - mozart.xml",
+            "Beethoven - AnDieFerneGeliebte": "AnDieFerneGeliebte_Beethoven.xml",
+            "das veilchen - mozart": "das veilchen - mozart.xml",
+            "Dichterliebe01": "Dichterliebe01.xml",
+            "mandoline - debussy": "mandoline - debussy.xml",
+            "MozartTrio": "MozartTrio.mxl",
         },
 
         zoom = 1.0,
@@ -31,6 +38,7 @@
         zoomDiv,
         custom,
         nextCursorBtn,
+        resetCursorBtn,
         showCursorBtn,
         hideCursorBtn;
 
@@ -48,6 +56,7 @@
         zoomOut = document.getElementById("zoom-out-btn");
         canvas = document.createElement("div");
         nextCursorBtn = document.getElementById("next-cursor-btn");
+        resetCursorBtn = document.getElementById("reset-cursor-btn");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
 
@@ -106,6 +115,9 @@
         nextCursorBtn.addEventListener("click", function() {
             OSMD.cursor.next();
         });
+        resetCursorBtn.addEventListener("click", function() {
+            OSMD.cursor.reset();
+        });
         hideCursorBtn.addEventListener("click", function() {
             OSMD.cursor.hide();
         });
@@ -147,7 +159,7 @@
         disable();
         var isCustom = typeof str === "string";
         if (!isCustom) {
-            str = folder + select.value + ".xml";
+            str = folder + select.value;
         }
         zoom = 1.0;
         OSMD.load(str).then(
@@ -240,6 +252,14 @@
         reader.onload = function (res) {
             selectOnChange(res.target.result);
         };
-        reader.readAsText(event.dataTransfer.files[0]);
+        if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".xml") > 0) {
+            reader.readAsText(event.dataTransfer.files[0]);
+        }
+        else if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".mxl") > 0){
+            reader.readAsBinaryString(event.dataTransfer.files[0]);
+        }
+        else {
+            alert("No vaild .xml/.mxl file!");
+        }
     });
 }());

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
 
     <title>OpenSheetMusicDisplay Demo</title>
@@ -12,42 +12,55 @@
 
     <!-- Include code and styles for this demo -->
     <script src="demo.js"></script>
-    <link href="demo.css" media="all" rel="stylesheet" />
-  </head>
-  <body>
-    <h1>OpenSheetMusicDisplay Demo</h1>
-    <table cellspacing="0">
-      <tr>
-        <td class="bignum">1</td>
+    <link href="demo.css" media="all" rel="stylesheet"/>
+    <link rel="icon" href="./favicon.ico?" type="image/x-icon"/>
+</head>
+<body>
+<table cellspacing="0" style="max-width:700px;">
+    <tr>
         <td>
-          <p>
-            Select a sample from the list below...
-          </p>
-          <select id="select"></select>
-          <p>... or just drop your MusicXML file on this page.</p>
+            <img src="./favicon.ico?" style="width:64px;height:64px;"/>
         </td>
-      </tr>
-      <tr>
-        <td class="bignum">2</td>
         <td>
-          <p>Current width: <span id="size-str">???</span>px</p>
-          <p>Zoom factor: <span id="zoom-str">???</span>%</p>
-          <p>
-            Zoom controls:
-            <input type="button" value="zoom in" id="zoom-in-btn"/>
-            <input type="button" value="zoom out" id="zoom-out-btn"/>
-          </p>
-          <p>Cursor controls:
-            <input type="button" value="show" id="show-cursor-btn"/>
-            <input type="button" value="hide" id="hide-cursor-btn"/>
-            <input type="button" value="next" id="next-cursor-btn"/>
-          </p>
+            <h1>OpenSheetMusicDisplay Demo</h1>
         </td>
-      </tr>
-      <tr id="error-tr">
+    </tr>
+</table>
+<table cellspacing="0" style="max-width:700px;">
+    <tr>
+        <td valign="top">
+            <select id="select"></select>
+            <p> Select a sample from the list ... </p>
+            <p>... or just drop your MusicXML file on this page.</p>
+        </td>
+        <td valign="top" halign="right">
+            <p>Cursor controls:
+                <input type="button" value="show" id="show-cursor-btn"/>
+                <input type="button" value="hide" id="hide-cursor-btn"/>
+                <input type="button" value="next" id="next-cursor-btn"/>
+                <input type="button" value="reset" id="reset-cursor-btn"/>
+            </p>
+            <p>
+                Zoom controls:
+                <input type="button" value="zoom in" id="zoom-in-btn"/>
+                <input type="button" value="zoom out" id="zoom-out-btn"/>
+            </p>
+            <table cellspacing="0">
+                <tr>
+                    <td>
+                        <p>Zoom factor: <span id="zoom-str">???</span>%</p>
+                    </td>
+                    <td>
+                        <p>Current width: <span id="size-str">???</span>px</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr id="error-tr">
         <td></td>
         <td id="error-td"></td>
-      </tr>
-    </table>
-  </body>
+    </tr>
+</table>
+</body>
 </html>

@@ -38,7 +38,13 @@ export class SourceMeasure extends BaseIdClass {
         }
     }
 
+    /**
+     * The unique measure list index starting with 0.
+     */
     public measureListIndex: number;
+    /**
+     * The measure number for showing on the music sheet. Typically starts with 1.
+     */
     public endsPiece: boolean;
 
     private measureNumber: number;

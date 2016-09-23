@@ -7,11 +7,22 @@ import {SystemLine} from "../SystemLine";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {StaffLine} from "../StaffLine";
+import {EngravingRules} from "../EngravingRules";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
         super(parent, id);
 
+    }
+
+    public calculateBorders(rules: EngravingRules): void {
+        if (this.staffLines.length === 0) {
+            return;
+        }
+        let width: number = this.calcBracketsWidth();
+        this.boundingBox.BorderLeft = -width;
+        this.boundingBox.BorderMarginLeft = -width;
+        this.boundingBox.XBordersHaveBeenSet = true;
     }
 
     /**
@@ -34,20 +45,12 @@ export class VexFlowMusicSystem extends MusicSystem {
     }
 
     /**
-     * Calculates the summed x-width of a possibly given Instrument Brace and/or Group Bracket(s).
-     * @returns {number} the x-width
-     */
-    protected calcInstrumentsBracketsWidth(): number {
-        return 0;
-    }
-
-    /**
      * creates an instrument brace for the given dimension.
      * The height and positioning can be inferred from the given points.
-     * @param rightUpper the upper right corner point of the bracket to create
-     * @param rightLower the lower right corner point of the bracket to create
+     * @param firstStaffLine the upper staff line of the bracket to create
+     * @param lastStaffLine the lower staff line of the bracket to create
      */
-    protected createInstrumentBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
+    protected createInstrumentBrace(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
         return;
     }
 
@@ -55,8 +58,8 @@ export class VexFlowMusicSystem extends MusicSystem {
      * creates an instrument group bracket for the given dimension.
      * There can be cascaded bracket (e.g. a group of 2 in a group of 4) -
      * The recursion depth informs about the current depth level (needed for positioning)
-     * @param rightUpper rightUpper the upper right corner point of the bracket to create
-     * @param rightLower rightLower the lower right corner point of the bracket to create
+     * @param firstStaffLine the upper staff line of the bracket to create
+     * @param lastStaffLine the lower staff line of the bracket to create
      * @param staffHeight
      * @param recursionDepth
      */

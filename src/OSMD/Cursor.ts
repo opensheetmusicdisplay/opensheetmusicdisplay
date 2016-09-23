@@ -22,14 +22,15 @@ export class Cursor {
 
     private container: HTMLElement;
     private osmd: OSMD;
+    private manager: MusicPartManager;
     private iterator: MusicPartManagerIterator;
     private graphic: GraphicalMusicSheet;
     private hidden: boolean = true;
     private cursorElement: HTMLImageElement;
 
     public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
-        this.iterator = manager.getIterator();
-        this.iterator.moveToNext();
+        this.manager = manager;
+        this.reset();
         this.graphic = graphic;
         this.hidden = true;
         this.hide();
@@ -59,7 +60,7 @@ export class Cursor {
         let x: number = 0, y: number = 0, height: number = 0;
         for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
             let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
-            let measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.MeasureNumber;
+            let measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.measureListIndex;
             let staffIndex: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.idInMusicSheet;
             let gse: VexFlowStaffEntry =
                 <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
@@ -128,11 +129,12 @@ export class Cursor {
     }
 
     /**
-     * Go to previous entry. Not implemented.
+     * Go to next entry
      */
-    public prev(): void {
-        // TODO
-        // Previous does not seem to be implemented in the MusicPartManager iterator...
+    public reset(): void {
+        this.iterator = this.manager.getIterator();
+        this.iterator.moveToNext();
+        this.update();
     }
 
     private updateStyle(width: number, color: string = "#33e02f"): void {
