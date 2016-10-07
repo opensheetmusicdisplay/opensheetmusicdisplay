@@ -1,0 +1,5 @@
+# Autodetect text files
+* text=auto
+
+# Declare files that will always have LF line endings on checkout.
+*.* text eol=lf
