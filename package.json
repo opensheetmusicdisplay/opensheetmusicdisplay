@@ -79,7 +79,7 @@
     "tsify": "^2.0.3",
     "tslint": "4.0.1",
     "typedoc": "^0.5.0",
-    "typescript": "^1.8.10",
+    "typescript": "^2.0.8",
     "typings": "^2.0.0"
   }
 }
