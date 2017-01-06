@@ -77,7 +77,7 @@
     "mocha": "^3.0.1",
     "phantomjs-prebuilt": "^2.1.8",
     "tsify": "^2.0.3",
-    "tslint": "4.0.1",
+    "tslint": "4.3.1",
     "typedoc": "^0.5.0",
     "typescript": "^1.8.10",
     "typings": "^2.0.0"
