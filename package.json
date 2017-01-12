@@ -76,7 +76,7 @@
     "karma-xml2js-preprocessor": "^0.0.3",
     "mocha": "^3.0.1",
     "phantomjs-prebuilt": "^2.1.8",
-    "tsify": "^2.0.3",
+    "tsify": "^3.0.0",
     "tslint": "4.3.1",
     "typedoc": "^0.5.0",
     "typescript": "^1.8.10",
