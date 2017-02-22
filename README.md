@@ -6,6 +6,7 @@
 
 [![Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay.png)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay)
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Display sheet music ([MusicXML](http://www.musicxml.com) files) in the browser.
 Using the [VexFlow](https://github.com/0xfe/vexflow) music notation rendering API.
