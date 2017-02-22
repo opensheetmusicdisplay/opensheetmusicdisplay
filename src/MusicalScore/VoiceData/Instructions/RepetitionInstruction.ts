@@ -41,7 +41,8 @@ export class RepetitionInstruction /*implements IComparable*/ {
 
      }
      */
-    constructor(measureIndex: number, endingIndices: number[], type: RepetitionInstructionEnum, alignment: AlignmentType, parentRepetition: Repetition) {
+    constructor(measureIndex: number, type: RepetitionInstructionEnum, alignment: AlignmentType = AlignmentType.End,
+                parentRepetition: Repetition = undefined, endingIndices: number[] = undefined) {
         this.measureIndex = measureIndex;
         this.endingIndices = endingIndices.slice();
         this.type = type;
@@ -55,18 +56,18 @@ export class RepetitionInstruction /*implements IComparable*/ {
     public alignment: AlignmentType;
     public parentRepetition: Repetition;
 
-    public CompareTo(obj: Object): number {
-        let other: RepetitionInstruction = <RepetitionInstruction>obj;
-        if (this.measureIndex > other.measureIndex) {
+    public static compare(one: RepetitionInstruction, other: RepetitionInstruction): number {
+
+        if (one.measureIndex > other.measureIndex) {
             return 1;
-        } else if (this.measureIndex < other.measureIndex) {
+        } else if (one.measureIndex < other.measureIndex) {
             return -1;
         }
-        if (this.alignment === AlignmentType.Begin) {
+        if (one.alignment === AlignmentType.Begin) {
             if (other.alignment === AlignmentType.End) {
                 return -1;
             }
-            switch (this.type) {
+            switch (one.type) {
                 case RepetitionInstructionEnum.Ending:
                     return 1;
                 case RepetitionInstructionEnum.StartLine:
@@ -86,7 +87,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
             if (other.alignment === AlignmentType.Begin) {
                 return 1;
             }
-            switch (this.type) {
+            switch (one.type) {
                 case RepetitionInstructionEnum.Ending:
                     return -1;
                 case RepetitionInstructionEnum.Fine:
