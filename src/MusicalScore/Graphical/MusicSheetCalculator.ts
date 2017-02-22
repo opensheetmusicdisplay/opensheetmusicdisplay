@@ -340,7 +340,7 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
-     * Calculate all the [[RepetitionInstruction]]s for a single [[SourceMeasure]].
+     * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
      * @param repetitionInstruction
      * @param measureIndex
      */

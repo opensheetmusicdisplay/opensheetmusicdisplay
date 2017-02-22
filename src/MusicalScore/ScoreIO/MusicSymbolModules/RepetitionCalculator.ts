@@ -10,6 +10,13 @@ export class RepetitionCalculator {
   private currentMeasure: SourceMeasure;
   private currentMeasureIndex: number;
 
+  /**
+   * Is called when all repetition symbols have been read from xml.
+   * Creates the repetition instructions and adds them to the corresponding measure.
+   * Creates the logical repetition objects for iteration and playback.
+   * @param musicSheet
+   * @param repetitionInstructions
+   */
   public calculateRepetitions(musicSheet: MusicSheet, repetitionInstructions: RepetitionInstruction[]): void {
     this.musicSheet = <MusicSheet>musicSheet;
     this.repetitionInstructions = repetitionInstructions;
@@ -21,6 +28,9 @@ export class RepetitionCalculator {
       this.currentMeasure = sourceMeasures[this.currentMeasureIndex];
       this.handleRepetitionInstructions(instruction);
     }
+
+    // if there are more than one instruction at measure begin or end,
+    // sort them according to the nesting of the repetitions:
     for (let idx: number = 0, len: number = this.musicSheet.SourceMeasures.length; idx < len; ++idx) {
       let measure: SourceMeasure = this.musicSheet.SourceMeasures[idx];
       if (measure.FirstRepetitionInstructions.length > 1) {
@@ -41,9 +51,10 @@ export class RepetitionCalculator {
         this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
         break;
       case RepetitionInstructionEnum.Ending:
-        if (currentRepetitionInstruction.alignment === AlignmentType.Begin) {
+        // set ending start or end
+        if (currentRepetitionInstruction.alignment === AlignmentType.Begin) {  // ending start
           this.currentMeasure.FirstRepetitionInstructions.push(currentRepetitionInstruction);
-        } else {
+        } else { // ending end
           for (let idx: number = 0, len: number = currentRepetitionInstruction.endingIndices.length; idx < len; ++idx) {
             this.currentMeasure.LastRepetitionInstructions.push(currentRepetitionInstruction);
           }

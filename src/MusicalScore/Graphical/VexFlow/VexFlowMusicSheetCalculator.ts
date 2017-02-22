@@ -11,7 +11,7 @@ import {GraphicalTie} from "../GraphicalTie";
 import {Tie} from "../../VoiceData/Tie";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {MultiExpression} from "../../VoiceData/Expressions/MultiExpression";
-import {RepetitionInstruction} from "../../VoiceData/Instructions/RepetitionInstruction";
+import {RepetitionInstruction, RepetitionInstructionEnum} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {Beam} from "../../VoiceData/Beam";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
@@ -29,6 +29,7 @@ import Vex = require("vexflow");
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import {VexFlowStaffLine} from "./VexFlowStaffLine";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -184,6 +185,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         return;
     }
 
+    /**
+     * Calculate the shape (Bézier curve) for this tie.
+     * @param tie
+     * @param tieIsAtSystemBreak
+     */
     protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
         let startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
         let vfStartNote: Vex.Flow.StaveNote = undefined;
@@ -221,22 +227,101 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
     }
 
+    /**
+     * Calculate the Lyrics YPositions for a single [[StaffLine]].
+     * @param staffLine
+     * @param lyricVersesNumber
+     */
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {
         return;
     }
 
+    /**
+     * Calculate a single OctaveShift for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
         return;
     }
 
+    /**
+     * Calculate all the textual and symbolic [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
+     * @param repetitionInstruction
+     * @param measureIndex
+     */
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
+      // find first visible StaffLine
+      let staffLine: VexFlowStaffLine = undefined;
+      let measures: VexFlowMeasure[]  = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
+      let topMeasure: VexFlowMeasure = undefined;
+      for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
+        let graphicalMeasure: VexFlowMeasure = measures[idx];
+        if (graphicalMeasure.ParentStaffLine !== undefined && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
+          staffLine = <VexFlowStaffLine>graphicalMeasure.ParentStaffLine;
+          topMeasure = graphicalMeasure;
+          break;
+        }
+      }
+      // now create graphical symbol or Text in VexFlow:
+      if (staffLine !== undefined) {
+        let instruction: string = "";
+        switch (repetitionInstruction.type) {
+          case RepetitionInstructionEnum.Segno:
+
+            // create Segno Symbol:
+            break;
+          case RepetitionInstructionEnum.Coda:
+            // create Coda Symbol:
+            break;
+          case RepetitionInstructionEnum.DaCapo:
+            instruction = "D.C.";
+            break;
+          case RepetitionInstructionEnum.DalSegno:
+            instruction = "D.S.";
+            break;
+          case RepetitionInstructionEnum.Fine:
+            instruction = "Fine";
+            break;
+          case RepetitionInstructionEnum.ToCoda:
+            instruction = "To Coda";
+            break;
+          case RepetitionInstructionEnum.DaCapoAlFine:
+            instruction = "D.C. al Fine";
+            break;
+          case RepetitionInstructionEnum.DaCapoAlCoda:
+            instruction = "D.C. al Coda";
+            break;
+          case RepetitionInstructionEnum.DalSegnoAlFine:
+            instruction = "D.S. al Fine";
+            break;
+          case RepetitionInstructionEnum.DalSegnoAlCoda:
+            instruction = "D.S. al Coda";
+            break;
+          default:
+            break;
+        }
         return;
+      }
     }
 
     protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
         return;
     }
 
+    /**
+     * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.
+     * @param tiedGraphicalNote
+     * @param beams
+     * @param activeClef
+     * @param octaveShiftValue
+     * @param graphicalStaffEntry
+     * @param duration
+     * @param openTie
+     * @param isLastTieNote
+     */
     protected handleTiedGraphicalNote(  tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
                                         octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
                                         openTie: Tie, isLastTieNote: boolean): void {

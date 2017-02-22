@@ -4,6 +4,9 @@ import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {StringUtil} from "../../../Common/Strings/StringUtil";
 export class RepetitionInstructionReader {
+  /**
+   * A global list of all repetition instructions in the musicsheet.
+   */
   public repetitionInstructions: RepetitionInstruction[];
   public xmlMeasureList: IXmlElement[][];
   private musicSheet: MusicSheet;
@@ -15,6 +18,11 @@ export class RepetitionInstructionReader {
     this.repetitionInstructions = [];
   }
 
+  /**
+   * is called when starting reading an xml measure
+   * @param measure
+   * @param currentMeasureIndex
+   */
   public prepareReadingMeasure(measure: SourceMeasure, currentMeasureIndex: number): void {
     this.currentMeasureIndex = currentMeasureIndex;
   }
@@ -28,7 +36,11 @@ export class RepetitionInstructionReader {
       let type: string = "";
       let style: string = "";
       let endingIndices: number[] = [];
+
+      // read barline style
       let styleNode: IXmlElement = barlineNode.element("bar-style");
+
+      // if location is ommited in Xml, right is implied (from documentation)
       if (styleNode !== undefined) {
         style = styleNode.value;
       }
@@ -38,6 +50,8 @@ export class RepetitionInstructionReader {
         location = "right";
       }
       let barlineNodeElements: IXmlElement[] = barlineNode.elements();
+
+      // read repeat- or ending line information
       for (let idx: number = 0, len: number = barlineNodeElements.length; idx < len; ++idx) {
         let childNode: IXmlElement = barlineNodeElements[idx];
         if ("repeat" === childNode.name && childNode.hasAttributes) {
@@ -47,10 +61,15 @@ export class RepetitionInstructionReader {
                     childNode.attribute("type") !== undefined && childNode.attribute("number") !== undefined) {
           type = childNode.attribute("type").value;
           let num: string = childNode.attribute("number").value;
+
+          // Parse the given ending indices:
+          // handle cases like: "1, 2" or "1 + 2" or even "1 - 3, 6"
           let separatedEndingIndices: string[] = num.split("[,+]");
           for (let idx2: number = 0, len2: number = separatedEndingIndices.length; idx2 < len2; ++idx2) {
             let separatedEndingIndex: string = separatedEndingIndices[idx2];
             let indices: string[] = separatedEndingIndex.match("[0-9]");
+
+            // check if possibly something like "1-3" is given..
             if (separatedEndingIndex.search("-") !== -1 && indices.length === 2) {
               let startIndex: number = parseInt(indices[0], 10);
               let endIndex: number = parseInt(indices[1], 10);
@@ -66,6 +85,8 @@ export class RepetitionInstructionReader {
           }
         }
       }
+
+      // reset measure counter if not lastMeasure
       if (style === "light-heavy" && endingIndices.length === 0 && !hasRepeat) {
         pieceEndingDetected = true;
       }
@@ -77,10 +98,11 @@ export class RepetitionInstructionReader {
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
           if (direction === "forward") {
+            // start new Repetition
             let newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.StartLine);
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
-        } else {
+        } else { // location right
           if (type === "stop" || type === "discontinue") {
             let newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
                                                                                   AlignmentType.End, undefined, endingIndices);
@@ -98,11 +120,12 @@ export class RepetitionInstructionReader {
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
     let wordsNode: IXmlElement = directionTypeNode.element("words");
     if (wordsNode !== undefined) {
+      // must Trim string and ToLower before compare
       let innerText: string = wordsNode.value.trim().toLowerCase();
       if (StringUtil.StringContainsSeparatedWord(innerText, "d.s. al fine") ||
         StringUtil.StringContainsSeparatedWord(innerText, "d. s. al fine")) {
         let measureIndex: number = this.currentMeasureIndex;
-        if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) {
+        if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
         let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlFine);
@@ -122,7 +145,7 @@ export class RepetitionInstructionReader {
       if (StringUtil.StringContainsSeparatedWord(innerText, "d.c. al fine") ||
         StringUtil.StringContainsSeparatedWord(innerText, "d. c. al fine")) {
         let measureIndex: number = this.currentMeasureIndex;
-        if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) {
+        if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
         let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlFine);
@@ -144,7 +167,7 @@ export class RepetitionInstructionReader {
         StringUtil.StringContainsSeparatedWord(innerText, "dacapo") ||
         StringUtil.StringContainsSeparatedWord(innerText, "da capo")) {
         let measureIndex: number = this.currentMeasureIndex;
-        if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) {
+        if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
         let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapo);
@@ -156,7 +179,7 @@ export class RepetitionInstructionReader {
         StringUtil.StringContainsSeparatedWord(innerText, "dalsegno") ||
         StringUtil.StringContainsSeparatedWord(innerText, "dal segno")) {
         let measureIndex: number = this.currentMeasureIndex;
-        if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) {
+        if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
         let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegno);
@@ -244,14 +267,14 @@ export class RepetitionInstructionReader {
           }
           break;
         case RepetitionInstructionEnum.Segno:
-          if (segnoCount - dalSegnaCount > 0) {
+          if (segnoCount - dalSegnaCount > 0) { // two segnos in a row
             let foundInstruction: boolean = false;
             for (let idx: number = 0, len: number = this.repetitionInstructions.length; idx < len; ++idx) {
               let instr: RepetitionInstruction = this.repetitionInstructions[idx];
               if (instruction.measureIndex - instr.measureIndex === 1) {
                 switch (instr.type) {
                   case RepetitionInstructionEnum.BackJumpLine:
-                    if (toCodaCount - codaCount > 0) {
+                    if (toCodaCount - codaCount > 0) { // open toCoda existing
                       instr.type = RepetitionInstructionEnum.DalSegnoAlCoda;
                     } else {
                       instr.type = RepetitionInstructionEnum.DalSegno;
@@ -276,7 +299,8 @@ export class RepetitionInstructionReader {
             if (foundInstruction) {
               break;
             }
-            if (toCodaCount - codaCount > 0) {
+            // convert to dal segno instruction:
+            if (toCodaCount - codaCount > 0) { // open toCoda existing
               instruction.type = RepetitionInstructionEnum.DalSegnoAlCoda;
             } else {
               instruction.type = RepetitionInstructionEnum.DalSegno;
@@ -288,6 +312,8 @@ export class RepetitionInstructionReader {
         default:
           break;
       }
+
+      // check if this  instruction already exists or is otherwise redundant:
       if (this.backwardSearchForPreviousIdenticalInstruction(index, instruction) || instruction.type === RepetitionInstructionEnum.None) {
         this.repetitionInstructions.splice(index, 1);
         index--;
