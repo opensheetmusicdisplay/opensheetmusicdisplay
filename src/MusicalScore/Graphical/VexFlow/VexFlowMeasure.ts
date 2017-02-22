@@ -81,16 +81,20 @@ export class VexFlowMeasure extends StaffMeasure {
      * @returns {SystemLinesEnum} the x-width
      */
     public getLineWidth(line: SystemLinesEnum): number {
-        // FIXME: See values in VexFlow's stavebarline.js
-        let vfline: any = VexFlowConverter.line(line);
-        switch (vfline) {
-            case Vex.Flow.StaveConnector.type.SINGLE:
-                return 1.0 / unitInPixels;
-            case Vex.Flow.StaveConnector.type.DOUBLE:
-                return 3.0 / unitInPixels;
-            default:
-                return 0;
-        }
+      // FIXME: See values in VexFlow's stavebarline.js
+
+      // ToDo: feature/Repetitions
+      // Extend the lineWidth calculation with all repetition lines.
+      // Change also the code in VexFlowConverter.line.
+      let vfline: any = VexFlowConverter.line(line);
+      switch (vfline) {
+          case Vex.Flow.StaveConnector.type.SINGLE:
+              return 1.0 / unitInPixels;
+          case Vex.Flow.StaveConnector.type.DOUBLE:
+              return 3.0 / unitInPixels;
+          default:
+              return 0;
+      }
     }
 
     /**

@@ -255,6 +255,7 @@ export class VexFlowConverter {
      * @returns {any}
      */
     public static line(lineType: SystemLinesEnum): any {
+        // ToDo: feature/Repetitions
         // TODO Not all line types are correctly mapped!
         switch (lineType) {
             case SystemLinesEnum.SingleThin:

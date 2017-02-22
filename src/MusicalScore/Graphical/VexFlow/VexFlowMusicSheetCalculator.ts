@@ -265,7 +265,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           break;
         }
       }
-      // now create graphical symbol or Text in VexFlow:
+      // ToDo: feature/Repetitions
+      // now create corresponding graphical symbol or Text in VexFlow:
+      // use top measure and staffline for positioning.
       if (staffLine !== undefined) {
         let instruction: string = "";
         switch (repetitionInstruction.type) {
