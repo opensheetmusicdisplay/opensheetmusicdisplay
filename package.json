@@ -6,9 +6,11 @@
   "typings": "dist/src/OSMD/OSMD",
   "scripts": {
     "docs": "typedoc --mode file --out build/docs --module commonjs --target ES5 --name opensheetmusicdisplay ./src",
-    "test": "grunt test",
     "postinstall": "grunt typings",
-    "prepublish": "grunt build:dist"
+    "prepublish": "grunt build:dist",
+    "server": "http-server",
+    "start": "npm run server -- build/demo",
+    "test": "grunt test"
   },
   "files": [
     "dist",
