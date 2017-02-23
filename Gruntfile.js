@@ -124,19 +124,6 @@ module.exports = function (grunt) {
         typings: {
             install: {}
         },
-        // Class documentation using typedoc
-        typedoc: {
-            build: {
-                options: {
-                    module: 'commonjs',
-                    out: '<%= outputDir.build %>/docs',
-                    name: 'opensheetmusicdisplay',
-                    target: 'es5',
-                    mode: 'file'
-                },
-                src: ['./src/**/*.ts', './external/**/*.ts', './typings/**/*.ts']
-            }
-        },
         // Typescript compilation for ES6 module (npm package)
         ts: {
           default : {
@@ -192,14 +179,10 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-ts');
     grunt.loadNpmTasks('grunt-tslint');
-    grunt.loadNpmTasks('grunt-typedoc');
     grunt.loadNpmTasks('grunt-typings');
 
     // Code quality
     grunt.registerTask('lint',        'Lints all JavaScript and TypeScript files.',  ['jshint', 'tslint']);
-
-    // Documentation
-    grunt.registerTask('docs',        'Builds class documentation to /build/docs',   ['typedoc']);
 
     // Build tasks
     grunt.registerTask('build:demo',  'Builds the demo.',                            ['browserify:debug', 'copy:demo']);
@@ -210,5 +193,5 @@ module.exports = function (grunt) {
     grunt.registerTask('test',        'Runs unit, regression and e2e tests.',        ['build:test', 'karma:ci']);
 
     // Default task (if grunt is run without any argument, used in contiuous integration)
-    grunt.registerTask('default',     'Default task, running all other tasks. (CI)', ['lint', 'test', 'docs', 'build:demo', 'build:dist']);
+    grunt.registerTask('default',     'Default task, running all other tasks. (CI)', ['lint', 'test', 'build:demo', 'build:dist']);
 };
