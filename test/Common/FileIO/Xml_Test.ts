@@ -1,4 +1,4 @@
-import {IXmlElement} from "../../../src/Common/FileIO/Xml.ts";
+import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {TestUtils} from "../../Util/TestUtils";
 import {OSMD} from "../../../src/OSMD/OSMD";
 
@@ -18,24 +18,26 @@ describe("XML interface", () => {
 
     // Test all the following xml files:
     let xmlTestset: string[] = [
-        "an chloe - mozart.xml",
-        "AnDieFerneGeliebte_Beethoven.xml",
+        "ActorPreludeSample.xml",
+        "Beethoven_AnDieFerneGeliebte.xml",
         "CharlesGounod_Meditation.xml",
-        "das veilchen - mozart.xml",
+        "Debussy_Mandoline.xml",
         "Dichterliebe01.xml",
         "JohannSebastianBach_Air.xml",
         "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
         "JosephHaydn_ConcertanteCello.xml",
-        "mandoline - debussy.xml",
+        "Mozart_AnChloe.xml",
+        "Mozart_DasVeilchen.xml",
         "MuzioClementi_SonatinaOpus36No1_Part1.xml",
         "MuzioClementi_SonatinaOpus36No1_Part2.xml",
         "MuzioClementi_SonatinaOpus36No3_Part1.xml",
         "MuzioClementi_SonatinaOpus36No3_Part2.xml",
+        "Saltarello.xml",
         "ScottJoplin_EliteSyncopations.xml",
         "ScottJoplin_The_Entertainer.xml",
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
         "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
-        "ActorPreludeSample.xml"];
+    ];
     for (let score of xmlTestset) {
         testFile(score);
     }
