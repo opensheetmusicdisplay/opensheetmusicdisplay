@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Prepare files to be published
-grunt docs
+npm run docs
 grunt build:demo
 
 # Clone github page
