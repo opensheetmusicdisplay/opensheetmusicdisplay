@@ -5,6 +5,7 @@
   "main": "dist/src/OSMD/OSMD.js",
   "typings": "dist/src/OSMD/OSMD",
   "scripts": {
+    "docs": "typedoc --mode file --out build/docs --module commonjs --target ES5 --name opensheetmusicdisplay ./src",
     "test": "grunt test",
     "postinstall": "grunt typings",
     "prepublish": "grunt build:dist"
@@ -62,11 +63,10 @@
     "grunt-karma": "^2.0.0",
     "grunt-ts": "^6.0.0-beta.3",
     "grunt-tslint": "^4.0.0",
-    "grunt-typedoc": "^0.2.4",
     "grunt-typings": "^0.1.5",
-    "http-server": "",
+    "http-server": "^0.9.0",
     "karma": "^1.1.1",
-    "karma-base64-to-js-preprocessor": "0.0.1",
+    "karma-base64-to-js-preprocessor": "^0.0.1",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.0.0",
     "karma-firefox-launcher": "^1.0.0",
@@ -77,9 +77,9 @@
     "mocha": "^3.0.1",
     "phantomjs-prebuilt": "^2.1.8",
     "tsify": "^3.0.0",
-    "tslint": "4.3.1",
-    "typedoc": "^0.5.0",
-    "typescript": "^2.1.5",
+    "tslint": "^4.3.1",
+    "typedoc": "^0.5.7",
+    "typescript": "^2.2.1",
     "typings": "^2.0.0"
   }
 }
