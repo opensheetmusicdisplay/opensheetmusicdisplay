@@ -235,16 +235,15 @@ export class VexFlowConverter {
         }
         let ret: string;
         switch (key.Mode) {
-            case KeyEnum.none:
-                ret = undefined;
-                break;
             case KeyEnum.minor:
                 ret = VexFlowConverter.minorMap[key.Key] + "m";
                 break;
             case KeyEnum.major:
                 ret = VexFlowConverter.majorMap[key.Key];
                 break;
+            case KeyEnum.none:
             default:
+                ret = "C";
         }
         return ret;
     }
