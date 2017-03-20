@@ -71,7 +71,7 @@
     "karma-chrome-launcher": "^2.0.0",
     "karma-firefox-launcher": "^1.0.0",
     "karma-mocha": "^1.1.1",
-    "karma-mocha-reporter": "^2.0.4",
+    "karma-mocha-reporter": "^2.2.3",
     "karma-phantomjs-launcher": "^1.0.1",
     "karma-xml2js-preprocessor": "^0.0.3",
     "mocha": "^3.0.1",
