@@ -68,8 +68,8 @@ export class OSMD {
             if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
-                    (str: string) => {
-                        return self.load(str);
+                    (x: string) => {
+                        return self.load(x);
                     },
                     (err: any) => {
                         Logging.debug(err);
