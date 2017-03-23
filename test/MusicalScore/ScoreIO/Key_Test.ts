@@ -8,7 +8,7 @@ import { KeyEnum as KeyModeEnum } from "../../../src/MusicalScore/VoiceData/Inst
 let reader: MusicSheetReader;
 let parser: DOMParser;
 
-describe.only("MusicXML parser for element 'key'", () => {
+describe("MusicXML parser for element 'key'", () => {
 
   before((): void => {
     reader = new MusicSheetReader();
