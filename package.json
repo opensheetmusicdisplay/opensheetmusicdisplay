@@ -11,6 +11,9 @@
     "postinstall": "grunt typings",
     "prepublish": "grunt build:dist"
   },
+  "pre-commit": [
+    "lint"
+  ],
   "files": [
     "dist",
     "AUTHORS",
@@ -77,6 +80,7 @@
     "karma-xml2js-preprocessor": "^0.0.3",
     "mocha": "^3.0.1",
     "phantomjs-prebuilt": "^2.1.8",
+    "pre-commit": "^1.2.2",
     "tsify": "^3.0.0",
     "tslint": "^5.0.0",
     "typedoc": "^0.5.7",
