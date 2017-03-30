@@ -1,7 +1,6 @@
 import { MusicSheetReader }       from "../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import { MusicSheet }             from "../../../src/MusicalScore/MusicSheet";
 import { IXmlElement }            from "../../../src/Common/FileIO/Xml";
-import { TestUtils }              from "../../Util/TestUtils";
 import { KeyInstruction }         from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { KeyEnum as KeyModeEnum } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 
@@ -14,10 +13,6 @@ describe("MusicXML parser for element 'key'", () => {
     reader = new MusicSheetReader();
     parser = new DOMParser();
   });
-
-  beforeEach((): void => {});
-
-  afterEach((): void => {});
 
   describe("for group traditional keys", () => {
 
@@ -263,14 +258,14 @@ describe("MusicXML parser for element 'key'", () => {
 function getMusicSheetWithKey(fifths: number = undefined, mode: string = undefined): MusicSheet {
   let doc: Document = parser.parseFromString(getMusicXmlWithKey(fifths, mode), "text/xml");
   chai.expect(doc).to.not.be.undefined;
-  let score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+  let score: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
   chai.expect(score).to.not.be.undefined;
   return reader.createMusicSheet(score, "template.xml");
 }
 
 function getMusicXmlWithKey(fifths: number = undefined, mode: string = undefined): string {
-  let modeElement = mode ? `<mode>${mode}</mode>` : '';
-  let fifthsElement = fifths ? `<fifths>${fifths}</fifths>` : '';
+  let modeElement: string = mode ? `<mode>${mode}</mode>` : "";
+  let fifthsElement: string = fifths ? `<fifths>${fifths}</fifths>` : "";
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
           <!DOCTYPE score-partwise PUBLIC
               "-//Recordare//DTD MusicXML 3.0 Partwise//EN"
@@ -355,7 +350,7 @@ function getIllegalMusicXmlWithTwoFifthsElements(): MusicSheet {
     "text/xml"
   );
   chai.expect(doc).to.not.be.undefined;
-  let score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+  let score: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
   chai.expect(score).to.not.be.undefined;
   return reader.createMusicSheet(score, "template.xml");
 }
