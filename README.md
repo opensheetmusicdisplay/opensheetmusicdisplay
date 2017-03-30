@@ -9,6 +9,7 @@
 [![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay.png)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Code Climate](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay/badges/gpa.svg)](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay)
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 Display sheet music ([MusicXML](http://www.musicxml.com) files) in the browser.
 Using the [VexFlow](https://github.com/0xfe/vexflow) music notation rendering API.
