@@ -10,9 +10,11 @@ import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import {Logging} from "../Common/Logging";
+import {SizeF2D} from "../Common/DataObjects/SizeF2D";
+import {Event, IEvent, IEventSource, IPlugin, PluginHost} from "../Plugin";
 import * as log from "loglevel";
 
-export class OSMD {
+export class OSMD implements IEventSource {
     /**
      * The easy way of displaying a MusicXML sheet music file
      * @param container is either the ID, or the actual "div" element which will host the music sheet
@@ -44,6 +46,9 @@ export class OSMD {
         if (autoResize) {
             this.autoResize();
         }
+
+        // Initialize plugin host
+        this.pluginHost = new PluginHost(this);
     }
 
     public cursor: Cursor;
@@ -54,6 +59,13 @@ export class OSMD {
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
+
+    // Hold a host for OSMD plugins
+    private pluginHost: PluginHost;
+
+    // Events
+    private onSheetLoaded: Event<MusicSheet> = new Event<MusicSheet>();
+    private onSizeChanged: Event<SizeF2D> = new Event<SizeF2D>();
 
     /**
      * Load a MusicXML file
@@ -110,6 +122,7 @@ export class OSMD {
         let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         let reader: MusicSheetReader = new MusicSheetReader();
         this.sheet = reader.createMusicSheet(score, "Unknown path");
+        this.onSheetLoaded.trigger(this.sheet); // emit `OnSheetLoaded` event
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         log.info(`Loaded sheet ${this.sheet.TitleString} successfully.`);
@@ -259,4 +272,28 @@ export class OSMD {
         window.setTimeout(startCallback, 0);
         window.setTimeout(endCallback, 1);
     }
+
+    /**
+     * Register a plugin with this OSMD instance.
+     *
+     * @param plugin The plugin to be registered with this instance.
+     */
+    public registerPlugin(plugin: IPlugin): void {
+        this.pluginHost.registerPlugin(plugin);
+    }
+
+    /**
+     * Unregister a plugin with this OSMD instance.
+     *
+     * @param plugin The plugin to be unregistered from this instance.
+     */
+    public unregisterPlugin(plugin: IPlugin): void {
+        this.pluginHost.unregisterPlugin(plugin);
+    }
+
+    /*
+     * Publish events emmitted as IEventSource. For documentation, see IEventSource.
+     */
+    public get OnSheetLoaded(): IEvent<MusicSheet> { return this.onSheetLoaded; }
+    public get OnSizeChanged(): IEvent<SizeF2D> { return this.onSizeChanged; }
 }

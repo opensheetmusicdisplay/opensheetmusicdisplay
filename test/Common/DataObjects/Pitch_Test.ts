@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects/Pitch";
-=======
 import chai = require("chai");
-import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects/pitch";
->>>>>>> Started working on plugin infrastructure for OSMD. #1
 
 describe("Pitch Unit Tests:", () => {
     describe("transpose Pitch", () => {
