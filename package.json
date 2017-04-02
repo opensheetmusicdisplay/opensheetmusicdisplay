@@ -8,7 +8,7 @@
     "docs": "typedoc --mode file --out build/docs --module commonjs --target ES5 --name opensheetmusicdisplay ./src",
     "lint": "grunt lint",
     "test": "npm run lint && grunt test",
-    "postinstall": "grunt typings",
+    "postinstall": "rimraf typings",
     "prepublish": "grunt build:dist"
   },
   "pre-commit": [
@@ -54,6 +54,9 @@
     "vexflow": "^1.2.53"
   },
   "devDependencies": {
+    "@types/chai": "^3.4.35",
+    "@types/loglevel": "^1.4.29",
+    "@types/mocha": "^2.2.40",
     "browserify": "^14.0.0",
     "chai": "^3.5.0",
     "cz-conventional-changelog": "^2.0.0",
@@ -82,11 +85,11 @@
     "mocha": "^3.0.1",
     "phantomjs-prebuilt": "^2.1.8",
     "pre-commit": "^1.2.2",
+    "rimraf": "^2.6.1",
     "tsify": "^3.0.0",
     "tslint": "^5.0.0",
     "typedoc": "^0.5.7",
-    "typescript": "^2.2.1",
-    "typings": "^2.0.0"
+    "typescript": "^2.2.1"
   },
   "config": {
     "commitizen": {
