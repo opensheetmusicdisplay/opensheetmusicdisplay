@@ -3,10 +3,12 @@ import { MusicSheet }             from "../../../src/MusicalScore/MusicSheet";
 import { IXmlElement }            from "../../../src/Common/FileIO/Xml";
 import { KeyInstruction }         from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { KeyEnum as KeyModeEnum } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
+import * as chai                  from "chai";
 
 let reader: MusicSheetReader;
 let parser: DOMParser;
 
+/* tslint:disable:no-unused-expression */
 describe("MusicXML parser for element 'key'", () => {
 
   before((): void => {

@@ -34,7 +34,7 @@ module.exports = function (grunt) {
                 src: ['src/OSMD/OSMD.ts'],
                 dest: '<%= outputDir.build %>/osmd.js',
                 options: {
-                    banner: "<%= banner %>",
+                    banner: '<%= banner %>',
                     browserifyOptions: {
                         standalone: 'opensheetmusicdisplay'
                     }
@@ -44,10 +44,10 @@ module.exports = function (grunt) {
                 src: ['src/OSMD/OSMD.ts'],
                 dest: '<%= outputDir.build %>/osmd-debug.js',
                 options: {
-                    banner: "<%= banner %>",
+                    banner: '<%= banner %>',
                     browserifyOptions: {
                         debug: true,
-                        standalone: 'opensheetmusicdisplay'                        
+                        standalone: 'opensheetmusicdisplay'
                     }
                 }
             },
@@ -55,7 +55,7 @@ module.exports = function (grunt) {
                 src: [].concat(typings, src, test),
                 dest: '<%= outputDir.build %>/osmd-test.js',
                 options: {
-                    banner: "<%= banner %>",
+                    banner: '<%= banner %>',
                     browserifyOptions: {
                         debug: true
                     }
@@ -69,7 +69,7 @@ module.exports = function (grunt) {
         uglify: {
             options: {
                 compress: {
-                    drop_console: true
+                    'drop_console': true
                 },
                 banner: banner,
                 mangle: true,
@@ -104,25 +104,6 @@ module.exports = function (grunt) {
                     browsers: ['Chrome']
                 }
             }
-        },
-        // TSLint setup
-        tslint: {
-            options: {
-                configuration: 'tslint.json'
-            },
-            all: {
-                src: [].concat(src, test)
-            }
-        },
-        // JsHint setup
-        jshint: {
-            all: [
-                'Gruntfile.js', 'karma.conf.js', 'demo/**/*.js'
-            ]
-        },
-        // TypeScript Type Definitions
-        typings: {
-            install: {}
         },
         // Typescript compilation for ES6 module (npm package)
         ts: {
@@ -172,17 +153,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-http-server');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-ts');
-    grunt.loadNpmTasks('grunt-tslint');
-    grunt.loadNpmTasks('grunt-typings');
-
-    // Code quality
-    grunt.registerTask('lint',        'Lints all JavaScript and TypeScript files.',  ['jshint', 'tslint']);
 
     // Build tasks
     grunt.registerTask('build:demo',  'Builds the demo.',                            ['browserify:debug', 'copy:demo']);
@@ -193,5 +168,5 @@ module.exports = function (grunt) {
     grunt.registerTask('test',        'Runs unit, regression and e2e tests.',        ['build:test', 'karma:ci']);
 
     // Default task (if grunt is run without any argument, used in contiuous integration)
-    grunt.registerTask('default',     'Default task, running all other tasks. (CI)', ['lint', 'test', 'build:demo', 'build:dist']);
+    grunt.registerTask('default',     'Default task, running all other tasks. (CI)', ['test', 'build:demo', 'build:dist']);
 };

@@ -6,8 +6,10 @@
   "typings": "dist/src/OSMD/OSMD",
   "scripts": {
     "docs": "typedoc --mode file --out build/docs --module commonjs --target ES5 --name opensheetmusicdisplay ./src",
-    "lint": "grunt lint",
+    "lint": "npm run jshint && npm run tslint",
+    "jshint": "jshint . --exclude node_modules,dist,build,bin,demo",
     "test": "npm run lint && grunt test",
+    "tslint": "tslint --type-check --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "postinstall": "rimraf typings",
     "prepublish": "grunt build:dist"
   },
@@ -64,15 +66,13 @@
     "grunt-browserify": "^5.0.0",
     "grunt-contrib-clean": "^1.0.0",
     "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-jshint": "^1.0.0",
     "grunt-contrib-uglify": "^2.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-http-server": "",
     "grunt-karma": "^2.0.0",
     "grunt-ts": "^6.0.0-beta.3",
-    "grunt-tslint": "^4.0.0",
-    "grunt-typings": "^0.1.5",
     "http-server": "^0.9.0",
+    "jshint": "^2.9.4",
     "karma": "^1.1.1",
     "karma-base64-to-js-preprocessor": "^0.0.1",
     "karma-chai": "^0.1.0",
@@ -89,7 +89,7 @@
     "tsify": "^3.0.0",
     "tslint": "^5.0.0",
     "typedoc": "^0.5.7",
-    "typescript": "^2.2.1"
+    "typescript": "^2.2.2"
   },
   "config": {
     "commitizen": {
