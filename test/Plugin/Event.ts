@@ -1,10 +1,9 @@
-import chai = require("chai");
-import spies = require("chai-spies");
+import * as chai from "chai";
+import * as spies from "chai-spies";
 chai.use(spies);
-
 import { IEvent, Event } from "../../src/Plugin";
 
-
+/* tslint:disable:no-unused-expression */
 describe("PluginHost's IEvent and actual implementation", () => {
 
     type MockHandler<T> = (data: T) => void;
@@ -28,7 +27,7 @@ describe("PluginHost's IEvent and actual implementation", () => {
         let spy: any = chai.spy();
         event.on(spy);
         event.trigger("mock event");
-        chai.expect(spy).to.have.been.called.once();
+        chai.expect(spy).to.have.been.called.once;
         chai.expect(spy).to.have.been.called.with("mock event");
         done();
     });
@@ -38,7 +37,7 @@ describe("PluginHost's IEvent and actual implementation", () => {
         let spy: any = chai.spy();
         event.on(spy);
         event.trigger("mock event");
-        chai.expect(spy).to.have.been.called.once();
+        chai.expect(spy).to.have.been.called.once;
         chai.expect(spy).to.have.been.called.with("mock event");
         event.trigger("another mock event");
         event.trigger("again a mock event");
@@ -61,13 +60,13 @@ describe("PluginHost's IEvent and actual implementation", () => {
         let spyString: any = chai.spy();
         eventString.on(spyString);
         eventString.trigger("mock event");
-        chai.expect(spyString).to.have.been.called.once();
+        chai.expect(spyString).to.have.been.called.once;
         chai.expect(spyString).to.have.been.called.with("mock event");
 
         let spyNumber: any = chai.spy();
         eventNumber.on(spyNumber);
         eventNumber.trigger(123456);
-        chai.expect(spyNumber).to.have.been.called.once();
+        chai.expect(spyNumber).to.have.been.called.once;
         chai.expect(spyNumber).to.have.been.called.with(123456);
         let spyCustom: any = chai.spy((eventArg: CustomType) => {
             chai.expect(eventArg).to.be.an("object");
@@ -84,7 +83,7 @@ describe("PluginHost's IEvent and actual implementation", () => {
             greet: (arg: string) => { return `Hello, ${arg}!`; },
             name: "Max",
         });
-        chai.expect(spyCustom).to.have.been.called.once();
+        chai.expect(spyCustom).to.have.been.called.once;
         done();
     });
 
@@ -97,11 +96,11 @@ describe("PluginHost's IEvent and actual implementation", () => {
         event.on(spyTwo);
         event.on(spyThree);
         event.trigger("mock event");
-        chai.expect(spyOne).to.have.been.called.once();
+        chai.expect(spyOne).to.have.been.called.once;
         chai.expect(spyOne).to.have.been.called.with("mock event");
-        chai.expect(spyTwo).to.have.been.called.once();
+        chai.expect(spyTwo).to.have.been.called.once;
         chai.expect(spyTwo).to.have.been.called.with("mock event");
-        chai.expect(spyThree).to.have.been.called.once();
+        chai.expect(spyThree).to.have.been.called.once;
         chai.expect(spyThree).to.have.been.called.with("mock event");
         done();
     });
@@ -111,11 +110,11 @@ describe("PluginHost's IEvent and actual implementation", () => {
         let spy: any = chai.spy();
         event.on(spy);
         event.trigger("mock event");
-        chai.expect(spy).to.have.been.called.once();
+        chai.expect(spy).to.have.been.called.once;
         chai.expect(spy).to.have.been.called.with("mock event");
         event.off(spy);
         event.trigger("mock event");
-        chai.expect(spy).to.have.been.called.once();
+        chai.expect(spy).to.have.been.called.once;
         done();
     });
 });

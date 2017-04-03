@@ -1,15 +1,14 @@
-import chai = require("chai");
-import spies = require("chai-spies");
+import * as chai from "chai";
+import * as spies from "chai-spies";
 chai.use(spies);
-
-import { MusicSheetAPI } from "../../src/MusicSheetAPI";
+import { OSMD } from "../../src/OSMD/OSMD";
 import { MockPlugin } from "./";
 
-
+/* tslint:disable:no-unused-expression */
 describe("OSMD plugin infrastructure", () => {
     let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
     let doc: Document;
-    let osmd: MusicSheetAPI;
+    let osmd: OSMD;
 
     function getSheet(filename: string): Document {
       return ((window as any).__xml__)[filename];
@@ -22,7 +21,7 @@ describe("OSMD plugin infrastructure", () => {
     });
 
     beforeEach((done): void => {
-        osmd = new MusicSheetAPI(document.documentElement);
+        osmd = new OSMD(document.documentElement);
         done();
     });
 
@@ -67,7 +66,7 @@ describe("OSMD plugin infrastructure", () => {
         let plugin: MockPlugin = new MockPlugin();
         osmd.registerPlugin(plugin);
         osmd.load(doc);
-        chai.expect(plugin.OnSheetLoadedSpy).to.have.been.called.once();
+        chai.expect(plugin.OnSheetLoadedSpy).to.have.been.called.once;
         done();
     });
 
@@ -75,9 +74,9 @@ describe("OSMD plugin infrastructure", () => {
         let plugin: MockPlugin = new MockPlugin();
         osmd.registerPlugin(plugin);
         osmd.load(doc);
-        chai.expect(plugin.OnSheetLoadedSpy).to.have.been.called.once();
+        chai.expect(plugin.OnSheetLoadedSpy).to.have.been.called.once;
         osmd.load(doc);
-        chai.expect(plugin.OnSheetLoadedSpy).to.have.been.called.twice();
+        chai.expect(plugin.OnSheetLoadedSpy).to.have.been.called.twice;
         done();
     });
 });
