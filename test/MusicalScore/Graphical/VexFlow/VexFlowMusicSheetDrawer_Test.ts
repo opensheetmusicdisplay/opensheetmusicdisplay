@@ -8,9 +8,10 @@ import {TestUtils} from "../../../Util/TestUtils";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {Fraction} from "../../../../src/Common/DataObjects/Fraction";
 
+/* tslint:disable:no-unused-expression */
 describe("VexFlow Music Sheet Drawer", () => {
 
-    it(".drawSheet (Clementi pt. 1)", (done: MochaDone) => {
+    it("draws sheet \"Clementi pt. 1\"", (done: MochaDone) => {
         let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         chai.expect(score).to.not.be.undefined;
         let partwise: Element = TestUtils.getPartWiseElement(score);
@@ -27,7 +28,7 @@ describe("VexFlow Music Sheet Drawer", () => {
         done();
     });
 
-    it.skip("With cursor (as rectangle)", (done: MochaDone) => {
+    it.skip("draws cursor (as rectangle)", (done: MochaDone) => {
         let score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         chai.expect(score).to.not.be.undefined;
         let partwise: Element = TestUtils.getPartWiseElement(score);

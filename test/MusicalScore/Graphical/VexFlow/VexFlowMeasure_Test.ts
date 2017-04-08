@@ -9,6 +9,7 @@ import {SourceStaffEntry} from "../../../../src/MusicalScore/VoiceData/SourceSta
 import {StaffMeasure} from "../../../../src/MusicalScore/Graphical/StaffMeasure";
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 
+/* tslint:disable:no-unused-expression */
 describe("VexFlow Measure", () => {
 
    it.skip("GraphicalMusicSheet", (done: MochaDone) => {

@@ -1,22 +1,24 @@
-<p align="center">
-  <img alt="OSMD logo" src="http://opensheetmusicdisplay.org/wp-content/uploads/2015/03/OSMD_3_icon.png" width="200"/>
-</p>
+<img alt="OSMD logo" src="http://opensheetmusicdisplay.org/wp-content/uploads/2015/03/OSMD_3_icon.png" width="200"/>
 
-# Open Sheet Music Display
+# OpenSheetMusicDisplay
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/opensheetmusicdisplay/opensheetmusicdisplay.svg)](https://greenkeeper.io/)
 [![Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay.png)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay)
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Code Climate](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay/badges/gpa.svg)](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay)
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
-Display sheet music ([MusicXML](http://www.musicxml.com) files) in the browser.
-Using the [VexFlow](https://github.com/0xfe/vexflow) music notation rendering API.
+https://www.opensheetmusicdisplay.org/
+
+OpenSheeMusicDisplay is the missing link between MusicXML and VexFlow. Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
+
+MusicXML is the de facto standard for sharing sheet music on the internet. VexFlow is widely used for rendering sheet music. It features an extensive note sign library attributable to its open source nature.
+
+OpenSheetMusicDisplay brings the two together and offers an open source turnkey solution for your digital sheet music project.
+
 Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT license](#license).
 
-How to **build**, how to **install**, how to **use**, ...? Have a look at the [GitHub Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki)!
-
-All the code is hosted at [GitHub](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay).
-
-Go to [opensheetmusicdisplay.org](http://opensheetmusicdisplay.org) for further information.
 
 <!--# <a name="license"></a>License
 The MIT License (MIT)

@@ -1,0 +1,173 @@
+## GITATTRIBUTES FOR WEB PROJECTS
+#
+# These settings are for any web project.
+#
+# Details per file setting:
+#   text    These files should be normalized (i.e. convert CRLF to LF).
+#   binary  These files are binary and should be left untouched.
+#
+# Note that binary is a macro for -text -diff.
+######################################################################
+
+## AUTO-DETECT - Handle line endings automatically for files detected
+## as text and leave all files detected as binary untouched.
+## This will handle all files NOT defined below.
+* text=auto
+
+## SOURCE CODE
+*.bat    text eol=lf
+*.coffee text eol=lf 
+*.css    text eol=lf
+*.htm    text eol=lf
+*.html   text eol=lf
+*.inc    text eol=lf
+*.ini    text eol=lf
+*.js     text eol=lf
+*.jsx    text eol=lf
+*.json   text eol=lf
+*.less   text eol=lf
+*.php    text eol=lf
+*.pl     text eol=lf
+*.py     text eol=lf
+*.rb     text eol=lf
+*.sass   text eol=lf
+*.scm    text eol=lf
+*.scss   text eol=lf
+*.sh     text eol=lf
+*.sql    text eol=lf
+*.styl   text eol=lf
+*.ts     text eol=lf
+*.xml    text eol=lf
+*.xhtml  text eol=lf
+
+## DOCUMENTATION
+*.markdown   text eol=lf
+*.md         text eol=lf
+*.mdwn       text eol=lf
+*.mdown      text eol=lf
+*.mkd        text eol=lf
+*.mkdn       text eol=lf
+*.mdtxt      text eol=lf
+*.mdtext     text eol=lf
+*.txt        text eol=lf
+AUTHORS      text eol=lf
+CHANGELOG    text eol=lf
+CHANGES      text eol=lf
+CONTRIBUTING text eol=lf
+COPYING      text eol=lf
+INSTALL      text eol=lf
+license      text eol=lf
+LICENSE      text eol=lf
+NEWS         text eol=lf
+readme       text eol=lf
+*README*     text eol=lf
+TODO         text eol=lf
+
+## TEMPLATES
+*.dot        text eol=lf
+*.ejs        text eol=lf
+*.haml       text eol=lf
+*.handlebars text eol=lf
+*.hbs        text eol=lf
+*.hbt        text eol=lf
+*.jade       text eol=lf
+*.latte      text eol=lf
+*.mustache   text eol=lf
+*.phtml      text eol=lf
+*.tmpl       text eol=lf
+
+## LINTERS
+.csslintrc    text eol=lf
+.eslintrc     text eol=lf
+.jscsrc       text eol=lf
+.jshintrc     text eol=lf
+.jshintignore text eol=lf
+.stylelintrc  text eol=lf
+
+## CONFIGS
+*.bowerrc      text eol=lf
+*.cnf          text eol=lf
+*.conf         text eol=lf
+*.config       text eol=lf
+.editorconfig  text eol=lf
+.gitattributes text eol=lf
+.gitconfig     text eol=lf
+.gitignore     text eol=lf
+.htaccess      text eol=lf 
+*.npmignore    text eol=lf
+*.yaml         text eol=lf
+*.yml          text eol=lf
+Makefile       text eol=lf
+makefile       text eol=lf
+
+## HEROKU
+Procfile       text eol=lf
+.slugignore    text eol=lf
+
+## GRAPHICS
+*.ai   binary
+*.bmp  binary
+*.eps  binary
+*.gif  binary
+*.ico  binary
+*.jng  binary
+*.jp2  binary
+*.jpg  binary
+*.jpeg binary
+*.jpx  binary
+*.jxr  binary
+*.pdf  binary
+*.png  binary
+*.psb  binary
+*.psd  binary
+*.svg  text
+*.svgz binary
+*.tif  binary
+*.tiff binary
+*.wbmp binary
+*.webp binary
+
+## AUDIO
+*.kar  binary
+*.m4a  binary
+*.mid  binary
+*.midi binary
+*.mp3  binary
+*.ogg  binary
+*.ra   binary
+
+## VIDEO
+*.3gpp binary
+*.3gp  binary
+*.as   binary
+*.asf  binary
+*.asx  binary
+*.fla  binary
+*.flv  binary
+*.m4v  binary
+*.mng  binary
+*.mov  binary
+*.mp4  binary
+*.mpeg binary
+*.mpg  binary
+*.swc  binary
+*.swf  binary
+*.webm binary
+
+## ARCHIVES
+*.7z  binary
+*.gz  binary
+*.rar binary
+*.tar binary
+*.zip binary
+
+## FONTS
+*.ttf   binary
+*.eot   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+
+## EXECUTABLES
+*.exe binary
+*.pyc binary

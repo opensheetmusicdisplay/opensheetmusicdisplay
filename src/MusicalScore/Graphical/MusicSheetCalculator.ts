@@ -1165,7 +1165,7 @@ export abstract class MusicSheetCalculator {
                         verticalContainer.StaffEntries[j] = graphicalStaffEntry;
                         graphicalStaffEntry.parentVerticalContainer = verticalContainer;
                     } else {
-                        ;
+                        // TODO ?
                     }
                 }
             }

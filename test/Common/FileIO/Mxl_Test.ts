@@ -2,10 +2,11 @@ import { IXmlElement } from "../../../src/Common/FileIO/Xml";
 import { TestUtils } from "../../Util/TestUtils";
 import { MXLHelper } from "../../../src/Common/FileIO/Mxl";
 
+/* tslint:disable:no-unused-expression */
 describe("MXL Tests", () => {
   // Generates a test for a mxl file name
   function testFile(scoreName: string): void {
-    it(scoreName, (done: MochaDone) => {
+    it(`reads ${scoreName}`, (done: MochaDone) => {
       // Load the xml file content
       let mxl: string = TestUtils.getMXL(scoreName);
       chai.expect(mxl).to.not.be.undefined;
@@ -26,7 +27,9 @@ describe("MXL Tests", () => {
   }
 
   // Test all the following mxl files:
-  let scores: string[] = ["MozartTrio.mxl"];
+  let scores: string[] = [
+    "MozartTrio.mxl",
+  ];
   for (let score of scores) {
     testFile(score);
   }
