@@ -15,6 +15,7 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum} from "../DrawingEnums";
+import {Logging} from "../../../Common/Logging";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -161,28 +162,91 @@ export class VexFlowConverter {
     }
 
     /**
-     * Convert a ClefInstruction to a string representing a clef type in VexFlow
-     * @param clef
-     * @returns {string}
-     * @constructor
+     * Convert a ClefInstruction to a string represention of a clef type in VexFlow.
+     *
+     * @param clef The OSMD object to be converted representing the clef
+     * @param size The VexFlow size to be used. Can be `default` or `small`. As soon as
+     *             #118 is done, this parameter will be dispensable.
+     * @returns    A string representation of a VexFlow clef
+     * @see        https://github.com/0xfe/vexflow/blob/master/src/clef.js
+     * @see        https://github.com/0xfe/vexflow/blob/master/tests/clef_tests.js
      */
-    public static Clef(clef: ClefInstruction): {type: string, annotation: string} {
+    public static Clef(clef: ClefInstruction, size: string = "default"): { type: string, size: string, annotation: string } {
         let type: string;
-        let annotation: string = undefined;
+        let annotation: string;
 
+        // Make sure size is either "default" or "small"
+        if (size !== "default" && size !== "small") {
+            Logging.warn(`Invalid VexFlow clef size "${size}" specified. Using "default".`);
+            size = "default";
+        }
+
+        /*
+         * For all of the following conversions, OSMD uses line numbers 1-5 starting from
+         * the bottom, while VexFlow uses 0-4 starting from the top.
+         */
         switch (clef.ClefType) {
+
+            // G Clef
             case ClefEnum.G:
-                type = "treble";
+                switch (clef.Line) {
+                    case 1:
+                        type = "french"; // VexFlow line 4
+                        break;
+                    case 2:
+                        type = "treble"; // VexFlow line 3
+                        break;
+                    default:
+                        type = "treble";
+                        Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                }
                 break;
+
+            // F Clef
             case ClefEnum.F:
-                type = "bass";
+                switch (clef.Line) {
+                  case 4:
+                      type = "bass"; // VexFlow line 1
+                      break;
+                  case 3:
+                      type = "baritone-f"; // VexFlow line 2
+                      break;
+                  case 5:
+                      type = "subbass"; // VexFlow line 0
+                      break;
+                  default:
+                      type = "bass";
+                      Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                }
                 break;
+
+            // C Clef
             case ClefEnum.C:
-                type = "alto";
+                switch (clef.Line) {
+                  case 3:
+                      type = "alto"; // VexFlow line 2
+                      break;
+                  case 4:
+                      type = "tenor"; // VexFlow line 1
+                      break;
+                  case 1:
+                      type = "soprano"; // VexFlow line 4
+                      break;
+                  case 2:
+                      type = "mezzo-soprano"; // VexFlow line 3
+                      break;
+                  default:
+                      type = "alto";
+                      Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                }
                 break;
+
+            // Percussion Clef
             case ClefEnum.percussion:
                 type = "percussion";
                 break;
+
+            // TAB Clef
             case ClefEnum.TAB:
                 type = "tab";
                 break;
@@ -198,7 +262,7 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        return {type, annotation};
+        return { type, size, annotation };
     }
 
     /**
