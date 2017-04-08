@@ -10,7 +10,7 @@ cd opensheetmusicdisplay.github.io
 git status
 
 # Copy class documentation
-rsync -a ../build/docs/* ./
+rsync -a ../build/docs/* ./classdoc
 
 # Copy demo application
 rsync -a ../build/demo/* ./demo

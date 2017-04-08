@@ -1,4 +1,4 @@
-<img alt="OSMD logo" src="http://opensheetmusicdisplay.org/wp-content/uploads/2015/03/OSMD_3_icon.png" width="200"/>
+<img alt="OSMD logo" src="http://opensheetmusicdisplay.org/assets/osmd_logo.svg" width="200"/>
 
 # OpenSheetMusicDisplay
 
