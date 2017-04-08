@@ -9,7 +9,7 @@
 [![Code Climate](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay/badges/gpa.svg)](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
-https://opensheetmusicdisplay.github.io/
+https://www.opensheetmusicdisplay.org/
 
 OpenSheeMusicDisplay is the missing link between MusicXML and VexFlow. Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
 
