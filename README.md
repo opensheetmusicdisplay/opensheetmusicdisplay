@@ -17,7 +17,7 @@ MusicXML is the de facto standard for sharing sheet music on the internet. VexFl
 
 OpenSheetMusicDisplay brings the two together and offers an open source turnkey solution for your digital sheet music project.
 
-Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT license](#license).
+Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT license](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/LICENSE).
 
 
 <!--# <a name="license"></a>License
