@@ -87,7 +87,7 @@
     "rimraf": "^2.6.1",
     "tsify": "^3.0.0",
     "tslint": "^5.0.0",
-    "typedoc": "^0.5.7",
+    "typedoc": "^0.6.0",
     "typescript": "^2.2.2"
   },
   "config": {
