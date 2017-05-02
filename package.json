@@ -70,7 +70,7 @@
     "grunt-http-server": "",
     "grunt-karma": "^2.0.0",
     "grunt-ts": "^6.0.0-beta.3",
-    "http-server": "^0.9.0",
+    "http-server": "^0.10.0",
     "jshint": "^2.9.4",
     "karma": "^1.1.1",
     "karma-base64-to-js-preprocessor": "^0.0.1",
