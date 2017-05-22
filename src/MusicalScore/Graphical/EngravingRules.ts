@@ -442,6 +442,9 @@ export class EngravingRules {
     public get SystemLabelsRightMargin(): number {
         return this.systemLabelsRightMargin;
     }
+    public set SystemLabelsRightMargin(value: number) {
+        this.systemLabelsRightMargin = value;
+    }
     public get MinimumAllowedDistanceBetweenSystems(): number {
         return this.minimumAllowedDistanceBetweenSystems;
     }
