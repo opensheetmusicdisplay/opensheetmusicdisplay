@@ -12,7 +12,8 @@
     "tslint": "tslint --type-check --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "typedoc": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
     "postinstall": "rimraf typings",
-    "prepublish": "grunt build:dist"
+    "prepublish": "grunt build:dist",
+    "start": "http-server build/demo"
   },
   "pre-commit": [
     "lint"
