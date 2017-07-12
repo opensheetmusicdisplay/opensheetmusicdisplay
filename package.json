@@ -60,7 +60,7 @@
     "@types/loglevel": "^1.4.29",
     "@types/mocha": "^2.2.40",
     "browserify": "^14.0.0",
-    "chai": "^3.5.0",
+    "chai": "^4.1.0",
     "cz-conventional-changelog": "^2.0.0",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
