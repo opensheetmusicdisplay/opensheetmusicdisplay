@@ -444,6 +444,8 @@ export class VexFlowMeasure extends StaffMeasure {
                 measure.ParentStaffLine.PositionAndShape.RelativePosition.x -
                 measure.parentMusicSystem.PositionAndShape.RelativePosition.x;
             gse.PositionAndShape.RelativePosition.x = x;
+            gse.PositionAndShape.calculateAbsolutePosition();
+            gse.PositionAndShape.calculateAbsolutePositionsOfChildren();
         }
     }
 }

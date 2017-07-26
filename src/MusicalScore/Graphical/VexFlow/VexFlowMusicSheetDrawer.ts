@@ -8,6 +8,8 @@ import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 import {MusicSystem} from "../MusicSystem";
 import {GraphicalObject} from "../GraphicalObject";
+import {GraphicalLayers} from "../DrawingEnums";
+import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 
 /**
  * This is a global contant which denotes the height in pixels of the space between two lines of the stave
@@ -68,7 +70,19 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
-        return measure.draw(this.vfctx);
+        measure.draw(this.vfctx);
+
+        // Draw the StaffEntries
+        for (let staffEntry of measure.staffEntries){
+            this.drawStaffEntry(staffEntry);
+        }
+    }
+
+    private drawStaffEntry(staffEntry: GraphicalStaffEntry): void {
+        // Draw ChordSymbol
+        if (staffEntry.graphicalChordContainer !== undefined) {
+            this.drawLabel(staffEntry.graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
+        }
     }
 
     protected drawInstrumentBrace(bracket: GraphicalObject, system: MusicSystem): void {

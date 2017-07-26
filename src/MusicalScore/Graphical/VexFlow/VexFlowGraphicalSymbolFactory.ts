@@ -19,6 +19,9 @@ import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
+import {GraphicalChordSymbolContainer} from "../GraphicalChordSymbolContainer";
+import {GraphicalLabel} from "../GraphicalLabel";
+import {EngravingRules} from "../EngravingRules";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -172,6 +175,15 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param transposeHalftones
      */
     public createChordSymbol(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
-        return;
+      let graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
+        new GraphicalChordSymbolContainer(sourceStaffEntry.ChordContainer,
+                                          graphicalStaffEntry.PositionAndShape,
+                                          EngravingRules.Rules.ChordSymbolTextHeight,
+                                          transposeHalftones);
+      let graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
+      graphicalLabel.setLabelPositionAndShapeBorders();
+      graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
+      graphicalStaffEntry.graphicalChordContainer = graphicalChordSymbolContainer;
+      graphicalStaffEntry.PositionAndShape.ChildElements.push(graphicalChordSymbolContainer.PositionAndShape);
     }
 }
