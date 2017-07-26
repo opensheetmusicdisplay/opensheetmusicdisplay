@@ -100,8 +100,8 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addClefAtBegin(clef: ClefInstruction): void {
         this.octaveOffset = clef.OctaveOffset;
-        let vfclef: {type: string, annotation: string} = VexFlowConverter.Clef(clef);
-        this.stave.addClef(vfclef.type, undefined, vfclef.annotation, Vex.Flow.Modifier.Position.BEGIN);
+        let vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "default");
+        this.stave.addClef(vfclef.type, vfclef.size, vfclef.annotation, Vex.Flow.Modifier.Position.BEGIN);
         this.updateInstructionWidth();
     }
 
@@ -141,8 +141,8 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param clef
      */
     public addClefAtEnd(clef: ClefInstruction): void {
-        let vfclef: {type: string, annotation: string} = VexFlowConverter.Clef(clef);
-        this.stave.setEndClef(vfclef.type, "small", vfclef.annotation);
+        let vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "small");
+        this.stave.setEndClef(vfclef.type, vfclef.size, vfclef.annotation);
         this.updateInstructionWidth();
     }
 
