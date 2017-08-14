@@ -87,7 +87,7 @@
         };
 
         // Create OSMD object and canvas
-        OSMD = new opensheetmusicdisplay.OSMD(canvas);
+        OSMD = new opensheetmusicdisplay.OSMD(canvas, false, "svg");
         OSMD.setLogLevel('info');
         document.body.appendChild(canvas);
 

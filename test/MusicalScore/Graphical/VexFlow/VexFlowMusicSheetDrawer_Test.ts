@@ -7,6 +7,8 @@ import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphica
 import {TestUtils} from "../../../Util/TestUtils";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {Fraction} from "../../../../src/Common/DataObjects/Fraction";
+import {VexFlowBackend} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowBackend";
+import {CanvasVexFlowBackend} from "../../../../src/MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
 
 /* tslint:disable:no-unused-expression */
 describe("VexFlow Music Sheet Drawer", () => {
@@ -23,7 +25,9 @@ describe("VexFlow Music Sheet Drawer", () => {
 
         // Create the canvas in the document:
         let canvas: HTMLCanvasElement = document.createElement("canvas");
-        let drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(canvas);
+        let backend: VexFlowBackend = new CanvasVexFlowBackend();
+        backend.initialize(canvas);
+        let drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(canvas, backend);
         drawer.drawSheet(gms);
         done();
     });
@@ -41,7 +45,9 @@ describe("VexFlow Music Sheet Drawer", () => {
 
         // Create the canvas in the document:
         let canvas: HTMLCanvasElement = document.createElement("canvas");
-        let drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(canvas);
+        let backend: VexFlowBackend = new CanvasVexFlowBackend();
+        backend.initialize(canvas);
+        let drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(canvas, backend);
         drawer.drawSheet(gms);
         done();
     });

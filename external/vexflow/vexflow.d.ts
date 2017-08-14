@@ -148,9 +148,14 @@ declare namespace Vex {
         }
 
         export class Renderer {
-            constructor(canvas: HTMLCanvasElement, backend: any);
+            constructor(canvas: HTMLElement, backend: number);
 
-            public static Backends: any;
+            public static Backends: {
+                CANVAS: number,
+                RAPHAEL: number,
+                SVG: number,
+                VML: number
+            };
 
             public resize(a: number, b: number): void;
 
@@ -190,6 +195,7 @@ declare namespace Vex {
 
         export class CanvasContext {
             public scale(x: number, y: number): CanvasContext;
+            public fillRect(x: number, y: number, width: number, height: number): CanvasContext
         }
 
         export class StaveConnector {
@@ -203,7 +209,6 @@ declare namespace Vex {
 
             public draw(): void;
         }
-
     }
 }
 
