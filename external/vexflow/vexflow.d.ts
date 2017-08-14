@@ -196,6 +196,7 @@ declare namespace Vex {
         export class CanvasContext {
             public scale(x: number, y: number): CanvasContext;
             public fillRect(x: number, y: number, width: number, height: number): CanvasContext
+            public fillText(text: string, x: number, y: number): CanvasContext;
         }
 
         export class StaveConnector {
