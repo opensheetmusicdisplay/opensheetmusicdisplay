@@ -93,7 +93,7 @@ describe("OSMD Main Export", () => {
     });
 
     it("load MXL Document by invalid URL", (done: MochaDone) => {
-        let url: string = "http://www.google.com";
+        let url: string = "https://www.google.com";
         let div: HTMLElement = document.createElement("div");
         let osmd: OSMD = new OSMD(div);
         osmd.load(url).then(
@@ -108,7 +108,7 @@ describe("OSMD Main Export", () => {
                 }
             }
         );
-    });
+    }).timeout(5000);
 
     it("load invalid XML string", (done: MochaDone) => {
         let xml: string = "<?xml";

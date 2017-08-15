@@ -51,7 +51,7 @@ describe("XML interface", () => {
             let osmd: OSMD = new OSMD(div);
             osmd.load(score);
             done();
-        });
+        }).timeout(3000);
     }
 
     it("test IXmlElement", (done: MochaDone) => {
