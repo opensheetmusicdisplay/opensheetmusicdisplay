@@ -70,9 +70,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }*/
         // Format the voices
         let allVoices: Vex.Flow.Voice[] = [];
-        let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
-            align_rests: true,
-        });
+        let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
 
         for (let measure of measures) {
             let mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;

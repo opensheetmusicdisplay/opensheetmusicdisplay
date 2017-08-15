@@ -101,7 +101,7 @@ export class VexFlowMeasure extends StaffMeasure {
     public addClefAtBegin(clef: ClefInstruction): void {
         this.octaveOffset = clef.OctaveOffset;
         let vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "default");
-        this.stave.addClef(vfclef.type, vfclef.size, vfclef.annotation, Vex.Flow.Modifier.Position.BEGIN);
+        this.stave.addClef(vfclef.type, vfclef.size, vfclef.annotation, Vex.Flow.StaveModifier.Position.BEGIN);
         this.updateInstructionWidth();
     }
 
@@ -130,7 +130,7 @@ export class VexFlowMeasure extends StaffMeasure {
         let timeSig: Vex.Flow.TimeSignature = VexFlowConverter.TimeSignature(rhythm);
         this.stave.addModifier(
             timeSig,
-            Vex.Flow.Modifier.Position.BEGIN
+            Vex.Flow.StaveModifier.Position.BEGIN
         );
         this.updateInstructionWidth();
     }
@@ -335,7 +335,7 @@ export class VexFlowMeasure extends StaffMeasure {
                     if (notes.length > 1) {
                         vftuplets.push(new Vex.Flow.Tuplet(notes));
                     } else {
-                        Logging.log("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
+                        Logging.warn("Tuplet with no notes! Trying to ignore, but this is a serious problem.");
                     }
                 }
             }

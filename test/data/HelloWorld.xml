@@ -20,8 +20,12 @@
           <beat-type>4</beat-type>
         </time>
         <clef>
-          <sign>G</sign>
-          <line>2</line>
+          <sign>F</sign>
+          <line>5</line>
+        </clef>
+        <clef additional="yes">
+          <sign>F</sign>
+          <line>5</line>
         </clef>
       </attributes>
       <note>

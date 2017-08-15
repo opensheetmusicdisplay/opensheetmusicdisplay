@@ -141,10 +141,6 @@ export class VexFlowConverter {
             auto_stem: true,
             clef: vfClefType,
             duration: duration,
-            duration_override: {
-                denominator: frac.Denominator,
-                numerator: frac.Numerator,
-            },
             keys: keys,
         });
 
@@ -323,7 +319,7 @@ export class VexFlowConverter {
             case SystemLinesEnum.SingleThin:
                 return Vex.Flow.StaveConnector.type.SINGLE;
             case SystemLinesEnum.DoubleThin:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.THIN_DOUBLE;
             case SystemLinesEnum.ThinBold:
                 return Vex.Flow.StaveConnector.type.SINGLE;
             case SystemLinesEnum.BoldThinDots:
@@ -335,6 +331,7 @@ export class VexFlowConverter {
             case SystemLinesEnum.None:
                 return Vex.Flow.StaveConnector.type.NONE;
             default:
+                return Vex.Flow.StaveConnector.type.NONE;
         }
     }
 

@@ -59,6 +59,7 @@
     "@types/chai": "^3.4.35",
     "@types/loglevel": "^1.4.29",
     "@types/mocha": "^2.2.40",
+    "@types/vexflow": "^1.2.27",
     "browserify": "^14.0.0",
     "chai": "^3.5.0",
     "cz-conventional-changelog": "^2.0.0",
