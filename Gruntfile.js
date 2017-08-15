@@ -1,4 +1,7 @@
 /*global module*/
+var webpack = require('webpack');
+var path = require('path');
+
 module.exports = function (grunt) {
     'use strict';
 
@@ -81,6 +84,40 @@ module.exports = function (grunt) {
                 }
             }
         },
+        // Webpack
+        webpack: {
+          build: {
+            entry: ['./src/OSMD/OSMD.ts'],
+            output: {
+                path: path.resolve(__dirname, 'build'),
+                filename: 'osmd.js'
+             },
+             resolve: {
+                 // Add '.ts' and '.tsx' as a resolvable extension.
+                 extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js']
+             },
+             module: {
+                 loaders: [
+                     // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
+                     { test: /\.tsx?$/, loader: 'ts-loader' }
+                 ]
+             },
+    				 plugins: [
+               // build optimization plugins
+               new webpack.LoaderOptionsPlugin({
+                minimize: true,
+                debug: false
+              }),
+    					new webpack.optimize.UglifyJsPlugin({
+                  warnings: false,
+                  beautify: false,
+                  compress: true,
+                  comments: false,
+                  sourceMap: true
+                })
+    				]
+    			}
+        },
         // Karma setup
         karma: {
             // For continuous integration
@@ -158,11 +195,13 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-http-server');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-ts');
+    grunt.loadNpmTasks('grunt-webpack');
 
     // Build tasks
     grunt.registerTask('build:demo',  'Builds the demo.',                            ['browserify:debug', 'copy:demo']);
     grunt.registerTask('build:test',  'Builds the tests',                            ['browserify:test']);
     grunt.registerTask('build:dist',  'Builds for distribution on npm and Bower.',   ['browserify:dist', 'uglify', 'ts']);
+    grunt.registerTask('build:pack',  'Builds using webpack',                        ['webpack:build', 'uglify']);
 
     // Tests
     grunt.registerTask('test',        'Runs unit, regression and e2e tests.',        ['build:test', 'karma:ci']);
