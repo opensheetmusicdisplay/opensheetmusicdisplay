@@ -46,7 +46,7 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 /**
  * To be implemented
  */
-export type repetitionInstructionReader = any;
+export type RepetitionInstructionReader = any;
 
 /**
  * An InstrumentReader is used during the reading phase to keep parsing new measures from the MusicXML file
@@ -54,7 +54,7 @@ export type repetitionInstructionReader = any;
  */
 export class InstrumentReader {
 
-    constructor(repetitionInstructionReader: repetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
+    constructor(repetitionInstructionReader: RepetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
         // (*) this.repetitionInstructionReader = repetitionInstructionReader;
         this.xmlMeasureList = xmlMeasureList;
         this.musicSheet = instrument.GetMusicSheet;
