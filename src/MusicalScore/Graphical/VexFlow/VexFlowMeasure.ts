@@ -297,7 +297,10 @@ export class VexFlowMeasure extends StaffMeasure {
                 for (let beam of this.beams[voiceID]) {
                     let notes: Vex.Flow.StaveNote[] = [];
                     for (let entry of beam[1]) {
-                        notes.push((<VexFlowStaffEntry>entry).vfNotes[voiceID]);
+                        let note: Vex.Flow.StaveNote = (<VexFlowStaffEntry>entry).vfNotes[voiceID];
+                        if (note !== undefined) {
+                          notes.push(note);
+                        }
                     }
                     if (notes.length > 1) {
                         vfbeams.push(new Vex.Flow.Beam(notes, true));
