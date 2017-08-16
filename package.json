@@ -71,6 +71,7 @@
     "grunt-http-server": "",
     "grunt-karma": "^2.0.0",
     "grunt-ts": "^6.0.0-beta.3",
+    "grunt-webpack": "^3.0.0",
     "http-server": "^0.10.0",
     "jshint": "^2.9.4",
     "karma": "^1.1.1",
@@ -86,10 +87,13 @@
     "phantomjs-prebuilt": "^2.1.8",
     "pre-commit": "^1.2.2",
     "rimraf": "^2.6.1",
+    "ts-loader": "^2.0.3",
     "tsify": "^3.0.0",
     "tslint": "^5.0.0",
     "typedoc": "^0.8.0",
-    "typescript": "^2.2.2"
+    "typescript": "^2.2.2",
+    "uglifyjs-webpack-plugin": "^0.4.3",
+    "webpack": "^2.5.1"
   },
   "config": {
     "commitizen": {

@@ -17,6 +17,7 @@ deploy:
     branch: master
     repo: opensheetmusicdisplay/opensheetmusicdisplay
 after_deploy:
+- openssl aes-256-cbc -K $encrypted_170846311824_key -iv $encrypted_170846311824_iv -in bin/gh_pages_deploy_key.enc -out bin/gh_pages_deploy_key -d
 - eval "$(ssh-agent -s)"
 - chmod 600 bin/gh_pages_deploy_key
 - ssh-add bin/gh_pages_deploy_key
@@ -24,6 +25,3 @@ after_deploy:
 - git config --global user.name "travis"
 - chmod +x ./bin/publish_gh_page.sh
 - ./bin/publish_gh_page.sh
-before_install:
-- openssl aes-256-cbc -K $encrypted_170846311824_key -iv $encrypted_170846311824_iv
-  -in bin/gh_pages_deploy_key.enc -out bin/gh_pages_deploy_key -d
