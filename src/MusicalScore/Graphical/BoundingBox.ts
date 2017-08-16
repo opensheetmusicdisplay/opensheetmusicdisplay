@@ -14,9 +14,9 @@ export class BoundingBox {
     protected absolutePosition: PointF2D = new PointF2D();
     protected relativePosition: PointF2D = new PointF2D();
     protected size: SizeF2D = new SizeF2D();
-    protected marginSize: SizeF2D;
-    protected upperLeftCorner: PointF2D;
-    protected upperLeftMarginCorner: PointF2D;
+    protected marginSize: SizeF2D = new SizeF2D();
+    protected upperLeftCorner: PointF2D = new PointF2D();
+    protected upperLeftMarginCorner: PointF2D = new PointF2D();
     protected borderLeft: number = 0;
     protected borderRight: number = 0;
     protected borderTop: number = 0;
