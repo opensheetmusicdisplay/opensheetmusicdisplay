@@ -93,7 +93,7 @@
     "typedoc": "^0.8.0",
     "typescript": "^2.2.2",
     "uglifyjs-webpack-plugin": "^0.4.3",
-    "webpack": "^2.5.1"
+    "webpack": "^3.5.5"
   },
   "config": {
     "commitizen": {
