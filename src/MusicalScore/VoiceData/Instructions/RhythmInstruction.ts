@@ -5,11 +5,11 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
  * A [[RhythmInstruction]] is the time signature which specifies the number of beats in each bar, and the value of one beat.
  */
 export class RhythmInstruction extends AbstractNotationInstruction {
-    constructor(rhythm: Fraction, numerator: number, denominator: number, rhythmSymbolEnum: RhythmSymbolEnum) {
+    constructor(rhythm: Fraction, rhythmSymbolEnum: RhythmSymbolEnum) {
         super(undefined); // FIXME no parent SourceStaffEntry
         this.rhythm = rhythm;
-        this.numerator = numerator;
-        this.denominator = denominator;
+        this.numerator = rhythm.Numerator;
+        this.denominator = rhythm.Denominator;
         this.symbolEnum = rhythmSymbolEnum;
     }
 
@@ -35,7 +35,7 @@ export class RhythmInstruction extends AbstractNotationInstruction {
     }
 
     public clone(): RhythmInstruction {
-        return new RhythmInstruction(this.rhythm.clone(), this.numerator, this.denominator, this.symbolEnum);
+        return new RhythmInstruction(this.rhythm.clone(), this.symbolEnum);
     }
 
     public OperatorEquals(rhythm2: RhythmInstruction): boolean {

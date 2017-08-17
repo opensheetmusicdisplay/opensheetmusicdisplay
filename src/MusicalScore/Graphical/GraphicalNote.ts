@@ -60,10 +60,15 @@ export class GraphicalNote extends GraphicalObject {
      * @returns {number}
      */
     private calculateNumberOfNeededDots(fraction: Fraction): number {
-        let dotCount: number = 0;
-        if (this.sourceNote === undefined || this.sourceNote.NoteTuplet === undefined) {
-            dotCount = Math.floor(Math.log(fraction.Numerator) / Math.LN2);
+      let number: number = 1;
+      let product: number = 2;
+      let expandedNumerator: number = fraction.GetExpandedNumerator();
+      if (this.sourceNote === undefined || this.sourceNote.NoteTuplet === undefined) {
+        while (product < expandedNumerator) {
+          number++;
+          product = <number>Math.pow(2, number);
         }
-        return Math.min(3, dotCount);
+      }
+      return Math.min(3, number - 1);
     }
 }

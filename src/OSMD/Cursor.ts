@@ -54,24 +54,24 @@ export class Cursor {
         }
         this.graphic.Cursors.length = 0;
         let iterator: MusicPartManagerIterator = this.iterator;
-        if  (iterator.EndReached || iterator.CurrentVoiceEntries === undefined) {
+        if  (iterator.EndReached || iterator.CurrentVoiceEntries === undefined || iterator.CurrentVoiceEntries.length === 0) {
             return;
         }
         let x: number = 0, y: number = 0, height: number = 0;
-        for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
-            let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
+
+            let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[0];
             let measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.measureListIndex;
             let staffIndex: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.idInMusicSheet;
             let gse: VexFlowStaffEntry =
                 <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
-            if (idx === 0) {
-                x = gse.getX();
+
+                x = gse.PositionAndShape.AbsolutePosition.x;
                 let musicSystem: MusicSystem = gse.parentMeasure.parentMusicSystem;
                 y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
                 let endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
                     musicSystem.StaffLines[musicSystem.StaffLines.length - 1].PositionAndShape.RelativePosition.y + 4.0;
                 height = endY - y;
-            }
+
             // The following code is not necessary (for now, but it could come useful later):
             // it highlights the notes under the cursor.
             //let vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = gse.vfNotes;
@@ -83,7 +83,7 @@ export class Cursor {
             //        });
             //    }
             //}
-        }
+
         // Update the graphical cursor
         // The following is the legacy cursor rendered on the canvas:
         // // let cursor: GraphicalLine = new GraphicalLine(new PointF2D(x, y), new PointF2D(x, y + height), 3, OutlineAndFillStyleEnum.PlaybackCursor);
@@ -129,7 +129,7 @@ export class Cursor {
     }
 
     /**
-     * Go to next entry
+     * reset cursor to start
      */
     public reset(): void {
         this.iterator = this.manager.getIterator();

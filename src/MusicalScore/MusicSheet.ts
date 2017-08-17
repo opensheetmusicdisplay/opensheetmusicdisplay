@@ -33,7 +33,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.rules = EngravingRules.Rules;
         this.playbackSettings = new PlaybackSettings();
         // FIXME?
-        this.playbackSettings.rhythm = new Fraction(4, 4, false);
+        this.playbackSettings.rhythm = new Fraction(4, 4, 0, false);
         this.userStartTempoInBPM = 100;
         this.pageWidth = 120;
         this.MusicPartManager = new MusicPartManager(this);

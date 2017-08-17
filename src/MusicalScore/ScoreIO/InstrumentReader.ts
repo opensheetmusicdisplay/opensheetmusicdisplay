@@ -226,15 +226,14 @@ export class InstrumentReader {
                     }
                     if (isTuplet) {
                         this.currentVoiceGenerator.read(
-                            xmlNode, noteDuration.Numerator,
-                            noteDuration.Denominator, restNote, isGraceNote,
+                            xmlNode, noteDuration, restNote, isGraceNote,
                             this.currentStaffEntry, this.currentMeasure,
                             measureStartAbsoluteTimestamp,
                             this.maxTieNoteFraction, isChord, guitarPro
                         );
                     } else {
                         this.currentVoiceGenerator.read(
-                            xmlNode, noteDivisions, 4 * this.divisions,
+                            xmlNode, new Fraction(noteDivisions, 4*this.divisions),
                             restNote, isGraceNote, this.currentStaffEntry,
                             this.currentMeasure, measureStartAbsoluteTimestamp,
                             this.maxTieNoteFraction, isChord, guitarPro
@@ -299,11 +298,11 @@ export class InstrumentReader {
                 } else if (xmlNode.name === "backup") {
                     let backFraction: number = parseInt(xmlNode.element("duration").value, 10);
                     currentFraction.Sub(new Fraction(backFraction, 4 * this.divisions));
-                    if (currentFraction.Numerator < 0) {
+                    if (currentFraction.IsNegative()) {
                         currentFraction = new Fraction(0, 1);
                     }
                     previousFraction.Sub(new Fraction(backFraction, 4 * this.divisions));
-                    if (previousFraction.Numerator < 0) {
+                    if (previousFraction.IsNegative()) {
                         previousFraction = new Fraction(0, 1);
                     }
                 } else if (xmlNode.name === "direction") {
@@ -738,7 +737,7 @@ export class InstrumentReader {
                             }
                             d = parseInt(typeList[i].value, 10);
                             maxDenom = Math.max(maxDenom, d);
-                            fractions[i] = new Fraction(n, d, false);
+                            fractions[i] = new Fraction(n, d, 0, false);
                         }
                         for (let i: number = 0; i < length; i++) {
                             if (fractions[i].Denominator === maxDenom) {
@@ -764,10 +763,10 @@ export class InstrumentReader {
                     symbolEnum = RhythmSymbolEnum.NONE;
                 }
                 this.abstractInstructions.push([1, new RhythmInstruction(
-                    new Fraction(num, denom, false), num, denom, symbolEnum
+                    new Fraction(num, denom, 0, false), symbolEnum
                 )]);
             } else {
-                this.abstractInstructions.push([1, new RhythmInstruction(new Fraction(4, 4, false), 4, 4, RhythmSymbolEnum.NONE)]);
+                this.abstractInstructions.push([1, new RhythmInstruction(new Fraction(4, 4, 0, false), RhythmSymbolEnum.NONE)]);
             }
         }
     }

@@ -106,7 +106,7 @@ export class VoiceGenerator {
      * @returns {Note}
      */
     public read(
-        noteNode: IXmlElement, noteDuration: number, divisions: number, restNote: boolean, graceNote: boolean,
+        noteNode: IXmlElement, noteDuration: Fraction, restNote: boolean, graceNote: boolean,
         parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
         measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean
     ): Note {
@@ -115,8 +115,8 @@ export class VoiceGenerator {
         //Logging.debug("read called:", restNote);
         try {
             this.currentNote = restNote
-                ? this.addRestNote(noteDuration, divisions)
-                : this.addSingleNote(noteNode, noteDuration, divisions, graceNote, chord, guitarPro);
+                ? this.addRestNote(noteDuration)
+                : this.addSingleNote(noteNode, noteDuration, graceNote, chord, guitarPro);
             // (*)
             //if (this.lyricsReader !== undefined && noteNode.element("lyric") !== undefined) {
             //    this.lyricsReader.addLyricEntry(noteNode, this.currentVoiceEntry);
@@ -321,7 +321,7 @@ export class VoiceGenerator {
      * @returns {Note}
      */
     private addSingleNote(
-        node: IXmlElement, noteDuration: number, divisions: number, graceNote: boolean, chord: boolean, guitarPro: boolean
+        node: IXmlElement, noteDuration: Fraction, graceNote: boolean, chord: boolean, guitarPro: boolean
     ): Note {
         //Logging.debug("addSingleNote called");
         let noteAlter: AccidentalEnum = AccidentalEnum.NONE;
@@ -396,7 +396,7 @@ export class VoiceGenerator {
 
         noteOctave -= Pitch.OctaveXmlDifference;
         let pitch: Pitch = new Pitch(noteStep, noteOctave, noteAlter);
-        let noteLength: Fraction = new Fraction(noteDuration, divisions);
+        let noteLength: Fraction = Fraction.createFromFraction(noteDuration);
         let note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
         note.PlaybackInstrumentId = playbackInstrumentId;
         if (!graceNote) {
@@ -416,8 +416,8 @@ export class VoiceGenerator {
      * @param divisions
      * @returns {Note}
      */
-    private addRestNote(noteDuration: number, divisions: number): Note {
-        let restFraction: Fraction = new Fraction(noteDuration, divisions);
+    private addRestNote(noteDuration: Fraction): Note {
+        let restFraction: Fraction = Fraction.createFromFraction(noteDuration);
         let restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
         this.currentVoiceEntry.Notes.push(restNote);
         if (this.openBeam !== undefined) {

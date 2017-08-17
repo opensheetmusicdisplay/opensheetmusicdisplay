@@ -253,7 +253,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 let calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
-                if (calNoteLen.lt(minLength) && calNoteLen.Numerator > 0) {
+                if (calNoteLen.lt(minLength) && calNoteLen.GetExpandedNumerator() > 0) {
                     minLength = calNoteLen;
                 }
             }
@@ -268,7 +268,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
                 let graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 let calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
-                if (maxLength.lt(calNoteLen)  && calNoteLen.Numerator > 0) {
+                if (maxLength.lt(calNoteLen)  && calNoteLen.GetExpandedNumerator() > 0) {
                     maxLength = calNoteLen;
                 }
             }
