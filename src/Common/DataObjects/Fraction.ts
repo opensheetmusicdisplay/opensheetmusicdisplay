@@ -91,7 +91,7 @@ export class Fraction {
 
   public toString(): string {
     let result: string = this.numerator + "/" + this.denominator;
-    if (this.wholeValue != 0) {
+    if (this.wholeValue !== 0) {
       result = this.wholeValue + " " + result;
     }
 
@@ -154,8 +154,7 @@ export class Fraction {
   public expand(expansionValue: number): void {
     this.numerator *= expansionValue;
     this.denominator *= expansionValue;
-    if(this.wholeValue != 0)
-    {
+    if (this.wholeValue !== 0) {
       this.numerator += this.wholeValue * this.denominator;
       this.wholeValue = 0;
     }
@@ -167,7 +166,8 @@ export class Fraction {
   // }
 
   public Add(fraction: Fraction): void {
-    this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator + (fraction.wholeValue * fraction.denominator + fraction.numerator) * this.denominator;
+    this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator +
+      (fraction.wholeValue * fraction.denominator + fraction.numerator) * this.denominator;
     this.denominator = this.denominator * fraction.denominator;
     this.wholeValue = 0;
     this.simplify();
@@ -175,7 +175,8 @@ export class Fraction {
   }
 
   public Sub(fraction: Fraction): void {
-    this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator - (fraction.wholeValue * fraction.denominator + fraction.numerator) * this.denominator;
+    this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator -
+      (fraction.wholeValue * fraction.denominator + fraction.numerator) * this.denominator;
     this.denominator = this.denominator * fraction.denominator;
     this.wholeValue = 0;
     this.simplify();
@@ -248,25 +249,21 @@ export class Fraction {
     this.numerator /= i;
     this.denominator /= i;
 
-    let whole:number = Math.floor(this.numerator / this.denominator);
-    if(whole != 0)
-    {
+    let whole: number = Math.floor(this.numerator / this.denominator);
+    if (whole !== 0) {
       this.wholeValue += whole;
       this.numerator -= whole * this.denominator;
-      if(this.numerator == 0)
-      {
+      if (this.numerator === 0) {
         this.denominator = 1;
       }
     }
-    if(this.denominator > Fraction.maximumAllowedNumber)
-    {
-      let factor:number = <number>this.denominator / Fraction.maximumAllowedNumber;
+    if (this.denominator > Fraction.maximumAllowedNumber) {
+      let factor: number = <number>this.denominator / Fraction.maximumAllowedNumber;
       this.numerator = <number>Math.round(this.numerator / factor);
       this.denominator = <number>Math.round(this.denominator / factor);
     }
-    if(this.numerator > Fraction.maximumAllowedNumber)
-    {
-      let factor:number = <number>this.numerator / Fraction.maximumAllowedNumber;
+    if (this.numerator > Fraction.maximumAllowedNumber) {
+      let factor: number = <number>this.numerator / Fraction.maximumAllowedNumber;
       this.numerator = <number>Math.round(this.numerator / factor);
       this.denominator = <number>Math.round(this.denominator / factor);
     }
