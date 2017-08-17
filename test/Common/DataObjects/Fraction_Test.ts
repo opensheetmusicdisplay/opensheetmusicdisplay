@@ -2,8 +2,6 @@
  * Created by Oliver on 16.03.2016.
  */
 import { Fraction } from "../../../src/Common/DataObjects/Fraction";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
-import {Logging} from "../../../src/Common/Logging";
 
 describe("Fraction Unit Tests:", () => {
     describe("Construct Fraction, check properties", () => {
