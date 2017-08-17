@@ -19,6 +19,7 @@ import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
 import {Logging} from "../../Common/Logging";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
+import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -55,20 +56,20 @@ export type RepetitionInstructionReader = any;
 export class InstrumentReader {
 
   constructor(repetitionInstructionReader: RepetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
-    // (*) this.repetitionInstructionReader = repetitionInstructionReader;
-    this.xmlMeasureList = xmlMeasureList;
-    this.musicSheet = instrument.GetMusicSheet;
-    this.instrument = instrument;
-    this.activeClefs = new Array(instrument.Staves.length);
-    this.activeClefsHaveBeenInitialized = new Array(instrument.Staves.length);
-    for (let i: number = 0; i < instrument.Staves.length; i++) {
-      this.activeClefsHaveBeenInitialized[i] = false;
-    }
-    // FIXME createExpressionGenerators(instrument.Staves.length);
-    // (*) this.slurReader = MusicSymbolModuleFactory.createSlurReader(this.musicSheet);
+      this.repetitionInstructionReader = repetitionInstructionReader;
+      this.xmlMeasureList = xmlMeasureList;
+      this.musicSheet = instrument.GetMusicSheet;
+      this.instrument = instrument;
+      this.activeClefs = new Array(instrument.Staves.length);
+      this.activeClefsHaveBeenInitialized = new Array(instrument.Staves.length);
+      for (let i: number = 0; i < instrument.Staves.length; i++) {
+        this.activeClefsHaveBeenInitialized[i] = false;
+      }
+      // FIXME createExpressionGenerators(instrument.Staves.length);
+      // (*) this.slurReader = MusicSymbolModuleFactory.createSlurReader(this.musicSheet);
   }
 
-  // (*) private repetitionInstructionReader: RepetitionInstructionReader;
+  private repetitionInstructionReader: RepetitionInstructionReader;
   private xmlMeasureList: IXmlElement[];
   private musicSheet: MusicSheet;
   private slurReader: any; // (*) SlurReader;
@@ -312,8 +313,9 @@ export class InstrumentReader {
           if (this.activeRhythm !== undefined && this.activeRhythm.Rhythm !== undefined) {
             relativePositionInMeasure /= this.activeRhythm.Rhythm.RealValue;
           }
-          // unused: let handeled: boolean = false;
-          // (*) if (this.repetitionInstructionReader !== undefined) {
+                    // unused:
+                    // let handeled: boolean = false;
+                    // if (this.repetitionInstructionReader !== undefined) {
           //  handeled = this.repetitionInstructionReader.handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode,
           //                                                                                              relativePositionInMeasure);
           //}
@@ -337,7 +339,7 @@ export class InstrumentReader {
           //  }
           //}
         } else if (xmlNode.name === "barline") {
-          // (*)
+
           //if (this.repetitionInstructionReader !== undefined) {
           //  let measureEndsSystem: boolean = false;
           //  this.repetitionInstructionReader.handleLineRepetitionInstructions(xmlNode, measureEndsSystem);
@@ -349,7 +351,7 @@ export class InstrumentReader {
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
         } else if (xmlNode.name === "harmony") {
-          // (*) this.openChordSymbolContainer = ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey);
+                    this.openChordSymbolContainer = ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey);
         }
       }
       for (let j in this.voiceGeneratorsDict) {
