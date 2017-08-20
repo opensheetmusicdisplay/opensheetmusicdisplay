@@ -24,24 +24,22 @@ export abstract class VexFlowBackend {
     return this.canvas;
   }
 
-  public getContext(): Vex.Flow.CanvasContext {
-    return this.ctx;
-  }
-
   public getRenderer(): Vex.Flow.Renderer {
     return this.renderer;
   }
 
+  public abstract getContext(): Vex.Flow.RenderContext;
+
   // public abstract setWidth(width: number): void;
   // public abstract setHeight(height: number): void;
 
-  public scale(k: number): void {
-    this.ctx.scale(k, k);
-  }
+  public abstract scale(k: number): void;
 
   public resize(x: number, y: number): void {
     this.renderer.resize(x, y);
   }
+
+  public abstract clear(): void;
 
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
@@ -53,5 +51,4 @@ export abstract class VexFlowBackend {
   protected renderer: Vex.Flow.Renderer;
   protected inner: HTMLElement;
   protected canvas: HTMLElement;
-  protected ctx: Vex.Flow.CanvasContext;
 }

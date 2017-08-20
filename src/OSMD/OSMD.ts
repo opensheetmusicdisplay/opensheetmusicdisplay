@@ -154,6 +154,7 @@ export class OSMD {
         this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(7, 4), OutlineAndFillStyleEnum.PlaybackCursor));*/
         // Update Sheet Page
         let height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
+        this.drawer.clear();
         this.drawer.resize(width, height);
         this.drawer.scale(this.zoom);
         // Finally, draw

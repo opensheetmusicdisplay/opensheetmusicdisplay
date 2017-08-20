@@ -181,7 +181,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.Flow.CanvasContext): void {
+    public draw(ctx: Vex.Flow.RenderContext): void {
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {

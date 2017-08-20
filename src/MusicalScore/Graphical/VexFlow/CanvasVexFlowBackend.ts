@@ -21,9 +21,21 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.inner.appendChild(this.canvas);
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
-        this.ctx = this.renderer.getContext();
-        this.canvasRenderingCtx = (this.ctx as any).vexFlowCanvasContext;
+        this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
+        this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
 
+    }
+
+    public getContext(): Vex.Flow.CanvasContext {
+        return this.ctx;
+    }
+
+    public clear(): void {
+        // Doesn't need to do anything
+    }
+
+    public scale(k: number): void {
+        this.ctx.scale(k, k);
     }
 
     public translate(x: number, y: number): void {
@@ -47,5 +59,6 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvasRenderingCtx.fillStyle = old;
     }
 
+    private ctx: Vex.Flow.CanvasContext;
     private canvasRenderingCtx: CanvasRenderingContext2D;
 }

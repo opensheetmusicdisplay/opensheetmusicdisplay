@@ -31,6 +31,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         this.renderer = this.backend.getRenderer();
     }
 
+    public clear(): void {
+        this.backend.clear();
+    }
+
     /**
      * Zoom the rendering areas
      * @param k is the zoom factor
@@ -46,7 +50,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param y
      */
     public resize(x: number, y: number): void {
-        this.renderer.resize(x, y);
+        this.backend.resize(x, y);
     }
 
     public translate(x: number, y: number): void {
