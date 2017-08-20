@@ -4,7 +4,6 @@ import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "../GraphicalLabel";
-import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 import {MusicSystem} from "../MusicSystem";
 import {GraphicalObject} from "../GraphicalObject";
