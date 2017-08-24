@@ -56,11 +56,11 @@
     "vexflow": "^1.2.53"
   },
   "devDependencies": {
-    "@types/chai": "^3.4.35",
+    "@types/chai": "^4.0.3",
     "@types/loglevel": "^1.4.29",
     "@types/mocha": "^2.2.40",
     "browserify": "^14.0.0",
-    "chai": "^3.5.0",
+    "chai": "^4.1.0",
     "cz-conventional-changelog": "^2.0.0",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
@@ -91,9 +91,7 @@
     "tsify": "^3.0.0",
     "tslint": "^5.0.0",
     "typedoc": "^0.7.0",
-    "typescript": "^2.2.2",
-    "uglifyjs-webpack-plugin": "^0.4.3",
-    "webpack": "^2.5.1"
+    "typescript": "^2.2.2"
   },
   "config": {
     "commitizen": {

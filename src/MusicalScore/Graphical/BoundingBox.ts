@@ -14,9 +14,9 @@ export class BoundingBox {
     protected absolutePosition: PointF2D = new PointF2D();
     protected relativePosition: PointF2D = new PointF2D();
     protected size: SizeF2D = new SizeF2D();
-    protected marginSize: SizeF2D;
-    protected upperLeftCorner: PointF2D;
-    protected upperLeftMarginCorner: PointF2D;
+    protected marginSize: SizeF2D = new SizeF2D();
+    protected upperLeftCorner: PointF2D = new PointF2D();
+    protected upperLeftMarginCorner: PointF2D = new PointF2D();
     protected borderLeft: number = 0;
     protected borderRight: number = 0;
     protected borderTop: number = 0;
@@ -205,6 +205,20 @@ export class BoundingBox {
     }
 
     /**
+     * Calculate the the absolute position by adding up all relative positions of all parents (including the own rel. pos.)
+     */
+    public calculateAbsolutePosition(): void {
+      this.absolutePosition.x = this.relativePosition.x;
+      this.absolutePosition.y = this.relativePosition.y;
+      let parent: BoundingBox = this.parent;
+      while (parent !== undefined) {
+        this.absolutePosition.x += parent.relativePosition.x;
+        this.absolutePosition.y += parent.relativePosition.y;
+        parent = parent.parent;
+      }
+    }
+
+    /**
      * This method calculates the Absolute Positions recursively
      */
     public calculateAbsolutePositionsRecursiveWithoutTopelement(): void {
@@ -218,6 +232,7 @@ export class BoundingBox {
 
     /**
      * This method calculates the Absolute Positions recursively
+     * from the root element down to the leaf elements
      * @param x
      * @param y
      */
@@ -228,6 +243,16 @@ export class BoundingBox {
             let child: BoundingBox = this.ChildElements[idx];
             child.calculateAbsolutePositionsRecursive(this.absolutePosition.x, this.absolutePosition.y);
         }
+    }
+
+    /**
+     * calculates the absolute positions of all children of this boundingBox
+     */
+    public calculateAbsolutePositionsOfChildren(): void {
+      for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
+        let child: BoundingBox = this.ChildElements[idx];
+        child.calculateAbsolutePositionsRecursive(this.absolutePosition.x, this.absolutePosition.y);
+      }
     }
 
     /**

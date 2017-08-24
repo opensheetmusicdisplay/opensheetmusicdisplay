@@ -279,7 +279,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             }
         }
         if (rhythmInstructions.length === 0 && this.currentMeasure === this.musicSheet.SourceMeasures[0]) {
-            let rhythmInstruction: RhythmInstruction = new RhythmInstruction(new Fraction(4, 4, false), 4, 4, RhythmSymbolEnum.NONE);
+            let rhythmInstruction: RhythmInstruction = new RhythmInstruction(new Fraction(4, 4, 0, false), RhythmSymbolEnum.NONE);
             for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
                 if (this.currentMeasure.FirstInstructionsStaffEntries[i] === undefined) {
                     this.currentMeasure.FirstInstructionsStaffEntries[i] = new SourceStaffEntry(undefined, undefined);
@@ -345,7 +345,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             instrumentsMaxTieNoteFractions.push(instrumentReader.MaxTieNoteFraction);
             let activeRythmMeasure: Fraction = instrumentReader.ActiveRhythm.Rhythm;
             if (activeRhythm.lt(activeRythmMeasure)) {
-                activeRhythm = new Fraction(activeRythmMeasure.Numerator, activeRythmMeasure.Denominator, false);
+                activeRhythm = new Fraction(activeRythmMeasure.Numerator, activeRythmMeasure.Denominator, 0, false);
             }
         }
         let instrumentsDurations: Fraction[] = this.currentMeasure.calculateInstrumentsDuration(this.musicSheet, instrumentsMaxTieNoteFractions);
@@ -400,7 +400,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private checkFractionsForEquivalence(maxInstrumentDuration: Fraction, activeRhythm: Fraction): void {
         if (activeRhythm.Denominator > maxInstrumentDuration.Denominator) {
             let factor: number = activeRhythm.Denominator / maxInstrumentDuration.Denominator;
-            maxInstrumentDuration.multiplyWithFactor(factor);
+            maxInstrumentDuration.expand(factor);
         }
     }
 
