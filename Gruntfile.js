@@ -1,7 +1,5 @@
 /*global module*/
-var webpack = require('webpack');
-var path = require('path');
-var  webpackCfg = require('./webpack.config.js');
+var webpackCfg = require('./webpack.config.js');
 
 module.exports = function (grunt) {
     'use strict';
@@ -188,7 +186,7 @@ module.exports = function (grunt) {
     grunt.registerTask('test',        'Runs unit, regression and e2e tests.',        ['build:test', 'karma:ci']);
 
     // Webpack dev server
-    grunt.registerTask("webpack-server", ["webpack-dev-server:start"]);
+    grunt.registerTask('webpack-server', ['webpack-dev-server:start']);
     // Default task (if grunt is run without any argument, used in contiuous integration)
     grunt.registerTask('default',     'Default task, running all other tasks. (CI)', ['test', 'build:demo', 'build:dist']);
 };
