@@ -1,6 +1,5 @@
 /*global module*/
-var webpack = require('webpack');
-var path = require('path');
+var webpackCfg = require('./webpack.config.js');
 
 module.exports = function (grunt) {
     'use strict';
@@ -86,37 +85,17 @@ module.exports = function (grunt) {
         },
         // Webpack
         webpack: {
-          build: {
-            entry: ['./src/OSMD/OSMD.ts'],
-            output: {
-                path: path.resolve(__dirname, 'build'),
-                filename: 'osmd.js'
-             },
-             resolve: {
-                 // Add '.ts' and '.tsx' as a resolvable extension.
-                 extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js']
-             },
-             module: {
-                 loaders: [
-                     // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
-                     { test: /\.tsx?$/, loader: 'ts-loader' }
-                 ]
-             },
-    				 plugins: [
-               // build optimization plugins
-               new webpack.LoaderOptionsPlugin({
-                minimize: true,
-                debug: false
-              }),
-    					new webpack.optimize.UglifyJsPlugin({
-                  warnings: false,
-                  beautify: false,
-                  compress: true,
-                  comments: false,
-                  sourceMap: true
-                })
-    				]
-    			}
+          options: {
+            progress: true,
+          },
+          build: webpackCfg,
+          dev: Object.assign({ watch: true }, webpackCfg)
+        },
+        'webpack-dev-server': {
+          options: {
+              webpack: webpackCfg
+          },
+          start: webpackCfg.devServer,
         },
         // Karma setup
         karma: {
@@ -206,6 +185,8 @@ module.exports = function (grunt) {
     // Tests
     grunt.registerTask('test',        'Runs unit, regression and e2e tests.',        ['build:test', 'karma:ci']);
 
+    // Webpack dev server
+    grunt.registerTask('webpack-server', ['webpack-dev-server:start']);
     // Default task (if grunt is run without any argument, used in contiuous integration)
     grunt.registerTask('default',     'Default task, running all other tasks. (CI)', ['test', 'build:demo', 'build:dist']);
 };

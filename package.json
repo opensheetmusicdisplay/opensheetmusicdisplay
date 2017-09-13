@@ -72,6 +72,7 @@
     "grunt-karma": "^2.0.0",
     "grunt-ts": "^6.0.0-beta.3",
     "grunt-webpack": "^3.0.0",
+    "grunt-webpack-server": "^0.1.0",
     "http-server": "^0.10.0",
     "jshint": "^2.9.4",
     "karma": "^1.1.1",
@@ -90,10 +91,11 @@
     "ts-loader": "^2.0.3",
     "tsify": "^3.0.0",
     "tslint": "^5.0.0",
-    "typedoc": "^0.8.0",
+    "typedoc": "^0.7.0",
     "typescript": "^2.2.2",
     "uglifyjs-webpack-plugin": "^0.4.3",
-    "webpack": "^3.5.5"
+    "webpack": "^3.5.5",
+    "webpack-dev-server": "^2.7.1"
   },
   "config": {
     "commitizen": {
