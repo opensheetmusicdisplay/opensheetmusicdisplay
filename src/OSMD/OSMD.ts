@@ -1,9 +1,12 @@
 import {IXmlElement} from "./../Common/FileIO/Xml";
 import {VexFlowMusicSheetCalculator} from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
+import {VexFlowBackend} from "./../MusicalScore/Graphical/VexFlow/VexFlowBackend";
 import {MusicSheetReader} from "./../MusicalScore/ScoreIO/MusicSheetReader";
 import {GraphicalMusicSheet} from "./../MusicalScore/Graphical/GraphicalMusicSheet";
 import {MusicSheetCalculator} from "./../MusicalScore/Graphical/MusicSheetCalculator";
 import {VexFlowMusicSheetDrawer} from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
+import {SvgVexFlowBackend} from "./../MusicalScore/Graphical/VexFlow/SvgVexFlowBackend";
+import {CanvasVexFlowBackend} from "./../MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
 import {MusicSheet} from "./../MusicalScore/MusicSheet";
 import {Cursor} from "./Cursor";
 import {MXLHelper} from "../Common/FileIO/Mxl";
@@ -18,7 +21,7 @@ export class OSMD {
      * @param container is either the ID, or the actual "div" element which will host the music sheet
      * @autoResize automatically resize the sheet to full page width on window resize
      */
-    constructor(container: string|HTMLElement, autoResize: boolean = false) {
+    constructor(container: string|HTMLElement, autoResize: boolean = false, backend: string = "canvas") {
         // Store container element
         if (typeof container === "string") {
             // ID passed
@@ -30,17 +33,22 @@ export class OSMD {
         if (!this.container) {
             throw new Error("Please pass a valid div container to OSMD");
         }
-        // Create the elements inside the container
-        this.canvas = document.createElement("canvas");
-        this.canvas.style.zIndex = "0";
-        let inner: HTMLElement = document.createElement("div");
-        inner.style.position = "relative";
-        inner.appendChild(this.canvas);
-        this.container.appendChild(inner);
+
+        if (backend === "svg") {
+            this.backend = new SvgVexFlowBackend();
+        } else {
+            this.backend = new CanvasVexFlowBackend();
+        }
+
+        this.backend.initialize(this.container);
+        this.canvas = this.backend.getCanvas();
+        const inner: HTMLElement = this.backend.getInnerElement();
+
         // Create the drawer
-        this.drawer = new VexFlowMusicSheetDrawer(this.canvas);
+        this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, false);
         // Create the cursor
         this.cursor = new Cursor(inner, this);
+
         if (autoResize) {
             this.autoResize();
         }
@@ -50,7 +58,8 @@ export class OSMD {
     public zoom: number = 1.0;
 
     private container: HTMLElement;
-    private canvas: HTMLCanvasElement;
+    private canvas: HTMLElement;
+    private backend: VexFlowBackend;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
@@ -145,6 +154,7 @@ export class OSMD {
         this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(7, 4), OutlineAndFillStyleEnum.PlaybackCursor));*/
         // Update Sheet Page
         let height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
+        this.drawer.clear();
         this.drawer.resize(width, height);
         this.drawer.scale(this.zoom);
         // Finally, draw
@@ -191,8 +201,8 @@ export class OSMD {
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;
-        this.canvas.width = 0;
-        this.canvas.height = 0;
+        // this.canvas.width = 0;
+        // this.canvas.height = 0;
     }
 
     /**

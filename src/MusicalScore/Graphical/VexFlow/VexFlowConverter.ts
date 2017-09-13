@@ -380,6 +380,23 @@ export class VexFlowConverter {
     }
 
     /**
+     * Converts the style into a string that VexFlow RenderContext can understand
+     * as the weight of the font
+     */
+    public static fontStyle(style: FontStyles): string {
+        switch (style) {
+            case FontStyles.Bold:
+                return "bold";
+            case FontStyles.Italic:
+                return "italic";
+            case FontStyles.BoldItalic:
+                return "italic bold";
+            default:
+                return "normal";
+        }
+    }
+
+    /**
      * Convert OutlineAndFillStyle to CSS properties
      * @param styleId
      * @returns {string}

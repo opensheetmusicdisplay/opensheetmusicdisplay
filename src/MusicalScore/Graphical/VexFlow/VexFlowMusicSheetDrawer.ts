@@ -4,12 +4,12 @@ import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "../GraphicalLabel";
-import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 import {MusicSystem} from "../MusicSystem";
 import {GraphicalObject} from "../GraphicalObject";
 import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
+import {VexFlowBackend} from "./VexFlowBackend";
 
 /**
  * This is a global contant which denotes the height in pixels of the space between two lines of the stave
@@ -20,17 +20,19 @@ export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private renderer: Vex.Flow.Renderer;
-    private vfctx: Vex.Flow.CanvasContext;
-    private ctx: CanvasRenderingContext2D;
+    private backend: VexFlowBackend;
     private zoom: number = 1.0;
 
-    constructor(canvas: HTMLCanvasElement, isPreviewImageDrawer: boolean = false) {
+    constructor(element: HTMLElement,
+                backend: VexFlowBackend,
+                isPreviewImageDrawer: boolean = false) {
         super(new VexFlowTextMeasurer(), isPreviewImageDrawer);
-        this.renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
-        this.vfctx = this.renderer.getContext();
-        // The following is a hack to retrieve the actual canvas' drawing context
-        // Not supposed to work forever....
-        this.ctx = (this.vfctx as any).vexFlowCanvasContext;
+        this.backend = backend;
+        this.renderer = this.backend.getRenderer();
+    }
+
+    public clear(): void {
+        this.backend.clear();
     }
 
     /**
@@ -39,7 +41,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     public scale(k: number): void {
         this.zoom = k;
-        this.vfctx.scale(k, k);
+        this.backend.scale(k);
     }
 
     /**
@@ -48,12 +50,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param y
      */
     public resize(x: number, y: number): void {
-        this.renderer.resize(x, y);
+        this.backend.resize(x, y);
     }
 
     public translate(x: number, y: number): void {
-        // Translation seems not supported by VexFlow
-        this.ctx.translate(x, y);
+        this.backend.translate(x, y);
     }
 
     /**
@@ -70,7 +71,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
-        measure.draw(this.vfctx);
+        measure.draw(this.backend.getContext());
 
         // Draw the StaffEntries
         for (let staffEntry of measure.staffEntries){
@@ -104,15 +105,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
                           bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
-        let ctx: CanvasRenderingContext2D = (this.vfctx as any).vexFlowCanvasContext;
-        let old: string = ctx.font;
-        ctx.font = VexFlowConverter.font(
-            graphicalLabel.Label.fontHeight * unitInPixels,
-            graphicalLabel.Label.fontStyle,
-            graphicalLabel.Label.font
-        );
-        ctx.fillText(graphicalLabel.Label.text, screenPosition.x, screenPosition.y + heightInPixel);
-        ctx.font = old;
+        const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
+        const { fontStyle, font, text } = graphicalLabel.Label;
+
+        this.backend.renderText(height, fontStyle, font, text, heightInPixel, screenPosition);
     }
 
     /**
@@ -123,10 +119,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param styleId the style id
      */
     protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number): void {
-        let old: string|CanvasGradient|CanvasPattern = this.ctx.fillStyle;
-        this.ctx.fillStyle = VexFlowConverter.style(styleId);
-        this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-        this.ctx.fillStyle = old;
+       this.backend.renderRectangle(rectangle, styleId);
     }
 
     /**
