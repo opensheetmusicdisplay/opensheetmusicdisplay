@@ -92,7 +92,7 @@
     "tsify": "^3.0.0",
     "tslint": "^5.0.0",
     "typedoc": "^0.7.0",
-    "typescript": "^2.2.2",
+    "typescript": "^2.5.3",
     "uglifyjs-webpack-plugin": "^0.4.3",
     "webpack": "^3.5.5",
     "webpack-dev-server": "^2.7.1"
