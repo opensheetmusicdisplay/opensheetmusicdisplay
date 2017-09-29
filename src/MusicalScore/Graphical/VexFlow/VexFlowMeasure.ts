@@ -260,6 +260,7 @@ export class VexFlowMeasure extends StaffMeasure {
 
     public handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet): void {
         let voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
+        tuplet = graphicalNote.sourceNote.NoteTuplet;
         let tuplets: [Tuplet, VexFlowStaffEntry[]][] = this.tuplets[voiceID];
         if (tuplets === undefined) {
             tuplets = this.tuplets[voiceID] = [];
@@ -322,7 +323,7 @@ export class VexFlowMeasure extends StaffMeasure {
     public finalizeTuplets(): void {
         // The following line resets the created Vex.Flow Tuplets and
         // created them brand new. Is this needed? And more importantly,
-        // should the old tuplets be removed manually by the notes?
+        // should the old tuplets be removed manually from the notes?
         this.vftuplets = {};
         for (let voiceID in this.tuplets) {
             if (this.tuplets.hasOwnProperty(voiceID)) {
@@ -330,13 +331,19 @@ export class VexFlowMeasure extends StaffMeasure {
                 if (vftuplets === undefined) {
                     vftuplets = this.vftuplets[voiceID] = [];
                 }
-                for (let tuplet of this.tuplets[voiceID]) {
-                    let notes: Vex.Flow.StaveNote[] = [];
-                    for (let entry of tuplet[1]) {
-                        notes.push((<VexFlowStaffEntry>entry).vfNotes[voiceID]);
+                for (let tupletBuilder of this.tuplets[voiceID]) {
+                    let tupletStaveNotes: Vex.Flow.StaveNote[] = [];
+                    let tupletStaffEntries: VexFlowStaffEntry[] = tupletBuilder[1];
+                    for (let tupletStaffEntry of tupletStaffEntries) {
+                      tupletStaveNotes.push((tupletStaffEntry).vfNotes[voiceID]);
                     }
-                    if (notes.length > 1) {
-                        vftuplets.push(new Vex.Flow.Tuplet(notes));
+                    if (tupletStaveNotes.length > 1) {
+                      let notesOccupied: number = 2;
+                      vftuplets.push(new Vex.Flow.Tuplet( tupletStaveNotes,
+                                                          {
+                                                            notes_occupied: notesOccupied,
+                                                            num_notes: tupletStaveNotes.length //, location: -1, ratioed: true
+                                                          }));
                     } else {
                         Logging.log("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
                     }

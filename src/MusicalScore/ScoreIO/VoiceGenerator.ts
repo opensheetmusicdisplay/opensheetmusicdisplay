@@ -122,6 +122,7 @@ export class VoiceGenerator {
             //    this.lyricsReader.addLyricEntry(noteNode, this.currentVoiceEntry);
             //    this.voice.Parent.HasLyrics = true;
             //}
+            let hasTupletCommand: boolean = false;
             let notationNode: IXmlElement = noteNode.element("notations");
             if (notationNode !== undefined) {
                 // let articNode: IXmlElement = undefined;
@@ -133,18 +134,23 @@ export class VoiceGenerator {
                 // (*)
                 //if (this.slurReader !== undefined && (slurNodes = notationNode.elements("slur")))
                 //    this.slurReader.addSlur(slurNodes, this.currentNote);
+                // check for Tuplets
                 let tupletNodeList: IXmlElement[] = notationNode.elements("tuplet");
-                if (tupletNodeList) {
-                    this.openTupletNumber = this.addTuplet(noteNode, tupletNodeList);
+                if (tupletNodeList.length > 0) {
+                  this.openTupletNumber = this.addTuplet(noteNode, tupletNodeList);
+                  hasTupletCommand = true;
                 }
+                // check for Arpeggios
                 if (notationNode.element("arpeggiate") !== undefined && !graceNote) {
                     this.currentVoiceEntry.ArpeggiosNotesIndices.push(this.currentVoiceEntry.Notes.indexOf(this.currentNote));
                 }
+                // check for Ties - must be the last check
                 let tiedNodeList: IXmlElement[] = notationNode.elements("tied");
-                if (tiedNodeList) {
+                if (tiedNodeList.length > 0) {
                     this.addTie(tiedNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction);
                 }
 
+                // remove open ties, if there is already a gap between the last tie note and now.
                 let openTieDict: { [_: number]: Tie; } = this.openTieDict;
                 for (let key in openTieDict) {
                     if (openTieDict.hasOwnProperty(key)) {
@@ -155,7 +161,9 @@ export class VoiceGenerator {
                     }
                 }
             }
-            if (noteNode.element("time-modification") !== undefined && notationNode === undefined) {
+            // time-modification yields tuplet in currentNote
+            // mustn't execute method, if this is the Note where the Tuplet has been created
+            if (noteNode.element("time-modification") !== undefined && !hasTupletCommand) {
                 this.handleTimeModificationNode(noteNode);
             }
         } catch (err) {
@@ -731,12 +739,13 @@ export class VoiceGenerator {
     }
 
     /**
-     * Handle the time-modification [[IXmlElement]] for the [[Tuplet]] case (tupletNotes not at begin/end of [[Tuplet]]).
+     * This method handles the time-modification IXmlElement for the Tuplet case (tupletNotes not at begin/end of Tuplet).
      * @param noteNode
      */
     private handleTimeModificationNode(noteNode: IXmlElement): void {
-        if (this.openTupletNumber in this.tupletDict) {
+        if (this.tupletDict[this.openTupletNumber] !== undefined) {
             try {
+                // Tuplet should already be created
                 let tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
                 let notes: Note[] = CollectionUtil.last(tuplet.Notes);
                 let lastTupletVoiceEntry: VoiceEntry = notes[0].ParentVoiceEntry;

@@ -44,22 +44,53 @@ export class VexFlowConverter {
      * @param fraction a fraction representing the duration of a note
      * @returns {string}
      */
-    public static duration(fraction: Fraction): string {
-        let dur: number = fraction.RealValue;
-        if (dur >= 1) {
-            return "w";
-        } else if (dur < 1 && dur >= 0.5) {
-            return "h";
-        } else if (dur < 0.5 && dur >= 0.25) {
-            return "q";
-        } else if (dur < 0.25 && dur >= 0.125) {
-            return "8";
-        } else if (dur < 0.125 && dur >= 0.0625) {
-            return "16";
-        } else if (dur < 0.0625 && dur >= 0.03125) {
-            return "32";
+    public static duration(fraction: Fraction, isTuplet: boolean): string {
+      let dur: number = fraction.RealValue;
+
+      if (dur >= 1) {
+          return "w";
+      } else if (dur < 1 && dur >= 0.5) {
+        // change to the next higher straight note to get the correct note display type
+        if (isTuplet) {
+          return "w";
         }
-        return "128";
+        return "h";
+      } else if (dur < 0.5 && dur >= 0.25) {
+        // change to the next higher straight note to get the correct note display type
+        if (isTuplet && dur > 0.25) {
+          return "h";
+        }
+        return "q";
+      } else if (dur < 0.25 && dur >= 0.125) {
+        // change to the next higher straight note to get the correct note display type
+        if (isTuplet && dur > 0.125) {
+          return "q";
+        }
+        return "8";
+      } else if (dur < 0.125 && dur >= 0.0625) {
+        // change to the next higher straight note to get the correct note display type
+        if (isTuplet && dur > 0.0625) {
+          return "8";
+        }
+        return "16";
+      } else if (dur < 0.0625 && dur >= 0.03125) {
+        // change to the next higher straight note to get the correct note display type
+        if (isTuplet && dur > 0.03125) {
+          return "16";
+        }
+        return "32";
+      } else if (dur < 0.03125 && dur >= 0.015625) {
+        // change to the next higher straight note to get the correct note display type
+        if (isTuplet && dur > 0.015625) {
+          return "32";
+        }
+        return "64";
+      }
+
+      if (isTuplet) {
+        return "64";
+      }
+      return "128";
     }
 
     /**
@@ -113,20 +144,21 @@ export class VexFlowConverter {
         let keys: string[] = [];
         let accidentals: string[] = [];
         let frac: Fraction = notes[0].graphicalNoteLength;
-        let duration: string = VexFlowConverter.duration(frac);
+        let isTuplet: boolean = notes[0].sourceNote.NoteTuplet !== undefined;
+        let duration: string = VexFlowConverter.duration(frac, isTuplet);
         let vfClefType: string = undefined;
         let numDots: number = 0;
         for (let note of notes) {
-            let res: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
-            if (res === undefined) {
-                keys = ["b/4"];
-                duration += "r";
-                break;
+            let pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
+            if (pitch === undefined) { // if it is a rest:
+              keys = ["b/4"];
+              duration += "r";
+              break;
             }
-            keys.push(res[0]);
-            accidentals.push(res[1]);
+            keys.push(pitch[0]);
+            accidentals.push(pitch[1]);
             if (!vfClefType) {
-                let vfClef: {type: string, annotation: string} = VexFlowConverter.Clef(res[2]);
+                let vfClef: {type: string, annotation: string} = VexFlowConverter.Clef(pitch[2]);
                 vfClefType = vfClef.type;
             }
             if (numDots < note.numberOfDots) {
@@ -141,10 +173,6 @@ export class VexFlowConverter {
             auto_stem: true,
             clef: vfClefType,
             duration: duration,
-            duration_override: {
-                denominator: frac.Denominator,
-                numerator: frac.Numerator,
-            },
             keys: keys,
         });
 

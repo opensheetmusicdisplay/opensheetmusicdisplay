@@ -186,7 +186,7 @@ declare namespace Vex {
         }
 
         export class Tuplet {
-            constructor(notes: StaveNote[]);
+            constructor(notes: StaveNote[], options: any);
 
             public setContext(ctx: RenderContext): Tuplet;
 
