@@ -1,10 +1,11 @@
-﻿import {IXmlElement} from "../../../Common/FileIO/Xml";
+import {IXmlElement} from "../../../Common/FileIO/Xml";
 import {MusicSheet} from "../../MusicSheet";
 import {ChordDegreeText, ChordSymbolContainer, ChordSymbolEnum, Degree} from "../../VoiceData/ChordSymbolContainer";
 import {AccidentalEnum, NoteEnum, Pitch} from "../../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
-import {Logging} from "../../../Common/Logging";
+import * as log from "loglevel";
+
 export class ChordSymbolReader {
     public static readChordSymbol(xmlNode: IXmlElement, musicSheet: MusicSheet, activeKey: KeyInstruction): ChordSymbolContainer {
         let root: IXmlElement = xmlNode.element("root");
@@ -29,7 +30,7 @@ export class ChordSymbolReader {
             let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                   "Invalid chord symbol");
             musicSheet.SheetErrors.pushMeasureError(errorMsg);
-            Logging.error(LogLevel.DEBUG, "InstrumentReader.readChordSymbol", errorMsg, ex);
+            log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
             return undefined;
         }
 
@@ -42,7 +43,7 @@ export class ChordSymbolReader {
                 let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                       "Invalid chord symbol");
                 musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                Logging.error(LogLevel.DEBUG, "InstrumentReader.readChordSymbol", errorMsg, ex);
+                log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
             }
 
         }
@@ -56,7 +57,7 @@ export class ChordSymbolReader {
             let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                   "Invalid chord symbol");
             musicSheet.SheetErrors.pushMeasureError(errorMsg);
-            Logging.error(LogLevel.DEBUG, "InstrumentReader.readChordSymbol", errorMsg, ex);
+            log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
             return undefined;
         }
 
@@ -74,10 +75,9 @@ export class ChordSymbolReader {
                     let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                           "Invalid chord symbol");
                     musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                    Logging.error(LogLevel.DEBUG, "InstrumentReader.readChordSymbol", errorMsg, ex);
+                    log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                     return undefined;
                 }
-
             }
             let bassAlteration: AccidentalEnum = AccidentalEnum.NONE;
             if (bassAlter !== undefined) {
@@ -87,9 +87,8 @@ export class ChordSymbolReader {
                     let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                           "Invalid chord symbol");
                     musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                    Logging.error(LogLevel.DEBUG, "InstrumentReader.readChordSymbol", errorMsg, ex);
+                    log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                 }
-
             }
             bassPitch = new Pitch(bassNote, 1, bassAlteration);
         }
@@ -112,7 +111,7 @@ export class ChordSymbolReader {
                 let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                       "Invalid chord symbol");
                 musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                Logging.error(LogLevel.DEBUG, "InstrumentReader.readChordSymbol", errorMsg, ex);
+                log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                 return undefined;
             }
 
@@ -123,7 +122,7 @@ export class ChordSymbolReader {
                 let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                       "Invalid chord symbol");
                 musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                Logging.error(LogLevel.DEBUG, "InstrumentReader.readChordSymbol", errorMsg, ex);
+                log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                 return undefined;
             }
 
@@ -134,7 +133,7 @@ export class ChordSymbolReader {
                 let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
                                                                       "Invalid chord symbol");
                 musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                Logging.error(LogLevel.DEBUG, "InstrumentReader.readChordSymbol", errorMsg, ex);
+                log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                 return undefined;
             }
 

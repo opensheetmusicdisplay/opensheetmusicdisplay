@@ -12,7 +12,6 @@ import {Cursor} from "./Cursor";
 import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
-import {Logging} from "../Common/Logging";
 import * as log from "loglevel";
 
 export class OSMD {
@@ -81,7 +80,7 @@ export class OSMD {
                         return self.load(x);
                     },
                     (err: any) => {
-                        Logging.debug(err);
+                        log.debug(err);
                         throw new Error("OSMD: Invalid MXL file");
                     }
                 );
@@ -171,23 +170,23 @@ export class OSMD {
     public setLogLevel(level: string): void {
         switch (level) {
             case "trace":
-                log.setDefaultLevel(LogLevel.TRACE);
+                log.setLevel(log.levels.WARN);
                 break;
             case "debug":
-                log.setDefaultLevel(LogLevel.DEBUG);
+                log.setLevel(log.levels.DEBUG);
                 break;
             case "info":
-                log.setDefaultLevel(LogLevel.INFO);
+                log.setLevel(log.levels.INFO);
                 break;
             case "warn":
-                log.setDefaultLevel(LogLevel.WARN);
+                log.setLevel(log.levels.WARN);
                 break;
             case "error":
-                log.setDefaultLevel(LogLevel.ERROR);
+                log.setLevel(log.levels.ERROR);
                 break;
             default:
                 log.warn(`Could not set log level to ${level}. Using warn instead.`);
-                log.setDefaultLevel(LogLevel.WARN);
+                log.setLevel(log.levels.WARN);
                 break;
         }
     }
