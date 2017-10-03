@@ -84,7 +84,7 @@
     "karma-mocha-reporter": "^2.0.4",
     "karma-phantomjs-launcher": "^1.0.1",
     "karma-xml2js-preprocessor": "^0.0.3",
-    "mocha": "^3.0.1",
+    "mocha": "^4.0.0",
     "phantomjs-prebuilt": "^2.1.8",
     "pre-commit": "^1.2.2",
     "rimraf": "^2.6.1",
