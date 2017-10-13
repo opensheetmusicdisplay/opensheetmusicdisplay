@@ -122,4 +122,11 @@ export enum KeyEnum {
     major = 0,
     minor = 1,
     none = 2,
+    dorian = 3,
+    phrygian = 4,
+    lydian = 5,
+    mixolydian = 6,
+    aeolian = 7,
+    ionian = 8,
+    locrian = 9,
 }
