@@ -9,7 +9,7 @@
     "lint": "npm run jshint && npm run tslint",
     "jshint": "jshint . --exclude node_modules,dist,build,bin,demo",
     "test": "npm run lint && grunt test",
-    "tslint": "tslint --type-check --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
+    "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "typedoc": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
     "postinstall": "rimraf typings",
     "prepublish": "grunt build:dist",
