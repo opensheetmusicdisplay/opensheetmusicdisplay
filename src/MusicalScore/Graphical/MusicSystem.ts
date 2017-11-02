@@ -14,7 +14,6 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
-import {CollectionUtil} from "../../Util/CollectionUtil";
 import {GraphicalComment} from "./GraphicalComment";
 import {GraphicalMarkedArea} from "./GraphicalMarkedArea";
 import {SystemLine} from "./SystemLine";
@@ -243,14 +242,11 @@ export abstract class MusicSystem extends GraphicalObject {
             if (instrument1 === undefined || instrument2 === undefined) {
                 continue;
             }
-            let firstStaffLine: StaffLine = undefined, lastStaffLine: StaffLine = undefined;
+            let firstStaffLine: StaffLine = undefined;
             for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
                 let staffLine: StaffLine = this.staffLines[idx2];
                 if (staffLine.ParentStaff === instrument1.Staves[0]) {
                     firstStaffLine = staffLine;
-                }
-                if (staffLine.ParentStaff === CollectionUtil.last(instrument2.Staves)) {
-                    lastStaffLine = staffLine;
                 }
             }
             if (firstStaffLine !== undefined && firstStaffLine !== undefined) {

@@ -17,7 +17,7 @@ export class Cursor {
     curs.style.position = "absolute";
     curs.style.zIndex = "-1";
     this.cursorElement = <HTMLImageElement>curs;
-    container.appendChild(curs);
+    this.container.appendChild(curs);
   }
 
   private container: HTMLElement;

@@ -1,4 +1,3 @@
-import Vex = require("vexflow");
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -12,14 +11,13 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
 
 /**
- * This is a global contant which denotes the height in pixels of the space between two lines of the stave
+ * This is a global constant which denotes the height in pixels of the space between two lines of the stave
  * (when zoom = 1.0)
  * @type number
  */
 export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
-    private renderer: Vex.Flow.Renderer;
     private backend: VexFlowBackend;
     private zoom: number = 1.0;
 
@@ -28,7 +26,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 isPreviewImageDrawer: boolean = false) {
         super(new VexFlowTextMeasurer(), isPreviewImageDrawer);
         this.backend = backend;
-        this.renderer = this.backend.getRenderer();
     }
 
     public clear(): void {
@@ -41,7 +38,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     public scale(k: number): void {
         this.zoom = k;
-        this.backend.scale(k);
+        this.backend.scale(this.zoom);
     }
 
     /**
