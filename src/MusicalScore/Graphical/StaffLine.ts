@@ -103,7 +103,6 @@ export abstract class StaffLine extends GraphicalObject {
      */
     public findClosestStaffEntry(xPosition: number): GraphicalStaffEntry {
         let closestStaffentry: GraphicalStaffEntry = undefined;
-        let difference: number = Number.MAX_VALUE;
         for (let idx: number = 0, len: number = this.Measures.length; idx < len; ++idx) {
             let graphicalMeasure: StaffMeasure = this.Measures[idx];
             for (let idx2: number = 0, len2: number = graphicalMeasure.staffEntries.length; idx2 < len2; ++idx2) {
@@ -111,9 +110,6 @@ export abstract class StaffLine extends GraphicalObject {
                 if (
                     Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x) < 5.0
                 ) {
-                    difference = Math.abs(
-                        graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x
-                    );
                     closestStaffentry = graphicalStaffEntry;
                 }
             }

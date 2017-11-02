@@ -56,7 +56,7 @@ export type RepetitionInstructionReader = any;
 export class InstrumentReader {
 
   constructor(repetitionInstructionReader: RepetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
-      this.repetitionInstructionReader = repetitionInstructionReader;
+      // this.repetitionInstructionReader = repetitionInstructionReader;
       this.xmlMeasureList = xmlMeasureList;
       this.musicSheet = instrument.GetMusicSheet;
       this.instrument = instrument;
@@ -69,7 +69,7 @@ export class InstrumentReader {
       // (*) this.slurReader = MusicSymbolModuleFactory.createSlurReader(this.musicSheet);
   }
 
-  private repetitionInstructionReader: RepetitionInstructionReader;
+  // private repetitionInstructionReader: RepetitionInstructionReader;
   private xmlMeasureList: IXmlElement[];
   private musicSheet: MusicSheet;
   private slurReader: any; // (*) SlurReader;
@@ -309,10 +309,10 @@ export class InstrumentReader {
         } else if (xmlNode.name === "direction") {
           // unused let directionTypeNode: IXmlElement = xmlNode.element("direction-type");
           // (*) MetronomeReader.readMetronomeInstructions(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
-          let relativePositionInMeasure: number = Math.min(1, currentFraction.RealValue);
-          if (this.activeRhythm !== undefined && this.activeRhythm.Rhythm !== undefined) {
-            relativePositionInMeasure /= this.activeRhythm.Rhythm.RealValue;
-          }
+          // let relativePositionInMeasure: number = Math.min(1, currentFraction.RealValue);
+          // if (this.activeRhythm !== undefined && this.activeRhythm.Rhythm !== undefined) {
+            // relativePositionInMeasure /= this.activeRhythm.Rhythm.RealValue;
+          // }
                     // unused:
                     // let handeled: boolean = false;
                     // if (this.repetitionInstructionReader !== undefined) {

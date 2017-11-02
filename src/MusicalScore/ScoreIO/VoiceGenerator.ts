@@ -36,7 +36,7 @@ export type SlurReader = any;
 export class VoiceGenerator {
     constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
         this.musicSheet = instrument.GetMusicSheet;
-        this.slurReader = slurReader;
+        // this.slurReader = slurReader;
         if (mainVoice !== undefined) {
             this.voice = new LinkedVoice(instrument, voiceId, mainVoice);
         } else {
@@ -47,7 +47,7 @@ export class VoiceGenerator {
         //this.articulationReader = MusicSymbolModuleFactory.createArticulationReader();
     }
 
-    private slurReader: SlurReader;
+    // private slurReader: SlurReader;
     //private lyricsReader: LyricsReader;
     //private articulationReader: ArticulationReader;
     private musicSheet: MusicSheet;
