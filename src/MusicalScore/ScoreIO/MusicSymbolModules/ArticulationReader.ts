@@ -1,6 +1,6 @@
 ﻿import {ArticulationEnum, VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {IXmlAttribute, IXmlElement} from "../../../Common/FileIO/Xml";
-import {Logging} from "../../../Common/Logging";
+import * as log from "loglevel";
 import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {OrnamentContainer, OrnamentEnum} from "../../VoiceData/OrnamentContainer";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
@@ -54,9 +54,9 @@ export class ArticulationReader {
               currentVoiceEntry.Articulations.push(articulationEnum);
             }
           }
-        } catch (err) {
+        } catch (ex) {
           let errorMsg: string = "Invalid note articulation.";
-          Logging.log("addArticulationExpression", errorMsg);
+          log.debug("addArticulationExpression", errorMsg, ex);
           return;
         }
       }

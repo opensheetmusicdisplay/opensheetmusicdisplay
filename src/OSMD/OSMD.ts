@@ -170,23 +170,23 @@ export class OSMD {
     public setLogLevel(level: string): void {
         switch (level) {
             case "trace":
-                log.setLevel(LogLevel.TRACE);
+                log.setLevel(log.levels.WARN);
                 break;
             case "debug":
-                log.setLevel(LogLevel.DEBUG);
+                log.setLevel(log.levels.DEBUG);
                 break;
             case "info":
-                log.setLevel(LogLevel.INFO);
+                log.setLevel(log.levels.INFO);
                 break;
             case "warn":
-                log.setLevel(LogLevel.WARN);
+                log.setLevel(log.levels.WARN);
                 break;
             case "error":
-                log.setLevel(LogLevel.ERROR);
+                log.setLevel(log.levels.ERROR);
                 break;
             default:
                 log.warn(`Could not set log level to ${level}. Using warn instead.`);
-                log.setLevel(LogLevel.WARN);
+                log.setLevel(log.levels.WARN);
                 break;
         }
     }
@@ -243,7 +243,7 @@ export class OSMD {
             timeout = undefined;
             window.clearTimeout(timeout);
             if ((new Date()).getTime() - rtime < delta) {
-                timeout = window.setTimeout(this.resizeEnd, delta);
+                timeout = window.setTimeout(resizeEnd, delta);
             } else {
                 endCallback();
             }
