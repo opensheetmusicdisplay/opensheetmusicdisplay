@@ -275,11 +275,23 @@ export abstract class MusicSheetCalculator {
 
     protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
                                             voiceEntry: VoiceEntry,
-                                            graphicalStaffEntry: GraphicalStaffEntry): void {
+                                            staffEntry: GraphicalStaffEntry): void {
         throw new Error("abstract, not implemented");
     }
 
-    protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
+  /**
+   * Adds a technical instruction at the given staff entry.
+   * @param technicalInstructions
+   * @param voiceEntry
+   * @param staffEntry
+   */
+  protected handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
+                                                  voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
+    throw new Error("abstract, not implemented");
+  }
+
+
+  protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -734,7 +746,7 @@ export abstract class MusicSheetCalculator {
             this.handleVoiceEntryArticulations(voiceEntry.Articulations, voiceEntry, graphicalStaffEntry);
         }
         if (voiceEntry.TechnicalInstructions.length > 0) {
-            this.checkVoiceEntriesForTechnicalInstructions(voiceEntry, graphicalStaffEntry);
+            this.handleVoiceEntryTechnicalInstructions(voiceEntry.TechnicalInstructions, voiceEntry, graphicalStaffEntry);
         }
         if (voiceEntry.LyricsEntries.size() > 0) {
             this.handleVoiceEntryLyrics(voiceEntry.LyricsEntries, voiceEntry, graphicalStaffEntry, openLyricWords);
@@ -1332,13 +1344,6 @@ export abstract class MusicSheetCalculator {
         return measure;
     }
 
-    private checkVoiceEntriesForTechnicalInstructions(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
-        for (let idx: number = 0, len: number = voiceEntry.TechnicalInstructions.length; idx < len; ++idx) {
-            let technicalInstruction: TechnicalInstruction = voiceEntry.TechnicalInstructions[idx];
-            this.symbolFactory.createGraphicalTechnicalInstruction(technicalInstruction, graphicalStaffEntry);
-        }
-    }
-
     private checkNoteForAccidental(graphicalNote: GraphicalNote, accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
                                    octaveEnum: OctaveEnum, grace: boolean = false): void {
         let pitch: Pitch = graphicalNote.sourceNote.Pitch;
@@ -1590,38 +1595,6 @@ export abstract class MusicSheetCalculator {
             }
         }
     }
-
-    // Commented because unused:
-    //private calculateFingering(): void {
-    //    for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-    //        let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-    //        for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-    //            let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-    //            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-    //                let staffLine: StaffLine = musicSystem.StaffLines[idx3];
-    //                let skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
-    //                for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
-    //                    let measure: StaffMeasure = staffLine.Measures[idx4];
-    //                    let measureRelativePosition: PointF2D = measure.PositionAndShape.RelativePosition;
-    //                    for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
-    //                        let staffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
-    //                        let hasTechnicalInstruction: boolean = false;
-    //                        for (let idx6: number = 0, len6: number = staffEntry.sourceStaffEntry.VoiceEntries.length; idx6 < len6; ++idx6) {
-    //                            let ve: VoiceEntry = staffEntry.sourceStaffEntry.VoiceEntries[idx6];
-    //                            if (ve.TechnicalInstructions.length > 0) {
-    //                                hasTechnicalInstruction = true;
-    //                                break;
-    //                            }
-    //                        }
-    //                        if (hasTechnicalInstruction) {
-    //                            this.layoutFingering(staffLine, skyBottomLineCalculator, staffEntry, measureRelativePosition);
-    //                        }
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
 
     private calculateLyricsPosition(): void {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.ParentMusicSheet.Instruments.length; idx < len; ++idx) {
