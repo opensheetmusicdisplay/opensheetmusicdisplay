@@ -11,7 +11,6 @@
     "test": "npm run lint && grunt test",
     "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "typedoc": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
-    "postinstall": "rm -rf typings",
     "prepublish": "grunt build:dist",
     "start": "http-server build/demo"
   },
@@ -87,7 +86,6 @@
     "mocha": "^4.0.0",
     "phantomjs-prebuilt": "^2.1.8",
     "pre-commit": "^1.2.2",
-    "rimraf": "^2.6.1",
     "ts-loader": "^3.0.0",
     "tsify": "^3.0.0",
     "tslint": "^5.8.0",
