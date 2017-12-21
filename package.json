@@ -74,7 +74,7 @@
     "grunt-webpack-server": "^0.1.0",
     "http-server": "^0.10.0",
     "jshint": "^2.9.4",
-    "karma": "^1.1.1",
+    "karma": "^2.0.0",
     "karma-base64-to-js-preprocessor": "^0.0.1",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.0.0",
