@@ -83,8 +83,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
-    protected drawInstrumentBrace(bracket: GraphicalObject, system: MusicSystem): void {
-        // empty
+    protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
+      // cast brace to VexFlowInstrumentBrace
+      // render it with Vexflow.
     }
 
     protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {

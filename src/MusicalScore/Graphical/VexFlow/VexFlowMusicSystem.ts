@@ -51,7 +51,21 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param lastStaffLine the lower StaffLine (use a cast to get the VexFlowStaffLine) of the brace to create
      */
     protected createInstrumentBrace(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
-        return;
+      // first cast the staff lines to get the VexFlow content:
+      // let firstVexFlowStaffLine: VexFlowStaffLine = (firstStaffLine as VexFlowStaffLine);
+      // let lastVexFlowStaffLine: VexFlowStaffLine = (lastStaffLine as VexFlowStaffLine);
+      // Create a VexFlowInstrumentBrace object (class doesn't exist yet, shall extend GraphicalObject to have a BoundingBox)
+      // do the following in the constructor of the VexFlowInstrumentBrace (which takes firstVexFlowStaffLine and lastVexFlowStaffLine as arguments):
+      // create the Vexflow stave connector,
+      // correctly connect it to the first and last VexFlowStaffLines
+      // infer from VexFlow the bounding box size of the created brace.
+      // transform the Vexflow coordinates to unit coordinate space.
+      // set the VexFlowInstrumentBrace.boundingBox to these coordinates
+      // finally add the graphical element to the music system with:
+      // this.boundingBox.ChildElements.push(vexFlowInstrumentBrace.boundingBox);
+      // and very importantly add the brace to the braces list of this system (needed to call the draw method in VexFlowMusicSheetDrawer later):
+      // this.instrumentBrackets.push(vexFlowInstrumentBrace);
+      return;
     }
 
     /**

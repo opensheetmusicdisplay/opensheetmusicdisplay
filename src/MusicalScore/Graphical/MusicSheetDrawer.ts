@@ -239,7 +239,7 @@ export abstract class MusicSheetDrawer {
         // empty
     }
 
-    protected drawInstrumentBracket(bracket: GraphicalObject, system: MusicSystem): void {
+    protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
         // empty
     }
 
@@ -300,7 +300,7 @@ export abstract class MusicSheetDrawer {
             }
         }
         for (let bracket of musicSystem.InstrumentBrackets) {
-            this.drawInstrumentBracket(bracket, musicSystem);
+            this.drawInstrumentBrace(bracket, musicSystem);
         }
         for (let bracket of musicSystem.GroupBrackets) {
             this.drawGroupBracket(bracket, musicSystem);
