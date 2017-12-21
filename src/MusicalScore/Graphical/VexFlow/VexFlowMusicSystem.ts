@@ -46,9 +46,9 @@ export class VexFlowMusicSystem extends MusicSystem {
 
     /**
      * creates an instrument brace for the given dimension.
-     * The height and positioning can be inferred from the given points.
-     * @param firstStaffLine the upper staff line of the bracket to create
-     * @param lastStaffLine the lower staff line of the bracket to create
+     * The height and positioning can be inferred from the given staff lines.
+     * @param firstStaffLine the upper StaffLine (use a cast to get the VexFlowStaffLine) of the brace to create
+     * @param lastStaffLine the lower StaffLine (use a cast to get the VexFlowStaffLine) of the brace to create
      */
     protected createInstrumentBrace(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
         return;
