@@ -1,11 +1,14 @@
+import { OSMD } from '../src/OSMD/OSMD';
+
 /*jslint browser:true */
 (function () {
     "use strict";
-    var OSMD;
+    var osmdObj;
     // The folder of the demo files
-    var folder = "sheets/",
+    var folder = "",
     // The available demos
         demos = {
+            "Beethoven - AnDieFerneGeliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
             "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
@@ -19,7 +22,6 @@
             "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer.xml",
             "ActorPreludeSample": "ActorPreludeSample.xml",
             "an chloe - mozart": "an chloe - mozart.xml",
-            "Beethoven - AnDieFerneGeliebte": "AnDieFerneGeliebte_Beethoven.xml",
             "das veilchen - mozart": "das veilchen - mozart.xml",
             "Dichterliebe01": "Dichterliebe01.xml",
             "mandoline - debussy": "mandoline - debussy.xml",
@@ -89,8 +91,8 @@
         };
 
         // Create OSMD object and canvas
-        OSMD = new opensheetmusicdisplay.OSMD(canvas, false);
-        OSMD.setLogLevel('info');
+        osmdObj = new OSMD(canvas, false);
+        osmdObj.setLogLevel('info');
         document.body.appendChild(canvas);
 
         // Set resize event handler
@@ -102,7 +104,7 @@
                 var width = document.body.clientWidth;
                 canvas.width = width;
                 try {
-                OSMD.render();
+                osmdObj.render();
                 } catch (e) {}
                 enable();
             }
@@ -111,28 +113,28 @@
         window.addEventListener("keydown", function(e) {
             var event = window.event ? window.event : e;
             if (event.keyCode === 39) {
-                OSMD.cursor.next();
+                osmdObj.cursor.next();
             }
         });
         nextCursorBtn.addEventListener("click", function() {
-            OSMD.cursor.next();
+            osmdObj.cursor.next();
         });
         resetCursorBtn.addEventListener("click", function() {
-            OSMD.cursor.reset();
+            osmdObj.cursor.reset();
         });
         hideCursorBtn.addEventListener("click", function() {
-            OSMD.cursor.hide();
+            osmdObj.cursor.hide();
         });
         showCursorBtn.addEventListener("click", function() {
-            OSMD.cursor.show();
+            osmdObj.cursor.show();
         });
 
         backendSelect.addEventListener("change", function(e) {
             var value = e.target.value;
             // clears the canvas element
             canvas.innerHTML = "";
-            OSMD = new opensheetmusicdisplay.OSMD(canvas, false, value);
-            OSMD.setLogLevel('info');
+            osmdObj = new opensheetmusicdisplay.OSMD(canvas, false, value);
+            osmdObj.setLogLevel('info');
             selectOnChange();
 
         });
@@ -174,9 +176,9 @@
             str = folder + select.value;
         }
         zoom = 1.0;
-        OSMD.load(str).then(
+        osmdObj.load(str).then(
             function() {
-                return OSMD.render();
+                return osmdObj.render();
             },
             function(e) {
                 error("Error reading sheet: " + e);
@@ -208,8 +210,8 @@
     function scale() {
         disable();
         window.setTimeout(function(){
-            OSMD.zoom = zoom;
-            OSMD.render();
+            osmdObj.zoom = zoom;
+            osmdObj.render();
             enable();
         }, 0);
     }
