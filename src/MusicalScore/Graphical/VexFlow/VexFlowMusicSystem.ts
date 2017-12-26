@@ -4,10 +4,12 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {SystemLinePosition} from "../SystemLinePosition";
 import {StaffMeasure} from "../StaffMeasure";
 import {SystemLine} from "../SystemLine";
+import {VexFlowStaffLine} from "./VexFlowStaffLine";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {StaffLine} from "../StaffLine";
 import {EngravingRules} from "../EngravingRules";
+import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
@@ -50,7 +52,12 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param firstStaffLine the upper StaffLine (use a cast to get the VexFlowStaffLine) of the brace to create
      * @param lastStaffLine the lower StaffLine (use a cast to get the VexFlowStaffLine) of the brace to create
      */
-    protected createInstrumentBrace(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
+    protected createInstrumentBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
+        // You could write this in one line but the linter doesn't let me.
+        const firstVexStaff: VexFlowStaffLine = (firstStaffLine as VexFlowStaffLine);
+        const lastVexStaff: VexFlowStaffLine = (lastStaffLine as VexFlowStaffLine);
+        const vexFlowBracket: VexFlowInstrumentBracket = new VexFlowInstrumentBracket(firstVexStaff, lastVexStaff);
+        this.InstrumentBrackets.push(vexFlowBracket);
         return;
     }
 

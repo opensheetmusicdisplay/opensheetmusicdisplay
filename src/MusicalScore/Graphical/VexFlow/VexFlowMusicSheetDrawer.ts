@@ -9,6 +9,7 @@ import {GraphicalObject} from "../GraphicalObject";
 import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
+import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -83,8 +84,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
-    protected drawInstrumentBrace(bracket: GraphicalObject, system: MusicSystem): void {
-        // empty
+    protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
+        // Draw InstrumentBrackets at beginning of line
+        const vexBrace: VexFlowInstrumentBracket = (brace as VexFlowInstrumentBracket);
+        vexBrace.draw(this.backend.getContext());
     }
 
     protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {

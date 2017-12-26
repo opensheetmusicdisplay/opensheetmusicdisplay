@@ -2,14 +2,9 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-  // entry: [
-  //   './src/OSMD/OSMD.ts'
-  //   // TODO: Add demo.js where the webdev server is implemented
-  //   //
-  // ],
   entry: {
-    'osmd': './src/OSMD/OSMD.ts',
-    'demo': './demo/demo.js'
+    'osmd': './src/OSMD/OSMD.ts', // Main library
+    'demo': './demo/index.js' // Demo index
   },
   output: {
       path: path.resolve(__dirname, 'build'),
@@ -22,26 +17,38 @@ module.exports = {
    module: {
        loaders: [
            // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
-           { test: /\.tsx?$/, loader: 'ts-loader' }
+           { test: /\.tsx?$/, loader: 'ts-loader' },
+           // all files with a '.js' extension. Mostly for the web demo.
+           { test: /\.jsx?$/, loader: 'babel-loader', exclude: /(node_modules|bower_components)/,
+              query: {
+                presets: ['es2015'] 
+              }
+          },
        ]
    },
    plugins: [
      // build optimization plugins
      new webpack.LoaderOptionsPlugin({
       minimize: true,
-      debug: false
+      debug: true
     }),
-    new webpack.optimize.UglifyJsPlugin({
-        warnings: false,
-        beautify: false,
-        compress: true,
-        comments: false,
-        sourceMap: true
-      })
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery'
+    }),
+    // FIXME: use environment variable to control uglify.
+    // new webpack.optimize.UglifyJsPlugin({
+    //     warnings: false,
+    //     beautify: false,
+    //     compress: true,
+    //     comments: false,
+    //     sourceMap: true
+    //   })
   ],
   devServer: {
     contentBase: [
       path.join(__dirname, 'test/data'),
+      path.join(__dirname, 'build'),
       path.join(__dirname, 'demo')
       // TODO: fill in paths for demo data
     ],
