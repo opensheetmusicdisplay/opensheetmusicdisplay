@@ -39,7 +39,6 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
         this.PositionAndShape.AbsolutePosition.y = topY / unitInPixels;
         this.PositionAndShape.Size.height = (botY - topY) / unitInPixels;
         this.PositionAndShape.Size.width = 12 / unitInPixels; // width is always 12 -> vexflow implementation
-        console.log(this.PositionAndShape.AbsolutePosition, this.PositionAndShape.Size);
     }
 
     /**
