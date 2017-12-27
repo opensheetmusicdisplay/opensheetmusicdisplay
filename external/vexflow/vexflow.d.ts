@@ -110,6 +110,8 @@ declare namespace Vex {
 
             public getLineForY(y: number): number;
 
+            public getYForLine(y: number): number;
+
             public getModifiers(pos: any, cat: any): Clef[]; // FIXME
             public setContext(ctx: RenderContext): Stave;
 
@@ -220,6 +222,16 @@ declare namespace Vex {
             public setType(type: any): StaveConnector;
 
             public setContext(ctx: RenderContext): StaveConnector;
+
+            public top_stave: Stave;
+            
+            public bottom_stave: Stave;
+            
+            public thickness: number;
+
+            public width: number;
+
+            public x_shift: number;
 
             public draw(): void;
         }
