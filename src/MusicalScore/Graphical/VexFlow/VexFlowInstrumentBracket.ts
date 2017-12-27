@@ -3,6 +3,7 @@ import {GraphicalObject} from "../GraphicalObject";
 import {VexFlowStaffLine} from "./VexFlowStaffLine";
 import { BoundingBox } from "../BoundingBox";
 import { VexFlowMeasure } from "./VexFlowMeasure";
+import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 
 /**
  * Class that defines a instrument bracket at the beginning of a line.
@@ -13,11 +14,11 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
 
     constructor(firstVexFlowStaffLine: VexFlowStaffLine, lastVexFlowStaffLine: VexFlowStaffLine) {
         super();
-        // FIXME: B.Giesinger: Fill in sizes after calculation
-        this.boundingBox = new BoundingBox(this);
+        this.PositionAndShape = new BoundingBox(this);
         const firstVexMeasure: VexFlowMeasure = firstVexFlowStaffLine.Measures[0] as VexFlowMeasure;
         const lastVexMeasure: VexFlowMeasure = lastVexFlowStaffLine.Measures[0] as VexFlowMeasure;
         this.addConnector(firstVexMeasure.getVFStave(), lastVexMeasure.getVFStave(), Vex.Flow.StaveConnector.type.BRACE);
+
     }
 
     /**
@@ -25,7 +26,20 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
      * @param ctx Render Vexflow context
      */
     public draw(ctx: Vex.Flow.RenderContext): void {
+        // Draw vexflow brace. This sets the positions inside the connector.
         this.vexflowConnector.setContext(ctx).draw();
+        // Set bounding box
+        const con: Vex.Flow.StaveConnector = this.vexflowConnector;
+        // First line in first stave
+        let topY: number = con.top_stave.getYForLine(0);
+        // Last line in last stave
+        let botY: number = con.bottom_stave.getYForLine(con.bottom_stave.getNumLines() - 1) + con.thickness;
+        // Set bounding box position and size in OSMD units
+        this.PositionAndShape.AbsolutePosition.x = (con.top_stave.getX() - 2 + con.x_shift) / unitInPixels;
+        this.PositionAndShape.AbsolutePosition.y = topY / unitInPixels;
+        this.PositionAndShape.Size.height = (botY - topY) / unitInPixels;
+        this.PositionAndShape.Size.width = 12 / unitInPixels; // width is always 12 -> vexflow implementation
+        console.log(this.PositionAndShape.AbsolutePosition, this.PositionAndShape.Size);
     }
 
     /**
