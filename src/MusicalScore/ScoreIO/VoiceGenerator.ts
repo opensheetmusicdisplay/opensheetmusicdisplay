@@ -118,8 +118,8 @@ export class VoiceGenerator {
                 ? this.addRestNote(noteDuration)
                 : this.addSingleNote(noteNode, noteDuration, graceNote, chord, guitarPro);
             // (*)
-            //if (this.lyricsReader !== undefined && noteNode.element("lyric") !== undefined) {
-            //    this.lyricsReader.addLyricEntry(noteNode, this.currentVoiceEntry);
+            //if (this.lyricsReader !== undefined && noteNode.elements("lyric") !== undefined) {
+            //    this.lyricsReader.addLyricEntry(noteNode.elements("lyric"), this.currentVoiceEntry);
             //    this.voice.Parent.HasLyrics = true;
             //}
             let hasTupletCommand: boolean = false;

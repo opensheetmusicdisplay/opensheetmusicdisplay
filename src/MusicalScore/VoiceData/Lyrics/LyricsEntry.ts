@@ -2,7 +2,7 @@ import {LyricWord} from "./LyricsWord";
 import {VoiceEntry} from "../VoiceEntry";
 
 export class LyricsEntry {
-    constructor(text: string, word: LyricWord, parent: VoiceEntry) {
+    constructor(text: string, verseNumber: number, word: LyricWord, parent: VoiceEntry) {
         this.text = text;
         this.word = word;
         this.parent = parent;
@@ -10,6 +10,8 @@ export class LyricsEntry {
     private text: string;
     private word: LyricWord;
     private parent: VoiceEntry;
+    private verseNumber: number;
+    public extend: boolean;
 
     public get Text(): string {
         return this.text;
@@ -25,5 +27,9 @@ export class LyricsEntry {
     }
     public set Parent(value: VoiceEntry) {
         this.parent = value;
+    }
+
+    public get VerseNumber(): number {
+        return this.verseNumber;
     }
 }
