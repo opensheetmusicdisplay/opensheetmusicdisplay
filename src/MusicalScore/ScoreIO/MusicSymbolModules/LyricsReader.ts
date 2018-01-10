@@ -1,29 +1,11 @@
-﻿import {MusicSheet} from "../../MusicSheet";
-import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
+﻿import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
-import {Voice} from "../../VoiceData/Voice";
 import {IXmlElement} from "../../../Common/FileIO/Xml";
 import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 
 export class LyricsReader {
-    private musicSheet: MusicSheet;
     private openLyricWords: { [_: number]: LyricWord; } = {};
     private currentLyricWord: LyricWord;
-
-    private findFirstPreviousVoiceEntryWithoutRestNote(voiceEntry: VoiceEntry): VoiceEntry {
-        let voice: Voice = voiceEntry.ParentVoice;
-        let previousVoiceEntry: VoiceEntry = voice.VoiceEntries[voice.VoiceEntries.indexOf(voiceEntry) - 1];
-        let index: number = voice.VoiceEntries.indexOf(previousVoiceEntry);
-        while (previousVoiceEntry.Notes.length > 0 && previousVoiceEntry.Notes[0].Pitch === undefined) {
-            index--;
-            previousVoiceEntry = voice.VoiceEntries[index];
-        }
-        return previousVoiceEntry;
-    }
-
-    constructor(musicSheet: MusicSheet) {
-        this.musicSheet = musicSheet;
-    }
 
     /**
      * This method adds a single LyricEntry to a VoiceEntry
