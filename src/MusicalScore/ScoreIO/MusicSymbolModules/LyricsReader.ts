@@ -111,7 +111,7 @@ export class LyricsReader {
                             if (lyricsEntry !== undefined) {
                                 // only add the lyric entry if not another entry has already been given:
                                 if (!currentVoiceEntry.LyricsEntries[currentLyricVerseNumber] !== undefined) {
-                                    currentVoiceEntry.LyricsEntries[currentLyricVerseNumber] = lyricsEntry;
+                                    currentVoiceEntry.LyricsEntries.setValue(currentLyricVerseNumber, lyricsEntry);
                                 }
                                 // save in currentInstrument the verseNumber (only once)
                                 if (!currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers[currentLyricVerseNumber] !== undefined) {
@@ -121,10 +121,10 @@ export class LyricsReader {
                         }
                     }
                 } catch (err) {
+                    // FIXME: port error to TS
                     //let errorMsg: string = TextTranslation.translateText("ReaderErrorMessages/LyricError", "Error while reading lyric entry.");
                     //this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                    continue;
-                }
+                    continue;                }
             }
         }
     }

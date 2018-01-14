@@ -14,7 +14,6 @@ import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {GraphicalNote} from "./GraphicalNote";
 import {Beam} from "../VoiceData/Beam";
 import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
-import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {OrnamentContainer} from "../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../VoiceData/VoiceEntry";
@@ -263,7 +262,7 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
-    protected handleVoiceEntryLyrics(lyricsEntries: Dictionary<number, LyricsEntry>, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
+    protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
                                      openLyricWords: LyricWord[]): void {
         throw new Error("abstract, not implemented");
     }
@@ -736,7 +735,7 @@ export abstract class MusicSheetCalculator {
             this.checkVoiceEntriesForTechnicalInstructions(voiceEntry, graphicalStaffEntry);
         }
         if (voiceEntry.LyricsEntries.size() > 0) {
-            this.handleVoiceEntryLyrics(voiceEntry.LyricsEntries, voiceEntry, graphicalStaffEntry, openLyricWords);
+            this.handleVoiceEntryLyrics(voiceEntry, graphicalStaffEntry, openLyricWords);
         }
         if (voiceEntry.OrnamentContainer !== undefined) {
             this.handleVoiceEntryOrnaments(voiceEntry.OrnamentContainer, voiceEntry, graphicalStaffEntry);

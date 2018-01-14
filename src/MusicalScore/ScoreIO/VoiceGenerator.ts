@@ -16,6 +16,7 @@ import {ITextTranslation} from "../Interfaces/ITextTranslation";
 import {ArticulationEnum} from "../VoiceData/VoiceEntry";
 import {Slur} from "../VoiceData/Expressions/ContinuousExpressions/Slur";
 import {LyricsEntry} from "../VoiceData/Lyrics/LyricsEntry";
+import {LyricsReader} from "../ScoreIO/MusicSymbolModules/LyricsReader";
 import {MusicSheetReadingException} from "../Exceptions";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import {NoteEnum} from "../../Common/DataObjects/Pitch";
@@ -43,12 +44,12 @@ export class VoiceGenerator {
             this.voice = new Voice(instrument, voiceId);
         }
         instrument.Voices.push(this.voice);
-        //this.lyricsReader = MusicSymbolModuleFactory.createLyricsReader(this.musicSheet);
+        this.lyricsReader = new LyricsReader();
         //this.articulationReader = MusicSymbolModuleFactory.createArticulationReader();
     }
 
     // private slurReader: SlurReader;
-    //private lyricsReader: LyricsReader;
+    private lyricsReader: LyricsReader;
     //private articulationReader: ArticulationReader;
     private musicSheet: MusicSheet;
     private voice: Voice;
@@ -117,11 +118,11 @@ export class VoiceGenerator {
             this.currentNote = restNote
                 ? this.addRestNote(noteDuration)
                 : this.addSingleNote(noteNode, noteDuration, graceNote, chord, guitarPro);
-            // (*)
-            //if (this.lyricsReader !== undefined && noteNode.elements("lyric") !== undefined) {
-            //    this.lyricsReader.addLyricEntry(noteNode.elements("lyric"), this.currentVoiceEntry);
-            //    this.voice.Parent.HasLyrics = true;
-            //}
+
+            if (this.lyricsReader !== undefined && noteNode.elements("lyric") !== undefined) {
+               this.lyricsReader.addLyricEntry(noteNode.elements("lyric"), this.currentVoiceEntry);
+               this.voice.Parent.HasLyrics = true;
+            }
             let hasTupletCommand: boolean = false;
             const notationNode: IXmlElement = noteNode.element("notations");
             if (notationNode !== undefined) {
