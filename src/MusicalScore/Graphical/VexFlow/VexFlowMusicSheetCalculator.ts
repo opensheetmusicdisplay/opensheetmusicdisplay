@@ -16,12 +16,10 @@ import {Beam} from "../../VoiceData/Beam";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
-import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
@@ -29,12 +27,13 @@ import Vex = require("vexflow");
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
         super(new VexFlowGraphicalSymbolFactory());
-        let a: LyricsEntry = new LyricsEntry(undefined, undefined, undefined);
-        a = a;
+        // let a: LyricsEntry = new LyricsEntry(undefined, undefined, undefined);
+        // a = a;
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
     }
 
@@ -255,8 +254,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
     }
 
-    protected handleVoiceEntryLyrics(lyricsEntries: Dictionary<number, LyricsEntry>, voiceEntry: VoiceEntry,
-                                     graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
+    // TODO: openLyrics is always empty, GraphicalStaffEntry contains all voiceEntries but is also always empty.
+    protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
+        (graphicalStaffEntry as VexFlowStaffEntry).handlehandleVoiceEntryLyrics(voiceEntry, graphicalStaffEntry);
         return;
     }
 
