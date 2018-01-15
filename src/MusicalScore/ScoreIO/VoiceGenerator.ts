@@ -44,7 +44,7 @@ export class VoiceGenerator {
             this.voice = new Voice(instrument, voiceId);
         }
         instrument.Voices.push(this.voice);
-        this.lyricsReader = new LyricsReader();
+        this.lyricsReader = new LyricsReader(this.musicSheet);
         //this.articulationReader = MusicSymbolModuleFactory.createArticulationReader();
     }
 

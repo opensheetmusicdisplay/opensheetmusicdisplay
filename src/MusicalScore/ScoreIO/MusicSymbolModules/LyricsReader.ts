@@ -2,11 +2,17 @@
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {IXmlElement} from "../../../Common/FileIO/Xml";
 import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
+import {ITextTranslation} from "../../Interfaces/ITextTranslation";
+import {MusicSheet} from "../../MusicSheet";
 
 export class LyricsReader {
     private openLyricWords: { [_: number]: LyricWord; } = {};
     private currentLyricWord: LyricWord;
+    private musicSheet: MusicSheet;
 
+    constructor(musicSheet: MusicSheet) {
+        this.musicSheet = musicSheet;
+    }
     /**
      * This method adds a single LyricEntry to a VoiceEntry
      * @param {IXmlElement[]} lyricNodeList
@@ -69,9 +75,9 @@ export class LyricsReader {
                                             currentLyricVerseNumber = parseInt(result[1], 10);
                                         }
                                     } catch (err) {
-                                        //let errorMsg: string =
-                                        // TextTranslation.translateText("ReaderErrorMessages/LyricVerseNumberError", "Invalid lyric verse number");
-                                        //this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
+                                        let errorMsg: string =
+                                        ITextTranslation.translateText("ReaderErrorMessages/LyricVerseNumberError", "Invalid lyric verse number");
+                                        this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                                         continue;
                                     }
                                 }
@@ -121,10 +127,10 @@ export class LyricsReader {
                         }
                     }
                 } catch (err) {
-                    // FIXME: port error to TS
-                    //let errorMsg: string = TextTranslation.translateText("ReaderErrorMessages/LyricError", "Error while reading lyric entry.");
-                    //this.musicSheet.SheetErrors.AddErrorMessageInTempList(errorMsg);
-                    continue;                }
+                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/LyricError", "Error while reading lyric entry.");
+                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                    continue;
+                }
             }
         }
     }
