@@ -143,12 +143,12 @@ export class ExpressionReader {
         if (n !== undefined) {
             let tempoAttr: IXmlAttribute = n.attribute("tempo");
             let dynAttr: IXmlAttribute = n.attribute("dynamics");
-            if (tempoAttr !== undefined) {
+            if (tempoAttr) {
                 let match: string[] = tempoAttr.value.match(/\d+/);
                 this.soundTempo = match !== undefined ? parseInt(match[0], 10) : 100;
                 isTempoInstruction = true;
             }
-            if (dynAttr !== undefined) {
+            if (dynAttr) {
                 let match: string[] = dynAttr.value.match(/\d+/);
                 this.soundDynamic = match !== undefined ? parseInt(match[0], 10) : 100;
                 isDynamicInstruction = true;
