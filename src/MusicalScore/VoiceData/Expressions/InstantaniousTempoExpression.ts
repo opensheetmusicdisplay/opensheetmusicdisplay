@@ -5,7 +5,8 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "./MultiTempoExpression";
 
 export class InstantaniousTempoExpression extends AbstractTempoExpression {
-    constructor(label: string, placement: PlacementEnum, staffNumber: number, soundTempo: number, parentMultiTempoExpression: MultiTempoExpression) {
+    constructor(label: string, placement: PlacementEnum, staffNumber: number,
+                soundTempo: number, parentMultiTempoExpression: MultiTempoExpression, isMetronomeMark: boolean = false) {
         super(label, placement, staffNumber, parentMultiTempoExpression);
         this.setTempoAndTempoType(soundTempo);
     }

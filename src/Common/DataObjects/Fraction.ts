@@ -50,6 +50,11 @@ export class Fraction {
     return sum;
   }
 
+    public static multiply (f1: Fraction, f2: Fraction): Fraction {
+        return new Fraction ( (f1.wholeValue * f1.denominator + f1.numerator) * (f2.wholeValue * f2.denominator + f2.numerator),
+                              f1.denominator * f2.denominator);
+    }
+
   private static greatestCommonDenominator(a: number, b: number): number {
     if (a === 0) {
       return b;
