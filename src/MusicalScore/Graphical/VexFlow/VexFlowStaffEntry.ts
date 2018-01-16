@@ -4,8 +4,8 @@ import {SourceStaffEntry} from "../../VoiceData/SourceStaffEntry";
 import {GraphicalNote} from "../GraphicalNote";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
-//import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
-//import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
+import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
+import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -37,10 +37,11 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         return x / n / unitInPixels;
     }
 
-    public handlehandleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
+    public handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
         // FIXME: lyricsEntries is private. BUT it would seem that I should set these entries here.protected?
-        // voiceEntry.LyricsEntries.forEach((key: number, value: LyricsEntry) => {
-        //     this.lyricsEntries.push(new GraphicalLyricEntry(value, graphicalStaffEntry, 20, 20));
-        // });
+        voiceEntry.LyricsEntries.forEach((key: number, value: LyricsEntry) => {
+            const graphicalLyricsEntry: GraphicalLyricEntry = new GraphicalLyricEntry(value, graphicalStaffEntry, 1.3, 8);
+            this.LyricsEntries.push(graphicalLyricsEntry);
+        });
     }
 }
