@@ -28,6 +28,9 @@ import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
+import { PointF2D } from "../../../Common/DataObjects/PointF2D";
+import { GraphicalLabel } from "../GraphicalLabel";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -222,7 +225,83 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
     }
 
+    // FIXME: B.G. Adapt this function so that it uses the skyline calculation
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {
+        // let numberOfVerses: number = 0;
+        // let lyricsStartYPosition: number = this.rules.StaffHeight;
+        // const lyricsStaffEntriesList: GraphicalStaffEntry[] = new Array<GraphicalStaffEntry>();
+        // const skyBottomLineCalculator: number = 0;
+
+        // // first find maximum Ycoordinate for the whole StaffLine
+        // let len: number = staffLine.Measures.length;
+        // for (let idx: number = 0; idx < len; ++idx) {
+        //     const measure: StaffMeasure = staffLine.Measures[idx];
+        //     const measureRelativePosition: PointF2D = measure.PositionAndShape.RelativePosition;
+        //     const len2: number = measure.staffEntries.length;
+        //     for (let idx2: number = 0; idx2 < len2; ++idx2) {
+        //         const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
+        //         if (staffEntry.LyricsEntries.length > 0) {
+        //             lyricsStaffEntriesList.push(staffEntry);
+        //             numberOfVerses = Math.max(numberOfVerses, staffEntry.LyricsEntries.length);
+
+        //             // Position of Staffentry relative to StaffLine
+        //             const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +
+        //                                         measureRelativePosition.x;
+
+        //             let minMarginLeft: number = Number.MAX_VALUE;
+        //             let maxMarginRight: number = Number.MAX_VALUE;
+
+        //             // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
+        //             for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+        //                 const lyricsEntryLabel: GraphicalLabel = staffEntry.LyricsEntries[i].GraphicalLabel;
+        //                 minMarginLeft = Math.min(minMarginLeft, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginLeft);
+        //                 maxMarginRight = Math.max(maxMarginRight, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginRight);
+        //             }
+
+
+        //             // check BottomLine in this range and take the maximum between the two values
+        //             // float bottomLineMax = skyBottomLineCalculator.getBottomLineMaxInRange(staffLine, minMarginLeft, maxMarginRight);
+        //             // FIXME: There is no class SkyBottomLineCalculator -> Fix value
+        //             const bottomLineMax: number = 0.0;
+        //             lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax);
+        //         }
+        //     }
+        // }
+
+        // let maxPosition: number = 4.0;
+        // // iterate again through the Staffentries with LyricEntries
+        // len = lyricsStaffEntriesList.length;
+        // for (let idx: number = 0; idx < len; ++idx) {
+        //     const staffEntry: GraphicalStaffEntry = lyricsStaffEntriesList[idx];
+        //     // set LyricEntryLabel RelativePosition
+        //     for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+        //         const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
+        //         const lyricsEntryLabel: GraphicalLabel = lyricEntry.GraphicalLabel;
+
+        //         // read the verseNumber and get index of this number in the sorted LyricVerseNumbersList of Instrument
+        //         // eg verseNumbers: 2,3,4,6 => 1,2,3,4
+        //         const verseNumber: number = lyricEntry.GetLyricsEntry.VerseNumber;
+        //         const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
+        //         const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight;
+
+        //         // Y-position calculated according to aforementioned mapping
+        //         let position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
+        //         if (this.leadSheet) {
+        //             position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
+        //         }
+        //         lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(0, position);
+        //         maxPosition = Math.max(maxPosition, position);
+        //     }
+        // }
+
+        // // update BottomLine (on the whole StaffLine's length)
+        // if (lyricsStaffEntriesList.length > 0) {
+        //     const endX: number = staffLine.PositionAndShape.Size.width;
+        //     const startX: number = lyricsStaffEntriesList[0].PositionAndShape.RelativePosition.x +
+        //     lyricsStaffEntriesList[0].PositionAndShape.BorderMarginLeft +
+        //     lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;
+        //     // skyBottomLineCalculator.updateBottomLineInRange(staffLine, startX, endX, maxPosition);
+        // }
         return;
     }
 
@@ -256,7 +335,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // TODO: openLyrics is always empty, GraphicalStaffEntry contains all voiceEntries but is also always empty.
     protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
-        (graphicalStaffEntry as VexFlowStaffEntry).handlehandleVoiceEntryLyrics(voiceEntry, graphicalStaffEntry);
+        (graphicalStaffEntry as VexFlowStaffEntry).handleVoiceEntryLyrics(voiceEntry, graphicalStaffEntry);
         return;
     }
 

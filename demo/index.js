@@ -26,6 +26,7 @@ import { OSMD } from '../src/OSMD/OSMD';
             "Dichterliebe01": "Dichterliebe01.xml",
             "mandoline - debussy": "mandoline - debussy.xml",
             "MozartTrio": "MozartTrio.mxl",
+            "Cornelius P. Christbaum Opus 8.1": "Cornelius_P_Christbaum_Opus_8_1_1865.mxl",
         },
 
         zoom = 1.0,
@@ -133,7 +134,7 @@ import { OSMD } from '../src/OSMD/OSMD';
             var value = e.target.value;
             // clears the canvas element
             canvas.innerHTML = "";
-            osmdObj = new opensheetmusicdisplay.OSMD(canvas, false, value);
+            osmdObj = new OSMD(canvas, false, value);
             osmdObj.setLogLevel('info');
             selectOnChange();
 

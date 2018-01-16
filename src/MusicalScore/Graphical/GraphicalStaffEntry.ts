@@ -69,6 +69,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return this.lyricsEntries;
     }
 
+    public set LyricsEntries(value: GraphicalLyricEntry[]) {
+        this.lyricsEntries = value;
+    }
+
     /**
      * Calculate the absolute Timestamp.
      * @returns {Fraction}

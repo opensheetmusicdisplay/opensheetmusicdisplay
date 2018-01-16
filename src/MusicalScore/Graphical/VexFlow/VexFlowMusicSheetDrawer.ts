@@ -10,6 +10,7 @@ import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -82,6 +83,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (staffEntry.graphicalChordContainer !== undefined) {
             this.drawLabel(staffEntry.graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
         }
+        if (staffEntry.LyricsEntries.length > 0) {
+            this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
+        }
+    }
+
+    private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
+        // FIXME: drawing only works if absolutePositions are calculated here. Should also work in VexflowStaffEntry.handleVoiceEntryLyrics
+        lyricEntries.forEach(le => le.GraphicalLabel.PositionAndShape.calculateAbsolutePosition());
+        lyricEntries.forEach(lyricsEntry => this.drawLabel(lyricsEntry.GraphicalLabel, layer));
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
