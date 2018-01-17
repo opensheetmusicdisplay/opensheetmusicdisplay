@@ -28,9 +28,6 @@ import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
-import { PointF2D } from "../../../Common/DataObjects/PointF2D";
-import { GraphicalLabel } from "../GraphicalLabel";
-import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -226,7 +223,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     // FIXME: B.G. Adapt this function so that it uses the skyline calculation
-    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {
+    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
         // let numberOfVerses: number = 0;
         // let lyricsStartYPosition: number = this.rules.StaffHeight;
         // const lyricsStaffEntriesList: GraphicalStaffEntry[] = new Array<GraphicalStaffEntry>();
@@ -302,7 +299,31 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         //     lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;
         //     // skyBottomLineCalculator.updateBottomLineInRange(staffLine, startX, endX, maxPosition);
         // }
-        return;
+        // return lyricsStaffEntriesList;
+        return new Array<GraphicalStaffEntry>();
+    }
+
+    /**
+     * calculates the dashes of lyric words and the extending underscore lines of syllables sung on more than one note.
+     * @param lyricsStaffEntries
+     */
+    protected calculateLyricsExtendsAndDashes(lyricsStaffEntries: GraphicalStaffEntry[]): void {
+        // FIXME: methods calculateSingleLyricWord + calculateLyricExtend need to be ported. -> SkylineCalculator needed.
+        /*
+        for (let idx: number = 0, len: number = lyricsStaffEntries.length; idx < len; ++idx) {
+            let staffEntry: GraphicalStaffEntry = lyricsStaffEntries[idx];
+            for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+                let lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
+                let lyricsEntryLabel: GraphicalLabel = lyricEntry.GraphicalLabel;
+                if (lyricEntry.ParentLyricWord !== undefined && lyricEntry.ParentLyricWord.GraphicalLyricsEntries.Last() !== lyricEntry) {
+                    calculateSingleLyricWord(lyricEntry);
+                }
+                if (lyricEntry.GetLyricsEntry.extend) {
+                    calculateLyricExtend(lyricEntry);
+                }
+            }
+        }
+        */
     }
 
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
