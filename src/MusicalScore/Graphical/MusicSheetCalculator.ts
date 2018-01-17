@@ -322,7 +322,15 @@ export abstract class MusicSheetCalculator {
      * @param staffLine
      * @param lyricVersesNumber
      */
-    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {
+    protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
+        throw new Error("abstract, not implemented");
+    }
+
+    /**
+     * calculates the dashes of lyric words and the extending underscore lines of syllables sung on more than one note.
+     * @param lyricsStaffEntries
+     */
+    protected calculateLyricsExtendsAndDashes(lyricsStaffEntries: GraphicalStaffEntry[]): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -1617,19 +1625,35 @@ export abstract class MusicSheetCalculator {
     //}
 
     private calculateLyricsPosition(): void {
+        let lyricStaffEntriesDict: Dictionary<StaffLine, GraphicalStaffEntry[]> = new Dictionary<StaffLine, GraphicalStaffEntry[]>();
+        // sort the lyriceVerseNumbers for every Instrument that has Lyrics
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.ParentMusicSheet.Instruments.length; idx < len; ++idx) {
             const instrument: Instrument = this.graphicalMusicSheet.ParentMusicSheet.Instruments[idx];
             if (instrument.HasLyrics && instrument.LyricVersesNumbers.length > 0) {
                 instrument.LyricVersesNumbers.sort();
             }
         }
+        // first calc lyrics text positions
+        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
+            let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
+                    let staffLine: StaffLine = musicSystem.StaffLines[idx3];
+                    let lyricsStaffEntries: GraphicalStaffEntry[] =
+                        this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
+                    lyricStaffEntriesDict.setValue(staffLine, lyricsStaffEntries);
+                }
+            }
+        }
+        // the fill in the lyric word dashes and lyrics extends/underscores
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                 const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                 for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                    this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
+                    let staffLine: StaffLine = musicSystem.StaffLines[idx3];
+                    this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
                 }
             }
         }
