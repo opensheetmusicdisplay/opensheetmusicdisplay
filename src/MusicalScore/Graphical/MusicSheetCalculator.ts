@@ -1031,7 +1031,7 @@ export abstract class MusicSheetCalculator {
         if (this.graphicalMusicSheet.Title !== undefined) {
             const title: GraphicalLabel = this.graphicalMusicSheet.Title;
             title.PositionAndShape.Parent = page.PositionAndShape;
-            const relative: PointF2D = new PointF2D();
+            let relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
             title.PositionAndShape.RelativePosition = relative;
@@ -1040,7 +1040,7 @@ export abstract class MusicSheetCalculator {
         if (this.graphicalMusicSheet.Subtitle !== undefined) {
             const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
-            const relative: PointF2D = new PointF2D();
+            let relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
             subtitle.PositionAndShape.RelativePosition = relative;
