@@ -259,8 +259,6 @@ export class MusicSystemBuilder {
     private initMusicSystem(): MusicSystem {
         let musicSystem: MusicSystem = this.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
         this.currentMusicPage.MusicSystems.push(musicSystem);
-        let boundingBox: BoundingBox = musicSystem.PositionAndShape;
-        this.currentMusicPage.PositionAndShape.ChildElements.push(boundingBox);
         return musicSystem;
     }
 
@@ -334,7 +332,6 @@ export class MusicSystemBuilder {
             let staffLine: StaffLine = this.symbolFactory.createStaffLine(musicSystem, staff);
             musicSystem.StaffLines.push(staffLine);
             let boundingBox: BoundingBox = staffLine.PositionAndShape;
-            musicSystem.PositionAndShape.ChildElements.push(boundingBox);
             let relativePosition: PointF2D = new PointF2D();
             if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
                 relativePosition.x = this.rules.FirstSystemMargin;
@@ -631,6 +628,9 @@ export class MusicSystemBuilder {
         measure.PositionAndShape.BorderRight = width;
         currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
         measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
+        // The Staff - Measure connection in the bounding box does not exist until now. This is due to the creation
+        // of the Measures during calculation. The stafflines are not available at that time so we need to update the
+        // connection here
         currentSystem.StaffLines[visStaffIdx].PositionAndShape.ChildElements.push(measure.PositionAndShape);
         return width;
     }
@@ -650,6 +650,9 @@ export class MusicSystemBuilder {
                 let measure: StaffMeasure = gmeasures[visStaffIdx];
                 currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
                 measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
+                // The Staff - Measure connection in the bounding box does not exist until now. This is due to the creation
+                // of the Measures during calculation. The stafflines are not available at that time so we need to update the
+                // connection here
                 currentSystem.StaffLines[visStaffIdx].PositionAndShape.ChildElements.push(measure.PositionAndShape);
             }
             currentSystem.AddStaffMeasures(gmeasures);
