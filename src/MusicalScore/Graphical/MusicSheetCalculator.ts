@@ -1014,6 +1014,8 @@ export abstract class MusicSheetCalculator {
 
     protected calculatePageLabels(page: GraphicalMusicPage): void {
 
+        // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
+        // because the page are only available now
         let firstSystemAbsoluteTopMargin: number = 10;
         if (page.MusicSystems.length > 0) {
             let firstMusicSystem: MusicSystem = page.MusicSystems[0];
@@ -1022,6 +1024,7 @@ export abstract class MusicSheetCalculator {
         if (this.graphicalMusicSheet.Title !== undefined) {
             let title: GraphicalLabel = this.graphicalMusicSheet.Title;
             title.PositionAndShape.Parent = page.PositionAndShape;
+            page.PositionAndShape.ChildElements.push(title.PositionAndShape);
             let relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
@@ -1031,6 +1034,7 @@ export abstract class MusicSheetCalculator {
         if (this.graphicalMusicSheet.Subtitle !== undefined) {
             let subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
+            page.PositionAndShape.ChildElements.push(subtitle.PositionAndShape);
             let relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
@@ -1040,6 +1044,7 @@ export abstract class MusicSheetCalculator {
         if (this.graphicalMusicSheet.Composer !== undefined) {
             let composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
             composer.PositionAndShape.Parent = page.PositionAndShape;
+            page.PositionAndShape.ChildElements.push(composer.PositionAndShape);
             composer.setLabelPositionAndShapeBorders();
             let relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
@@ -1050,6 +1055,7 @@ export abstract class MusicSheetCalculator {
         if (this.graphicalMusicSheet.Lyricist !== undefined) {
             let lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
             lyricist.PositionAndShape.Parent = page.PositionAndShape;
+            page.PositionAndShape.ChildElements.push(lyricist.PositionAndShape);
             lyricist.setLabelPositionAndShapeBorders();
             let relative: PointF2D = new PointF2D();
             relative.x = this.rules.PageLeftMargin;
