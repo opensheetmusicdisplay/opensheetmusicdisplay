@@ -68,7 +68,7 @@ export class Tie extends BaseIdClass {
         this.noteHasBeenCreated = new Array(this.fractions.length);
     }
     public allGraphicalNotesHaveBeenCreated(): boolean {
-        for (let b of this.noteHasBeenCreated) {
+        for (const b of this.noteHasBeenCreated) {
             if (!b) {
                 return false;
             }

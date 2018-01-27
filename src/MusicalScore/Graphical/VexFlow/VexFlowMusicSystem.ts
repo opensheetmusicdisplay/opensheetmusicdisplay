@@ -21,7 +21,7 @@ export class VexFlowMusicSystem extends MusicSystem {
         if (this.staffLines.length === 0) {
             return;
         }
-        let width: number = this.calcBracketsWidth();
+        const width: number = this.calcBracketsWidth();
         this.boundingBox.BorderLeft = -width;
         this.boundingBox.BorderMarginLeft = -width;
         this.boundingBox.XBordersHaveBeenSet = true;

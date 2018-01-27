@@ -39,7 +39,7 @@ export class RhythmInstruction extends AbstractNotationInstruction {
     }
 
     public OperatorEquals(rhythm2: RhythmInstruction): boolean {
-        let rhythm1: RhythmInstruction = this;
+        const rhythm1: RhythmInstruction = this;
         if (rhythm1 === rhythm2) {
             return true;
         }
@@ -50,7 +50,7 @@ export class RhythmInstruction extends AbstractNotationInstruction {
     }
 
     public OperatorNotEqual(rhythm2: RhythmInstruction): boolean {
-        let rhythm1: RhythmInstruction = this;
+        const rhythm1: RhythmInstruction = this;
         return !(rhythm1 === rhythm2);
     }
 

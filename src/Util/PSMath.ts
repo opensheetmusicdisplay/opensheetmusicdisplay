@@ -26,7 +26,7 @@ export class PSMath {
         let sumWeigtedValues: number = 0;
         let sumWeights: number = 0;
         for (let i: number = 0; i < values.length; i++) {
-            let weight: number = weights[i];
+            const weight: number = weights[i];
             sumWeigtedValues += values[i] * weight;
             sumWeights += weight;
         }

@@ -94,16 +94,16 @@ export class SubInstrument {
         // FIXME: test this function
         try {
             if (instrumentType) {
-                let tmpName: string = instrumentType.toLowerCase().trim();
-                for (let key in SubInstrument.midiInstrument) {
+                const tmpName: string = instrumentType.toLowerCase().trim();
+                for (const key in SubInstrument.midiInstrument) {
                     if (tmpName.indexOf(key) !== -1) {
                         return key;
                     }
                 }
             }
             if (this.parentInstrument.Name) {
-                let tmpName: string = this.parentInstrument.Name.toLowerCase().trim();
-                for (let key in SubInstrument.midiInstrument) {
+                const tmpName: string = this.parentInstrument.Name.toLowerCase().trim();
+                for (const key in SubInstrument.midiInstrument) {
                     if (tmpName.indexOf(key) !== -1) {
                         return key;
                     }

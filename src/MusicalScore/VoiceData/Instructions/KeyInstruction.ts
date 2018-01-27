@@ -21,12 +21,12 @@ export class KeyInstruction extends AbstractNotationInstruction {
     private mode: KeyEnum;
 
     public static copy(keyInstruction: KeyInstruction): KeyInstruction {
-        let newKeyInstruction: KeyInstruction = new KeyInstruction(keyInstruction.parent, keyInstruction.Key, keyInstruction.Mode);
+        const newKeyInstruction: KeyInstruction = new KeyInstruction(keyInstruction.parent, keyInstruction.Key, keyInstruction.Mode);
         return newKeyInstruction;
     }
 
     public static getNoteEnumList(instruction: KeyInstruction): NoteEnum[] {
-        let enums: NoteEnum[] = [];
+        const enums: NoteEnum[] = [];
         if (instruction.keyType > 0) {
             for (let i: number = 0; i < instruction.keyType; i++) {
                 enums.push(KeyInstruction.sharpPositionList[i]);
@@ -41,9 +41,9 @@ export class KeyInstruction extends AbstractNotationInstruction {
     }
 
     public static getAllPossibleMajorKeyInstructions(): KeyInstruction[] {
-        let keyInstructionList: KeyInstruction[] = [];
+        const keyInstructionList: KeyInstruction[] = [];
         for (let keyType: number = -7; keyType < 7; keyType++) {
-            let currentKeyInstruction: KeyInstruction = new KeyInstruction(undefined, keyType, KeyEnum.major);
+            const currentKeyInstruction: KeyInstruction = new KeyInstruction(undefined, keyType, KeyEnum.major);
             keyInstructionList.push(currentKeyInstruction);
         }
         return keyInstructionList;
@@ -66,7 +66,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
     }
 
     public getFundamentalNotesOfAccidentals(): NoteEnum[] {
-        let noteList: NoteEnum[] = [];
+        const noteList: NoteEnum[] = [];
         if (this.keyType > 0) {
             for (let i: number = 0; i < this.keyType; i++) {
                 noteList.push(KeyInstruction.sharpPositionList[i]);
@@ -93,7 +93,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
     }
 
     public OperatorEquals(key2: KeyInstruction): boolean {
-        let key1: KeyInstruction = this;
+        const key1: KeyInstruction = this;
         if (key1 === key2) {
             return true;
         }
