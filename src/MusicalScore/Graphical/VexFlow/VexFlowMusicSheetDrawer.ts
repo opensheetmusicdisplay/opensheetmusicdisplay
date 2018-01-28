@@ -88,9 +88,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
+    /**
+     * Draw all lyrics to the canvas
+     * @param lyricEntries Array of lyric entries to be drawn
+     * @param layer Number of the layer that the lyrics should be drawn in
+     */
     private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
-        // FIXME: drawing only works if absolutePositions are calculated here. Should also work in VexflowStaffEntry.handleVoiceEntryLyrics
-        lyricEntries.forEach(le => le.GraphicalLabel.PositionAndShape.calculateAbsolutePosition());
         lyricEntries.forEach(lyricsEntry => this.drawLabel(lyricsEntry.GraphicalLabel, layer));
     }
 

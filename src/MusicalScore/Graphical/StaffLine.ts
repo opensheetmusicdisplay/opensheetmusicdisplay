@@ -81,7 +81,7 @@ export abstract class StaffLine extends GraphicalObject {
         let staffLinePsi: BoundingBox = this.PositionAndShape;
         activitySymbol.PositionAndShape.RelativePosition =
             new PointF2D(staffLinePsi.RelativePosition.x + staffLinePsi.BorderRight + 0.5, staffLinePsi.RelativePosition.y + 0.5);
-        //this.parentMusicSystem.PositionAndShape.ChildElements.push(activitySymbol.PositionAndShape);
+        activitySymbol.PositionAndShape.Parent = this.parentMusicSystem.PositionAndShape;
     }
 
     /**
