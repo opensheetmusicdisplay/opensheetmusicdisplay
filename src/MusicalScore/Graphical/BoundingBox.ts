@@ -39,13 +39,13 @@ export class BoundingBox {
      * @param parent Parent bounding box of an object in a higher hierarchy position
      * @param connectChildToParent Create a child to parent relationship too. Will be true by default
      */
-    constructor(dataObject: Object = undefined, parent: BoundingBox = undefined, connectChildToParent: boolean = true) {
+    constructor(dataObject: Object = undefined, parent: BoundingBox = undefined) {
         this.parent = parent;
         this.dataObject = dataObject;
         this.xBordersHaveBeenSet = false;
         this.yBordersHaveBeenSet = false;
-        if (parent !== undefined && connectChildToParent) {
-            parent.ChildElements.push(this);
+        if (parent !== undefined) {
+            this.Parent = parent;
         }
     }
 
