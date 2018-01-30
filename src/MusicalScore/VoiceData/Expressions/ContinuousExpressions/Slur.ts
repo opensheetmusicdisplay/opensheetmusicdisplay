@@ -24,7 +24,7 @@ export class Slur {
     public startNoteHasMoreStartingSlurs(): boolean {
         if (this.startNote === undefined) { return false; }
         for (let idx: number = 0, len: number = this.startNote.NoteSlurs.length; idx < len; ++idx) {
-            let slur: Slur = this.startNote.NoteSlurs[idx];
+            const slur: Slur = this.startNote.NoteSlurs[idx];
             if (slur !== this && slur.StartNote === this.startNote) {
                 return true;
             }
@@ -34,7 +34,7 @@ export class Slur {
     public endNoteHasMoreEndingSlurs(): boolean {
         if (this.endNote === undefined) { return false; }
         for (let idx: number = 0, len: number = this.endNote.NoteSlurs.length; idx < len; ++idx) {
-            let slur: Slur = this.endNote.NoteSlurs[idx];
+            const slur: Slur = this.endNote.NoteSlurs[idx];
             if (slur !== this && slur.EndNote === this.endNote) {
                 return true;
             }
@@ -48,9 +48,9 @@ export class Slur {
         if (this.endNote === undefined || this.startNote === undefined) {
             return false;
         }
-        let length: Fraction = Fraction.minus(this.endNote.getAbsoluteTimestamp(), this.startNote.getAbsoluteTimestamp());
+        const length: Fraction = Fraction.minus(this.endNote.getAbsoluteTimestamp(), this.startNote.getAbsoluteTimestamp());
         for (let idx: number = 0, len: number = this.startNote.NoteSlurs.length; idx < len; ++idx) {
-            let slur: Slur = this.startNote.NoteSlurs[idx];
+            const slur: Slur = this.startNote.NoteSlurs[idx];
             if (
                 slur !== this
                 && slur.EndNote !== undefined
@@ -61,7 +61,7 @@ export class Slur {
             }
         }
         for (let idx: number = 0, len: number = this.endNote.NoteSlurs.length; idx < len; ++idx) {
-            let slur: Slur = this.endNote.NoteSlurs[idx];
+            const slur: Slur = this.endNote.NoteSlurs[idx];
             if (
                 slur !== this
                 && slur.EndNote !== undefined

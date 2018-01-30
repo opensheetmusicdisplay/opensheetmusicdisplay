@@ -38,8 +38,8 @@ export class VerticalGraphicalStaffEntryContainer {
     }
 
     public static compareByTimestamp(x: VerticalGraphicalStaffEntryContainer, y: VerticalGraphicalStaffEntryContainer): number {
-        let xValue: number = x.absoluteTimestamp.RealValue;
-        let yValue: number = y.absoluteTimestamp.RealValue;
+        const xValue: number = x.absoluteTimestamp.RealValue;
+        const yValue: number = y.absoluteTimestamp.RealValue;
 
         if (xValue < yValue) {
             return -1;
@@ -56,7 +56,7 @@ export class VerticalGraphicalStaffEntryContainer {
      */
     public getFirstNonNullStaffEntry(): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
+            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             if (graphicalStaffEntry !== undefined) {
                 return graphicalStaffEntry;
             }

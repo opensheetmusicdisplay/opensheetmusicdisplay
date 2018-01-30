@@ -43,7 +43,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                       heightInPixel: number, screenPosition: PointF2D): void  {
-        let old: string = this.canvasRenderingCtx.font;
+        const old: string = this.canvasRenderingCtx.font;
         this.canvasRenderingCtx.font = VexFlowConverter.font(
             fontHeight,
             fontStyle,
@@ -53,7 +53,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvasRenderingCtx.font = old;
     }
     public renderRectangle(rectangle: RectangleF2D, styleId: number): void {
-        let old: string | CanvasGradient | CanvasPattern = this.canvasRenderingCtx.fillStyle;
+        const old: string | CanvasGradient | CanvasPattern = this.canvasRenderingCtx.fillStyle;
         this.canvasRenderingCtx.fillStyle = VexFlowConverter.style(styleId);
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         this.canvasRenderingCtx.fillStyle = old;

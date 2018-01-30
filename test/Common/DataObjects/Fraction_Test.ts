@@ -5,7 +5,7 @@ import { Fraction } from "../../../src/Common/DataObjects/Fraction";
 
 describe("Fraction Unit Tests:", () => {
     describe("Construct Fraction, check properties", () => {
-        let f1: Fraction = new Fraction(2, 6);
+        const f1: Fraction = new Fraction(2, 6);
 
         it("Numerator and Denominator", (done: MochaDone) => {
             chai.expect(f1.Numerator).to.equal(1);
@@ -21,7 +21,7 @@ describe("Fraction Unit Tests:", () => {
     describe("Compare fractions", () => {
       let f1: Fraction;
       let f2: Fraction;
-      let rand: () => number = function(): number {
+      const rand: () => number = function(): number {
         return Math.floor(Math.random() * 500) + 1;
       };
       it("lt attribute", (done: MochaDone) => {

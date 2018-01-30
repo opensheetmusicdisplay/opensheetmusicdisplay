@@ -8,16 +8,16 @@ import * as log from "loglevel";
 
 export class ChordSymbolReader {
     public static readChordSymbol(xmlNode: IXmlElement, musicSheet: MusicSheet, activeKey: KeyInstruction): ChordSymbolContainer {
-        let root: IXmlElement = xmlNode.element("root");
-        let kind: IXmlElement = xmlNode.element("kind");
+        const root: IXmlElement = xmlNode.element("root");
+        const kind: IXmlElement = xmlNode.element("kind");
 
         // must be always present
         if (root === undefined || kind === undefined) {
           return undefined;
         }
 
-        let rootStep: IXmlElement = root.element("root-step");
-        let rootAlter: IXmlElement = root.element("root-alter");
+        const rootStep: IXmlElement = root.element("root-step");
+        const rootAlter: IXmlElement = root.element("root-alter");
 
         // a valid NoteEnum value should be present
         if (rootStep === undefined) {
@@ -27,8 +27,8 @@ export class ChordSymbolReader {
         try {
             rootNote = NoteEnum[rootStep.value.trim()];
         } catch (ex) {
-            let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                  "Invalid chord symbol");
+            const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                    "Invalid chord symbol");
             musicSheet.SheetErrors.pushMeasureError(errorMsg);
             log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
             return undefined;
@@ -40,22 +40,22 @@ export class ChordSymbolReader {
             try {
                 rootAlteration = <AccidentalEnum>parseInt(rootAlter.value, undefined);
             } catch (ex) {
-                let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                      "Invalid chord symbol");
+                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                        "Invalid chord symbol");
                 musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
             }
 
         }
         // using default octave value, to be changed later
-        let rootPitch: Pitch = new Pitch(rootNote, 1, rootAlteration);
-        let kindValue: string = kind.value.trim().replace("-", "");
+        const rootPitch: Pitch = new Pitch(rootNote, 1, rootAlteration);
+        const kindValue: string = kind.value.trim().replace("-", "");
         let chordKind: ChordSymbolEnum;
         try {
             chordKind = ChordSymbolEnum[kindValue];
         } catch (ex) {
-            let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                  "Invalid chord symbol");
+            const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                    "Invalid chord symbol");
             musicSheet.SheetErrors.pushMeasureError(errorMsg);
             log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
             return undefined;
@@ -63,17 +63,17 @@ export class ChordSymbolReader {
 
         // bass is optional
         let bassPitch: Pitch = undefined;
-        let bass: IXmlElement = xmlNode.element("bass");
+        const bass: IXmlElement = xmlNode.element("bass");
         if (bass !== undefined) {
-            let bassStep: IXmlElement = bass.element("bass-step");
-            let bassAlter: IXmlElement = bass.element("bass-alter");
+            const bassStep: IXmlElement = bass.element("bass-step");
+            const bassAlter: IXmlElement = bass.element("bass-alter");
             let bassNote: NoteEnum = NoteEnum.C;
             if (bassStep !== undefined) {
                 try {
                     bassNote = NoteEnum[bassStep.value.trim()];
                 } catch (ex) {
-                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                          "Invalid chord symbol");
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                            "Invalid chord symbol");
                     musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                     return undefined;
@@ -84,8 +84,8 @@ export class ChordSymbolReader {
                 try {
                     bassAlteration = <AccidentalEnum>parseInt(bassAlter.value, undefined);
                 } catch (ex) {
-                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                          "Invalid chord symbol");
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                            "Invalid chord symbol");
                     musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                 }
@@ -95,11 +95,11 @@ export class ChordSymbolReader {
 
         // degree is optional
         let degree: Degree = undefined;
-        let degreeNode: IXmlElement = xmlNode.element("degree");
+        const degreeNode: IXmlElement = xmlNode.element("degree");
         if (degreeNode !== undefined) {
-            let degreeValue: IXmlElement = degreeNode.element("degree-value");
-            let degreeAlter: IXmlElement = degreeNode.element("degree-alter");
-            let degreeType: IXmlElement = degreeNode.element("degree-type");
+            const degreeValue: IXmlElement = degreeNode.element("degree-value");
+            const degreeAlter: IXmlElement = degreeNode.element("degree-alter");
+            const degreeType: IXmlElement = degreeNode.element("degree-type");
             if (degreeValue === undefined || degreeAlter === undefined || degreeType === undefined) {
               return undefined;
             }
@@ -108,8 +108,8 @@ export class ChordSymbolReader {
             try {
                 value = parseInt(degreeValue.value.trim(), undefined);
             } catch (ex) {
-                let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                      "Invalid chord symbol");
+                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                        "Invalid chord symbol");
                 musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                 return undefined;
@@ -119,8 +119,8 @@ export class ChordSymbolReader {
             try {
                 alter = <AccidentalEnum>parseInt(degreeAlter.value, undefined);
             } catch (ex) {
-                let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                      "Invalid chord symbol");
+                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                        "Invalid chord symbol");
                 musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                 return undefined;
@@ -130,8 +130,8 @@ export class ChordSymbolReader {
             try {
                 text = ChordDegreeText[degreeType.value.trim().toLowerCase()];
             } catch (ex) {
-                let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
-                                                                      "Invalid chord symbol");
+                const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/ChordSymbolError",
+                                                                        "Invalid chord symbol");
                 musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 log.debug("InstrumentReader.readChordSymbol", errorMsg, ex);
                 return undefined;

@@ -72,7 +72,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         measure.draw(this.backend.getContext());
 
         // Draw the StaffEntries
-        for (let staffEntry of measure.staffEntries) {
+        for (const staffEntry of measure.staffEntries) {
             this.drawStaffEntry(staffEntry);
         }
     }

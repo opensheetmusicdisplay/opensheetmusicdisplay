@@ -4,8 +4,8 @@ import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 
 /* tslint:disable:no-unused-expression */
 describe("Music Sheet Reader", () => {
-    let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
-    let reader: MusicSheetReader = new MusicSheetReader();
+    const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
+    const reader: MusicSheetReader = new MusicSheetReader();
     let score: IXmlElement;
     let sheet: MusicSheet;
 
@@ -15,7 +15,7 @@ describe("Music Sheet Reader", () => {
 
     before((): void => {
         // Load the xml file
-        let doc: Document = getSheet(path);
+        const doc: Document = getSheet(path);
         chai.expect(doc).to.not.be.undefined;
         score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
         // chai.expect(score).to.not.be.undefined;
