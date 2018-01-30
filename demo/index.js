@@ -26,6 +26,8 @@ import { OSMD } from '../src/OSMD/OSMD';
             "Dichterliebe01": "Dichterliebe01.xml",
             "mandoline - debussy": "mandoline - debussy.xml",
             "MozartTrio": "MozartTrio.mxl",
+            "Cornelius P. Christbaum Opus 8.1": "Cornelius_P_Christbaum_Opus_8_1_1865.mxl",
+            "France Levasseur - Parlez Mois": "Parlez-moi.mxl",
         },
 
         zoom = 1.0,

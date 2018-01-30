@@ -259,8 +259,6 @@ export class MusicSystemBuilder {
     private initMusicSystem(): MusicSystem {
         const musicSystem: MusicSystem = this.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
         this.currentMusicPage.MusicSystems.push(musicSystem);
-        const boundingBox: BoundingBox = musicSystem.PositionAndShape;
-        this.currentMusicPage.PositionAndShape.ChildElements.push(boundingBox);
         return musicSystem;
     }
 
@@ -334,7 +332,6 @@ export class MusicSystemBuilder {
             const staffLine: StaffLine = this.symbolFactory.createStaffLine(musicSystem, staff);
             musicSystem.StaffLines.push(staffLine);
             const boundingBox: BoundingBox = staffLine.PositionAndShape;
-            musicSystem.PositionAndShape.ChildElements.push(boundingBox);
             const relativePosition: PointF2D = new PointF2D();
             if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
                 relativePosition.x = this.rules.FirstSystemMargin;
@@ -631,7 +628,6 @@ export class MusicSystemBuilder {
         measure.PositionAndShape.BorderRight = width;
         currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
         measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
-        currentSystem.StaffLines[visStaffIdx].PositionAndShape.ChildElements.push(measure.PositionAndShape);
         return width;
     }
 
@@ -650,7 +646,6 @@ export class MusicSystemBuilder {
                 const measure: StaffMeasure = gmeasures[visStaffIdx];
                 currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
                 measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
-                currentSystem.StaffLines[visStaffIdx].PositionAndShape.ChildElements.push(measure.PositionAndShape);
             }
             currentSystem.AddStaffMeasures(gmeasures);
         }

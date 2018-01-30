@@ -119,7 +119,6 @@ export abstract class MusicSystem extends GraphicalObject {
         const leftSystemLine: SystemLine = this.createSystemLine(xPosition, lineWidth, SystemLinesEnum.SingleThin,
                                                                  SystemLinePosition.MeasureBegin, this, top, bottom);
         this.SystemLines.push(leftSystemLine);
-        this.boundingBox.ChildElements.push(leftSystemLine.PositionAndShape);
         leftSystemLine.PositionAndShape.RelativePosition = new PointF2D(xPosition, 0);
         leftSystemLine.PositionAndShape.BorderLeft = 0;
         leftSystemLine.PositionAndShape.BorderRight = lineWidth;
@@ -155,7 +154,6 @@ export abstract class MusicSystem extends GraphicalObject {
             singleVerticalLineAfterMeasure.PositionAndShape.BorderLeft = 0;
             singleVerticalLineAfterMeasure.PositionAndShape.BorderRight = lineWidth;
             this.SystemLines.push(singleVerticalLineAfterMeasure);
-            this.boundingBox.ChildElements.push(singleVerticalLineAfterMeasure.PositionAndShape);
         }
     }
 
@@ -276,7 +274,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(graphicalLabel, instrument);
-                this.boundingBox.ChildElements.push(graphicalLabel.PositionAndShape);
+                //graphicalLabel.PositionAndShape.Parent = this.PositionAndShape;
 
                 // X-Position will be 0 (Label starts at the same PointF_2D with MusicSystem)
                 // Y-Position will be calculated after the y-Spacing

@@ -279,7 +279,6 @@ export abstract class StaffMeasure extends GraphicalObject {
 
     public addGraphicalStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
         this.staffEntries.push(graphicalStaffEntry);
-        this.PositionAndShape.ChildElements.push(graphicalStaffEntry.PositionAndShape);
     }
 
     /**
@@ -301,7 +300,6 @@ export abstract class StaffMeasure extends GraphicalObject {
                     }
                 }
             }
-            this.PositionAndShape.ChildElements.push(staffEntry.PositionAndShape);
         }
     }
 

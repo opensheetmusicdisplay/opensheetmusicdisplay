@@ -5,6 +5,9 @@ import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 
 /**
  * A bounding box delimits an area on the 2D plane.
+ * @param dataObject Graphical object where the bounding box will be attached
+ * @param parent Parent bounding box of an object in a higher hierarchy position
+ * @param connectChildToParent Create a child to parent relationship too. Will be true by default
  */
 export class BoundingBox {
     protected isSymbol: boolean = false;
@@ -30,12 +33,20 @@ export class BoundingBox {
     protected childElements: BoundingBox[] = [];
     protected parent: BoundingBox;
     protected dataObject: Object;
-
+    /**
+     * Create a bounding box
+     * @param dataObject Graphical object where the bounding box will be attached
+     * @param parent Parent bounding box of an object in a higher hierarchy position
+     * @param connectChildToParent Create a child to parent relationship too. Will be true by default
+     */
     constructor(dataObject: Object = undefined, parent: BoundingBox = undefined) {
         this.parent = parent;
         this.dataObject = dataObject;
         this.xBordersHaveBeenSet = false;
         this.yBordersHaveBeenSet = false;
+        if (parent !== undefined) {
+            this.Parent = parent;
+        }
     }
 
     public get RelativePositionHasBeenSet(): boolean {
@@ -189,6 +200,12 @@ export class BoundingBox {
 
     public set Parent(value: BoundingBox) {
         this.parent = value;
+        if (this.parent.ChildElements.indexOf(this) > -1) {
+            console.error("BoundingBox of " + (this.dataObject.constructor as any).name +
+            " already in children list of " + (this.parent.dataObject.constructor as any).name + "'s BoundingBox");
+        } else {
+            this.parent.ChildElements.push(this);
+        }
     }
 
     public get DataObject(): Object {

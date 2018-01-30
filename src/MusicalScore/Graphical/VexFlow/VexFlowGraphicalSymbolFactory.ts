@@ -184,6 +184,5 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
       graphicalLabel.setLabelPositionAndShapeBorders();
       graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
       graphicalStaffEntry.graphicalChordContainer = graphicalChordSymbolContainer;
-      graphicalStaffEntry.PositionAndShape.ChildElements.push(graphicalChordSymbolContainer.PositionAndShape);
     }
 }
