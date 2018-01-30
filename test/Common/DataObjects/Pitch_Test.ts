@@ -2,10 +2,10 @@ import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects
 
 describe("Pitch Unit Tests:", () => {
     describe("transpose Pitch", () => {
-        let pitch: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
-        let transposedFundamentalAndOctave: {value: number; overflow: number; } =
+        const pitch: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
+        const transposedFundamentalAndOctave: {value: number; overflow: number; } =
           Pitch.CalculateTransposedHalfTone(pitch, 12);
-        let higherTransposedFundamentalAndOctave: {value: number; overflow: number; } =
+        const higherTransposedFundamentalAndOctave: {value: number; overflow: number; } =
           Pitch.CalculateTransposedHalfTone(pitch, 26);
 
         it("should be 1 octave higher and same fundamental", (done: MochaDone) => {
@@ -18,13 +18,13 @@ describe("Pitch Unit Tests:", () => {
     });
 
     describe("calculate Frequency from Pitch", () => {
-        let pitch1: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
-        let pitch2: Pitch = new Pitch(NoteEnum.B, 1, AccidentalEnum.DOUBLEFLAT);
-        let pitch3: Pitch = new Pitch(NoteEnum.G, 1, AccidentalEnum.DOUBLESHARP);
+        const pitch1: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
+        const pitch2: Pitch = new Pitch(NoteEnum.B, 1, AccidentalEnum.DOUBLEFLAT);
+        const pitch3: Pitch = new Pitch(NoteEnum.G, 1, AccidentalEnum.DOUBLESHARP);
 
-        let frequency1: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch1.Frequency));
-        let frequency2: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch2.Frequency));
-        let frequency3: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch3.Frequency));
+        const frequency1: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch1.Frequency));
+        const frequency2: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch2.Frequency));
+        const frequency3: number = Pitch.calcFrequency(Pitch.calcFractionalKey(pitch3.Frequency));
 
         it("should be 440Hz", (done: MochaDone) => {
             chai.expect(pitch1.Frequency).to.equal(440);
@@ -39,17 +39,17 @@ describe("Pitch Unit Tests:", () => {
 
     describe("calculate fractional key", () => {
         // the values are validated against the C# output. TODO: ask mauz about the shift
-        let pitch1: Pitch = new Pitch(NoteEnum.C, 6, AccidentalEnum.SHARP);   // C#6 -> 109
-        let pitch2: Pitch = new Pitch(NoteEnum.B, 1, AccidentalEnum.NONE);    // B1 -> 59
-        let pitch3: Pitch = new Pitch(NoteEnum.F, 4, AccidentalEnum.DOUBLEFLAT);  // Fbb4 -> 87
-        let pitch4: Pitch = new Pitch(NoteEnum.E, -1, AccidentalEnum.DOUBLESHARP);    // E##-1 -> 30
-        let pitch5: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);    // A1 -> 57
+        const pitch1: Pitch = new Pitch(NoteEnum.C, 6, AccidentalEnum.SHARP);   // C#6 -> 109
+        const pitch2: Pitch = new Pitch(NoteEnum.B, 1, AccidentalEnum.NONE);    // B1 -> 59
+        const pitch3: Pitch = new Pitch(NoteEnum.F, 4, AccidentalEnum.DOUBLEFLAT);  // Fbb4 -> 87
+        const pitch4: Pitch = new Pitch(NoteEnum.E, -1, AccidentalEnum.DOUBLESHARP);    // E##-1 -> 30
+        const pitch5: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);    // A1 -> 57
 
-        let key1: number = Pitch.calcFractionalKey(pitch1.Frequency);
-        let key2: number = Pitch.calcFractionalKey(pitch2.Frequency);
-        let key3: number = Pitch.calcFractionalKey(pitch3.Frequency);
-        let key4: number = Pitch.calcFractionalKey(pitch4.Frequency);
-        let key5: number = Pitch.calcFractionalKey(pitch5.Frequency);
+        const key1: number = Pitch.calcFractionalKey(pitch1.Frequency);
+        const key2: number = Pitch.calcFractionalKey(pitch2.Frequency);
+        const key3: number = Pitch.calcFractionalKey(pitch3.Frequency);
+        const key4: number = Pitch.calcFractionalKey(pitch4.Frequency);
+        const key5: number = Pitch.calcFractionalKey(pitch5.Frequency);
 
         it("pitch key should equal midi key", (done: MochaDone) => {
             chai.expect(key1).to.equal(109);
@@ -62,8 +62,8 @@ describe("Pitch Unit Tests:", () => {
     });
 
     describe("calculate Pitch from Frequency", () => {
-        let octave: number = 1;
-        let accidentals: number[] = [AccidentalEnum.DOUBLEFLAT,
+        const octave: number = 1;
+        const accidentals: number[] = [AccidentalEnum.DOUBLEFLAT,
             AccidentalEnum.FLAT,
             AccidentalEnum.NONE,
             AccidentalEnum.SHARP,
@@ -90,8 +90,8 @@ describe("Pitch Unit Tests:", () => {
     });
 
     describe("get Pitch from fractional key", () => {
-        let octave: number = 5;
-        let accidentals: number[] = [AccidentalEnum.DOUBLEFLAT,
+        const octave: number = 5;
+        const accidentals: number[] = [AccidentalEnum.DOUBLEFLAT,
             AccidentalEnum.FLAT,
             AccidentalEnum.NONE,
             AccidentalEnum.SHARP,
@@ -104,7 +104,7 @@ describe("Pitch Unit Tests:", () => {
         for (let i: number = 0; i < Pitch.pitchEnumValues.length; i++) {
             for (let j: number = 0; j < accidentals.length; j++) {
                 pitch = new Pitch(Pitch.pitchEnumValues[i], octave, accidentals[j]);
-                let halftone: number = pitch.getHalfTone();
+                const halftone: number = pitch.getHalfTone();
                 calcedPitch = Pitch.fromHalftone(halftone);
 
                 it( "calcedPitch equals original, " +

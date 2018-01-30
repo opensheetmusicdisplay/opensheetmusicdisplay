@@ -11,10 +11,10 @@ export class SelectionStartSymbol extends GraphicalObject {
 
     constructor(system: MusicSystem, xPosition: number) {
         super();
-        let xCoordinate: number = xPosition;
-        let yCoordinate: number = system.PositionAndShape.AbsolutePosition.y;
-        let lineThickness: number = 0.4;
-        let height: number = CollectionUtil.last(system.StaffLines).PositionAndShape.RelativePosition.y + 4;
+        const xCoordinate: number = xPosition;
+        const yCoordinate: number = system.PositionAndShape.AbsolutePosition.y;
+        const lineThickness: number = 0.4;
+        const height: number = CollectionUtil.last(system.StaffLines).PositionAndShape.RelativePosition.y + 4;
         this.verticalLine = new GraphicalLine(
             new PointF2D(xCoordinate, yCoordinate),
             new PointF2D(xCoordinate, yCoordinate + height),
@@ -22,9 +22,9 @@ export class SelectionStartSymbol extends GraphicalObject {
             OutlineAndFillStyleEnum.SelectionSymbol
         );
         for (let idx: number = 0, len: number = system.StaffLines.length; idx < len; ++idx) {
-            let staffLine: StaffLine = system.StaffLines[idx];
-            let anchor: PointF2D = new PointF2D(xCoordinate, yCoordinate + staffLine.PositionAndShape.RelativePosition.y);
-            let arrowPoints: PointF2D[] = new Array(7);
+            const staffLine: StaffLine = system.StaffLines[idx];
+            const anchor: PointF2D = new PointF2D(xCoordinate, yCoordinate + staffLine.PositionAndShape.RelativePosition.y);
+            const arrowPoints: PointF2D[] = new Array(7);
             arrowPoints[0].x = anchor.x + 4;
             arrowPoints[0].y = anchor.y + 2;
             arrowPoints[1].x = anchor.x + 2.5;

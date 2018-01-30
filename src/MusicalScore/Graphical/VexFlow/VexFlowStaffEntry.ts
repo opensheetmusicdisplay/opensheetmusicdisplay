@@ -21,8 +21,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
     public getX(): number {
         let x: number = 0;
         let n: number = 0;
-        let vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = this.vfNotes;
-        for (let voiceId in vfNotes) {
+        const vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = this.vfNotes;
+        for (const voiceId in vfNotes) {
             if (vfNotes.hasOwnProperty(voiceId)) {
                 x += (vfNotes[voiceId].getNoteHeadBeginX() + vfNotes[voiceId].getNoteHeadEndX()) / 2;
                 n += 1;

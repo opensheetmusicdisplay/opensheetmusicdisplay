@@ -71,8 +71,8 @@ export class OSMD {
         // Warning! This function is asynchronous! No error handling is done here.
         this.reset();
         if (typeof content === "string") {
-            let str: string = <string>content;
-            let self: OSMD = this;
+            const str: string = <string>content;
+            const self: OSMD = this;
             if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
@@ -87,7 +87,7 @@ export class OSMD {
             }
             if (str.substr(0, 5) === "<?xml") {
                 // Parse the string representing an xml file
-                let parser: DOMParser = new DOMParser();
+                const parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(str, "text/xml");
             } else if (str.length < 2083) {
                 // Assume now "str" is a URL
@@ -102,10 +102,10 @@ export class OSMD {
         if (!content || !(<any>content).nodeName) {
             return Promise.reject(new Error("OSMD: The document which was provided is invalid"));
         }
-        let children: NodeList = (<Document>content).childNodes;
+        const children: NodeList = (<Document>content).childNodes;
         let elem: Element;
         for (let i: number = 0, length: number = children.length; i < length; i += 1) {
-            let node: Node = children[i];
+            const node: Node = children[i];
             if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === "score-partwise") {
                 elem = <Element>node;
                 break;
@@ -114,9 +114,9 @@ export class OSMD {
         if (!elem) {
             return Promise.reject(new Error("OSMD: Document is not a valid 'partwise' MusicXML"));
         }
-        let score: IXmlElement = new IXmlElement(elem);
-        let calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
-        let reader: MusicSheetReader = new MusicSheetReader();
+        const score: IXmlElement = new IXmlElement(elem);
+        const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
+        const reader: MusicSheetReader = new MusicSheetReader();
         this.sheet = reader.createMusicSheet(score, "Unknown path");
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
@@ -131,7 +131,7 @@ export class OSMD {
         if (!this.graphic) {
             throw new Error("OSMD: Before rendering a music sheet, please load a MusicXML file");
         }
-        let width: number = this.container.offsetWidth;
+        const width: number = this.container.offsetWidth;
         // Before introducing the following optimization (maybe irrelevant), tests
         // have to be modified to ensure that width is > 0 when executed
         //if (isNaN(width) || width === 0) {
@@ -152,7 +152,7 @@ export class OSMD {
         this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(6, 4), OutlineAndFillStyleEnum.PlaybackCursor));
         this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(7, 4), OutlineAndFillStyleEnum.PlaybackCursor));*/
         // Update Sheet Page
-        let height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
+        const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
         this.drawer.clear();
         this.drawer.resize(width, height);
         this.drawer.scale(this.zoom);
@@ -208,7 +208,7 @@ export class OSMD {
      * Attach the appropriate handler to the window.onResize event
      */
     private autoResize(): void {
-        let self: OSMD = this;
+        const self: OSMD = this;
         this.handleResize(
             () => {
                 // empty
@@ -237,7 +237,7 @@ export class OSMD {
     private handleResize(startCallback: () => void, endCallback: () => void): void {
         let rtime: number;
         let timeout: number = undefined;
-        let delta: number = 200;
+        const delta: number = 200;
 
         function resizeEnd(): void {
             timeout = undefined;
