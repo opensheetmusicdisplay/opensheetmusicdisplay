@@ -353,4 +353,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
         }
     }
+
+    // FIXME: implement
+    public hasOnlyRests(): boolean {
+        return false;
+    }
 }
