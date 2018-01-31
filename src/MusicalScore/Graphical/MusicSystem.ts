@@ -111,13 +111,13 @@ export abstract class MusicSystem extends GraphicalObject {
         if (this === this.parent.MusicSystems[0] && this.parent === this.parent.Parent.MusicPages[0]) {
             xPosition = this.maxLabelLength + systemLabelsRightMargin - lineWidth / 2;
         }
-        let top: StaffMeasure = this.staffLines[0].Measures[0];
+        const top: StaffMeasure = this.staffLines[0].Measures[0];
         let bottom: StaffMeasure = undefined;
         if (this.staffLines.length > 1) {
             bottom = this.staffLines[this.staffLines.length - 1].Measures[0];
         }
-        let leftSystemLine: SystemLine = this.createSystemLine(xPosition, lineWidth, SystemLinesEnum.SingleThin,
-                                                               SystemLinePosition.MeasureBegin, this, top, bottom);
+        const leftSystemLine: SystemLine = this.createSystemLine(xPosition, lineWidth, SystemLinesEnum.SingleThin,
+                                                                 SystemLinePosition.MeasureBegin, this, top, bottom);
         this.SystemLines.push(leftSystemLine);
         leftSystemLine.PositionAndShape.RelativePosition = new PointF2D(xPosition, 0);
         leftSystemLine.PositionAndShape.BorderLeft = 0;
@@ -138,17 +138,18 @@ export abstract class MusicSystem extends GraphicalObject {
      */
     public createVerticalLineForMeasure(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
                                         measureIndex: number, measure: StaffMeasure): void {
-        let staffLine: StaffLine = measure.ParentStaffLine;
-        let staffLineRelative: PointF2D = new PointF2D(staffLine.PositionAndShape.RelativePosition.x,
-                                                       staffLine.PositionAndShape.RelativePosition.y);
-        let staves: Staff[] = staffLine.ParentStaff.ParentInstrument.Staves;
+        const staffLine: StaffLine = measure.ParentStaffLine;
+        const staffLineRelative: PointF2D = new PointF2D(staffLine.PositionAndShape.RelativePosition.x,
+                                                         staffLine.PositionAndShape.RelativePosition.y);
+        const staves: Staff[] = staffLine.ParentStaff.ParentInstrument.Staves;
         if (staffLine.ParentStaff === staves[0]) {
             let bottomMeasure: StaffMeasure = undefined;
             if (staves.length > 1) {
                 bottomMeasure = this.getBottomStaffLine(staffLine).Measures[measureIndex];
             }
-            let singleVerticalLineAfterMeasure: SystemLine = this.createSystemLine(xPosition, lineWidth, lineType, linePosition, this, measure, bottomMeasure);
-            let systemXPosition: number = staffLineRelative.x + xPosition;
+            const singleVerticalLineAfterMeasure: SystemLine = this.createSystemLine(xPosition, lineWidth, lineType,
+                                                                                     linePosition, this, measure, bottomMeasure);
+            const systemXPosition: number = staffLineRelative.x + xPosition;
             singleVerticalLineAfterMeasure.PositionAndShape.RelativePosition = new PointF2D(systemXPosition, 0);
             singleVerticalLineAfterMeasure.PositionAndShape.BorderLeft = 0;
             singleVerticalLineAfterMeasure.PositionAndShape.BorderRight = lineWidth;
@@ -182,7 +183,7 @@ export abstract class MusicSystem extends GraphicalObject {
 
     public AddStaffMeasures(graphicalMeasures: StaffMeasure[]): void {
         for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
-            let graphicalMeasure: StaffMeasure = graphicalMeasures[idx];
+            const graphicalMeasure: StaffMeasure = graphicalMeasures[idx];
             graphicalMeasure.parentMusicSystem = this;
         }
         this.graphicalMeasures.push(graphicalMeasures);
@@ -193,7 +194,7 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     public GetSystemsLastTimeStamp(): Fraction {
-        let m: SourceMeasure = this.graphicalMeasures[this.graphicalMeasures.length - 1][0].parentSourceMeasure;
+        const m: SourceMeasure = this.graphicalMeasures[this.graphicalMeasures.length - 1][0].parentSourceMeasure;
         return Fraction.plus(m.AbsoluteTimestamp, m.Duration);
     }
 
@@ -204,11 +205,11 @@ export abstract class MusicSystem extends GraphicalObject {
      */
     public createInstrumentBrackets(instruments: Instrument[], staffHeight: number): void {
         for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
-            let instrument: Instrument = instruments[idx];
+            const instrument: Instrument = instruments[idx];
             if (instrument.Staves.length > 1) {
                 let firstStaffLine: StaffLine = undefined, lastStaffLine: StaffLine = undefined;
                 for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
-                    let staffLine: StaffLine = this.staffLines[idx2];
+                    const staffLine: StaffLine = this.staffLines[idx2];
                     if (staffLine.ParentStaff === instrument.Staves[0]) {
                         firstStaffLine = staffLine;
                     }
@@ -231,18 +232,18 @@ export abstract class MusicSystem extends GraphicalObject {
      */
     public createGroupBrackets(instrumentGroups: InstrumentalGroup[], staffHeight: number, recursionDepth: number): void {
         for (let idx: number = 0, len: number = instrumentGroups.length; idx < len; ++idx) {
-            let instrumentGroup: InstrumentalGroup = instrumentGroups[idx];
+            const instrumentGroup: InstrumentalGroup = instrumentGroups[idx];
             if (instrumentGroup.InstrumentalGroups.length < 1) {
                 continue;
             }
-            let instrument1: Instrument = this.findFirstVisibleInstrumentInInstrumentalGroup(instrumentGroup);
-            let instrument2: Instrument = this.findLastVisibleInstrumentInInstrumentalGroup(instrumentGroup);
+            const instrument1: Instrument = this.findFirstVisibleInstrumentInInstrumentalGroup(instrumentGroup);
+            const instrument2: Instrument = this.findLastVisibleInstrumentInInstrumentalGroup(instrumentGroup);
             if (instrument1 === undefined || instrument2 === undefined) {
                 continue;
             }
             let firstStaffLine: StaffLine = undefined;
             for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
-                let staffLine: StaffLine = this.staffLines[idx2];
+                const staffLine: StaffLine = this.staffLines[idx2];
                 if (staffLine.ParentStaff === instrument1.Staves[0]) {
                     firstStaffLine = staffLine;
                 }
@@ -265,10 +266,10 @@ export abstract class MusicSystem extends GraphicalObject {
      */
     public createMusicSystemLabel(instrumentLabelTextHeight: number, systemLabelsRightMargin: number, labelMarginBorderFactor: number): void {
         if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
-            let instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.getVisibleInstruments();
+            const instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.getVisibleInstruments();
             for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
-                let instrument: Instrument = instruments[idx];
-                let graphicalLabel: GraphicalLabel = new GraphicalLabel(
+                const instrument: Instrument = instruments[idx];
+                const graphicalLabel: GraphicalLabel = new GraphicalLabel(
                     instrument.NameLabel, instrumentLabelTextHeight, TextAlignment.LeftCenter, this.boundingBox
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
@@ -282,9 +283,9 @@ export abstract class MusicSystem extends GraphicalObject {
 
             // calculate maxLabelLength (needed for X-Spacing)
             this.maxLabelLength = 0.0;
-            let labels: GraphicalLabel[] = this.labels.keys();
+            const labels: GraphicalLabel[] = this.labels.keys();
             for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
-                let label: GraphicalLabel = labels[idx];
+                const label: GraphicalLabel = labels[idx];
                 if (label.PositionAndShape.Size.width > this.maxLabelLength) {
                     this.maxLabelLength = label.PositionAndShape.Size.width;
                 }
@@ -304,7 +305,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 for (let i: number = 0; i < this.staffLines.length; i++) {
                     if (this.staffLines[i].ParentStaff.ParentInstrument === value) {
                         for (let j: number = i; j < this.staffLines.length; j++) {
-                            let staffLine: StaffLine = this.staffLines[j];
+                            const staffLine: StaffLine = this.staffLines[j];
                             if (staffLine.ParentStaff.ParentInstrument !== value) {
                                 break;
                             }
@@ -331,18 +332,18 @@ export abstract class MusicSystem extends GraphicalObject {
         let second: boolean = false;
         for (let i: number = 0; i < this.staffLines.length - 1; i++) {
             for (let idx: number = 0, len: number = this.staffLines[i].Measures.length; idx < len; ++idx) {
-                let measure: StaffMeasure = this.staffLines[i].Measures[idx];
+                const measure: StaffMeasure = this.staffLines[i].Measures[idx];
                 for (let idx2: number = 0, len2: number = measure.staffEntries.length; idx2 < len2; ++idx2) {
-                    let staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
+                    const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
                     if (staffEntry.sourceStaffEntry.Link !== undefined) {
                         first = true;
                     }
                 }
             }
             for (let idx: number = 0, len: number = this.staffLines[i + 1].Measures.length; idx < len; ++idx) {
-                let measure: StaffMeasure = this.staffLines[i + 1].Measures[idx];
+                const measure: StaffMeasure = this.staffLines[i + 1].Measures[idx];
                 for (let idx2: number = 0, len2: number = measure.staffEntries.length; idx2 < len2; ++idx2) {
-                    let staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
+                    const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
                     if (staffEntry.sourceStaffEntry.Link !== undefined) {
                         second = true;
                     }
@@ -356,9 +357,9 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     public getBottomStaffLine(topStaffLine: StaffLine): StaffLine {
-        let staves: Staff[] = topStaffLine.ParentStaff.ParentInstrument.Staves;
-        let last: Staff = staves[staves.length - 1];
-        for (let line of topStaffLine.ParentMusicSystem.staffLines) {
+        const staves: Staff[] = topStaffLine.ParentStaff.ParentInstrument.Staves;
+        const last: Staff = staves[staves.length - 1];
+        for (const line of topStaffLine.ParentMusicSystem.staffLines) {
             if (line.ParentStaff === last) {
                 return line;
             }
@@ -397,11 +398,11 @@ export abstract class MusicSystem extends GraphicalObject {
     protected calcBracketsWidth(): number {
         let width: number = 0;
         for (let idx: number = 0, len: number = this.GroupBrackets.length; idx < len; ++idx) {
-            let groupBracket: GraphicalObject = this.GroupBrackets[idx];
+            const groupBracket: GraphicalObject = this.GroupBrackets[idx];
             width = Math.max(width, groupBracket.PositionAndShape.Size.width);
         }
         for (let idx2: number = 0, len2: number = this.InstrumentBrackets.length; idx2 < len2; ++idx2) {
-            let instrumentBracket: GraphicalObject = this.InstrumentBrackets[idx2];
+            const instrumentBracket: GraphicalObject = this.InstrumentBrackets[idx2];
             width = Math.max(width, instrumentBracket.PositionAndShape.Size.width);
         }
         return width;
@@ -417,7 +418,7 @@ export abstract class MusicSystem extends GraphicalObject {
 
     private findFirstVisibleInstrumentInInstrumentalGroup(instrumentalGroup: InstrumentalGroup): Instrument {
         for (let idx: number = 0, len: number = instrumentalGroup.InstrumentalGroups.length; idx < len; ++idx) {
-            let groupOrInstrument: InstrumentalGroup = instrumentalGroup.InstrumentalGroups[idx];
+            const groupOrInstrument: InstrumentalGroup = instrumentalGroup.InstrumentalGroups[idx];
             if (groupOrInstrument instanceof Instrument) {
                 if ((<Instrument>groupOrInstrument).Visible === true) {
                     return <Instrument>groupOrInstrument;
@@ -450,13 +451,13 @@ export abstract class MusicSystem extends GraphicalObject {
      */
     private updateMusicSystemStaffLineXPosition(systemLabelsRightMargin: number): void {
         for (let idx: number = 0, len: number = this.StaffLines.length; idx < len; ++idx) {
-            let staffLine: StaffLine = this.StaffLines[idx];
-            let relative: PointF2D = staffLine.PositionAndShape.RelativePosition;
+            const staffLine: StaffLine = this.StaffLines[idx];
+            const relative: PointF2D = staffLine.PositionAndShape.RelativePosition;
             relative.x = this.maxLabelLength + systemLabelsRightMargin;
             staffLine.PositionAndShape.RelativePosition = relative;
             staffLine.PositionAndShape.BorderRight = this.boundingBox.Size.width - this.maxLabelLength - systemLabelsRightMargin;
             for (let i: number = 0; i < staffLine.StaffLines.length; i++) {
-                let lineEnd: PointF2D = new PointF2D(staffLine.PositionAndShape.Size.width, staffLine.StaffLines[i].End.y);
+                const lineEnd: PointF2D = new PointF2D(staffLine.PositionAndShape.Size.width, staffLine.StaffLines[i].End.y);
                 staffLine.StaffLines[i].End = lineEnd;
             }
         }

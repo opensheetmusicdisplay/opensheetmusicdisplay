@@ -56,7 +56,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
     public parentRepetition: Repetition;
 
     public CompareTo(obj: Object): number {
-        let other: RepetitionInstruction = <RepetitionInstruction>obj;
+        const other: RepetitionInstruction = <RepetitionInstruction>obj;
         if (this.measureIndex > other.measureIndex) {
             return 1;
         } else if (this.measureIndex < other.measureIndex) {

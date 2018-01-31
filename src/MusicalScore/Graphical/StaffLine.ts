@@ -77,8 +77,8 @@ export abstract class StaffLine extends GraphicalObject {
     }
 
     public addActivitySymbolClickArea(): void {
-        let activitySymbol: StaffLineActivitySymbol = new StaffLineActivitySymbol(this);
-        let staffLinePsi: BoundingBox = this.PositionAndShape;
+        const activitySymbol: StaffLineActivitySymbol = new StaffLineActivitySymbol(this);
+        const staffLinePsi: BoundingBox = this.PositionAndShape;
         activitySymbol.PositionAndShape.RelativePosition =
             new PointF2D(staffLinePsi.RelativePosition.x + staffLinePsi.BorderRight + 0.5, staffLinePsi.RelativePosition.y + 0.5);
         activitySymbol.PositionAndShape.Parent = this.parentMusicSystem.PositionAndShape;
@@ -89,7 +89,7 @@ export abstract class StaffLine extends GraphicalObject {
      * @returns {boolean}
      */
     public isPartOfMultiStaffInstrument(): boolean {
-        let instrument: Instrument = this.parentStaff.ParentInstrument;
+        const instrument: Instrument = this.parentStaff.ParentInstrument;
         if (instrument.Staves.length > 1) {
             return true;
         }
@@ -104,9 +104,9 @@ export abstract class StaffLine extends GraphicalObject {
     public findClosestStaffEntry(xPosition: number): GraphicalStaffEntry {
         let closestStaffentry: GraphicalStaffEntry = undefined;
         for (let idx: number = 0, len: number = this.Measures.length; idx < len; ++idx) {
-            let graphicalMeasure: StaffMeasure = this.Measures[idx];
+            const graphicalMeasure: StaffMeasure = this.Measures[idx];
             for (let idx2: number = 0, len2: number = graphicalMeasure.staffEntries.length; idx2 < len2; ++idx2) {
-                let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx2];
+                const graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx2];
                 if (
                     Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x) < 5.0
                 ) {

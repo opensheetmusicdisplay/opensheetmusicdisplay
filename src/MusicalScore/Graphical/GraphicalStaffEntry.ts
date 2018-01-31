@@ -78,7 +78,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      * @returns {Fraction}
      */
     public getAbsoluteTimestamp(): Fraction {
-        let result: Fraction = this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.clone();
+        const result: Fraction = this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.clone();
         if (this.relInMeasureTimestamp !== undefined) {
             result.Add(this.relInMeasureTimestamp);
         }
@@ -92,10 +92,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      */
     public findEndTieGraphicalNoteFromNote(tieNote: Note): GraphicalNote {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                let note: Note = graphicalNote.sourceNote;
+                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                const note: Note = graphicalNote.sourceNote;
                 if (note.Pitch !== undefined && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
                     && note.Pitch.Octave === tieNote.Pitch.Octave && note.getAbsoluteTimestamp().Equals(tieNote.getAbsoluteTimestamp())) {
                     return graphicalNote;
@@ -113,10 +113,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      */
     public findEndTieGraphicalNoteFromNoteWithStartingSlur(tieNote: Note, slur: Slur): GraphicalNote {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                let note: Note = graphicalNote.sourceNote;
+                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                const note: Note = graphicalNote.sourceNote;
                 if (note.NoteTie !== undefined && note.NoteSlurs.indexOf(slur) !== -1) {
                     return graphicalNote;
                 }
@@ -132,10 +132,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      */
     public findEndTieGraphicalNoteFromNoteWithEndingSlur(tieNote: Note): GraphicalNote {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                let note: Note = graphicalNote.sourceNote;
+                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                const note: Note = graphicalNote.sourceNote;
                 if (
                     note.Pitch !== undefined && note.Pitch.FundamentalNote === tieNote.Pitch.FundamentalNote
                     && note.Pitch.Octave === tieNote.Pitch.Octave && this.getAbsoluteTimestamp().Equals(tieNote.getAbsoluteTimestamp())
@@ -149,9 +149,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
 
     public findGraphicalNoteFromGraceNote(graceNote: Note): GraphicalNote {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 if (graphicalNote.sourceNote === graceNote) {
                     return graphicalNote;
                 }
@@ -162,9 +162,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
 
     public findGraphicalNoteFromNote(baseNote: Note): GraphicalNote {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 if (graphicalNote.sourceNote === baseNote && this.getAbsoluteTimestamp().Equals(baseNote.getAbsoluteTimestamp())) {
                     return graphicalNote;
                 }
@@ -175,7 +175,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
 
     public getGraphicalNoteDurationFromVoice(voice: Voice): Fraction {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             if (graphicalNotes[0].sourceNote.ParentVoiceEntry.ParentVoice === voice) {
                 return graphicalNotes[0].graphicalNoteLength;
             }
@@ -190,9 +190,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public findLinkedNotes(notLinkedNotes: GraphicalNote[]): void {
         if (this.sourceStaffEntry !== undefined && this.sourceStaffEntry.Link !== undefined) {
             for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-                let graphicalNotes: GraphicalNote[] = this.notes[idx];
+                const graphicalNotes: GraphicalNote[] = this.notes[idx];
                 for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                    let graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                    const graphicalNote: GraphicalNote = graphicalNotes[idx2];
                     if (graphicalNote.parentStaffEntry === this) {
                         notLinkedNotes.push(graphicalNote);
                     }
@@ -208,9 +208,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      */
     public findVoiceEntryGraphicalNotes(voiceEntry: VoiceEntry): GraphicalNote[] {
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
                 if (graphicalNote.sourceNote.ParentVoiceEntry === voiceEntry) {
                     return graphicalNotes;
                 }
@@ -227,7 +227,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public isVoiceEntryPartOfLinkedVoiceEntry(voiceEntry: VoiceEntry): boolean {
         if (this.sourceStaffEntry.Link !== undefined) {
             for (let idx: number = 0, len: number = this.sourceStaffEntry.Link.LinkStaffEntries.length; idx < len; ++idx) {
-                let sEntry: SourceStaffEntry = this.sourceStaffEntry.Link.LinkStaffEntries[idx];
+                const sEntry: SourceStaffEntry = this.sourceStaffEntry.Link.LinkStaffEntries[idx];
                 if (sEntry.VoiceEntries.indexOf(voiceEntry) !== -1 && sEntry !== this.sourceStaffEntry) {
                     return true;
                 }
@@ -238,7 +238,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
 
     public getMainVoice(): Voice {
         for (let idx: number = 0, len: number = this.sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
-            let voiceEntry: VoiceEntry = this.sourceStaffEntry.VoiceEntries[idx];
+            const voiceEntry: VoiceEntry = this.sourceStaffEntry.VoiceEntries[idx];
             if (!(voiceEntry.ParentVoice instanceof LinkedVoice)) {
                 return voiceEntry.ParentVoice;
             }
@@ -253,10 +253,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public findStaffEntryMinNoteLength(): Fraction {
         let minLength: Fraction = new Fraction(Number.MAX_VALUE, 1);
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                let calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
+                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                const calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
                 if (calNoteLen.lt(minLength) && calNoteLen.GetExpandedNumerator() > 0) {
                     minLength = calNoteLen;
                 }
@@ -268,10 +268,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public findStaffEntryMaxNoteLength(): Fraction {
         let maxLength: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.notes[idx];
             for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                let graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                let calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
+                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
+                const calNoteLen: Fraction = graphicalNote.graphicalNoteLength;
                 if (maxLength.lt(calNoteLen)  && calNoteLen.GetExpandedNumerator() > 0) {
                     maxLength = calNoteLen;
                 }
@@ -309,7 +309,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      */
     public findOrCreateGraphicalNotesListFromGraphicalNote(graphicalNote: GraphicalNote): GraphicalNote[] {
         let graphicalNotes: GraphicalNote[];
-        let tieStartSourceStaffEntry: SourceStaffEntry = graphicalNote.sourceNote.ParentStaffEntry;
+        const tieStartSourceStaffEntry: SourceStaffEntry = graphicalNote.sourceNote.ParentStaffEntry;
         if (this.sourceStaffEntry !== tieStartSourceStaffEntry) {
             graphicalNotes = this.findOrCreateGraphicalNotesListFromVoiceEntry(graphicalNote.sourceNote.ParentVoiceEntry);
         } else {

@@ -194,9 +194,9 @@ export class SourceStaffEntry {
     public calculateMinNoteLength(): Fraction {
         let duration: Fraction = new Fraction(Number.MAX_VALUE, 1);
         for (let idx: number = 0, len: number = this.VoiceEntries.length; idx < len; ++idx) {
-            let voiceEntry: VoiceEntry = this.VoiceEntries[idx];
+            const voiceEntry: VoiceEntry = this.VoiceEntries[idx];
             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-                let note: Note = voiceEntry.Notes[idx2];
+                const note: Note = voiceEntry.Notes[idx2];
                 if (note.NoteTie !== undefined) {
                     if (note.calculateNoteLengthWithoutTie().lt(duration)) {
                         duration = note.calculateNoteLengthWithoutTie();
@@ -212,14 +212,14 @@ export class SourceStaffEntry {
     public calculateMaxNoteLength(): Fraction {
         let duration: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.VoiceEntries.length; idx < len; ++idx) {
-            let voiceEntry: VoiceEntry = this.VoiceEntries[idx];
+            const voiceEntry: VoiceEntry = this.VoiceEntries[idx];
             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-                let note: Note = voiceEntry.Notes[idx2];
+                const note: Note = voiceEntry.Notes[idx2];
                 if (note.NoteTie !== undefined) {
                     if (duration < note.calculateNoteLengthWithoutTie()) {
                         duration = note.calculateNoteLengthWithoutTie();
                         for (let idx3: number = 0, len3: number = note.NoteTie.Fractions.length; idx3 < len3; ++idx3) {
-                            let fraction: Fraction = note.NoteTie.Fractions[idx3];
+                            const fraction: Fraction = note.NoteTie.Fractions[idx3];
                             duration.Add(fraction);
                         }
                     }
@@ -233,7 +233,7 @@ export class SourceStaffEntry {
 
     public hasNotes(): boolean {
         for (let idx: number = 0, len: number = this.VoiceEntries.length; idx < len; ++idx) {
-            let voiceEntry: VoiceEntry = this.VoiceEntries[idx];
+            const voiceEntry: VoiceEntry = this.VoiceEntries[idx];
             if (voiceEntry.Notes.length > 0) {
                 return true;
             }
@@ -243,7 +243,7 @@ export class SourceStaffEntry {
 
     public hasTie(): boolean {
         for (let idx: number = 0, len: number = this.VoiceEntries.length; idx < len; ++idx) {
-            let voiceEntry: VoiceEntry = this.VoiceEntries[idx];
+            const voiceEntry: VoiceEntry = this.VoiceEntries[idx];
             if (voiceEntry.hasTie()) {
                 return true;
             }
@@ -253,9 +253,9 @@ export class SourceStaffEntry {
 
     public findLinkedNotes(linkedNotes: Note[]): void {
         for (let idx: number = 0, len: number = this.voiceEntries.length; idx < len; ++idx) {
-            let voiceEntry: VoiceEntry = this.voiceEntries[idx];
+            const voiceEntry: VoiceEntry = this.voiceEntries[idx];
             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-                let note: Note = voiceEntry.Notes[idx2];
+                const note: Note = voiceEntry.Notes[idx2];
                 if (note.ParentStaffEntry === this) {
                     linkedNotes.push(note);
                 }

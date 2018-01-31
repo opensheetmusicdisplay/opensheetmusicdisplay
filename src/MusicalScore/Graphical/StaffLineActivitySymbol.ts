@@ -7,7 +7,7 @@ export class StaffLineActivitySymbol extends GraphicalObject {
     constructor(staffLine: StaffLine) {
         super();
         this.parentStaffLine = staffLine;
-        let staffLinePsi: BoundingBox = staffLine.PositionAndShape;
+        const staffLinePsi: BoundingBox = staffLine.PositionAndShape;
         this.boundingBox = new BoundingBox(this, staffLinePsi);
         this.boundingBox.BorderRight = 6;
         this.boundingBox.BorderBottom = 4.5;
