@@ -1,4 +1,4 @@
-﻿import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
+import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {IXmlElement} from "../../../Common/FileIO/Xml";
 import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
@@ -20,9 +20,9 @@ export class LyricsReader {
      */
     public addLyricEntry(lyricNodeList: IXmlElement[], currentVoiceEntry: VoiceEntry): void {
         if (lyricNodeList !== undefined) {
-            let lyricNodeListArr: IXmlElement[] = lyricNodeList;
+            const lyricNodeListArr: IXmlElement[] = lyricNodeList;
             for (let idx: number = 0, len: number = lyricNodeListArr.length; idx < len; ++idx) {
-                let lyricNode: IXmlElement = lyricNodeListArr[idx];
+                const lyricNode: IXmlElement = lyricNodeListArr[idx];
                 try {
                     let syllabic: string = "single"; // Single as default
                     if (lyricNode.element("text") !== undefined) {
@@ -31,15 +31,15 @@ export class LyricsReader {
                             syllabic = lyricNode.element("syllabic").value;
                         }
                         if (textNode !== undefined) {
-                            let text: string = textNode.value;
+                            const text: string = textNode.value;
                             // <elision> separates Multiple syllabels on a single LyricNote
                             // "-" text indicating separated syllabel should be ignored
                             // we calculate the Dash element much later
                             if (lyricNode.element("elision") !== undefined && text === "-") {
-                                let lyricNodeChildren: IXmlElement[] = lyricNode.elements();
+                                const lyricNodeChildren: IXmlElement[] = lyricNode.elements();
                                 let elisionIndex: number = 0;
                                 for (let i: number = 0; i < lyricNodeChildren.length; i++) {
-                                    let child: IXmlElement = lyricNodeChildren[i];
+                                    const child: IXmlElement = lyricNodeChildren[i];
                                     if (child.name === "elision") {
                                         elisionIndex = i;
                                         break;
@@ -50,7 +50,7 @@ export class LyricsReader {
                                 // read the next nodes
                                 if (elisionIndex > 0) {
                                     for (let i: number = elisionIndex; i < lyricNodeChildren.length; i++) {
-                                        let child: IXmlElement = lyricNodeChildren[i];
+                                        const child: IXmlElement = lyricNodeChildren[i];
                                         if (child.name === "text") {
                                             nextText = child;
                                         }
@@ -70,12 +70,12 @@ export class LyricsReader {
                                     currentLyricVerseNumber = parseInt(lyricNode.attribute("number").value, 10);
                                 } catch (err) {
                                     try {
-                                        let result: string[] = lyricNode.attribute("number").value.toLowerCase().split("verse");
+                                        const result: string[] = lyricNode.attribute("number").value.toLowerCase().split("verse");
                                         if (result.length > 1) {
                                             currentLyricVerseNumber = parseInt(result[1], 10);
                                         }
                                     } catch (err) {
-                                        let errorMsg: string =
+                                        const errorMsg: string =
                                         ITextTranslation.translateText("ReaderErrorMessages/LyricVerseNumberError", "Invalid lyric verse number");
                                         this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                                         continue;
@@ -127,7 +127,7 @@ export class LyricsReader {
                         }
                     }
                 } catch (err) {
-                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/LyricError", "Error while reading lyric entry.");
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/LyricError", "Error while reading lyric entry.");
                     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     continue;
                 }

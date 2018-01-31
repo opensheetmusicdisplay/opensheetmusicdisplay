@@ -28,6 +28,13 @@ import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { PointF2D } from "../../../Common/DataObjects/PointF2D";
+import { GraphicalLabel } from "../GraphicalLabel";
+import { GraphicalLyricWord } from "../GraphicalLyricWord";
+import { BoundingBox } from "../BoundingBox";
+import { GraphicalLine } from "../GraphicalLine";
+// import { GraphicalLabel } from "../GraphicalLabel";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -224,83 +231,84 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // FIXME: B.G. Adapt this function so that it uses the skyline calculation
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
-        // let numberOfVerses: number = 0;
-        // let lyricsStartYPosition: number = this.rules.StaffHeight;
-        // const lyricsStaffEntriesList: GraphicalStaffEntry[] = new Array<GraphicalStaffEntry>();
+        let numberOfVerses: number = 0;
+        // FIXME: There is no class SkyBottomLineCalculator -> Fix value
+        let lyricsStartYPosition: number = 8; //this.rules.StaffHeight;
+        const lyricsStaffEntriesList: GraphicalStaffEntry[] = new Array<GraphicalStaffEntry>();
         // const skyBottomLineCalculator: number = 0;
 
-        // // first find maximum Ycoordinate for the whole StaffLine
-        // let len: number = staffLine.Measures.length;
-        // for (let idx: number = 0; idx < len; ++idx) {
-        //     const measure: StaffMeasure = staffLine.Measures[idx];
-        //     const measureRelativePosition: PointF2D = measure.PositionAndShape.RelativePosition;
-        //     const len2: number = measure.staffEntries.length;
-        //     for (let idx2: number = 0; idx2 < len2; ++idx2) {
-        //         const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
-        //         if (staffEntry.LyricsEntries.length > 0) {
-        //             lyricsStaffEntriesList.push(staffEntry);
-        //             numberOfVerses = Math.max(numberOfVerses, staffEntry.LyricsEntries.length);
+        // first find maximum Ycoordinate for the whole StaffLine
+        let len: number = staffLine.Measures.length;
+        for (let idx: number = 0; idx < len; ++idx) {
+            const measure: StaffMeasure = staffLine.Measures[idx];
+            const measureRelativePosition: PointF2D = measure.PositionAndShape.RelativePosition;
+            const len2: number = measure.staffEntries.length;
+            for (let idx2: number = 0; idx2 < len2; ++idx2) {
+                const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
+                if (staffEntry.LyricsEntries.length > 0) {
+                    lyricsStaffEntriesList.push(staffEntry);
+                    numberOfVerses = Math.max(numberOfVerses, staffEntry.LyricsEntries.length);
 
-        //             // Position of Staffentry relative to StaffLine
-        //             const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +
-        //                                         measureRelativePosition.x;
+                    // Position of Staffentry relative to StaffLine
+                    const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +
+                                                measureRelativePosition.x;
 
-        //             let minMarginLeft: number = Number.MAX_VALUE;
-        //             let maxMarginRight: number = Number.MAX_VALUE;
+                    let minMarginLeft: number = Number.MAX_VALUE;
+                    let maxMarginRight: number = Number.MAX_VALUE;
 
-        //             // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
-        //             for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
-        //                 const lyricsEntryLabel: GraphicalLabel = staffEntry.LyricsEntries[i].GraphicalLabel;
-        //                 minMarginLeft = Math.min(minMarginLeft, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginLeft);
-        //                 maxMarginRight = Math.max(maxMarginRight, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginRight);
-        //             }
+                    // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
+                    for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+                        const lyricsEntryLabel: GraphicalLabel = staffEntry.LyricsEntries[i].GraphicalLabel;
+                        minMarginLeft = Math.min(minMarginLeft, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginLeft);
+                        maxMarginRight = Math.max(maxMarginRight, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginRight);
+                    }
 
 
-        //             // check BottomLine in this range and take the maximum between the two values
-        //             // float bottomLineMax = skyBottomLineCalculator.getBottomLineMaxInRange(staffLine, minMarginLeft, maxMarginRight);
-        //             // FIXME: There is no class SkyBottomLineCalculator -> Fix value
-        //             const bottomLineMax: number = 0.0;
-        //             lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax);
-        //         }
-        //     }
-        // }
+                    // check BottomLine in this range and take the maximum between the two values
+                    // FIXME: There is no class SkyBottomLineCalculator -> Fix value
+                    // float bottomLineMax = skyBottomLineCalculator.getBottomLineMaxInRange(staffLine, minMarginLeft, maxMarginRight);
+                    const bottomLineMax: number = 0.0;
+                    lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax);
+                }
+            }
+        }
 
-        // let maxPosition: number = 4.0;
-        // // iterate again through the Staffentries with LyricEntries
-        // len = lyricsStaffEntriesList.length;
-        // for (let idx: number = 0; idx < len; ++idx) {
-        //     const staffEntry: GraphicalStaffEntry = lyricsStaffEntriesList[idx];
-        //     // set LyricEntryLabel RelativePosition
-        //     for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
-        //         const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
-        //         const lyricsEntryLabel: GraphicalLabel = lyricEntry.GraphicalLabel;
+        let maxPosition: number = 4.0;
+        // iterate again through the Staffentries with LyricEntries
+        len = lyricsStaffEntriesList.length;
+        for (let idx: number = 0; idx < len; ++idx) {
+            const staffEntry: GraphicalStaffEntry = lyricsStaffEntriesList[idx];
+            // set LyricEntryLabel RelativePosition
+            for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+                const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
+                const lyricsEntryLabel: GraphicalLabel = lyricEntry.GraphicalLabel;
 
-        //         // read the verseNumber and get index of this number in the sorted LyricVerseNumbersList of Instrument
-        //         // eg verseNumbers: 2,3,4,6 => 1,2,3,4
-        //         const verseNumber: number = lyricEntry.GetLyricsEntry.VerseNumber;
-        //         const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
-        //         const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight;
+                // read the verseNumber and get index of this number in the sorted LyricVerseNumbersList of Instrument
+                // eg verseNumbers: 2,3,4,6 => 1,2,3,4
+                const verseNumber: number = lyricEntry.GetLyricsEntry.VerseNumber;
+                const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
+                const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight;
 
-        //         // Y-position calculated according to aforementioned mapping
-        //         let position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
-        //         if (this.leadSheet) {
-        //             position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
-        //         }
-        //         lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(0, position);
-        //         maxPosition = Math.max(maxPosition, position);
-        //     }
-        // }
+                // Y-position calculated according to aforementioned mapping
+                let position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
+                if (this.leadSheet) {
+                    position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
+                }
+                lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(0, position);
+                maxPosition = Math.max(maxPosition, position);
+            }
+        }
 
-        // // update BottomLine (on the whole StaffLine's length)
-        // if (lyricsStaffEntriesList.length > 0) {
-        //     const endX: number = staffLine.PositionAndShape.Size.width;
-        //     const startX: number = lyricsStaffEntriesList[0].PositionAndShape.RelativePosition.x +
-        //     lyricsStaffEntriesList[0].PositionAndShape.BorderMarginLeft +
-        //     lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;
-        //     // skyBottomLineCalculator.updateBottomLineInRange(staffLine, startX, endX, maxPosition);
-        // }
-        // return lyricsStaffEntriesList;
-        return new Array<GraphicalStaffEntry>();
+        // update BottomLine (on the whole StaffLine's length)
+        if (lyricsStaffEntriesList.length > 0) {
+            // const endX: number = staffLine.PositionAndShape.Size.width;
+            // const startX: number = lyricsStaffEntriesList[0].PositionAndShape.RelativePosition.x +
+            // lyricsStaffEntriesList[0].PositionAndShape.BorderMarginLeft +
+            // lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;
+            // FIXME: There is no class SkyBottomLineCalculator. This call should update the positions according to the last run
+            // skyBottomLineCalculator.updateBottomLineInRange(staffLine, startX, endX, maxPosition);
+        }
+        return lyricsStaffEntriesList;
     }
 
     /**
@@ -309,21 +317,208 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
     protected calculateLyricsExtendsAndDashes(lyricsStaffEntries: GraphicalStaffEntry[]): void {
         // FIXME: methods calculateSingleLyricWord + calculateLyricExtend need to be ported. -> SkylineCalculator needed.
-        /*
         for (let idx: number = 0, len: number = lyricsStaffEntries.length; idx < len; ++idx) {
-            let staffEntry: GraphicalStaffEntry = lyricsStaffEntries[idx];
+            const staffEntry: GraphicalStaffEntry = lyricsStaffEntries[idx];
             for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
-                let lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
-                let lyricsEntryLabel: GraphicalLabel = lyricEntry.GraphicalLabel;
-                if (lyricEntry.ParentLyricWord !== undefined && lyricEntry.ParentLyricWord.GraphicalLyricsEntries.Last() !== lyricEntry) {
-                    calculateSingleLyricWord(lyricEntry);
+                const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
+                // let lyricsEntryLabel: GraphicalLabel = lyricEntry.GraphicalLabel;
+                if (lyricEntry.ParentLyricWord !== undefined && lyricEntry.ParentLyricWord.GraphicalLyricsEntries.pop() !== lyricEntry) {
+                    this.calculateSingleLyricWord(lyricEntry);
                 }
                 if (lyricEntry.GetLyricsEntry.extend) {
-                    calculateLyricExtend(lyricEntry);
+                    this.calculateLyricExtend(lyricEntry);
                 }
             }
         }
-        */
+    }
+
+    /**
+     * This method calculates the dashes within the syllables of a LyricWord
+     * @param lyricEntry
+     */
+    private calculateSingleLyricWord(lyricEntry: GraphicalLyricEntry): void {
+        // const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator (this.rules);
+        const graphicalLyricWord: GraphicalLyricWord = lyricEntry.ParentLyricWord;
+        const index: number = graphicalLyricWord.GraphicalLyricsEntries.indexOf(lyricEntry);
+        let nextLyricEntry: GraphicalLyricEntry = undefined;
+        if (index >= 0) {
+            nextLyricEntry = graphicalLyricWord.GraphicalLyricsEntries[index + 1];
+        }
+        if (nextLyricEntry === undefined) {
+            return;
+        }
+        console.log("Word", lyricEntry, lyricEntry.ParentLyricWord.GetLyricWord.Syllables.map(s => s.Text));
+        const startStaffLine: StaffLine = <StaffLine>lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
+        const nextStaffLine: StaffLine = <StaffLine>nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
+        const startStaffEntry: GraphicalStaffEntry = lyricEntry.StaffEntryParent;
+        const endStaffentry: GraphicalStaffEntry = nextLyricEntry.StaffEntryParent;
+
+        // if on the same StaffLine
+        if (lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine === nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine) {
+            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                                   startStaffEntry.PositionAndShape.RelativePosition.x +
+                                   lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+            const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
+                                 endStaffentry.PositionAndShape.RelativePosition.x +
+                                 nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
+            const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+            let numberOfDashes: number = 1;
+            if ((endX - startX) > this.rules.BetweenSyllabelMaximumDistance) {
+                numberOfDashes = <number>Math.ceil((endX - startX) / this.rules.BetweenSyllabelMaximumDistance);
+            }
+            if (numberOfDashes === 1) {
+                // this.calculateSingleDashForLyricWord(startStaffLine,startX,endX,y);
+            } else {
+                this.calculateDashes(startStaffLine, startX, endX, y);
+            }
+        } else {
+            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                                startStaffEntry.PositionAndShape.RelativePosition.x +
+                                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+            const lastStaffMeasure: StaffMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
+            const endX: number = lastStaffMeasure.PositionAndShape.RelativePosition.x + lastStaffMeasure.PositionAndShape.Size.width;
+            let y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+            this.calculateDashes(startStaffLine, startX, endX, y);
+            if (!(endStaffentry === endStaffentry.parentMeasure.staffEntries[0] &&
+                  endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {
+                const secondStartX: number = nextStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
+                const secondEndX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
+                                           endStaffentry.PositionAndShape.RelativePosition.x +
+                                           nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
+                y = nextLyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+                this.calculateDashes(nextStaffLine, secondStartX, secondEndX, y);
+            }
+        }
+    }
+
+        /**
+         * This method calculates Dashes for a LyricWord.
+         * @param staffLine
+         * @param startX
+         * @param endX
+         * @param y
+         */
+        private calculateDashes(staffLine: StaffLine, startX: number, endX: number, y: number): void {
+            const distance: number = endX - startX;
+            if (distance < this.rules.MinimumDistanceBetweenDashes) {
+                //this.calculateSingleDashForLyricWord(staffLine, startX, endX, y);
+            } else {
+                // enough distance for more Dashes
+                const numberOfDashes: number = Math.floor(distance / this.rules.MinimumDistanceBetweenDashes);
+                const distanceBetweenDashes: number = distance / this.rules.MinimumDistanceBetweenDashes;
+                let counter: number = 0;
+
+                startX += distanceBetweenDashes / 2;
+                endX -= distanceBetweenDashes / 2;
+                while (counter <= Math.floor(numberOfDashes / 2.0) && endX > startX) {
+                    // distance = this.calculateRightAndLeftDashesForLyricWord(staffLine, startX, endX, y);
+                    startX += distanceBetweenDashes;
+                    endX -= distanceBetweenDashes;
+                    counter++;
+                }
+
+                // if the remaining distance isn't big enough for two Dashes (another check would be if numberOfDashes is uneven),
+                // then put the last Dash in the middle of the remaining distance
+                if (distance > distanceBetweenDashes) {
+                    //this.calculateSingleDashForLyricWord(staffLine, startX, endX, y);
+                }
+            }
+        }
+
+    /**
+     * Layouts the underscore line when a lyric entry is marked as extend
+     * @param {GraphicalLyricEntry} lyricEntry
+     */
+    private calculateLyricExtend(lyricEntry: GraphicalLyricEntry): void {
+        console.log("Extend", lyricEntry);
+        // let skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
+        let startY: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+        // let endY: number = startY;
+        const startStaffEntry: GraphicalStaffEntry = lyricEntry.StaffEntryParent;
+        const startStaffLine: StaffLine = <StaffLine>lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
+
+        // find endstaffEntry and staffLine
+        let endStaffEntry: GraphicalStaffEntry = undefined;
+        let endStaffLine: StaffLine = undefined;
+        const staffIndex: number = startStaffEntry.parentMeasure.ParentStaff.idInMusicSheet;
+        for (let index: number = startStaffEntry.parentVerticalContainer.Index + 1;
+             index < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
+             ++index) {
+            const gse: GraphicalStaffEntry = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[index].StaffEntries[staffIndex];
+            if (gse === undefined) {
+                continue;
+            }
+            if (gse.hasOnlyRests()) {
+                if (endStaffEntry !== undefined && startStaffLine !== endStaffLine) {
+                    endY = Math.max(6, endStaffEntry.PositionAndShape.BorderBottom + 2);
+                }
+                break;
+            }
+            if (gse.LyricsEntries.length > 0) {
+                break;
+            }
+            endStaffEntry = gse;
+            endStaffLine = <StaffLine>endStaffEntry.parentMeasure.ParentStaffLine;
+        }
+        if (endStaffEntry === undefined) {
+            return;
+        }
+        // if on the same StaffLine
+        if (startStaffLine === endStaffLine) {
+            // start- and End margins from the text Labels
+            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                                   startStaffEntry.PositionAndShape.RelativePosition.x +
+                                   lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+            const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                                 endStaffEntry.PositionAndShape.RelativePosition.x +
+                                 endStaffEntry.PositionAndShape.BorderMarginRight;
+            // needed in order to line up with the Label's text bottom line (is the y psoition of the underscore)
+            startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
+            // create a Line (as underscope after the LyricLabel's End)
+            this.calculateSingleLyricWordWithUnderscore(startStaffLine, startX, endX, startY);
+        } else { // start and end on different StaffLines
+            // start margin from the text Label until the End of StaffLine
+            const lastMeasureBb: BoundingBox = startStaffLine.Measures[startStaffLine.Measures.length - 1].PositionAndShape;
+            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+            startStaffEntry.PositionAndShape.RelativePosition.x +
+            lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+            const endX: number = lastMeasureBb.RelativePosition.x +
+                                 lastMeasureBb.Size.width;
+            // needed in order to line up with the Label's text bottom line
+            startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
+            // first Underscore until the StaffLine's End
+            this.calculateSingleLyricWordWithUnderscore(startStaffLine, startX, endX, startY);
+            if (endStaffEntry === undefined) {
+                return;
+            }
+            // second Underscore in the endStaffLine until endStaffEntry (if endStaffEntry isn't the first StaffEntry of the StaffLine))
+            if (!(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
+                endStaffEntry.parentMeasure === endStaffEntry.parentMeasure.ParentStaffLine.Measures[0])) {
+                const secondStartX: number = endStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
+                const secondEndX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+                                           endStaffEntry.PositionAndShape.RelativePosition.x +
+                                           endStaffEntry.PositionAndShape.BorderMarginRight;
+                this.calculateSingleLyricWordWithUnderscore(endStaffLine, secondStartX, secondEndX, startY);
+            }
+        }
+    }
+
+    /**
+     * This method calculates a single underscoreLine.
+     * @param staffLine
+     * @param startX
+     * @param end
+     * @param y
+     */
+    private calculateSingleLyricWordWithUnderscore(staffLine: StaffLine, startX: number, endX: number, y: number): void {
+        const lineStart: PointF2D = new PointF2D(startX, y);
+        const lineEnd: PointF2D = new PointF2D(endX, y);
+        const graphicalLine: GraphicalLine = new GraphicalLine(lineStart, lineEnd, this.rules.LyricUnderscoreLineWidth);
+        console.log("here");
+        staffLine.LyricLines.push(graphicalLine);
+        if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
+            this.staffLinesWithLyricWords.push(staffLine);
+        }
     }
 
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
@@ -354,9 +549,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
     }
 
-    // TODO: openLyrics is always empty, GraphicalStaffEntry contains all voiceEntries but is also always empty.
     protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
-        (graphicalStaffEntry as VexFlowStaffEntry).handleVoiceEntryLyrics(voiceEntry, graphicalStaffEntry);
+        (graphicalStaffEntry as VexFlowStaffEntry).handleVoiceEntryLyrics(voiceEntry, graphicalStaffEntry, openLyricWords);
         return;
     }
 

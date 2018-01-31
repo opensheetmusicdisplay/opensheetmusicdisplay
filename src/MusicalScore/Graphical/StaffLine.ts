@@ -20,6 +20,7 @@ export abstract class StaffLine extends GraphicalObject {
     protected parentStaff: Staff;
     protected skyLine: number[];
     protected bottomLine: number[];
+    protected lyricLines: GraphicalLine[] = [];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         super();
@@ -42,6 +43,14 @@ export abstract class StaffLine extends GraphicalObject {
 
     public set StaffLines(value: GraphicalLine[]) {
         this.staffLines = value;
+    }
+
+    public get LyricLines(): GraphicalLine[] {
+        return this.lyricLines;
+    }
+
+    public set LyricLines(value: GraphicalLine[]) {
+        this.lyricLines = value;
     }
 
     public get ParentMusicSystem(): MusicSystem {
