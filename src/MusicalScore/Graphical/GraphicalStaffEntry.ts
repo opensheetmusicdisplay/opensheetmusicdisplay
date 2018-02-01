@@ -356,6 +356,15 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
 
     // FIXME: implement
     public hasOnlyRests(): boolean {
-        return false;
+        const hasOnlyRests: boolean = true;
+        for (const graphicalNotes of this.notes) {
+            for (const graphicalNote of graphicalNotes) {
+                const note: Note = graphicalNote.sourceNote;
+                if (!note.isRest()) {
+                    return false;
+                }
+            }
+        }
+        return hasOnlyRests;
     }
 }
