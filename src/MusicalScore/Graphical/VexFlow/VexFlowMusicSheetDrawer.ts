@@ -86,6 +86,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (staffEntry.LyricsEntries.length > 0) {
             this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
         }
+
+        if (staffEntry.parentMeasure.ParentStaffLine.LyricsDashes.length > 0) {
+            this.drawDashes(staffEntry.parentMeasure.ParentStaffLine.LyricsDashes, <number>GraphicalLayers.Notes);
+        }
     }
 
     /**
@@ -95,6 +99,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
         lyricEntries.forEach(lyricsEntry => this.drawLabel(lyricsEntry.GraphicalLabel, layer));
+    }
+
+    /**
+     * Draw all dashes to the canvas
+     * @param lyricsDashes Array of lyric dashes to be drawn
+     * @param layer Number of the layer that the lyrics should be drawn in
+     */
+    private drawDashes(lyricsDashes: GraphicalLabel[], layer: number): void {
+        lyricsDashes.forEach(dash => {
+            console.log("Drawing dash", dash.PositionAndShape.AbsolutePosition);
+            this.drawLabel(dash, layer);
+        });
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
