@@ -17,9 +17,6 @@ export class GraphicalLyricEntry {
 
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
-        if (this.lyricsEntry.Word !== undefined) {
-            this.graphicalLyricWord = new GraphicalLyricWord(this.lyricsEntry.Word);
-        }
         this.graphicalStaffEntry = graphicalStaffEntry;
         this.graphicalLabel = new GraphicalLabel(
             new Label(lyricsEntry.Text),

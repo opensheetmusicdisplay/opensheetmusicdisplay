@@ -68,6 +68,8 @@ export abstract class MusicSheetCalculator {
     protected staffLinesWithLyricWords: StaffLine[] = [];
     protected staffLinesWithGraphicalExpressions: StaffLine[] = [];
 
+    protected graphicalLyricWords: GraphicalLyricWord[] = [];
+
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected rules: EngravingRules;
     protected symbolFactory: IGraphicalSymbolFactory;
@@ -1738,6 +1740,9 @@ export abstract class MusicSheetCalculator {
                     const lyricsStaffEntries: GraphicalStaffEntry[] =
                         this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
                     lyricStaffEntriesDict.setValue(staffLine, lyricsStaffEntries);
+                    // FIXME: Here's a fish somewhere?!
+                    //console.log(lyricStaffEntriesDict.getValue(staffLine))
+                    this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
                 }
             }
         }
@@ -1769,7 +1774,6 @@ export abstract class MusicSheetCalculator {
         if (nextLyricEntry === undefined) {
             return;
         }
-        console.log("Word", lyricEntry, lyricEntry.ParentLyricWord.GetLyricWord.Syllables.map(s => s.Text));
         const startStaffLine: StaffLine = <StaffLine>lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
         const nextStaffLine: StaffLine = <StaffLine>nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
         const startStaffEntry: GraphicalStaffEntry = lyricEntry.StaffEntryParent;
@@ -1778,11 +1782,11 @@ export abstract class MusicSheetCalculator {
         // if on the same StaffLine
         if (lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine === nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine) {
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
-                startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+            startStaffEntry.PositionAndShape.RelativePosition.x +
+            lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
             const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
-                endStaffentry.PositionAndShape.RelativePosition.x +
-                nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
+            endStaffentry.PositionAndShape.RelativePosition.x +
+            nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
             if ((endX - startX) > this.rules.BetweenSyllabelMaximumDistance) {
@@ -1821,6 +1825,7 @@ export abstract class MusicSheetCalculator {
      * @param y
      */
     private calculateDashes(staffLine: StaffLine, startX: number, endX: number, y: number): void {
+        console.log("Dash");
         let distance: number = endX - startX;
         if (distance < this.rules.MinimumDistanceBetweenDashes) {
             this.calculateSingleDashForLyricWord(staffLine, startX, endX, y);
@@ -1862,7 +1867,6 @@ export abstract class MusicSheetCalculator {
             this.staffLinesWithLyricWords.push(staffLine);
         }
         dash.PositionAndShape.Parent = staffLine.PositionAndShape;
-        staffLine.PositionAndShape.ChildElements.push(dash.PositionAndShape);
         const relative: PointF2D = new PointF2D(startX + (endX - startX) / 2, y);
         dash.PositionAndShape.RelativePosition = relative;
     }
@@ -1872,7 +1876,6 @@ export abstract class MusicSheetCalculator {
      * @param {GraphicalLyricEntry} lyricEntry
      */
     private calculateLyricExtend(lyricEntry: GraphicalLyricEntry): void {
-        console.log("Extend", lyricEntry);
         let startY: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
         const startStaffEntry: GraphicalStaffEntry = lyricEntry.StaffEntryParent;
         const startStaffLine: StaffLine = <StaffLine>lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
@@ -1951,7 +1954,6 @@ export abstract class MusicSheetCalculator {
         const lineStart: PointF2D = new PointF2D(startX, y);
         const lineEnd: PointF2D = new PointF2D(endX, y);
         const graphicalLine: GraphicalLine = new GraphicalLine(lineStart, lineEnd, this.rules.LyricUnderscoreLineWidth);
-        console.log("here");
         staffLine.LyricLines.push(graphicalLine);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
             this.staffLinesWithLyricWords.push(staffLine);
