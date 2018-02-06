@@ -1071,8 +1071,8 @@ export abstract class MusicSheetCalculator {
         let rightStaffEntry: GraphicalStaffEntry = undefined;
         const numEntries: number = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
         const index: number = this.graphicalMusicSheet.GetInterpolatedIndexInVerticalContainers(timestamp);
-        const leftIndex: number = <number>Math.min(Math.floor(index), numEntries - 1);
-        const rightIndex: number = <number>Math.min(Math.ceil(index), numEntries - 1);
+        const leftIndex: number = Math.min(Math.floor(index), numEntries - 1);
+        const rightIndex: number = Math.min(Math.ceil(index), numEntries - 1);
         if (leftIndex < 0 || verticalIndex < 0) {
             return relative;
         }
@@ -1110,7 +1110,7 @@ export abstract class MusicSheetCalculator {
     protected getRelativeXPositionFromTimestamp(timestamp: Fraction): number {
         const numEntries: number = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
         const index: number = this.graphicalMusicSheet.GetInterpolatedIndexInVerticalContainers(timestamp);
-        const discreteIndex: number = <number>Math.max(0, Math.min(Math.round(index), numEntries - 1));
+        const discreteIndex: number = Math.max(0, Math.min(Math.round(index), numEntries - 1));
         const gse: GraphicalStaffEntry = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[discreteIndex].getFirstNonNullStaffEntry();
         const posX: number = gse.PositionAndShape.RelativePosition.x + gse.parentMeasure.PositionAndShape.RelativePosition.x;
         return posX;
@@ -1777,6 +1777,7 @@ export abstract class MusicSheetCalculator {
 
         // if on the same StaffLine
         if (lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine === nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine) {
+            // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
                 lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
@@ -1786,21 +1787,32 @@ export abstract class MusicSheetCalculator {
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
             if ((endX - startX) > this.rules.BetweenSyllabelMaximumDistance) {
-                numberOfDashes = <number>Math.ceil((endX - startX) / this.rules.BetweenSyllabelMaximumDistance);
+                numberOfDashes = Math.ceil((endX - startX) / this.rules.BetweenSyllabelMaximumDistance);
             }
+            // check distance and create the adequate number of Dashes
             if (numberOfDashes === 1) {
+                // distance between the two GraphicalLyricEntries is big for only one Dash, position in the middle
                 this.calculateSingleDashForLyricWord(startStaffLine, startX, endX, y);
             } else {
+                // distance is big enough for more Dashes
+                // calculate the adequate number of Dashes from the distance between the two LyricEntries
+                // distance between the Dashes should be equal
                 this.calculateDashes(startStaffLine, startX, endX, y);
             }
         } else {
+            // start and end on different StaffLines
+            // start margin from the text Label until the End of StaffLine
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
                 lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
             const lastStaffMeasure: StaffMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
             const endX: number = lastStaffMeasure.PositionAndShape.RelativePosition.x + lastStaffMeasure.PositionAndShape.Size.width;
             let y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
+
+            // calculate Dashes for the first StaffLine
             this.calculateDashes(startStaffLine, startX, endX, y);
+
+            // calculate Dashes for the second StaffLine (only if endStaffEntry isn't the first StaffEntry of the StaffLine)
             if (!(endStaffentry === endStaffentry.parentMeasure.staffEntries[0] &&
                     endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = nextStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
@@ -1862,7 +1874,6 @@ export abstract class MusicSheetCalculator {
             this.staffLinesWithLyricWords.push(staffLine);
         }
         dash.PositionAndShape.Parent = staffLine.PositionAndShape;
-        staffLine.PositionAndShape.ChildElements.push(dash.PositionAndShape);
         const relative: PointF2D = new PointF2D(startX + (endX - startX) / 2, y);
         dash.PositionAndShape.RelativePosition = relative;
     }
@@ -1974,14 +1985,12 @@ export abstract class MusicSheetCalculator {
             this.staffLinesWithLyricWords.push(staffLine);
         }
         leftDash.PositionAndShape.Parent = staffLine.PositionAndShape;
-        staffLine.PositionAndShape.ChildElements.push(leftDash.PositionAndShape);
         const leftDashRelative: PointF2D = new PointF2D (startX, y);
         leftDash.PositionAndShape.RelativePosition = leftDashRelative;
         const rightDash: GraphicalLabel = new GraphicalLabel (new Label ("-"), this.rules.LyricsHeight, TextAlignment.CenterBottom);
         rightDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(rightDash);
         rightDash.PositionAndShape.Parent = staffLine.PositionAndShape;
-        staffLine.PositionAndShape.ChildElements.push(rightDash.PositionAndShape);
         const rightDashRelative: PointF2D = new PointF2D (endX, y);
         rightDash.PositionAndShape.RelativePosition = rightDashRelative;
         return (rightDash.PositionAndShape.RelativePosition.x - leftDash.PositionAndShape.RelativePosition.x);
