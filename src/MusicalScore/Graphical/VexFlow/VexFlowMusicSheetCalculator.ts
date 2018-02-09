@@ -29,6 +29,8 @@ import Vex = require("vexflow");
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import {Voice} from "../../VoiceData/Voice";
+import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -139,7 +141,41 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry,
                                hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
-        return;
+        const firstNote: GraphicalNote = graphicalNotes[0];
+        const hasLink: boolean = graphicalStaffEntry.sourceStaffEntry.Link !== undefined;
+        if (hasLink) {
+            if (firstNote.sourceNote.ParentVoiceEntry === graphicalStaffEntry.sourceStaffEntry.VoiceEntries[0]) {
+                // set stem up:
+                //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
+                return;
+            } else {
+                // set stem down:
+                //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
+                //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
+                return;
+            }
+        } else {
+            const isMainVoice: boolean = !(firstNote.sourceNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice);
+            if (isMainVoice) {
+                const mainVoice: Voice = graphicalStaffEntry.getMainVoice();
+
+                if (firstNote.sourceNote.ParentVoiceEntry.ParentVoice === mainVoice) {
+                    // set stem up:
+                    //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
+                    return;
+                } else {
+                    // set stem down:
+                    //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
+                    //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
+                    return;
+                }
+            } else {
+                // set stem down:
+                //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
+                //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
+                return;
+            }
+        }
     }
 
     /**
