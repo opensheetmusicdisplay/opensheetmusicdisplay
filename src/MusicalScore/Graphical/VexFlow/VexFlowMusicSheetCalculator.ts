@@ -141,9 +141,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry,
                                hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
+
+        // Stem direction calculation:
         const firstNote: GraphicalNote = graphicalNotes[0];
         const hasLink: boolean = graphicalStaffEntry.sourceStaffEntry.Link !== undefined;
         if (hasLink) {
+            // in case of StaffEntryLink don't check mainVoice / linkedVoice
             if (firstNote.sourceNote.ParentVoiceEntry === graphicalStaffEntry.sourceStaffEntry.VoiceEntries[0]) {
                 // set stem up:
                 //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
@@ -156,6 +159,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         } else {
             const isMainVoice: boolean = !(firstNote.sourceNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice);
+            // if mainVoice, direction Up, else direction Down
             if (isMainVoice) {
                 const mainVoice: Voice = graphicalStaffEntry.getMainVoice();
 
@@ -164,6 +168,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
                     return;
                 } else {
+                    // two Voices present in same Measure
                     // set stem down:
                     //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
                     //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
