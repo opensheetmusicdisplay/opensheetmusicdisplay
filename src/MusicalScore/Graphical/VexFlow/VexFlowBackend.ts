@@ -44,7 +44,7 @@ export abstract class VexFlowBackend {
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                              heightInPixel: number, screenPosition: PointF2D): void;
-  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number): void;
+  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number): void;
 
   public abstract getBackendType(): number;
 

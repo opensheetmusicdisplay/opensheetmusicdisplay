@@ -24,6 +24,7 @@ import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalOctaveShift} from "./GraphicalOctaveShift";
 import {GraphicalObject} from "./GraphicalObject";
+import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -201,7 +202,7 @@ export abstract class MusicSheetDrawer {
         // empty
     }
 
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number): void {
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, alpha: number = 1): void {
         throw new Error("not implemented");
     }
 
@@ -407,6 +408,11 @@ export abstract class MusicSheetDrawer {
         if (!this.isVisible(page.PositionAndShape)) {
             return;
         }
+
+        if (process.env.DRAW_BOUNDING_BOXES.toLowerCase() === "true" || process.env.DRAW_BOUNDING_BOXES === "1") {
+            this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.BOUNDING_BOX_TYPE);
+        }
+
         for (const system of page.MusicSystems) {
             if (this.isVisible(system.PositionAndShape)) {
                 this.drawMusicSystem(system);
@@ -417,6 +423,20 @@ export abstract class MusicSheetDrawer {
                 this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
         }
+    }
+
+    private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = undefined): void {
+        const dataObjectString: string = (startBox.DataObject.constructor as any).name;
+        if (startBox.BoundingRectangle !== undefined && (dataObjectString === type || type === undefined)) {
+            const tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x * unitInPixels,
+                                                           startBox.AbsolutePosition.y * unitInPixels,
+                                                           startBox.Size.width * unitInPixels,
+                                                           startBox.Size.height * unitInPixels);
+            this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
+            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 1.2, TextAlignment.CenterCenter),
+                             layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y));
+        }
+        startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer++, type));
     }
 
     private drawMarkedAreas(system: MusicSystem): void {
