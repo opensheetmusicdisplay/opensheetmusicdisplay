@@ -428,12 +428,11 @@ export abstract class MusicSheetDrawer {
     private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = undefined): void {
         const dataObjectString: string = (startBox.DataObject.constructor as any).name;
         if (startBox.BoundingRectangle !== undefined && (dataObjectString === type || type === undefined)) {
-            // FIXME: Including this constant from VexFlowMusicSheetDrawer causes karma test to crash.
-            const unitInPixels: number = 10;
-            const tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x * unitInPixels,
-                                                           startBox.AbsolutePosition.y * unitInPixels,
-                                                           startBox.Size.width * unitInPixels,
-                                                           startBox.Size.height * unitInPixels);
+            const relBoundingRect: RectangleF2D = startBox.BoundingRectangle;
+            let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderLeft - 1,
+                                                         startBox.AbsolutePosition.y + startBox.BorderTop - 1,
+                                                         (relBoundingRect.width + 6), (relBoundingRect.height + 2));
+            tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
             this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 1.2, TextAlignment.CenterCenter),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y));
