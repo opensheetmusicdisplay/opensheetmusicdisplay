@@ -409,7 +409,7 @@ export abstract class MusicSheetDrawer {
             return;
         }
 
-        if (process.env.DRAW_BOUNDING_BOXES.toLowerCase() === "true" || process.env.DRAW_BOUNDING_BOXES === "1") {
+        if (process.env.DRAW_BOUNDING_BOXES === "1") {
             this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.BOUNDING_BOX_TYPE);
         }
 
