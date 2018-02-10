@@ -24,7 +24,7 @@ import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalOctaveShift} from "./GraphicalOctaveShift";
 import {GraphicalObject} from "./GraphicalObject";
-import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
+// import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -428,6 +428,8 @@ export abstract class MusicSheetDrawer {
     private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = undefined): void {
         const dataObjectString: string = (startBox.DataObject.constructor as any).name;
         if (startBox.BoundingRectangle !== undefined && (dataObjectString === type || type === undefined)) {
+            // FIXME: Including this constant from VexFlowMusicSheetDrawer causes karma test to crash.
+            const unitInPixels: number = 10;
             const tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x * unitInPixels,
                                                            startBox.AbsolutePosition.y * unitInPixels,
                                                            startBox.Size.width * unitInPixels,
