@@ -409,10 +409,6 @@ export abstract class MusicSheetDrawer {
             return;
         }
 
-        if (process.env.DRAW_BOUNDING_BOXES === "1") {
-            this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.BOUNDING_BOX_TYPE);
-        }
-
         for (const system of page.MusicSystems) {
             if (this.isVisible(system.PositionAndShape)) {
                 this.drawMusicSystem(system);
@@ -423,21 +419,28 @@ export abstract class MusicSheetDrawer {
                 this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
         }
+        // Draw bounding boxes for debug purposes. This has to be at the end because only
+        // then all the calculations and recalculations are done
+        if (process.env.DRAW_BOUNDING_BOXES === "1") {
+            this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.BOUNDING_BOX_TYPE);
+        }
+
     }
 
     private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = undefined): void {
         const dataObjectString: string = (startBox.DataObject.constructor as any).name;
-        if (startBox.BoundingRectangle !== undefined && (dataObjectString === type || type === undefined)) {
+        if (startBox.BoundingRectangle !== undefined && (dataObjectString === type || type === "all")) {
             const relBoundingRect: RectangleF2D = startBox.BoundingRectangle;
-            let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderLeft - 1,
-                                                         startBox.AbsolutePosition.y + startBox.BorderTop - 1,
-                                                         (relBoundingRect.width + 6), (relBoundingRect.height + 2));
+            let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderLeft,
+                                                         startBox.AbsolutePosition.y + startBox.BorderTop ,
+                                                         (relBoundingRect.width + 0), (relBoundingRect.height + 0));
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
             this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 1.2, TextAlignment.CenterCenter),
-                             layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y));
+                             layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
-        startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer++, type));
+        layer++;
+        startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
     }
 
     private drawMarkedAreas(system: MusicSystem): void {
