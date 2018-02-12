@@ -40,7 +40,7 @@ module.exports = {
       NODE_ENV: 'development', // use 'development' unless process.env.NODE_ENV is defined
       DEBUG: false,
       DRAW_BOUNDING_BOXES: '0',
-      BOUNDING_BOX_TYPE: 'GraphicalLabel', // Set to undefined for all bounding boxes othwise put in the name of the object
+      BOUNDING_BOX_TYPE: 'GraphicalLabel', // Set to undefined for all bounding boxes otherwise put in the name of the object
     }),
     // FIXME: use environment variable to control uglify.
     // new webpack.optimize.UglifyJsPlugin({
