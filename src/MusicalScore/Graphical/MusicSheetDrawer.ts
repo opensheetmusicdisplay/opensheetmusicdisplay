@@ -420,7 +420,7 @@ export abstract class MusicSheetDrawer {
         }
         // Draw bounding boxes for debug purposes. This has to be at the end because only
         // then all the calculations and recalculations are done
-        if (process.env.DRAW_BOUNDING_BOX_ELEMENT !== undefined) {
+        if (process.env.DRAW_BOUNDING_BOX_ELEMENT) {
             this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.DRAW_BOUNDING_BOX_ELEMENT);
         }
 
