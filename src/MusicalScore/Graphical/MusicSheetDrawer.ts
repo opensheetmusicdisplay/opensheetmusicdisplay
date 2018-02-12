@@ -24,7 +24,6 @@ import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalOctaveShift} from "./GraphicalOctaveShift";
 import {GraphicalObject} from "./GraphicalObject";
-// import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -421,13 +420,19 @@ export abstract class MusicSheetDrawer {
         }
         // Draw bounding boxes for debug purposes. This has to be at the end because only
         // then all the calculations and recalculations are done
-        if (process.env.DRAW_BOUNDING_BOXES === "1") {
-            this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.BOUNDING_BOX_TYPE);
+        if (process.env.DRAW_BOUNDING_BOX_ELEMENT !== undefined) {
+            this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.DRAW_BOUNDING_BOX_ELEMENT);
         }
 
     }
 
-    private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = undefined): void {
+    /**
+     * Draw bounding boxes aroung GraphicalObjects
+     * @param startBox Bounding Box that is used as a staring point to recursively go through all child elements
+     * @param layer Layer to draw to
+     * @param type Type of element to show bounding boxes for as string.
+     */
+    private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = "all"): void {
         const dataObjectString: string = (startBox.DataObject.constructor as any).name;
         if (startBox.BoundingRectangle !== undefined && (dataObjectString === type || type === "all")) {
             const relBoundingRect: RectangleF2D = startBox.BoundingRectangle;

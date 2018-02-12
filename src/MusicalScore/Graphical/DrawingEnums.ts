@@ -1,4 +1,4 @@
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import * as Collections from "typescript-collections";
 
 /**
  * The supported styles to draw a rectangle on the music sheet
@@ -39,7 +39,8 @@ export enum OutlineAndFillStyleEnum {
     Comment10
 }
 
-export const OUTLINE_AND_FILL_STYLE_DICT: Dictionary<OutlineAndFillStyleEnum, string> = new Dictionary<OutlineAndFillStyleEnum, string>();
+// tslint:disable-next-line:max-line-length A linebreak would be more confusing here
+export const OUTLINE_AND_FILL_STYLE_DICT: Collections.Dictionary<OutlineAndFillStyleEnum, string> = new Collections.Dictionary<OutlineAndFillStyleEnum, string>();
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.BaseWritingColor, "Thistle");
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.FollowingCursor, "Aqua");
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.AlternativeFollowingCursor, "Azure");

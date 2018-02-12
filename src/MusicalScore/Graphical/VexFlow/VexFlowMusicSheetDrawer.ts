@@ -117,6 +117,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param rectangle the rect in screen coordinates
      * @param layer is the current rendering layer. There are many layers on top of each other to which can be rendered. Not needed for now.
      * @param styleId the style id
+     * @param alpha alpha value between 0 and 1
      */
     protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, alpha: number): void {
        this.backend.renderRectangle(rectangle, styleId, alpha);

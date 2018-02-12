@@ -59,6 +59,14 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.restore();
     }
 
+    /**
+     * Renders a rectangle with the given style to the screen.
+     * It is given in screen coordinates.
+     * @param rectangle the rect in screen coordinates
+     * @param layer is the current rendering layer. There are many layers on top of each other to which can be rendered. Not needed for now.
+     * @param styleId the style id
+     * @param alpha alpha value between 0 and 1
+     */
     public renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number = 1): void {
         this.ctx.save();
         this.ctx.attributes.fill = VexFlowConverter.style(styleId);
