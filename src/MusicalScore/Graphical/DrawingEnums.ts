@@ -74,15 +74,13 @@ OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.Comment8, "Cornflow
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.Comment9, "Cornsilk");
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.Comment10, "DarkGrey");
 
-
-
 export enum StyleSets {
     MarkedArea,
     Comment
 }
 
 /**
- * The layers which one can draw on (not suppoerted)
+ * The layers which one can draw on (not supported)
  */
 export enum GraphicalLayers {
     Background,
