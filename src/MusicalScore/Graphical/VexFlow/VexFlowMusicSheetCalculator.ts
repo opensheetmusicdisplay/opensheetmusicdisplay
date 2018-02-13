@@ -144,41 +144,43 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // Stem direction calculation:
     if (graphicalNotes.length > 0) {
       const firstNote: GraphicalNote = graphicalNotes[0];
-      const hasLink: boolean = graphicalStaffEntry.sourceStaffEntry.Link !== undefined;
-      if (hasLink) {
-        // in case of StaffEntryLink don't check mainVoice / linkedVoice
-        if (firstNote.sourceNote.ParentVoiceEntry === graphicalStaffEntry.sourceStaffEntry.VoiceEntries[0]) {
-          // set stem up:
-          //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
-          return;
-        } else {
-          // set stem down:
-          //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
-          //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
-          return;
-        }
-      } else {
-        const isMainVoice: boolean = !(firstNote.sourceNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice);
-        // if mainVoice, direction Up, else direction Down
-        if (isMainVoice) {
-          const mainVoice: Voice = graphicalStaffEntry.getMainVoice();
-
-          if (firstNote.sourceNote.ParentVoiceEntry.ParentVoice === mainVoice) {
+      if (firstNote !== undefined) {
+        const hasLink: boolean = graphicalStaffEntry.sourceStaffEntry.Link !== undefined;
+        if (hasLink) {
+          // in case of StaffEntryLink don't check mainVoice / linkedVoice
+          if (firstNote.sourceNote.ParentVoiceEntry === graphicalStaffEntry.sourceStaffEntry.VoiceEntries[0]) {
             // set stem up:
             //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
             return;
           } else {
-            // two Voices present in same Measure
             // set stem down:
             //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
             //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
             return;
           }
         } else {
-          // set stem down:
-          //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
-          //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
-          return;
+          const isMainVoice: boolean = !(firstNote.sourceNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice);
+          // if mainVoice, direction Up, else direction Down
+          if (isMainVoice) {
+            const mainVoice: Voice = graphicalStaffEntry.getMainVoice();
+
+            if (firstNote.sourceNote.ParentVoiceEntry.ParentVoice === mainVoice) {
+              // set stem up:
+              //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
+              return;
+            } else {
+              // two Voices present in same Measure
+              // set stem down:
+              //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
+              //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
+              return;
+            }
+          } else {
+            // set stem down:
+            //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
+            //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
+            return;
+          }
         }
       }
     }
