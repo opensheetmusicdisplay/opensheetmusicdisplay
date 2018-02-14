@@ -144,7 +144,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // Stem direction calculation:
     if (graphicalNotes.length > 0) {
       const firstNote: GraphicalNote = graphicalNotes[0];
-      if (firstNote !== undefined) {
+      if (firstNote.sourceNote.ParentVoiceEntry !== undefined) {
         const hasLink: boolean = graphicalStaffEntry.sourceStaffEntry.Link !== undefined;
         if (hasLink) {
           // in case of StaffEntryLink don't check mainVoice / linkedVoice
