@@ -28,7 +28,7 @@ declare namespace Vex {
 
             public getH(): number;
 
-            public draw(ctx: Vex.Flow.RenderContext) : void;
+            public draw(ctx: Vex.Flow.RenderContext) : void;            
         }
 
         export class Tickable {
@@ -61,7 +61,7 @@ declare namespace Vex {
             public draw(ctx: any, stave: Stave): void;
         }
 
-        export class StaveNote {
+        export class StaveNote extends Tickable{
             constructor(note_struct: any);
 
             public getNoteHeadBounds(): any;
@@ -69,6 +69,8 @@ declare namespace Vex {
             public getNoteHeadBeginX(): number;
 
             public getNoteHeadEndX(): number;
+
+            public getGlyphWidth(): number;
 
             public addAccidental(index: number, accidental: Accidental): StaveNote;
 
