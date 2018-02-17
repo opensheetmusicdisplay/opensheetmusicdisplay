@@ -244,13 +244,15 @@ export class VexFlowMeasure extends StaffMeasure {
                     const tickable: Vex.Flow.Tickable = tickables[tickIdx];
                     // This will let the tickable know how to calculate it's bounding box
                     tickable.setStave(this.stave);
-                    const bb: Vex.Flow.BoundingBox = tickable.getBoundingBox();
-                    // I assume the middle of the tickable is just right
-                    const tickablePosition: number = bb.getX() + bb.getW() / 2;
+                    // The middle of the tickable is also the OSMD BoundingBox center
+                    const staveNote: Vex.Flow.StaveNote = (<Vex.Flow.StaveNote>tickable);
+                    const tickablePosition: number = staveNote.getNoteHeadEndX() - staveNote.getGlyphWidth() / 2;
                     // Calculate parent absolute position and reverse calculate the relative position
                     const staffEntryBoundingBox: BoundingBox = this.staffEntries[tickIdx].PositionAndShape;
                     // All the modifiers signs, clefs, you name it have an offset in the measure. Therefore remove it.
-                    const modifierOffset: number = this.stave.getModifierXShift();
+                    // NOTE: Somehow vexflows shift is off by 25px.
+                    const modifierOffset: number = this.stave.getModifierXShift() - (this.MeasureNumber === 1 ? 25 : 0);
+                    // const modifierOffset: number = 0;
                     // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
                     // The positions are needed for cursor placement and mouse/tap interactions
                     staffEntryBoundingBox.RelativePosition.x = (tickablePosition - this.stave.getNoteStartX() + modifierOffset) / unitInPixels;
@@ -261,7 +263,6 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     public format(): void {
-        console.log("Formatting");
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
