@@ -199,6 +199,11 @@ export abstract class MusicSheetCalculator {
         // create new MusicSystems and StaffLines (as many as necessary) and populate them with Measures from measureList
         this.calculateMusicSystems();
 
+        this.formatMeasures();
+
+        // calculate all LyricWords Positions
+        this.calculateLyricsPosition();
+
         // Add some white space at the end of the piece:
         this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
 
@@ -227,6 +232,9 @@ export abstract class MusicSheetCalculator {
         this.graphicalMusicSheet.MinAllowedSystemWidth = minLength;
     }
 
+    protected formatMeasures(): void {
+        throw new Error("abstract, not implemented");
+    }
     /**
      * Calculates the x layout of the staff entries within the staff measures belonging to one source measure.
      * All staff entries are x-aligned throughout all the measures.
@@ -591,8 +599,7 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             this.calculateTempoExpressions();
         }
-        // calculate all LyricWords Positions
-        this.calculateLyricsPosition();
+
         // update all StaffLine's Borders
         // create temporary Object, just to call the methods (in order to avoid declaring them static)
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
@@ -1740,8 +1747,6 @@ export abstract class MusicSheetCalculator {
                     const lyricsStaffEntries: GraphicalStaffEntry[] =
                         this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
                     lyricStaffEntriesDict.setValue(staffLine, lyricsStaffEntries);
-                    // FIXME: Here's a fish somewhere?!
-                    //console.log(lyricStaffEntriesDict.getValue(staffLine))
                     this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
                 }
             }
@@ -1837,7 +1842,6 @@ export abstract class MusicSheetCalculator {
      * @param y
      */
     private calculateDashes(staffLine: StaffLine, startX: number, endX: number, y: number): void {
-        console.log("Dash");
         let distance: number = endX - startX;
         if (distance < this.rules.MinimumDistanceBetweenDashes) {
             this.calculateSingleDashForLyricWord(staffLine, startX, endX, y);

@@ -27,12 +27,26 @@ declare namespace Vex {
             public getW(): number;
 
             public getH(): number;
+
+            public draw(ctx: Vex.Flow.RenderContext) : void;
+        }
+
+        export class Tickable {
+            public reset(): void;
+
+            public setStave(stave: Stave);
+
+            public getBoundingBox(): BoundingBox;
         }
 
         export class Voice {
             constructor(time: any);
 
             public static Mode: any;
+
+            public context: RenderContext;
+
+            public tickables: Tickable[];
 
             public getBoundingBox(): BoundingBox;
 
@@ -95,6 +109,8 @@ declare namespace Vex {
             public setWidth(width: number): Stave;
 
             public getNoteStartX(): number;
+            
+            public getModifierXShift(): number;
 
             public getNoteEndX(): number;
 
@@ -111,6 +127,7 @@ declare namespace Vex {
             public getLineForY(y: number): number;
 
             public getModifiers(pos: any, cat: any): Clef[]; // FIXME
+            
             public setContext(ctx: RenderContext): Stave;
 
             public addModifier(mod: any, pos: any): void;

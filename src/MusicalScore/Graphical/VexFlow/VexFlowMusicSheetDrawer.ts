@@ -71,6 +71,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
         measure.draw(this.backend.getContext());
+        for (const voiceID in measure.vfVoices) {
+            if (measure.vfVoices.hasOwnProperty(voiceID)) {
+                const tickables: Vex.Flow.Tickable[] = measure.vfVoices[voiceID].tickables;
+                for (const tick of tickables) {
+                    if ((<any>tick).getAttribute("type") === "StaveNote" && process.env.DEBUG) {
+                        tick.getBoundingBox().draw(this.backend.getContext());
+                    }
+                }
+            }
+        }
 
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
@@ -132,8 +142,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param styleId the style id
      */
     protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number): void {
-       this.backend.renderRectangle(rectangle, styleId);
-    }
+        this.backend.renderRectangle(rectangle, styleId);
+     }
 
     /**
      * Converts a point from unit to pixel space.

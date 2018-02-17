@@ -35,8 +35,6 @@ import { GraphicalLyricWord } from "../GraphicalLyricWord";
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
         super(new VexFlowGraphicalSymbolFactory());
-        // let a: LyricsEntry = new LyricsEntry(undefined, undefined, undefined);
-        // a = a;
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
     }
 
@@ -45,6 +43,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (const staffMeasures of this.graphicalMusicSheet.MeasureList) {
             for (const staffMeasure of staffMeasures) {
                 (<VexFlowMeasure>staffMeasure).clean();
+            }
+        }
+    }
+
+    protected formatMeasures(): void {
+        for (const staffMeasures of this.graphicalMusicSheet.MeasureList) {
+            for (const staffMeasure of staffMeasures) {
+                (<VexFlowMeasure>staffMeasure).format();
+                (<VexFlowMeasure>staffMeasure).calculateStaffEntryPositions();
             }
         }
     }
@@ -95,17 +102,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         let width: number = 200;
         if (allVoices.length > 0) {
-            const firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
             // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
             // FIXME: a more relaxed formatting of voices
             width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+            // firstMeasure.formatVoices = (w: number) => {
+            //     formatter.format(allVoices, w);
+            // };
             for (const measure of measures) {
                 measure.minimumStaffEntriesWidth = width;
-                (measure as VexFlowMeasure).formatVoices = undefined;
+                if (measure !== measures[0]) {
+                    (measure as VexFlowMeasure).formatVoices = undefined;
+                } else {
+                    (measure as VexFlowMeasure).formatVoices = (w: number) => {
+                        formatter.format(allVoices, w);
+                    };
+                }
             }
-            firstMeasure.formatVoices = (w: number) => {
-                formatter.format(allVoices, w);
-            };
         }
 
         return width;
