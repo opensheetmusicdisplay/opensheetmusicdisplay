@@ -17,6 +17,7 @@ import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
+import {BoundingBox} from "../BoundingBox";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -182,15 +183,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param ctx
      */
     public draw(ctx: Vex.Flow.RenderContext): void {
-        // If this is the first stave in the vertical measure, call the format
-        // method to set the width of all the voices
-        if (this.formatVoices) {
-            // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
-        }
 
-        // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
@@ -226,9 +219,58 @@ export class VexFlowMeasure extends StaffMeasure {
         for (const connector of this.connectors) {
             connector.setContext(ctx).draw();
         }
+    }
 
-        // now we can finally set the vexflow x positions back into the osmd object model:
-        this.setStaffEntriesXPositions();
+    /**
+     * Calculates the staff entry positions from the VexFlow stave information and the tickabels inside the staff.
+     * This is needed in order to set the OSMD staff entries (which are almost the same as tickables) to the correct positionts.
+     * It is also needed to be done after formatting!
+     * TODO: Maybe call format() here directly instead in the calculator
+     */
+    public calculateStaffEntryPositions(): void {
+        for (const voiceID in this.vfVoices) {
+            if (this.vfVoices.hasOwnProperty(voiceID)) {
+                const tickables: Vex.Flow.Tickable[] = this.vfVoices[voiceID].tickables;
+                if (tickables.length !== this.staffEntries.length) {
+                    // FIXME: This can happen because tickables are not 100% the same as Staffentries and
+                    // the count of notes in a tuple differs. Not sure how to deal with it as it also confuses the cursor
+                    // to jump back to the beginning. Maybe just take the last valid tickable?
+                    console.error("Measure " + this.MeasureNumber + " Voice " + voiceID + ". " +
+                    "Tickables length (" + tickables.length + ") in vexflow " +
+                    "does not match number of staff entries (" + this.staffEntries.length + "). This should never happen!");
+                    continue;
+                }
+                for (let tickIdx: number = 0; tickIdx < tickables.length; tickIdx++) {
+                    const tickable: Vex.Flow.Tickable = tickables[tickIdx];
+                    // This will let the tickable know how to calculate it's bounding box
+                    tickable.setStave(this.stave);
+                    const bb: Vex.Flow.BoundingBox = tickable.getBoundingBox();
+                    // I assume the middle of the tickable is just right
+                    const tickablePosition: number = bb.getX() + bb.getW() / 2;
+                    // Calculate parent absolute position and reverse calculate the relative position
+                    const staffEntryBoundingBox: BoundingBox = this.staffEntries[tickIdx].PositionAndShape;
+                    // All the modifiers signs, clefs, you name it have an offset in the measure. Therefore remove it.
+                    const modifierOffset: number = this.stave.getModifierXShift();
+                    // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
+                    // The positions are needed for cursor placement and mouse/tap interactions
+                    staffEntryBoundingBox.RelativePosition.x = (tickablePosition - this.stave.getNoteStartX() + modifierOffset) / unitInPixels;
+                }
+
+            }
+        }
+    }
+
+    public format(): void {
+        console.log("Formatting");
+        // If this is the first stave in the vertical measure, call the format
+        // method to set the width of all the voices
+        if (this.formatVoices) {
+            // The width of the voices does not include the instructions (StaveModifiers)
+            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
+        }
+
+        // Force the width of the Begin Instructions
+        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
     }
 
     /**
@@ -438,24 +480,5 @@ export class VexFlowMeasure extends StaffMeasure {
     private updateInstructionWidth(): void {
         this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
         this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
-    }
-
-    /**
-     * sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
-     * The positions are needed for cursor placement and mouse/tap interactions
-     */
-    private setStaffEntriesXPositions(): void {
-        for (let idx3: number = 0, len3: number = this.staffEntries.length; idx3 < len3; ++idx3) {
-            const gse: VexFlowStaffEntry = (<VexFlowStaffEntry> this.staffEntries[idx3]);
-            const measure: StaffMeasure = gse.parentMeasure;
-            const x: number =
-                gse.getX() -
-                measure.PositionAndShape.RelativePosition.x -
-                measure.ParentStaffLine.PositionAndShape.RelativePosition.x -
-                measure.parentMusicSystem.PositionAndShape.RelativePosition.x;
-            gse.PositionAndShape.RelativePosition.x = x;
-            gse.PositionAndShape.calculateAbsolutePosition();
-            gse.PositionAndShape.calculateAbsolutePositionsOfChildren();
-        }
     }
 }
