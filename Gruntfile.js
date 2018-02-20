@@ -1,5 +1,5 @@
 /*global module*/
-var webpackCfg = require('./webpack.config.js');
+var webpackCfg = require('./webpack.prod.js');
 
 module.exports = function (grunt) {
     'use strict';
