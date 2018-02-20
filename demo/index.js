@@ -205,8 +205,8 @@ import { OSMD } from '../src/OSMD/OSMD';
     }
 
     function logCanvasSize() {
-        size.innerHTML = canvas.offsetWidth;
-        zoomDiv.innerHTML = Math.floor(zoom * 100.0);
+        size.innerHTML = canvas.offsetWidth + "px";
+        zoomDiv.innerHTML = Math.floor(zoom * 100.0) + "%";
     }
 
     function scale() {

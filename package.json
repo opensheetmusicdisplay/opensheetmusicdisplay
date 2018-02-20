@@ -12,7 +12,9 @@
     "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "typedoc": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
     "prepublish": "grunt build:dist",
-    "start": "http-server build/demo"
+    "clean": "",
+    "build": "webpack --progress --colors --config webpack.prod.js",
+    "start": "webpack-dev-server --progress --colors --config webpack.dev.js"
   },
   "pre-commit": [
     "lint"
@@ -63,7 +65,9 @@
     "babel-preset-es2015": "^6.24.1",
     "browserify": "^16.1.0",
     "chai": "^4.1.0",
+    "clean-webpack-plugin": "^0.1.18",
     "cz-conventional-changelog": "^2.0.0",
+    "file-loader": "^1.1.8",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
     "grunt-contrib-clean": "^1.0.0",
@@ -75,6 +79,7 @@
     "grunt-ts": "^6.0.0-beta.3",
     "grunt-webpack": "^3.0.0",
     "grunt-webpack-server": "^0.1.0",
+    "html-webpack-plugin": "^2.30.1",
     "http-server": "^0.11.0",
     "jquery": "^3.2.1",
     "jshint": "^2.9.4",
@@ -93,11 +98,15 @@
     "ts-loader": "^3.0.0",
     "tsify": "^3.0.0",
     "tslint": "^5.8.0",
+    "tslint-loader": "^3.5.3",
     "typedoc": "^0.10.0",
     "typescript": "^2.6.1",
     "uglifyjs-webpack-plugin": "^1.0.1",
+    "underscore-template-loader": "^0.8.0",
     "webpack": "^3.5.5",
-    "webpack-dev-server": "2.7.1"
+    "webpack-dev-server": "2.7.1",
+    "webpack-merge": "^4.1.1",
+    "webpack-visualizer-plugin": "^0.1.11"
   },
   "config": {
     "commitizen": {

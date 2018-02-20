@@ -1,4 +1,5 @@
 var path = require('path');
+var HtmlWebpackPlugin = require('html-webpack-plugin');
 var webpack = require('webpack');
 
 module.exports = {
@@ -17,21 +18,39 @@ module.exports = {
    module: {
        loaders: [
            // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
-           { test: /\.tsx?$/, loader: 'ts-loader' },
+           { 
+              test: /\.tsx?$/, 
+              loader: 'ts-loader' 
+            },
            // all files with a '.js' extension. Mostly for the web demo.
-           { test: /\.jsx?$/, loader: 'babel-loader', exclude: /(node_modules|bower_components)/,
+           { 
+              test: /\.jsx?$/, 
+              loader: 'babel-loader', 
+              exclude: /(node_modules|bower_components)/,
               query: {
                 presets: ['es2015'] 
               }
+            },
+            // ts lint loader. will pre-lint the ts files
+            {
+              test: /\.ts$/,
+              enforce: 'pre',
+              loader: 'tslint-loader',
+              options: { /* Loader options go here */ }
           },
+          // For html loader generation
+          {
+            test: /\.html$/,
+            loader: 'underscore-template-loader'
+          },
+          {
+              test: /\.(jpg|jpeg|gif|png|ico)$/,
+              exclude: /node_modules/,
+              loader:'file-loader?name=img/[path][name].[ext]&context=./app/images'
+          }
        ]
-   },
-   plugins: [
-     // build optimization plugins
-     new webpack.LoaderOptionsPlugin({
-      minimize: true,
-      debug: true
-    }),
+   },   
+   plugins: [     
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery'
@@ -41,21 +60,17 @@ module.exports = {
       DEBUG: false,
       DRAW_BOUNDING_BOX_ELEMENT: false, //  Specifies the element to draw bounding boxes for (e.g. 'GraphicalLabels'). If 'all', bounding boxes are drawn for all elements.
     }),
-    // FIXME: use environment variable to control uglify.
-    // new webpack.optimize.UglifyJsPlugin({
-    //     warnings: false,
-    //     beautify: false,
-    //     compress: true,
-    //     comments: false,
-    //     sourceMap: true
-    //   })
+    // add a demo page to the build folder
+    new HtmlWebpackPlugin({
+      template: 'demo/index.html',
+      title: 'OpenSheetMusicDisplay Demo',
+    }),
   ],
   devServer: {
     contentBase: [
       path.join(__dirname, 'test/data'),
       path.join(__dirname, 'build'),
       path.join(__dirname, 'demo')
-      // TODO: fill in paths for demo data
     ],
     port: 8000,
     compress: false,
