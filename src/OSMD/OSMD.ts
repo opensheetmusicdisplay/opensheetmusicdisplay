@@ -13,6 +13,7 @@ import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
+import { VexFlowStaffEntry } from "../MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
 
 export class OSMD {
     /**
@@ -189,6 +190,23 @@ export class OSMD {
                 log.setLevel(log.levels.WARN);
                 break;
         }
+    }
+
+    public colorizeNotes(styleObj: any = {fillStyle: "black", strokeStyle: "blue"}): void {
+        // Get all staff entries throughout the document
+        const numOfStaffEntries: number = this.graphic.VerticalGraphicalStaffEntryContainers.length;
+        const voiceNumber: number = 1;
+        // Define new note style
+        // Get all Vexflow notes in all staves
+        for (let idx: number = 0; idx < numOfStaffEntries; idx++) {
+            const note: Vex.Flow.StaveNote = (<VexFlowStaffEntry>this.graphic.getStaffEntry(idx)).vfNotes[voiceNumber];
+            // apply new style
+            if (note) {
+                note.setStyle(styleObj);
+            }
+        }
+        // Re-render document
+        this.render();
     }
 
     /**
