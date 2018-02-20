@@ -14,7 +14,7 @@ import {GraphicalNote} from "../GraphicalNote";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
-import {OutlineAndFillStyleEnum} from "../DrawingEnums";
+import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
 import {Logging} from "../../../Common/Logging";
 
 /**
@@ -430,7 +430,7 @@ export class VexFlowConverter {
      * @returns {string}
      */
     public static style(styleId: OutlineAndFillStyleEnum): string {
-        // TODO To be implemented
-        return "lightgreen";
+        const ret: string = OUTLINE_AND_FILL_STYLE_DICT.getValue(styleId);
+        return ret;
     }
 }

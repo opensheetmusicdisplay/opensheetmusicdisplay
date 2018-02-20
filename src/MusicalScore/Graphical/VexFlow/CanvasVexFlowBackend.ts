@@ -52,11 +52,13 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvasRenderingCtx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
         this.canvasRenderingCtx.font = old;
     }
-    public renderRectangle(rectangle: RectangleF2D, styleId: number): void {
+    public renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number = 1): void {
         const old: string | CanvasGradient | CanvasPattern = this.canvasRenderingCtx.fillStyle;
         this.canvasRenderingCtx.fillStyle = VexFlowConverter.style(styleId);
+        this.canvasRenderingCtx.globalAlpha = alpha;
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         this.canvasRenderingCtx.fillStyle = old;
+        this.canvasRenderingCtx.globalAlpha = 1;
     }
 
     private ctx: Vex.Flow.CanvasContext;

@@ -135,7 +135,7 @@ import { OSMD } from '../src/OSMD/OSMD';
             var value = e.target.value;
             // clears the canvas element
             canvas.innerHTML = "";
-            osmdObj = new opensheetmusicdisplay.OSMD(canvas, false, value);
+            osmdObj = new OSMD(canvas, false, value);
             osmdObj.setLogLevel('info');
             selectOnChange();
 

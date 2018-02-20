@@ -36,6 +36,11 @@ module.exports = {
       $: 'jquery',
       jQuery: 'jquery'
     }),
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: 'development', // use 'development' unless process.env.NODE_ENV is defined
+      DEBUG: false,
+      DRAW_BOUNDING_BOX_ELEMENT: false, //  Specifies the element to draw bounding boxes for (e.g. 'GraphicalLabels'). If 'all', bounding boxes are drawn for all elements.
+    }),
     // FIXME: use environment variable to control uglify.
     // new webpack.optimize.UglifyJsPlugin({
     //     warnings: false,
