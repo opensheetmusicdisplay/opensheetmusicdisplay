@@ -12,7 +12,6 @@
     "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "typedoc": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
     "prepublish": "grunt build:dist",
-    "clean": "",
     "build": "webpack --progress --colors --config webpack.prod.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js"
   },
