@@ -40,9 +40,13 @@ declare namespace Vex {
 
             public addTickables(notes: StaveNote[]): Voice;
 
+            public getTickables(): StaveNote[];
+
             public addTickable(note: StaveNote): Voice;
 
             public setMode(mode: any): Voice;
+
+            public setStyle(style: any): Voice;
 
             public draw(ctx: any, stave: Stave): void;
         }

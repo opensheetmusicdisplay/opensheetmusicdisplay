@@ -34,6 +34,8 @@ export class VexFlowMeasure extends StaffMeasure {
     // The VexFlow Ties in the measure
     public vfTies: Vex.Flow.StaveTie[] = [];
 
+    public style: any = {};
+
     // The VexFlow Stave (one measure in one line)
     private stave: Vex.Flow.Stave;
     // VexFlow StaveConnectors (vertical lines)
@@ -194,11 +196,16 @@ export class VexFlowMeasure extends StaffMeasure {
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
+
+        ctx.save();
+        ctx = Object.assign(ctx, this.style);
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
                 this.vfVoices[voiceID].draw(ctx, this.stave);
             }
         }
+        ctx.restore();
+
         // Draw beams
         for (const voiceID in this.vfbeams) {
             if (this.vfbeams.hasOwnProperty(voiceID)) {
