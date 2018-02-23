@@ -38,7 +38,7 @@ export abstract class AbstractTempoExpression {
     }
 
     protected static isStringInStringList(wordsToFind: string[], inputString: string): boolean {
-        for (let wordToFind of wordsToFind) {
+        for (const wordToFind of wordsToFind) {
             if (AbstractTempoExpression.stringContainsSeparatedWord(inputString.toLowerCase().trim(), wordToFind.toLowerCase().trim())) {
                 return true;
             }

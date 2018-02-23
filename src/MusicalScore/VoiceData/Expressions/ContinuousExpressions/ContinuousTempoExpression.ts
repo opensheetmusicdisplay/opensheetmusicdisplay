@@ -68,15 +68,15 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
         return this.ParentMultiTempoExpression.AbsoluteTimestamp.RealValue;
     }
     public getInterpolatedTempo(currentAbsoluteTimestamp: Fraction): number {
-        let continuousAbsoluteStartTimestamp: Fraction = Fraction.plus(
+        const continuousAbsoluteStartTimestamp: Fraction = Fraction.plus(
             this.parentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp, this.parentMultiTempoExpression.Timestamp
         );
         if (currentAbsoluteTimestamp.lt(continuousAbsoluteStartTimestamp)) { return -1; }
         if (this.absoluteEndTimestamp.lt(currentAbsoluteTimestamp)) { return -2; }
-        let interpolationRatio: number =
+        const interpolationRatio: number =
             Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue
             / Fraction.minus(this.absoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;
-        let interpolatedTempo: number = Math.max(0.0, Math.min(250.0, this.startTempo + (this.endTempo - this.startTempo) * interpolationRatio));
+        const interpolatedTempo: number = Math.max(0.0, Math.min(250.0, this.startTempo + (this.endTempo - this.startTempo) * interpolationRatio));
         return interpolatedTempo;
     }
 

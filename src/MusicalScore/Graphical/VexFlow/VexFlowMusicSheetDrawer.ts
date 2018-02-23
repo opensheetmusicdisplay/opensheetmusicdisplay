@@ -1,34 +1,36 @@
-import Vex = require("vexflow");
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "../GraphicalLabel";
-import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 import {MusicSystem} from "../MusicSystem";
 import {GraphicalObject} from "../GraphicalObject";
+import {GraphicalLayers} from "../DrawingEnums";
+import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
+import {VexFlowBackend} from "./VexFlowBackend";
+import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 
 /**
- * This is a global contant which denotes the height in pixels of the space between two lines of the stave
+ * This is a global constant which denotes the height in pixels of the space between two lines of the stave
  * (when zoom = 1.0)
  * @type number
  */
 export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
-    private renderer: Vex.Flow.Renderer;
-    private vfctx: Vex.Flow.CanvasContext;
-    private ctx: CanvasRenderingContext2D;
+    private backend: VexFlowBackend;
     private zoom: number = 1.0;
 
-    constructor(canvas: HTMLCanvasElement, isPreviewImageDrawer: boolean = false) {
+    constructor(element: HTMLElement,
+                backend: VexFlowBackend,
+                isPreviewImageDrawer: boolean = false) {
         super(new VexFlowTextMeasurer(), isPreviewImageDrawer);
-        this.renderer = new Vex.Flow.Renderer(canvas, Vex.Flow.Renderer.Backends.CANVAS);
-        this.vfctx = this.renderer.getContext();
-        // The following is a hack to retrieve the actual canvas' drawing context
-        // Not supposed to work forever....
-        this.ctx = (this.vfctx as any).vexFlowCanvasContext;
+        this.backend = backend;
+    }
+
+    public clear(): void {
+        this.backend.clear();
     }
 
     /**
@@ -37,7 +39,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     public scale(k: number): void {
         this.zoom = k;
-        this.vfctx.scale(k, k);
+        this.backend.scale(this.zoom);
     }
 
     /**
@@ -46,12 +48,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param y
      */
     public resize(x: number, y: number): void {
-        this.renderer.resize(x, y);
+        this.backend.resize(x, y);
     }
 
     public translate(x: number, y: number): void {
-        // Translation seems not supported by VexFlow
-        this.ctx.translate(x, y);
+        this.backend.translate(x, y);
     }
 
     /**
@@ -68,11 +69,25 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
-        return measure.draw(this.vfctx);
+        measure.draw(this.backend.getContext());
+
+        // Draw the StaffEntries
+        for (const staffEntry of measure.staffEntries) {
+            this.drawStaffEntry(staffEntry);
+        }
     }
 
-    protected drawInstrumentBrace(bracket: GraphicalObject, system: MusicSystem): void {
-        // empty
+    private drawStaffEntry(staffEntry: GraphicalStaffEntry): void {
+        // Draw ChordSymbol
+        if (staffEntry.graphicalChordContainer !== undefined) {
+            this.drawLabel(staffEntry.graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
+        }
+    }
+
+    protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
+        // Draw InstrumentBrackets at beginning of line
+        const vexBrace: VexFlowInstrumentBracket = (brace as VexFlowInstrumentBracket);
+        vexBrace.draw(this.backend.getContext());
     }
 
     protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {
@@ -90,15 +105,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
                           bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
-        let ctx: CanvasRenderingContext2D = (this.vfctx as any).vexFlowCanvasContext;
-        let old: string = ctx.font;
-        ctx.font = VexFlowConverter.font(
-            graphicalLabel.Label.fontHeight * unitInPixels,
-            graphicalLabel.Label.fontStyle,
-            graphicalLabel.Label.font
-        );
-        ctx.fillText(graphicalLabel.Label.text, screenPosition.x, screenPosition.y + heightInPixel);
-        ctx.font = old;
+        const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
+        const { fontStyle, font, text } = graphicalLabel.Label;
+
+        this.backend.renderText(height, fontStyle, font, text, heightInPixel, screenPosition);
     }
 
     /**
@@ -107,12 +117,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param rectangle the rect in screen coordinates
      * @param layer is the current rendering layer. There are many layers on top of each other to which can be rendered. Not needed for now.
      * @param styleId the style id
+     * @param alpha alpha value between 0 and 1
      */
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number): void {
-        let old: string|CanvasGradient|CanvasPattern = this.ctx.fillStyle;
-        this.ctx.fillStyle = VexFlowConverter.style(styleId);
-        this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-        this.ctx.fillStyle = old;
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, alpha: number): void {
+       this.backend.renderRectangle(rectangle, styleId, alpha);
     }
 
     /**

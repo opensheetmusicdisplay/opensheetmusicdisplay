@@ -13,58 +13,58 @@ export class SubInstrument {
     }
 
     private static midiInstrument: { [key: string]: MidiInstrument; } = {
-        "cello": MidiInstrument.Cello,
-        "violon-c": MidiInstrument.Cello,
-        "contrabass": MidiInstrument.Contrabass,
-        "kontrabass": MidiInstrument.Contrabass,
-        "clarinet": MidiInstrument.Clarinet,
-        "klarinette": MidiInstrument.Clarinet,
-        "flute": MidiInstrument.Flute,
-        "flöte": MidiInstrument.Flute,
-        "frenchhorn": MidiInstrument.French_Horn,
-        "guitar": MidiInstrument.Acoustic_Guitar_nylon,
-        "gitarre": MidiInstrument.Acoustic_Guitar_nylon,
-        "harp": MidiInstrument.Orchestral_Harp,
-        "harfe": MidiInstrument.Orchestral_Harp,
-        "oboe": MidiInstrument.Oboe,
-        "organ": MidiInstrument.Church_Organ,
-        "orgue": MidiInstrument.Church_Organ,
-        "orgel": MidiInstrument.Church_Organ,
-        "piano": MidiInstrument.Acoustic_Grand_Piano,
-        "klavier": MidiInstrument.Acoustic_Grand_Piano,
-        "piccolo": MidiInstrument.Piccolo,
-        "strings": MidiInstrument.String_Ensemble_1,
-        "streicher": MidiInstrument.String_Ensemble_1,
-        "steeldrum": MidiInstrument.Steel_Drums,
-        "trombone": MidiInstrument.Trombone,
-        "posaune": MidiInstrument.Trombone,
-        "brass": MidiInstrument.Trombone,
-        "trumpet": MidiInstrument.Trumpet,
-        "trompete": MidiInstrument.Trumpet,
-        "tpt": MidiInstrument.Trumpet,
-        "tuba": MidiInstrument.Tuba,
-        "sax": MidiInstrument.Tenor_Sax,
-        "viola": MidiInstrument.Viola,
-        "bratsche": MidiInstrument.Viola,
-        "violin": MidiInstrument.Violin,
-        "violon.": MidiInstrument.Violin,
-        "woodblock": MidiInstrument.Woodblock,
         "alt": MidiInstrument.Synth_Voice,
         "alto": MidiInstrument.Synth_Voice,
-        "tenor": MidiInstrument.Synth_Voice,
+        "banjo": MidiInstrument.Banjo,
         "bariton": MidiInstrument.Synth_Voice,
         "baritone": MidiInstrument.Synth_Voice,
         "bass": MidiInstrument.Synth_Voice,
-        "sopran": MidiInstrument.Synth_Voice,
-        "voice": MidiInstrument.Synth_Voice,
-        "recorder": MidiInstrument.Recorder,
         "blockflöte": MidiInstrument.Recorder,
-        "banjo": MidiInstrument.Banjo,
+        "brass": MidiInstrument.Trombone,
+        "bratsche": MidiInstrument.Viola,
+        "cello": MidiInstrument.Cello,
+        "clarinet": MidiInstrument.Clarinet,
+        "contrabass": MidiInstrument.Contrabass,
         "drums": MidiInstrument.Percussion,
+        "flute": MidiInstrument.Flute,
+        "flöte": MidiInstrument.Flute,
+        "frenchhorn": MidiInstrument.French_Horn,
+        "gitarre": MidiInstrument.Acoustic_Guitar_nylon,
+        "guitar": MidiInstrument.Acoustic_Guitar_nylon,
+        "harfe": MidiInstrument.Orchestral_Harp,
+        "harp": MidiInstrument.Orchestral_Harp,
+        "klarinette": MidiInstrument.Clarinet,
+        "klavier": MidiInstrument.Acoustic_Grand_Piano,
+        "kontrabass": MidiInstrument.Contrabass,
+        "oboe": MidiInstrument.Oboe,
+        "organ": MidiInstrument.Church_Organ,
+        "orgel": MidiInstrument.Church_Organ,
+        "orgue": MidiInstrument.Church_Organ,
         "percussion": MidiInstrument.Percussion,
-        "schlagzeug": MidiInstrument.Percussion,
+        "piano": MidiInstrument.Acoustic_Grand_Piano,
+        "piccolo": MidiInstrument.Piccolo,
+        "posaune": MidiInstrument.Trombone,
+        "recorder": MidiInstrument.Recorder,
+        "sax": MidiInstrument.Tenor_Sax,
         "schlagwerk": MidiInstrument.Percussion,
+        "schlagzeug": MidiInstrument.Percussion,
+        "sopran": MidiInstrument.Synth_Voice,
+        "steeldrum": MidiInstrument.Steel_Drums,
+        "streicher": MidiInstrument.String_Ensemble_1,
+        "strings": MidiInstrument.String_Ensemble_1,
+        "tenor": MidiInstrument.Synth_Voice,
+        "tpt": MidiInstrument.Trumpet,
+        "trombone": MidiInstrument.Trombone,
+        "trompete": MidiInstrument.Trumpet,
+        "trumpet": MidiInstrument.Trumpet,
+        "tuba": MidiInstrument.Tuba,
         "unnamed": MidiInstrument.Acoustic_Grand_Piano,
+        "viola": MidiInstrument.Viola,
+        "violin": MidiInstrument.Violin,
+        "violon-c": MidiInstrument.Cello,
+        "violon.": MidiInstrument.Violin,
+        "voice": MidiInstrument.Synth_Voice,
+        "woodblock": MidiInstrument.Woodblock
     };
 
     public idString: string;
@@ -94,16 +94,16 @@ export class SubInstrument {
         // FIXME: test this function
         try {
             if (instrumentType) {
-                let tmpName: string = instrumentType.toLowerCase().trim();
-                for (let key in SubInstrument.midiInstrument) {
+                const tmpName: string = instrumentType.toLowerCase().trim();
+                for (const key in SubInstrument.midiInstrument) {
                     if (tmpName.indexOf(key) !== -1) {
                         return key;
                     }
                 }
             }
             if (this.parentInstrument.Name) {
-                let tmpName: string = this.parentInstrument.Name.toLowerCase().trim();
-                for (let key in SubInstrument.midiInstrument) {
+                const tmpName: string = this.parentInstrument.Name.toLowerCase().trim();
+                for (const key in SubInstrument.midiInstrument) {
                     if (tmpName.indexOf(key) !== -1) {
                         return key;
                     }

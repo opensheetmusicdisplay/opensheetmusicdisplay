@@ -2,12 +2,10 @@ import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetRead
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 
-
-
-describe("Music Sheet Reader Tests", () => {
-    // Initialize variables
-    let path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
-    let reader: MusicSheetReader = new MusicSheetReader();
+/* tslint:disable:no-unused-expression */
+describe("Music Sheet Reader", () => {
+    const path: string = "test/data/MuzioClementi_SonatinaOpus36No1_Part1.xml";
+    const reader: MusicSheetReader = new MusicSheetReader();
     let score: IXmlElement;
     let sheet: MusicSheet;
 
@@ -17,37 +15,29 @@ describe("Music Sheet Reader Tests", () => {
 
     before((): void => {
         // Load the xml file
-        let doc: Document = getSheet(path);
+        const doc: Document = getSheet(path);
         chai.expect(doc).to.not.be.undefined;
         score = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
         // chai.expect(score).to.not.be.undefined;
         sheet = reader.createMusicSheet(score, path);
     });
 
-    beforeEach((): void => {
-      // ???
+    it("checks XML", (done: MochaDone) => {
+      done(); // TODO implement test
     });
 
-    afterEach((): void => {
-      // cleanup?
-    });
-
-    it("Check XML", (done: MochaDone) => {
-      done();
-    });
-
-    it("Read title and composer", (done: MochaDone) => {
+    it("reads title and composer", (done: MochaDone) => {
         chai.expect(sheet.TitleString).to.equal("Sonatina Op.36 No 1 Teil 1 Allegro");
         chai.expect(sheet.ComposerString).to.equal("Muzio Clementi");
         done();
     });
 
-    it("Measures", (done: MochaDone) => {
+    it("reads measures", (done: MochaDone) => {
         chai.expect(sheet.SourceMeasures.length).to.equal(38);
         done();
     });
 
-    it("Instruments", (done: MochaDone) => {
+    it("reads instruments", (done: MochaDone) => {
         chai.expect(reader.CompleteNumberOfStaves).to.equal(2);
         chai.expect(sheet.Instruments.length).to.equal(2);
         chai.expect(sheet.InstrumentalGroups.length).to.equal(2);
@@ -56,9 +46,9 @@ describe("Music Sheet Reader Tests", () => {
         done();
     });
 
-    it("Notes", (done: MochaDone) => {
+    it("reads notes", (done: MochaDone) => {
+        // TODO implement test
         // Staff Entries on first measure
-
         // chai.expect(sheet.SourceMeasures[0].VerticalSourceStaffEntryContainers[0].StaffEntries.length).to.equal(4);
         done();
     });

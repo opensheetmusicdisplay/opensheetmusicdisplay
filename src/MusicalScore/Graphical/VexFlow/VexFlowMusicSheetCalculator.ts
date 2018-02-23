@@ -39,8 +39,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     protected clearRecreatedObjects(): void {
         super.clearRecreatedObjects();
-        for (let staffMeasures of this.graphicalMusicSheet.MeasureList) {
-            for (let staffMeasure of staffMeasures) {
+        for (const staffMeasures of this.graphicalMusicSheet.MeasureList) {
+            for (const staffMeasure of staffMeasures) {
                 (<VexFlowMeasure>staffMeasure).clean();
             }
         }
@@ -68,15 +68,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             (measure as VexFlowMeasure).finalizeTuplets();
         }*/
         // Format the voices
-        let allVoices: Vex.Flow.Voice[] = [];
-        let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
+        const allVoices: Vex.Flow.Voice[] = [];
+        const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
             align_rests: true,
         });
 
-        for (let measure of measures) {
-            let mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
-            let voices: Vex.Flow.Voice[] = [];
-            for (let voiceID in mvoices) {
+        for (const measure of measures) {
+            const mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
+            const voices: Vex.Flow.Voice[] = [];
+            for (const voiceID in mvoices) {
                 if (mvoices.hasOwnProperty(voiceID)) {
                     voices.push(mvoices[voiceID]);
                     allVoices.push(mvoices[voiceID]);
@@ -92,11 +92,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         let width: number = 200;
         if (allVoices.length > 0) {
-            let firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
+            const firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
             // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
             // FIXME: a more relaxed formatting of voices
             width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
-            for (let measure of measures) {
+            for (const measure of measures) {
                 measure.minimumStaffEntriesWidth = width;
                 (measure as VexFlowMeasure).formatVoices = undefined;
             }
@@ -156,15 +156,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
     protected calculateSystemYLayout(): void {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+            const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             if (!this.leadSheet) {
                 let globalY: number = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
                     this.rules.TitleBottomDistance;
                 for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                    let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                    const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                     // calculate y positions of stafflines within system
                     let y: number = 0;
-                    for (let line of musicSystem.StaffLines) {
+                    for (const line of musicSystem.StaffLines) {
                         line.PositionAndShape.RelativePosition.y = y;
                         y += 10;
                     }
@@ -191,13 +191,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      * @param tieIsAtSystemBreak
      */
     protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
-        let startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
+        const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
         let vfStartNote: Vex.Flow.StaveNote = undefined;
         if (startNote !== undefined) {
             vfStartNote = startNote.vfnote[0];
         }
 
-        let endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
+        const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
         let vfEndNote: Vex.Flow.StaveNote = undefined;
         if (endNote !== undefined) {
             vfEndNote = endNote.vfnote[0];
@@ -206,23 +206,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         if (tieIsAtSystemBreak) {
             // split tie into two ties:
-            let vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+            const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
                 first_note: vfStartNote,
             });
-            let measure1: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            const measure1: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
             measure1.vfTies.push(vfTie1);
 
-            let vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+            const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
                 last_note : vfEndNote,
             });
-            let measure2: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            const measure2: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
             measure2.vfTies.push(vfTie2);
         } else {
-            let vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+            const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
                 first_note: vfStartNote,
                 last_note : vfEndNote,
             });
-            let measure: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            const measure: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
             measure.vfTies.push(vfTie);
         }
     }
@@ -255,13 +255,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
       // find first visible StaffLine
       let staffLine: VexFlowStaffLine = undefined;
-      let measures: VexFlowMeasure[]  = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
-      let topMeasure: VexFlowMeasure = undefined;
+      const measures: VexFlowMeasure[]  = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
       for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
-        let graphicalMeasure: VexFlowMeasure = measures[idx];
+        const graphicalMeasure: VexFlowMeasure = measures[idx];
         if (graphicalMeasure.ParentStaffLine !== undefined && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
           staffLine = <VexFlowStaffLine>graphicalMeasure.ParentStaffLine;
-          topMeasure = graphicalMeasure;
           break;
         }
       }
@@ -269,38 +267,37 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // now create corresponding graphical symbol or Text in VexFlow:
       // use top measure and staffline for positioning.
       if (staffLine !== undefined) {
-        let instruction: string = "";
+        //let instruction: string = "";
         switch (repetitionInstruction.type) {
           case RepetitionInstructionEnum.Segno:
-
             // create Segno Symbol:
             break;
           case RepetitionInstructionEnum.Coda:
             // create Coda Symbol:
             break;
           case RepetitionInstructionEnum.DaCapo:
-            instruction = "D.C.";
+            //instruction = "D.C.";
             break;
           case RepetitionInstructionEnum.DalSegno:
-            instruction = "D.S.";
+            //instruction = "D.S.";
             break;
           case RepetitionInstructionEnum.Fine:
-            instruction = "Fine";
+            //instruction = "Fine";
             break;
           case RepetitionInstructionEnum.ToCoda:
-            instruction = "To Coda";
+            //instruction = "To Coda";
             break;
           case RepetitionInstructionEnum.DaCapoAlFine:
-            instruction = "D.C. al Fine";
+            //instruction = "D.C. al Fine";
             break;
           case RepetitionInstructionEnum.DaCapoAlCoda:
-            instruction = "D.C. al Coda";
+            //instruction = "D.C. al Coda";
             break;
           case RepetitionInstructionEnum.DalSegnoAlFine:
-            instruction = "D.S. al Fine";
+            //instruction = "D.S. al Fine";
             break;
           case RepetitionInstructionEnum.DalSegnoAlCoda:
-            instruction = "D.S. al Coda";
+            //instruction = "D.S. al Coda";
             break;
           default:
             break;

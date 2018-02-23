@@ -33,13 +33,13 @@ export class GraphicalLabel extends Clickable {
         if (this.Label.text.trim() === "") {
             return;
         }
-        let labelMarginBorderFactor: number = EngravingRules.Rules.LabelMarginBorderFactor;
+        const labelMarginBorderFactor: number = EngravingRules.Rules.LabelMarginBorderFactor;
 
-        let widthToHeightRatio: number =
+        const widthToHeightRatio: number =
             MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.text, this.Label.font, this.Label.fontStyle);
-        let height: number = this.Label.fontHeight;
-        let width: number = height * widthToHeightRatio;
-        let psi: BoundingBox = this.PositionAndShape;
+        const height: number = this.Label.fontHeight;
+        const width: number = height * widthToHeightRatio;
+        const psi: BoundingBox = this.PositionAndShape;
 
         switch (this.Label.textAlignment) {
             case TextAlignment.CenterBottom:

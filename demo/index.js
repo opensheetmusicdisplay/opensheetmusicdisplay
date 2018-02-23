@@ -1,20 +1,14 @@
+import { OSMD } from '../src/OSMD/OSMD';
+
 /*jslint browser:true */
 (function () {
     "use strict";
-    var OSMD;
+    var osmdObj;
     // The folder of the demo files
-    var folder = "sheets/",
+    var folder = "",
     // The available demos
         demos = {
-            "Actor Prelude Sample": "ActorPreludeSample.xml",
-            "Beethoven - An Fie Ferne Geliebte": "AnDieFerneGeliebte_Beethoven.xml",
-            "C. Gounod - Meditation": "CharlesGounod_Meditation.xml",
-            "Debussy - Mandoline": "mandoline - debussy.xml",
-            "Dichterliebe": "Dichterliebe01.xml",
-            "G.P. Telemann - Sonata, TWV 40:102 - 1. Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
-            "J. Haydn - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
-            "J.S. Bach - Air": "JohannSebastianBach_Air.xml",
-            "J.S. Bach - Praeludium In C Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+            "Beethoven - AnDieFerneGeliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
             "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
@@ -24,7 +18,14 @@
             "Mozart - Trio": "MozartTrio.mxl",
             "S. Joplin - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
             "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer.xml",
-            "Saltarello": "Saltarello.mxl"
+            "ActorPreludeSample": "ActorPreludeSample.xml",
+            "an chloe - mozart": "an chloe - mozart.xml",
+            "das veilchen - mozart": "das veilchen - mozart.xml",
+            "Dichterliebe01": "Dichterliebe01.xml",
+            "mandoline - debussy": "mandoline - debussy.xml",
+            "MozartTrio": "MozartTrio.mxl",
+            "Cornelius P. Christbaum Opus 8.1": "Cornelius_P_Christbaum_Opus_8_1_1865.mxl",
+            "France Levasseur - Parlez Mois": "Parlez-moi.mxl",
         },
 
         zoom = 1.0,
@@ -41,7 +42,8 @@
         nextCursorBtn,
         resetCursorBtn,
         showCursorBtn,
-        hideCursorBtn;
+        hideCursorBtn,
+        backendSelect;
 
     // Initialization code
     function init() {
@@ -60,6 +62,7 @@
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
+        backendSelect = document.getElementById("backend-select");
 
         // Hide error
         error();
@@ -91,8 +94,8 @@
         };
 
         // Create OSMD object and canvas
-        OSMD = new opensheetmusicdisplay.OSMD(canvas);
-        OSMD.setLogLevel('info');
+        osmdObj = new OSMD(canvas, false);
+        osmdObj.setLogLevel('info');
         document.body.appendChild(canvas);
 
         // Set resize event handler
@@ -104,7 +107,7 @@
                 var width = document.body.clientWidth;
                 canvas.width = width;
                 try {
-                OSMD.render();
+                osmdObj.render();
                 } catch (e) {}
                 enable();
             }
@@ -113,20 +116,30 @@
         window.addEventListener("keydown", function(e) {
             var event = window.event ? window.event : e;
             if (event.keyCode === 39) {
-                OSMD.cursor.next();
+                osmdObj.cursor.next();
             }
         });
         nextCursorBtn.addEventListener("click", function() {
-            OSMD.cursor.next();
+            osmdObj.cursor.next();
         });
         resetCursorBtn.addEventListener("click", function() {
-            OSMD.cursor.reset();
+            osmdObj.cursor.reset();
         });
         hideCursorBtn.addEventListener("click", function() {
-            OSMD.cursor.hide();
+            osmdObj.cursor.hide();
         });
         showCursorBtn.addEventListener("click", function() {
-            OSMD.cursor.show();
+            osmdObj.cursor.show();
+        });
+
+        backendSelect.addEventListener("change", function(e) {
+            var value = e.target.value;
+            // clears the canvas element
+            canvas.innerHTML = "";
+            osmdObj = new OSMD(canvas, false, value);
+            osmdObj.setLogLevel('info');
+            selectOnChange();
+
         });
     }
 
@@ -166,9 +179,9 @@
             str = folder + select.value;
         }
         zoom = 1.0;
-        OSMD.load(str).then(
+        osmdObj.load(str).then(
             function() {
-                return OSMD.render();
+                return osmdObj.render();
             },
             function(e) {
                 error("Error reading sheet: " + e);
@@ -200,8 +213,8 @@
     function scale() {
         disable();
         window.setTimeout(function(){
-            OSMD.zoom = zoom;
-            OSMD.render();
+            osmdObj.zoom = zoom;
+            osmdObj.render();
             enable();
         }, 0);
     }

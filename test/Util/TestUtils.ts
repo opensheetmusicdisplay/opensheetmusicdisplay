@@ -6,12 +6,12 @@
 export class TestUtils {
 
     public static getScore(name: string): Document {
-        let path: string = "test/data/" + name;
+        const path: string = "test/data/" + name;
         return ((window as any).__xml__)[path];
     }
 
     public static getMXL(scoreName: string): string {
-        let path: string = "test/data/" + scoreName;
+        const path: string = "test/data/" + scoreName;
         return ((window as any).__raw__)[path];
     }
 
@@ -21,9 +21,9 @@ export class TestUtils {
      * @returns {Element}
      */
     public static getPartWiseElement(doc: Document): Element {
-        let nodes: NodeList = doc.childNodes;
+        const nodes: NodeList = doc.childNodes;
         for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
-            let node: Node = nodes[i];
+            const node: Node = nodes[i];
             if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === "score-partwise") {
                 return <Element>node;
             }

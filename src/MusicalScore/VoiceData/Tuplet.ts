@@ -39,7 +39,7 @@ export class Tuplet {
     }
 
     /**
-     * Return the index of the first List (notes[0], notes[1],...).
+     * Returns the index of the given Note in the Tuplet List (notes[0], notes[1],...).
      * @param note
      * @returns {number}
      */

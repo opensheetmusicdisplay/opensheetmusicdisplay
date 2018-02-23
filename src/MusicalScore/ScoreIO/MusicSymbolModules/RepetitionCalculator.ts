@@ -1,4 +1,4 @@
-﻿import {SourceMeasure} from "../../VoiceData/SourceMeasure";
+import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {MusicSheet} from "../../MusicSheet";
@@ -6,7 +6,6 @@ import {MusicSheet} from "../../MusicSheet";
 export class RepetitionCalculator {
   private musicSheet: MusicSheet;
   private repetitionInstructions: RepetitionInstruction[] = [];
-  private lastRepetitionCommonPartStartIndex: number = 0;
   private currentMeasure: SourceMeasure;
   private currentMeasureIndex: number;
 
@@ -20,10 +19,9 @@ export class RepetitionCalculator {
   public calculateRepetitions(musicSheet: MusicSheet, repetitionInstructions: RepetitionInstruction[]): void {
     this.musicSheet = <MusicSheet>musicSheet;
     this.repetitionInstructions = repetitionInstructions;
-    this.lastRepetitionCommonPartStartIndex = 0;
-    let sourceMeasures: SourceMeasure[] = this.musicSheet.SourceMeasures;
+    const sourceMeasures: SourceMeasure[] = this.musicSheet.SourceMeasures;
     for (let idx: number = 0, len: number = this.repetitionInstructions.length; idx < len; ++idx) {
-      let instruction: RepetitionInstruction = this.repetitionInstructions[idx];
+      const instruction: RepetitionInstruction = this.repetitionInstructions[idx];
       this.currentMeasureIndex = instruction.measureIndex;
       this.currentMeasure = sourceMeasures[this.currentMeasureIndex];
       this.handleRepetitionInstructions(instruction);
@@ -32,7 +30,7 @@ export class RepetitionCalculator {
     // if there are more than one instruction at measure begin or end,
     // sort them according to the nesting of the repetitions:
     for (let idx: number = 0, len: number = this.musicSheet.SourceMeasures.length; idx < len; ++idx) {
-      let measure: SourceMeasure = this.musicSheet.SourceMeasures[idx];
+      const measure: SourceMeasure = this.musicSheet.SourceMeasures[idx];
       if (measure.FirstRepetitionInstructions.length > 1) {
         measure.FirstRepetitionInstructions.sort(RepetitionInstruction.compare);
       }

@@ -1,4 +1,4 @@
-﻿import {MusicSheet} from "../../MusicSheet";
+import {MusicSheet} from "../../MusicSheet";
 import {IXmlElement} from "../../../Common/FileIO/Xml";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "../../VoiceData/Instructions/RepetitionInstruction";
@@ -35,10 +35,10 @@ export class RepetitionInstructionReader {
       let direction: string = "";
       let type: string = "";
       let style: string = "";
-      let endingIndices: number[] = [];
+      const endingIndices: number[] = [];
 
       // read barline style
-      let styleNode: IXmlElement = barlineNode.element("bar-style");
+      const styleNode: IXmlElement = barlineNode.element("bar-style");
 
       // if location is ommited in Xml, right is implied (from documentation)
       if (styleNode !== undefined) {
@@ -49,36 +49,36 @@ export class RepetitionInstructionReader {
       } else {
         location = "right";
       }
-      let barlineNodeElements: IXmlElement[] = barlineNode.elements();
+      const barlineNodeElements: IXmlElement[] = barlineNode.elements();
 
       // read repeat- or ending line information
       for (let idx: number = 0, len: number = barlineNodeElements.length; idx < len; ++idx) {
-        let childNode: IXmlElement = barlineNodeElements[idx];
+        const childNode: IXmlElement = barlineNodeElements[idx];
         if ("repeat" === childNode.name && childNode.hasAttributes) {
           hasRepeat = true;
           direction = childNode.attribute("direction").value;
         } else if ( "ending" === childNode.name && childNode.hasAttributes &&
                     childNode.attribute("type") !== undefined && childNode.attribute("number") !== undefined) {
           type = childNode.attribute("type").value;
-          let num: string = childNode.attribute("number").value;
+          const num: string = childNode.attribute("number").value;
 
           // Parse the given ending indices:
           // handle cases like: "1, 2" or "1 + 2" or even "1 - 3, 6"
-          let separatedEndingIndices: string[] = num.split("[,+]");
+          const separatedEndingIndices: string[] = num.split("[,+]");
           for (let idx2: number = 0, len2: number = separatedEndingIndices.length; idx2 < len2; ++idx2) {
-            let separatedEndingIndex: string = separatedEndingIndices[idx2];
-            let indices: string[] = separatedEndingIndex.match("[0-9]");
+            const separatedEndingIndex: string = separatedEndingIndices[idx2];
+            const indices: string[] = separatedEndingIndex.match("[0-9]");
 
             // check if possibly something like "1-3" is given..
             if (separatedEndingIndex.search("-") !== -1 && indices.length === 2) {
-              let startIndex: number = parseInt(indices[0], 10);
-              let endIndex: number = parseInt(indices[1], 10);
+              const startIndex: number = parseInt(indices[0], 10);
+              const endIndex: number = parseInt(indices[1], 10);
               for (let index: number = startIndex; index <= endIndex; index++) {
                 endingIndices.push(index);
               }
             } else {
               for (let idx3: number = 0, len3: number = indices.length; idx3 < len3; ++idx3) {
-                let index: string = indices[idx3];
+                const index: string = indices[idx3];
                 endingIndices.push(parseInt(index, 10));
               }
             }
@@ -93,23 +93,23 @@ export class RepetitionInstructionReader {
       if (hasRepeat || endingIndices.length > 0) {
         if (location === "left") {
           if (type === "start") {
-            let newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
-                                                                                  AlignmentType.Begin, undefined, endingIndices);
+            const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
+                                                                                    AlignmentType.Begin, undefined, endingIndices);
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
           if (direction === "forward") {
             // start new Repetition
-            let newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.StartLine);
+            const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.StartLine);
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
         } else { // location right
           if (type === "stop" || type === "discontinue") {
-            let newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
-                                                                                  AlignmentType.End, undefined, endingIndices);
+            const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
+                                                                                    AlignmentType.End, undefined, endingIndices);
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
           if (direction === "backward") {
-            let newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.BackJumpLine);
+            const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.BackJumpLine);
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
         }
@@ -118,17 +118,17 @@ export class RepetitionInstructionReader {
   }
 
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
-    let wordsNode: IXmlElement = directionTypeNode.element("words");
+    const wordsNode: IXmlElement = directionTypeNode.element("words");
     if (wordsNode !== undefined) {
       // must Trim string and ToLower before compare
-      let innerText: string = wordsNode.value.trim().toLowerCase();
+      const innerText: string = wordsNode.value.trim().toLowerCase();
       if (StringUtil.StringContainsSeparatedWord(innerText, "d.s. al fine") ||
         StringUtil.StringContainsSeparatedWord(innerText, "d. s. al fine")) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlFine);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlFine);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -138,7 +138,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlCoda);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlCoda);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -148,7 +148,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlFine);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlFine);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -158,7 +158,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlCoda);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapoAlCoda);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -170,7 +170,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapo);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DaCapo);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -182,7 +182,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegno);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegno);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -194,7 +194,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.ToCoda);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.ToCoda);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -203,7 +203,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Fine);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Fine);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -212,7 +212,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition > 0.5) {
           measureIndex++;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Coda);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Coda);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -221,7 +221,7 @@ export class RepetitionInstructionReader {
         if (relativeMeasurePosition > 0.5) {
           measureIndex++;
         }
-        let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
+        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
@@ -230,7 +230,7 @@ export class RepetitionInstructionReader {
       if (relativeMeasurePosition > 0.5) {
         measureIndex++;
       }
-      let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
+      const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
       this.addInstruction(this.repetitionInstructions, newInstruction);
       return true;
     } else if (directionTypeNode.element("coda") !== undefined) {
@@ -238,7 +238,7 @@ export class RepetitionInstructionReader {
       if (relativeMeasurePosition > 0.5) {
         measureIndex++;
       }
-      let newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Coda);
+      const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Coda);
       this.addInstruction(this.repetitionInstructions, newInstruction);
       return true;
     }
@@ -248,11 +248,11 @@ export class RepetitionInstructionReader {
   public removeRedundantInstructions(): void {
     let segnoCount: number = 0;
     let codaCount: number = 0;
-    let fineCount: number = 0;
+    //const fineCount: number = 0;
     let toCodaCount: number = 0;
     let dalSegnaCount: number = 0;
     for (let index: number = 0; index < this.repetitionInstructions.length; index++) {
-      let instruction: RepetitionInstruction = this.repetitionInstructions[index];
+      const instruction: RepetitionInstruction = this.repetitionInstructions[index];
       switch (instruction.type) {
         case RepetitionInstructionEnum.Coda:
           if (toCodaCount > 0) {
@@ -270,7 +270,7 @@ export class RepetitionInstructionReader {
           if (segnoCount - dalSegnaCount > 0) { // two segnos in a row
             let foundInstruction: boolean = false;
             for (let idx: number = 0, len: number = this.repetitionInstructions.length; idx < len; ++idx) {
-              let instr: RepetitionInstruction = this.repetitionInstructions[idx];
+              const instr: RepetitionInstruction = this.repetitionInstructions[idx];
               if (instruction.measureIndex - instr.measureIndex === 1) {
                 switch (instr.type) {
                   case RepetitionInstructionEnum.BackJumpLine:
@@ -320,7 +320,7 @@ export class RepetitionInstructionReader {
       } else {
         switch (instruction.type) {
           case RepetitionInstructionEnum.Fine:
-            fineCount++;
+            //fineCount++;
             break;
           case RepetitionInstructionEnum.ToCoda:
             toCodaCount++;
@@ -345,7 +345,7 @@ export class RepetitionInstructionReader {
 
   private findInstructionInPreviousMeasure(currentInstructionIndex: number, currentMeasureIndex: number, searchedType: RepetitionInstructionEnum): boolean {
     for (let index: number = currentInstructionIndex - 1; index >= 0; index--) {
-      let instruction: RepetitionInstruction = this.repetitionInstructions[index];
+      const instruction: RepetitionInstruction = this.repetitionInstructions[index];
       if (currentMeasureIndex - instruction.measureIndex === 1 && instruction.type === searchedType) {
         return true;
       }
@@ -355,7 +355,7 @@ export class RepetitionInstructionReader {
 
   private backwardSearchForPreviousIdenticalInstruction(currentInstructionIndex: number, currentInstruction: RepetitionInstruction): boolean {
     for (let index: number = currentInstructionIndex - 1; index >= 0; index--) {
-      let instruction: RepetitionInstruction = this.repetitionInstructions[index];
+      const instruction: RepetitionInstruction = this.repetitionInstructions[index];
       if (instruction.equals(currentInstruction)) {
         return true;
       }
@@ -366,7 +366,7 @@ export class RepetitionInstructionReader {
   private addInstruction(currentRepetitionInstructions: RepetitionInstruction[], newInstruction: RepetitionInstruction): void {
     let addInstruction: boolean = true;
     for (let idx: number = 0, len: number = currentRepetitionInstructions.length; idx < len; ++idx) {
-      let repetitionInstruction: RepetitionInstruction = currentRepetitionInstructions[idx];
+      const repetitionInstruction: RepetitionInstruction = currentRepetitionInstructions[idx];
       if (newInstruction.equals(repetitionInstruction)) {
         addInstruction = false;
         break;

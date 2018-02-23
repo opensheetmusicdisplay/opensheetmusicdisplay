@@ -14,12 +14,14 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
         this.staffNumber = staffNumber;
     }
     public static dynamicToRelativeVolumeDict: { [_: string]: number; } = {
-        "ffffff": (127.0 / 127.0),
-        "fffff": (126.0 / 127.0) ,
-        "ffff": 125.0 / 127.0,
-        "fff": 124.0 / 127.0,
-        "ff": 108.0 / 127.0,
         "f": 92.0 / 127.0,
+        "ff": 108.0 / 127.0,
+        "fff": 124.0 / 127.0,
+        "ffff": 125.0 / 127.0,
+        "fffff": (126.0 / 127.0) ,
+        "ffffff": (127.0 / 127.0),
+        "fp": 0.5,
+        "fz": 0.5,
         "mf": 76.0 / 127.0,
         "mp": 60.0 / 127.0,
         "p": 44.0 / 127.0,
@@ -28,15 +30,13 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
         "pppp": 10.0 / 127.0,
         "ppppp": 8.0 / 127.0,
         "pppppp": 6.0 / 127.0,
-        "sf": 0.5,
-        "sfp": 0.5,
-        "sfpp": 0.5,
-        "fp": 0.5,
         "rf": 0.5,
         "rfz": 0.5,
-        "sfz": 0.5,
+        "sf": 0.5,
         "sffz": 0.5,
-        "fz": 0.5,
+        "sfp": 0.5,
+        "sfpp": 0.5,
+        "sfz": 0.5
     };
 
     //private static weight: number;

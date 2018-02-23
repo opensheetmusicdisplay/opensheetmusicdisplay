@@ -48,13 +48,13 @@ export class ClefInstruction extends AbstractNotationInstruction {
     }
 
     public static getAllPossibleClefs(): ClefInstruction[] {
-        let clefList: ClefInstruction[] = [];
+        const clefList: ClefInstruction[] = [];
         for (let i: number = 0; i <= 2; i++) {
-            let clefInstructionG: ClefInstruction = new ClefInstruction(ClefEnum.G, i, 2);
+            const clefInstructionG: ClefInstruction = new ClefInstruction(ClefEnum.G, i, 2);
             clefList.push(clefInstructionG);
         }
         for (let j: number = -2; j <= 0; j++) {
-            let clefInstructionF: ClefInstruction = new ClefInstruction(ClefEnum.F, j, 4);
+            const clefInstructionF: ClefInstruction = new ClefInstruction(ClefEnum.F, j, 4);
             clefList.push(clefInstructionF);
         }
         return clefList;

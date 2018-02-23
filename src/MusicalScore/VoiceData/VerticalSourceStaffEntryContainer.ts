@@ -9,13 +9,11 @@ export class VerticalSourceStaffEntryContainer {
 
     constructor(parentMeasure: SourceMeasure, timestamp: Fraction, size: number) {
         this.timestamp = timestamp;
-        this.size = size;
         this.staffEntries = new Array(size);
         this.parentMeasure = parentMeasure;
     }
 
     private timestamp: Fraction;
-    private size: number;
     private staffEntries: SourceStaffEntry[] = [];
     private comments: Comment[] = [];
     private parentMeasure: SourceMeasure;

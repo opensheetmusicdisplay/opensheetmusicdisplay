@@ -8,11 +8,11 @@
     <meta name="author" content="OpenSheetMusicDisplay contributors">
 
     <!-- Include opensheetmusicdisplay -->
-    <script src="osmd-debug.js"></script>
+    <!-- <script src="./osmd.js" type="text/javascript"></script> -->
 
     <!-- Include code and styles for this demo -->
-    <script src="demo.js"></script>
-    <link href="demo.css" media="all" rel="stylesheet"/>
+    <script src="./demo.js" type="text/javascript"></script>
+    <link href="./demo.css" media="all" rel="stylesheet"/>
     <link rel="icon" href="./favicon.ico?" type="image/x-icon"/>
 </head>
 <body>
@@ -34,6 +34,11 @@
             <p>... or just drop your MusicXML file on this page.</p>
         </td>
         <td valign="top" halign="right">
+            <p>Renderer Backend
+                <select id="backend-select" value="canvas">
+                    <option value="canvas">Canvas</option>>
+                    <option value="svg">SVG</option>
+                </select>
             <p>Cursor controls:
                 <input type="button" value="show" id="show-cursor-btn"/>
                 <input type="button" value="hide" id="hide-cursor-btn"/>

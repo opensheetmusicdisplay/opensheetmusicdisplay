@@ -4,10 +4,12 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {SystemLinePosition} from "../SystemLinePosition";
 import {StaffMeasure} from "../StaffMeasure";
 import {SystemLine} from "../SystemLine";
+import {VexFlowStaffLine} from "./VexFlowStaffLine";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {StaffLine} from "../StaffLine";
 import {EngravingRules} from "../EngravingRules";
+import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
@@ -19,7 +21,7 @@ export class VexFlowMusicSystem extends MusicSystem {
         if (this.staffLines.length === 0) {
             return;
         }
-        let width: number = this.calcBracketsWidth();
+        const width: number = this.calcBracketsWidth();
         this.boundingBox.BorderLeft = -width;
         this.boundingBox.BorderMarginLeft = -width;
         this.boundingBox.XBordersHaveBeenSet = true;
@@ -47,11 +49,16 @@ export class VexFlowMusicSystem extends MusicSystem {
 
     /**
      * creates an instrument brace for the given dimension.
-     * The height and positioning can be inferred from the given points.
-     * @param firstStaffLine the upper staff line of the bracket to create
-     * @param lastStaffLine the lower staff line of the bracket to create
+     * The height and positioning can be inferred from the given staff lines.
+     * @param firstStaffLine the upper StaffLine (use a cast to get the VexFlowStaffLine) of the brace to create
+     * @param lastStaffLine the lower StaffLine (use a cast to get the VexFlowStaffLine) of the brace to create
      */
-    protected createInstrumentBrace(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
+    protected createInstrumentBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine): void {
+        // You could write this in one line but the linter doesn't let me.
+        const firstVexStaff: VexFlowStaffLine = (firstStaffLine as VexFlowStaffLine);
+        const lastVexStaff: VexFlowStaffLine = (lastStaffLine as VexFlowStaffLine);
+        const vexFlowBracket: VexFlowInstrumentBracket = new VexFlowInstrumentBracket(firstVexStaff, lastVexStaff);
+        this.InstrumentBrackets.push(vexFlowBracket);
         return;
     }
 
