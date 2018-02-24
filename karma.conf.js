@@ -55,11 +55,12 @@ module.exports = function (config) {
             module: {
                 loaders: common.module.loaders
             },
-            resolve: common.resolve            
+            resolve: common.resolve    
         },
         webpackMiddleware: {
             // webpack-dev-middleware configuration
             // i. e.
+            noInfo: true
         },
         // test results reporter to use
         // possible values: 'dots', 'progress'
@@ -86,6 +87,8 @@ module.exports = function (config) {
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: [process.env.BROWSER ? process.env.BROWSER : 'PhantomJS'],
+
+        browserNoActivityTimeout: 30000,
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
