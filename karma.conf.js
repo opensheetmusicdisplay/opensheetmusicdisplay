@@ -89,10 +89,16 @@ module.exports = function (config) {
         autoWatch: false,
 
         // start these browsers
-        // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: [process.env.BROWSER ? process.env.BROWSER : 'ChromeHeadless'],
+        browsers: [process.env.CI ? 'ChromeHeadlessNoSandbox' : 'ChromeHeadless'],
 
-        browserNoActivityTimeout: 30000,
+        // For security reasons, Google Chrome is unable to provide sandboxing
+        // when it is running in container-based environments (e.g. CI).
+        customLaunchers: {
+          ChromeHeadlessNoSandbox: {
+            base: 'ChromeHeadless',
+            flags: ['--no-sandbox']
+          }
+        },
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
