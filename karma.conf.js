@@ -1,6 +1,3 @@
-// Karma configuration
-// Generated on Fri Feb 05 2016 12:36:08 GMT+0100 (CET)
-/*globals module*/
 var common = require('./webpack.common.js');
 
 module.exports = function (config) {
@@ -62,6 +59,13 @@ module.exports = function (config) {
             // i. e.
             noInfo: true
         },
+
+        // Required for Firefox and Chorme to work
+        // see https://github.com/webpack-contrib/karma-webpack/issues/188
+        mime: {
+            'text/x-typescript': ['ts','tsx']
+        },
+
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
@@ -86,7 +90,7 @@ module.exports = function (config) {
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: [process.env.BROWSER ? process.env.BROWSER : 'PhantomJS'],
+        browsers: [process.env.BROWSER ? process.env.BROWSER : 'ChromeHeadless'],
 
         browserNoActivityTimeout: 30000,
 
@@ -98,5 +102,4 @@ module.exports = function (config) {
         // how many browser should be started simultaneous
         concurrency: Infinity
     });
-    mocha.setup({ timeout: 10000 });
 };
