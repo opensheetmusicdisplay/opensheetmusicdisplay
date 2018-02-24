@@ -5,13 +5,12 @@
   "main": "dist/src/OSMD/OSMD.js",
   "typings": "dist/src/OSMD/OSMD",
   "scripts": {
-    "docs": "typedoc --mode file --out build/docs --module commonjs --target ES5 --name opensheetmusicdisplay ./src",
+    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
     "eslint": "eslint .",
     "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "npm-run-all eslint tslint",
     "test": "npm-run-all lint karma",
     "karma": "karma start karma.conf.js",
-    "typedoc": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
     "prepare": "npm run build",
     "build": "webpack --progress --colors --config webpack.prod.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js"
