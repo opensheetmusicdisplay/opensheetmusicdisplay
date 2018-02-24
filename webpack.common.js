@@ -19,8 +19,9 @@ module.exports = {
        loaders: [
            // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
            { 
-              test: /\.tsx?$/, 
-              loader: 'ts-loader' 
+              test: /\.ts$/, 
+              loader: 'ts-loader',
+              exclude: /(node_modules|bower_components)/,
             },
            // all files with a '.js' extension. Mostly for the web demo.
            { 
@@ -28,7 +29,7 @@ module.exports = {
               loader: 'babel-loader', 
               exclude: /(node_modules|bower_components)/,
               query: {
-                presets: ['es2015'] 
+                presets: ['es2015']
               }
             },
             // ts lint loader. will pre-lint the ts files

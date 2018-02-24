@@ -1,6 +1,8 @@
 // Karma configuration
 // Generated on Fri Feb 05 2016 12:36:08 GMT+0100 (CET)
 /*globals module*/
+var common = require('./webpack.common.js');
+
 module.exports = function (config) {
     'use strict';
     config.set({
@@ -15,13 +17,11 @@ module.exports = function (config) {
         exclude: [],
 
         files: [{
-            pattern: 'build/osmd-test.js'
-        }, {
             pattern: 'src/**/*.ts',
             included: false
         }, {
             pattern: 'test/**/*.ts',
-            included: false
+            included: true
         }, {
             pattern: 'test/data/*.xml',
             included: true
@@ -39,9 +39,28 @@ module.exports = function (config) {
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             'test/data/*.xml': ['xml2js'],
-            'test/data/*.mxl.base64': ['base64-to-js']
+            'test/data/*.mxl.base64': ['base64-to-js'],
+            // add webpack as preprocessor
+            'src/**/*.ts': ['webpack'],
+            'test/**/*.ts': ['webpack'],
         },
 
+        webpack: {
+            // karma watches the test entry points
+            // (you don't need to specify the entry option)
+            // webpack watches dependencies
+
+            // copy parts of webpack configuration to use minimal effort here
+            devtool: 'inline-source-map',
+            module: {
+                loaders: common.module.loaders
+            },
+            resolve: common.resolve            
+        },
+        webpackMiddleware: {
+            // webpack-dev-middleware configuration
+            // i. e.
+        },
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
@@ -66,7 +85,7 @@ module.exports = function (config) {
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: [], // Will be overruled by karma grunt task options
+        browsers: [process.env.BROWSER ? process.env.BROWSER : 'PhantomJS'],
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits

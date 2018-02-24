@@ -21,7 +21,7 @@
 <div class="ui three column grid container">
     <div class="column">
         <h3 class="ui header">Select a sample:</h3>
-        <select class="ui dropdown" id="select"></select>
+        <select class="ui selection dropdown" style="width:100px"  id="select"></select>
     </div>
     <div class="column">
         <h3 class="ui header">Render backend:</h3>
@@ -32,18 +32,42 @@
     </div>
     <div class="column">
         <h3 class="ui header">Cursor controls:</h3>
-        <div class="ui buttons">                
-            <input class="ui button" type="button" value="show" id="show-cursor-btn"/>
-            <input class="ui button" type="button" value="hide" id="hide-cursor-btn"/>
-            <input class="ui button" type="button" value="next" id="next-cursor-btn"/>
-            <input class="ui button" type="button" value="reset" id="reset-cursor-btn"/>
+        <div class="ui buttons">
+            <div class="ui animated fade button" id="show-cursor-btn">
+                <div class="visible content">Show</div>
+                <div class="hidden content">
+                    <i class="eye icon"></i>
+                </div>
+            </div>
+            <div class="ui animated fade button" id="hide-cursor-btn">
+                <div class="visible content">Hide</div>
+                <div class="hidden content">
+                    <i class="eye slash icon"></i>
+                </div>
+            </div>
+            <div class="ui animated fade button" id="next-cursor-btn">
+                <div class="visible content">Next</div>
+                <div class="hidden content">
+                    <i class="arrow right icon"></i>
+                </div>
+            </div>
+            <div class="ui animated fade button" id="reset-cursor-btn">
+                <div class="visible content">Reset</div>
+                <div class="hidden content">
+                    <i class="undo icon"></i>
+                </div>
+            </div>
         </div>
     </div>         
     <div class="column">
         <h3 class="ui header">Zoom controls:</h3>
         <div class="ui buttons">
-            <input class="ui button" type="button" value="zoom in" id="zoom-in-btn"/>
-            <input class="ui button" type="button" value="zoom out" id="zoom-out-btn"/>
+                <div class="ui button" id="zoom-in-btn">
+                    <i class="search plus icon"></i>
+                </div>
+                <div class="ui button" id="zoom-out-btn">
+                    <i class="search minus icon"></i>
+                </div>
         </div>
     </div>
     <div class="column">
