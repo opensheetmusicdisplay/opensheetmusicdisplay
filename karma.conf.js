@@ -78,10 +78,7 @@ module.exports = function (config) {
         logLevel: config.LOG_ERROR,
 
         client: {
-            captureConsole: true,
-            mocha: {
-                timeout: 6000
-            }
+            captureConsole: true
         },
 
         // enable / disable watching file and executing tests whenever any file changes
@@ -101,4 +98,5 @@ module.exports = function (config) {
         // how many browser should be started simultaneous
         concurrency: Infinity
     });
+    mocha.setup({ timeout: 10000 });
 };
