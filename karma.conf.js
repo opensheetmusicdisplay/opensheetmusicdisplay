@@ -78,7 +78,10 @@ module.exports = function (config) {
         logLevel: config.LOG_ERROR,
 
         client: {
-            captureConsole: true
+            captureConsole: true,
+            mocha: {
+                timeout: 6000
+            }
         },
 
         // enable / disable watching file and executing tests whenever any file changes
