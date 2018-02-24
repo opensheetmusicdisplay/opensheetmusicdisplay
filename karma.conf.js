@@ -1,7 +1,7 @@
-var common = require('./webpack.common.js');
+var common = require('./webpack.common.js')
 
 module.exports = function (config) {
-    'use strict';
+    'use strict'
     config.set({
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '',
@@ -39,7 +39,7 @@ module.exports = function (config) {
             'test/data/*.mxl.base64': ['base64-to-js'],
             // add webpack as preprocessor
             'src/**/*.ts': ['webpack'],
-            'test/**/*.ts': ['webpack'],
+            'test/**/*.ts': ['webpack']
         },
 
         webpack: {
@@ -52,7 +52,7 @@ module.exports = function (config) {
             module: {
                 loaders: common.module.loaders
             },
-            resolve: common.resolve    
+            resolve: common.resolve
         },
         webpackMiddleware: {
             // webpack-dev-middleware configuration
@@ -63,7 +63,7 @@ module.exports = function (config) {
         // Required for Firefox and Chorme to work
         // see https://github.com/webpack-contrib/karma-webpack/issues/188
         mime: {
-            'text/x-typescript': ['ts','tsx']
+            'text/x-typescript': ['ts', 'tsx']
         },
 
         // test results reporter to use
@@ -94,10 +94,10 @@ module.exports = function (config) {
         // For security reasons, Google Chrome is unable to provide sandboxing
         // when it is running in container-based environments (e.g. CI).
         customLaunchers: {
-          ChromeHeadlessNoSandbox: {
-            base: 'ChromeHeadless',
-            flags: ['--no-sandbox']
-          }
+            ChromeHeadlessNoSandbox: {
+                base: 'ChromeHeadless',
+                flags: ['--no-sandbox']
+            }
         },
 
         // Continuous Integration mode
@@ -107,5 +107,5 @@ module.exports = function (config) {
         // Concurrency level
         // how many browser should be started simultaneous
         concurrency: Infinity
-    });
-};
+    })
+}
