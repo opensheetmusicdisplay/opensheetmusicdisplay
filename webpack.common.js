@@ -28,7 +28,9 @@ module.exports = {
                 test: /\.ts$/,
                 enforce: 'pre',
                 loader: 'tslint-loader',
-                options: { /* Loader options go here */ }
+                options: {
+                    typeCheck: true
+                }
             },
             // For html loader generation
             {
