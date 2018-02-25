@@ -23,15 +23,17 @@ module.exports = {
                 loader: 'ts-loader',
                 exclude: /(node_modules|bower_components)/
             },
-            // ts lint loader. will pre-lint the ts files
-            {
-                test: /\.ts$/,
-                enforce: 'pre',
-                loader: 'tslint-loader',
-                options: {
-                    typeCheck: true
-                }
-            },
+            // FIXME: TSLint loader is horribly slow therefore check only at beginning
+            // https://github.com/wbuchwalter/tslint-loader/issues/76
+            // // ts lint loader. will pre-lint the ts files
+            // {
+            //     test: /\.ts$/,
+            //     enforce: 'pre',
+            //     loader: 'tslint-loader',
+            //     options: {
+            //         typeCheck: true
+            //     }
+            // },
             // For html loader generation
             {
                 test: /\.html$/,
@@ -50,6 +52,7 @@ module.exports = {
             jQuery: 'jquery'
         }),
         new webpack.EnvironmentPlugin({
+            STATIC_FILES_SUBFOLDER: false, // Set to other directory if NOT using webpack-dev-server
             NODE_ENV: 'development', // use 'development' unless process.env.NODE_ENV is defined
             DEBUG: false,
             DRAW_BOUNDING_BOX_ELEMENT: false //  Specifies the element to draw bounding boxes for (e.g. 'GraphicalLabels'). If 'all', bounding boxes are drawn for all elements.

@@ -5,7 +5,7 @@ import { OSMD } from '../src/OSMD/OSMD';
     "use strict";
     var osmdObj;
     // The folder of the demo files
-    var folder = "",
+    var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     // The available demos
         demos = {
             "Beethoven - AnDieFerneGeliebte": "Beethoven_AnDieFerneGeliebte.xml",

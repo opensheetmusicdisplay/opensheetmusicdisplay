@@ -48,7 +48,7 @@ module.exports = function (config) {
             // webpack watches dependencies
 
             // copy parts of webpack configuration to use minimal effort here
-            devtool: 'inline-source-map',
+            devtool: 'cheap-module-eval-source-map',
             module: {
                 loaders: common.module.loaders
             },
