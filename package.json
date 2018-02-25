@@ -9,8 +9,8 @@
     "eslint": "eslint .",
     "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "npm-run-all eslint tslint",
-    "test": "npm-run-all lint karma",
-    "karma": "karma start karma.conf.js",
+    "test": "karma start --single-run --no-auto-watch",
+    "test:watch": "karma start --no-single-run --auto-watch --browsers Chrome",
     "prepare": "npm run build",
     "build": "webpack --progress --colors --config webpack.prod.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js"
