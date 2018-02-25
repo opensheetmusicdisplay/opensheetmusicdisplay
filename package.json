@@ -96,7 +96,7 @@
     "typedoc": "^0.10.0",
     "typescript": "^2.6.1",
     "uglifyjs-webpack-plugin": "^1.0.1",
-    "webpack": "^3.5.5",
+    "webpack": "^4.0.0",
     "webpack-dev-server": "2.7.1"
   },
   "config": {
