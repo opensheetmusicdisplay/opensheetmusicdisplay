@@ -1137,7 +1137,7 @@ export abstract class MusicSheetCalculator {
         if (this.graphicalMusicSheet.Title !== undefined) {
             const title: GraphicalLabel = this.graphicalMusicSheet.Title;
             title.PositionAndShape.Parent = page.PositionAndShape;
-            let relative: PointF2D = new PointF2D();
+            const relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
             title.PositionAndShape.RelativePosition = relative;
@@ -1146,7 +1146,7 @@ export abstract class MusicSheetCalculator {
         if (this.graphicalMusicSheet.Subtitle !== undefined) {
             const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
-            let relative: PointF2D = new PointF2D();
+            const relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
             subtitle.PositionAndShape.RelativePosition = relative;
@@ -1729,7 +1729,7 @@ export abstract class MusicSheetCalculator {
     //}
 
     private calculateLyricsPosition(): void {
-        let lyricStaffEntriesDict: Dictionary<StaffLine, GraphicalStaffEntry[]> = new Dictionary<StaffLine, GraphicalStaffEntry[]>();
+        const lyricStaffEntriesDict: Dictionary<StaffLine, GraphicalStaffEntry[]> = new Dictionary<StaffLine, GraphicalStaffEntry[]>();
         // sort the lyriceVerseNumbers for every Instrument that has Lyrics
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.ParentMusicSheet.Instruments.length; idx < len; ++idx) {
             const instrument: Instrument = this.graphicalMusicSheet.ParentMusicSheet.Instruments[idx];
@@ -1739,12 +1739,12 @@ export abstract class MusicSheetCalculator {
         }
         // first calc lyrics text positions
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+            const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                 for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    let staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                    let lyricsStaffEntries: GraphicalStaffEntry[] =
+                    const staffLine: StaffLine = musicSystem.StaffLines[idx3];
+                    const lyricsStaffEntries: GraphicalStaffEntry[] =
                         this.calculateSingleStaffLineLyricsPosition(staffLine, staffLine.ParentStaff.ParentInstrument.LyricVersesNumbers);
                     lyricStaffEntriesDict.setValue(staffLine, lyricsStaffEntries);
                     this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
@@ -1757,7 +1757,7 @@ export abstract class MusicSheetCalculator {
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                 const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
                 for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    let staffLine: StaffLine = musicSystem.StaffLines[idx3];
+                    const staffLine: StaffLine = musicSystem.StaffLines[idx3];
                     this.calculateLyricsExtendsAndDashes(lyricStaffEntriesDict.getValue(staffLine));
                 }
             }

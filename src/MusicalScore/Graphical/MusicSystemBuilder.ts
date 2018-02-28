@@ -331,8 +331,8 @@ export class MusicSystemBuilder {
         if (musicSystem !== undefined) {
             const staffLine: StaffLine = this.symbolFactory.createStaffLine(musicSystem, staff);
             musicSystem.StaffLines.push(staffLine);
-            let boundingBox: BoundingBox = staffLine.PositionAndShape;
-            let relativePosition: PointF2D = new PointF2D();
+            const boundingBox: BoundingBox = staffLine.PositionAndShape;
+            const relativePosition: PointF2D = new PointF2D();
             if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
                 relativePosition.x = this.rules.FirstSystemMargin;
             } else {
