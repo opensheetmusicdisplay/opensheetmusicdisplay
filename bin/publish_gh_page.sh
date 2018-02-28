@@ -2,7 +2,7 @@
 
 # Prepare files to be published
 npm run docs
-grunt build:demo
+npm run build
 
 # Clone github page
 git clone git@github.com:opensheetmusicdisplay/opensheetmusicdisplay.github.io.git
