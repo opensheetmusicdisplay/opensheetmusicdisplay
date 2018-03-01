@@ -44,7 +44,15 @@ export abstract class VexFlowBackend {
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                              heightInPixel: number, screenPosition: PointF2D): void;
-  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number): void;
+  /**
+   * Renders a rectangle with the given style to the screen.
+   * It is given in screen coordinates.
+   * @param rectangle the rect in screen coordinates
+   * @param layer is the current rendering layer. There are many layers on top of each other to which can be rendered. Not needed for now.
+   * @param styleId the style id
+   * @param alpha alpha value between 0 and 1
+   */
+  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number): void;
 
   public abstract getBackendType(): number;
 

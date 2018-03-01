@@ -11,10 +11,10 @@ export class SelectionEndSymbol extends GraphicalObject {
 
     constructor(system: MusicSystem, xPosition: number) {
         super();
-        let xCoordinate: number = xPosition;
-        let yCoordinate: number = system.PositionAndShape.AbsolutePosition.y;
-        let lineThickness: number = 0.4;
-        let height: number = CollectionUtil.last(system.StaffLines).PositionAndShape.RelativePosition.y + 4;
+        const xCoordinate: number = xPosition;
+        const yCoordinate: number = system.PositionAndShape.AbsolutePosition.y;
+        const lineThickness: number = 0.4;
+        const height: number = CollectionUtil.last(system.StaffLines).PositionAndShape.RelativePosition.y + 4;
         this.verticalLine = new GraphicalLine(
             new PointF2D(xCoordinate, yCoordinate),
             new PointF2D(xCoordinate, yCoordinate + height),
@@ -22,9 +22,9 @@ export class SelectionEndSymbol extends GraphicalObject {
             OutlineAndFillStyleEnum.SelectionSymbol
         );
         for (let idx: number = 0, len: number = system.StaffLines.length; idx < len; ++idx) {
-            let staffLine: StaffLine = system.StaffLines[idx];
-            let anchor: PointF2D = new PointF2D(xCoordinate, yCoordinate + staffLine.PositionAndShape.RelativePosition.y);
-            let arrowPoints: PointF2D[] = new Array(3);
+            const staffLine: StaffLine = system.StaffLines[idx];
+            const anchor: PointF2D = new PointF2D(xCoordinate, yCoordinate + staffLine.PositionAndShape.RelativePosition.y);
+            const arrowPoints: PointF2D[] = new Array(3);
             anchor.y -= .2;
             arrowPoints[0].x = anchor.x - 3;
             arrowPoints[0].y = anchor.y + 1.2;
@@ -33,11 +33,11 @@ export class SelectionEndSymbol extends GraphicalObject {
             arrowPoints[2].x = anchor.x - 2;
             arrowPoints[2].y = anchor.y + 2;
             this.arrows.push(arrowPoints);
-            let linePoints: PointF2D[] = new Array(8);
-            let arrowThickness: number = .8;
+            const linePoints: PointF2D[] = new Array(8);
+            const arrowThickness: number = .8;
             anchor.x -= .1;
             anchor.y += .3;
-            let hilfsVar: number = .2;
+            const hilfsVar: number = .2;
             linePoints[0].x = anchor.x - 2;
             linePoints[0].y = anchor.y + 1.5 - hilfsVar;
             linePoints[1].x = anchor.x - 1;

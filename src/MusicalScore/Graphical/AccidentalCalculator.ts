@@ -34,7 +34,7 @@ export class AccidentalCalculator {
      */
     public doCalculationsAtEndOfMeasure(): void {
         this.currentInMeasureNoteAlterationsDict.clear();
-        for (let key of this.keySignatureNoteAlterationsDict.keys()) {
+        for (const key of this.keySignatureNoteAlterationsDict.keys()) {
             this.currentInMeasureNoteAlterationsDict.setValue(key, this.keySignatureNoteAlterationsDict.getValue(key));
         }
     }
@@ -43,7 +43,7 @@ export class AccidentalCalculator {
         if (pitch === undefined) {
             return;
         }
-        let pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;
+        const pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;
         /*let pitchKeyGivenInMeasureDict: boolean = this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey);
         if (
             (pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.Accidental)
@@ -64,7 +64,7 @@ export class AccidentalCalculator {
             this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
         }*/
 
-        let isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;
+        const isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;
         if (this.currentInMeasureNoteAlterationsDict.containsKey(pitchKey)) {
             if (isInCurrentAlterationsToKeyList) {
                 this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
@@ -96,7 +96,7 @@ export class AccidentalCalculator {
     }
 
     private reactOnKeyInstructionChange(): void {
-        let noteEnums: NoteEnum[] = KeyInstruction.getNoteEnumList(this.activeKeyInstruction);
+        const noteEnums: NoteEnum[] = KeyInstruction.getNoteEnumList(this.activeKeyInstruction);
         let keyAccidentalType: AccidentalEnum;
         if (this.activeKeyInstruction.Key > 0) {
             keyAccidentalType = AccidentalEnum.SHARP;

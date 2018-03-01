@@ -5,6 +5,9 @@ import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 
 /**
  * A bounding box delimits an area on the 2D plane.
+ * @param dataObject Graphical object where the bounding box will be attached
+ * @param parent Parent bounding box of an object in a higher hierarchy position
+ * @param connectChildToParent Create a child to parent relationship too. Will be true by default
  */
 export class BoundingBox {
     protected isSymbol: boolean = false;
@@ -30,12 +33,20 @@ export class BoundingBox {
     protected childElements: BoundingBox[] = [];
     protected parent: BoundingBox;
     protected dataObject: Object;
-
+    /**
+     * Create a bounding box
+     * @param dataObject Graphical object where the bounding box will be attached
+     * @param parent Parent bounding box of an object in a higher hierarchy position
+     * @param connectChildToParent Create a child to parent relationship too. Will be true by default
+     */
     constructor(dataObject: Object = undefined, parent: BoundingBox = undefined) {
         this.parent = parent;
         this.dataObject = dataObject;
         this.xBordersHaveBeenSet = false;
         this.yBordersHaveBeenSet = false;
+        if (parent !== undefined) {
+            this.Parent = parent;
+        }
     }
 
     public get RelativePositionHasBeenSet(): boolean {
@@ -189,6 +200,12 @@ export class BoundingBox {
 
     public set Parent(value: BoundingBox) {
         this.parent = value;
+        if (this.parent.ChildElements.indexOf(this) > -1) {
+            console.error("BoundingBox of " + (this.dataObject.constructor as any).name +
+            " already in children list of " + (this.parent.dataObject.constructor as any).name + "'s BoundingBox");
+        } else {
+            this.parent.ChildElements.push(this);
+        }
     }
 
     public get DataObject(): Object {
@@ -225,7 +242,7 @@ export class BoundingBox {
         this.absolutePosition.x = 0.0;
         this.absolutePosition.y = 0.0;
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            let child: BoundingBox = this.ChildElements[idx];
+            const child: BoundingBox = this.ChildElements[idx];
             child.calculateAbsolutePositionsRecursive(this.absolutePosition.x, this.absolutePosition.y);
         }
     }
@@ -240,7 +257,7 @@ export class BoundingBox {
         this.absolutePosition.x = this.relativePosition.x + x;
         this.absolutePosition.y = this.relativePosition.y + y;
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            let child: BoundingBox = this.ChildElements[idx];
+            const child: BoundingBox = this.ChildElements[idx];
             child.calculateAbsolutePositionsRecursive(this.absolutePosition.x, this.absolutePosition.y);
         }
     }
@@ -250,7 +267,7 @@ export class BoundingBox {
      */
     public calculateAbsolutePositionsOfChildren(): void {
       for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-        let child: BoundingBox = this.ChildElements[idx];
+        const child: BoundingBox = this.ChildElements[idx];
         child.calculateAbsolutePositionsRecursive(this.absolutePosition.x, this.absolutePosition.y);
       }
     }
@@ -263,7 +280,7 @@ export class BoundingBox {
             return;
         }
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            let childElement: BoundingBox = this.ChildElements[idx];
+            const childElement: BoundingBox = this.ChildElements[idx];
             childElement.calculateBoundingBox();
         }
 
@@ -291,7 +308,7 @@ export class BoundingBox {
 
         // ChildElements will have their borders calculated, so calculate current borders
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            let childElement: BoundingBox = this.ChildElements[idx];
+            const childElement: BoundingBox = this.ChildElements[idx];
             minLeft = Math.min(minLeft, childElement.relativePosition.x + childElement.borderLeft);
             maxRight = Math.max(maxRight, childElement.relativePosition.x + childElement.borderRight);
             minTop = Math.min(minTop, childElement.relativePosition.y + childElement.borderTop);
@@ -322,7 +339,7 @@ export class BoundingBox {
             return;
         }
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            let childElement: BoundingBox = this.ChildElements[idx];
+            const childElement: BoundingBox = this.ChildElements[idx];
             childElement.calculateTopBottomBorders();
         }
         let minTop: number = Number.MAX_VALUE;
@@ -336,7 +353,7 @@ export class BoundingBox {
             maxMarginBottom = this.borderMarginBottom;
         }
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            let childElement: BoundingBox = this.ChildElements[idx];
+            const childElement: BoundingBox = this.ChildElements[idx];
             minTop = Math.min(minTop, childElement.relativePosition.y + childElement.borderTop);
             maxBottom = Math.max(maxBottom, childElement.relativePosition.y + childElement.borderBottom);
             minMarginTop = Math.min(minMarginTop, childElement.relativePosition.y + childElement.borderMarginTop);
@@ -388,9 +405,9 @@ export class BoundingBox {
      * @returns {boolean}
      */
     public collisionDetection(psi: BoundingBox): boolean {
-        let overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderRight, psi.absolutePosition.x + psi.borderRight)
+        const overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderRight, psi.absolutePosition.x + psi.borderRight)
             - Math.max(this.AbsolutePosition.x + this.borderLeft, psi.absolutePosition.x + psi.borderLeft);
-        let overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderBottom, psi.absolutePosition.y + psi.borderBottom)
+        const overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderBottom, psi.absolutePosition.y + psi.borderBottom)
             - Math.max(this.AbsolutePosition.y + this.borderTop, psi.absolutePosition.y + psi.borderTop);
         if (overlapWidth > 0 && overlapHeight > 0) {
             return true;
@@ -404,14 +421,14 @@ export class BoundingBox {
      * @returns {boolean}
      */
     public liesInsideBorders(psi: BoundingBox): boolean {
-        let leftBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderLeft)
+        const leftBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderLeft)
             && (psi.absolutePosition.x + psi.borderLeft) <= (this.AbsolutePosition.x + this.borderRight);
-        let rightBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderRight)
+        const rightBorderInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= (psi.absolutePosition.x + psi.borderRight)
             && (psi.absolutePosition.x + psi.borderRight) <= (this.AbsolutePosition.x + this.borderRight);
         if (leftBorderInside && rightBorderInside) {
-            let topBorderInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderTop)
+            const topBorderInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderTop)
                 && (psi.absolutePosition.y + psi.borderTop) <= (this.AbsolutePosition.y + this.borderBottom);
-            let bottomBorderInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderBottom)
+            const bottomBorderInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= (psi.absolutePosition.y + psi.borderBottom)
                 && (psi.absolutePosition.y + psi.borderBottom) <= (this.AbsolutePosition.y + this.borderBottom);
             if (topBorderInside && bottomBorderInside) {
                 return true;
@@ -421,9 +438,9 @@ export class BoundingBox {
     }
 
     public pointLiesInsideBorders(position: PointF2D): boolean {
-        let xInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= position.x && position.x <= (this.AbsolutePosition.x + this.borderRight);
+        const xInside: boolean = (this.AbsolutePosition.x + this.borderLeft) <= position.x && position.x <= (this.AbsolutePosition.x + this.borderRight);
         if (xInside) {
-            let yInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= position.y && position.y <= (this.AbsolutePosition.y + this.borderBottom);
+            const yInside: boolean = (this.AbsolutePosition.y + this.borderTop) <= position.y && position.y <= (this.AbsolutePosition.y + this.borderBottom);
             if (yInside) {
                 return true;
             }
@@ -437,9 +454,9 @@ export class BoundingBox {
      * @returns {boolean}
      */
     public marginCollisionDetection(psi: BoundingBox): boolean {
-        let overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderMarginRight, psi.absolutePosition.x + psi.borderMarginRight)
+        const overlapWidth: number = Math.min(this.AbsolutePosition.x + this.borderMarginRight, psi.absolutePosition.x + psi.borderMarginRight)
             - Math.max(this.AbsolutePosition.x + this.borderMarginLeft, psi.absolutePosition.x + psi.borderMarginLeft);
-        let overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderMarginBottom, psi.absolutePosition.y + psi.borderMarginBottom)
+        const overlapHeight: number = Math.min(this.AbsolutePosition.y + this.borderMarginBottom, psi.absolutePosition.y + psi.borderMarginBottom)
             - Math.max(this.AbsolutePosition.y + this.borderMarginTop, psi.absolutePosition.y + psi.borderMarginTop);
         if (overlapWidth > 0 && overlapHeight > 0) {
             return true;
@@ -453,14 +470,14 @@ export class BoundingBox {
      * @returns {boolean}
      */
     public liesInsideMargins(psi: BoundingBox): boolean {
-        let leftMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginLeft)
+        const leftMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginLeft)
             && (psi.absolutePosition.x + psi.borderMarginLeft) <= (this.AbsolutePosition.x + this.borderMarginRight);
-        let rightMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginRight)
+        const rightMarginInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= (psi.absolutePosition.x + psi.borderMarginRight)
             && (psi.absolutePosition.x + psi.borderMarginRight) <= (this.AbsolutePosition.x + this.borderMarginRight);
         if (leftMarginInside && rightMarginInside) {
-            let topMarginInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= (psi.absolutePosition.y + psi.borderMarginTop)
+            const topMarginInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= (psi.absolutePosition.y + psi.borderMarginTop)
                 && (psi.absolutePosition.y + psi.borderMarginTop) <= (this.AbsolutePosition.y + this.borderMarginBottom);
-            let bottomMarginInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= (psi.absolutePosition.y + psi.borderMarginBottom)
+            const bottomMarginInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= (psi.absolutePosition.y + psi.borderMarginBottom)
                 && (psi.absolutePosition.y + psi.borderMarginBottom) <= (this.AbsolutePosition.y + this.borderMarginBottom);
             if (topMarginInside && bottomMarginInside) {
                 return true;
@@ -470,10 +487,10 @@ export class BoundingBox {
     }
 
     public pointLiesInsideMargins(position: PointF2D): boolean {
-        let xInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= position.x
+        const xInside: boolean = (this.AbsolutePosition.x + this.borderMarginLeft) <= position.x
             && position.x <= (this.AbsolutePosition.x + this.borderMarginRight);
         if (xInside) {
-            let yInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= position.y
+            const yInside: boolean = (this.AbsolutePosition.y + this.borderMarginTop) <= position.y
                 && position.y <= (this.AbsolutePosition.y + this.borderMarginBottom);
             if (yInside) {
                 return true;
@@ -514,13 +531,13 @@ export class BoundingBox {
     }
 
     public getClickedObjectOfType<T>(clickPosition: PointF2D): T {
-        let obj: Object = this.dataObject;
+        const obj: Object = this.dataObject;
         if (this.pointLiesInsideBorders(clickPosition) && (<T>obj !== undefined)) {
             return (obj as T);
         }
         for (let idx: number = 0, len: number = this.childElements.length; idx < len; ++idx) {
-            let psi: BoundingBox = this.childElements[idx];
-            let innerObject: Object = psi.getClickedObjectOfType<T>(clickPosition);
+            const psi: BoundingBox = this.childElements[idx];
+            const innerObject: Object = psi.getClickedObjectOfType<T>(clickPosition);
             if (innerObject !== undefined) {
                 return (innerObject as T);
             }
@@ -541,8 +558,8 @@ export class BoundingBox {
             }
             // FIXME Andrea: add here "return []"?
         }
-        let result: T[] = [];
-        for (let child of this.childElements) {
+        const result: T[] = [];
+        for (const child of this.childElements) {
             result.concat(child.getObjectsInRegion<T>(region, liesInside));
         }
         return result;
@@ -607,7 +624,7 @@ export class BoundingBox {
 
         // perform check for all children iteratively and return border from children symbols
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            let childElement: BoundingBox = this.ChildElements[idx];
+            const childElement: BoundingBox = this.ChildElements[idx];
             childElement.calculateMarginPositionAlongDirection(toBePlaced, direction);
         }
     }
@@ -658,7 +675,7 @@ export class BoundingBox {
 
         // perform check for all children iteratively and return border from children symbols
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
-            let childElement: BoundingBox = this.ChildElements[idx];
+            const childElement: BoundingBox = this.ChildElements[idx];
             childElement.calculatePositionAlongDirection(toBePlaced, direction);
         }
     }

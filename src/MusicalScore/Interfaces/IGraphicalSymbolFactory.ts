@@ -12,6 +12,7 @@ import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {Staff} from "../VoiceData/Staff";
 import {StaffLine} from "../Graphical/StaffLine";
 import {StaffMeasure} from "../Graphical/StaffMeasure";
+import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
 
 export interface IGraphicalSymbolFactory {
 
@@ -42,6 +43,11 @@ export interface IGraphicalSymbolFactory {
     addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void;
 
     addFermataAtTiedEndNote(tiedNote: Note, graphicalStaffEntry: GraphicalStaffEntry): void;
+
+    createGraphicalTechnicalInstruction(
+        technicalInstruction: TechnicalInstruction,
+        graphicalStaffEntry: GraphicalStaffEntry): void;
+
 
     createInStaffClef(graphicalStaffEntry: GraphicalStaffEntry, clefInstruction: ClefInstruction): void;
 

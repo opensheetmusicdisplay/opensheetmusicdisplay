@@ -34,15 +34,13 @@ import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstru
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   constructor() {
     super(new VexFlowGraphicalSymbolFactory());
-    let a: LyricsEntry = new LyricsEntry(undefined, undefined, undefined);
-    a = a;
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
   }
 
   protected clearRecreatedObjects(): void {
     super.clearRecreatedObjects();
-    for (let staffMeasures of this.graphicalMusicSheet.MeasureList) {
-      for (let staffMeasure of staffMeasures) {
+    for (const staffMeasures of this.graphicalMusicSheet.MeasureList) {
+            for (const staffMeasure of staffMeasures) {
         (<VexFlowMeasure>staffMeasure).clean();
       }
     }
@@ -70,44 +68,44 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      (measure as VexFlowMeasure).finalizeTuplets();
      }*/
     // Format the voices
-    let allVoices: Vex.Flow.Voice[] = [];
-    let formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
+        const allVoices: Vex.Flow.Voice[] = [];
+        const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
       align_rests: true,
     });
 
-    for (let measure of measures) {
-      let mvoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
-      let voices: Vex.Flow.Voice[] = [];
-      for (let voiceID in mvoices) {
+        for (const measure of measures) {
+            const mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
+            const voices: Vex.Flow.Voice[] = [];
+            for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
           voices.push(mvoices[voiceID]);
           allVoices.push(mvoices[voiceID]);
 
         }
       }
-      if (voices.length === 0) {
+            if (voices.length === 0) {
         Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
         continue;
       }
-      formatter.joinVoices(voices);
+            formatter.joinVoices(voices);
     }
 
-    let width: number = 200;
-    if (allVoices.length > 0) {
-      let firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
+        let width: number = 200;
+        if (allVoices.length > 0) {
+            const firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
       // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
       // FIXME: a more relaxed formatting of voices
-      width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
-      for (let measure of measures) {
+            width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+            for (const measure of measures) {
         measure.minimumStaffEntriesWidth = width;
         (measure as VexFlowMeasure).formatVoices = undefined;
       }
-      firstMeasure.formatVoices = (w: number) => {
+            firstMeasure.formatVoices = (w: number) => {
         formatter.format(allVoices, w);
       };
     }
 
-    return width;
+        return width;
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
@@ -158,23 +156,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected calculateSystemYLayout(): void {
     for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-      let graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-      if (!this.leadSheet) {
+            const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+            if (!this.leadSheet) {
         let globalY: number = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
           this.rules.TitleBottomDistance;
         for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-          let musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                    const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
           // calculate y positions of stafflines within system
-          let y: number = 0;
-          for (let line of musicSystem.StaffLines) {
+                    let y: number = 0;
+                    for (const line of musicSystem.StaffLines) {
             line.PositionAndShape.RelativePosition.y = y;
             y += 10;
           }
           // set y positions of systems using the previous system and a fixed distance.
-          musicSystem.PositionAndShape.BorderBottom = y + 0;
-          musicSystem.PositionAndShape.RelativePosition.x = this.rules.PageLeftMargin + this.rules.SystemLeftMargin;
-          musicSystem.PositionAndShape.RelativePosition.y = globalY;
-          globalY += y + 5;
+                    musicSystem.PositionAndShape.BorderBottom = y + 0;
+                    musicSystem.PositionAndShape.RelativePosition.x = this.rules.PageLeftMargin + this.rules.SystemLeftMargin;
+                    musicSystem.PositionAndShape.RelativePosition.y = globalY;
+                    globalY += y + 5;
         }
       }
     }
@@ -201,39 +199,39 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
-    let startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
-    let vfStartNote: Vex.Flow.StaveNote = undefined;
-    if (startNote !== undefined) {
+        const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
+        let vfStartNote: Vex.Flow.StaveNote = undefined;
+        if (startNote !== undefined) {
       vfStartNote = startNote.vfnote[0];
     }
 
-    let endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
-    let vfEndNote: Vex.Flow.StaveNote = undefined;
-    if (endNote !== undefined) {
+        const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
+        let vfEndNote: Vex.Flow.StaveNote = undefined;
+        if (endNote !== undefined) {
       vfEndNote = endNote.vfnote[0];
     }
 
 
-    if (tieIsAtSystemBreak) {
+        if (tieIsAtSystemBreak) {
       // split tie into two ties:
-      let vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+            const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
         first_note: vfStartNote,
       });
-      let measure1: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure1.vfTies.push(vfTie1);
+            const measure1: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            measure1.vfTies.push(vfTie1);
 
-      let vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+            const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
         last_note: vfEndNote,
       });
-      let measure2: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure2.vfTies.push(vfTie2);
+            const measure2: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            measure2.vfTies.push(vfTie2);
     } else {
-      let vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+            const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
         first_note: vfStartNote,
         last_note: vfEndNote,
       });
-      let measure: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure.vfTies.push(vfTie);
+            const measure: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+            measure.vfTies.push(vfTie);
     }
   }
 
