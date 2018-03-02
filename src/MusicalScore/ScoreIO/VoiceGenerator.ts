@@ -28,6 +28,7 @@ import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {ArticulationReader} from "./MusicSymbolModules/ArticulationReader";
+import { TabNote } from "../VoiceData/TabNote";
 
 /**
  * To be implemented
@@ -409,7 +410,33 @@ export class VoiceGenerator {
     noteOctave -= Pitch.OctaveXmlDifference;
     const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAlter);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
-    const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
+    let note: Note = undefined;
+    let stringNumber: number = -1;
+    let fretNumber: number = -1;
+    // check for guitar tabs:
+    const notationNode: IXmlElement = node.element("notations");
+    if (notationNode !== undefined) {
+      const technicalNode: IXmlElement = notationNode.element("technical");
+      if (technicalNode !== undefined) {
+        const stringNode: IXmlElement = technicalNode.element("string");
+        if (stringNode !== undefined) {
+          stringNumber = parseInt(stringNode.value, 10);
+        }
+        const fretNode: IXmlElement = technicalNode.element("fret");
+        if (fretNode !== undefined) {
+          fretNumber = parseInt(fretNode.value, 10);
+        }
+      }
+    }
+
+    if (stringNumber < 0 || fretNumber < 0) {
+      // create normal Note
+      note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
+    } else {
+      // create TabNote
+      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber);
+    }
+
     note.PlaybackInstrumentId = playbackInstrumentId;
     if (!graceNote) {
       this.currentVoiceEntry.Notes.push(note);
