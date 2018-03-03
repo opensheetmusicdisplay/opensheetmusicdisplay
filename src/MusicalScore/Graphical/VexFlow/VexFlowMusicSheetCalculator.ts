@@ -156,23 +156,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected calculateSystemYLayout(): void {
     for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-            if (!this.leadSheet) {
+      const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+      if (!this.leadSheet) {
         let globalY: number = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
           this.rules.TitleBottomDistance;
         for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                    const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+          const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
           // calculate y positions of stafflines within system
-                    let y: number = 0;
-                    for (const line of musicSystem.StaffLines) {
+          let y: number = 0;
+          for (const line of musicSystem.StaffLines) {
             line.PositionAndShape.RelativePosition.y = y;
             y += 10;
           }
           // set y positions of systems using the previous system and a fixed distance.
-                    musicSystem.PositionAndShape.BorderBottom = y + 0;
-                    musicSystem.PositionAndShape.RelativePosition.x = this.rules.PageLeftMargin + this.rules.SystemLeftMargin;
-                    musicSystem.PositionAndShape.RelativePosition.y = globalY;
-                    globalY += y + 5;
+          musicSystem.PositionAndShape.BorderBottom = y + 0;
+          musicSystem.PositionAndShape.RelativePosition.x = this.rules.PageLeftMargin + this.rules.SystemLeftMargin;
+          musicSystem.PositionAndShape.RelativePosition.y = globalY;
+          globalY += y + 5;
         }
       }
     }
