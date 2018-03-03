@@ -8,7 +8,6 @@ import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {MusicSystem} from "./MusicSystem";
 import {BoundingBox} from "./BoundingBox";
 import {Staff} from "../VoiceData/Staff";
-import {Instrument} from "../Instrument";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {StaffLine} from "./StaffLine";
 import {GraphicalLine} from "./GraphicalLine";
@@ -60,11 +59,9 @@ export class MusicSystemBuilder {
         let previousMeasureEndsSystem: boolean = false;
         const systemMaxWidth: number = this.getFullPageSystemWidth();
         this.measureListIndex = 0;
-        this.currentSystemParams = new SystemBuildParameters();
 
         // the first System - create also its Labels
-        this.currentSystemParams.currentSystem = this.initMusicSystem();
-        this.layoutSystemStaves();
+        this.initMusicSystem(this.measureList[0]);
         this.addSystemLabels();
         this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.RelativePosition.y;
 
@@ -181,10 +178,9 @@ export class MusicSystemBuilder {
             this.currentMusicPage = this.createMusicPage();
             this.currentPageHeight = this.rules.PageTopMargin + this.rules.TitleTopDistance;
         }
-        this.currentSystemParams = new SystemBuildParameters();
+
         if (this.measureListIndex < this.measureList.length) {
-            this.currentSystemParams.currentSystem = this.initMusicSystem();
-            this.layoutSystemStaves();
+            this.initMusicSystem(measures);
             this.addSystemLabels();
         }
     }
@@ -257,8 +253,11 @@ export class MusicSystemBuilder {
      * Initialize a new [[MusicSystem]].
      * @returns {MusicSystem}
      */
-    private initMusicSystem(): MusicSystem {
+    private initMusicSystem(measures: StaffMeasure[]): MusicSystem {
+        this.currentSystemParams = new SystemBuildParameters();
         const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
+        this.currentSystemParams.currentSystem = musicSystem;
+        this.layoutSystemStaves(measures);
         this.currentMusicPage.MusicSystems.push(musicSystem);
         return musicSystem;
     }
@@ -272,26 +271,15 @@ export class MusicSystemBuilder {
             - this.rules.PageRightMargin - this.rules.SystemLeftMargin - this.rules.SystemRightMargin;
     }
 
-    private layoutSystemStaves(): void {
+    private layoutSystemStaves(measures: StaffMeasure[]): void {
         const systemWidth: number = this.getFullPageSystemWidth();
         const musicSystem: MusicSystem = this.currentSystemParams.currentSystem;
         const boundingBox: BoundingBox = musicSystem.PositionAndShape;
         boundingBox.BorderLeft = 0.0;
         boundingBox.BorderRight = systemWidth;
         boundingBox.BorderTop = 0.0;
-        const staffList: Staff[] = [];
-        const instruments: Instrument[] = this.graphicalMusicSheet.ParentMusicSheet.Instruments;
-        for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
-            const instrument: Instrument = instruments[idx];
-            if (instrument.Voices.length === 0 || !instrument.Visible) {
-                continue;
-            }
-            for (let idx2: number = 0, len2: number = instrument.Staves.length; idx2 < len2; ++idx2) {
-                const staff: Staff = instrument.Staves[idx2];
-                staffList.push(staff);
-            }
-        }
-        let multiLyrics: boolean = false;
+
+        /* let multiLyrics: boolean = false;
         if (this.leadSheet) {
             for (let idx: number = 0, len: number = staffList.length; idx < len; ++idx) {
                 const staff: Staff = staffList[idx];
@@ -300,24 +288,23 @@ export class MusicSystemBuilder {
                     break;
                 }
             }
-        }
+        } */
         let yOffsetSum: number = 0;
-        for (let i: number = 0; i < staffList.length; i++) {
-            this.addStaffLineToMusicSystem(musicSystem, yOffsetSum, staffList[i]);
+        for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
+            this.addStaffLineToMusicSystem(musicSystem, yOffsetSum, measures[idx].ParentStaff);
             yOffsetSum += this.rules.StaffHeight;
-            if (i + 1 < staffList.length) {
-                let yOffset: number = 0;
-                if (this.leadSheet && !multiLyrics) {
-                    yOffset = 2.5;
-                } else {
-                    if (staffList[i].ParentInstrument === staffList[i + 1].ParentInstrument) {
+            let yOffset: number = 0;
+            // if (this.leadSheet && !multiLyrics) {
+            //     yOffset = 2.5;
+            // } else {
+            if (idx + 1 < measures.length &&
+                measures[idx].ParentStaff.ParentInstrument === measures[idx + 1].ParentStaff.ParentInstrument) {
                         yOffset = this.rules.BetweenStaffDistance;
                     } else {
                         yOffset = this.rules.StaffDistance;
                     }
-                }
-                yOffsetSum += yOffset;
-            }
+            // }
+            yOffsetSum += yOffset;
         }
         boundingBox.BorderBottom = yOffsetSum;
     }
