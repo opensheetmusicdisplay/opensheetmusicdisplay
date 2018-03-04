@@ -15,6 +15,7 @@ import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 // import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import { VexFlowStaffEntry } from "../MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
+import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 
 export class OSMD {
     /**
@@ -197,22 +198,21 @@ export class OSMD {
 
     public colorizeNotes(styleObj: any = {fillStyle: "black", strokeStyle: "blue"}): void {
         // Get all staff entries throughout the document
-        const numOfStaffEntries: number = this.graphic.VerticalGraphicalStaffEntryContainers.length;
-        const voiceNumber: number = 1;
-        // this.graphic.MeasureList.forEach(m => {
-        //         m.forEach(n => {
-        //             (n as VexFlowMeasure).style = styleObj;
-        //         });
-        // });
-        // Define new note style
-        // Get all Vexflow notes in all staves
-        for (let idx: number = 0; idx < numOfStaffEntries; idx++) {
-            const note: Vex.Flow.StaveNote = (<VexFlowStaffEntry>this.graphic.getStaffEntry(idx)).vfNotes[voiceNumber];
-            // apply new style
-            if (note) {
-                note.setStyle(styleObj);
-            }
-        }
+        this.graphic.MeasureList.forEach(m => {
+                m.forEach(n => {
+                    // (n as VexFlowMeasure).style = styleObj;
+                    (n as VexFlowMeasure).staffEntries.forEach(se => {
+                        const staffEntry: VexFlowStaffEntry = (se as VexFlowStaffEntry);
+                        console.log(staffEntry.vfNotes);
+                        for (const noteId in staffEntry.vfNotes) {
+                            if (staffEntry.vfNotes.hasOwnProperty(noteId)) {
+                                staffEntry.vfNotes[noteId].setStyle(styleObj);
+                            }
+                        }
+                        // note.setStyle(styleObj);
+                    });
+                });
+        });
         // Re-render document
         this.render();
     }
