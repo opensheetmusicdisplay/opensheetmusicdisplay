@@ -10,15 +10,14 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
  */
 export class VexFlowInstrumentBracket extends GraphicalObject {
 
-    private vexflowConnector: Vex.Flow.StaveConnector;
+    protected vexflowConnector: Vex.Flow.StaveConnector;
 
-    constructor(firstVexFlowStaffLine: VexFlowStaffLine, lastVexFlowStaffLine: VexFlowStaffLine) {
+    constructor(firstVexFlowStaffLine: VexFlowStaffLine, lastVexFlowStaffLine: VexFlowStaffLine, depth: number = 0) {
         super();
-        this.PositionAndShape = new BoundingBox(this);
+        this.PositionAndShape = new BoundingBox(this, firstVexFlowStaffLine.ParentMusicSystem.PositionAndShape);
         const firstVexMeasure: VexFlowMeasure = firstVexFlowStaffLine.Measures[0] as VexFlowMeasure;
         const lastVexMeasure: VexFlowMeasure = lastVexFlowStaffLine.Measures[0] as VexFlowMeasure;
-        this.addConnector(firstVexMeasure.getVFStave(), lastVexMeasure.getVFStave(), Vex.Flow.StaveConnector.type.BRACE);
-
+        this.addConnector(firstVexMeasure.getVFStave(), lastVexMeasure.getVFStave(), Vex.Flow.StaveConnector.type.BRACKET, depth);
     }
 
     /**
@@ -31,16 +30,15 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
         // Set bounding box
         const con: Vex.Flow.StaveConnector = this.vexflowConnector;
         // First line in first stave
-        let topY: number = con.top_stave.getYForLine(0);
+        const topY: number = con.top_stave.getYForLine(0);
         // Last line in last stave
-        let botY: number = con.bottom_stave.getYForLine(con.bottom_stave.getNumLines() - 1) + con.thickness;
+        const botY: number = con.bottom_stave.getYForLine(con.bottom_stave.getNumLines() - 1) + con.thickness;
         // Set bounding box position and size in OSMD units
         this.PositionAndShape.AbsolutePosition.x = (con.top_stave.getX() - 2 + con.x_shift) / unitInPixels;
         this.PositionAndShape.AbsolutePosition.y = topY / unitInPixels;
         this.PositionAndShape.Size.height = (botY - topY) / unitInPixels;
         this.PositionAndShape.Size.width = 12 / unitInPixels; // width is always 12 -> vexflow implementation
     }
-
     /**
      * Adds a connector between two staves
      *
@@ -48,8 +46,9 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
      * @param {Stave} stave2: Second stave
      * @param {Flow.StaveConnector.type} type: Type of connector
      */
-    private addConnector(stave1: Vex.Flow.Stave, stave2: Vex.Flow.Stave, type: any): void {
+    private addConnector(stave1: Vex.Flow.Stave, stave2: Vex.Flow.Stave, type: any, depth: number): void {
         this.vexflowConnector = new Vex.Flow.StaveConnector(stave1, stave2)
-        .setType(type);
+        .setType(type)
+        .setXShift(depth * -5);
     }
 }

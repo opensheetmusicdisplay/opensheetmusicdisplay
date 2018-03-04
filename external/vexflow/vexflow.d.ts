@@ -213,15 +213,17 @@ declare namespace Vex {
             public attributes: any;
             public state: any;
         }
-
+        
         export class StaveConnector {
             constructor(top: Stave, bottom: Stave);
-
+                        
             public static type: any;
 
             public setType(type: any): StaveConnector;
 
             public setContext(ctx: RenderContext): StaveConnector;
+
+            public setXShift(shift: number): StaveConnector;
 
             public top_stave: Stave;
             
