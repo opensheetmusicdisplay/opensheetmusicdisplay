@@ -87,6 +87,7 @@
     "mocha": "^4.1.0",
     "npm-run-all": "^4.1.2",
     "pre-commit": "^1.2.2",
+    "source-map-loader": "^0.2.3",
     "ts-loader": "^3.0.0",
     "tsify": "^3.0.0",
     "tslint": "^5.8.0",

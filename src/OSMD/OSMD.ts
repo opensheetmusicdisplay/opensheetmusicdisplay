@@ -13,7 +13,7 @@ import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
-import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+// import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import { VexFlowStaffEntry } from "../MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
 
 export class OSMD {
