@@ -41,6 +41,7 @@ import { OSMD } from '../src/OSMD/OSMD';
         size,
         zoomDiv,
         custom,
+        colorizeBtn,
         nextCursorBtn,
         resetCursorBtn,
         showCursorBtn,
@@ -60,6 +61,7 @@ import { OSMD } from '../src/OSMD/OSMD';
         zoomIn = document.getElementById("zoom-in-btn");
         zoomOut = document.getElementById("zoom-out-btn");
         canvas = document.createElement("div");
+        colorizeBtn = document.getElementById("colorize-btn");
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
         showCursorBtn = document.getElementById("show-cursor-btn");
@@ -95,7 +97,7 @@ import { OSMD } from '../src/OSMD/OSMD';
         // Create OSMD object and canvas
         osmdObj = new OSMD(canvas, false);
         osmdObj.setLogLevel('info');
-        document.body.appendChild(canvas);
+        document.body.appendChild(canvas);        
 
         // Set resize event handler
         new Resize(
@@ -117,6 +119,9 @@ import { OSMD } from '../src/OSMD/OSMD';
             if (event.keyCode === 39) {
                 osmdObj.cursor.next();
             }
+        });
+        colorizeBtn.addEventListener("click", function() {
+            osmdObj.colorizeNotes({"fillStyle":"red"});
         });
         nextCursorBtn.addEventListener("click", function() {
             osmdObj.cursor.next();
@@ -180,7 +185,7 @@ import { OSMD } from '../src/OSMD/OSMD';
         zoom = 1.0;
         osmdObj.load(str).then(
             function() {
-                return osmdObj.render();
+                return osmdObj.render();                
             },
             function(e) {
                 error("Error reading sheet: " + e);

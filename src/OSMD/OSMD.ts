@@ -14,6 +14,7 @@ import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import { VexFlowStaffEntry } from "../MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
 
 export class OSMD {
     /**
@@ -196,23 +197,23 @@ export class OSMD {
 
     public colorizeNotes(styleObj: any = {fillStyle: "black", strokeStyle: "blue"}): void {
         // Get all staff entries throughout the document
-        // const numOfStaffEntries: number = this.graphic.VerticalGraphicalStaffEntryContainers.length;
-        // const voiceNumber: number = 1;
-        this.graphic.MeasureList.forEach(m => {
-                m.forEach(n => {
-                    (n as VexFlowMeasure).style = { fillStyle: "green",  strokeStyle: "blue"};
-                });
-        });
-        // // Define new note style
-        // // Get all Vexflow notes in all staves
-        // for (let idx: number = 0; idx < numOfStaffEntries; idx++) {
-        //     const note: Vex.Flow.StaveNote = (<VexFlowStaffEntry>this.graphic.getStaffEntry(idx)).vfNotes[voiceNumber];
-        //     // apply new style
-        //     if (note) {
-        //         note.setStyle(styleObj);
-        //     }
-        // }
-        // // Re-render document
+        const numOfStaffEntries: number = this.graphic.VerticalGraphicalStaffEntryContainers.length;
+        const voiceNumber: number = 1;
+        // this.graphic.MeasureList.forEach(m => {
+        //         m.forEach(n => {
+        //             (n as VexFlowMeasure).style = styleObj;
+        //         });
+        // });
+        // Define new note style
+        // Get all Vexflow notes in all staves
+        for (let idx: number = 0; idx < numOfStaffEntries; idx++) {
+            const note: Vex.Flow.StaveNote = (<VexFlowStaffEntry>this.graphic.getStaffEntry(idx)).vfNotes[voiceNumber];
+            // apply new style
+            if (note) {
+                note.setStyle(styleObj);
+            }
+        }
+        // Re-render document
         this.render();
     }
 

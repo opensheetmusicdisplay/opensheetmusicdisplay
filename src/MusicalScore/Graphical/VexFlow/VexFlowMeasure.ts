@@ -194,44 +194,49 @@ export class VexFlowMeasure extends StaffMeasure {
         // Force the width of the Begin Instructions
         this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
         // Draw stave lines
-        this.stave.setContext(ctx).draw();
+        if (!this.stave.getContext()) { this.stave.setContext(ctx); }
+        this.stave.draw();
         // Draw all voices
 
-        ctx.save();
-        ctx = Object.assign(ctx, this.style);
+        // ctx.save();
+        // ctx = (Object as any).assign(ctx, this.style);
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
                 this.vfVoices[voiceID].draw(ctx, this.stave);
             }
         }
-        ctx.restore();
 
         // Draw beams
         for (const voiceID in this.vfbeams) {
             if (this.vfbeams.hasOwnProperty(voiceID)) {
                 for (const beam of this.vfbeams[voiceID]) {
-                    beam.setContext(ctx).draw();
+                    if (!beam.getContext()) { beam.setContext(ctx); }
+                    beam.draw();
                 }
             }
         }
+        // ctx.restore();
 
         // Draw tuplets
         for (const voiceID in this.vftuplets) {
             if (this.vftuplets.hasOwnProperty(voiceID)) {
                 for (const tuplet of this.vftuplets[voiceID]) {
-                    tuplet.setContext(ctx).draw();
+                    if (!tuplet.getContext()) { tuplet.setContext(ctx); }
+                    tuplet.draw();
                 }
             }
         }
 
         // Draw ties
         for (const tie of this.vfTies) {
-            tie.setContext(ctx).draw();
+            if (!tie.getContext()) { tie.setContext(ctx); }
+            tie.draw();
         }
 
         // Draw vertical lines
         for (const connector of this.connectors) {
-            connector.setContext(ctx).draw();
+            if (!connector.getContext()) { connector.setContext(ctx); }
+            connector.draw();
         }
 
         // now we can finally set the vexflow x positions back into the osmd object model:

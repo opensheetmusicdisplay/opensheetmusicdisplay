@@ -74,6 +74,8 @@ declare namespace Vex {
 
             public setContext(ctx: RenderContext): StaveTie;
 
+            public getContext(): RenderContext;
+
             public draw(): void;
         }
 
@@ -115,7 +117,10 @@ declare namespace Vex {
             public getLineForY(y: number): number;
 
             public getModifiers(pos: any, cat: any): Clef[]; // FIXME
+
             public setContext(ctx: RenderContext): Stave;
+
+            public getContext(): RenderContext;
 
             public addModifier(mod: any, pos: any): void;
 
@@ -186,6 +191,8 @@ declare namespace Vex {
 
             public setContext(ctx: RenderContext): Beam;
 
+            public getContext(): RenderContext;
+
             public draw(): void;
         }
 
@@ -193,6 +200,8 @@ declare namespace Vex {
             constructor(notes: StaveNote[], options: any);
 
             public setContext(ctx: RenderContext): Tuplet;
+            
+            public getContext(): RenderContext;
 
             public draw(): void;
         }
@@ -224,6 +233,8 @@ declare namespace Vex {
             public setType(type: any): StaveConnector;
 
             public setContext(ctx: RenderContext): StaveConnector;
+
+            public getContext(): RenderContext;
 
             public draw(): void;
         }
