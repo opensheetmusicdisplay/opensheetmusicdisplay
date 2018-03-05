@@ -46,8 +46,13 @@ declare namespace Vex {
 
             public draw(ctx: any, stave: Stave): void;
         }
+        export class Note {
+            constructor(note_struct: any);
 
-        export class StaveNote {
+            public getX(): number;
+        }
+
+        export class StaveNote extends Note {
             constructor(note_struct: any);
 
             public getNoteHeadBounds(): any;
@@ -63,6 +68,14 @@ declare namespace Vex {
             public setStyle(style: any): void;
 
             public addDotToAll(): void;
+        }
+        
+        export class TabNote extends StaveNote{
+            constructor(note_struct: any);
+        }
+
+        export class TabStave extends Stave {
+            constructor(x: number, y: number, width: number, options: any);
         }
 
         export class StaveTie {

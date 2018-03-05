@@ -7,7 +7,7 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
 import {Note} from "../VoiceData/Note";
 import {MusicSheet} from "../MusicSheet";
 import {StaffMeasure} from "./StaffMeasure";
-import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
+import {ClefInstruction, ClefEnum} from "../VoiceData/Instructions/ClefInstruction";
 import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
@@ -51,6 +51,7 @@ import {OctaveShift} from "../VoiceData/Expressions/ContinuousExpressions/Octave
 import {Logging} from "../../Common/Logging";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/CollectionUtil";
+import { TabNote } from "../VoiceData/TabNote";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -418,6 +419,10 @@ export abstract class MusicSheetCalculator {
                 const staffMeasure: StaffMeasure = allMeasures[idx][idx2];
                 if (staffMeasure.isVisible()) {
                     visibleStaffMeasures.push(staffMeasure);
+                    // add Tab Measure if exists:
+                    if (staffMeasure.tabMeasure !== undefined) {
+                       visibleStaffMeasures.push(staffMeasure.tabMeasure);
+                    }
                 }
             }
             visibleMeasureList.push(visibleStaffMeasures);
@@ -711,7 +716,15 @@ export abstract class MusicSheetCalculator {
                                openTuplets: Tuplet[], openBeams: Beam[],
                                octaveShiftValue: OctaveEnum, grace: boolean = false, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
+        // if GraphicalStaffEntry has been created earlier (because of Tie), then the GraphicalNotesLists have also been created
         const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.findOrCreateGraphicalNotesListFromVoiceEntry(voiceEntry);
+        // check for Tabs:
+        const tabStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.tabStaffEntry;
+        let graphicalTabNotes: GraphicalNote[] = [];
+        if (tabStaffEntry !== undefined) {
+            graphicalTabNotes = tabStaffEntry.findOrCreateGraphicalNotesListFromVoiceEntry(voiceEntry);
+        }
+
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             const note: Note = voiceEntry.Notes[idx];
             if (sourceStaffEntry !== undefined && sourceStaffEntry.Link !== undefined && linkedNotes !== undefined && linkedNotes.indexOf(note) > -1) {
@@ -739,6 +752,13 @@ export abstract class MusicSheetCalculator {
                 if (note.NoteTuplet !== undefined) {
                     this.handleTuplet(graphicalNote, note.NoteTuplet, openTuplets);
                 }
+            }
+
+            // handle TabNotes:
+            if (note instanceof TabNote) {
+                const graphicalTabNote: GraphicalNote = this.symbolFactory.createNote(note, tabStaffEntry, activeClef, octaveShiftValue, undefined);
+                tabStaffEntry.addGraphicalNoteToListAtCorrectYPosition(graphicalTabNotes, graphicalTabNote);
+                graphicalTabNote.PositionAndShape.calculateBoundingBox();
             }
         }
         if (voiceEntry.Articulations.length > 0) {
@@ -1191,13 +1211,12 @@ export abstract class MusicSheetCalculator {
                                                     openOctaveShifts: OctaveShiftParams[], activeClefs: ClefInstruction[]): StaffMeasure[] {
         this.initStaffMeasuresCreation();
         const verticalMeasureList: StaffMeasure[] = [];
-        const openBeams: Beam[] = [];
-        const openTuplets: Tuplet[] = [];
+
         const staffEntryLinks: StaffEntryLink[] = [];
         for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
             const measure: StaffMeasure = this.createGraphicalMeasure(
-                sourceMeasure, tieTimestampListDictList[staffIndex], openTuplets, openBeams,
-                accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
+                sourceMeasure, tieTimestampListDictList[staffIndex],
+                accidentalCalculators[staffIndex], activeClefs[staffIndex], openOctaveShifts[staffIndex], openLyricWords, staffIndex, staffEntryLinks
             );
             this.staffMeasureCreatedCalculations(measure);
             verticalMeasureList.push(measure);
@@ -1206,13 +1225,19 @@ export abstract class MusicSheetCalculator {
         return verticalMeasureList;
     }
 
-    private createGraphicalMeasure(sourceMeasure: SourceMeasure, tieTimestampListDict: Dictionary<Tie, Fraction[]>, openTuplets: Tuplet[], openBeams: Beam[],
-                                   accidentalCalculator: AccidentalCalculator, activeClefs: ClefInstruction[],
-                                   openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
+    private createGraphicalMeasure(sourceMeasure: SourceMeasure, tieTimestampListDict: Dictionary<Tie, Fraction[]>,
+                                   accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
+                                   openOctaveShift: OctaveShiftParams, openLyricWords: LyricWord[], staffIndex: number,
                                    staffEntryLinks: StaffEntryLink[]): StaffMeasure {
+        const openBeams: Beam[] = [];
+        const openTuplets: Tuplet[] = [];
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         const measure: StaffMeasure = this.symbolFactory.createStaffMeasure(sourceMeasure, staff);
+        if (activeClef.ClefType === ClefEnum.TAB) {
+            measure.tabMeasure = this.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
+        }
         measure.hasError = sourceMeasure.getErrorInMeasure(staffIndex);
+        // check for key instruction changes
         if (sourceMeasure.FirstInstructionsStaffEntries[staffIndex] !== undefined) {
             for (let idx: number = 0, len: number = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions.length; idx < len; ++idx) {
                 const instruction: AbstractNotationInstruction = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[idx];
@@ -1229,69 +1254,95 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+        // check for octave shifts
         for (let idx: number = 0, len: number = sourceMeasure.StaffLinkedExpressions[staffIndex].length; idx < len; ++idx) {
             const multiExpression: MultiExpression = sourceMeasure.StaffLinkedExpressions[staffIndex][idx];
             if (multiExpression.OctaveShiftStart !== undefined) {
-                const openOctaveShift: OctaveShift = multiExpression.OctaveShiftStart;
-                openOctaveShifts[staffIndex] = new OctaveShiftParams(
-                    openOctaveShift, multiExpression.AbsoluteTimestamp,
-                    openOctaveShift.ParentEndMultiExpression.AbsoluteTimestamp
+                const openOctaveShiftStart: OctaveShift = multiExpression.OctaveShiftStart;
+                openOctaveShift = new OctaveShiftParams(
+                    openOctaveShiftStart, multiExpression.AbsoluteTimestamp,
+                    openOctaveShiftStart.ParentEndMultiExpression.AbsoluteTimestamp
                 );
             }
         }
+        // create GraphicalStaffEntries - always check for possible null Entry
         for (let entryIndex: number = 0; entryIndex < sourceMeasure.VerticalSourceStaffEntryContainers.length; entryIndex++) {
             const sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[entryIndex].StaffEntries[staffIndex];
+            // is there a SourceStaffEntry at this Index
             if (sourceStaffEntry !== undefined) {
+                // a SourceStaffEntry exists
+                // is there an inStaff ClefInstruction? -> update activeClef
                 for (let idx: number = 0, len: number = sourceStaffEntry.Instructions.length; idx < len; ++idx) {
                     const abstractNotationInstruction: AbstractNotationInstruction = sourceStaffEntry.Instructions[idx];
                     if (abstractNotationInstruction instanceof ClefInstruction) {
-                        activeClefs[staffIndex] = <ClefInstruction>abstractNotationInstruction;
+                        activeClef = <ClefInstruction>abstractNotationInstruction;
                     }
                 }
+                // create new GraphicalStaffEntry
                 const graphicalStaffEntry: GraphicalStaffEntry = this.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
-                if (measure.staffEntries.length > entryIndex) {
+                if (entryIndex < measure.staffEntries.length) {
+                    // a GraphicalStaffEntry has been inserted already at this Index (from Tie)
                     measure.addGraphicalStaffEntryAtTimestamp(graphicalStaffEntry);
                 } else {
                     measure.addGraphicalStaffEntry(graphicalStaffEntry);
                 }
+                // if there is a Tab measure
+                if (measure.tabMeasure !== undefined) {
+                    // create new Tab-GraphicalStaffEntry in Tab-Measure
+                    const tabStaffEntry: GraphicalStaffEntry = this.symbolFactory.createStaffEntry(sourceStaffEntry, measure.tabMeasure);
+                    graphicalStaffEntry.tabStaffEntry = tabStaffEntry;
+                    if (entryIndex < measure.tabMeasure.staffEntries.length) {
+                        // a GraphicalStaffEntry has been inserted already at this Index (from Tie)
+                        measure.tabMeasure.addGraphicalStaffEntryAtTimestamp(tabStaffEntry);
+                    } else {
+                        measure.tabMeasure.addGraphicalStaffEntry(tabStaffEntry);
+                    }
+                }
+
                 const linkedNotes: Note[] = [];
                 if (sourceStaffEntry.Link !== undefined) {
                     sourceStaffEntry.findLinkedNotes(linkedNotes);
                     this.handleStaffEntryLink(graphicalStaffEntry, staffEntryLinks);
                 }
+                // check for possible OctaveShift
                 let octaveShiftValue: OctaveEnum = OctaveEnum.NONE;
-                if (openOctaveShifts[staffIndex] !== undefined) {
-                    const octaveShiftParams: OctaveShiftParams = openOctaveShifts[staffIndex];
-                    if (octaveShiftParams.getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp)  &&
-                        sourceStaffEntry.AbsoluteTimestamp.lte(octaveShiftParams.getAbsoluteEndTimestamp)) {
-                        octaveShiftValue = octaveShiftParams.getOpenOctaveShift.Type;
+                if (openOctaveShift !== undefined) {
+                    if (openOctaveShift.getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
+                        sourceStaffEntry.AbsoluteTimestamp.lte(openOctaveShift.getAbsoluteEndTimestamp)) {
+                        octaveShiftValue = openOctaveShift.getOpenOctaveShift.Type;
                     }
                 }
+                // for each visible Voice create the corresponding GraphicalNotes
                 for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
+                    // create GraphicalStaffEntries for GraceNotes appearing before this GraphicalStaffEntry
                     this.handleVoiceEntryGraceNotes(
                         voiceEntry.graceVoiceEntriesBefore, graphicalStaffEntry.graceStaffEntriesBefore, graphicalStaffEntry,
-                        accidentalCalculator, activeClefs[staffIndex], octaveShiftValue, openLyricWords,
+                        accidentalCalculator, activeClef, octaveShiftValue, openLyricWords,
                         tieTimestampListDict, openTuplets, openBeams
                     );
+                    // Normal Notes...
                     octaveShiftValue = this.handleVoiceEntry(
                         voiceEntry, graphicalStaffEntry,
                         accidentalCalculator, openLyricWords,
                         tieTimestampListDict,
-                        activeClefs[staffIndex], openTuplets,
+                        activeClef, openTuplets,
                         openBeams, octaveShiftValue, false, linkedNotes,
                         sourceStaffEntry
                     );
+                    // create GraphicalStaffEntries for GraceNotes appearing after this GraphicalStaffEntry (very rarely used in music)
                     this.handleVoiceEntryGraceNotes(
                         voiceEntry.graceVoiceEntriesAfter, graphicalStaffEntry.graceStaffEntriesAfter, graphicalStaffEntry,
-                        accidentalCalculator, activeClefs[staffIndex], octaveShiftValue, openLyricWords,
+                        accidentalCalculator, activeClef, octaveShiftValue, openLyricWords,
                         tieTimestampListDict, openTuplets, openBeams
                     );
                 }
+                // SourceStaffEntry has inStaff ClefInstruction -> create graphical clef
                 if (sourceStaffEntry.Instructions.length > 0) {
                     const clefInstruction: ClefInstruction = <ClefInstruction>sourceStaffEntry.Instructions[0];
                     this.symbolFactory.createInStaffClef(graphicalStaffEntry, clefInstruction);
                 }
+                // SourceStaffEntry has ChordSymbol
                 if (sourceStaffEntry.ChordContainer !== undefined) {
                     sourceStaffEntry.ParentStaff.ParentInstrument.HasChordSymbols = true;
                     this.symbolFactory.createChordSymbol(sourceStaffEntry, graphicalStaffEntry, this.graphicalMusicSheet.ParentMusicSheet.Transpose);
@@ -1301,26 +1352,28 @@ export abstract class MusicSheetCalculator {
         if (tieTimestampListDict.size() > 0) {
             this.handleOpenTies(
                 measure, openBeams,
-                tieTimestampListDict, activeClefs[staffIndex], openOctaveShifts[staffIndex]
+                tieTimestampListDict, activeClef, openOctaveShift
             );
         }
         accidentalCalculator.doCalculationsAtEndOfMeasure();
+        // update activeClef given at end of measure if needed
         if (sourceMeasure.LastInstructionsStaffEntries[staffIndex] !== undefined) {
             const lastStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
             for (let idx: number = 0, len: number = lastStaffEntry.Instructions.length; idx < len; ++idx) {
                 const abstractNotationInstruction: AbstractNotationInstruction = lastStaffEntry.Instructions[idx];
                 if (abstractNotationInstruction instanceof ClefInstruction) {
-                    activeClefs[staffIndex] = <ClefInstruction>abstractNotationInstruction;
+                    activeClef = <ClefInstruction>abstractNotationInstruction;
                 }
             }
         }
         for (let idx: number = 0, len: number = sourceMeasure.StaffLinkedExpressions[staffIndex].length; idx < len; ++idx) {
             const multiExpression: MultiExpression = sourceMeasure.StaffLinkedExpressions[staffIndex][idx];
-            if (multiExpression.OctaveShiftEnd !== undefined && openOctaveShifts[staffIndex] !== undefined &&
-                multiExpression.OctaveShiftEnd === openOctaveShifts[staffIndex].getOpenOctaveShift) {
-                openOctaveShifts[staffIndex] = undefined;
+            if (multiExpression.OctaveShiftEnd !== undefined && openOctaveShift !== undefined &&
+                multiExpression.OctaveShiftEnd === openOctaveShift.getOpenOctaveShift) {
+                openOctaveShift = undefined;
             }
         }
+        // add rests for empty measures
         if (measure.staffEntries.length === 0) {
             const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, staff);
             const note: Note = new Note(undefined, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
@@ -1329,10 +1382,10 @@ export abstract class MusicSheetCalculator {
             graphicalStaffEntry.relInMeasureTimestamp = new Fraction(0, 1);
             const graphicalNotes: GraphicalNote[] = [];
             graphicalStaffEntry.notes.push(graphicalNotes);
-            const graphicalNote: GraphicalNote = this.symbolFactory.createNote(   note,
-                                                                                  graphicalStaffEntry,
-                                                                                  new ClefInstruction(),
-                                                                                  OctaveEnum.NONE, undefined);
+            const graphicalNote: GraphicalNote = this.symbolFactory.createNote(note,
+                                                                               graphicalStaffEntry,
+                                                                               new ClefInstruction(),
+                                                                               OctaveEnum.NONE, undefined);
             graphicalNotes.push(graphicalNote);
         }
         return measure;

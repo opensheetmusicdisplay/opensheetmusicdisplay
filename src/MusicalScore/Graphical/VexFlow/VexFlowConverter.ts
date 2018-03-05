@@ -16,6 +16,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
 import {Logging} from "../../../Common/Logging";
+import { TabNote } from "../../VoiceData/TabNote";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -140,7 +141,7 @@ export class VexFlowConverter {
      * @param notes form a chord on the staff
      * @returns {Vex.Flow.StaveNote}
      */
-    public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
+    public static CreateStaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
         let keys: string[] = [];
         const accidentals: string[] = [];
         const frac: Fraction = notes[0].graphicalNoteLength;
@@ -185,6 +186,36 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             vfnote.addDotToAll();
         }
+
+        return vfnote;
+    }
+
+    /**
+     * Convert a set of GraphicalNotes to a VexFlow StaveNote
+     * @param notes form a chord on the staff
+     * @returns {Vex.Flow.StaveNote}
+     */
+    public static CreateTabNote(notes: GraphicalNote[]): Vex.Flow.TabNote {
+        const tabPositions: {}[] = [];
+        const frac: Fraction = notes[0].graphicalNoteLength;
+        const isTuplet: boolean = notes[0].sourceNote.NoteTuplet !== undefined;
+        let duration: string = VexFlowConverter.duration(frac, isTuplet);
+        let numDots: number = 0;
+        for (const note of notes) {
+            const tabNote: TabNote = note.sourceNote as TabNote;
+            const tabPosition: {str: string, fret: string} = {str: tabNote.StringNumber.toString(), fret: tabNote.FretNumber.toString()};
+            tabPositions.push(tabPosition);
+            if (numDots < note.numberOfDots) {
+                numDots = note.numberOfDots;
+            }
+        }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            duration += "d";
+        }
+        const vfnote: Vex.Flow.TabNote = new Vex.Flow.TabNote({
+            duration: duration,
+            positions: tabPositions,
+        });
 
         return vfnote;
     }
@@ -276,7 +307,7 @@ export class VexFlowConverter {
 
             // TAB Clef
             case ClefEnum.TAB:
-                type = "tab";
+                type = "french";
                 break;
             default:
         }

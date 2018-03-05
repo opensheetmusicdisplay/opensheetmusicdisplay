@@ -19,7 +19,7 @@ import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
 
 export class VexFlowMeasure extends StaffMeasure {
-    constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
+    constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;
         this.resetLayout();
@@ -35,17 +35,17 @@ export class VexFlowMeasure extends StaffMeasure {
     public vfTies: Vex.Flow.StaveTie[] = [];
 
     // The VexFlow Stave (one measure in one line)
-    private stave: Vex.Flow.Stave;
+    protected stave: Vex.Flow.Stave;
     // VexFlow StaveConnectors (vertical lines)
-    private connectors: Vex.Flow.StaveConnector[] = [];
+    protected connectors: Vex.Flow.StaveConnector[] = [];
     // Intermediate object to construct beams
     private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
     // VexFlow Beams
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
     // Intermediate object to construct tuplets
-    private tuplets: { [voiceID: number]: [Tuplet, VexFlowStaffEntry[]][]; } = {};
+    protected tuplets: { [voiceID: number]: [Tuplet, VexFlowStaffEntry[]][]; } = {};
     // VexFlow Tuplets
-    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
+    protected vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -364,8 +364,9 @@ export class VexFlowMeasure extends StaffMeasure {
             const gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
             for (const voiceID in gnotes) {
                 if (gnotes.hasOwnProperty(voiceID)) {
-                    const vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
-                    (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
+                    const vfnote: StaveNote = VexFlowConverter.CreateStaveNote(gnotes[voiceID]);
+                    // add VexFlow Notes to VexFlow Voice:
+                    graphicalStaffEntry.vfNotes[voiceID] = vfnote;
                 }
             }
         }
@@ -435,7 +436,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * After re-running the formatting on the VexFlow Stave, update the
      * space needed by Instructions (in VexFlow: StaveModifiers)
      */
-    private updateInstructionWidth(): void {
+    protected updateInstructionWidth(): void {
         this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
         this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
     }
@@ -444,7 +445,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
      * The positions are needed for cursor placement and mouse/tap interactions
      */
-    private setStaffEntriesXPositions(): void {
+    protected setStaffEntriesXPositions(): void {
         for (let idx3: number = 0, len3: number = this.staffEntries.length; idx3 < len3; ++idx3) {
             const gse: VexFlowStaffEntry = (<VexFlowStaffEntry> this.staffEntries[idx3]);
             const measure: StaffMeasure = gse.parentMeasure;

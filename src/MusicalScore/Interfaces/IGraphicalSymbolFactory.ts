@@ -22,6 +22,8 @@ export interface IGraphicalSymbolFactory {
 
     createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): StaffMeasure;
 
+    createTabStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): StaffMeasure;
+
     createExtraStaffMeasure(staffLine: StaffLine): StaffMeasure;
 
     createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: StaffMeasure): GraphicalStaffEntry;

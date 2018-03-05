@@ -30,6 +30,7 @@ import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import { VexFlowTabMeasure } from "./VexFlowTabMeasure";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   constructor() {
@@ -68,44 +69,56 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      (measure as VexFlowMeasure).finalizeTuplets();
      }*/
     // Format the voices
-        const allVoices: Vex.Flow.Voice[] = [];
-        const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
+    const allVoices: Vex.Flow.Voice[] = [];
+    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
       align_rests: true,
     });
 
-        for (const measure of measures) {
-            const mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
-            const voices: Vex.Flow.Voice[] = [];
-            for (const voiceID in mvoices) {
+    for (const measure of measures) {
+      const mvoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
+      const voices: Vex.Flow.Voice[] = [];
+      for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
           voices.push(mvoices[voiceID]);
           allVoices.push(mvoices[voiceID]);
 
         }
       }
-            if (voices.length === 0) {
+      if (measure.tabMeasure !== undefined) {
+        const tabVoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure.tabMeasure as VexFlowTabMeasure).vfVoices;
+        for (const voiceID in tabVoices) {
+          if (tabVoices.hasOwnProperty(voiceID)) {
+            allVoices.push(tabVoices[voiceID]);
+          }
+        }
+      }
+      if (voices.length === 0) {
         Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
         continue;
       }
-            formatter.joinVoices(voices);
+      formatter.joinVoices(voices);
     }
 
-        let width: number = 200;
-        if (allVoices.length > 0) {
-            const firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
+    let width: number = 200;
+    if (allVoices.length > 0) {
+      const firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
       // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
       // FIXME: a more relaxed formatting of voices
-            width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
-            for (const measure of measures) {
+      width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+      for (const measure of measures) {
         measure.minimumStaffEntriesWidth = width;
         (measure as VexFlowMeasure).formatVoices = undefined;
+        if (measure.tabMeasure !== undefined) {
+          measure.tabMeasure.minimumStaffEntriesWidth = width;
+          (measure as VexFlowTabMeasure).formatVoices = undefined;
+        }
       }
-            firstMeasure.formatVoices = (w: number) => {
+      firstMeasure.formatVoices = (w: number) => {
         formatter.format(allVoices, w);
       };
     }
 
-        return width;
+    return width;
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
@@ -124,6 +137,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected staffMeasureCreatedCalculations(measure: StaffMeasure): void {
     (measure as VexFlowMeasure).staffMeasureCreatedCalculations();
+    if (measure.tabMeasure !== undefined) {
+      (measure.tabMeasure as VexFlowTabMeasure).staffMeasureCreatedCalculations();
+    }
   }
 
   /**
