@@ -47,6 +47,7 @@ import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/Continu
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
+import { VexFlowTabMeasure } from "./VexFlowTabMeasure";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -98,6 +99,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @returns the minimum required x width of the source measure (=list of staff measures)
    */
   protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
+    // include tab measures:
+    const visibleMeasures: GraphicalMeasure[] = [];
+    for (const measure of measures) {
+      visibleMeasures.push(measure);
+      if (measure.tabMeasure) {
+        visibleMeasures.push(measure.tabMeasure);
+      }
+    }
+    measures = visibleMeasures;
+
     // Finalize beams
     /*for (let measure of measures) {
      (measure as VexFlowMeasure).finalizeBeams();
@@ -115,6 +126,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           voices.push(mvoices[voiceID]);
           allVoices.push(mvoices[voiceID]);
         }
+      }
+      if (measure.tabMeasure !== undefined) {
+        const tabVoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure.tabMeasure as VexFlowTabMeasure).vfVoices;
+        const tvoices: Vex.Flow.Voice[] = [];
+        for (const voiceID in tabVoices) {
+          if (tabVoices.hasOwnProperty(voiceID)) {
+            tvoices.push(tabVoices[voiceID]);
+            allVoices.push(tabVoices[voiceID]);
+          }
+        }
+        if (tvoices.length === 0) {
+          log.info("Found a tab measure with no voices. Continuing anyway.", tabVoices);
+          continue;
+        }
+        // all voices that belong to one stave are collectively added to create a common context in VexFlow.
+        formatter.joinVoices(tvoices);
       }
       if (voices.length === 0) {
         log.info("Found a measure with no voices. Continuing anyway.", mvoices);
@@ -367,6 +394,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
     (measure as VexFlowMeasure).graphicalMeasureCreatedCalculations();
+    if (measure.tabMeasure !== undefined) {
+      (measure.tabMeasure as VexFlowTabMeasure).graphicalMeasureCreatedCalculations();
+    }
   }
 
   /**

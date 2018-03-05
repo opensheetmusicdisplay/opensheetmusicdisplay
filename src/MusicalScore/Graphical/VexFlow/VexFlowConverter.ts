@@ -25,6 +25,7 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 import { Note } from "../..";
 import StaveNote = Vex.Flow.StaveNote;
+import { TabNote } from "../../VoiceData/TabNote";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -465,6 +466,36 @@ export class VexFlowConverter {
     }
 
     /**
+     * Convert a set of GraphicalNotes to a VexFlow StaveNote
+     * @param notes form a chord on the staff
+     * @returns {Vex.Flow.StaveNote}
+     */
+    public static CreateTabNote(gve: GraphicalVoiceEntry): Vex.Flow.TabNote {
+        const tabPositions: {str: number, fret: number}[] = [];
+        const frac: Fraction = gve.notes[0].graphicalNoteLength;
+        const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
+        let duration: string = VexFlowConverter.duration(frac, isTuplet);
+        let numDots: number = 0;
+        for (const note of gve.notes) {
+            const tabNote: TabNote = note.sourceNote as TabNote;
+            const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumber, fret: tabNote.FretNumber};
+            tabPositions.push(tabPosition);
+            if (numDots < note.numberOfDots) {
+                numDots = note.numberOfDots;
+            }
+        }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            duration += "d";
+        }
+        const vfnote: Vex.Flow.TabNote = new Vex.Flow.TabNote({
+            duration: duration,
+            positions: tabPositions,
+        });
+
+        return vfnote;
+    }
+
+    /**
      * Convert a ClefInstruction to a string represention of a clef type in VexFlow.
      *
      * @param clef The OSMD object to be converted representing the clef
@@ -551,7 +582,7 @@ export class VexFlowConverter {
 
             // TAB Clef
             case ClefEnum.TAB:
-                type = "tab";
+                type = "french";
                 break;
             default:
         }

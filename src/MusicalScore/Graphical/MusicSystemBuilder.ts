@@ -253,7 +253,7 @@ export class MusicSystemBuilder {
      * Initialize a new [[MusicSystem]].
      * @returns {MusicSystem}
      */
-    private initMusicSystem(measures: StaffMeasure[]): MusicSystem {
+    private initMusicSystem(measures: GraphicalMeasure[]): MusicSystem {
         this.currentSystemParams = new SystemBuildParameters();
         const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
         this.currentSystemParams.currentSystem = musicSystem;
@@ -271,7 +271,7 @@ export class MusicSystemBuilder {
             - this.rules.PageRightMargin - this.rules.SystemLeftMargin - this.rules.SystemRightMargin;
     }
 
-    private layoutSystemStaves(measures: StaffMeasure[]): void {
+    private layoutSystemStaves(measures: GraphicalMeasure[]): void {
         const systemWidth: number = this.getFullPageSystemWidth();
         const musicSystem: MusicSystem = this.currentSystemParams.currentSystem;
         const boundingBox: BoundingBox = musicSystem.PositionAndShape;

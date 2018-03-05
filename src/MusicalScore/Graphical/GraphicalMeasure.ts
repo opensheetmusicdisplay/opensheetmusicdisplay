@@ -43,6 +43,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public parentSourceMeasure: SourceMeasure;
     public staffEntries: GraphicalStaffEntry[];
     public parentMusicSystem: MusicSystem;
+    public tabMeasure: GraphicalMeasure = undefined;
     /**
      * The x-width of possibly existing: repetition start line, clef, key, rhythm.
      */

@@ -36,7 +36,7 @@ import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {NoteType, Arpeggio} from "../../VoiceData";
 
 export class VexFlowMeasure extends GraphicalMeasure {
-    constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
+    constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;
         this.resetLayout();
@@ -53,9 +53,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: Vex.Flow.Repetition[] = [];
     /** The VexFlow Stave (= one measure in a staffline) */
-    private stave: Vex.Flow.Stave;
+    protected stave: Vex.Flow.Stave;
     /** VexFlow StaveConnectors (vertical lines) */
-    private connectors: Vex.Flow.StaveConnector[] = [];
+    protected connectors: Vex.Flow.StaveConnector[] = [];
     /** Intermediate object to construct beams */
     private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][]; } = {};
     /** Beams created by (optional) autoBeam function. */
@@ -65,9 +65,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** VexFlow Beams */
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
     /** Intermediate object to construct tuplets */
-    private tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
+    protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
     /** VexFlow Tuplets */
-    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
+    protected vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -451,7 +451,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * And the graphical notes have to be analysed directly (and not the voiceEntries, as it actually should be -> needs refactoring)
      * @param voice the voice for which the ghost notes shall be searched.
      */
-    private getRestFilledVexFlowStaveNotesPerVoice(voice: Voice): GraphicalVoiceEntry[] {
+    protected getRestFilledVexFlowStaveNotesPerVoice(voice: Voice): GraphicalVoiceEntry[] {
         let latestVoiceTimestamp: Fraction = undefined;
         const gvEntries: GraphicalVoiceEntry[] = this.getGraphicalVoiceEntriesPerVoice(voice);
         for (let idx: number = 0, len: number = gvEntries.length; idx < len; ++idx) {
@@ -999,7 +999,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /**
      * Create the articulations for all notes of the current staff entry
      */
-    private createArticulations(): void {
+    protected createArticulations(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
 
@@ -1015,7 +1015,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /**
      * Create the ornaments for all notes of the current staff entry
      */
-    private createOrnaments(): void {
+    protected createOrnaments(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
             const gvoices: { [voiceID: number]: GraphicalVoiceEntry; } = graphicalStaffEntry.graphicalVoiceEntries;
@@ -1032,7 +1032,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
-    private createFingerings(voiceEntry: GraphicalVoiceEntry): void {
+    protected createFingerings(voiceEntry: GraphicalVoiceEntry): void {
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
         const technicalInstructions: TechnicalInstruction[] = voiceEntry.parentVoiceEntry.TechnicalInstructions;
         const fingeringsCount: number = technicalInstructions.length;
@@ -1120,7 +1120,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * After re-running the formatting on the VexFlow Stave, update the
      * space needed by Instructions (in VexFlow: StaveModifiers)
      */
-    private updateInstructionWidth(): void {
+    protected updateInstructionWidth(): void {
         let vfBeginInstructionsWidth: number = 0;
         let vfEndInstructionsWidth: number = 0;
         const modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
