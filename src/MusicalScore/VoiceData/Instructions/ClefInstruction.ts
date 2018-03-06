@@ -120,7 +120,7 @@ export class ClefInstruction extends AbstractNotationInstruction {
         if (this === undefined || other === undefined) {
             return false;
         }
-        return (this.ClefPitch === other.ClefPitch && this.Line === other.Line);
+        return (this.clefPitch === other.clefPitch && this.Line === other.Line);
     }
 
     public NotEqual(clef2: ClefInstruction): boolean {
@@ -150,8 +150,8 @@ export class ClefInstruction extends AbstractNotationInstruction {
                 this.referenceCyPosition = 2;
                 break;
             case ClefEnum.TAB:
-                this.clefPitch = new Pitch(NoteEnum.G, 2, AccidentalEnum.NONE);
-                this.referenceCyPosition = -1;
+                this.clefPitch = new Pitch(NoteEnum.G, 0, AccidentalEnum.NONE);
+                this.referenceCyPosition = 0;
                 break;
             default:
                 throw new ArgumentOutOfRangeException("clefType");

@@ -4,7 +4,7 @@ import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
 import {SystemLinesEnum} from "../SystemLinesEnum";
-import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
+import {ClefInstruction, ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -100,8 +100,12 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addClefAtBegin(clef: ClefInstruction): void {
         this.octaveOffset = clef.OctaveOffset;
-        const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "default");
-        this.stave.addClef(vfclef.type, vfclef.size, vfclef.annotation, Vex.Flow.Modifier.Position.BEGIN);
+        if (clef.ClefType === ClefEnum.TAB) {
+            this.stave.addClef("tab", undefined, undefined, undefined);
+        } else {
+            const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "default");
+            this.stave.addClef(vfclef.type, vfclef.size, vfclef.annotation, Vex.Flow.Modifier.Position.BEGIN);
+        }
         this.updateInstructionWidth();
     }
 
