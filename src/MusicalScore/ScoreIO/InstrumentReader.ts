@@ -761,9 +761,6 @@ export class InstrumentReader {
           try {
             clefEnum = ClefEnum[signNode.value];
             if (!ClefInstruction.isSupportedClef(clefEnum)) {
-              if (clefEnum === ClefEnum.TAB && guitarPro) {
-                clefOctaveOffset = -1;
-              }
               errorMsg = ITextTranslation.translateText(
                 "ReaderErrorMessages/ClefError",
                 "Unsupported clef found -> using default clef."
@@ -771,6 +768,9 @@ export class InstrumentReader {
               this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
               clefEnum = ClefEnum.G;
               line = 2;
+            }
+            if (clefEnum === ClefEnum.TAB) {
+              clefOctaveOffset = -1;
             }
           } catch (e) {
             errorMsg = ITextTranslation.translateText(
