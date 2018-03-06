@@ -97,7 +97,7 @@ export abstract class StaffMeasure extends GraphicalObject {
 
     public set ParentStaffLine(value: StaffLine) {
         this.parentStaffLine = value;
-        if (this.parentStaffLine !== undefined) {
+        if (this.parentStaffLine !== undefined && this.PositionAndShape.Parent === undefined) {
             this.PositionAndShape.Parent = this.parentStaffLine.PositionAndShape;
         }
     }
