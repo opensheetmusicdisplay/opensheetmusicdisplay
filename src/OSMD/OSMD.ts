@@ -117,7 +117,7 @@ export class OSMD {
         const score: IXmlElement = new IXmlElement(elem);
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         const reader: MusicSheetReader = new MusicSheetReader();
-        this.sheet = reader.createMusicSheet(score, "Unknown path");
+        this.sheet = reader.createMusicSheet(score, "");
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         log.info(`Loaded sheet ${this.sheet.TitleString} successfully.`);

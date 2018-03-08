@@ -759,6 +759,12 @@ export abstract class MusicSheetCalculator {
                 const graphicalTabNote: GraphicalNote = this.symbolFactory.createNote(note, tabStaffEntry, activeClef, octaveShiftValue, undefined);
                 tabStaffEntry.addGraphicalNoteToListAtCorrectYPosition(graphicalTabNotes, graphicalTabNote);
                 graphicalTabNote.PositionAndShape.calculateBoundingBox();
+
+                if (!this.leadSheet) {
+                    if (note.NoteTuplet !== undefined) {
+                        this.handleTuplet(graphicalTabNote, note.NoteTuplet, openTuplets);
+                    }
+                }
             }
         }
         if (voiceEntry.Articulations.length > 0) {
