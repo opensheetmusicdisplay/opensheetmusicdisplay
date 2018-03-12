@@ -24,9 +24,9 @@ describe("Clef Converter MusicXML to VexFlow", () => {
      * @see https://usermanuals.musicxml.com/MusicXML/Content/EL-MusicXML-clef.htm
      */
     function getMusicSheetWithClef(sign: string, line?: number, clefOcatveChange?: number, additional?: string, size?: string): MusicSheet {
-      let doc: Document = parser.parseFromString(getMusicXmlWithClef(sign, line, clefOcatveChange, additional, size), "text/xml");
+      const doc: Document = parser.parseFromString(getMusicXmlWithClef(sign, line, clefOcatveChange, additional, size), "text/xml");
       chai.expect(doc).to.not.be.undefined;
-      let score: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
+      const score: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
       chai.expect(score).to.not.be.undefined;
       return reader.createMusicSheet(score, "template.xml");
     }

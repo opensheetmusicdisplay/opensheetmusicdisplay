@@ -132,8 +132,8 @@ export class InstrumentReader {
     this.maxTieNoteFraction = new Fraction(0, 1);
     let lastNoteWasGrace: boolean = false;
     try {
-      let xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
-      for (let xmlNode of xmlMeasureListArr) {
+      const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
+      for (const xmlNode of xmlMeasureListArr) {
         if (xmlNode.name === "note") {
           if (xmlNode.hasAttributes && xmlNode.attribute("print-object") && xmlNode.attribute("print-spacing")) {
             continue;
@@ -150,9 +150,9 @@ export class InstrumentReader {
           }
 
           this.currentStaff = this.instrument.Staves[noteStaff - 1];
-          let isChord: boolean = xmlNode.element("chord") !== undefined;
+          const isChord: boolean = xmlNode.element("chord") !== undefined;
           if (xmlNode.element("voice") !== undefined) {
-            let noteVoice: number = parseInt(xmlNode.element("voice").value, 10);
+            const noteVoice: number = parseInt(xmlNode.element("voice").value, 10);
             this.currentVoiceGenerator = this.getOrCreateVoiceGenerator(noteVoice, noteStaff - 1);
           } else {
             if (!isChord || this.currentVoiceGenerator === undefined) {
@@ -174,16 +174,16 @@ export class InstrumentReader {
                 isTuplet = true;
               }
             } else {
-              let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
+              const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
               this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
               Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
               continue;
             }
           }
 
-          let restNote: boolean = xmlNode.element("rest") !== undefined;
+          const restNote: boolean = xmlNode.element("rest") !== undefined;
           //Logging.log("New note found!", noteDivisions, noteDuration.toString(), restNote);
-          let isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
+          const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
             musicTimestamp = previousFraction.clone();
@@ -211,7 +211,7 @@ export class InstrumentReader {
               this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff, this.currentStaffEntry, this.currentMeasure
             );
           }
-          let beginOfMeasure: boolean = (
+          const beginOfMeasure: boolean = (
             this.currentStaffEntry !== undefined &&
             this.currentStaffEntry.Timestamp !== undefined &&
             this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) && !this.currentStaffEntry.hasNotes()
@@ -239,7 +239,7 @@ export class InstrumentReader {
               this.maxTieNoteFraction, isChord, guitarPro
             );
           }
-          let notationsNode: IXmlElement = xmlNode.element("notations");
+          const notationsNode: IXmlElement = xmlNode.element("notations");
           if (notationsNode !== undefined && notationsNode.element("dynamics") !== undefined) {
             let expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
             if (expressionReader !== undefined) {
@@ -253,12 +253,12 @@ export class InstrumentReader {
           }
           lastNoteWasGrace = isGraceNote;
         } else if (xmlNode.name === "attributes") {
-          let divisionsNode: IXmlElement = xmlNode.element("divisions");
+          const divisionsNode: IXmlElement = xmlNode.element("divisions");
           if (divisionsNode !== undefined) {
             this.divisions = parseInt(divisionsNode.value, 10);
             if (isNaN(this.divisions)) {
-              let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError",
-                                                                    "Invalid divisions value at Instrument: ");
+              const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError",
+                                                                      "Invalid divisions value at Instrument: ");
               Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
               this.divisions = this.readDivisionsFromNotes();
               if (this.divisions > 0) {
@@ -275,7 +275,7 @@ export class InstrumentReader {
             this.divisions === 0 &&
             this.currentXmlMeasureIndex === 0
           ) {
-            let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
+            const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError", "Invalid divisions value at Instrument: ");
             this.divisions = this.readDivisionsFromNotes();
             if (this.divisions > 0) {
               this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
@@ -293,10 +293,10 @@ export class InstrumentReader {
             this.saveClefInstructionAtEndOfMeasure();
           }
         } else if (xmlNode.name === "forward") {
-          let forFraction: number = parseInt(xmlNode.element("duration").value, 10);
+          const forFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Add(new Fraction(forFraction, 4 * this.divisions));
         } else if (xmlNode.name === "backup") {
-          let backFraction: number = parseInt(xmlNode.element("duration").value, 10);
+          const backFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Sub(new Fraction(backFraction, 4 * this.divisions));
           if (currentFraction.IsNegative()) {
             currentFraction = new Fraction(0, 1);
@@ -352,9 +352,9 @@ export class InstrumentReader {
                     this.openChordSymbolContainer = ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey);
         }
       }
-      for (let j in this.voiceGeneratorsDict) {
+      for (const j in this.voiceGeneratorsDict) {
         if (this.voiceGeneratorsDict.hasOwnProperty(j)) {
-          let voiceGenerator: VoiceGenerator = this.voiceGeneratorsDict[j];
+          const voiceGenerator: VoiceGenerator = this.voiceGeneratorsDict[j];
           voiceGenerator.checkForOpenBeam();
           voiceGenerator.checkForOpenGraceNotes();
         }
@@ -380,7 +380,7 @@ export class InstrumentReader {
       if (divisionsException) {
         throw new MusicSheetReadingException(e.Message);
       }
-      let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
+      const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
       this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
       Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
     }
@@ -391,7 +391,7 @@ export class InstrumentReader {
   }
 
   public doCalculationsAfterDurationHasBeenSet(): void {
-    for (let j in this.voiceGeneratorsDict) {
+    for (const j in this.voiceGeneratorsDict) {
       if (this.voiceGeneratorsDict.hasOwnProperty(j)) {
         this.voiceGeneratorsDict[j].checkOpenTies();
       }
@@ -405,14 +405,14 @@ export class InstrumentReader {
    * @returns {VoiceGenerator}
    */
   private getOrCreateVoiceGenerator(voiceId: number, staffId: number): VoiceGenerator {
-    let staff: Staff = this.instrument.Staves[staffId];
+    const staff: Staff = this.instrument.Staves[staffId];
     let voiceGenerator: VoiceGenerator = this.voiceGeneratorsDict[voiceId];
     if (voiceGenerator !== undefined) {
       if (staff.Voices.indexOf(voiceGenerator.GetVoice) === -1) {
         staff.Voices.push(voiceGenerator.GetVoice);
       }
     } else {
-      let mainVoiceGenerator: VoiceGenerator = this.staffMainVoiceGeneratorDict[staffId];
+      const mainVoiceGenerator: VoiceGenerator = this.staffMainVoiceGeneratorDict[staffId];
       if (mainVoiceGenerator !== undefined) {
         voiceGenerator = new VoiceGenerator(this.instrument, voiceId, this.slurReader, mainVoiceGenerator.GetVoice);
         staff.Voices.push(voiceGenerator.GetVoice);
@@ -446,7 +446,7 @@ export class InstrumentReader {
     } else {
       first = this.currentMeasure;
     }
-    let clefInstruction: ClefInstruction = new ClefInstruction(ClefEnum.G, 0, 2);
+    const clefInstruction: ClefInstruction = new ClefInstruction(ClefEnum.G, 0, 2);
     let firstStaffEntry: SourceStaffEntry;
     if (first.FirstInstructionsStaffEntries[staffIndex] === undefined) {
       firstStaffEntry = new SourceStaffEntry(undefined, undefined);
@@ -469,15 +469,15 @@ export class InstrumentReader {
     } else {
       first = this.currentMeasure;
     }
-    let keyInstruction: KeyInstruction = new KeyInstruction(undefined, 0, KeyEnum.major);
+    const keyInstruction: KeyInstruction = new KeyInstruction(undefined, 0, KeyEnum.major);
     for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + this.instrument.Staves.length; j++) {
       if (first.FirstInstructionsStaffEntries[j] === undefined) {
-        let firstStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
+        const firstStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
         first.FirstInstructionsStaffEntries[j] = firstStaffEntry;
         keyInstruction.Parent = firstStaffEntry;
         firstStaffEntry.Instructions.push(keyInstruction);
       } else {
-        let firstStaffEntry: SourceStaffEntry = first.FirstInstructionsStaffEntries[j];
+        const firstStaffEntry: SourceStaffEntry = first.FirstInstructionsStaffEntries[j];
         keyInstruction.Parent = firstStaffEntry;
         firstStaffEntry.removeFirstInstructionOfTypeKeyInstruction();
         if (firstStaffEntry.Instructions[0] instanceof ClefInstruction) {
@@ -496,8 +496,8 @@ export class InstrumentReader {
    * @returns {boolean}
    */
   private isAttributesNodeAtBeginOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    let children: IXmlElement[] = parentNode.elements();
-    let attributesNodeIndex: number = children.indexOf(attributesNode); // FIXME | 0
+    const children: IXmlElement[] = parentNode.elements();
+    const attributesNodeIndex: number = children.indexOf(attributesNode); // FIXME | 0
     if (attributesNodeIndex > 0 && children[attributesNodeIndex - 1].name === "backup") {
       return true;
     }
@@ -518,7 +518,7 @@ export class InstrumentReader {
    * @returns {boolean}
    */
   private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    let childs: IXmlElement[] = parentNode.elements().slice();
+    const childs: IXmlElement[] = parentNode.elements().slice();
     let attributesNodeIndex: number = 0;
     for (let i: number = 0; i < childs.length; i++) {
       if (childs[i] === attributesNode) {
@@ -543,9 +543,9 @@ export class InstrumentReader {
    */
   private getNoteDurationFromTypeNode(xmlNode: IXmlElement): Fraction {
     if (xmlNode.element("type") !== undefined) {
-      let typeNode: IXmlElement = xmlNode.element("type");
+      const typeNode: IXmlElement = xmlNode.element("type");
       if (typeNode !== undefined) {
-        let type: string = typeNode.value;
+        const type: string = typeNode.value;
         return this.currentVoiceGenerator.getNoteDurationFromType(type);
       }
     }
@@ -563,23 +563,23 @@ export class InstrumentReader {
         return;
       }
     }
-    let transposeNode: IXmlElement = node.element("transpose");
+    const transposeNode: IXmlElement = node.element("transpose");
     if (transposeNode !== undefined) {
-      let chromaticNode: IXmlElement = transposeNode.element("chromatic");
+      const chromaticNode: IXmlElement = transposeNode.element("chromatic");
       if (chromaticNode !== undefined) {
         this.instrument.PlaybackTranspose = parseInt(chromaticNode.value, 10);
       }
     }
-    let clefList: IXmlElement[] = node.elements("clef");
+    const clefList: IXmlElement[] = node.elements("clef");
     let errorMsg: string;
     if (clefList.length > 0) {
       for (let idx: number = 0, len: number = clefList.length; idx < len; ++idx) {
-        let nodeList: IXmlElement = clefList[idx];
+        const nodeList: IXmlElement = clefList[idx];
         let clefEnum: ClefEnum = ClefEnum.G;
         let line: number = 2;
         let staffNumber: number = 1;
         let clefOctaveOffset: number = 0;
-        let lineNode: IXmlElement = nodeList.element("line");
+        const lineNode: IXmlElement = nodeList.element("line");
         if (lineNode !== undefined) {
           try {
             line = parseInt(lineNode.value, 10);
@@ -594,7 +594,7 @@ export class InstrumentReader {
           }
 
         }
-        let signNode: IXmlElement = nodeList.element("sign");
+        const signNode: IXmlElement = nodeList.element("sign");
         if (signNode !== undefined) {
           try {
             clefEnum = ClefEnum[signNode.value];
@@ -622,7 +622,7 @@ export class InstrumentReader {
           }
 
         }
-        let clefOctaveNode: IXmlElement = nodeList.element("clef-octave-change");
+        const clefOctaveNode: IXmlElement = nodeList.element("clef-octave-change");
         if (clefOctaveNode !== undefined) {
           try {
             clefOctaveOffset = parseInt(clefOctaveNode.value, 10);
@@ -649,13 +649,13 @@ export class InstrumentReader {
           }
         }
 
-        let clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
+        const clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
         this.abstractInstructions.push([staffNumber, clefInstruction]);
       }
     }
     if (node.element("key") !== undefined && this.instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
       let key: number = 0;
-      let keyNode: IXmlElement = node.element("key").element("fifths");
+      const keyNode: IXmlElement = node.element("key").element("fifths");
       if (keyNode !== undefined) {
         try {
           key = parseInt(keyNode.value, 10);
@@ -689,14 +689,14 @@ export class InstrumentReader {
         }
 
       }
-      let keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
+      const keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
       this.abstractInstructions.push([1, keyInstruction]);
     }
     if (node.element("time") !== undefined) {
       let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
-      let timeNode: IXmlElement = node.element("time");
+      const timeNode: IXmlElement = node.element("time");
       if (timeNode !== undefined && timeNode.hasAttributes) {
-        let firstAttr: IXmlAttribute = timeNode.firstAttribute;
+        const firstAttr: IXmlAttribute = timeNode.firstAttribute;
         if (firstAttr.name === "symbol") {
           if (firstAttr.value === "common") {
             symbolEnum = RhythmSymbolEnum.COMMON;
@@ -707,27 +707,27 @@ export class InstrumentReader {
       }
       let num: number = 0;
       let denom: number = 0;
-      let senzaMisura: boolean = (timeNode !== undefined && timeNode.element("senza-misura") !== undefined);
-      let timeList: IXmlElement[] = node.elements("time");
-      let beatsList: IXmlElement[] = [];
-      let typeList: IXmlElement[] = [];
+      const senzaMisura: boolean = (timeNode !== undefined && timeNode.element("senza-misura") !== undefined);
+      const timeList: IXmlElement[] = node.elements("time");
+      const beatsList: IXmlElement[] = [];
+      const typeList: IXmlElement[] = [];
       for (let idx: number = 0, len: number = timeList.length; idx < len; ++idx) {
-        let xmlNode: IXmlElement = timeList[idx];
+        const xmlNode: IXmlElement = timeList[idx];
         beatsList.push.apply(beatsList, xmlNode.elements("beats"));
         typeList.push.apply(typeList, xmlNode.elements("beat-type"));
       }
       if (!senzaMisura) {
         try {
           if (beatsList !== undefined && beatsList.length > 0 && typeList !== undefined && beatsList.length === typeList.length) {
-            let length: number = beatsList.length;
-            let fractions: Fraction[] = new Array(length);
+            const length: number = beatsList.length;
+            const fractions: Fraction[] = new Array(length);
             let maxDenom: number = 0;
             for (let i: number = 0; i < length; i++) {
-              let s: string = beatsList[i].value;
+              const s: string = beatsList[i].value;
               let n: number = 0;
               let d: number = 0;
               if (s.indexOf("+") !== -1) {
-                let numbers: string[] = s.split("+");
+                const numbers: string[] = s.split("+");
                 for (let idx: number = 0, len: number = numbers.length; idx < len; ++idx) {
                   n += parseInt(numbers[idx], 10);
                 }
@@ -777,15 +777,15 @@ export class InstrumentReader {
    */
   private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
     for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
-      let pair: [number, AbstractNotationInstruction] = this.abstractInstructions[i];
-      let key: number = pair[0];
-      let value: AbstractNotationInstruction = pair[1];
+      const pair: [number, AbstractNotationInstruction] = this.abstractInstructions[i];
+      const key: number = pair[0];
+      const value: AbstractNotationInstruction = pair[1];
       if (value instanceof ClefInstruction) {
-        let clefInstruction: ClefInstruction = <ClefInstruction>value;
+        const clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (this.currentXmlMeasureIndex === 0 || (key <= this.activeClefs.length && clefInstruction !== this.activeClefs[key - 1])) {
           if (!beginOfMeasure && this.currentStaffEntry !== undefined && !this.currentStaffEntry.hasNotes() && key - 1
             === this.instrument.Staves.indexOf(this.currentStaffEntry.ParentStaff)) {
-            let newClefInstruction: ClefInstruction = clefInstruction;
+            const newClefInstruction: ClefInstruction = clefInstruction;
             newClefInstruction.Parent = this.currentStaffEntry;
             this.currentStaffEntry.removeFirstInstructionOfTypeClefInstruction();
             this.currentStaffEntry.Instructions.push(newClefInstruction);
@@ -794,9 +794,9 @@ export class InstrumentReader {
           } else if (beginOfMeasure) {
             let firstStaffEntry: SourceStaffEntry;
             if (this.currentMeasure !== undefined) {
-              let newClefInstruction: ClefInstruction = clefInstruction;
-              let sseIndex: number = this.inSourceMeasureInstrumentIndex + key - 1;
-              let firstSse: SourceStaffEntry = this.currentMeasure.FirstInstructionsStaffEntries[sseIndex];
+              const newClefInstruction: ClefInstruction = clefInstruction;
+              const sseIndex: number = this.inSourceMeasureInstrumentIndex + key - 1;
+              const firstSse: SourceStaffEntry = this.currentMeasure.FirstInstructionsStaffEntries[sseIndex];
               if (this.currentXmlMeasureIndex === 0) {
                 if (firstSse === undefined) {
                   firstStaffEntry = new SourceStaffEntry(undefined, undefined);
@@ -813,13 +813,13 @@ export class InstrumentReader {
                   firstStaffEntry.Instructions.splice(0, 0, newClefInstruction);
                   this.activeClefsHaveBeenInitialized[key - 1] = true;
                 } else {
-                  let lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
+                  const lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
                   this.currentMeasure.LastInstructionsStaffEntries[sseIndex] = lastStaffEntry;
                   newClefInstruction.Parent = lastStaffEntry;
                   lastStaffEntry.Instructions.push(newClefInstruction);
                 }
               } else if (!this.activeClefsHaveBeenInitialized[key - 1]) {
-                let first: SourceMeasure = this.musicSheet.SourceMeasures[0];
+                const first: SourceMeasure = this.musicSheet.SourceMeasures[0];
                 if (first.FirstInstructionsStaffEntries[sseIndex] === undefined) {
                   firstStaffEntry = new SourceStaffEntry(undefined, undefined);
                 } else {
@@ -830,7 +830,7 @@ export class InstrumentReader {
                 firstStaffEntry.Instructions.splice(0, 0, newClefInstruction);
                 this.activeClefsHaveBeenInitialized[key - 1] = true;
               } else {
-                let lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
+                const lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
                 this.previousMeasure.LastInstructionsStaffEntries[sseIndex] = lastStaffEntry;
                 newClefInstruction.Parent = lastStaffEntry;
                 lastStaffEntry.Instructions.push(newClefInstruction);
@@ -844,7 +844,7 @@ export class InstrumentReader {
         }
       }
       if (value instanceof KeyInstruction) {
-        let keyInstruction: KeyInstruction = <KeyInstruction>value;
+        const keyInstruction: KeyInstruction = <KeyInstruction>value;
         if (this.activeKey === undefined || this.activeKey.Key !== keyInstruction.Key) {
           this.activeKey = keyInstruction;
           this.abstractInstructions.splice(i, 1);
@@ -861,14 +861,14 @@ export class InstrumentReader {
           }
           if (sourceMeasure !== undefined) {
             for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + numberOfStaves; j++) {
-              let newKeyInstruction: KeyInstruction = keyInstruction;
+              const newKeyInstruction: KeyInstruction = keyInstruction;
               if (sourceMeasure.FirstInstructionsStaffEntries[j] === undefined) {
-                let firstStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
+                const firstStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
                 sourceMeasure.FirstInstructionsStaffEntries[j] = firstStaffEntry;
                 newKeyInstruction.Parent = firstStaffEntry;
                 firstStaffEntry.Instructions.push(newKeyInstruction);
               } else {
-                let firstStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[j];
+                const firstStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[j];
                 newKeyInstruction.Parent = firstStaffEntry;
                 firstStaffEntry.removeFirstInstructionOfTypeKeyInstruction();
                 if (firstStaffEntry.Instructions.length === 0) {
@@ -888,13 +888,13 @@ export class InstrumentReader {
         }
       }
       if (value instanceof RhythmInstruction) {
-        let rhythmInstruction: RhythmInstruction = <RhythmInstruction>value;
+        const rhythmInstruction: RhythmInstruction = <RhythmInstruction>value;
         if (this.activeRhythm === undefined || this.activeRhythm !== rhythmInstruction) {
           this.activeRhythm = rhythmInstruction;
           this.abstractInstructions.splice(i, 1);
           if (this.currentMeasure !== undefined) {
             for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + numberOfStaves; j++) {
-              let newRhythmInstruction: RhythmInstruction = rhythmInstruction;
+              const newRhythmInstruction: RhythmInstruction = rhythmInstruction;
               let firstStaffEntry: SourceStaffEntry;
               if (this.currentMeasure.FirstInstructionsStaffEntries[j] === undefined) {
                 firstStaffEntry = new SourceStaffEntry(undefined, undefined);
@@ -919,19 +919,19 @@ export class InstrumentReader {
    */
   private saveClefInstructionAtEndOfMeasure(): void {
     for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
-      let key: number = this.abstractInstructions[i][0];
-      let value: AbstractNotationInstruction = this.abstractInstructions[i][1];
+      const key: number = this.abstractInstructions[i][0];
+      const value: AbstractNotationInstruction = this.abstractInstructions[i][1];
       if (value instanceof ClefInstruction) {
-        let clefInstruction: ClefInstruction = <ClefInstruction>value;
+        const clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (
           (this.activeClefs[key - 1] === undefined) ||
           (clefInstruction.ClefType !== this.activeClefs[key - 1].ClefType || (
             clefInstruction.ClefType === this.activeClefs[key - 1].ClefType &&
             clefInstruction.Line !== this.activeClefs[key - 1].Line
           ))) {
-          let lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
+          const lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
           this.currentMeasure.LastInstructionsStaffEntries[this.inSourceMeasureInstrumentIndex + key - 1] = lastStaffEntry;
-          let newClefInstruction: ClefInstruction = clefInstruction;
+          const newClefInstruction: ClefInstruction = clefInstruction;
           newClefInstruction.Parent = lastStaffEntry;
           lastStaffEntry.Instructions.push(newClefInstruction);
           this.activeClefs[key - 1] = clefInstruction;
@@ -948,16 +948,16 @@ export class InstrumentReader {
    */
   private getNoteDurationForTuplet(xmlNode: IXmlElement): Fraction {
     let duration: Fraction = new Fraction(0, 1);
-    let typeDuration: Fraction = this.getNoteDurationFromTypeNode(xmlNode);
+    const typeDuration: Fraction = this.getNoteDurationFromTypeNode(xmlNode);
     if (xmlNode.element("time-modification") !== undefined) {
-      let time: IXmlElement = xmlNode.element("time-modification");
+      const time: IXmlElement = xmlNode.element("time-modification");
       if (time !== undefined) {
         if (time.element("actual-notes") !== undefined && time.element("normal-notes") !== undefined) {
-          let actualNotes: IXmlElement = time.element("actual-notes");
-          let normalNotes: IXmlElement = time.element("normal-notes");
+          const actualNotes: IXmlElement = time.element("actual-notes");
+          const normalNotes: IXmlElement = time.element("normal-notes");
           if (actualNotes !== undefined && normalNotes !== undefined) {
-            let actual: number = parseInt(actualNotes.value, 10);
-            let normal: number = parseInt(normalNotes.value, 10);
+            const actual: number = parseInt(actualNotes.value, 10);
+            const normal: number = parseInt(normalNotes.value, 10);
             duration = new Fraction(normal * typeDuration.Numerator, actual * typeDuration.Denominator);
           }
         }
@@ -1000,15 +1000,15 @@ export class InstrumentReader {
     let xmlMeasureIndex: number = this.currentXmlMeasureIndex;
     let read: boolean = false;
     while (!read) {
-      let xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[xmlMeasureIndex].elements();
+      const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[xmlMeasureIndex].elements();
       for (let idx: number = 0, len: number = xmlMeasureListArr.length; idx < len; ++idx) {
-        let xmlNode: IXmlElement = xmlMeasureListArr[idx];
+        const xmlNode: IXmlElement = xmlMeasureListArr[idx];
         if (xmlNode.name === "note" && xmlNode.element("time-modification") === undefined) {
           if (xmlNode.element("duration") !== undefined && xmlNode.element("type") !== undefined) {
-            let durationNode: IXmlElement = xmlNode.element("duration");
-            let typeNode: IXmlElement = xmlNode.element("type");
+            const durationNode: IXmlElement = xmlNode.element("duration");
+            const typeNode: IXmlElement = xmlNode.element("type");
             if (durationNode !== undefined && typeNode !== undefined) {
-              let type: string = typeNode.value;
+              const type: string = typeNode.value;
               let noteDuration: number = 0;
               try {
                 noteDuration = parseInt(durationNode.value, 10);
@@ -1074,7 +1074,7 @@ export class InstrumentReader {
       if (divisionsFromNote === 0) {
         xmlMeasureIndex++;
         if (xmlMeasureIndex === this.xmlMeasureList.length) {
-          let errorMsg: string = ITextTranslation.translateText("ReaderErrorMEssages/DivisionsError", "Invalid divisions value at Instrument: ");
+          const errorMsg: string = ITextTranslation.translateText("ReaderErrorMEssages/DivisionsError", "Invalid divisions value at Instrument: ");
           throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
         }
       }

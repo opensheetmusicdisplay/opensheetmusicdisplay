@@ -39,13 +39,13 @@ export class Fraction {
   }
 
   public static plus(f1: Fraction, f2: Fraction): Fraction {
-    let sum: Fraction = f1.clone();
+    const sum: Fraction = f1.clone();
     sum.Add(f2);
     return sum;
   }
 
   public static minus(f1: Fraction, f2: Fraction): Fraction {
-    let sum: Fraction = f1.clone();
+    const sum: Fraction = f1.clone();
     sum.Sub(f2);
     return sum;
   }
@@ -193,14 +193,14 @@ export class Fraction {
       return this;
     }
 
-    let upTestFraction: Fraction = new Fraction(this.numerator + 1, this.denominator, this.wholeValue);
+    const upTestFraction: Fraction = new Fraction(this.numerator + 1, this.denominator, this.wholeValue);
 
     while (upTestFraction.Denominator > maxAllowedDenominator) {
       upTestFraction.Numerator++;
     }
 
     if (this.numerator > this.denominator) {
-      let downTestFraction: Fraction = new Fraction(this.numerator - 1, this.denominator, this.wholeValue);
+      const downTestFraction: Fraction = new Fraction(this.numerator - 1, this.denominator, this.wholeValue);
 
       while (downTestFraction.Denominator > maxAllowedDenominator) {
         downTestFraction.Numerator--;
@@ -218,7 +218,7 @@ export class Fraction {
   }
 
   public CompareTo(obj: Fraction): number {
-    let diff: number = this.realValue - obj.realValue;
+    const diff: number = this.realValue - obj.realValue;
     // Return the sign of diff
     return diff ? diff < 0 ? -1 : 1 : 0;
   }
@@ -249,12 +249,12 @@ export class Fraction {
       return;
     }
 
-    let i: number = Fraction.greatestCommonDenominator(Math.abs(this.numerator), Math.abs(this.denominator));
+    const i: number = Fraction.greatestCommonDenominator(Math.abs(this.numerator), Math.abs(this.denominator));
 
     this.numerator /= i;
     this.denominator /= i;
 
-    let whole: number = Math.floor(this.numerator / this.denominator);
+    const whole: number = Math.floor(this.numerator / this.denominator);
     if (whole !== 0) {
       this.wholeValue += whole;
       this.numerator -= whole * this.denominator;
@@ -263,12 +263,12 @@ export class Fraction {
       }
     }
     if (this.denominator > Fraction.maximumAllowedNumber) {
-      let factor: number = <number>this.denominator / Fraction.maximumAllowedNumber;
+      const factor: number = <number>this.denominator / Fraction.maximumAllowedNumber;
       this.numerator = <number>Math.round(this.numerator / factor);
       this.denominator = <number>Math.round(this.denominator / factor);
     }
     if (this.numerator > Fraction.maximumAllowedNumber) {
-      let factor: number = <number>this.numerator / Fraction.maximumAllowedNumber;
+      const factor: number = <number>this.numerator / Fraction.maximumAllowedNumber;
       this.numerator = <number>Math.round(this.numerator / factor);
       this.denominator = <number>Math.round(this.denominator / factor);
     }

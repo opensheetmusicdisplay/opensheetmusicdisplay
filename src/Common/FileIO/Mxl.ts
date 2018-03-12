@@ -13,7 +13,7 @@ export class MXLHelper {
      * @constructor
      */
     public static MXLtoIXmlElement(data: string): Promise<IXmlElement> {
-        let zip: JSZip.JSZip = new JSZip();
+        const zip: JSZip.JSZip = new JSZip();
         // asynchronously load zip file and process it - with Promises
         return zip.loadAsync(data).then(
             (_: any) => {
@@ -24,9 +24,9 @@ export class MXLHelper {
             }
         ).then(
             (content: string) => {
-                let parser: DOMParser = new DOMParser();
-                let doc: Document = parser.parseFromString(content, "text/xml");
-                let rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
+                const parser: DOMParser = new DOMParser();
+                const doc: Document = parser.parseFromString(content, "text/xml");
+                const rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
                 return zip.file(rootFile).async("string");
             },
             (err: any) => {
@@ -34,9 +34,9 @@ export class MXLHelper {
             }
         ).then(
             (content: string) => {
-                let parser: DOMParser = new DOMParser();
-                let xml: Document = parser.parseFromString(content, "text/xml");
-                let doc: IXmlElement = new IXmlElement(xml.documentElement);
+                const parser: DOMParser = new DOMParser();
+                const xml: Document = parser.parseFromString(content, "text/xml");
+                const doc: IXmlElement = new IXmlElement(xml.documentElement);
                 return Promise.resolve(doc);
             },
             (err: any) => {
@@ -53,7 +53,7 @@ export class MXLHelper {
     }
 
     public static MXLtoXMLstring(data: string): Promise<string> {
-        let zip:  JSZip.JSZip = new JSZip();
+        const zip:  JSZip.JSZip = new JSZip();
         // asynchronously load zip file and process it - with Promises
         return zip.loadAsync(data).then(
             (_: any) => {
@@ -64,9 +64,9 @@ export class MXLHelper {
             }
         ).then(
             (content: string) => {
-                let parser: DOMParser = new DOMParser();
-                let doc: Document = parser.parseFromString(content, "text/xml");
-                let rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
+                const parser: DOMParser = new DOMParser();
+                const doc: Document = parser.parseFromString(content, "text/xml");
+                const rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
                 return zip.file(rootFile).async("string");
             },
             (err: any) => {

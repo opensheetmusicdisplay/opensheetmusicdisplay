@@ -5,7 +5,7 @@ import { OSMD } from '../src/OSMD/OSMD';
     "use strict";
     var osmdObj;
     // The folder of the demo files
-    var folder = "",
+    var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     // The available demos
         demos = {
             "Beethoven - AnDieFerneGeliebte": "Beethoven_AnDieFerneGeliebte.xml",
@@ -26,6 +26,8 @@ import { OSMD } from '../src/OSMD/OSMD';
             "Dichterliebe01": "Dichterliebe01.xml",
             "mandoline - debussy": "mandoline - debussy.xml",
             "MozartTrio": "MozartTrio.mxl",
+            "Cornelius P. Christbaum Opus 8.1": "Cornelius_P_Christbaum_Opus_8_1_1865.mxl",
+            "France Levasseur - Parlez Mois": "Parlez-moi.mxl",
         },
 
         zoom = 1.0,
@@ -133,7 +135,7 @@ import { OSMD } from '../src/OSMD/OSMD';
             var value = e.target.value;
             // clears the canvas element
             canvas.innerHTML = "";
-            osmdObj = new opensheetmusicdisplay.OSMD(canvas, false, value);
+            osmdObj = new OSMD(canvas, false, value);
             osmdObj.setLogLevel('info');
             selectOnChange();
 
@@ -203,8 +205,8 @@ import { OSMD } from '../src/OSMD/OSMD';
     }
 
     function logCanvasSize() {
-        size.innerHTML = canvas.offsetWidth;
-        zoomDiv.innerHTML = Math.floor(zoom * 100.0);
+        size.innerHTML = canvas.offsetWidth + "px";
+        zoomDiv.innerHTML = Math.floor(zoom * 100.0) + "%";
     }
 
     function scale() {

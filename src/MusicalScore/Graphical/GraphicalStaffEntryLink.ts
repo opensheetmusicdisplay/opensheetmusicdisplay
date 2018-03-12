@@ -38,13 +38,13 @@ export class GraphicalStaffEntryLink {
      */
     public getLinkedStaffEntriesGraphicalNotes(graphicalStaffEntry: GraphicalStaffEntry): GraphicalNote[] {
         if (this.graphicalLinkedStaffEntries.indexOf(graphicalStaffEntry) !== -1) {
-            let notes: GraphicalNote[] = [];
+            const notes: GraphicalNote[] = [];
             for (let idx: number = 0, len: number = this.graphicalLinkedStaffEntries.length; idx < len; ++idx) {
-                let graphicalLinkedStaffEntry: GraphicalStaffEntry = this.graphicalLinkedStaffEntries[idx];
+                const graphicalLinkedStaffEntry: GraphicalStaffEntry = this.graphicalLinkedStaffEntries[idx];
                 for (let idx2: number = 0, len2: number = graphicalLinkedStaffEntry.notes.length; idx2 < len2; ++idx2) {
-                    let graphicalNotes: GraphicalNote[] = graphicalLinkedStaffEntry.notes[idx2];
+                    const graphicalNotes: GraphicalNote[] = graphicalLinkedStaffEntry.notes[idx2];
                     for (let idx3: number = 0, len3: number = graphicalNotes.length; idx3 < len3; ++idx3) {
-                        let graphicalNote: GraphicalNote = graphicalNotes[idx3];
+                        const graphicalNote: GraphicalNote = graphicalNotes[idx3];
                         if (graphicalNote.sourceNote.ParentStaffEntry.Link !== undefined
                             && graphicalNote.sourceNote.ParentVoiceEntry === this.staffEntryLink.GetVoiceEntry) {
                             notes.push(graphicalNote);

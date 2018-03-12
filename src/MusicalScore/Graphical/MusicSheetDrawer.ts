@@ -67,8 +67,8 @@ export abstract class MusicSheetDrawer {
         this.rules = graphicalMusicSheet.ParentMusicSheet.Rules;
         this.drawSplitScreenLine();
         if (this.drawingParameters.drawCursors) {
-            for (let line of graphicalMusicSheet.Cursors) {
-                let psi: BoundingBox = new BoundingBox(line);
+            for (const line of graphicalMusicSheet.Cursors) {
+                const psi: BoundingBox = new BoundingBox(line);
                 psi.AbsolutePosition = line.Start;
                 psi.BorderBottom = line.End.y - line.Start.y;
                 psi.BorderRight = line.Width / 2.0;
@@ -83,7 +83,7 @@ export abstract class MusicSheetDrawer {
             this.drawScrollIndicator();
         }
         // Draw all the pages
-        for (let page of this.graphicalMusicSheet.MusicPages) {
+        for (const page of this.graphicalMusicSheet.MusicPages) {
             this.drawPage(page);
         }
     }
@@ -95,33 +95,33 @@ export abstract class MusicSheetDrawer {
     }
 
     public drawLineAsVerticalRectangle(line: GraphicalLine, layer: number): void {
-        let lineStart: PointF2D = line.Start;
-        let lineWidth: number = line.Width;
+        const lineStart: PointF2D = line.Start;
+        const lineWidth: number = line.Width;
         let rectangle: RectangleF2D = new RectangleF2D(lineStart.x - lineWidth / 2, lineStart.y, lineWidth, line.End.y - lineStart.y);
         rectangle = this.applyScreenTransformationForRect(rectangle);
         this.renderRectangle(rectangle, layer, line.styleId);
     }
 
     public drawLineAsHorizontalRectangleWithOffset(line: GraphicalLine, offset: PointF2D, layer: number): void {
-        let start: PointF2D = new PointF2D(line.Start.x + offset.x, line.Start.y + offset.y);
-        let end: PointF2D = new PointF2D(line.End.x + offset.x, line.End.y + offset.y);
-        let width: number = line.Width;
+        const start: PointF2D = new PointF2D(line.Start.x + offset.x, line.Start.y + offset.y);
+        const end: PointF2D = new PointF2D(line.End.x + offset.x, line.End.y + offset.y);
+        const width: number = line.Width;
         let rectangle: RectangleF2D = new RectangleF2D(start.x, end.y - width / 2, end.x - start.x, width);
         rectangle = this.applyScreenTransformationForRect(rectangle);
         this.renderRectangle(rectangle, layer, line.styleId);
     }
 
     public drawLineAsVerticalRectangleWithOffset(line: GraphicalLine, offset: PointF2D, layer: number): void {
-        let start: PointF2D = new PointF2D(line.Start.x + offset.x, line.Start.y + offset.y);
-        let end: PointF2D = new PointF2D(line.End.x + offset.x, line.End.y + offset.y);
-        let width: number = line.Width;
+        const start: PointF2D = new PointF2D(line.Start.x + offset.x, line.Start.y + offset.y);
+        const end: PointF2D = new PointF2D(line.End.x + offset.x, line.End.y + offset.y);
+        const width: number = line.Width;
         let rectangle: RectangleF2D = new RectangleF2D(start.x, start.y, width, end.y - start.y);
         rectangle = this.applyScreenTransformationForRect(rectangle);
         this.renderRectangle(rectangle, layer, line.styleId);
     }
 
     public drawRectangle(rect: GraphicalRectangle, layer: number): void {
-        let psi: BoundingBox = rect.PositionAndShape;
+        const psi: BoundingBox = rect.PositionAndShape;
         let rectangle: RectangleF2D = new RectangleF2D(psi.AbsolutePosition.x, psi.AbsolutePosition.y, psi.BorderRight, psi.BorderBottom);
         rectangle = this.applyScreenTransformationForRect(rectangle);
         this.renderRectangle(rectangle, layer, <number>rect.style);
@@ -135,15 +135,15 @@ export abstract class MusicSheetDrawer {
         if (!this.isVisible(graphicalLabel.PositionAndShape)) {
             return;
         }
-        let label: Label = graphicalLabel.Label;
+        const label: Label = graphicalLabel.Label;
         if (label.text.trim() === "") {
             return;
         }
-        let screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
-        let heightInPixel: number = this.calculatePixelDistance(label.fontHeight);
-        let widthInPixel: number = heightInPixel * this.textMeasurer.computeTextWidthToHeightRatio(label.text, label.font, label.fontStyle);
-        let bitmapWidth: number = <number>Math.ceil(widthInPixel);
-        let bitmapHeight: number = <number>Math.ceil(heightInPixel * 1.2);
+        const screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
+        const heightInPixel: number = this.calculatePixelDistance(label.fontHeight);
+        const widthInPixel: number = heightInPixel * this.textMeasurer.computeTextWidthToHeightRatio(label.text, label.font, label.fontStyle);
+        const bitmapWidth: number = <number>Math.ceil(widthInPixel);
+        const bitmapHeight: number = <number>Math.ceil(heightInPixel * 1.2);
         switch (label.textAlignment) {
             case TextAlignment.LeftTop:
                 break;
@@ -186,8 +186,8 @@ export abstract class MusicSheetDrawer {
     }
 
     protected applyScreenTransformations(points: PointF2D[]): PointF2D[] {
-        let transformedPoints: PointF2D[] = [];
-        for (let point of points) {
+        const transformedPoints: PointF2D[] = [];
+        for (const point of points) {
             transformedPoints.push(this.applyScreenTransformation(point));
         }
         return transformedPoints;
@@ -201,7 +201,7 @@ export abstract class MusicSheetDrawer {
         // empty
     }
 
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number): void {
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, alpha: number = 1): void {
         throw new Error("not implemented");
     }
 
@@ -252,21 +252,21 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawMusicSystem(system: MusicSystem): void {
-        let absBoundingRectWithMargin: RectangleF2D = this.getSystemAbsBoundingRect(system);
-        let systemBoundingBoxInPixels: RectangleF2D = this.getSytemBoundingBoxInPixels(absBoundingRectWithMargin);
+        const absBoundingRectWithMargin: RectangleF2D = this.getSystemAbsBoundingRect(system);
+        const systemBoundingBoxInPixels: RectangleF2D = this.getSytemBoundingBoxInPixels(absBoundingRectWithMargin);
         this.drawMusicSystemComponents(system, systemBoundingBoxInPixels, absBoundingRectWithMargin);
     }
 
     protected getSytemBoundingBoxInPixels(absBoundingRectWithMargin: RectangleF2D): RectangleF2D {
-        let systemBoundingBoxInPixels: RectangleF2D = this.applyScreenTransformationForRect(absBoundingRectWithMargin);
+        const systemBoundingBoxInPixels: RectangleF2D = this.applyScreenTransformationForRect(absBoundingRectWithMargin);
         systemBoundingBoxInPixels.x = Math.round(systemBoundingBoxInPixels.x);
         systemBoundingBoxInPixels.y = Math.round(systemBoundingBoxInPixels.y);
         return systemBoundingBoxInPixels;
     }
 
     protected getSystemAbsBoundingRect(system: MusicSystem): RectangleF2D {
-        let relBoundingRect: RectangleF2D = system.PositionAndShape.BoundingRectangle;
-        let absBoundingRectWithMargin: RectangleF2D = new RectangleF2D(
+        const relBoundingRect: RectangleF2D = system.PositionAndShape.BoundingRectangle;
+        const absBoundingRectWithMargin: RectangleF2D = new RectangleF2D(
             system.PositionAndShape.AbsolutePosition.x + system.PositionAndShape.BorderLeft - 1,
             system.PositionAndShape.AbsolutePosition.y + system.PositionAndShape.BorderTop - 1,
             (relBoundingRect.width + 6), (relBoundingRect.height + 2)
@@ -276,8 +276,8 @@ export abstract class MusicSheetDrawer {
 
     protected drawMusicSystemComponents(musicSystem: MusicSystem, systemBoundingBoxInPixels: RectangleF2D,
                                         absBoundingRectWithMargin: RectangleF2D): void {
-        let selectStartSymb: SelectionStartSymbol = this.graphicalMusicSheet.SelectionStartSymbol;
-        let selectEndSymb: SelectionEndSymbol = this.graphicalMusicSheet.SelectionEndSymbol;
+        const selectStartSymb: SelectionStartSymbol = this.graphicalMusicSheet.SelectionStartSymbol;
+        const selectEndSymb: SelectionEndSymbol = this.graphicalMusicSheet.SelectionEndSymbol;
         if (this.drawingParameters.drawSelectionStartSymbol) {
             if (selectStartSymb !== undefined && this.isVisible(selectStartSymb.PositionAndShape)) {
                 this.drawSelectionStartSymbol(selectStartSymb);
@@ -288,29 +288,29 @@ export abstract class MusicSheetDrawer {
                 this.drawSelectionEndSymbol(selectEndSymb);
             }
         }
-        for (let staffLine of musicSystem.StaffLines) {
+        for (const staffLine of musicSystem.StaffLines) {
             this.drawStaffLine(staffLine);
         }
-        for (let systemLine of musicSystem.SystemLines) {
+        for (const systemLine of musicSystem.SystemLines) {
             this.drawSystemLineObject(systemLine);
         }
         if (musicSystem === musicSystem.Parent.MusicSystems[0] && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
-            for (let label of musicSystem.Labels) {
+            for (const label of musicSystem.Labels) {
                 this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
         }
-        for (let bracket of musicSystem.InstrumentBrackets) {
+        for (const bracket of musicSystem.InstrumentBrackets) {
             this.drawInstrumentBrace(bracket, musicSystem);
         }
-        for (let bracket of musicSystem.GroupBrackets) {
+        for (const bracket of musicSystem.GroupBrackets) {
             this.drawGroupBracket(bracket, musicSystem);
         }
         if (!this.leadSheet) {
-            for (let measureNumberLabel of musicSystem.MeasureNumberLabels) {
+            for (const measureNumberLabel of musicSystem.MeasureNumberLabels) {
                 this.drawLabel(measureNumberLabel, <number>GraphicalLayers.Notes);
             }
         }
-        for (let staffLine of musicSystem.StaffLines) {
+        for (const staffLine of musicSystem.StaffLines) {
             this.drawStaffLineSymbols(staffLine);
         }
         if (this.drawingParameters.drawMarkedAreas) {
@@ -331,7 +331,7 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawStaffLine(staffLine: StaffLine): void {
-        for (let measure of staffLine.Measures) {
+        for (const measure of staffLine.Measures) {
             this.drawMeasure(measure);
         }
     }
@@ -342,17 +342,17 @@ export abstract class MusicSheetDrawer {
 
     protected drawOctaveShift(staffLine: StaffLine, graphicalOctaveShift: GraphicalOctaveShift): void {
         this.drawSymbol(graphicalOctaveShift.octaveSymbol, MusicSymbolDrawingStyle.Normal, graphicalOctaveShift.PositionAndShape.AbsolutePosition);
-        let absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+        const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
         if (graphicalOctaveShift.dashesStart.x < graphicalOctaveShift.dashesEnd.x) {
-            let horizontalLine: GraphicalLine = new GraphicalLine(graphicalOctaveShift.dashesStart, graphicalOctaveShift.dashesEnd,
-                                                                  this.rules.OctaveShiftLineWidth);
+            const horizontalLine: GraphicalLine = new GraphicalLine(graphicalOctaveShift.dashesStart, graphicalOctaveShift.dashesEnd,
+                                                                    this.rules.OctaveShiftLineWidth);
             this.drawLineAsHorizontalRectangleWithOffset(horizontalLine, absolutePos, <number>GraphicalLayers.Notes);
         }
         if (!graphicalOctaveShift.endsOnDifferentStaffLine || graphicalOctaveShift.isSecondPart) {
             let verticalLine: GraphicalLine;
-            let dashEnd: PointF2D = graphicalOctaveShift.dashesEnd;
-            let octShiftVertLineLength: number = this.rules.OctaveShiftVerticalLineLength;
-            let octShiftLineWidth: number = this.rules.OctaveShiftLineWidth;
+            const dashEnd: PointF2D = graphicalOctaveShift.dashesEnd;
+            const octShiftVertLineLength: number = this.rules.OctaveShiftVerticalLineLength;
+            const octShiftLineWidth: number = this.rules.OctaveShiftLineWidth;
             if (graphicalOctaveShift.octaveSymbol === MusicSymbol.VA8 || graphicalOctaveShift.octaveSymbol === MusicSymbol.MA15) {
                 verticalLine = new GraphicalLine(dashEnd, new PointF2D(dashEnd.x, dashEnd.y + octShiftVertLineLength), octShiftLineWidth);
             } else {
@@ -364,7 +364,7 @@ export abstract class MusicSheetDrawer {
 
     protected drawStaffLines(staffLine: StaffLine): void {
         if (staffLine.StaffLines !== undefined) {
-            let position: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+            const position: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
             for (let i: number = 0; i < 5; i++) {
                 this.drawLineAsHorizontalRectangleWithOffset(staffLine.StaffLines[i], position, <number>GraphicalLayers.Notes);
             }
@@ -407,20 +407,49 @@ export abstract class MusicSheetDrawer {
         if (!this.isVisible(page.PositionAndShape)) {
             return;
         }
-        for (let system of page.MusicSystems) {
+
+        for (const system of page.MusicSystems) {
             if (this.isVisible(system.PositionAndShape)) {
                 this.drawMusicSystem(system);
             }
         }
         if (page === page.Parent.MusicPages[0]) {
-            for (let label of page.Labels) {
+            for (const label of page.Labels) {
                 this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
         }
+        // Draw bounding boxes for debug purposes. This has to be at the end because only
+        // then all the calculations and recalculations are done
+        if (process.env.DRAW_BOUNDING_BOX_ELEMENT) {
+            this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.DRAW_BOUNDING_BOX_ELEMENT);
+        }
+
+    }
+
+    /**
+     * Draw bounding boxes aroung GraphicalObjects
+     * @param startBox Bounding Box that is used as a staring point to recursively go through all child elements
+     * @param layer Layer to draw to
+     * @param type Type of element to show bounding boxes for as string.
+     */
+    private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = "all"): void {
+        const dataObjectString: string = (startBox.DataObject.constructor as any).name;
+        if (startBox.BoundingRectangle !== undefined && (dataObjectString === type || type === "all")) {
+            const relBoundingRect: RectangleF2D = startBox.BoundingRectangle;
+            let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderLeft,
+                                                         startBox.AbsolutePosition.y + startBox.BorderTop ,
+                                                         (relBoundingRect.width + 0), (relBoundingRect.height + 0));
+            tmpRect = this.applyScreenTransformationForRect(tmpRect);
+            this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
+            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 1.2, TextAlignment.CenterCenter),
+                             layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
+        }
+        layer++;
+        startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
     }
 
     private drawMarkedAreas(system: MusicSystem): void {
-        for (let markedArea of system.GraphicalMarkedAreas) {
+        for (const markedArea of system.GraphicalMarkedAreas) {
             if (markedArea !== undefined) {
                 if (markedArea.systemRectangle !== undefined) {
                     this.drawRectangle(markedArea.systemRectangle, <number>GraphicalLayers.Background);
@@ -439,7 +468,7 @@ export abstract class MusicSheetDrawer {
     }
 
     private drawComment(system: MusicSystem): void {
-        for (let comment of system.GraphicalComments) {
+        for (const comment of system.GraphicalComments) {
             if (comment !== undefined) {
                 if (comment.settings !== undefined) {
                     this.drawLabel(comment.settings, <number>GraphicalLayers.Comment);
@@ -452,10 +481,10 @@ export abstract class MusicSheetDrawer {
     }
 
     private drawStaffLineSymbols(staffLine: StaffLine): void {
-        let parentInst: Instrument = staffLine.ParentStaff.ParentInstrument;
-        let absX: number = staffLine.PositionAndShape.AbsolutePosition.x;
-        let absY: number = staffLine.PositionAndShape.AbsolutePosition.y + 2;
-        let borderRight: number = staffLine.PositionAndShape.BorderRight;
+        const parentInst: Instrument = staffLine.ParentStaff.ParentInstrument;
+        const absX: number = staffLine.PositionAndShape.AbsolutePosition.x;
+        const absY: number = staffLine.PositionAndShape.AbsolutePosition.y + 2;
+        const borderRight: number = staffLine.PositionAndShape.BorderRight;
         if (parentInst.highlight && this.drawingParameters.drawHighlights) {
             this.drawLineAsHorizontalRectangle(
                 new GraphicalLine(
@@ -488,14 +517,14 @@ export abstract class MusicSheetDrawer {
                 break;
         }
         if (drawSymbols) {
-            let p: PointF2D = new PointF2D(absX + borderRight + 2, absY);
+            const p: PointF2D = new PointF2D(absX + borderRight + 2, absY);
             this.drawSymbol(symbol, style, p);
         }
         if (this.drawingParameters.drawErrors) {
-            for (let measure of staffLine.Measures) {
-                let measurePSI: BoundingBox = measure.PositionAndShape;
-                let absXPSI: number = measurePSI.AbsolutePosition.x;
-                let absYPSI: number = measurePSI.AbsolutePosition.y + 2;
+            for (const measure of staffLine.Measures) {
+                const measurePSI: BoundingBox = measure.PositionAndShape;
+                const absXPSI: number = measurePSI.AbsolutePosition.x;
+                const absYPSI: number = measurePSI.AbsolutePosition.y + 2;
                 if (measure.hasError && this.graphicalMusicSheet.ParentMusicSheet.DrawErroneousMeasures) {
                     this.drawLineAsHorizontalRectangle(
                         new GraphicalLine(

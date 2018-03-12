@@ -98,11 +98,11 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     public createNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
                       activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined): GraphicalNote {
         // Creates the note:
-        let graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift, graphicalNoteLength);
+        const graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift, graphicalNoteLength);
         if (note.ParentVoiceEntry !== undefined) {
             // Adds the note to the right (graphical) voice (mynotes)
-            let voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
-            let mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
+            const voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
+            const mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
             if (!(voiceID in mynotes)) {
                 mynotes[voiceID] = [];
             }
@@ -135,7 +135,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
         // ToDo: set accidental here from pitch.Accidental
-        let note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
+        const note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
         note.setPitch(pitch);
     }
 
@@ -175,15 +175,14 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param transposeHalftones
      */
     public createChordSymbol(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
-      let graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
+      const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
         new GraphicalChordSymbolContainer(sourceStaffEntry.ChordContainer,
                                           graphicalStaffEntry.PositionAndShape,
                                           EngravingRules.Rules.ChordSymbolTextHeight,
                                           transposeHalftones);
-      let graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
+      const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
       graphicalLabel.setLabelPositionAndShapeBorders();
       graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
       graphicalStaffEntry.graphicalChordContainer = graphicalChordSymbolContainer;
-      graphicalStaffEntry.PositionAndShape.ChildElements.push(graphicalChordSymbolContainer.PositionAndShape);
     }
 }

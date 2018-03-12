@@ -1165,7 +1165,7 @@ export class EngravingRules {
         this.factorOne = new Array(this.bezierCurveStepSize);
         this.factorTwo = new Array(this.bezierCurveStepSize);
         for (let i: number = 0; i < this.bezierCurveStepSize; i++) {
-            let t: number = i / this.bezierCurveStepSize;
+            const t: number = i / this.bezierCurveStepSize;
             this.tPower3[i] = Math.pow(t, 3);
             this.oneMinusTPower3[i] = Math.pow((1 - t), 3);
             this.factorOne[i] = 3 * Math.pow((1 - t), 2) * t;

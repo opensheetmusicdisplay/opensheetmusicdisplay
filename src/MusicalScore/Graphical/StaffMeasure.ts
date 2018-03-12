@@ -182,7 +182,7 @@ export abstract class StaffMeasure extends GraphicalObject {
 
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
+            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             if (graphicalStaffEntry.relInMeasureTimestamp.Equals(relativeTimestamp)) {
                 return graphicalStaffEntry;
             }
@@ -197,7 +197,7 @@ export abstract class StaffMeasure extends GraphicalObject {
      */
     public findGraphicalStaffEntryFromVerticalContainerTimestamp(absoluteTimestamp: Fraction): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
+            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             if (graphicalStaffEntry.sourceStaffEntry.VerticalContainerParent.getAbsoluteTimestamp().Equals(absoluteTimestamp)) {
                 return graphicalStaffEntry;
             }
@@ -210,9 +210,9 @@ export abstract class StaffMeasure extends GraphicalObject {
      * @returns {boolean}
      */
     public hasSameDurationWithSourceMeasureParent(): boolean {
-        let duration: Fraction = new Fraction(0, 1);
+        const duration: Fraction = new Fraction(0, 1);
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
+            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             duration.Add(graphicalStaffEntry.findStaffEntryMinNoteLength());
         }
         return duration.Equals(this.parentSourceMeasure.Duration);
@@ -226,11 +226,11 @@ export abstract class StaffMeasure extends GraphicalObject {
         if (this.staffEntries.length === 0) {
             return false;
         }
-        let voices: Voice[] = [];
+        const voices: Voice[] = [];
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            let staffEntry: GraphicalStaffEntry = this.staffEntries[idx];
+            const staffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             for (let idx2: number = 0, len2: number = staffEntry.sourceStaffEntry.VoiceEntries.length; idx2 < len2; ++idx2) {
-                let voiceEntry: VoiceEntry = staffEntry.sourceStaffEntry.VoiceEntries[idx2];
+                const voiceEntry: VoiceEntry = staffEntry.sourceStaffEntry.VoiceEntries[idx2];
                 if (voices.indexOf(voiceEntry.ParentVoice) < 0) {
                     voices.push(voiceEntry.ParentVoice);
                 }
@@ -248,23 +248,23 @@ export abstract class StaffMeasure extends GraphicalObject {
 
     public getGraphicalMeasureDurationFromStaffEntries(): Fraction {
         let duration: Fraction = new Fraction(0, 1);
-        let voices: Voice[] = [];
+        const voices: Voice[] = [];
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
+            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             for (let idx2: number = 0, len2: number = graphicalStaffEntry.sourceStaffEntry.VoiceEntries.length; idx2 < len2; ++idx2) {
-                let voiceEntry: VoiceEntry = graphicalStaffEntry.sourceStaffEntry.VoiceEntries[idx2];
+                const voiceEntry: VoiceEntry = graphicalStaffEntry.sourceStaffEntry.VoiceEntries[idx2];
                 if (voices.indexOf(voiceEntry.ParentVoice) < 0) {
                     voices.push(voiceEntry.ParentVoice);
                 }
             }
         }
         for (let idx: number = 0, len: number = voices.length; idx < len; ++idx) {
-            let voice: Voice = voices[idx];
-            let voiceDuration: Fraction = new Fraction(0, 1);
+            const voice: Voice = voices[idx];
+            const voiceDuration: Fraction = new Fraction(0, 1);
             for (let idx2: number = 0, len2: number = this.staffEntries.length; idx2 < len2; ++idx2) {
-                let graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx2];
+                const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx2];
                 for (let idx3: number = 0, len3: number = graphicalStaffEntry.notes.length; idx3 < len3; ++idx3) {
-                    let graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx3];
+                    const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx3];
                     if (graphicalNotes.length > 0 && graphicalNotes[0].sourceNote.ParentVoiceEntry.ParentVoice === voice) {
                         voiceDuration.Add(graphicalNotes[0].graphicalNoteLength);
                     }
@@ -279,7 +279,6 @@ export abstract class StaffMeasure extends GraphicalObject {
 
     public addGraphicalStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
         this.staffEntries.push(graphicalStaffEntry);
-        this.PositionAndShape.ChildElements.push(graphicalStaffEntry.PositionAndShape);
     }
 
     /**
@@ -301,12 +300,11 @@ export abstract class StaffMeasure extends GraphicalObject {
                     }
                 }
             }
-            this.PositionAndShape.ChildElements.push(staffEntry.PositionAndShape);
         }
     }
 
     public beginsWithLineRepetition(): boolean {
-        let sourceMeasure: SourceMeasure = this.parentSourceMeasure;
+        const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
         if (sourceMeasure === undefined) {
             return false;
         }
@@ -318,7 +316,7 @@ export abstract class StaffMeasure extends GraphicalObject {
      * @returns {boolean}
      */
     public endsWithLineRepetition(): boolean {
-        let sourceMeasure: SourceMeasure = this.parentSourceMeasure;
+        const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
         if (sourceMeasure === undefined) {
             return false;
         }
@@ -330,7 +328,7 @@ export abstract class StaffMeasure extends GraphicalObject {
      * @returns {boolean}
      */
     public beginsWithWordRepetition(): boolean {
-        let sourceMeasure: SourceMeasure = this.parentSourceMeasure;
+        const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
         if (sourceMeasure === undefined) {
             return false;
         }
@@ -341,7 +339,7 @@ export abstract class StaffMeasure extends GraphicalObject {
      * Check if this Measure is a Repetition Ending.
      */
     public endsWithWordRepetition(): boolean {
-        let sourceMeasure: SourceMeasure = this.parentSourceMeasure;
+        const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
         if (sourceMeasure === undefined) {
             return false;
         }

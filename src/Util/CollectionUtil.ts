@@ -28,9 +28,9 @@ export class CollectionUtil {
      */
     public static removeDictElementIfTrue<S, T, V>(thisPointer: S, dict: Dictionary<T, V>,
                                                    iterationFunction: (thisPointer: S, key: T, value: V) => boolean): void {
-        let toDeleteEntries: T[] = [];
+        const toDeleteEntries: T[] = [];
         dict.forEach(function (key: T, value: V): void {
-            let shallDelete: boolean = iterationFunction(thisPointer, key, value);
+            const shallDelete: boolean = iterationFunction(thisPointer, key, value);
             if (shallDelete) {
                 toDeleteEntries.push(key);
             }
@@ -53,7 +53,7 @@ export class CollectionUtil {
         let mid: number = 1;
         while (startIndex < endIndex) {
             mid = Math.floor((startIndex + endIndex) / 2);
-            let c: number = cmp(array[mid], element);
+            const c: number = cmp(array[mid], element);
             if (c === 0) {
                 return mid;
             }
