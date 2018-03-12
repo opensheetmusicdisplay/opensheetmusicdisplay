@@ -35,8 +35,6 @@ import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   constructor() {
     super(new VexFlowGraphicalSymbolFactory());
-    let a: LyricsEntry = new LyricsEntry(undefined, undefined, undefined);
-    a = a;
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
   }
 
