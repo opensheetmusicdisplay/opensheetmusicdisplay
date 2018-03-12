@@ -121,7 +121,7 @@ import { OSMD } from '../src/OSMD/OSMD';
             }
         });
         colorizeBtn.addEventListener("click", function() {
-            osmdObj.colorizeNotes({"fillStyle":"red"});
+            osmdObj.colorizeNotes();
         });
         nextCursorBtn.addEventListener("click", function() {
             osmdObj.cursor.next();

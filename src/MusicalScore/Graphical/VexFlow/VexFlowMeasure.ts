@@ -198,10 +198,11 @@ export class VexFlowMeasure extends StaffMeasure {
         this.stave.draw();
         // Draw all voices
 
-        // ctx.save();
-        // ctx = (Object as any).assign(ctx, this.style);
+        ctx.save();
+        ctx = (Object as any).assign(ctx, this.style);
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
+                this.vfVoices[voiceID].setStyle(this.style);
                 this.vfVoices[voiceID].draw(ctx, this.stave);
             }
         }
@@ -215,7 +216,6 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
             }
         }
-        // ctx.restore();
 
         // Draw tuplets
         for (const voiceID in this.vftuplets) {
@@ -232,6 +232,7 @@ export class VexFlowMeasure extends StaffMeasure {
             if (!tie.getContext()) { tie.setContext(ctx); }
             tie.draw();
         }
+        ctx.restore();
 
         // Draw vertical lines
         for (const connector of this.connectors) {

@@ -196,21 +196,21 @@ export class OSMD {
         }
     }
 
-    public colorizeNotes(styleObj: any = {fillStyle: "black", strokeStyle: "blue"}): void {
+    public colorizeNotes(styleObj: any = {fillStyle: "blue", strokeStyle: "red"}): void {
         // Get all staff entries throughout the document
         this.graphic.MeasureList.forEach(m => {
                 m.forEach(n => {
-                    // (n as VexFlowMeasure).style = styleObj;
-                    (n as VexFlowMeasure).staffEntries.forEach(se => {
-                        const staffEntry: VexFlowStaffEntry = (se as VexFlowStaffEntry);
-                        console.log(staffEntry.vfNotes);
-                        for (const noteId in staffEntry.vfNotes) {
-                            if (staffEntry.vfNotes.hasOwnProperty(noteId)) {
-                                staffEntry.vfNotes[noteId].setStyle(styleObj);
-                            }
-                        }
-                        // note.setStyle(styleObj);
-                    });
+                    (n as VexFlowMeasure).style = styleObj;
+                    // (n as VexFlowMeasure).staffEntries.forEach(se => {
+                    //     const staffEntry: VexFlowStaffEntry = (se as VexFlowStaffEntry);
+                    //     console.log(staffEntry.vfNotes);
+                    //     for (const noteId in staffEntry.vfNotes) {
+                    //         if (staffEntry.vfNotes.hasOwnProperty(noteId)) {
+                    //             staffEntry.vfNotes[noteId].setStyle(styleObj);
+                    //         }
+                    //     }
+                    //     // note.setStyle(styleObj);
+                    // });
                 });
         });
         // Re-render document
