@@ -60,14 +60,14 @@ export class RepetitionInstruction /*implements IComparable*/ {
         const other: RepetitionInstruction = <RepetitionInstruction>obj;
         if (this.measureIndex > other.measureIndex) {
             return 1;
-        } else if (one.measureIndex < other.measureIndex) {
+        } else if (this.measureIndex < other.measureIndex) {
             return -1;
         }
-        if (one.alignment === AlignmentType.Begin) {
+        if (this.alignment === AlignmentType.Begin) {
             if (other.alignment === AlignmentType.End) {
                 return -1;
             }
-            switch (one.type) {
+            switch (this.type) {
                 case RepetitionInstructionEnum.Ending:
                     return 1;
                 case RepetitionInstructionEnum.StartLine:
@@ -87,7 +87,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
             if (other.alignment === AlignmentType.Begin) {
                 return 1;
             }
-            switch (one.type) {
+            switch (this.type) {
                 case RepetitionInstructionEnum.Ending:
                     return -1;
                 case RepetitionInstructionEnum.Fine:

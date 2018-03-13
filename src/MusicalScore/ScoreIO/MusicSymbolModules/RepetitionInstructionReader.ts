@@ -2,6 +2,7 @@ import {MusicSheet} from "../../MusicSheet";
 import {IXmlElement} from "../../../Common/FileIO/Xml";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "../../VoiceData/Instructions/RepetitionInstruction";
+import {RepetitionInstructionComparer} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {StringUtil} from "../../../Common/Strings/StringUtil";
 export class RepetitionInstructionReader {
   /**
@@ -340,7 +341,7 @@ export class RepetitionInstructionReader {
         }
       }
     }
-    this.repetitionInstructions.sort(RepetitionInstruction.compare);
+    this.repetitionInstructions.sort(RepetitionInstructionComparer.Compare);
   }
 
   private findInstructionInPreviousMeasure(currentInstructionIndex: number, currentMeasureIndex: number, searchedType: RepetitionInstructionEnum): boolean {

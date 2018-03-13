@@ -1,5 +1,6 @@
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "../../VoiceData/Instructions/RepetitionInstruction";
+import {RepetitionInstructionComparer} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {MusicSheet} from "../../MusicSheet";
 
@@ -32,10 +33,10 @@ export class RepetitionCalculator {
     for (let idx: number = 0, len: number = this.musicSheet.SourceMeasures.length; idx < len; ++idx) {
       const measure: SourceMeasure = this.musicSheet.SourceMeasures[idx];
       if (measure.FirstRepetitionInstructions.length > 1) {
-        measure.FirstRepetitionInstructions.sort(RepetitionInstruction.compare);
+        measure.FirstRepetitionInstructions.sort(RepetitionInstructionComparer.Compare);
       }
       if (measure.LastRepetitionInstructions.length > 1) {
-        measure.LastRepetitionInstructions.sort(RepetitionInstruction.compare);
+        measure.LastRepetitionInstructions.sort(RepetitionInstructionComparer.Compare);
       }
     }
   }
