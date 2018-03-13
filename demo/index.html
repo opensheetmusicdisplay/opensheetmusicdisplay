@@ -3,65 +3,83 @@
 <head>
     <meta charset="utf-8">
 
-    <title>OpenSheetMusicDisplay Demo</title>
+    <title><%= htmlWebpackPlugin.options.title %></title>
     <meta name="description" content="A showcase for OpenSheetMusicDisplay.">
     <meta name="author" content="OpenSheetMusicDisplay contributors">
-
-    <!-- Include opensheetmusicdisplay -->
-    <!-- <script src="./osmd.js" type="text/javascript"></script> -->
-
-    <!-- Include code and styles for this demo -->
-    <script src="./demo.js" type="text/javascript"></script>
-    <link href="./demo.css" media="all" rel="stylesheet"/>
+    <!-- Demo js file is included automatically by webpack druing build -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.min.js" type="text/javascript"></script>    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.css" media="all" rel="stylesheet"/>
     <link rel="icon" href="./favicon.ico?" type="image/x-icon"/>
 </head>
 <body>
+<br>
+<h1 class="ui centered header">
+    <img src="./favicon.ico?" class="ui image">
+    <%= htmlWebpackPlugin.options.title %>
+</h1>
+<div class="ui three column grid container">
+    <div class="column">
+        <h3 class="ui header">Select a sample:</h3>
+        <select class="ui selection dropdown" style="width:100px"  id="select"></select>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Render backend:</h3>
+        <select class="ui dropdown" id="backend-select" value="canvas">
+            <option value="canvas">Canvas</option>>
+            <option value="svg">SVG</option>
+        </select>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Cursor controls:</h3>
+        <div class="ui buttons">
+            <div class="ui animated fade button" id="show-cursor-btn">
+                <div class="visible content">Show</div>
+                <div class="hidden content">
+                    <i class="eye icon"></i>
+                </div>
+            </div>
+            <div class="ui animated fade button" id="hide-cursor-btn">
+                <div class="visible content">Hide</div>
+                <div class="hidden content">
+                    <i class="eye slash icon"></i>
+                </div>
+            </div>
+            <div class="ui animated fade button" id="next-cursor-btn">
+                <div class="visible content">Next</div>
+                <div class="hidden content">
+                    <i class="arrow right icon"></i>
+                </div>
+            </div>
+            <div class="ui animated fade button" id="reset-cursor-btn">
+                <div class="visible content">Reset</div>
+                <div class="hidden content">
+                    <i class="undo icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>         
+    <div class="column">
+        <h3 class="ui header">Zoom controls:</h3>
+        <div class="ui buttons">
+                <div class="ui button" id="zoom-in-btn">
+                    <i class="search plus icon"></i>
+                </div>
+                <div class="ui button" id="zoom-out-btn">
+                    <i class="search minus icon"></i>
+                </div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Zoom factor:</h3>
+        <h4 class="ui header" id="zoom-str">???</h4>
+    </div>
+    <div class="column">
+            <h3 class="ui header">Current width:</h3>                
+            <h4 class="ui header" id="size-str">???</h4>
+    </div>
+</div>
 <table cellspacing="0" style="max-width:700px;">
-    <tr>
-        <td>
-            <img src="./favicon.ico?" style="width:64px;height:64px;"/>
-        </td>
-        <td>
-            <h1>OpenSheetMusicDisplay Demo</h1>
-        </td>
-    </tr>
-</table>
-<table cellspacing="0" style="max-width:700px;">
-    <tr>
-        <td valign="top">
-            <select id="select"></select>
-            <p> Select a sample from the list ... </p>
-            <p>... or just drop your MusicXML file on this page.</p>
-        </td>
-        <td valign="top" halign="right">
-            <p>Renderer Backend
-                <select id="backend-select" value="canvas">
-                    <option value="canvas">Canvas</option>>
-                    <option value="svg">SVG</option>
-                </select>
-            <p>Cursor controls:
-                <input type="button" value="show" id="show-cursor-btn"/>
-                <input type="button" value="hide" id="hide-cursor-btn"/>
-                <input type="button" value="next" id="next-cursor-btn"/>
-                <input type="button" value="reset" id="reset-cursor-btn"/>
-            </p>
-            <p>
-                Zoom controls:
-                <input type="button" value="zoom in" id="zoom-in-btn"/>
-                <input type="button" value="zoom out" id="zoom-out-btn"/>
-            </p>
-            <table cellspacing="0">
-                <tr>
-                    <td>
-                        <p>Zoom factor: <span id="zoom-str">???</span>%</p>
-                    </td>
-                    <td>
-                        <p>Current width: <span id="size-str">???</span>px</p>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
     <tr id="error-tr">
         <td></td>
         <td id="error-td"></td>
