@@ -60,6 +60,8 @@ declare namespace Vex {
 
             public addAnnotation(index: number, annotation: Annotation): StaveNote;
 
+            public addModifier(index: number, modifier: Modifier): StaveNote;
+
             public setStyle(style: any): void;
 
             public addDotToAll(): void;
@@ -177,6 +179,10 @@ declare namespace Vex {
             constructor(type: string);
         }
 
+        export class Articulation extends Modifier {
+            constructor(type: string);
+        }
+        
         export class Beam {
             constructor(notes: StaveNote[], auto_stem: boolean);
 

@@ -16,6 +16,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
 import {Logging} from "../../../Common/Logging";
+import { ArticulationEnum } from "../../VoiceData/VoiceEntry";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -145,6 +146,7 @@ export class VexFlowConverter {
         const accidentals: string[] = [];
         const frac: Fraction = notes[0].graphicalNoteLength;
         const isTuplet: boolean = notes[0].sourceNote.NoteTuplet !== undefined;
+        const articulations: ArticulationEnum[] = notes[0].sourceNote.ParentVoiceEntry.Articulations;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
         let vfClefType: string = undefined;
         let numDots: number = 0;
@@ -186,6 +188,59 @@ export class VexFlowConverter {
             vfnote.addDotToAll();
         }
 
+        for (const articulation of articulations) {
+            // tslint:disable-next-line:switch-default
+            switch (articulation) {
+                case ArticulationEnum.accent: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("a>"));
+                    break;
+                }
+                case ArticulationEnum.downbow: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("am"));
+                    break;
+                }
+                case ArticulationEnum.fermata: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("a@a"));
+                    break;
+                }
+                case ArticulationEnum.invertedfermata: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("a@u"));
+                    break;
+                }
+                case ArticulationEnum.lefthandpizzicato: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("a+"));
+                    break;
+                }
+                case ArticulationEnum.snappizzicato: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("ao"));
+                    break;
+                }
+                case ArticulationEnum.staccatissimo: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("av"));
+                    break;
+                }
+                case ArticulationEnum.staccato: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("a."));
+                    break;
+                }
+                case ArticulationEnum.tenuto: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("a-"));
+                    break;
+                }
+                case ArticulationEnum.upbow: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("a|"));
+                    break;
+                }
+                case ArticulationEnum.strongaccent: {
+                    vfnote.addModifier(0, new Vex.Flow.Articulation("a^"));
+                    break;
+                }
+                // case ArticulationEnum.staccato: {
+                //     vfnote.addModifier(0, new Vex.Flow.Articulation("a."));
+                //     break;
+                // }
+            }
+        }
         return vfnote;
     }
 
