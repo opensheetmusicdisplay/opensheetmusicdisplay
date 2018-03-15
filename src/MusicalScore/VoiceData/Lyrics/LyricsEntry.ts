@@ -6,6 +6,7 @@ export class LyricsEntry {
         this.text = text;
         this.word = word;
         this.parent = parent;
+        this.verseNumber = verseNumber;
     }
     private text: string;
     private word: LyricWord;

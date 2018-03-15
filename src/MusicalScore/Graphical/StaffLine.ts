@@ -47,6 +47,11 @@ export abstract class StaffLine extends GraphicalObject {
         this.staffLines = value;
     }
 
+    public get NextStaffLine(): StaffLine {
+        const idxInParent: number = this.parentMusicSystem.StaffLines.indexOf(this);
+        return idxInParent !== this.parentMusicSystem.StaffLines.length ? this.parentMusicSystem.StaffLines[idxInParent + 1] : undefined;
+    }
+
     public get LyricLines(): GraphicalLine[] {
         return this.lyricLines;
     }

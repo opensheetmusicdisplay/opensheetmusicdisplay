@@ -164,7 +164,7 @@ export class EngravingRules {
         this.betweenStaffDistance = 5.0;
 
         // System Sizing and Label Variables
-        this.staffHeight = 4.0;
+        this.staffHeight = 8.0; // 4,0;
         this.betweenStaffLinesDistance = EngravingRules.unit;
         this.systemDistance = 10.0;
         this.systemLeftMargin = 0.0;
@@ -268,8 +268,8 @@ export class EngravingRules {
         this.repetitionEndingLineYUpperOffset = 0.3;
 
         // Lyrics
-        this.lyricsHeight = 2.0;
-        this.verticalBetweenLyricsDistance = 0.5;
+        this.lyricsHeight = 0.08; //2.0;
+        this.verticalBetweenLyricsDistance = 0.0; //0.5;
         this.betweenSyllabelMaximumDistance = 10.0;
         this.minimumDistanceBetweenDashes = 5.0;
 

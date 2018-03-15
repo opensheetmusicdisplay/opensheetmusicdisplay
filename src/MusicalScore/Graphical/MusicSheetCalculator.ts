@@ -340,7 +340,7 @@ export abstract class MusicSheetCalculator {
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
         let numberOfVerses: number = 0;
         // FIXME: There is no class SkyBottomLineCalculator -> Fix value
-        let lyricsStartYPosition: number = 8; //this.rules.StaffHeight;
+        let lyricsStartYPosition: number = this.rules.StaffHeight;
         const lyricsStaffEntriesList: GraphicalStaffEntry[] = [];
         // const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
 
@@ -358,13 +358,13 @@ export abstract class MusicSheetCalculator {
 
                     // Position of Staffentry relative to StaffLine
                     const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +
-                        measureRelativePosition.x;
+                    measureRelativePosition.x;
 
                     let minMarginLeft: number = Number.MAX_VALUE;
                     let maxMarginRight: number = Number.MAX_VALUE;
 
                     // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
-                    for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+                    for (let i: number = 0; i < numberOfVerses; i++) {
                         const lyricsEntryLabel: GraphicalLabel = staffEntry.LyricsEntries[i].GraphicalLabel;
                         minMarginLeft = Math.min(minMarginLeft, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginLeft);
                         maxMarginRight = Math.max(maxMarginRight, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginRight);
@@ -385,7 +385,7 @@ export abstract class MusicSheetCalculator {
         for (let idx: number = 0; idx < len; ++idx) {
             const staffEntry: GraphicalStaffEntry = lyricsStaffEntriesList[idx];
             // set LyricEntryLabel RelativePosition
-            for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
+            for (let i: number = 0; i < numberOfVerses; i++) {
                 const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
                 const lyricsEntryLabel: GraphicalLabel = lyricEntry.GraphicalLabel;
 
@@ -407,7 +407,25 @@ export abstract class MusicSheetCalculator {
 
         // update BottomLine (on the whole StaffLine's length)
         if (lyricsStaffEntriesList.length > 0) {
-            // const endX: number = staffLine.PositionAndShape.Size.width;
+            let additionalPageLength: number = 0;
+            maxPosition -= this.rules.StaffHeight;
+            let iterator: StaffLine = staffLine.NextStaffLine;
+            let systemMaxCount: number = 0;
+            while (iterator !== undefined) {
+                iterator.PositionAndShape.RelativePosition.y += maxPosition;
+                iterator = iterator.NextStaffLine;
+                systemMaxCount += maxPosition;
+                additionalPageLength += maxPosition;
+            }
+
+            systemMaxCount -= this.rules.BetweenStaffDistance;
+            let systemIterator: MusicSystem = staffLine.ParentMusicSystem.NextSystem;
+            while (systemIterator !== undefined) {
+                systemIterator.PositionAndShape.RelativePosition.y += systemMaxCount;
+                systemIterator = systemIterator.NextSystem;
+                additionalPageLength += systemMaxCount;
+            }
+            staffLine.ParentMusicSystem.Parent.PositionAndShape.BorderBottom += additionalPageLength;
             // const startX: number = lyricsStaffEntriesList[0].PositionAndShape.RelativePosition.x +
             // lyricsStaffEntriesList[0].PositionAndShape.BorderMarginLeft +
             // lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;
