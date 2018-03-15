@@ -133,6 +133,10 @@ declare namespace Vex {
         export class StaveModifier extends Modifier {
         }
 
+        export class Repetition extends StaveModifier {
+            constructor(type: any, x: number, y_shift: number);
+        }
+
         export class Clef extends StaveModifier {
             constructor(type: string, size: number, annotation: string);
 

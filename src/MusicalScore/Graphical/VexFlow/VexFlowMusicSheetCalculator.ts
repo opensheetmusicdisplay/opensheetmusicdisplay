@@ -11,7 +11,7 @@ import {GraphicalTie} from "../GraphicalTie";
 import {Tie} from "../../VoiceData/Tie";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {MultiExpression} from "../../VoiceData/Expressions/MultiExpression";
-import {RepetitionInstruction, RepetitionInstructionEnum} from "../../VoiceData/Instructions/RepetitionInstruction";
+import {RepetitionInstruction} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {Beam} from "../../VoiceData/Beam";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
@@ -29,7 +29,6 @@ import Vex = require("vexflow");
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
-import {VexFlowStaffLine} from "./VexFlowStaffLine";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     constructor() {
@@ -254,55 +253,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
       // find first visible StaffLine
-      let staffLine: VexFlowStaffLine = undefined;
+      let uppermostMeasure: VexFlowMeasure = undefined;
       const measures: VexFlowMeasure[]  = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
       for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
         const graphicalMeasure: VexFlowMeasure = measures[idx];
         if (graphicalMeasure.ParentStaffLine !== undefined && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
-          staffLine = <VexFlowStaffLine>graphicalMeasure.ParentStaffLine;
-          break;
+            uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
+            break;
         }
       }
       // ToDo: feature/Repetitions
       // now create corresponding graphical symbol or Text in VexFlow:
       // use top measure and staffline for positioning.
-      if (staffLine !== undefined) {
-        //let instruction: string = "";
-        switch (repetitionInstruction.type) {
-          case RepetitionInstructionEnum.Segno:
-            // create Segno Symbol:
-            break;
-          case RepetitionInstructionEnum.Coda:
-            // create Coda Symbol:
-            break;
-          case RepetitionInstructionEnum.DaCapo:
-            //instruction = "D.C.";
-            break;
-          case RepetitionInstructionEnum.DalSegno:
-            //instruction = "D.S.";
-            break;
-          case RepetitionInstructionEnum.Fine:
-            //instruction = "Fine";
-            break;
-          case RepetitionInstructionEnum.ToCoda:
-            //instruction = "To Coda";
-            break;
-          case RepetitionInstructionEnum.DaCapoAlFine:
-            //instruction = "D.C. al Fine";
-            break;
-          case RepetitionInstructionEnum.DaCapoAlCoda:
-            //instruction = "D.C. al Coda";
-            break;
-          case RepetitionInstructionEnum.DalSegnoAlFine:
-            //instruction = "D.S. al Fine";
-            break;
-          case RepetitionInstructionEnum.DalSegnoAlCoda:
-            //instruction = "D.S. al Coda";
-            break;
-          default:
-            break;
-        }
-        return;
+      if (uppermostMeasure !== undefined) {
+        uppermostMeasure.addWordRepetition(repetitionInstruction.type);
       }
     }
 

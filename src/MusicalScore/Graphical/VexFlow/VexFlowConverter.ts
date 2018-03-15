@@ -435,3 +435,19 @@ export class VexFlowConverter {
         return ret;
     }
 }
+
+export enum VexFlowRepetitionType {
+    NONE = 1,         // no coda or segno
+    CODA_LEFT = 2,    // coda at beginning of stave
+    CODA_RIGHT = 3,   // coda at end of stave
+    SEGNO_LEFT = 4,   // segno at beginning of stave
+    SEGNO_RIGHT = 5,  // segno at end of stave
+    DC = 6,           // D.C. at end of stave
+    DC_AL_CODA = 7,   // D.C. al coda at end of stave
+    DC_AL_FINE = 8,   // D.C. al Fine end of stave
+    DS = 9,           // D.S. at end of stave
+    DS_AL_CODA = 10,  // D.S. al coda at end of stave
+    DS_AL_FINE = 11,  // D.S. al Fine at end of stave
+    FINE = 12,        // Fine at end of stave
+}
+

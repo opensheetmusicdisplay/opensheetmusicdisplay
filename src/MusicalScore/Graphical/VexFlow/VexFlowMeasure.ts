@@ -7,7 +7,7 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
-import {VexFlowConverter} from "./VexFlowConverter";
+import {VexFlowConverter, VexFlowRepetitionType} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
@@ -17,6 +17,7 @@ import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
+import { RepetitionInstructionEnum } from "../../VoiceData/Instructions/RepetitionInstruction";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -33,8 +34,10 @@ export class VexFlowMeasure extends StaffMeasure {
     public formatVoices: (width: number) => void;
     // The VexFlow Ties in the measure
     public vfTies: Vex.Flow.StaveTie[] = [];
+    // The repetition instructions given as words or symbols (coda, dal segno..)
+    public vfRepetitionWords: Vex.Flow.Repetition[] = [];
 
-    // The VexFlow Stave (one measure in one line)
+    // The VexFlow Stave (= one measure in a staffline)
     private stave: Vex.Flow.Stave;
     // VexFlow StaveConnectors (vertical lines)
     private connectors: Vex.Flow.StaveConnector[] = [];
@@ -147,6 +150,52 @@ export class VexFlowMeasure extends StaffMeasure {
         const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "small");
         this.stave.setEndClef(vfclef.type, vfclef.size, vfclef.annotation);
         this.updateInstructionWidth();
+    }
+
+    public addWordRepetition(repetitionInstruction: RepetitionInstructionEnum): void {
+        let instruction: VexFlowRepetitionType = undefined;
+        let position: any = Vex.Flow.Modifier.Position.END;
+        switch (repetitionInstruction) {
+          case RepetitionInstructionEnum.Segno:
+            // create Segno Symbol:
+            instruction = VexFlowRepetitionType.SEGNO_LEFT;
+            position = Vex.Flow.Modifier.Position.BEGIN;
+            break;
+          case RepetitionInstructionEnum.Coda:
+            // create Coda Symbol:
+            instruction = VexFlowRepetitionType.CODA_LEFT;
+            position = Vex.Flow.Modifier.Position.BEGIN;
+            break;
+          case RepetitionInstructionEnum.DaCapo:
+            instruction = VexFlowRepetitionType.DC;
+            break;
+          case RepetitionInstructionEnum.DalSegno:
+            instruction = VexFlowRepetitionType.DS;
+            break;
+          case RepetitionInstructionEnum.Fine:
+            instruction = VexFlowRepetitionType.FINE;
+            break;
+          case RepetitionInstructionEnum.ToCoda:
+            //instruction = "To Coda";
+            break;
+          case RepetitionInstructionEnum.DaCapoAlFine:
+            instruction = VexFlowRepetitionType.DC_AL_FINE;
+            break;
+          case RepetitionInstructionEnum.DaCapoAlCoda:
+            instruction = VexFlowRepetitionType.DC_AL_CODA;
+            break;
+          case RepetitionInstructionEnum.DalSegnoAlFine:
+            instruction = VexFlowRepetitionType.DS_AL_FINE;
+            break;
+          case RepetitionInstructionEnum.DalSegnoAlCoda:
+            instruction = VexFlowRepetitionType.DS_AL_CODA;
+            break;
+          default:
+            break;
+        }
+        if (instruction !== undefined) {
+            this.stave.addModifier(new Vex.Flow.Repetition(instruction, 0, 0), position);
+        }
     }
 
     /**
