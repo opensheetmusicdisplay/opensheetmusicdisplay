@@ -346,21 +346,19 @@ export class VexFlowConverter {
      * @returns {any}
      */
     public static line(lineType: SystemLinesEnum): any {
-        // ToDo: feature/Repetitions
-        // TODO Not all line types are correctly mapped!
         switch (lineType) {
             case SystemLinesEnum.SingleThin:
                 return Vex.Flow.StaveConnector.type.SINGLE;
             case SystemLinesEnum.DoubleThin:
                 return Vex.Flow.StaveConnector.type.DOUBLE;
             case SystemLinesEnum.ThinBold:
-                return Vex.Flow.StaveConnector.type.SINGLE;
+                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.BoldThinDots:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_LEFT;
             case SystemLinesEnum.DotsThinBold:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.DotsBoldBoldDots:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.None:
                 return Vex.Flow.StaveConnector.type.NONE;
             default:
