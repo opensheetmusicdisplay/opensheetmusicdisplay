@@ -82,6 +82,10 @@ declare namespace Vex {
 
             public getX(): number;
 
+            public setBegBarType(type: any): Stave;
+
+            public setEndBarType(type: any): Stave;
+
             public addClef(clefSpec: string, size: any, annotation: any, position: any): void;
 
             public setEndClef(clefSpec: string, size: any, annotation: any): void;

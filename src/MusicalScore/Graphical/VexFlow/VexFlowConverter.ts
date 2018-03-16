@@ -451,3 +451,13 @@ export enum VexFlowRepetitionType {
     FINE = 12,        // Fine at end of stave
 }
 
+export enum VexFlowBarlineType {
+    SINGLE = 1,
+    DOUBLE = 2,
+    END = 3,
+    REPEAT_BEGIN = 4,
+    REPEAT_END = 5,
+    REPEAT_BOTH = 6,
+    NONE = 7,
+}
+

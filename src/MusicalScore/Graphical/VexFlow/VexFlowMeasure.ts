@@ -7,7 +7,7 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
-import {VexFlowConverter, VexFlowRepetitionType} from "./VexFlowConverter";
+import {VexFlowConverter, VexFlowRepetitionType, VexFlowBarlineType} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
@@ -18,6 +18,7 @@ import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import { RepetitionInstructionEnum } from "../../VoiceData/Instructions/RepetitionInstruction";
+import { SystemLinePosition } from "../SystemLinePosition";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -150,6 +151,40 @@ export class VexFlowMeasure extends StaffMeasure {
         const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "small");
         this.stave.setEndClef(vfclef.type, vfclef.size, vfclef.annotation);
         this.updateInstructionWidth();
+    }
+
+    public addMeasureLine(lineType: SystemLinesEnum, linePosition: SystemLinePosition): void {
+        switch (linePosition) {
+            case SystemLinePosition.MeasureBegin:
+                switch (lineType) {
+                    case SystemLinesEnum.BoldThinDots:
+                        this.stave.setBegBarType(VexFlowBarlineType.REPEAT_BEGIN);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case SystemLinePosition.MeasureEnd:
+                switch (lineType) {
+                    case SystemLinesEnum.DotsBoldBoldDots:
+                        this.stave.setEndBarType(VexFlowBarlineType.REPEAT_BOTH);
+                        break;
+                    case SystemLinesEnum.DotsThinBold:
+                        this.stave.setEndBarType(VexFlowBarlineType.REPEAT_END);
+                        break;
+                    case SystemLinesEnum.DoubleThin:
+                        this.stave.setEndBarType(VexFlowBarlineType.DOUBLE);
+                        break;
+                    case SystemLinesEnum.ThinBold:
+                        this.stave.setEndBarType(VexFlowBarlineType.END);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     public addWordRepetition(repetitionInstruction: RepetitionInstructionEnum): void {
