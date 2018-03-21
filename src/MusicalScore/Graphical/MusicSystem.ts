@@ -275,7 +275,7 @@ export abstract class MusicSystem extends GraphicalObject {
             for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
                 const instrument: Instrument = instruments[idx];
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
-                    instrument.NameLabel, instrumentLabelTextHeight, TextAlignment.LeftCenter, this.boundingBox //this.staffLines[idx].PositionAndShape
+                    instrument.NameLabel, instrumentLabelTextHeight, TextAlignment.LeftCenter, this.boundingBox
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(graphicalLabel, instrument);

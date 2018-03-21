@@ -331,7 +331,8 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
-    // FIXME: B.G. Adapt this function so that it uses the skyline calculation
+    // FIXME: There are several HACKS in this function to make multiline lyrics work without the skyline. 
+    // These need to be reverted once the skyline is available
     /**
      * Calculate the Lyrics YPositions for a single [[StaffLine]].
      * @param staffLine
@@ -340,7 +341,7 @@ export abstract class MusicSheetCalculator {
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
         let numberOfVerses: number = 0;
         // FIXME: There is no class SkyBottomLineCalculator -> Fix value
-        let lyricsStartYPosition: number = this.rules.StaffHeight;
+        let lyricsStartYPosition: number = this.rules.StaffHeight + 6.0; // Add offset to prevent collision
         const lyricsStaffEntriesList: GraphicalStaffEntry[] = [];
         // const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
 
@@ -358,13 +359,13 @@ export abstract class MusicSheetCalculator {
 
                     // Position of Staffentry relative to StaffLine
                     const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +
-                    measureRelativePosition.x;
+                                                        measureRelativePosition.x;
 
                     let minMarginLeft: number = Number.MAX_VALUE;
                     let maxMarginRight: number = Number.MAX_VALUE;
 
                     // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
-                    for (let i: number = 0; i < numberOfVerses; i++) {
+                    for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
                         const lyricsEntryLabel: GraphicalLabel = staffEntry.LyricsEntries[i].GraphicalLabel;
                         minMarginLeft = Math.min(minMarginLeft, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginLeft);
                         maxMarginRight = Math.max(maxMarginRight, staffEntryPositionX + lyricsEntryLabel.PositionAndShape.BorderMarginRight);
@@ -385,7 +386,7 @@ export abstract class MusicSheetCalculator {
         for (let idx: number = 0; idx < len; ++idx) {
             const staffEntry: GraphicalStaffEntry = lyricsStaffEntriesList[idx];
             // set LyricEntryLabel RelativePosition
-            for (let i: number = 0; i < numberOfVerses; i++) {
+            for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
                 const lyricEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[i];
                 const lyricsEntryLabel: GraphicalLabel = lyricEntry.GraphicalLabel;
 
@@ -407,6 +408,9 @@ export abstract class MusicSheetCalculator {
 
         // update BottomLine (on the whole StaffLine's length)
         if (lyricsStaffEntriesList.length > 0) {
+            /**
+             * HACK START
+             */
             let additionalPageLength: number = 0;
             maxPosition -= this.rules.StaffHeight;
             let iterator: StaffLine = staffLine.NextStaffLine;
@@ -426,6 +430,12 @@ export abstract class MusicSheetCalculator {
                 additionalPageLength += systemMaxCount;
             }
             staffLine.ParentMusicSystem.Parent.PositionAndShape.BorderBottom += additionalPageLength;
+            // Update the instrument labels
+            staffLine.ParentMusicSystem.setMusicSystemLabelsYPosition();
+            /**
+             * HACK END
+             */
+            // const endX: number = staffLine.PositionAndShape.Size.width;
             // const startX: number = lyricsStaffEntriesList[0].PositionAndShape.RelativePosition.x +
             // lyricsStaffEntriesList[0].PositionAndShape.BorderMarginLeft +
             // lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;

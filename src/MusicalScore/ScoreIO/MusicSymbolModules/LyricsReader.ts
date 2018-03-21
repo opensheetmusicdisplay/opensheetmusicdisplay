@@ -132,6 +132,9 @@ export class LyricsReader {
                     continue;
                 }
             }
+            // Squash to unique numbers
+            currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers =
+            currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers.filter((lvn, index, self) => self.indexOf(lvn) === index);
         }
     }
 }
