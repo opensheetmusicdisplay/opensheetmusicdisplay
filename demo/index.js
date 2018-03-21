@@ -94,7 +94,7 @@ import { OSMD } from '../src/OSMD/OSMD';
         };
 
         // Create OSMD object and canvas
-        osmdObj = new OSMD(canvas, false);
+        osmdObj = new OSMD(canvas, false, backendSelect.value);
         osmdObj.setLogLevel('info');
         document.body.appendChild(canvas);
 
