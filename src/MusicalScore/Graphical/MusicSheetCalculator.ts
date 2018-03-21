@@ -331,7 +331,7 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
-    // FIXME: There are several HACKS in this function to make multiline lyrics work without the skyline. 
+    // FIXME: There are several HACKS in this function to make multiline lyrics work without the skyline.
     // These need to be reverted once the skyline is available
     /**
      * Calculate the Lyrics YPositions for a single [[StaffLine]].
