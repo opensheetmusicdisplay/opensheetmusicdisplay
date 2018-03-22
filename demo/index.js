@@ -190,7 +190,7 @@ import { OSMD } from '../src/OSMD/OSMD';
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
-                error("Error rendering sheet: " + e);
+                error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
                 onLoadingEnd(isCustom);
             }
         );

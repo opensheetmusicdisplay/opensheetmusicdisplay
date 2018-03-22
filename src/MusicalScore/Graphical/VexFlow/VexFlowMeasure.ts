@@ -182,15 +182,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param ctx
      */
     public draw(ctx: Vex.Flow.RenderContext): void {
-        // If this is the first stave in the vertical measure, call the format
-        // method to set the width of all the voices
-        if (this.formatVoices) {
-            // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
-        }
 
-        // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
@@ -226,9 +218,18 @@ export class VexFlowMeasure extends StaffMeasure {
         for (const connector of this.connectors) {
             connector.setContext(ctx).draw();
         }
+    }
 
-        // now we can finally set the vexflow x positions back into the osmd object model:
-        this.setStaffEntriesXPositions();
+    public format(): void {
+        // If this is the first stave in the vertical measure, call the format
+        // method to set the width of all the voices
+        if (this.formatVoices) {
+            // The width of the voices does not include the instructions (StaveModifiers)
+            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
+        }
+
+        // Force the width of the Begin Instructions
+        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
     }
 
     /**
@@ -438,24 +439,5 @@ export class VexFlowMeasure extends StaffMeasure {
     private updateInstructionWidth(): void {
         this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
         this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
-    }
-
-    /**
-     * sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
-     * The positions are needed for cursor placement and mouse/tap interactions
-     */
-    private setStaffEntriesXPositions(): void {
-        for (let idx3: number = 0, len3: number = this.staffEntries.length; idx3 < len3; ++idx3) {
-            const gse: VexFlowStaffEntry = (<VexFlowStaffEntry> this.staffEntries[idx3]);
-            const measure: StaffMeasure = gse.parentMeasure;
-            const x: number =
-                gse.getX() -
-                measure.PositionAndShape.RelativePosition.x -
-                measure.ParentStaffLine.PositionAndShape.RelativePosition.x -
-                measure.parentMusicSystem.PositionAndShape.RelativePosition.x;
-            gse.PositionAndShape.RelativePosition.x = x;
-            gse.PositionAndShape.calculateAbsolutePosition();
-            gse.PositionAndShape.calculateAbsolutePositionsOfChildren();
-        }
     }
 }
