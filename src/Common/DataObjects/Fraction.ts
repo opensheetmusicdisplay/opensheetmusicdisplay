@@ -121,6 +121,7 @@ export class Fraction {
   public set Denominator(value: number) {
     if (this.denominator !== value) {
       this.denominator = value;
+      // don't simplify in case of a GraceNote (need it in order to set the right symbol)
       if (this.numerator !== 0) {
         this.simplify();
       }
@@ -139,6 +140,10 @@ export class Fraction {
     }
   }
 
+  /**
+   * Returns the unified numerator where the whole value will be expanded
+   * with the denominator and added to the existing numerator.
+   */
   public GetExpandedNumerator(): number {
     return this.wholeValue * this.denominator + this.numerator;
   }
@@ -166,6 +171,8 @@ export class Fraction {
   // }
 
   public Add(fraction: Fraction): void {
+    // normally should check if denominator or fraction.denominator is 0 but in our case
+    // a zero denominator doesn't make sense
     this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator +
       (fraction.wholeValue * fraction.denominator + fraction.numerator) * this.denominator;
     this.denominator = this.denominator * fraction.denominator;
@@ -175,6 +182,8 @@ export class Fraction {
   }
 
   public Sub(fraction: Fraction): void {
+    // normally should check if denominator or fraction.denominator is 0 but in our case
+    // a zero denominator doesn't make sense
     this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator -
       (fraction.wholeValue * fraction.denominator + fraction.numerator) * this.denominator;
     this.denominator = this.denominator * fraction.denominator;
@@ -182,7 +191,11 @@ export class Fraction {
     this.simplify();
     this.setRealValue();
   }
-
+  /**
+   * Brute Force quanization by searching incremental with the numerator until the denominator is
+   * smaller/equal than the desired one.
+   * @param maxAllowedDenominator
+   */
   public Quantize(maxAllowedDenominator: number): Fraction {
     if (this.denominator <= maxAllowedDenominator) {
       return this;
@@ -239,11 +252,14 @@ export class Fraction {
   }
 
   private simplify(): void {
+    // don't simplify in case of a GraceNote (need it in order to set the right symbol)
     if (this.numerator === 0) {
       this.denominator = 1;
       return;
     }
 
+    // normally should check if denominator or fraction.denominator is 0 but in our case a zero denominator
+    // doesn't make sense. Could probably be optimized
     const i: number = Fraction.greatestCommonDenominator(Math.abs(this.numerator), Math.abs(this.denominator));
 
     this.numerator /= i;

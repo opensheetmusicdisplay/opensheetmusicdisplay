@@ -69,6 +69,10 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         return this.lyricsEntries;
     }
 
+    public set LyricsEntries(value: GraphicalLyricEntry[]) {
+        this.lyricsEntries = value;
+    }
+
     /**
      * Calculate the absolute Timestamp.
      * @returns {Fraction}
@@ -348,5 +352,19 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
                 }
             }
         }
+    }
+
+    // FIXME: implement
+    public hasOnlyRests(): boolean {
+        const hasOnlyRests: boolean = true;
+        for (const graphicalNotes of this.notes) {
+            for (const graphicalNote of graphicalNotes) {
+                const note: Note = graphicalNote.sourceNote;
+                if (!note.isRest()) {
+                    return false;
+                }
+            }
+        }
+        return hasOnlyRests;
     }
 }

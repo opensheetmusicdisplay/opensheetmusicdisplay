@@ -173,6 +173,8 @@ export class Instrument extends InstrumentalGroup {
     public SetStaffAudible(staffId: number, audible: boolean): void {
         const staff: Staff = this.staves[staffId - 1];
         staff.audible = audible;
+        // hack for now:
+        // activate all voices needed so that the staff notes will be played
         if (audible) {
             for (let idx: number = 0, len: number = staff.Voices.length; idx < len; ++idx) {
                 const v: Voice = staff.Voices[idx];
