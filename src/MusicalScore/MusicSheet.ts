@@ -27,15 +27,19 @@ export class PlaybackSettings {
 /**
  * This is the representation of a complete piece of sheet music.
  * It includes the contents of a MusicXML file after the reading.
+ * Notes: the musicsheet might not need the Rules, e.g. in the testframework. The EngravingRules Constructor
+ * fails when no FontInfo exists, which needs a TextMeasurer
  */
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
         this.rules = EngravingRules.Rules;
         this.playbackSettings = new PlaybackSettings();
         // FIXME?
+        // initialize SheetPlaybackSetting with default values
         this.playbackSettings.rhythm = new Fraction(4, 4, 0, false);
         this.userStartTempoInBPM = 100;
         this.pageWidth = 120;
+        // create MusicPartManager
         this.MusicPartManager = new MusicPartManager(this);
     }
     public static defaultTitle: string = "[kein Titel]";
@@ -291,6 +295,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return measures;
     }
+    /**
+     * Returns the next SourceMeasure from a given SourceMeasure.
+     * @param measure
+     */
     public getNextSourceMeasure(measure: SourceMeasure): SourceMeasure {
         const index: number = this.sourceMeasures.indexOf(measure);
         if (index === this.sourceMeasures.length - 1) {
@@ -298,9 +306,15 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return this.sourceMeasures[index + 1];
     }
+    /**
+     * Returns the first SourceMeasure of MusicSheet.
+     */
     public getFirstSourceMeasure(): SourceMeasure {
         return this.sourceMeasures[0];
     }
+    /**
+     * Returns the last SourceMeasure of MusicSheet.
+     */
     public getLastSourceMeasure(): SourceMeasure {
         return this.sourceMeasures[this.sourceMeasures.length - 1];
     }

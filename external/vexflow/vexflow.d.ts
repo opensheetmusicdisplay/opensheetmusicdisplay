@@ -135,6 +135,9 @@ declare namespace Vex {
         }
 
         export class StaveModifier extends Modifier {
+            public static Position: any;
+            
+            public getPosition(): number;
         }
 
         export class Repetition extends StaveModifier {
@@ -170,10 +173,10 @@ declare namespace Vex {
             public getContext(): CanvasContext|SVGContext;
         }
 
-        export class TimeSignature {
+        export class TimeSignature extends StaveModifier {
             constructor(timeSpec: string, customPadding?: any);
         }
-        export class KeySignature {
+        export class KeySignature extends StaveModifier {
             constructor(keySpec: string, cancelKeySpec: string, alterKeySpec?: string);
         }
 

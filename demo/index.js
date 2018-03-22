@@ -8,24 +8,27 @@ import { OSMD } from '../src/OSMD/OSMD';
     var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     // The available demos
         demos = {
-            "Beethoven - AnDieFerneGeliebte": "Beethoven_AnDieFerneGeliebte.xml",
+            "Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
             "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
             "M. Clementi - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
-            "Mozart - An Chloe": "an chloe - mozart.xml",
-            "Mozart - Das Veilchen": "das veilchen - mozart.xml",
+            "J.S. Bach - Praeludium In C Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+            "J.S. Bach - Air": "JohannSebastianBach_Air.xml",
+            "C. Gounod - Meditation": "CharlesGounod_Meditation.xml",
+            "J. Haydn - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
+            "Mozart - An Chloe": "Mozart_AnChloe.xml",
+            "Mozart - Das Veilchen": "Mozart_DasVeilchen.xml",
             "Mozart - Trio": "MozartTrio.mxl",
             "S. Joplin - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
             "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer.xml",
             "ActorPreludeSample": "ActorPreludeSample.xml",
-            "an chloe - mozart": "an chloe - mozart.xml",
-            "das veilchen - mozart": "das veilchen - mozart.xml",
-            "Dichterliebe01": "Dichterliebe01.xml",
-            "mandoline - debussy": "mandoline - debussy.xml",
-            "MozartTrio": "MozartTrio.mxl",
-            "Cornelius P. Christbaum Opus 8.1": "Cornelius_P_Christbaum_Opus_8_1_1865.mxl",
+            "R. Schumann - Dichterliebe": "Dichterliebe01.xml",
+            "C. Debussy - Mandoline": "Debussy_Mandoline.xml",
             "France Levasseur - Parlez Mois": "Parlez-moi.mxl",
+            "Telemann - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
+            "Telemann - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
+            "Saltarello": "Saltarello.mxl",
         },
 
         zoom = 1.0,
@@ -94,7 +97,7 @@ import { OSMD } from '../src/OSMD/OSMD';
         };
 
         // Create OSMD object and canvas
-        osmdObj = new OSMD(canvas, false);
+        osmdObj = new OSMD(canvas, false, backendSelect.value);
         osmdObj.setLogLevel('info');
         document.body.appendChild(canvas);
 
