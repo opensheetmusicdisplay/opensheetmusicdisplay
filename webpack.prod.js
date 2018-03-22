@@ -15,15 +15,11 @@ module.exports = merge(common, {
         filename: '[name].min.js',
         path: path.resolve(__dirname, 'build')
     },
+    mode: 'production',
+    optimization: {
+        minimize: true
+    },
     plugins: [
-        new webpack.optimize.UglifyJsPlugin({
-            warnings: false,
-            beautify: false,
-            compress: true,
-            comments: false,
-            sourceMap: true,
-            parallel: true
-        }),
         // build optimization plugins
         new webpack.LoaderOptionsPlugin({
             minimize: true,

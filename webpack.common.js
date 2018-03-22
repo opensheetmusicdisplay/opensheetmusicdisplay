@@ -13,36 +13,15 @@ module.exports = {
     },
     resolve: {
         // Add '.ts' and '.tsx' as a resolvable extension.
-        extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js']
+        extensions: ['.ts', '.tsx', '.js']
     },
     module: {
-        loaders: [
+        rules: [
             // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
             {
                 test: /\.ts$/,
                 loader: 'ts-loader',
                 exclude: /(node_modules|bower_components)/
-            },
-            // FIXME: TSLint loader is horribly slow therefore check only at beginning
-            // https://github.com/wbuchwalter/tslint-loader/issues/76
-            // // ts lint loader. will pre-lint the ts files
-            // {
-            //     test: /\.ts$/,
-            //     enforce: 'pre',
-            //     loader: 'tslint-loader',
-            //     options: {
-            //         typeCheck: true
-            //     }
-            // },
-            // For html loader generation
-            {
-                test: /\.html$/,
-                loader: 'underscore-template-loader'
-            },
-            {
-                test: /\.(jpg|jpeg|gif|png|ico)$/,
-                exclude: /node_modules/,
-                loader: 'file-loader?name=img/[path][name].[ext]&context=./app/images'
             }
         ]
     },
@@ -60,6 +39,7 @@ module.exports = {
         // add a demo page to the build folder
         new HtmlWebpackPlugin({
             template: 'demo/index.html',
+            favicon: 'demo/favicon.ico',
             title: 'OpenSheetMusicDisplay Demo'
         })
     ],
