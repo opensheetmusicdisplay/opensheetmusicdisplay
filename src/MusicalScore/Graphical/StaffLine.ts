@@ -8,6 +8,7 @@ import {StaffMeasure} from "./StaffMeasure";
 import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import {GraphicalLabel} from "./GraphicalLabel";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -20,6 +21,8 @@ export abstract class StaffLine extends GraphicalObject {
     protected parentStaff: Staff;
     protected skyLine: number[];
     protected bottomLine: number[];
+    protected lyricLines: GraphicalLine[] = [];
+    protected lyricsDashes: GraphicalLabel[] = [];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         super();
@@ -42,6 +45,27 @@ export abstract class StaffLine extends GraphicalObject {
 
     public set StaffLines(value: GraphicalLine[]) {
         this.staffLines = value;
+    }
+
+    public get NextStaffLine(): StaffLine {
+        const idxInParent: number = this.parentMusicSystem.StaffLines.indexOf(this);
+        return idxInParent !== this.parentMusicSystem.StaffLines.length ? this.parentMusicSystem.StaffLines[idxInParent + 1] : undefined;
+    }
+
+    public get LyricLines(): GraphicalLine[] {
+        return this.lyricLines;
+    }
+
+    public set LyricLines(value: GraphicalLine[]) {
+        this.lyricLines = value;
+    }
+
+    public get LyricsDashes(): GraphicalLabel[] {
+        return this.lyricsDashes;
+    }
+
+    public set LyricsDashes(value: GraphicalLabel[]) {
+        this.lyricsDashes = value;
     }
 
     public get ParentMusicSystem(): MusicSystem {
