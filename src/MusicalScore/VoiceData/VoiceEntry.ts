@@ -29,6 +29,7 @@ export class VoiceEntry {
 
     public graceVoiceEntriesBefore: VoiceEntry[];
     public graceVoiceEntriesAfter: VoiceEntry[];
+    public stemDirection: StemDirection = undefined;
 
     private parentVoice: Voice;
     private parentSourceStaffEntry: SourceStaffEntry;
@@ -324,4 +325,10 @@ export enum ArticulationEnum {
     unstress,
     detachedlegato,
     otherarticulation
+}
+
+export enum StemDirection {
+    Up = 0,
+    Down = 1,
+    None = 2
 }

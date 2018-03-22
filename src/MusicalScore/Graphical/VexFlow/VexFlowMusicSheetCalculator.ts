@@ -2,7 +2,7 @@ import {MusicSheetCalculator} from "../MusicSheetCalculator";
 import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
 import {StaffMeasure} from "../StaffMeasure";
 import {StaffLine} from "../StaffLine";
-import {VoiceEntry} from "../../VoiceData/VoiceEntry";
+import {VoiceEntry, StemDirection} from "../../VoiceData/VoiceEntry";
 import {MusicSystem} from "../MusicSystem";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
@@ -166,12 +166,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           // in case of StaffEntryLink don't check mainVoice / linkedVoice
           if (firstNote.sourceNote.ParentVoiceEntry === graphicalStaffEntry.sourceStaffEntry.VoiceEntries[0]) {
             // set stem up:
-            //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
+            voiceEntry.stemDirection = StemDirection.Up;
             return;
           } else {
             // set stem down:
-            //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
-            //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
+            voiceEntry.stemDirection = StemDirection.Down;
             return;
           }
         } else {
@@ -182,19 +181,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
             if (firstNote.sourceNote.ParentVoiceEntry.ParentVoice === mainVoice) {
               // set stem up:
-              //graphicalStaffEntry.setStemDirection(firstNote, StemEnum.StemUp);
+              voiceEntry.stemDirection = StemDirection.Up;
               return;
             } else {
               // two Voices present in same Measure
               // set stem down:
-              //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
-              //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
+              voiceEntry.stemDirection = StemDirection.Down;
               return;
             }
           } else {
             // set stem down:
-            //const last: GraphicalNote = graphicalNotes[graphicalNotes.length - 1];
-            //graphicalStaffEntry.setStemDirection(last, StemEnum.StemDown);
+            voiceEntry.stemDirection = StemDirection.Down;
             return;
           }
         }

@@ -389,14 +389,17 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
                 for (const beam of this.beams[voiceID]) {
                     const notes: Vex.Flow.StaveNote[] = [];
-                    for (const entry of beam[1]) {
+                    const staffEntries: VexFlowStaffEntry[] = beam[1];
+                    const autoStemBeam: boolean = staffEntries[0].graphicalNotes[voiceID][0].sourceNote.ParentVoiceEntry.stemDirection === undefined;
+                    for (const entry of staffEntries) {
                         const note: Vex.Flow.StaveNote = (<VexFlowStaffEntry>entry).vfNotes[voiceID];
                         if (note !== undefined) {
                           notes.push(note);
                         }
                     }
                     if (notes.length > 1) {
-                        vfbeams.push(new Vex.Flow.Beam(notes, true));
+                        const vfBeam: Vex.Flow.Beam = new Vex.Flow.Beam(notes, autoStemBeam);
+                        vfbeams.push(vfBeam);
                         // just a test for coloring the notes:
                         // for (let note of notes) {
                         //     (<Vex.Flow.StaveNote> note).setStyle({fillStyle: "green", strokeStyle: "green"});
