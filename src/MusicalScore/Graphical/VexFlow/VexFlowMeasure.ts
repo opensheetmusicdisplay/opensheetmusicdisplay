@@ -65,6 +65,7 @@ export class VexFlowMeasure extends StaffMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
         });
+        this.beginModifiers = [];
         this.updateInstructionWidth();
     }
 
@@ -81,16 +82,18 @@ export class VexFlowMeasure extends StaffMeasure {
      * @returns {SystemLinesEnum} the x-width
      */
     public getLineWidth(line: SystemLinesEnum): number {
-        // FIXME: See values in VexFlow's stavebarline.js
-        const vfline: any = VexFlowConverter.line(line);
-        switch (vfline) {
-            case Vex.Flow.StaveConnector.type.SINGLE:
-                return 1.0 / unitInPixels;
-            case Vex.Flow.StaveConnector.type.DOUBLE:
-                return 3.0 / unitInPixels;
-            default:
-                return 0;
-        }
+        // don't return here any value, as the line width will be considered at the updateInstructionWidth() method using the stavemodifiers.
+        return 0;
+        // See values in VexFlow's stavebarline.js
+        // const vfline: any = VexFlowConverter.line(line);
+        // switch (vfline) {
+        //     case Vex.Flow.StaveConnector.type.SINGLE:
+        //         return 1.0 / unitInPixels;
+        //     case Vex.Flow.StaveConnector.type.DOUBLE:
+        //         return 3.0 / unitInPixels;
+        //     default:
+        //         return 0;
+        // }
     }
 
     /**
@@ -413,30 +416,20 @@ export class VexFlowMeasure extends StaffMeasure {
         return this.stave;
     }
 
-    //private increaseBeginInstructionWidth(): void {
-    //    let modifiers: StaveModifier[] = this.stave.getModifiers();
-    //    let modifier: StaveModifier = modifiers[modifiers.length - 1];
-    //    //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
-    //    let padding: number = modifier.getPadding(20);
-    //    let width: number = modifier.getWidth();
-    //    this.beginInstructionsWidth += (padding + width) / UnitInPixels;
-    //}
-    //
-    //private increaseEndInstructionWidth(): void {
-    //    let modifiers: StaveModifier[] = this.stave.getModifiers();
-    //    let modifier: StaveModifier = modifiers[modifiers.length - 1];
-    //    let padding: number = 0;
-    //    let width: number = modifier.getWidth();
-    //    this.endInstructionsWidth += (padding + width) / UnitInPixels;
-    //
-    //}
-
     /**
      * After re-running the formatting on the VexFlow Stave, update the
      * space needed by Instructions (in VexFlow: StaveModifiers)
      */
     private updateInstructionWidth(): void {
-        this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
+        let beginInstructionsWidth: number = 0;
+        const modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
+        for (const mod of modifiers) {
+            if (mod.getPosition() === Vex.Flow.StaveModifier.Position.BEGIN) {
+                beginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
+            }
+        }
+
+        this.beginInstructionsWidth = beginInstructionsWidth / unitInPixels; // (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
         this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
     }
 
