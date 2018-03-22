@@ -61,7 +61,19 @@ declare namespace Vex {
             public draw(ctx: any, stave: Stave): void;
         }
 
-        export class StaveNote extends Tickable{
+        export class Note extends Tickable {
+        }
+
+        export class Stem {
+            public static UP: number;
+            public static DOWN: number;
+        }
+        export class StemmableNote extends Note {
+            public getStemDirection(): number;
+            public setStemDirection(direction: number): StemmableNote;
+        }
+
+        export class StaveNote extends StemmableNote{
             constructor(note_struct: any);
 
             public getNoteHeadBounds(): any;
@@ -153,6 +165,10 @@ declare namespace Vex {
             public getWidth(): number;
 
             public getPadding(index: number): number;
+
+            public getPosition(): number;
+
+            public setPosition(position: number): Modifier;
         }
 
         export class StaveModifier extends Modifier {

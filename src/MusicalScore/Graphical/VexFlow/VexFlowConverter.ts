@@ -178,6 +178,8 @@ export class VexFlowConverter {
             keys: keys,
         });
 
+        const stemDirection: number = vfnote.getStemDirection();
+
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
@@ -188,57 +190,68 @@ export class VexFlowConverter {
             vfnote.addDotToAll();
         }
 
+        // Articulations:
+        let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
+        if (stemDirection === Vex.Flow.Stem.UP) {
+            vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+        }
         for (const articulation of articulations) {
             // tslint:disable-next-line:switch-default
+            let vfArt: Vex.Flow.Articulation = undefined;
             switch (articulation) {
                 case ArticulationEnum.accent: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("a>"));
+                    vfArt = new Vex.Flow.Articulation("a>");
                     break;
                 }
                 case ArticulationEnum.downbow: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("am"));
+                    vfArt = new Vex.Flow.Articulation("am");
                     break;
                 }
                 case ArticulationEnum.fermata: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("a@a"));
+                    vfArt = new Vex.Flow.Articulation("a@a");
+                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("a@u"));
+                    vfArt = new Vex.Flow.Articulation("a@u");
+                    vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
                     break;
                 }
                 case ArticulationEnum.lefthandpizzicato: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("a+"));
+                    vfArt = new Vex.Flow.Articulation("a+");
                     break;
                 }
                 case ArticulationEnum.snappizzicato: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("ao"));
+                    vfArt = new Vex.Flow.Articulation("ao");
                     break;
                 }
                 case ArticulationEnum.staccatissimo: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("av"));
+                    vfArt = new Vex.Flow.Articulation("av");
                     break;
                 }
                 case ArticulationEnum.staccato: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("a."));
+                    vfArt = new Vex.Flow.Articulation("a.");
                     break;
                 }
                 case ArticulationEnum.tenuto: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("a-"));
+                    vfArt = new Vex.Flow.Articulation("a-");
                     break;
                 }
                 case ArticulationEnum.upbow: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("a|"));
+                    vfArt = new Vex.Flow.Articulation("a|");
                     break;
                 }
                 case ArticulationEnum.strongaccent: {
-                    vfnote.addModifier(0, new Vex.Flow.Articulation("a^"));
+                    vfArt = new Vex.Flow.Articulation("a^");
                     break;
                 }
-                // case ArticulationEnum.staccato: {
-                //     vfnote.addModifier(0, new Vex.Flow.Articulation("a."));
-                //     break;
-                // }
+                default: {
+                    break;
+                }
+            }
+            if (vfArt !== undefined) {
+                vfArt.setPosition(vfArtPosition);
+                vfnote.addModifier(0, vfArt);
             }
         }
         return vfnote;
