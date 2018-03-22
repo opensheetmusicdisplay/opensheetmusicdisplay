@@ -20,13 +20,12 @@ import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
 import {Logging} from "../../Common/Logging";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
+import { RepetitionInstructionReader } from "./MusicSymbolModules/RepetitionInstructionReader";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
-//type repetitionInstructionReader = any;
 //type ChordSymbolContainer = any;
 //type SlurReader = any;
-//type RepetitionInstructionReader = any;
 //type ExpressionReader = any;
 //declare class MusicSymbolModuleFactory {
 //  public static createSlurReader(x: any): any;
@@ -44,10 +43,6 @@ import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
 //  }
 //}
 
-/**
- * To be implemented
- */
-export type RepetitionInstructionReader = any;
 
 /**
  * An InstrumentReader is used during the reading phase to keep parsing new measures from the MusicXML file
@@ -56,7 +51,7 @@ export type RepetitionInstructionReader = any;
 export class InstrumentReader {
 
   constructor(repetitionInstructionReader: RepetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
-      // this.repetitionInstructionReader = repetitionInstructionReader;
+      this.repetitionInstructionReader = repetitionInstructionReader;
       this.xmlMeasureList = xmlMeasureList;
       this.musicSheet = instrument.GetMusicSheet;
       this.instrument = instrument;
@@ -69,7 +64,7 @@ export class InstrumentReader {
       // (*) this.slurReader = MusicSymbolModuleFactory.createSlurReader(this.musicSheet);
   }
 
-  // private repetitionInstructionReader: RepetitionInstructionReader;
+  private repetitionInstructionReader: RepetitionInstructionReader;
   private xmlMeasureList: IXmlElement[];
   private musicSheet: MusicSheet;
   private slurReader: any; // (*) SlurReader;
@@ -124,9 +119,9 @@ export class InstrumentReader {
     }
     this.currentMeasure = currentMeasure;
     this.inSourceMeasureInstrumentIndex = this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.instrument);
-    // (*) if (this.repetitionInstructionReader !== undefined) {
-    //  this.repetitionInstructionReader.prepareReadingMeasure(currentMeasure, this.currentXmlMeasureIndex);
-    //}
+    if (this.repetitionInstructionReader !== undefined) {
+     this.repetitionInstructionReader.prepareReadingMeasure(currentMeasure, this.currentXmlMeasureIndex);
+    }
     let currentFraction: Fraction = new Fraction(0, 1);
     let previousFraction: Fraction = new Fraction(0, 1);
     let divisionsException: boolean = false;
@@ -309,15 +304,17 @@ export class InstrumentReader {
         } else if (xmlNode.name === "direction") {
           // unused let directionTypeNode: IXmlElement = xmlNode.element("direction-type");
           // (*) MetronomeReader.readMetronomeInstructions(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
-          // let relativePositionInMeasure: number = Math.min(1, currentFraction.RealValue);
-          // if (this.activeRhythm !== undefined && this.activeRhythm.Rhythm !== undefined) {
-            // relativePositionInMeasure /= this.activeRhythm.Rhythm.RealValue;
-          // }
-                    // unused:
-                    // let handeled: boolean = false;
-                    // if (this.repetitionInstructionReader !== undefined) {
-          //  handeled = this.repetitionInstructionReader.handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode,
-          //                                                                                              relativePositionInMeasure);
+          let relativePositionInMeasure: number = Math.min(1, currentFraction.RealValue);
+          if (this.activeRhythm !== undefined && this.activeRhythm.Rhythm !== undefined) {
+            relativePositionInMeasure /= this.activeRhythm.Rhythm.RealValue;
+          }
+          const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
+          //let handeled: boolean = false;
+          if (this.repetitionInstructionReader !== undefined) {
+            //handeled =
+            this.repetitionInstructionReader.handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode,
+                                                                                            relativePositionInMeasure);
+          }
           //}
           //if (!handeled) {
           //  let expressionReader: ExpressionReader = this.expressionReaders[0];
@@ -339,15 +336,14 @@ export class InstrumentReader {
           //  }
           //}
         } else if (xmlNode.name === "barline") {
-
-          //if (this.repetitionInstructionReader !== undefined) {
-          //  let measureEndsSystem: boolean = false;
-          //  this.repetitionInstructionReader.handleLineRepetitionInstructions(xmlNode, measureEndsSystem);
-          //  if (measureEndsSystem) {
-          //    this.currentMeasure.BreakSystemAfter = true;
-          //    this.currentMeasure.endsPiece = true;
-          //  }
-          //}
+          if (this.repetitionInstructionReader !== undefined) {
+           const measureEndsSystem: boolean = false;
+           this.repetitionInstructionReader.handleLineRepetitionInstructions(xmlNode, measureEndsSystem);
+           if (measureEndsSystem) {
+             this.currentMeasure.BreakSystemAfter = true;
+             this.currentMeasure.endsPiece = true;
+           }
+          }
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
         } else if (xmlNode.name === "harmony") {

@@ -16,12 +16,12 @@ import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {GraphicalNote} from "../GraphicalNote";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
-import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {GraphicalChordSymbolContainer} from "../GraphicalChordSymbolContainer";
 import {GraphicalLabel} from "../GraphicalLabel";
 import {EngravingRules} from "../EngravingRules";
+import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -150,14 +150,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
         return;
     }
 
-    /**
-     * Adds a technical instruction at the given staff entry.
-     * @param technicalInstruction
-     * @param graphicalStaffEntry
-     */
-    public createGraphicalTechnicalInstruction(technicalInstruction: TechnicalInstruction, graphicalStaffEntry: GraphicalStaffEntry): void {
-        return;
-    }
+
 
     /**
      * Adds a clef change within a measure before the given staff entry.
@@ -185,4 +178,14 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
       graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
       graphicalStaffEntry.graphicalChordContainer = graphicalChordSymbolContainer;
     }
+
+    /**
+     * Adds a technical instruction at the given staff entry.
+     * @param technicalInstruction
+     * @param graphicalStaffEntry
+     */
+    public createGraphicalTechnicalInstruction(technicalInstruction: TechnicalInstruction, graphicalStaffEntry: GraphicalStaffEntry): void {
+        return;
+    }
+
 }

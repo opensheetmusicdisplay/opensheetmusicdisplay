@@ -39,9 +39,13 @@ export class VexFlowMusicSystem extends MusicSystem {
      */
     protected createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
                                musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
-        // ToDo: create line in Vexflow
+        const vfMeasure: VexFlowMeasure = topMeasure as VexFlowMeasure;
+        vfMeasure.addMeasureLine(lineType, linePosition);
         if (bottomMeasure) {
-            (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType));
+          // ToDo: feature/Repetitions
+          // create here the correct lines according to the given lineType.
+          (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType));
+          (bottomMeasure as VexFlowMeasure).addMeasureLine(lineType, linePosition);
         }
         return new SystemLine(lineType, linePosition, this, topMeasure, bottomMeasure);
     }

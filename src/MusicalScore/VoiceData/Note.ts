@@ -103,6 +103,10 @@ export class Note {
         this.playbackInstrumentId = value;
     }
 
+    public isRest(): boolean {
+        return this.Pitch === undefined;
+    }
+
     public calculateNoteLengthWithoutTie(): Fraction {
         const withoutTieLength: Fraction = this.length.clone();
         if (this.tie !== undefined) {

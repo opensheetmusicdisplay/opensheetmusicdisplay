@@ -41,16 +41,19 @@ export class RepetitionInstruction /*implements IComparable*/ {
 
      }
      */
-    constructor(measureIndex: number, endingIndices: number[], type: RepetitionInstructionEnum, alignment: AlignmentType, parentRepetition: Repetition) {
+    constructor(measureIndex: number, type: RepetitionInstructionEnum, alignment: AlignmentType = AlignmentType.End,
+                parentRepetition: Repetition = undefined, endingIndices: number[] = undefined) {
         this.measureIndex = measureIndex;
-        this.endingIndices = endingIndices.slice();
+        if (endingIndices !== undefined) {
+            this.endingIndices = endingIndices.slice();
+        }
         this.type = type;
         this.alignment = alignment;
         this.parentRepetition = parentRepetition;
     }
 
     public measureIndex: number;
-    public endingIndices: number[];
+    public endingIndices: number[] = undefined;
     public type: RepetitionInstructionEnum;
     public alignment: AlignmentType;
     public parentRepetition: Repetition;

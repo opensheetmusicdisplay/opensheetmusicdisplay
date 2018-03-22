@@ -35,6 +35,7 @@ export class GraphicalLyricWord {
     }
 
     private initialize(): void {
+        // FIXME: This is actually not needed in Javascript as we have dynamic memory allication?
         for (let i: number = 0; i < this.lyricWord.Syllables.length; i++) {
             this.graphicalLyricsEntries.push(undefined);
         }
