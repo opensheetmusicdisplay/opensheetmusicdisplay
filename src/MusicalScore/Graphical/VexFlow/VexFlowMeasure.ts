@@ -7,7 +7,7 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
-import {VexFlowConverter} from "./VexFlowConverter";
+import {VexFlowConverter, VexFlowRepetitionType, VexFlowBarlineType} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
@@ -17,6 +17,8 @@ import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
+import { RepetitionInstructionEnum } from "../../VoiceData/Instructions/RepetitionInstruction";
+import { SystemLinePosition } from "../SystemLinePosition";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -33,8 +35,10 @@ export class VexFlowMeasure extends StaffMeasure {
     public formatVoices: (width: number) => void;
     // The VexFlow Ties in the measure
     public vfTies: Vex.Flow.StaveTie[] = [];
+    // The repetition instructions given as words or symbols (coda, dal segno..)
+    public vfRepetitionWords: Vex.Flow.Repetition[] = [];
 
-    // The VexFlow Stave (one measure in one line)
+    // The VexFlow Stave (= one measure in a staffline)
     private stave: Vex.Flow.Stave;
     // VexFlow StaveConnectors (vertical lines)
     private connectors: Vex.Flow.StaveConnector[] = [];
@@ -76,18 +80,25 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     /**
-     * returns the x-width of a given measure line.
+     * returns the x-width (in units) of a given measure line {SystemLinesEnum}.
      * @param line
-     * @returns {SystemLinesEnum} the x-width
+     * @returns the x-width in osmd units
      */
     public getLineWidth(line: SystemLinesEnum): number {
-        // FIXME: See values in VexFlow's stavebarline.js
-        const vfline: any = VexFlowConverter.line(line);
-        switch (vfline) {
-            case Vex.Flow.StaveConnector.type.SINGLE:
-                return 1.0 / unitInPixels;
-            case Vex.Flow.StaveConnector.type.DOUBLE:
-                return 3.0 / unitInPixels;
+        switch (line) {
+            // return 0 for the normal lines, as the line width will be considered at the updateInstructionWidth() method using the stavemodifiers.
+            // case SystemLinesEnum.SingleThin:
+            //     return 5.0 / unitInPixels;
+            // case SystemLinesEnum.DoubleThin:
+            //     return 5.0 / unitInPixels;
+            //     case SystemLinesEnum.ThinBold:
+            //     return 5.0 / unitInPixels;
+            // but just add a little extra space for repetitions (cosmetics):
+            case SystemLinesEnum.BoldThinDots:
+            case SystemLinesEnum.DotsThinBold:
+                return 10.0 / unitInPixels;
+            case SystemLinesEnum.DotsBoldBoldDots:
+                return 10.0 / unitInPixels;
             default:
                 return 0;
         }
@@ -146,6 +157,86 @@ export class VexFlowMeasure extends StaffMeasure {
         this.updateInstructionWidth();
     }
 
+    public addMeasureLine(lineType: SystemLinesEnum, linePosition: SystemLinePosition): void {
+        switch (linePosition) {
+            case SystemLinePosition.MeasureBegin:
+                switch (lineType) {
+                    case SystemLinesEnum.BoldThinDots:
+                        this.stave.setBegBarType(VexFlowBarlineType.REPEAT_BEGIN);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case SystemLinePosition.MeasureEnd:
+                switch (lineType) {
+                    case SystemLinesEnum.DotsBoldBoldDots:
+                        this.stave.setEndBarType(VexFlowBarlineType.REPEAT_BOTH);
+                        break;
+                    case SystemLinesEnum.DotsThinBold:
+                        this.stave.setEndBarType(VexFlowBarlineType.REPEAT_END);
+                        break;
+                    case SystemLinesEnum.DoubleThin:
+                        this.stave.setEndBarType(VexFlowBarlineType.DOUBLE);
+                        break;
+                    case SystemLinesEnum.ThinBold:
+                        this.stave.setEndBarType(VexFlowBarlineType.END);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    public addWordRepetition(repetitionInstruction: RepetitionInstructionEnum): void {
+        let instruction: VexFlowRepetitionType = undefined;
+        let position: any = Vex.Flow.Modifier.Position.END;
+        switch (repetitionInstruction) {
+          case RepetitionInstructionEnum.Segno:
+            // create Segno Symbol:
+            instruction = VexFlowRepetitionType.SEGNO_LEFT;
+            position = Vex.Flow.Modifier.Position.BEGIN;
+            break;
+          case RepetitionInstructionEnum.Coda:
+            // create Coda Symbol:
+            instruction = VexFlowRepetitionType.CODA_LEFT;
+            position = Vex.Flow.Modifier.Position.BEGIN;
+            break;
+          case RepetitionInstructionEnum.DaCapo:
+            instruction = VexFlowRepetitionType.DC;
+            break;
+          case RepetitionInstructionEnum.DalSegno:
+            instruction = VexFlowRepetitionType.DS;
+            break;
+          case RepetitionInstructionEnum.Fine:
+            instruction = VexFlowRepetitionType.FINE;
+            break;
+          case RepetitionInstructionEnum.ToCoda:
+            //instruction = "To Coda";
+            break;
+          case RepetitionInstructionEnum.DaCapoAlFine:
+            instruction = VexFlowRepetitionType.DC_AL_FINE;
+            break;
+          case RepetitionInstructionEnum.DaCapoAlCoda:
+            instruction = VexFlowRepetitionType.DC_AL_CODA;
+            break;
+          case RepetitionInstructionEnum.DalSegnoAlFine:
+            instruction = VexFlowRepetitionType.DS_AL_FINE;
+            break;
+          case RepetitionInstructionEnum.DalSegnoAlCoda:
+            instruction = VexFlowRepetitionType.DS_AL_CODA;
+            break;
+          default:
+            break;
+        }
+        if (instruction !== undefined) {
+            this.stave.addModifier(new Vex.Flow.Repetition(instruction, 0, 0), position);
+        }
+    }
+
     /**
      * Sets the overall x-width of the measure.
      * @param width
@@ -182,15 +273,7 @@ export class VexFlowMeasure extends StaffMeasure {
      * @param ctx
      */
     public draw(ctx: Vex.Flow.RenderContext): void {
-        // If this is the first stave in the vertical measure, call the format
-        // method to set the width of all the voices
-        if (this.formatVoices) {
-            // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
-        }
 
-        // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
         // Draw stave lines
         this.stave.setContext(ctx).draw();
         // Draw all voices
@@ -226,9 +309,18 @@ export class VexFlowMeasure extends StaffMeasure {
         for (const connector of this.connectors) {
             connector.setContext(ctx).draw();
         }
+    }
 
-        // now we can finally set the vexflow x positions back into the osmd object model:
-        this.setStaffEntriesXPositions();
+    public format(): void {
+        // If this is the first stave in the vertical measure, call the format
+        // method to set the width of all the voices
+        if (this.formatVoices) {
+            // The width of the voices does not include the instructions (StaveModifiers)
+            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
+        }
+
+        // Force the width of the Begin Instructions
+        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
     }
 
     /**
@@ -310,7 +402,7 @@ export class VexFlowMeasure extends StaffMeasure {
                         //     (<Vex.Flow.StaveNote> note).setStyle({fillStyle: "green", strokeStyle: "green"});
                         // }
                     } else {
-                        Logging.log("Warning! Beam with no notes! Trying to ignore, but this is a serious problem.");
+                        Logging.log("Warning! Beam with no notes!");
                     }
                 }
             }
@@ -413,49 +505,25 @@ export class VexFlowMeasure extends StaffMeasure {
         return this.stave;
     }
 
-    //private increaseBeginInstructionWidth(): void {
-    //    let modifiers: StaveModifier[] = this.stave.getModifiers();
-    //    let modifier: StaveModifier = modifiers[modifiers.length - 1];
-    //    //let padding: number = modifier.getCategory() === "keysignatures" ? modifier.getPadding(2) : 0;
-    //    let padding: number = modifier.getPadding(20);
-    //    let width: number = modifier.getWidth();
-    //    this.beginInstructionsWidth += (padding + width) / UnitInPixels;
-    //}
-    //
-    //private increaseEndInstructionWidth(): void {
-    //    let modifiers: StaveModifier[] = this.stave.getModifiers();
-    //    let modifier: StaveModifier = modifiers[modifiers.length - 1];
-    //    let padding: number = 0;
-    //    let width: number = modifier.getWidth();
-    //    this.endInstructionsWidth += (padding + width) / UnitInPixels;
-    //
-    //}
-
     /**
      * After re-running the formatting on the VexFlow Stave, update the
      * space needed by Instructions (in VexFlow: StaveModifiers)
      */
     private updateInstructionWidth(): void {
-        this.beginInstructionsWidth = (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
-        this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
-    }
-
-    /**
-     * sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
-     * The positions are needed for cursor placement and mouse/tap interactions
-     */
-    private setStaffEntriesXPositions(): void {
-        for (let idx3: number = 0, len3: number = this.staffEntries.length; idx3 < len3; ++idx3) {
-            const gse: VexFlowStaffEntry = (<VexFlowStaffEntry> this.staffEntries[idx3]);
-            const measure: StaffMeasure = gse.parentMeasure;
-            const x: number =
-                gse.getX() -
-                measure.PositionAndShape.RelativePosition.x -
-                measure.ParentStaffLine.PositionAndShape.RelativePosition.x -
-                measure.parentMusicSystem.PositionAndShape.RelativePosition.x;
-            gse.PositionAndShape.RelativePosition.x = x;
-            gse.PositionAndShape.calculateAbsolutePosition();
-            gse.PositionAndShape.calculateAbsolutePositionsOfChildren();
+        let beginInstructionsWidth: number = 0;
+        let endInstructionsWidth: number = 0;
+        const modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
+        for (const mod of modifiers) {
+            if (mod.getPosition() === Vex.Flow.StaveModifier.Position.BEGIN) {
+                beginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
+            } else if (mod.getPosition() === Vex.Flow.StaveModifier.Position.END) {
+                endInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
+            }
         }
+
+        this.beginInstructionsWidth = beginInstructionsWidth / unitInPixels;
+        this.endInstructionsWidth = endInstructionsWidth / unitInPixels;
+        //this.beginInstructionsWidth =  (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
+        //this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
     }
 }

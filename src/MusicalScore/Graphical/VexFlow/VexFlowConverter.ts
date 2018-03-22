@@ -401,20 +401,19 @@ export class VexFlowConverter {
      * @returns {any}
      */
     public static line(lineType: SystemLinesEnum): any {
-        // TODO Not all line types are correctly mapped!
         switch (lineType) {
             case SystemLinesEnum.SingleThin:
                 return Vex.Flow.StaveConnector.type.SINGLE;
             case SystemLinesEnum.DoubleThin:
                 return Vex.Flow.StaveConnector.type.DOUBLE;
             case SystemLinesEnum.ThinBold:
-                return Vex.Flow.StaveConnector.type.SINGLE;
+                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.BoldThinDots:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_LEFT;
             case SystemLinesEnum.DotsThinBold:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.DotsBoldBoldDots:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.None:
                 return Vex.Flow.StaveConnector.type.NONE;
             default:
@@ -489,3 +488,29 @@ export class VexFlowConverter {
         return ret;
     }
 }
+
+export enum VexFlowRepetitionType {
+    NONE = 1,         // no coda or segno
+    CODA_LEFT = 2,    // coda at beginning of stave
+    CODA_RIGHT = 3,   // coda at end of stave
+    SEGNO_LEFT = 4,   // segno at beginning of stave
+    SEGNO_RIGHT = 5,  // segno at end of stave
+    DC = 6,           // D.C. at end of stave
+    DC_AL_CODA = 7,   // D.C. al coda at end of stave
+    DC_AL_FINE = 8,   // D.C. al Fine end of stave
+    DS = 9,           // D.S. at end of stave
+    DS_AL_CODA = 10,  // D.S. al coda at end of stave
+    DS_AL_FINE = 11,  // D.S. al Fine at end of stave
+    FINE = 12,        // Fine at end of stave
+}
+
+export enum VexFlowBarlineType {
+    SINGLE = 1,
+    DOUBLE = 2,
+    END = 3,
+    REPEAT_BEGIN = 4,
+    REPEAT_END = 5,
+    REPEAT_BOTH = 6,
+    NONE = 7,
+}
+

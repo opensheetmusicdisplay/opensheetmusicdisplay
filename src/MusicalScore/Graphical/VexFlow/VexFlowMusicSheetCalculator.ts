@@ -16,12 +16,10 @@ import {Beam} from "../../VoiceData/Beam";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
-import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
@@ -30,6 +28,11 @@ import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { GraphicalLabel } from "../GraphicalLabel";
+import { LyricsEntry } from "../../VoiceData/Lyrics/LyricsEntry";
+import { GraphicalLyricWord } from "../GraphicalLyricWord";
+import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   constructor() {
@@ -45,6 +48,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
   }
+
+    protected formatMeasures(): void {
+        for (const staffMeasures of this.graphicalMusicSheet.MeasureList) {
+            for (const staffMeasure of staffMeasures) {
+                (<VexFlowMeasure>staffMeasure).format();
+                for (const staffEntry of staffMeasure.staffEntries) {
+                    (<VexFlowStaffEntry>staffEntry).calculateXPosition();
+                }
+            }
+        }
+    }
 
   //protected clearSystemsAndMeasures(): void {
   //    for (let measure of measures) {
@@ -68,45 +82,48 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      (measure as VexFlowMeasure).finalizeTuplets();
      }*/
     // Format the voices
-        const allVoices: Vex.Flow.Voice[] = [];
-        const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
-      align_rests: true,
+    const allVoices: Vex.Flow.Voice[] = [];
+    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({align_rests: true,
     });
 
-        for (const measure of measures) {
-            const mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
-            const voices: Vex.Flow.Voice[] = [];
-            for (const voiceID in mvoices) {
-        if (mvoices.hasOwnProperty(voiceID)) {
-          voices.push(mvoices[voiceID]);
-          allVoices.push(mvoices[voiceID]);
+    for (const measure of measures) {
+        const mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
+        const voices: Vex.Flow.Voice[] = [];
+        for (const voiceID in mvoices) {
+            if (mvoices.hasOwnProperty(voiceID)) {
+                voices.push(mvoices[voiceID]);
+                allVoices.push(mvoices[voiceID]);
 
+            }
         }
-      }
-            if (voices.length === 0) {
-        Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
-        continue;
-      }
-            formatter.joinVoices(voices);
+        if (voices.length === 0) {
+            Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+            continue;
+        }
+        formatter.joinVoices(voices);
     }
 
-        let width: number = 200;
-        if (allVoices.length > 0) {
-            const firstMeasure: VexFlowMeasure = measures[0] as VexFlowMeasure;
-      // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
-      // FIXME: a more relaxed formatting of voices
-            width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
-            for (const measure of measures) {
-        measure.minimumStaffEntriesWidth = width;
-        (measure as VexFlowMeasure).formatVoices = undefined;
-      }
-            firstMeasure.formatVoices = (w: number) => {
-        formatter.format(allVoices, w);
-      };
+    let width: number = 200;
+    if (allVoices.length > 0) {
+        // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
+        // FIXME: a more relaxed formatting of voices
+        width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+        // firstMeasure.formatVoices = (w: number) => {
+        //     formatter.format(allVoices, w);
+        // };
+        for (const measure of measures) {
+            measure.minimumStaffEntriesWidth = width;
+            if (measure !== measures[0]) {
+                (measure as VexFlowMeasure).formatVoices = undefined;
+            } else {
+                (measure as VexFlowMeasure).formatVoices = (w: number) => {
+                    formatter.format(allVoices, w);
+                };
+            }
+        }
     }
-
-        return width;
-  }
+    return width;
+}
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
                                startNote: GraphicalNote, endNote: GraphicalNote): GraphicalTie {
@@ -198,6 +215,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return;
   }
 
+    /**
+     * Calculate the shape (B�zier curve) for this tie.
+     * @param tie
+     * @param tieIsAtSystemBreak
+     */
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
         const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
         let vfStartNote: Vex.Flow.StaveNote = undefined;
@@ -235,22 +257,56 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-  protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): void {
-    return;
-  }
-
+    /**
+     * Calculate a single OctaveShift for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
   protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     return;
   }
 
+    /**
+     * Calculate all the textual and symbolic [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
+     * @param repetitionInstruction
+     * @param measureIndex
+     */
   protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
-    return;
-  }
+      // find first visible StaffLine
+      let uppermostMeasure: VexFlowMeasure = undefined;
+      const measures: VexFlowMeasure[]  = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
+      for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
+        const graphicalMeasure: VexFlowMeasure = measures[idx];
+        if (graphicalMeasure.ParentStaffLine !== undefined && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
+            uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
+            break;
+        }
+      }
+      // ToDo: feature/Repetitions
+      // now create corresponding graphical symbol or Text in VexFlow:
+      // use top measure and staffline for positioning.
+      if (uppermostMeasure !== undefined) {
+        uppermostMeasure.addWordRepetition(repetitionInstruction.type);
+      }
+    }
 
   protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     return;
   }
 
+    /**
+     * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.
+     * @param tiedGraphicalNote
+     * @param beams
+     * @param activeClef
+     * @param octaveShiftValue
+     * @param graphicalStaffEntry
+     * @param duration
+     * @param openTie
+     * @param isLastTieNote
+     */
   protected handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
                                     octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
                                     openTie: Tie, isLastTieNote: boolean): void {
@@ -267,10 +323,47 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
   }
 
-  protected handleVoiceEntryLyrics(lyricsEntries: Dictionary<number, LyricsEntry>, voiceEntry: VoiceEntry,
-                                   graphicalStaffEntry: GraphicalStaffEntry, openLyricWords: LyricWord[]): void {
-    return;
+    protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
+        voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
+            const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
+                                                                                     graphicalStaffEntry,
+                                                                                     this.rules.LyricsHeight,
+                                                                                     this.rules.StaffHeight);
+
+            graphicalStaffEntry.LyricsEntries.push(graphicalLyricEntry);
+
+            // create corresponding GraphicalLabel
+            const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
+            graphicalLabel.setLabelPositionAndShapeBorders();
+
+            if (lyricsEntry.Word !== undefined) {
+                const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);
+                let index: number = lyricWords.indexOf(lyricsEntry.Word);
+                if (index === -1) {
+                    lyricWords.push(lyricsEntry.Word);
+                    index = lyricWords.indexOf(lyricsEntry.Word);
   }
+
+                if (this.graphicalLyricWords.length === 0 || index > this.graphicalLyricWords.length - 1) {
+                    const graphicalLyricWord: GraphicalLyricWord = new GraphicalLyricWord(lyricsEntry.Word);
+
+                    graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
+                    graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
+                    this.graphicalLyricWords.push(graphicalLyricWord);
+                } else {
+                    const graphicalLyricWord: GraphicalLyricWord = this.graphicalLyricWords[index];
+
+                    graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
+                    graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
+
+                    if (graphicalLyricWord.isFilled()) {
+                        lyricWords.splice(index, 1);
+                        this.graphicalLyricWords.splice(this.graphicalLyricWords.indexOf(graphicalLyricWord), 1);
+                    }
+                }
+            }
+        });
+    }
 
   protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
     return;

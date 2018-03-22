@@ -57,6 +57,11 @@ export abstract class MusicSystem extends GraphicalObject {
         this.parent = value;
     }
 
+    public get NextSystem(): MusicSystem {
+        const idxInParent: number = this.Parent.MusicSystems.indexOf(this);
+        return idxInParent !== this.Parent.MusicSystems.length ? this.Parent.MusicSystems[idxInParent + 1] : undefined;
+    }
+
     public get StaffLines(): StaffLine[] {
         return this.staffLines;
     }
@@ -274,11 +279,9 @@ export abstract class MusicSystem extends GraphicalObject {
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(graphicalLabel, instrument);
-                //graphicalLabel.PositionAndShape.Parent = this.PositionAndShape;
-
                 // X-Position will be 0 (Label starts at the same PointF_2D with MusicSystem)
                 // Y-Position will be calculated after the y-Spacing
-                graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
+                // graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
             }
 
             // calculate maxLabelLength (needed for X-Spacing)
