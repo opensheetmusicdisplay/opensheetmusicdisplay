@@ -49,8 +49,9 @@ module.exports = function (config) {
 
             // copy parts of webpack configuration to use minimal effort here
             devtool: 'cheap-module-eval-source-map',
+            mode: 'production',
             module: {
-                loaders: common.module.loaders
+                rules: common.module.rules
             },
             resolve: common.resolve
         },
