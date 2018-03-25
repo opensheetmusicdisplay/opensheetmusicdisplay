@@ -19,6 +19,7 @@ import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import { RepetitionInstructionEnum } from "../../VoiceData/Instructions/RepetitionInstruction";
 import { SystemLinePosition } from "../SystemLinePosition";
+import { StemDirectionType } from "../../VoiceData/VoiceEntry";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -390,7 +391,8 @@ export class VexFlowMeasure extends StaffMeasure {
                 for (const beam of this.beams[voiceID]) {
                     const notes: Vex.Flow.StaveNote[] = [];
                     const staffEntries: VexFlowStaffEntry[] = beam[1];
-                    const autoStemBeam: boolean = staffEntries[0].graphicalNotes[voiceID][0].sourceNote.ParentVoiceEntry.stemDirection === undefined;
+                    const autoStemBeam: boolean = staffEntries[0].graphicalNotes[voiceID][0].sourceNote.
+                                                    ParentVoiceEntry.StemDirection === StemDirectionType.Undefined;
                     for (const entry of staffEntries) {
                         const note: Vex.Flow.StaveNote = (<VexFlowStaffEntry>entry).vfNotes[voiceID];
                         if (note !== undefined) {

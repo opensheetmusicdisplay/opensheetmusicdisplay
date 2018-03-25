@@ -2,7 +2,7 @@ import {MusicSheetCalculator} from "../MusicSheetCalculator";
 import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
 import {StaffMeasure} from "../StaffMeasure";
 import {StaffLine} from "../StaffLine";
-import {VoiceEntry, StemDirection} from "../../VoiceData/VoiceEntry";
+import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {MusicSystem} from "../MusicSystem";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
@@ -27,8 +27,6 @@ import Vex = require("vexflow");
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
-import {Voice} from "../../VoiceData/Voice";
-import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { GraphicalLabel } from "../GraphicalLabel";
@@ -157,46 +155,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry,
                              hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
-    // Stem direction calculation:
-    if (graphicalNotes.length > 0) {
-      const firstNote: GraphicalNote = graphicalNotes[0];
-      if (firstNote.sourceNote.ParentVoiceEntry !== undefined) {
-        const hasLink: boolean = graphicalStaffEntry.sourceStaffEntry.Link !== undefined;
-        if (hasLink) {
-          // in case of StaffEntryLink don't check mainVoice / linkedVoice
-          if (firstNote.sourceNote.ParentVoiceEntry === graphicalStaffEntry.sourceStaffEntry.VoiceEntries[0]) {
-            // set stem up:
-            voiceEntry.stemDirection = StemDirection.Up;
-            return;
-          } else {
-            // set stem down:
-            voiceEntry.stemDirection = StemDirection.Down;
-            return;
-          }
-        } else {
-          const isMainVoice: boolean = !(firstNote.sourceNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice);
-          // if mainVoice, direction Up, else direction Down
-          if (isMainVoice) {
-            const mainVoice: Voice = graphicalStaffEntry.getMainVoice();
-
-            if (firstNote.sourceNote.ParentVoiceEntry.ParentVoice === mainVoice) {
-              // set stem up:
-              voiceEntry.stemDirection = StemDirection.Up;
-              return;
-            } else {
-              // two Voices present in same Measure
-              // set stem down:
-              voiceEntry.stemDirection = StemDirection.Down;
-              return;
-            }
-          } else {
-            // set stem down:
-            voiceEntry.stemDirection = StemDirection.Down;
-            return;
-          }
-        }
-      }
-    }
+    return;
   }
 
   /**

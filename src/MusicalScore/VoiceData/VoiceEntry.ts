@@ -29,7 +29,6 @@ export class VoiceEntry {
 
     public graceVoiceEntriesBefore: VoiceEntry[];
     public graceVoiceEntriesAfter: VoiceEntry[];
-    public stemDirection: StemDirection = undefined;
 
     private parentVoice: Voice;
     private parentSourceStaffEntry: SourceStaffEntry;
@@ -40,6 +39,7 @@ export class VoiceEntry {
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
     private arpeggiosNotesIndices: number[] = [];
     private ornamentContainer: OrnamentContainer;
+    private stemDirection: StemDirectionType = StemDirectionType.Undefined;
 
     public get ParentSourceStaffEntry(): SourceStaffEntry {
         return this.parentSourceStaffEntry;
@@ -76,6 +76,13 @@ export class VoiceEntry {
     }
     public set OrnamentContainer(value: OrnamentContainer) {
         this.ornamentContainer = value;
+    }
+
+    public get StemDirection(): StemDirectionType {
+        return this.stemDirection;
+    }
+    public set StemDirection(value: StemDirectionType) {
+        this.stemDirection = value;
     }
 
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {
@@ -327,7 +334,8 @@ export enum ArticulationEnum {
     otherarticulation
 }
 
-export enum StemDirection {
+export enum StemDirectionType {
+    Undefined = -1,
     Up = 0,
     Down = 1,
     None = 2

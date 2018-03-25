@@ -14,7 +14,7 @@ import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {GraphicalNote} from "./GraphicalNote";
 import {Beam} from "../VoiceData/Beam";
 import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
-import {VoiceEntry} from "../VoiceData/VoiceEntry";
+import {VoiceEntry, StemDirectionType} from "../VoiceData/VoiceEntry";
 import {OrnamentContainer} from "../VoiceData/OrnamentContainer";
 import {ArticulationEnum} from "../VoiceData/VoiceEntry";
 import {Tuplet} from "../VoiceData/Tuplet";
@@ -852,6 +852,7 @@ export abstract class MusicSheetCalculator {
                                openTuplets: Tuplet[], openBeams: Beam[],
                                octaveShiftValue: OctaveEnum, grace: boolean = false, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
+        this.calculateStemDirectionFromVoices(voiceEntry);
         const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.findOrCreateGraphicalNotesListFromVoiceEntry(voiceEntry);
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             const note: Note = voiceEntry.Notes[idx];
@@ -995,8 +996,8 @@ export abstract class MusicSheetCalculator {
 
     protected layoutVoiceEntries(graphicalStaffEntry: GraphicalStaffEntry): void {
         graphicalStaffEntry.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
-        const isGraceStaffEntry: boolean = graphicalStaffEntry.staffEntryParent !== undefined;
         if (!this.leadSheet) {
+            const isGraceStaffEntry: boolean = graphicalStaffEntry.staffEntryParent !== undefined;
             const graphicalStaffEntryNotes: GraphicalNote[][] = graphicalStaffEntry.notes;
             for (let idx4: number = 0, len4: number = graphicalStaffEntryNotes.length; idx4 < len4; ++idx4) {
                 const graphicalNotes: GraphicalNote[] = graphicalStaffEntryNotes[idx4];
@@ -2105,6 +2106,37 @@ export abstract class MusicSheetCalculator {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Calculates the desired stem direction depending on the number (or type) of voices.
+     * If more than one voice is there, the main voice (typically the first or upper voice) will get stem up direction.
+     * The others get stem down direction.
+     * @param voiceEntry the voiceEntry for which the stem direction has to be calculated
+     */
+    private calculateStemDirectionFromVoices(voiceEntry: VoiceEntry): void {
+        // Stem direction calculation:
+        const hasLink: boolean = voiceEntry.ParentSourceStaffEntry.Link !== undefined;
+        if (hasLink) {
+            // in case of StaffEntryLink don't check mainVoice / linkedVoice
+            if (voiceEntry === voiceEntry.ParentSourceStaffEntry.VoiceEntries[0]) {
+            // set stem up:
+            voiceEntry.StemDirection = StemDirectionType.Up;
+            return;
+            } else {
+            // set stem down:
+            voiceEntry.StemDirection = StemDirectionType.Down;
+            return;
+            }
+        } else {
+            if (voiceEntry.ParentVoice instanceof LinkedVoice) {
+                // Linked voice: set stem down:
+                voiceEntry.StemDirection = StemDirectionType.Down;
+            } else {
+                // if this voiceEntry belongs to the mainVoice: stem Up
+                voiceEntry.StemDirection = StemDirectionType.Up;
             }
         }
     }

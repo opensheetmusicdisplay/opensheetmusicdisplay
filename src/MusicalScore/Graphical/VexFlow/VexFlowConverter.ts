@@ -16,7 +16,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
 import {Logging} from "../../../Common/Logging";
-import { ArticulationEnum, StemDirection } from "../../VoiceData/VoiceEntry";
+import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -177,12 +177,12 @@ export class VexFlowConverter {
             duration: duration,
             keys: keys,
         });
-        const wantedStemDirection: StemDirection = notes[0].sourceNote.ParentVoiceEntry.stemDirection;
+        const wantedStemDirection: StemDirectionType = notes[0].sourceNote.ParentVoiceEntry.StemDirection;
         switch (wantedStemDirection) {
-            case(StemDirection.Up):
+            case(StemDirectionType.Up):
                 vfnote.setStemDirection(Vex.Flow.Stem.UP);
                 break;
-            case (StemDirection.Down):
+            case (StemDirectionType.Down):
                 vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
                 break;
             default:

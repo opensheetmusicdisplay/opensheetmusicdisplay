@@ -6,7 +6,6 @@ import {Note} from "../VoiceData/Note";
 import {Slur} from "../VoiceData/Expressions/ContinuousExpressions/Slur";
 import {Voice} from "../VoiceData/Voice";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
-import {LinkedVoice} from "../VoiceData/LinkedVoice";
 import {GraphicalTie} from "./GraphicalTie";
 import {GraphicalObject} from "./GraphicalObject";
 import {StaffMeasure} from "./StaffMeasure";
@@ -234,16 +233,6 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
         }
         return false;
-    }
-
-    public getMainVoice(): Voice {
-        for (let idx: number = 0, len: number = this.sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
-            const voiceEntry: VoiceEntry = this.sourceStaffEntry.VoiceEntries[idx];
-            if (!(voiceEntry.ParentVoice instanceof LinkedVoice)) {
-                return voiceEntry.ParentVoice;
-            }
-        }
-        return this.notes[0][0].sourceNote.ParentVoiceEntry.ParentVoice;
     }
 
     /**
