@@ -20,7 +20,7 @@ export class OSMD {
      * @param container is either the ID, or the actual "div" element which will host the music sheet
      * @autoResize automatically resize the sheet to full page width on window resize
      */
-    constructor(container: string|HTMLElement, autoResize: boolean = false, backend: string = "canvas") {
+    constructor(container: string|HTMLElement, autoResize: boolean = false, backend: string = "svg") {
         // Store container element
         if (typeof container === "string") {
             // ID passed

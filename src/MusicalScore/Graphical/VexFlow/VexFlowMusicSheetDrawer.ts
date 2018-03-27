@@ -11,6 +11,7 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -71,6 +72,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
         measure.draw(this.backend.getContext());
+        for (const voiceID in measure.vfVoices) {
+            if (measure.vfVoices.hasOwnProperty(voiceID)) {
+                const tickables: Vex.Flow.Tickable[] = measure.vfVoices[voiceID].tickables;
+                for (const tick of tickables) {
+                    if ((<any>tick).getAttribute("type") === "StaveNote" && process.env.DEBUG) {
+                        tick.getBoundingBox().draw(this.backend.getContext());
+                    }
+                }
+            }
+        }
 
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
@@ -83,6 +94,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (staffEntry.graphicalChordContainer !== undefined) {
             this.drawLabel(staffEntry.graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
         }
+        if (staffEntry.LyricsEntries.length > 0) {
+            this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
+        }
+    }
+
+    /**
+     * Draw all lyrics to the canvas
+     * @param lyricEntries Array of lyric entries to be drawn
+     * @param layer Number of the layer that the lyrics should be drawn in
+     */
+    private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
+        lyricEntries.forEach(lyricsEntry => this.drawLabel(lyricsEntry.GraphicalLabel, layer));
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {

@@ -334,6 +334,19 @@ export abstract class MusicSheetDrawer {
         for (const measure of staffLine.Measures) {
             this.drawMeasure(measure);
         }
+
+        if (staffLine.LyricsDashes.length > 0) {
+            this.drawDashes(staffLine.LyricsDashes);
+        }
+    }
+
+    /**
+     * Draw all dashes to the canvas
+     * @param lyricsDashes Array of lyric dashes to be drawn
+     * @param layer Number of the layer that the lyrics should be drawn in
+     */
+    protected drawDashes(lyricsDashes: GraphicalLabel[]): void {
+        lyricsDashes.forEach(dash => this.drawLabel(dash, <number>GraphicalLayers.Notes));
     }
 
     // protected drawSlur(slur: GraphicalSlur, abs: PointF2D): void {

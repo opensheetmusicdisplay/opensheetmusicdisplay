@@ -128,6 +128,10 @@ export class MusicPartManagerIterator {
     public get JumpResponsibleRepetition(): Repetition {
         return this.jumpResponsibleRepetition;
     }
+
+    /**
+     * Creates a clone of this iterator which has the same actual position.
+     */
     public clone(): MusicPartManagerIterator {
         const ret: MusicPartManagerIterator = new MusicPartManagerIterator(this.manager);
         ret.currentVoiceEntryIndex = this.currentVoiceEntryIndex;
@@ -139,6 +143,11 @@ export class MusicPartManagerIterator {
         return ret;
     }
 
+    /**
+     * Returns the visible voice entries for the provided instrument of the current iterator position.
+     * @param instrument
+     * Returns: A List of voiceEntries. If there are no entries the List has a Count of 0 (it does not return null).
+     */
     public CurrentVisibleVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         const voiceEntries: VoiceEntry[] = [];
         if (this.currentVoiceEntries === undefined) {
@@ -159,6 +168,11 @@ export class MusicPartManagerIterator {
         return voiceEntries;
     }
 
+    /**
+     * Returns the visible voice entries for the provided instrument of the current iterator position.
+     * @param instrument
+     * Returns: A List of voiceEntries. If there are no entries the List has a Count of 0 (it does not return null).
+     */
     public CurrentAudibleVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         const voiceEntries: VoiceEntry[] = [];
         if (this.currentVoiceEntries === undefined) {
@@ -179,10 +193,20 @@ export class MusicPartManagerIterator {
         return voiceEntries;
     }
 
+    /**
+     * Returns the audible dynamics of the current iterator position.
+     * Returns: A List of Dynamics. If there are no entries the List has a Count of 0 (it does not return null).
+     */
     public getCurrentDynamicChangingExpressions(): DynamicsContainer[] {
         return this.currentDynamicChangingExpressions;
     }
 
+    /**
+     * Returns the score following voice entries for the provided instrument of the current iterator position.
+     * @param instrument
+     * Returns: A List of voiceEntries. If there are no entries the List has a Count of 0
+     * (it does not return null).
+     */
     public CurrentScoreFollowingVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         const voiceEntries: VoiceEntry[] = [];
         if (this.currentVoiceEntries === undefined) {
@@ -471,6 +495,7 @@ export class MusicPartManagerIterator {
             this.handleRepetitionsAtMeasureBegin();
             this.activateCurrentRhythmInstructions();
         }
+        // everything fine, no complications
         if (this.currentVoiceEntryIndex >= 0 && this.currentVoiceEntryIndex < this.currentMeasure.VerticalSourceStaffEntryContainers.length) {
             const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
@@ -491,11 +516,18 @@ export class MusicPartManagerIterator {
             this.recursiveMove();
             return;
         }
+        // we reached the end
         this.currentVerticalContainerInMeasureTimestamp = new Fraction();
         this.currentMeasure = undefined;
         this.currentVoiceEntries = undefined;
         this.endReached = true;
     }
+
+    /**
+     * helper function for moveToNextVisibleVoiceEntry and moveToPreviousVisibleVoiceEntry
+     * Get all entries and check if there is at least one valid entry in the list
+     * @param notesOnly
+     */
     private checkEntries(notesOnly: boolean): boolean {
         const tlist: VoiceEntry[] = this.CurrentVisibleVoiceEntries();
         if (tlist.length > 0) {
