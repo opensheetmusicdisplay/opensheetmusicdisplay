@@ -17,7 +17,11 @@ module.exports = merge(common, {
     },
     mode: 'production',
     optimization: {
-        minimize: true
+        minimize: true,
+        splitChunks: {
+            chunks: 'all',
+            name: false
+        }
     },
     plugins: [
         // build optimization plugins
