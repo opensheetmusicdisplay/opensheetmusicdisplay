@@ -44,7 +44,7 @@ export class VexFlowMusicSystem extends MusicSystem {
         if (bottomMeasure) {
           // ToDo: feature/Repetitions
           // create here the correct lines according to the given lineType.
-          (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType));
+          (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType, linePosition));
           (bottomMeasure as VexFlowMeasure).addMeasureLine(lineType, linePosition);
         }
         return new SystemLine(lineType, linePosition, this, topMeasure, bottomMeasure);

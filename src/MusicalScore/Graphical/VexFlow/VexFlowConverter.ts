@@ -17,6 +17,7 @@ import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
 import {Logging} from "../../../Common/Logging";
 import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry";
+import { SystemLinePosition } from "../SystemLinePosition";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -424,10 +425,13 @@ export class VexFlowConverter {
      * @param lineType
      * @returns {any}
      */
-    public static line(lineType: SystemLinesEnum): any {
+    public static line(lineType: SystemLinesEnum, linePosition: SystemLinePosition): any {
         switch (lineType) {
             case SystemLinesEnum.SingleThin:
-                return Vex.Flow.StaveConnector.type.SINGLE;
+                if (linePosition === SystemLinePosition.MeasureBegin) {
+                    return Vex.Flow.StaveConnector.type.SINGLE;
+                }
+                return Vex.Flow.StaveConnector.type.SINGLE_RIGHT;
             case SystemLinesEnum.DoubleThin:
                 return Vex.Flow.StaveConnector.type.DOUBLE;
             case SystemLinesEnum.ThinBold:
