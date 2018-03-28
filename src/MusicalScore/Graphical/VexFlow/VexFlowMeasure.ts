@@ -489,6 +489,22 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
             }
         }
+        this.createArticulations();
+    }
+
+    private createArticulations(): void {
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
+
+            // create vex flow Notes:
+            const gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
+            for (const voiceID in gnotes) {
+                if (gnotes.hasOwnProperty(voiceID)) {
+                    const vfnote: StaveNote = (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID];
+                    VexFlowConverter.generateArticulations(vfnote, gnotes[voiceID][0].sourceNote.ParentVoiceEntry.Articulations);
+                }
+            }
+        }
     }
 
     /**

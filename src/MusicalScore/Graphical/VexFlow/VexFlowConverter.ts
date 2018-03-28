@@ -147,7 +147,6 @@ export class VexFlowConverter {
         const accidentals: string[] = [];
         const frac: Fraction = notes[0].graphicalNoteLength;
         const isTuplet: boolean = notes[0].sourceNote.NoteTuplet !== undefined;
-        const articulations: ArticulationEnum[] = notes[0].sourceNote.ParentVoiceEntry.Articulations;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
         let vfClefType: string = undefined;
         let numDots: number = 0;
@@ -190,8 +189,6 @@ export class VexFlowConverter {
                 break;
         }
 
-        const stemDirection: number = vfnote.getStemDirection();
-
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
@@ -201,12 +198,17 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             vfnote.addDotToAll();
         }
+        return vfnote;
+    }
 
+    public static generateArticulations(vfnote: Vex.Flow.StaveNote, articulations: ArticulationEnum[]): void {
         // Articulations:
         let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
-        if (stemDirection === Vex.Flow.Stem.UP) {
+
+        if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
             vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
         }
+
         for (const articulation of articulations) {
             // tslint:disable-next-line:switch-default
             let vfArt: Vex.Flow.Articulation = undefined;
@@ -266,7 +268,6 @@ export class VexFlowConverter {
                 vfnote.addModifier(0, vfArt);
             }
         }
-        return vfnote;
     }
 
     /**
