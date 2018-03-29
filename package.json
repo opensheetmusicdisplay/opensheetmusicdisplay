@@ -2,8 +2,8 @@
   "name": "opensheetmusicdisplay",
   "version": "0.2.1",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
-  "main": "dist/src/OSMD/OSMD.js",
-  "typings": "dist/src/OSMD/OSMD",
+  "main": "dist/src/OpenSheetMusicDisplay/OpenSheetMusicDisplay.js",
+  "typings": "dist/src/OpenSheetMusicDisplay/OpenSheetMusicDisplay",
   "scripts": {
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
     "eslint": "eslint .",

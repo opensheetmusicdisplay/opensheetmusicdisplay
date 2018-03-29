@@ -3,16 +3,16 @@ import {MusicPartManager} from "../MusicalScore/MusicParts/MusicPartManager";
 import {VoiceEntry} from "../MusicalScore/VoiceData/VoiceEntry";
 import {VexFlowStaffEntry} from "../MusicalScore/Graphical/VexFlow/VexFlowStaffEntry";
 import {MusicSystem} from "../MusicalScore/Graphical/MusicSystem";
-import {OSMD} from "./OSMD";
+import {OpenSheetMusicDisplay} from "./OpenSheetMusicDisplay";
 import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet";
 
 /**
  * A cursor which can iterate through the music sheet.
  */
 export class Cursor {
-  constructor(container: HTMLElement, osmd: OSMD) {
+  constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay) {
     this.container = container;
-    this.osmd = osmd;
+    this.openSheetMusicDisplay = openSheetMusicDisplay;
     const curs: HTMLElement = document.createElement("img");
     curs.style.position = "absolute";
     curs.style.zIndex = "-1";
@@ -21,7 +21,7 @@ export class Cursor {
   }
 
   private container: HTMLElement;
-  private osmd: OSMD;
+  private openSheetMusicDisplay: OpenSheetMusicDisplay;
   private manager: MusicPartManager;
   private iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
@@ -44,11 +44,11 @@ export class Cursor {
     this.update();
     // Forcing the sheet to re-render is not necessary anymore,
     // since the cursor is an HTML element.
-    // this.osmd.render();
+    // this.openSheetMusicDisplay.render();
   }
 
   public update(): void {
-    // Warning! This should NEVER call this.osmd.render()
+    // Warning! This should NEVER call this.openSheetMusicDisplay.render()
     if (this.hidden) {
       return;
     }
@@ -90,10 +90,10 @@ export class Cursor {
 
     // This the current HTML Cursor:
     const cursorElement: HTMLImageElement = this.cursorElement;
-    cursorElement.style.top = (y * 10.0 * this.osmd.zoom) + "px";
-    cursorElement.style.left = ((x - 1.5) * 10.0 * this.osmd.zoom) + "px";
-    cursorElement.height = (height * 10.0 * this.osmd.zoom);
-    const newWidth: number = 3 * 10.0 * this.osmd.zoom;
+    cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+    cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+    cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+    const newWidth: number = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
     if (newWidth !== cursorElement.width) {
       cursorElement.width = newWidth;
       this.updateStyle(newWidth);
@@ -113,7 +113,7 @@ export class Cursor {
     //this.graphic.Cursors.length = 0;
     // Forcing the sheet to re-render is not necessary anymore
     //if (!this.hidden) {
-    //    this.osmd.render();
+    //    this.openSheetMusicDisplay.render();
     //}
     this.hidden = true;
   }

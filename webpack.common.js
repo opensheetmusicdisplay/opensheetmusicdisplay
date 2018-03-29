@@ -4,7 +4,7 @@ var webpack = require('webpack')
 
 module.exports = {
     entry: {
-        'osmd': './src/OSMD/OSMD.ts', // Main library
+        'opensheetmusicdisplay': './src/OpenSheetMusicDisplay/OpenSheetMusicDisplay.ts', // Main library
         'demo': './demo/index.js' // Demo index
     },
     output: {

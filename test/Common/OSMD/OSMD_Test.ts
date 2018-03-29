@@ -1,14 +1,14 @@
 import chai = require("chai");
-import {OSMD} from "../../../src/OSMD/OSMD";
+import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import {TestUtils} from "../../Util/TestUtils";
 
 
-describe("OSMD Main Export", () => {
+describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
 
     it("no container", (done: MochaDone) => {
         chai.expect(() => {
-            return new OSMD(undefined);
+            return new OpenSheetMusicDisplay(undefined);
         }).to.throw(/container/);
         done();
     });
@@ -16,7 +16,7 @@ describe("OSMD Main Export", () => {
     it("container", (done: MochaDone) => {
         const div: HTMLElement = document.createElement("div");
         chai.expect(() => {
-            return new OSMD(div);
+            return new OpenSheetMusicDisplay(div);
         }).to.not.throw(Error);
         done();
     });
@@ -24,10 +24,10 @@ describe("OSMD Main Export", () => {
     it("load MXL from string", (done: MochaDone) => {
         const mxl: string = TestUtils.getMXL("MozartTrio.mxl");
         const div: HTMLElement = document.createElement("div");
-        const osmd: OSMD = new OSMD(div);
-        osmd.load(mxl).then(
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(mxl).then(
             (_: {}) => {
-                osmd.render();
+                opensheetmusicdisplay.render();
                 done();
             },
             done
@@ -37,8 +37,8 @@ describe("OSMD Main Export", () => {
     it("load invalid MXL from string", (done: MochaDone) => {
         const mxl: string = "\x50\x4b\x03\x04";
         const div: HTMLElement = document.createElement("div");
-        const osmd: OSMD = new OSMD(div);
-        osmd.load(mxl).then(
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(mxl).then(
             (_: {}) => {
                 done(new Error("Corrupted MXL appears to be loaded correctly"));
             },
@@ -56,10 +56,10 @@ describe("OSMD Main Export", () => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         const xml: string = new XMLSerializer().serializeToString(score);
         const div: HTMLElement = document.createElement("div");
-        const osmd: OSMD = new OSMD(div);
-        osmd.load(xml).then(
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(xml).then(
             (_: {}) => {
-                osmd.render();
+                opensheetmusicdisplay.render();
                 done();
             },
             done
@@ -69,10 +69,10 @@ describe("OSMD Main Export", () => {
     it("load XML Document", (done: MochaDone) => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         const div: HTMLElement = document.createElement("div");
-        const osmd: OSMD = new OSMD(div);
-        osmd.load(score).then(
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(score).then(
             (_: {}) => {
-                osmd.render();
+                opensheetmusicdisplay.render();
                 done();
             },
             done
@@ -82,10 +82,10 @@ describe("OSMD Main Export", () => {
     it("load MXL Document by URL", (done: MochaDone) => {
         const url: string = "base/test/data/MozartTrio.mxl";
         const div: HTMLElement = document.createElement("div");
-        const osmd: OSMD = new OSMD(div);
-        osmd.load(url).then(
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(url).then(
             (_: {}) => {
-                osmd.render();
+                opensheetmusicdisplay.render();
                 done();
             },
             done
@@ -95,8 +95,8 @@ describe("OSMD Main Export", () => {
     it("load MXL Document by invalid URL", (done: MochaDone) => {
         const url: string = "https://www.google.com";
         const div: HTMLElement = document.createElement("div");
-        const osmd: OSMD = new OSMD(div);
-        osmd.load(url).then(
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(url).then(
             (_: {}) => {
                 done(new Error("Invalid URL appears to be loaded correctly"));
             },
@@ -113,8 +113,8 @@ describe("OSMD Main Export", () => {
     it("load invalid XML string", (done: MochaDone) => {
         const xml: string = "<?xml";
         const div: HTMLElement = document.createElement("div");
-        const osmd: OSMD = new OSMD(div);
-        osmd.load(xml).then(
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(xml).then(
             (_: {}) => {
                 done(new Error("Corrupted XML appears to be loaded correctly"));
             },
@@ -130,9 +130,9 @@ describe("OSMD Main Export", () => {
 
     it("render without loading", (done: MochaDone) => {
         const div: HTMLElement = document.createElement("div");
-        const osmd: OSMD = new OSMD(div);
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
         chai.expect(() => {
-            return osmd.render();
+            return opensheetmusicdisplay.render();
         }).to.throw(/load/);
         done();
     });
@@ -150,11 +150,11 @@ describe("OSMD Main Export", () => {
     it("test width 500", (done: MochaDone) => {
         const div: HTMLElement = container1;
         div.style.width = "500px";
-        const osmd: OSMD = new OSMD(div);
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
-        osmd.load(score).then(
+        opensheetmusicdisplay.load(score).then(
             (_: {}) => {
-                osmd.render();
+                opensheetmusicdisplay.render();
                 chai.expect(div.offsetWidth).to.equal(500);
                 done();
             },
@@ -165,11 +165,11 @@ describe("OSMD Main Export", () => {
     it("test width 200", (done: MochaDone) => {
         const div: HTMLElement = container1;
         div.style.width = "200px";
-        const osmd: OSMD = new OSMD(div);
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
-        osmd.load(score).then(
+        opensheetmusicdisplay.load(score).then(
             (_: {}) => {
-                osmd.render();
+                opensheetmusicdisplay.render();
                 chai.expect(div.offsetWidth).to.equal(200);
                 done();
             },
