@@ -10,6 +10,7 @@ import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
+import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 
 /**
@@ -109,12 +110,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
         // Draw InstrumentBrackets at beginning of line
-        const vexBrace: VexFlowInstrumentBracket = (brace as VexFlowInstrumentBracket);
+        const vexBrace: VexFlowInstrumentBrace = (brace as VexFlowInstrumentBrace);
         vexBrace.draw(this.backend.getContext());
     }
 
     protected drawGroupBracket(bracket: GraphicalObject, system: MusicSystem): void {
-        // empty
+        // Draw InstrumentBrackets at beginning of line
+        const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
+        vexBrace.draw(this.backend.getContext());
     }
 
     /**

@@ -247,14 +247,18 @@ export abstract class MusicSystem extends GraphicalObject {
                 continue;
             }
             let firstStaffLine: StaffLine = undefined;
+            let lastStaffLine: StaffLine = undefined;
             for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
                 const staffLine: StaffLine = this.staffLines[idx2];
                 if (staffLine.ParentStaff === instrument1.Staves[0]) {
                     firstStaffLine = staffLine;
                 }
+                if (staffLine.ParentStaff === instrument2.Staves[0]) {
+                    lastStaffLine = staffLine;
+                }
             }
-            if (firstStaffLine !== undefined && firstStaffLine !== undefined) {
-                this.createGroupBracket(firstStaffLine, firstStaffLine, recursionDepth);
+            if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
+                this.createGroupBracket(firstStaffLine, lastStaffLine, recursionDepth);
             }
             if (instrumentGroup.InstrumentalGroups.length < 1) {
                 continue;
