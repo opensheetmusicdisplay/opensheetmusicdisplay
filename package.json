@@ -17,7 +17,7 @@
     "build:webpack": "webpack --progress --colors --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
-    "fix-memory-limit": "increase-memory-limit"
+    "fix-memory-limit": "cross-env LIMIT=8192 increase-memory-limit"
   },
   "pre-commit": [
     "lint"
