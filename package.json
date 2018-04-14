@@ -16,7 +16,8 @@
     "build:doc": "cross-env STATIC_FILES_SUBFOLDER=sheets npm run build",
     "build:webpack": "webpack --progress --colors --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
-    "start": "webpack-dev-server --progress --colors --config webpack.dev.js"
+    "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
+    "fix-memory-limit": "increase-memory-limit"
   },
   "pre-commit": [
     "lint"
@@ -51,6 +52,7 @@
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
     "es6-promise": "^4.0.5",
+    "increase-memory-limit": "^1.0.6",
     "jszip": "^3.0.0",
     "loglevel": "^1.5.0",
     "shortid": "^2.2.6",

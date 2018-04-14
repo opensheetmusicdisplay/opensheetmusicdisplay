@@ -48,8 +48,8 @@ module.exports = function (config) {
             // webpack watches dependencies
 
             // copy parts of webpack configuration to use minimal effort here
-            devtool: 'cheap-module-eval-source-map',
-            mode: 'production',
+            devtool: process.env.CI ? false : 'cheap-module-eval-source-map',
+            mode: process.env.CI ? 'production' : 'development',
             module: {
                 rules: common.module.rules
             },
