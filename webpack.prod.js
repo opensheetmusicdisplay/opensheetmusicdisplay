@@ -18,10 +18,10 @@ module.exports = merge(common, {
     mode: 'production',
     optimization: {
         minimize: true,
-        splitChunks: {
-            chunks: 'all',
-            name: false
-        }
+        // splitChunks: {
+        //     chunks: 'all',
+        //     name: false
+        // }
     },
     plugins: [
         // build optimization plugins
