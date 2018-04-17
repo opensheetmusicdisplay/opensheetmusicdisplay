@@ -192,6 +192,21 @@ export class VexFlowMeasure extends StaffMeasure {
         }
     }
 
+    /**
+     * Adds a measure number to the top left corner of the measure
+     */
+    public addMeasureNumber(): void {
+        const text: string = this.MeasureNumber.toString();
+        const position: number = Vex.Flow.StaveModifier.Position.ABOVE;
+        const options: any = {
+            justification: 1,
+            shift_x: 0,
+            shift_y: 0,
+          };
+
+        this.stave.setText(text, position, options);
+    }
+
     public addWordRepetition(repetitionInstruction: RepetitionInstructionEnum): void {
         let instruction: VexFlowRepetitionType = undefined;
         let position: any = Vex.Flow.Modifier.Position.END;
