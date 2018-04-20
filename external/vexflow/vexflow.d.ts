@@ -157,6 +157,12 @@ declare namespace Vex {
             public draw(): void;
 
             public addTimeSignature(sig: string): void;
+
+            public setVoltaType(type: number, number_t: number, y: number): void;
+        }
+
+        export class Volta extends StaveModifier {
+            public static type: any;
         }
 
         export class Modifier {

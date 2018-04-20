@@ -288,7 +288,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // now create corresponding graphical symbol or Text in VexFlow:
       // use top measure and staffline for positioning.
       if (uppermostMeasure !== undefined) {
-        uppermostMeasure.addWordRepetition(repetitionInstruction.type);
+        uppermostMeasure.addWordRepetition(repetitionInstruction);
       }
     }
 

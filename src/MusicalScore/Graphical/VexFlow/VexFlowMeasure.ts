@@ -17,7 +17,7 @@ import StaveNote = Vex.Flow.StaveNote;
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
-import { RepetitionInstructionEnum } from "../../VoiceData/Instructions/RepetitionInstruction";
+import { RepetitionInstructionEnum, RepetitionInstruction, AlignmentType } from "../../VoiceData/Instructions/RepetitionInstruction";
 import { SystemLinePosition } from "../SystemLinePosition";
 import { StemDirectionType } from "../../VoiceData/VoiceEntry";
 
@@ -192,10 +192,10 @@ export class VexFlowMeasure extends StaffMeasure {
         }
     }
 
-    public addWordRepetition(repetitionInstruction: RepetitionInstructionEnum): void {
+    public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
         let instruction: VexFlowRepetitionType = undefined;
         let position: any = Vex.Flow.Modifier.Position.END;
-        switch (repetitionInstruction) {
+        switch (repetitionInstruction.type) {
           case RepetitionInstructionEnum.Segno:
             // create Segno Symbol:
             instruction = VexFlowRepetitionType.SEGNO_LEFT;
@@ -235,6 +235,18 @@ export class VexFlowMeasure extends StaffMeasure {
         }
         if (instruction !== undefined) {
             this.stave.addModifier(new Vex.Flow.Repetition(instruction, 0, 0), position);
+            return;
+        }
+        let voltaType: number = Vex.Flow.Volta.type.BEGIN;
+        if (repetitionInstruction.type === RepetitionInstructionEnum.Ending) {
+            switch (repetitionInstruction.alignment) {
+                case AlignmentType.End:
+                voltaType = Vex.Flow.Volta.type.END;
+                break;
+                default:
+                break;
+            }
+            this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], 0);
         }
     }
 
