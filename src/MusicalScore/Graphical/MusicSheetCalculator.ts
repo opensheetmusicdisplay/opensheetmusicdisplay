@@ -373,7 +373,9 @@ export abstract class MusicSheetCalculator {
             let relativeY: number;
 
             // and the corresponding SkyLine indeces
+            // tslint:disable-next-line:no-unused-variable
             let start: number = relativeX;
+            // tslint:disable-next-line:no-unused-variable
             let end: number = relativeX - graphicalLabel.PositionAndShape.BorderLeft + graphicalLabel.PositionAndShape.BorderMarginRight;
 
             // take into account the InstrumentNameLabel's at the beginning of the first MusicSystem
