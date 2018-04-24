@@ -28,11 +28,11 @@ import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
-import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
-import { GraphicalLabel } from "../GraphicalLabel";
-import { LyricsEntry } from "../../VoiceData/Lyrics/LyricsEntry";
-import { GraphicalLyricWord } from "../GraphicalLyricWord";
-import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
+import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
+import {GraphicalLabel} from "../GraphicalLabel";
+import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
+import {GraphicalLyricWord} from "../GraphicalLyricWord";
+import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   constructor() {
@@ -132,10 +132,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
 
   protected updateStaffLineBorders(staffLine: StaffLine): void {
-    return;
-  }
-
-  protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
     return;
   }
 

@@ -331,8 +331,82 @@ export abstract class MusicSheetCalculator {
      * @param musicSystem
      */
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
-        throw new Error("abstract, not implemented");
+        const staffLine: StaffLine = musicSystem.StaffLines[0];
+        let currentMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
+        for (const measure of staffLine.Measures) {
+            if (measure.MeasureNumber === 0 || measure.MeasureNumber === 1) {
+                currentMeasureNumber = measure.MeasureNumber;
+            }
+
+            if ((measure.MeasureNumber === currentMeasureNumber ||
+                measure.MeasureNumber === currentMeasureNumber + this.rules.MeasureNumberLabelOffset) &&
+                !measure.parentSourceMeasure.ImplicitMeasure) {
+                if (measure.MeasureNumber !== 1 ||
+                    (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0])) {
+                        this.calculateSingleMeasureNumberPlacement(measure, staffLine, musicSystem);
+                    }
+                currentMeasureNumber = measure.MeasureNumber;
+            }
+        }
     }
+
+        /// <summary>
+        /// This method calculates a single MeasureNumberLabel and adds it to the graphical label list of the music system
+        /// </summary>
+        /// <param name="measure"></param>
+        /// <param name="staffLine"></param>
+        /// <param name="musicSystem"></param>
+        private calculateSingleMeasureNumberPlacement(measure: StaffMeasure, staffLine: StaffLine, musicSystem: MusicSystem): void {
+            const labelNumber: string = measure.MeasureNumber.toString();
+            const graphicalLabel: GraphicalLabel = new GraphicalLabel(new Label(labelNumber), this.rules.MeasureNumberLabelHeight,
+                                                                      TextAlignment.LeftBottom);
+            // FIXME: Change if Skyline is available
+            // const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
+
+            // calculate LabelBoundingBox and set PSI parent
+            graphicalLabel.setLabelPositionAndShapeBorders();
+            graphicalLabel.PositionAndShape.Parent = musicSystem.PositionAndShape;
+
+            // calculate relative Position
+            const relativeX: number = staffLine.PositionAndShape.RelativePosition.x +
+                              measure.PositionAndShape.RelativePosition.x - graphicalLabel.PositionAndShape.BorderMarginLeft;
+            let relativeY: number;
+
+            // and the corresponding SkyLine indeces
+            let start: number = relativeX;
+            let end: number = relativeX - graphicalLabel.PositionAndShape.BorderLeft + graphicalLabel.PositionAndShape.BorderMarginRight;
+
+            // take into account the InstrumentNameLabel's at the beginning of the first MusicSystem
+            if (staffLine === musicSystem.StaffLines[0] && musicSystem === musicSystem.Parent.MusicSystems[0]) {
+                start -= staffLine.PositionAndShape.RelativePosition.x;
+                end -= staffLine.PositionAndShape.RelativePosition.x;
+            }
+
+            // get the minimum corresponding SkyLine value
+            // FIXME: Change if Skyline is available
+            // const skyLineMinValue: number = skyBottomLineCalculator.getSkyLineMinInRange(staffLine, start, end);
+            const skyLineMinValue: number = 0;
+
+            if (measure === staffLine.Measures[0]) {
+                // must take into account possible MusicSystem Bracket's
+                let minBracketTopBorder: number = 0;
+                if (musicSystem.GroupBrackets.length > 0) {
+                    for (const groupBracket of musicSystem.GroupBrackets) {
+                        minBracketTopBorder = Math.min(minBracketTopBorder, groupBracket.PositionAndShape.BorderTop);
+                    }
+                }
+                relativeY = Math.min(skyLineMinValue, minBracketTopBorder);
+            } else {
+                relativeY = skyLineMinValue;
+            }
+
+            relativeY = Math.min(0, relativeY);
+
+            graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(relativeX, relativeY);
+            // FIXME: Change if Skyline is available
+            // skyBottomLineCalculator.updateSkyLineInRange(staffLine, start, end, relativeY + graphicalLabel.PositionAndShape.BorderMarginTop);
+            musicSystem.MeasureNumberLabels.push(graphicalLabel);
+        }
 
     /**
      * Calculate the shape (Bézier curve) for this tie.
