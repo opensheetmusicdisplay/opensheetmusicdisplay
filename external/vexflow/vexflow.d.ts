@@ -202,6 +202,7 @@ declare namespace Vex {
         export class Clef extends StaveModifier {
             constructor(type: string, size: number, annotation: string);
 
+            public static annotations: { [type: string]: any; };
             public static category: string;
             public static types: { [type: string]: any; };
             public glyph: any;
