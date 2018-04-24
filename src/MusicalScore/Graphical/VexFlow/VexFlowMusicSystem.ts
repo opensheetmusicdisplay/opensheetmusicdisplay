@@ -42,9 +42,6 @@ export class VexFlowMusicSystem extends MusicSystem {
                                musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
         const vfMeasure: VexFlowMeasure = topMeasure as VexFlowMeasure;
         vfMeasure.addMeasureLine(lineType, linePosition);
-        if (vfMeasure.ParentStaff.Id === 1) {
-            vfMeasure.addMeasureNumber();
-        }
         if (bottomMeasure) {
           // ToDo: feature/Repetitions
           // create here the correct lines according to the given lineType.

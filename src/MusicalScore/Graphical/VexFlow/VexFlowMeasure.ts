@@ -194,6 +194,8 @@ export class VexFlowMeasure extends StaffMeasure {
 
     /**
      * Adds a measure number to the top left corner of the measure
+     * This method is not used currently in favor of the calculateMeasureNumberPlacement
+     * method in the MusicSheetCalculator.ts
      */
     public addMeasureNumber(): void {
         const text: string = this.MeasureNumber.toString();
