@@ -10,7 +10,8 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'build'),
         filename: '[name].js',
-        library: 'opensheetmusicdisplay'
+        library: 'opensheetmusicdisplay',
+        libraryTarget: 'umd'
     },
     resolve: {
         // Add '.ts' and '.tsx' as a resolvable extension.
