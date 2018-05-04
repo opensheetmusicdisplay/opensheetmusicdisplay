@@ -170,7 +170,7 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
         }
     }
     private addExpressionToEntryList(expression: AbstractExpression, prefix: string): void {
-        let multiExpressionEntry: MultiExpressionEntry = new MultiExpressionEntry();
+        const multiExpressionEntry: MultiExpressionEntry = new MultiExpressionEntry();
         multiExpressionEntry.prefix = prefix;
         multiExpressionEntry.expression = expression;
         if (expression instanceof ContinuousDynamicExpression) {
@@ -186,7 +186,7 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     }
     private removeExpressionFromEntryList(expression: AbstractExpression): void {
         for (let idx: number = 0, len: number = this.expressions.length; idx < len; ++idx) {
-            let entry: MultiExpressionEntry = this.expressions[idx];
+            const entry: MultiExpressionEntry = this.expressions[idx];
             if (entry.expression === expression) {
                 this.expressions.splice(idx, 1);
                 break;

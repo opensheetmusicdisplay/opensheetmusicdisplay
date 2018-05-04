@@ -1,7 +1,7 @@
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
 import {SourceStaffEntry} from "./SourceStaffEntry";
-import {RepetitionInstruction} from "./Instructions/RepetitionInstruction";
+import {RepetitionInstruction, RepetitionInstructionEnum} from "./Instructions/RepetitionInstruction";
 import {Staff} from "./Staff";
 import {VoiceEntry} from "./VoiceEntry";
 import {Voice} from "./Voice";
@@ -166,7 +166,7 @@ export class SourceMeasure extends BaseIdClass {
         let staffEntry: SourceStaffEntry = undefined;
         // Find:
         let existingVerticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer;
-        for (let container of this.verticalSourceStaffEntryContainers) {
+        for (const container of this.verticalSourceStaffEntryContainers) {
             if (container.Timestamp.Equals(inMeasureTimestamp)) {
                 existingVerticalSourceStaffEntryContainer = container;
                 break;
@@ -181,9 +181,9 @@ export class SourceMeasure extends BaseIdClass {
             }
             return {createdNewContainer: false, staffEntry: staffEntry};
         }
-        let last: VerticalSourceStaffEntryContainer = this.verticalSourceStaffEntryContainers[this.verticalSourceStaffEntryContainers.length - 1];
+        const last: VerticalSourceStaffEntryContainer = this.verticalSourceStaffEntryContainers[this.verticalSourceStaffEntryContainers.length - 1];
         if (this.verticalSourceStaffEntryContainers.length === 0 || last.Timestamp.lt(inMeasureTimestamp)) {
-            let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
+            const container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
                 this, inMeasureTimestamp.clone(), this.completeNumberOfStaves
             );
             this.verticalSourceStaffEntryContainers.push(container);
@@ -195,7 +195,7 @@ export class SourceMeasure extends BaseIdClass {
                 i >= 0; i--
             ) {
                 if (this.verticalSourceStaffEntryContainers[i].Timestamp.lt(inMeasureTimestamp)) {
-                    let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
+                    const container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
                         this, inMeasureTimestamp.clone(), this.completeNumberOfStaves
                     );
                     this.verticalSourceStaffEntryContainers.splice(i + 1, 0, container);
@@ -204,7 +204,7 @@ export class SourceMeasure extends BaseIdClass {
                     break;
                 }
                 if (i === 0) {
-                    let container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
+                    const container: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(
                         this, inMeasureTimestamp.clone(), this.completeNumberOfStaves
                     );
                     this.verticalSourceStaffEntryContainers.splice(i, 0, container);
@@ -228,7 +228,7 @@ export class SourceMeasure extends BaseIdClass {
     public findOrCreateVoiceEntry(sse: SourceStaffEntry, voice: Voice): { createdVoiceEntry: boolean, voiceEntry: VoiceEntry } {
         let ve: VoiceEntry = undefined;
         let createdNewVoiceEntry: boolean = false;
-        for (let voiceEntry of sse.VoiceEntries) {
+        for (const voiceEntry of sse.VoiceEntries) {
             if (voiceEntry.ParentVoice === voice) {
                 ve = voiceEntry;
                 break;
@@ -279,7 +279,7 @@ export class SourceMeasure extends BaseIdClass {
      */
     public getVerticalContainerByTimestamp(musicTimestamp: Fraction): VerticalSourceStaffEntryContainer {
         for (let idx: number = 0, len: number = this.VerticalSourceStaffEntryContainers.length; idx < len; ++idx) {
-            let verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = this.VerticalSourceStaffEntryContainers[idx];
+            const verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = this.VerticalSourceStaffEntryContainers[idx];
             if (verticalSourceStaffEntryContainer.Timestamp.Equals(musicTimestamp)) {
                 return verticalSourceStaffEntryContainer;
             }
@@ -314,16 +314,16 @@ export class SourceMeasure extends BaseIdClass {
      */
     public reverseCheck(musicSheet: MusicSheet, maxInstDuration: Fraction): Fraction {
         let maxDuration: Fraction = new Fraction(0, 1);
-        let instrumentsDurations: Fraction[] = [];
+        const instrumentsDurations: Fraction[] = [];
         for (let i: number = 0; i < musicSheet.Instruments.length; i++) {
             let instrumentDuration: Fraction = new Fraction(0, 1);
-            let inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
+            const inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
             for (let j: number = 0; j < musicSheet.Instruments[i].Staves.length; j++) {
-                let lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
+                const lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
                 if (lastStaffEntry !== undefined && !lastStaffEntry.hasTie()) {
-                    let verticalContainerIndex: number = this.verticalSourceStaffEntryContainers.indexOf(lastStaffEntry.VerticalContainerParent);
+                    const verticalContainerIndex: number = this.verticalSourceStaffEntryContainers.indexOf(lastStaffEntry.VerticalContainerParent);
                     for (let m: number = verticalContainerIndex - 1; m >= 0; m--) {
-                        let previousStaffEntry: SourceStaffEntry = this.verticalSourceStaffEntryContainers[m][inSourceMeasureInstrumentIndex + j];
+                        const previousStaffEntry: SourceStaffEntry = this.verticalSourceStaffEntryContainers[m][inSourceMeasureInstrumentIndex + j];
                         if (previousStaffEntry !== undefined && previousStaffEntry.hasTie()) {
                             if (instrumentDuration.lt(Fraction.plus(previousStaffEntry.Timestamp, previousStaffEntry.calculateMaxNoteLength()))) {
                                 instrumentDuration = Fraction.plus(previousStaffEntry.Timestamp, previousStaffEntry.calculateMaxNoteLength());
@@ -336,7 +336,7 @@ export class SourceMeasure extends BaseIdClass {
             instrumentsDurations.push(instrumentDuration);
         }
         for (let idx: number = 0, len: number = instrumentsDurations.length; idx < len; ++idx) {
-            let instrumentsDuration: Fraction = instrumentsDurations[idx];
+            const instrumentsDuration: Fraction = instrumentsDurations[idx];
             if (maxDuration.lt(instrumentsDuration)) {
                 maxDuration = instrumentsDuration;
             }
@@ -352,12 +352,12 @@ export class SourceMeasure extends BaseIdClass {
      * @returns {Fraction[]}
      */
     public calculateInstrumentsDuration(musicSheet: MusicSheet, instrumentMaxTieNoteFractions: Fraction[]): Fraction[] {
-        let instrumentsDurations: Fraction[] = [];
+        const instrumentsDurations: Fraction[] = [];
         for (let i: number = 0; i < musicSheet.Instruments.length; i++) {
             let instrumentDuration: Fraction = new Fraction(0, 1);
-            let inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
+            const inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
             for (let j: number = 0; j < musicSheet.Instruments[i].Staves.length; j++) {
-                let lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
+                const lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
                 if (lastStaffEntry !== undefined && lastStaffEntry.Timestamp !== undefined) {
                     if (instrumentDuration.lt(Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntry.calculateMaxNoteLength()))) {
                         instrumentDuration = Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntry.calculateMaxNoteLength());
@@ -373,9 +373,9 @@ export class SourceMeasure extends BaseIdClass {
     }
 
     public getEntriesPerStaff(staffIndex: number): SourceStaffEntry[] {
-        let sourceStaffEntries: SourceStaffEntry[] = [];
-        for (let container of this.VerticalSourceStaffEntryContainers) {
-            let sse: SourceStaffEntry = container.StaffEntries[staffIndex];
+        const sourceStaffEntries: SourceStaffEntry[] = [];
+        for (const container of this.VerticalSourceStaffEntryContainers) {
+            const sse: SourceStaffEntry = container.StaffEntries[staffIndex];
             if (sse !== undefined) {
                 sourceStaffEntries.push(sse);
             }
@@ -389,7 +389,7 @@ export class SourceMeasure extends BaseIdClass {
      */
     public hasBeginInstructions(): boolean {
         for (let staffIndex: number = 0, len: number = this.FirstInstructionsStaffEntries.length; staffIndex < len; staffIndex++) {
-            let beginInstructionsStaffEntry: SourceStaffEntry = this.FirstInstructionsStaffEntries[staffIndex];
+            const beginInstructionsStaffEntry: SourceStaffEntry = this.FirstInstructionsStaffEntries[staffIndex];
             if (beginInstructionsStaffEntry !== undefined && beginInstructionsStaffEntry.Instructions.length > 0) {
                 return true;
             }
@@ -399,7 +399,10 @@ export class SourceMeasure extends BaseIdClass {
 
     public beginsWithLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.FirstRepetitionInstructions.length; idx < len; ++idx) {
-            let instr: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
+            const instr: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
+            if (instr.type === RepetitionInstructionEnum.StartLine) {
+                return true;
+            }
             if (instr.parentRepetition !== undefined && instr === instr.parentRepetition.startMarker && !instr.parentRepetition.FromWords) {
                 return true;
             }
@@ -413,8 +416,12 @@ export class SourceMeasure extends BaseIdClass {
      */
     public endsWithLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.LastRepetitionInstructions.length; idx < len; ++idx) {
-            let instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
-            let rep: Repetition = instruction.parentRepetition;
+            const instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
+            if (instruction.type === RepetitionInstructionEnum.BackJumpLine) {
+                return true;
+            }
+
+            const rep: Repetition = instruction.parentRepetition;
             if (rep === undefined) {
                 continue;
             }
@@ -422,7 +429,7 @@ export class SourceMeasure extends BaseIdClass {
                 continue;
             }
             for (let idx2: number = 0, len2: number = rep.BackwardJumpInstructions.length; idx2 < len2; ++idx2) {
-                let backJumpInstruction: RepetitionInstruction = rep.BackwardJumpInstructions[idx2];
+                const backJumpInstruction: RepetitionInstruction = rep.BackwardJumpInstructions[idx2];
                 if (instruction === backJumpInstruction) {
                     return true;
                 }
@@ -437,7 +444,7 @@ export class SourceMeasure extends BaseIdClass {
      */
     public beginsWithWordRepetition(): boolean {
         for (let idx: number = 0, len: number = this.FirstRepetitionInstructions.length; idx < len; ++idx) {
-            let instruction: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
+            const instruction: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
             if (instruction.parentRepetition !== undefined &&
                 instruction === instruction.parentRepetition.startMarker && instruction.parentRepetition.FromWords) {
                 return true;
@@ -452,8 +459,8 @@ export class SourceMeasure extends BaseIdClass {
      */
     public endsWithWordRepetition(): boolean {
         for (let idx: number = 0, len: number = this.LastRepetitionInstructions.length; idx < len; ++idx) {
-            let instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
-            let rep: Repetition = instruction.parentRepetition;
+            const instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
+            const rep: Repetition = instruction.parentRepetition;
             if (rep === undefined) {
                 continue;
             }
@@ -461,7 +468,7 @@ export class SourceMeasure extends BaseIdClass {
                 continue;
             }
             for (let idx2: number = 0, len2: number = rep.BackwardJumpInstructions.length; idx2 < len2; ++idx2) {
-                let backJumpInstruction: RepetitionInstruction = rep.BackwardJumpInstructions[idx2];
+                const backJumpInstruction: RepetitionInstruction = rep.BackwardJumpInstructions[idx2];
                 if (instruction === backJumpInstruction) {
                     return true;
                 }
@@ -475,9 +482,9 @@ export class SourceMeasure extends BaseIdClass {
 
     public getKeyInstruction(staffIndex: number): KeyInstruction {
         if (this.FirstInstructionsStaffEntries[staffIndex] !== undefined) {
-            let sourceStaffEntry: SourceStaffEntry = this.FirstInstructionsStaffEntries[staffIndex];
+            const sourceStaffEntry: SourceStaffEntry = this.FirstInstructionsStaffEntries[staffIndex];
             for (let idx: number = 0, len: number = sourceStaffEntry.Instructions.length; idx < len; ++idx) {
-                let abstractNotationInstruction: AbstractNotationInstruction = sourceStaffEntry.Instructions[idx];
+                const abstractNotationInstruction: AbstractNotationInstruction = sourceStaffEntry.Instructions[idx];
                 if (abstractNotationInstruction instanceof KeyInstruction) {
                     return <KeyInstruction>abstractNotationInstruction;
                 }

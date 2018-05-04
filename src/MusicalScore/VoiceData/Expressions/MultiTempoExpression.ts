@@ -86,7 +86,7 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
         } else if (abstractTempoExpression instanceof ContinuousTempoExpression) {
             this.continuousTempo = <ContinuousTempoExpression>abstractTempoExpression;
         }
-        let tempoExpressionEntry: TempoExpressionEntry = new TempoExpressionEntry();
+        const tempoExpressionEntry: TempoExpressionEntry = new TempoExpressionEntry();
         tempoExpressionEntry.prefix = prefix;
         tempoExpressionEntry.expression = abstractTempoExpression;
         tempoExpressionEntry.label = abstractTempoExpression.Label;

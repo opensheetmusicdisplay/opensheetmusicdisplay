@@ -80,7 +80,7 @@ export class Instrument extends InstrumentalGroup {
     }
     public set Volume(value: number) {
         for (let idx: number = 0, len: number = this.subInstruments.length; idx < len; ++idx) {
-            let subInstrument: SubInstrument = this.subInstruments[idx];
+            const subInstrument: SubInstrument = this.subInstruments[idx];
             subInstrument.volume = value;
         }
     }
@@ -96,7 +96,7 @@ export class Instrument extends InstrumentalGroup {
     }
     public getSubInstrument(subInstrumentIdString: string): SubInstrument {
         for (let idx: number = 0, len: number = this.subInstruments.length; idx < len; ++idx) {
-            let subInstrument: SubInstrument = this.subInstruments[idx];
+            const subInstrument: SubInstrument = this.subInstruments[idx];
             if (subInstrument.idString === subInstrumentIdString) {
                 return subInstrument;
             }
@@ -112,49 +112,49 @@ export class Instrument extends InstrumentalGroup {
     }
     public set Visible(value: boolean) {
         for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
-            let v: Voice = this.Voices[idx];
+            const v: Voice = this.Voices[idx];
             v.Visible = value;
         }
     }
     public get Audible(): boolean {
         let result: boolean = false;
         for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
-            let v: Voice = this.Voices[idx];
+            const v: Voice = this.Voices[idx];
             result = result || v.Audible;
         }
         return result;
     }
     public set Audible(value: boolean) {
         for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
-            let v: Voice = this.Voices[idx];
+            const v: Voice = this.Voices[idx];
             v.Audible = value;
         }
         for (let idx: number = 0, len: number = this.staves.length; idx < len; ++idx) {
-            let staff: Staff = this.staves[idx];
+            const staff: Staff = this.staves[idx];
             staff.audible = value;
         }
     }
     public get Following(): boolean {
         let result: boolean = false;
         for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
-            let v: Voice = this.Voices[idx];
+            const v: Voice = this.Voices[idx];
             result = result || v.Following;
         }
         return result;
     }
     public set Following(value: boolean) {
         for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
-            let v: Voice = this.Voices[idx];
+            const v: Voice = this.Voices[idx];
             v.Following = value;
         }
         for (let idx: number = 0, len: number = this.staves.length; idx < len; ++idx) {
-            let staff: Staff = this.staves[idx];
+            const staff: Staff = this.staves[idx];
             staff.following = value;
         }
     }
     public SetVoiceAudible(voiceId: number, audible: boolean): void {
         for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
-            let v: Voice = this.Voices[idx];
+            const v: Voice = this.Voices[idx];
             if (v.VoiceId === voiceId) {
                 v.Audible = audible;
                 break;
@@ -163,7 +163,7 @@ export class Instrument extends InstrumentalGroup {
     }
     public SetVoiceFollowing(voiceId: number, following: boolean): void {
         for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
-            let v: Voice = this.Voices[idx];
+            const v: Voice = this.Voices[idx];
             if (v.VoiceId === voiceId) {
                 v.Following = following;
                 break;
@@ -171,22 +171,24 @@ export class Instrument extends InstrumentalGroup {
         }
     }
     public SetStaffAudible(staffId: number, audible: boolean): void {
-        let staff: Staff = this.staves[staffId - 1];
+        const staff: Staff = this.staves[staffId - 1];
         staff.audible = audible;
+        // hack for now:
+        // activate all voices needed so that the staff notes will be played
         if (audible) {
             for (let idx: number = 0, len: number = staff.Voices.length; idx < len; ++idx) {
-                let v: Voice = staff.Voices[idx];
+                const v: Voice = staff.Voices[idx];
                 v.Audible = true;
             }
         } else {
             for (let idx: number = 0, len: number = staff.Voices.length; idx < len; ++idx) {
-                let voice: Voice = staff.Voices[idx];
+                const voice: Voice = staff.Voices[idx];
                 let isAudibleInOtherStaves: boolean = false;
                 for (let idx2: number = 0, len2: number = this.Staves.length; idx2 < len2; ++idx2) {
-                    let st: Staff = this.Staves[idx2];
+                    const st: Staff = this.Staves[idx2];
                     if (st.Id === staffId || !st.audible) { continue; }
                     for (let idx3: number = 0, len3: number = st.Voices.length; idx3 < len3; ++idx3) {
-                        let v: Voice = st.Voices[idx3];
+                        const v: Voice = st.Voices[idx3];
                         if (v === voice) {
                             isAudibleInOtherStaves = true;
                         }
@@ -199,22 +201,22 @@ export class Instrument extends InstrumentalGroup {
         }
     }
     public SetStaffFollow(staffId: number, follow: boolean): void {
-        let staff: Staff = this.staves[staffId - 1];
+        const staff: Staff = this.staves[staffId - 1];
         staff.following = follow;
         if (follow) {
             for (let idx: number = 0, len: number = staff.Voices.length; idx < len; ++idx) {
-                let v: Voice = staff.Voices[idx];
+                const v: Voice = staff.Voices[idx];
                 v.Following = true;
             }
         } else {
             for (let idx: number = 0, len: number = staff.Voices.length; idx < len; ++idx) {
-                let voice: Voice = staff.Voices[idx];
+                const voice: Voice = staff.Voices[idx];
                 let isFollowingInOtherStaves: boolean = false;
                 for (let idx2: number = 0, len2: number = this.Staves.length; idx2 < len2; ++idx2) {
-                    let st: Staff = this.Staves[idx2];
+                    const st: Staff = this.Staves[idx2];
                     if (st.Id === staffId || !st.following) { continue; }
                     for (let idx3: number = 0, len3: number = st.Voices.length; idx3 < len3; ++idx3) {
-                        let v: Voice = st.Voices[idx3];
+                        const v: Voice = st.Voices[idx3];
                         if (v === voice) {
                             isFollowingInOtherStaves = true;
                         }
@@ -227,7 +229,7 @@ export class Instrument extends InstrumentalGroup {
         }
     }
     public areAllVoiceVisible(): boolean {
-        for (let voice of this.Voices) {
+        for (const voice of this.Voices) {
             if (!voice.Visible) {
                 return false;
             }

@@ -1,9 +1,9 @@
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {TestUtils} from "../../Util/TestUtils";
-import {OSMD} from "../../../src/OSMD/OSMD";
+import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 
 // Test XML simple document
-let xmlTestData: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+const xmlTestData: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 <!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 2.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">\
 <score-partwise>  <identification>    <encoding>      <software>Example Software name</software>      \
 <encoding-date>2016-04-04</encoding-date>      </encoding>    </identification>   <credit page=\"1\"> \
@@ -11,13 +11,13 @@ let xmlTestData: string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 
 
 describe("XML interface", () => {
-    let parser: DOMParser = new DOMParser();
-    let doc: Document = parser.parseFromString(xmlTestData, "text/xml");
-    let documentElement: IXmlElement = new IXmlElement(doc.documentElement);
+    const parser: DOMParser = new DOMParser();
+    const doc: Document = parser.parseFromString(xmlTestData, "text/xml");
+    const documentElement: IXmlElement = new IXmlElement(doc.documentElement);
 
 
     // Test all the following xml files:
-    let xmlTestset: string[] = [
+    const xmlTestset: string[] = [
         "ActorPreludeSample.xml",
         "Beethoven_AnDieFerneGeliebte.xml",
         "CharlesGounod_Meditation.xml",
@@ -38,7 +38,7 @@ describe("XML interface", () => {
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
         "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
     ];
-    for (let score of xmlTestset) {
+    for (const score of xmlTestset) {
         testFile(score);
     }
 
@@ -46,12 +46,12 @@ describe("XML interface", () => {
     function testFile(scoreName: string): void {
         it(scoreName, (done: MochaDone) => {
             // Load the xml file content
-            let score: Document = TestUtils.getScore(scoreName);
-            let div: HTMLElement = document.createElement("div");
-            let osmd: OSMD = new OSMD(div);
-            osmd.load(score);
+            const score: Document = TestUtils.getScore(scoreName);
+            const div: HTMLElement = document.createElement("div");
+            const openSheetMusicDisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+            openSheetMusicDisplay.load(score);
             done();
-        });
+        }).timeout(3000);
     }
 
     it("test IXmlElement", (done: MochaDone) => {
@@ -73,7 +73,7 @@ describe("XML interface", () => {
             documentElement.element("credit").attributes()[0].name
         ).to.equal("page");
 
-        let creditWords: IXmlElement =
+        const creditWords: IXmlElement =
             documentElement.element("credit").element("credit-words");
         // Test attributes method
         chai.expect(creditWords.attributes().length).to.equal(2);

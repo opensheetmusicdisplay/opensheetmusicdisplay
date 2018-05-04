@@ -38,7 +38,7 @@ export class GraphicalNote extends GraphicalObject {
 
     public get ParentList(): GraphicalNote[] {
         for (let idx: number = 0, len: number = this.parentStaffEntry.notes.length; idx < len; ++idx) {
-            let graphicalNotes: GraphicalNote[] = this.parentStaffEntry.notes[idx];
+            const graphicalNotes: GraphicalNote[] = this.parentStaffEntry.notes[idx];
             if (graphicalNotes.indexOf(this) !== -1) {
                 return graphicalNotes;
             }
@@ -60,10 +60,15 @@ export class GraphicalNote extends GraphicalObject {
      * @returns {number}
      */
     private calculateNumberOfNeededDots(fraction: Fraction): number {
-        let dotCount: number = 0;
-        if (this.sourceNote === undefined || this.sourceNote.NoteTuplet === undefined) {
-            dotCount = Math.floor(Math.log(fraction.Numerator) / Math.LN2);
+      let num: number = 1;
+      let product: number = 2;
+      const expandedNumerator: number = fraction.GetExpandedNumerator();
+      if (this.sourceNote === undefined || this.sourceNote.NoteTuplet === undefined) {
+        while (product < expandedNumerator) {
+          num++;
+          product = <number>Math.pow(2, num);
         }
-        return Math.min(3, dotCount);
+      }
+      return Math.min(3, num - 1);
     }
 }

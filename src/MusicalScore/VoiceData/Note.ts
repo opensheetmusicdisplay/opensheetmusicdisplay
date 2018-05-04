@@ -103,10 +103,14 @@ export class Note {
         this.playbackInstrumentId = value;
     }
 
+    public isRest(): boolean {
+        return this.Pitch === undefined;
+    }
+
     public calculateNoteLengthWithoutTie(): Fraction {
-        let withoutTieLength: Fraction = this.length.clone();
+        const withoutTieLength: Fraction = this.length.clone();
         if (this.tie !== undefined) {
-            for (let fraction of this.tie.Fractions) {
+            for (const fraction of this.tie.Fractions) {
                 withoutTieLength.Sub(fraction);
             }
         }
@@ -120,7 +124,7 @@ export class Note {
             return this.length;
         }
         if (originalLength.Numerator > 1) {
-            let exp: number = Math.floor(Math.log(originalLength.Denominator) / Math.LN2) - this.calculateNumberOfNeededDots(originalLength);
+            const exp: number = Math.floor(Math.log(originalLength.Denominator) / Math.LN2) - this.calculateNumberOfNeededDots(originalLength);
             originalLength.Denominator = Math.pow(2, exp);
             originalLength.Numerator = 1;
         }
@@ -141,7 +145,7 @@ export class Note {
     }
     public checkForDoubleSlur(slur: Slur): boolean {
         for (let idx: number = 0, len: number = this.slurs.length; idx < len; ++idx) {
-            let noteSlur: Slur = this.slurs[idx];
+            const noteSlur: Slur = this.slurs[idx];
             if (
               noteSlur.StartNote !== undefined &&
               noteSlur.EndNote !== undefined &&

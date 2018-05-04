@@ -39,6 +39,7 @@ export class VoiceEntry {
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
     private arpeggiosNotesIndices: number[] = [];
     private ornamentContainer: OrnamentContainer;
+    private stemDirection: StemDirectionType = StemDirectionType.Undefined;
 
     public get ParentSourceStaffEntry(): SourceStaffEntry {
         return this.parentSourceStaffEntry;
@@ -77,6 +78,13 @@ export class VoiceEntry {
         this.ornamentContainer = value;
     }
 
+    public get StemDirection(): StemDirectionType {
+        return this.stemDirection;
+    }
+    public set StemDirection(value: StemDirectionType) {
+        this.stemDirection = value;
+    }
+
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {
         switch (articulation) {
             case ArticulationEnum.accent:
@@ -102,28 +110,28 @@ export class VoiceEntry {
     }
     public hasTie(): boolean {
         for (let idx: number = 0, len: number = this.Notes.length; idx < len; ++idx) {
-            let note: Note = this.Notes[idx];
+            const note: Note = this.Notes[idx];
             if (note.NoteTie !== undefined) { return true; }
         }
         return false;
     }
     public hasSlur(): boolean {
         for (let idx: number = 0, len: number = this.Notes.length; idx < len; ++idx) {
-            let note: Note = this.Notes[idx];
+            const note: Note = this.Notes[idx];
             if (note.NoteSlurs.length > 0) { return true; }
         }
         return false;
     }
     public isStaccato(): boolean {
         for (let idx: number = 0, len: number = this.Articulations.length; idx < len; ++idx) {
-            let articulation: ArticulationEnum = this.Articulations[idx];
+            const articulation: ArticulationEnum = this.Articulations[idx];
             if (articulation === ArticulationEnum.staccato) { return true; }
         }
         return false;
     }
     public isAccent(): boolean {
         for (let idx: number = 0, len: number = this.Articulations.length; idx < len; ++idx) {
-            let articulation: ArticulationEnum = this.Articulations[idx];
+            const articulation: ArticulationEnum = this.Articulations[idx];
             if (articulation === ArticulationEnum.accent || articulation === ArticulationEnum.strongaccent) {
                 return true;
             }
@@ -146,20 +154,20 @@ export class VoiceEntry {
         if (voiceEntryWithOrnament === undefined) {
             voiceEntryWithOrnament = this;
         }
-        let voiceEntries: VoiceEntry[] = [];
+        const voiceEntries: VoiceEntry[] = [];
         if (voiceEntryWithOrnament.ornamentContainer === undefined) {
             return;
         }
-        let baseNote: Note = this.notes[0];
-        let baselength: Fraction = baseNote.calculateNoteLengthWithoutTie();
-        let baseVoice: Voice = voiceEntryWithOrnament.ParentVoice;
-        let baseTimestamp: Fraction = voiceEntryWithOrnament.Timestamp;
+        const baseNote: Note = this.notes[0];
+        const baselength: Fraction = baseNote.calculateNoteLengthWithoutTie();
+        const baseVoice: Voice = voiceEntryWithOrnament.ParentVoice;
+        const baseTimestamp: Fraction = voiceEntryWithOrnament.Timestamp;
         let currentTimestamp: Fraction = Fraction.createFromFraction(baseTimestamp);
         //let length: Fraction;
         switch (voiceEntryWithOrnament.ornamentContainer.GetOrnament) {
             case OrnamentEnum.Trill: {
-                let length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 8);
-                let higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
+                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 8);
+                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
                 let alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 if (voiceEntryWithOrnament.OrnamentContainer.AccidentalAbove !== AccidentalEnum.NONE) {
                     alteration = <AccidentalEnum><number>voiceEntryWithOrnament.ornamentContainer.AccidentalAbove;
@@ -175,11 +183,11 @@ export class VoiceEntry {
                 break;
             }
             case OrnamentEnum.Turn: {
-                let length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
-                let lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                let lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                let higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                let higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
+                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
+                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
+                const lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
+                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
+                const higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 this.createAlteratedVoiceEntry(
                     currentTimestamp, length, baseVoice, higherPitch, higherAlteration, voiceEntries
                 );
@@ -194,11 +202,11 @@ export class VoiceEntry {
                 break;
             }
             case OrnamentEnum.InvertedTurn: {
-                let length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
-                let lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                let lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                let higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                let higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
+                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
+                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
+                const lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
+                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
+                const higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 this.createAlteratedVoiceEntry(
                     currentTimestamp, length, baseVoice, lowerPitch, lowerAlteration, voiceEntries
                 );
@@ -213,11 +221,11 @@ export class VoiceEntry {
                 break;
             }
             case OrnamentEnum.DelayedTurn: {
-                let length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 2);
-                let lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                let lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                let higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                let higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
+                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 2);
+                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
+                const lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
+                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
+                const higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
                 currentTimestamp = Fraction.plus(baseTimestamp, length);
                 length.Denominator = baselength.Denominator * 8;
@@ -231,11 +239,11 @@ export class VoiceEntry {
                 break;
             }
             case OrnamentEnum.DelayedInvertedTurn: {
-                let length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 2);
-                let lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                let lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                let higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                let higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
+                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 2);
+                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
+                const lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
+                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
+                const higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
                 currentTimestamp = Fraction.plus(baseTimestamp, length);
                 length.Denominator = baselength.Denominator * 8;
@@ -249,9 +257,9 @@ export class VoiceEntry {
                 break;
             }
             case OrnamentEnum.Mordent: {
-                let length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
-                let higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                let alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
+                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
+                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
+                const alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
                 currentTimestamp.Add(length);
                 this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, higherPitch, alteration, voiceEntries);
@@ -261,9 +269,9 @@ export class VoiceEntry {
                 break;
             }
             case OrnamentEnum.InvertedMordent: {
-                let length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
-                let lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                let alteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
+                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
+                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
+                const alteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
                 this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
                 currentTimestamp.Add(length);
                 this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, lowerPitch, alteration, voiceEntries);
@@ -280,9 +288,9 @@ export class VoiceEntry {
     private createBaseVoiceEntry(
         currentTimestamp: Fraction, length: Fraction, baseVoice: Voice, baseNote: Note, voiceEntries: VoiceEntry[]
     ): void {
-        let voiceEntry: VoiceEntry = new VoiceEntry(currentTimestamp, baseVoice, baseNote.ParentStaffEntry);
-        let pitch: Pitch = new Pitch(baseNote.Pitch.FundamentalNote, baseNote.Pitch.Octave, baseNote.Pitch.Accidental);
-        let note: Note = new Note(voiceEntry, undefined, length, pitch);
+        const voiceEntry: VoiceEntry = new VoiceEntry(currentTimestamp, baseVoice, baseNote.ParentStaffEntry);
+        const pitch: Pitch = new Pitch(baseNote.Pitch.FundamentalNote, baseNote.Pitch.Octave, baseNote.Pitch.Accidental);
+        const note: Note = new Note(voiceEntry, undefined, length, pitch);
         voiceEntry.Notes.push(note);
         voiceEntries.push(voiceEntry);
     }
@@ -290,9 +298,9 @@ export class VoiceEntry {
         currentTimestamp: Fraction, length: Fraction, baseVoice: Voice, higherPitch: Pitch,
         alteration: AccidentalEnum, voiceEntries: VoiceEntry[]
     ): void {
-        let voiceEntry: VoiceEntry = new VoiceEntry(currentTimestamp, baseVoice, undefined);
-        let pitch: Pitch = new Pitch(higherPitch.FundamentalNote, higherPitch.Octave, alteration);
-        let note: Note = new Note(voiceEntry, undefined, length, pitch);
+        const voiceEntry: VoiceEntry = new VoiceEntry(currentTimestamp, baseVoice, undefined);
+        const pitch: Pitch = new Pitch(higherPitch.FundamentalNote, higherPitch.Octave, alteration);
+        const note: Note = new Note(voiceEntry, undefined, length, pitch);
         voiceEntry.Notes.push(note);
         voiceEntries.push(voiceEntry);
     }
@@ -324,4 +332,11 @@ export enum ArticulationEnum {
     unstress,
     detachedlegato,
     otherarticulation
+}
+
+export enum StemDirectionType {
+    Undefined = -1,
+    Up = 0,
+    Down = 1,
+    None = 2
 }

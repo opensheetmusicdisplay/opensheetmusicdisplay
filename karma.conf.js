@@ -1,8 +1,7 @@
-// Karma configuration
-// Generated on Fri Feb 05 2016 12:36:08 GMT+0100 (CET)
-/*globals module*/
+var common = require('./webpack.common.js')
+
 module.exports = function (config) {
-    'use strict';
+    'use strict'
     config.set({
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '',
@@ -15,13 +14,11 @@ module.exports = function (config) {
         exclude: [],
 
         files: [{
-            pattern: 'build/osmd-test.js'
-        }, {
             pattern: 'src/**/*.ts',
             included: false
         }, {
             pattern: 'test/**/*.ts',
-            included: false
+            included: true
         }, {
             pattern: 'test/data/*.xml',
             included: true
@@ -39,7 +36,35 @@ module.exports = function (config) {
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             'test/data/*.xml': ['xml2js'],
-            'test/data/*.mxl.base64': ['base64-to-js']
+            'test/data/*.mxl.base64': ['base64-to-js'],
+            // add webpack as preprocessor
+            'src/**/*.ts': ['webpack'],
+            'test/**/*.ts': ['webpack']
+        },
+
+        webpack: {
+            // karma watches the test entry points
+            // (you don't need to specify the entry option)
+            // webpack watches dependencies
+
+            // copy parts of webpack configuration to use minimal effort here
+            devtool: process.env.CI ? false : 'cheap-module-eval-source-map',
+            mode: process.env.CI ? 'production' : 'development',
+            module: {
+                rules: common.module.rules
+            },
+            resolve: common.resolve
+        },
+        webpackMiddleware: {
+            // webpack-dev-middleware configuration
+            // i. e.
+            noInfo: true
+        },
+
+        // Required for Firefox and Chorme to work
+        // see https://github.com/webpack-contrib/karma-webpack/issues/188
+        mime: {
+            'text/x-typescript': ['ts', 'tsx']
         },
 
         // test results reporter to use
@@ -49,7 +74,9 @@ module.exports = function (config) {
 
         // web server port
         port: 9876,
-
+        // timeout in ms:
+        browserNoActivityTimeout: 100000,
+        captureTimeout: 60000,
         // enable / disable colors in the output (reporters and logs)
         colors: true,
 
@@ -65,8 +92,16 @@ module.exports = function (config) {
         autoWatch: false,
 
         // start these browsers
-        // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: [], // Will be overruled by karma grunt task options
+        browsers: [process.env.CI ? 'ChromeHeadlessNoSandbox' : 'ChromeHeadless'],
+
+        // For security reasons, Google Chrome is unable to provide sandboxing
+        // when it is running in container-based environments (e.g. CI).
+        customLaunchers: {
+            ChromeHeadlessNoSandbox: {
+                base: 'ChromeHeadless',
+                flags: ['--no-sandbox']
+            }
+        },
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
@@ -75,5 +110,5 @@ module.exports = function (config) {
         // Concurrency level
         // how many browser should be started simultaneous
         concurrency: Infinity
-    });
-};
+    })
+}

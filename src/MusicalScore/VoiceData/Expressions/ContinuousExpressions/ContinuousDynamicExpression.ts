@@ -91,7 +91,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         );
     }
     public getInterpolatedDynamic(currentAbsoluteTimestamp: Fraction): number {
-        let continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsoluteTimestamp;
+        const continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsoluteTimestamp;
         let continuousAbsoluteEndTimestamp: Fraction;
         if (this.EndMultiExpression !== undefined) {
             continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsoluteTimestamp;
@@ -102,10 +102,10 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         }
         if (currentAbsoluteTimestamp.lt(continuousAbsoluteStartTimestamp)) { return -1; }
         if (continuousAbsoluteEndTimestamp.lt(currentAbsoluteTimestamp)) { return -2; }
-        let interpolationRatio: number =
+        const interpolationRatio: number =
             Fraction.minus(currentAbsoluteTimestamp, continuousAbsoluteStartTimestamp).RealValue
             / Fraction.minus(continuousAbsoluteEndTimestamp, continuousAbsoluteStartTimestamp).RealValue;
-        let interpolatedVolume: number = Math.max(0.0, Math.min(99.9, this.startVolume + (this.endVolume - this.startVolume) * interpolationRatio));
+        const interpolatedVolume: number = Math.max(0.0, Math.min(99.9, this.startVolume + (this.endVolume - this.startVolume) * interpolationRatio));
         return interpolatedVolume;
     }
     public isWedge(): boolean {

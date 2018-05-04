@@ -13,9 +13,17 @@ export class MusicPartManager /*implements ISelectionListener*/ {
     private musicSheet: MusicSheet;
     private sheetStart: Fraction;
     private sheetEnd: Fraction;
+
+    /**
+     * This method is called from CoreContainer when the user changes a Repetitions's userNumberOfRepetitions.
+     */
     public reInit(): void {
         this.init();
     }
+
+    /**
+     * Main initialize method for MusicPartManager.
+     */
     public init(): void {
         this.parts = this.musicSheet.Repetitions.slice();
         this.sheetStart = this.musicSheet.SelectionStart = new Fraction(0, 1);
@@ -36,7 +44,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         if (this.timestamps.length === 0) {
             return timestamp;
         }
-        let transform: TimestampTransform = this.getCurrentRepetitionTimestampTransform(timestamp);
+        const transform: TimestampTransform = this.getCurrentRepetitionTimestampTransform(timestamp);
         return Fraction.plus(timestamp, Fraction.minus(transform.to, transform.$from)); // FIXME
     }
     public get Parts(): PartListEntry[] {
@@ -60,8 +68,8 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         this.musicSheet.SelectionEnd = end === undefined ? this.sheetEnd : end;
     }
     private calcMapping(): void {
-        let timestamps: TimestampTransform[] = [];
-        let iterator: MusicPartManagerIterator = this.getIterator();
+        const timestamps: TimestampTransform[] = [];
+        const iterator: MusicPartManagerIterator = this.getIterator();
         let currentRepetition: Repetition = iterator.CurrentRepetition;
         let curTimestampTransform: TimestampTransform = new TimestampTransform(
             iterator.CurrentEnrolledTimestamp.clone(),
@@ -73,8 +81,10 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         while (!iterator.EndReached) {
             if (iterator.JumpOccurred || currentRepetition !== iterator.CurrentRepetition) {
                 currentRepetition = iterator.CurrentRepetition;
+                // if we are still in the same repetition but in a different repetition run, we remember
+                // that we have to jump backwards at this position
                 if (iterator.backJumpOccurred) {
-                    let jumpRep: Repetition = iterator.JumpResponsibleRepetition;
+                    const jumpRep: Repetition = iterator.JumpResponsibleRepetition;
                     curTimestampTransform.nextBackJump = iterator.CurrentEnrolledTimestamp;
                     curTimestampTransform.curRepetition = jumpRep;
                     curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;

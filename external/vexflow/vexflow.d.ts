@@ -1,4 +1,7 @@
+
+
 declare namespace Vex {
+
     export module Flow {
         const RESOLUTION: any;
 
@@ -27,12 +30,26 @@ declare namespace Vex {
             public getW(): number;
 
             public getH(): number;
+
+            public draw(ctx: Vex.Flow.RenderContext): void;
+        }
+
+        export class Tickable {
+            public reset(): void;
+
+            public setStave(stave: Stave);
+
+            public getBoundingBox(): BoundingBox;
         }
 
         export class Voice {
             constructor(time: any);
 
             public static Mode: any;
+
+            public context: RenderContext;
+
+            public tickables: Tickable[];
 
             public getBoundingBox(): BoundingBox;
 
@@ -47,7 +64,19 @@ declare namespace Vex {
             public draw(ctx: any, stave: Stave): void;
         }
 
-        export class StaveNote {
+        export class Note extends Tickable {
+        }
+
+        export class Stem {
+            public static UP: number;
+            public static DOWN: number;
+        }
+        export class StemmableNote extends Note {
+            public getStemDirection(): number;
+            public setStemDirection(direction: number): StemmableNote;
+        }
+
+        export class StaveNote extends StemmableNote {
             constructor(note_struct: any);
 
             public getNoteHeadBounds(): any;
@@ -56,9 +85,13 @@ declare namespace Vex {
 
             public getNoteHeadEndX(): number;
 
+            public getGlyphWidth(): number;
+
             public addAccidental(index: number, accidental: Accidental): StaveNote;
 
             public addAnnotation(index: number, annotation: Annotation): StaveNote;
+
+            public addModifier(index: number, modifier: Modifier): StaveNote;
 
             public setStyle(style: any): void;
 
@@ -68,7 +101,7 @@ declare namespace Vex {
         export class StaveTie {
             constructor(notes_struct: any);
 
-            public setContext(ctx: CanvasContext): StaveTie;
+            public setContext(ctx: RenderContext): StaveTie;
 
             public draw(): void;
         }
@@ -81,6 +114,10 @@ declare namespace Vex {
             public setY(y: number): Stave;
 
             public getX(): number;
+
+            public setBegBarType(type: any): Stave;
+
+            public setEndBarType(type: any): Stave;
 
             public addClef(clefSpec: string, size: any, annotation: any, position: any): void;
 
@@ -96,11 +133,15 @@ declare namespace Vex {
 
             public getNoteStartX(): number;
 
+            public getModifierXShift(): number;
+
             public getNoteEndX(): number;
 
             public setNoteStartX(x: number): Stave;
 
             public setKeySignature(keySpec: any, cancelKeySpec: any, position: any): Stave;
+
+            public setText(text: string, position: number, options: any): void;
 
             public format(): void;
 
@@ -110,8 +151,11 @@ declare namespace Vex {
 
             public getLineForY(y: number): number;
 
+            public getYForLine(y: number): number;
+
             public getModifiers(pos: any, cat: any): Clef[]; // FIXME
-            public setContext(ctx: CanvasContext): Stave;
+
+            public setContext(ctx: RenderContext): Stave;
 
             public addModifier(mod: any, pos: any): void;
 
@@ -128,9 +172,31 @@ declare namespace Vex {
             public getWidth(): number;
 
             public getPadding(index: number): number;
+
+            public getPosition(): number;
+
+            public setPosition(position: number): Modifier;
         }
 
+
         export class StaveModifier extends Modifier {
+            public static get Position() {
+                return {
+                    LEFT: 1,
+                    RIGHT: 2,
+                    ABOVE: 3,
+                    BELOW: 4,
+                    BEGIN: 5,
+                    END: 6,
+                };
+            }
+
+            public getPosition(): number;
+
+        }
+
+        export class Repetition extends StaveModifier {
+            constructor(type: any, x: number, y_shift: number);
         }
 
         export class Clef extends StaveModifier {
@@ -148,19 +214,24 @@ declare namespace Vex {
         }
 
         export class Renderer {
-            constructor(canvas: HTMLCanvasElement, backend: any);
+            constructor(canvas: HTMLElement, backend: number);
 
-            public static Backends: any;
+            public static Backends: {
+                CANVAS: number,
+                RAPHAEL: number,
+                SVG: number,
+                VML: number
+            };
 
             public resize(a: number, b: number): void;
 
-            public getContext(): CanvasContext;
+            public getContext(): CanvasContext | SVGContext;
         }
 
-        export class TimeSignature {
+        export class TimeSignature extends StaveModifier {
             constructor(timeSpec: string, customPadding?: any);
         }
-        export class KeySignature {
+        export class KeySignature extends StaveModifier {
             constructor(keySpec: string, cancelKeySpec: string, alterKeySpec?: string);
         }
 
@@ -172,24 +243,43 @@ declare namespace Vex {
             constructor(type: string);
         }
 
+        export class Articulation extends Modifier {
+            constructor(type: string);
+        }
+
         export class Beam {
             constructor(notes: StaveNote[], auto_stem: boolean);
 
-            public setContext(ctx: CanvasContext): Beam;
+            public setContext(ctx: RenderContext): Beam;
 
             public draw(): void;
         }
 
         export class Tuplet {
-            constructor(notes: StaveNote[]);
+            constructor(notes: StaveNote[], options: any);
 
-            public setContext(ctx: CanvasContext): Tuplet;
+            public setContext(ctx: RenderContext): Tuplet;
 
             public draw(): void;
         }
 
-        export class CanvasContext {
-            public scale(x: number, y: number): CanvasContext;
+        export class RenderContext {
+            public scale(x: number, y: number): RenderContext;
+            public fillRect(x: number, y: number, width: number, height: number): RenderContext
+            public fillText(text: string, x: number, y: number): RenderContext;
+            public setFont(family: string, size: number, weight: string): RenderContext;
+            public save(): RenderContext;
+            public restore(): RenderContext;
+        }
+
+        export class CanvasContext extends RenderContext {
+            public vexFlowCanvasContext: CanvasRenderingContext2D;
+        }
+
+        export class SVGContext extends RenderContext {
+            public svg: SVGElement;
+            public attributes: any;
+            public state: any;
         }
 
         export class StaveConnector {
@@ -199,11 +289,22 @@ declare namespace Vex {
 
             public setType(type: any): StaveConnector;
 
-            public setContext(ctx: CanvasContext): StaveConnector;
+            public setContext(ctx: RenderContext): StaveConnector;
+
+            public setXShift(shift: number): StaveConnector;
+
+            public top_stave: Stave;
+
+            public bottom_stave: Stave;
+
+            public thickness: number;
+
+            public width: number;
+
+            public x_shift: number;
 
             public draw(): void;
         }
-
     }
 }
 

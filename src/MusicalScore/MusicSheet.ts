@@ -27,15 +27,19 @@ export class PlaybackSettings {
 /**
  * This is the representation of a complete piece of sheet music.
  * It includes the contents of a MusicXML file after the reading.
+ * Notes: the musicsheet might not need the Rules, e.g. in the testframework. The EngravingRules Constructor
+ * fails when no FontInfo exists, which needs a TextMeasurer
  */
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
         this.rules = EngravingRules.Rules;
         this.playbackSettings = new PlaybackSettings();
         // FIXME?
-        this.playbackSettings.rhythm = new Fraction(4, 4, false);
+        // initialize SheetPlaybackSetting with default values
+        this.playbackSettings.rhythm = new Fraction(4, 4, 0, false);
         this.userStartTempoInBPM = 100;
         this.pageWidth = 120;
+        // create MusicPartManager
         this.MusicPartManager = new MusicPartManager(this);
     }
     public static defaultTitle: string = "[kein Titel]";
@@ -235,9 +239,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public checkForInstrumentWithNoVoice(): void {
         for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
-            let instrument: Instrument = this.instruments[idx];
+            const instrument: Instrument = this.instruments[idx];
             if (instrument.Voices.length === 0) {
-                let voice: Voice = new Voice(instrument, 1);
+                const voice: Voice = new Voice(instrument, 1);
                 instrument.Voices.push(voice);
             }
         }
@@ -254,9 +258,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public fillStaffList(): void {
         let i: number = 0;
         for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
-            let instrument: Instrument = this.instruments[idx];
+            const instrument: Instrument = this.instruments[idx];
             for (let idx2: number = 0, len2: number = instrument.Staves.length; idx2 < len2; ++idx2) {
-                let staff: Staff = instrument.Staves[idx2];
+                const staff: Staff = instrument.Staves[idx2];
                 staff.idInMusicSheet = i;
                 this.staves.push(staff);
                 i++;
@@ -272,7 +276,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public getCompleteNumberOfStaves(): number {
         let num: number = 0;
         for (let idx: number = 0, len: number = this.instruments.length; idx < len; ++idx) {
-            let instrument: Instrument = this.instruments[idx];
+            const instrument: Instrument = this.instruments[idx];
             num += instrument.Staves.length;
         }
         return num;
@@ -285,32 +289,42 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
      * @returns {SourceMeasure[]}
      */
     public getListOfMeasuresFromIndeces(start: number, end: number): SourceMeasure[] {
-        let measures: SourceMeasure[] = [];
+        const measures: SourceMeasure[] = [];
         for (let i: number = start; i <= end; i++) {
             measures.push(this.sourceMeasures[i]);
         }
         return measures;
     }
+    /**
+     * Returns the next SourceMeasure from a given SourceMeasure.
+     * @param measure
+     */
     public getNextSourceMeasure(measure: SourceMeasure): SourceMeasure {
-        let index: number = this.sourceMeasures.indexOf(measure);
+        const index: number = this.sourceMeasures.indexOf(measure);
         if (index === this.sourceMeasures.length - 1) {
             return measure;
         }
         return this.sourceMeasures[index + 1];
     }
+    /**
+     * Returns the first SourceMeasure of MusicSheet.
+     */
     public getFirstSourceMeasure(): SourceMeasure {
         return this.sourceMeasures[0];
     }
+    /**
+     * Returns the last SourceMeasure of MusicSheet.
+     */
     public getLastSourceMeasure(): SourceMeasure {
         return this.sourceMeasures[this.sourceMeasures.length - 1];
     }
     public resetAllNoteStates(): void {
-       let iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
+       const iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
        while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
            for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
-               let voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
+               const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
                for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-                   let note: Note = voiceEntry.Notes[idx2];
+                   const note: Note = voiceEntry.Notes[idx2];
                    note.state = NoteState.Normal;
                }
            }
@@ -321,7 +335,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return this.Instruments.indexOf(instrument);
     }
     public getGlobalStaffIndexOfFirstStaff(instrument: Instrument): number {
-        let instrumentIndex: number = this.getMusicSheetInstrumentIndex(instrument);
+        const instrumentIndex: number = this.getMusicSheetInstrumentIndex(instrument);
         let staffLineIndex: number = 0;
         for (let i: number = 0; i < instrumentIndex; i++) {
             staffLineIndex += this.Instruments[i].Staves.length;
@@ -481,11 +495,11 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    }
     // }
     public getEnrolledSelectionStartTimeStampWorkaround(): Fraction {
-        let iter: MusicPartManagerIterator = this.MusicPartManager.getIterator(this.SelectionStart);
+        const iter: MusicPartManagerIterator = this.MusicPartManager.getIterator(this.SelectionStart);
         return Fraction.createFromFraction(iter.CurrentEnrolledTimestamp);
     }
     public get SheetEndTimestamp(): Fraction {
-        let lastMeasure: SourceMeasure = this.getLastSourceMeasure();
+        const lastMeasure: SourceMeasure = this.getLastSourceMeasure();
         return Fraction.plus(lastMeasure.AbsoluteTimestamp, lastMeasure.Duration);
     }
 
@@ -496,9 +510,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
      */
     public getSourceMeasureFromTimeStamp(timeStamp: Fraction): SourceMeasure {
         for (let idx: number = 0, len: number = this.sourceMeasures.length; idx < len; ++idx) {
-            let sm: SourceMeasure = this.sourceMeasures[idx];
+            const sm: SourceMeasure = this.sourceMeasures[idx];
             for (let idx2: number = 0, len2: number = sm.VerticalSourceStaffEntryContainers.length; idx2 < len2; ++idx2) {
-                let vssec: VerticalSourceStaffEntryContainer = sm.VerticalSourceStaffEntryContainers[idx2];
+                const vssec: VerticalSourceStaffEntryContainer = sm.VerticalSourceStaffEntryContainers[idx2];
                 if (timeStamp.Equals(vssec.getAbsoluteTimestamp())) {
                     return sm;
                 }
@@ -507,7 +521,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return this.findSourceMeasureFromTimeStamp(timeStamp);
     }
     public findSourceMeasureFromTimeStamp(timestamp: Fraction): SourceMeasure {
-        for (let sm of this.sourceMeasures) {
+        for (const sm of this.sourceMeasures) {
             if (sm.AbsoluteTimestamp.lte(timestamp) && timestamp.lt(Fraction.plus(sm.AbsoluteTimestamp, sm.Duration))) {
                 return sm;
             }
@@ -515,9 +529,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
 
     public getVisibleInstruments(): Instrument[] {
-        let visInstruments: Instrument[] = [];
+        const visInstruments: Instrument[] = [];
         for (let idx: number = 0, len: number = this.Instruments.length; idx < len; ++idx) {
-            let instrument: Instrument = this.Instruments[idx];
+            const instrument: Instrument = this.Instruments[idx];
             if (instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
                 visInstruments.push(instrument);
             }

@@ -27,6 +27,7 @@ export class GraphicalLyricEntry {
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, staffHeight);
     }
 
+    // FIXME: This should actually be called LyricsEntry or be a function
     public get GetLyricsEntry(): LyricsEntry {
         return this.lyricsEntry;
     }

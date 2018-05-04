@@ -7,15 +7,15 @@
  */
 export class Logging {
     public static debug(...args: any[]): void {
-        console.debug("[OSMD] ", args.join(" "));
+        console.debug("[opensheetmusicdisplay] ", args.join(" "));
     }
     public static log(...args: any[]): void {
-        console.log("[OSMD] ", args.join(" "));
+        console.log("[opensheetmusicdisplay] ", args.join(" "));
     }
     public static error(...args: any[]): void {
-        console.error("[OSMD] ", args.join(" "));
+        console.error("[opensheetmusicdisplay] ", args.join(" "));
     }
     public static warn(...args: any[]): void {
-        console.warn("[OSMD] ", args.join(" "));
+        console.warn("[opensheetmusicdisplay] ", args.join(" "));
     }
 }

@@ -14,7 +14,8 @@ export enum AccidentalEnum {
     FLAT = -1,
     NONE = 0,
     SHARP = 1,
-    DOUBLESHARP = 2
+    DOUBLESHARP = 2,
+    NATURAL = 3
 }
 
 // This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.
@@ -64,7 +65,7 @@ export class Pitch {
      * @constructor
      */
     public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { value: number; overflow: number; } {
-        let newHalfTone: number = <number>pitch.fundamentalNote + <number>pitch.accidental + transpose;
+        const newHalfTone: number = <number>pitch.fundamentalNote + <number>pitch.accidental + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
@@ -91,12 +92,12 @@ export class Pitch {
         let halftoneSteps: number;
         if (obj instanceof Pitch) {
             // obj is a pitch
-            let pitch: Pitch = obj;
+            const pitch: Pitch = obj;
             octaveSteps = pitch.octave - 1;
             halftoneSteps = <number>pitch.fundamentalNote - <number>NoteEnum.A + <number>pitch.accidental;
         } else if (typeof obj === "number") {
             // obj is a fractional key
-            let fractionalKey: number = obj;
+            const fractionalKey: number = obj;
             halftoneSteps = fractionalKey - 57.0;
         }
         // Return frequency:
@@ -109,9 +110,9 @@ export class Pitch {
     }
 
     public static fromFrequency(frequency: number): Pitch {
-        let key: number = Pitch.calcFractionalKey(frequency) + 0.5;
-        let octave: number = Math.floor(key / 12) - Pitch.octXmlDiff;
-        let halftone: number = Math.floor(key) % 12;
+        const key: number = Pitch.calcFractionalKey(frequency) + 0.5;
+        const octave: number = Math.floor(key / 12) - Pitch.octXmlDiff;
+        const halftone: number = Math.floor(key) % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftone;
         let accidental: AccidentalEnum = AccidentalEnum.NONE;
         if (this.pitchEnumValues.indexOf(fundamentalNote) === -1) {
@@ -122,8 +123,8 @@ export class Pitch {
     }
 
     public static fromHalftone(halftone: number): Pitch {
-        let octave: number = <number>Math.floor(<number>halftone / 12) - Pitch.octXmlDiff;
-        let halftoneInOctave: number = halftone % 12;
+        const octave: number = <number>Math.floor(<number>halftone / 12) - Pitch.octXmlDiff;
+        const halftoneInOctave: number = halftone % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftoneInOctave;
         let accidental: AccidentalEnum = AccidentalEnum.NONE;
         if (this.pitchEnumValues.indexOf(fundamentalNote) === -1) {
@@ -222,7 +223,7 @@ export class Pitch {
     }
 
     public OperatorEquals(p2: Pitch): boolean {
-        let p1: Pitch = this;
+        const p1: Pitch = this;
         // if (ReferenceEquals(p1, p2)) {
         //     return true;
         // }
@@ -233,13 +234,13 @@ export class Pitch {
     }
 
     public OperatorNotEqual(p2: Pitch): boolean {
-        let p1: Pitch = this;
+        const p1: Pitch = this;
         return !(p1 === p2);
     }
 
     // This method returns a new Pitch factor-Halftones higher than the current Pitch
     private getHigherPitchByTransposeFactor(factor: number): Pitch {
-        let noteEnumIndex: number = Pitch.pitchEnumValues.indexOf(this.fundamentalNote);
+        const noteEnumIndex: number = Pitch.pitchEnumValues.indexOf(this.fundamentalNote);
         let newOctave: number = this.octave;
         let newNoteEnum: NoteEnum;
         if (noteEnumIndex + factor > Pitch.pitchEnumValues.length - 1) {
@@ -252,7 +253,7 @@ export class Pitch {
     }
 
     private getLowerPitchByTransposeFactor(factor: number): Pitch {
-        let noteEnumIndex: number = Pitch.pitchEnumValues.indexOf(this.fundamentalNote);
+        const noteEnumIndex: number = Pitch.pitchEnumValues.indexOf(this.fundamentalNote);
         let newOctave: number = this.octave;
         let newNoteEnum: NoteEnum;
         if (noteEnumIndex - factor < 0) {
@@ -271,7 +272,7 @@ export class Pitch {
     }
 
     private getPreviousFundamentalNote(fundamental: NoteEnum): NoteEnum {
-        let i: number = Pitch.pitchEnumValues.indexOf(fundamental);
+        const i: number = Pitch.pitchEnumValues.indexOf(fundamental);
         if (i > 0) {
             return Pitch.pitchEnumValues[i - 1];
         } else {

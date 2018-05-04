@@ -54,7 +54,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     public set UserNumberOfRepetitions(value: number) {
         this.userNumberOfRepetitions = value;
         this.repetitonIterationOrder = [];
-        let endingsDiff: number = this.userNumberOfRepetitions - this.NumberOfEndings;
+        const endingsDiff: number = this.userNumberOfRepetitions - this.NumberOfEndings;
         for (let i: number = 1; i <= this.userNumberOfRepetitions; i++) {
             if (i <= endingsDiff) {
                 this.repetitonIterationOrder.push(1);
@@ -64,7 +64,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         }
     }
     public getForwardJumpTargetForIteration(iteration: number): number {
-        let endingIndex: number = this.repetitonIterationOrder[iteration - 1];
+        const endingIndex: number = this.repetitonIterationOrder[iteration - 1];
         if (this.endingIndexDict[endingIndex] !== undefined) {
             return this.endingIndexDict[endingIndex].part.StartIndex;
         }
@@ -74,9 +74,9 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         return this.startMarker.measureIndex;
     }
     public SetEndingStartIndex(endingNumbers: number[], startIndex: number): void {
-        let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
+        const part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
         this.endingParts.push(part);
-        for (let endingNumber of endingNumbers) {
+        for (const endingNumber of endingNumbers) {
             try {
                 this.endingIndexDict[endingNumber] = part;
                 part.endingIndices.push(endingNumber);
@@ -130,15 +130,15 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     }
     private checkRepetitionForMultipleLyricVerses(): number {
         let lyricVerses: number = 0;
-        let start: number = this.StartIndex;
-        let end: number = this.EndIndex;
+        const start: number = this.StartIndex;
+        const end: number = this.EndIndex;
         for (let measureIndex: number = start; measureIndex <= end; measureIndex++) {
-            let sourceMeasure: SourceMeasure = this.musicSheet2.SourceMeasures[measureIndex];
+            const sourceMeasure: SourceMeasure = this.musicSheet2.SourceMeasures[measureIndex];
             for (let i: number = 0; i < sourceMeasure.CompleteNumberOfStaves; i++) {
-                for (let sourceStaffEntry of sourceMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries) {
+                for (const sourceStaffEntry of sourceMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries) {
                     if (sourceStaffEntry !== undefined) {
                         let verses: number = 0;
-                        for (let voiceEntry of sourceStaffEntry.VoiceEntries) {
+                        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
                             verses += Object.keys(voiceEntry.LyricsEntries).length;
                         }
                         lyricVerses = Math.max(lyricVerses, verses);

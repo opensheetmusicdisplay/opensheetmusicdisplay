@@ -8,7 +8,7 @@ import {VexFlowConverter} from "./VexFlowConverter";
 
 export class VexFlowTextMeasurer implements ITextMeasurer {
     constructor() {
-        let canvas: HTMLCanvasElement = document.createElement("canvas");
+        const canvas: HTMLCanvasElement = document.createElement("canvas");
         this.context = canvas.getContext("2d");
     }
     // The context of a canvas used internally to compute font sizes

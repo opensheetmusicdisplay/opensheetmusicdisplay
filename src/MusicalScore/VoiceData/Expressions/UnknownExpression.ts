@@ -2,10 +2,6 @@ import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
 import {TextAlignment} from "../../../Common/Enums/TextAlignment";
 
 export class UnknownExpression extends AbstractExpression {
-    //constructor(label: string, placementEnum: PlacementEnum, staffNumber: number) {
-    //    this(label, placementEnum, OSMDTextAlignment.LeftBottom, staffNumber);
-    //
-    //}
     constructor(label: string, placementEnum: PlacementEnum, textAlignment: TextAlignment, staffNumber: number) {
         super();
         this.label = label;

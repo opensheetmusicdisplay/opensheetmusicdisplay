@@ -8,6 +8,7 @@ import {StaffMeasure} from "./StaffMeasure";
 import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import {GraphicalLabel} from "./GraphicalLabel";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -20,6 +21,8 @@ export abstract class StaffLine extends GraphicalObject {
     protected parentStaff: Staff;
     protected skyLine: number[];
     protected bottomLine: number[];
+    protected lyricLines: GraphicalLine[] = [];
+    protected lyricsDashes: GraphicalLabel[] = [];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         super();
@@ -42,6 +45,27 @@ export abstract class StaffLine extends GraphicalObject {
 
     public set StaffLines(value: GraphicalLine[]) {
         this.staffLines = value;
+    }
+
+    public get NextStaffLine(): StaffLine {
+        const idxInParent: number = this.parentMusicSystem.StaffLines.indexOf(this);
+        return idxInParent !== this.parentMusicSystem.StaffLines.length ? this.parentMusicSystem.StaffLines[idxInParent + 1] : undefined;
+    }
+
+    public get LyricLines(): GraphicalLine[] {
+        return this.lyricLines;
+    }
+
+    public set LyricLines(value: GraphicalLine[]) {
+        this.lyricLines = value;
+    }
+
+    public get LyricsDashes(): GraphicalLabel[] {
+        return this.lyricsDashes;
+    }
+
+    public set LyricsDashes(value: GraphicalLabel[]) {
+        this.lyricsDashes = value;
     }
 
     public get ParentMusicSystem(): MusicSystem {
@@ -77,11 +101,11 @@ export abstract class StaffLine extends GraphicalObject {
     }
 
     public addActivitySymbolClickArea(): void {
-        let activitySymbol: StaffLineActivitySymbol = new StaffLineActivitySymbol(this);
-        let staffLinePsi: BoundingBox = this.PositionAndShape;
+        const activitySymbol: StaffLineActivitySymbol = new StaffLineActivitySymbol(this);
+        const staffLinePsi: BoundingBox = this.PositionAndShape;
         activitySymbol.PositionAndShape.RelativePosition =
             new PointF2D(staffLinePsi.RelativePosition.x + staffLinePsi.BorderRight + 0.5, staffLinePsi.RelativePosition.y + 0.5);
-        this.parentMusicSystem.PositionAndShape.ChildElements.push(activitySymbol.PositionAndShape);
+        activitySymbol.PositionAndShape.Parent = this.parentMusicSystem.PositionAndShape;
     }
 
     /**
@@ -89,7 +113,7 @@ export abstract class StaffLine extends GraphicalObject {
      * @returns {boolean}
      */
     public isPartOfMultiStaffInstrument(): boolean {
-        let instrument: Instrument = this.parentStaff.ParentInstrument;
+        const instrument: Instrument = this.parentStaff.ParentInstrument;
         if (instrument.Staves.length > 1) {
             return true;
         }
@@ -103,17 +127,13 @@ export abstract class StaffLine extends GraphicalObject {
      */
     public findClosestStaffEntry(xPosition: number): GraphicalStaffEntry {
         let closestStaffentry: GraphicalStaffEntry = undefined;
-        let difference: number = Number.MAX_VALUE;
         for (let idx: number = 0, len: number = this.Measures.length; idx < len; ++idx) {
-            let graphicalMeasure: StaffMeasure = this.Measures[idx];
+            const graphicalMeasure: StaffMeasure = this.Measures[idx];
             for (let idx2: number = 0, len2: number = graphicalMeasure.staffEntries.length; idx2 < len2; ++idx2) {
-                let graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx2];
+                const graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx2];
                 if (
                     Math.abs(graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x) < 5.0
                 ) {
-                    difference = Math.abs(
-                        graphicalStaffEntry.PositionAndShape.RelativePosition.x - xPosition + graphicalMeasure.PositionAndShape.RelativePosition.x
-                    );
                     closestStaffentry = graphicalStaffEntry;
                 }
             }
