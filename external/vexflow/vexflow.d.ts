@@ -228,6 +228,13 @@ declare namespace Vex {
         export class Articulation extends Modifier {
             constructor(type: string);
         }
+
+        export class Ornament extends Modifier {
+            constructor(type: string);
+            setDelayed(delayed: boolean): void;
+            setUpperAccidental(acc: string): void;
+            setLowerAccidental(acc: string): void;
+        }
         
         export class Beam {
             constructor(notes: StaveNote[], auto_stem: boolean);

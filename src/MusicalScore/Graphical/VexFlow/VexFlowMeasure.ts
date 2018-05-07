@@ -490,8 +490,12 @@ export class VexFlowMeasure extends StaffMeasure {
             }
         }
         this.createArticulations();
+        this.createOrnaments();
     }
 
+    /**
+     * Create the articulations for all notes of the current staff entry
+     */
     private createArticulations(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
@@ -502,6 +506,26 @@ export class VexFlowMeasure extends StaffMeasure {
                 if (gnotes.hasOwnProperty(voiceID)) {
                     const vfnote: StaveNote = (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID];
                     VexFlowConverter.generateArticulations(vfnote, gnotes[voiceID][0].sourceNote.ParentVoiceEntry.Articulations);
+                }
+            }
+        }
+    }
+
+    /**
+     * Create the ornaments for all notes of the current staff entry
+     */
+    private createOrnaments(): void {
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
+
+            // create vex flow Notes:
+            const gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
+            for (const voiceID in gnotes) {
+                if (gnotes.hasOwnProperty(voiceID)) {
+                    const vfnote: StaveNote = (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID];
+                    if (gnotes[voiceID][0].sourceNote.ParentVoiceEntry.OrnamentContainer !== undefined) {
+                        VexFlowConverter.generateOrnaments(vfnote, gnotes[voiceID][0].sourceNote.ParentVoiceEntry.OrnamentContainer.GetOrnament);
+                    }
                 }
             }
         }
