@@ -169,7 +169,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * furthermore the y positions of the systems themselves.
    */
   protected calculateSystemYLayout(): void {
-    const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
+    const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator();
     for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
             for (const musicSystem of graphicalMusicPage.MusicSystems) {
                 skyBottomLineCalculator.optimizeDistanceBetweenStaffLines(musicSystem);

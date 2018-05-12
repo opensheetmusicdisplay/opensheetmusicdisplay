@@ -362,7 +362,7 @@ export abstract class MusicSheetCalculator {
             const graphicalLabel: GraphicalLabel = new GraphicalLabel(new Label(labelNumber), this.rules.MeasureNumberLabelHeight,
                                                                       TextAlignment.LeftBottom);
             // FIXME: Change if Skyline is available
-            const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
+            const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator();
 
             // calculate LabelBoundingBox and set PSI parent
             graphicalLabel.setLabelPositionAndShapeBorders();
@@ -781,7 +781,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateSkyBottomLine(staffLine: StaffLine): void {
-        const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules, staffLine);
+        const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(staffLine);
         skyBottomLineCalculator.calculateLines();
         return;
     }
