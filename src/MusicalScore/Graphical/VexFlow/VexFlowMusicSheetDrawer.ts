@@ -9,9 +9,10 @@ import {GraphicalObject} from "../GraphicalObject";
 import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
-import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
-import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
-import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import {VexFlowInstrumentBracket} from "./VexFlowInstrumentBracket";
+import {VexFlowInstrumentBrace} from "./VexFlowInstrumentBrace";
+import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
+import {StaffLine} from "../StaffLine";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -88,6 +89,84 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             this.drawStaffEntry(staffEntry);
         }
     }
+
+    // private drawPixel(coord: PointF2D): void {
+    //     coord = this.applyScreenTransformation(coord);
+    //     const ctx: any = this.backend.getContext();
+    //     const oldStyle: string = ctx.fillStyle;
+    //     ctx.fillStyle = "#00FF00FF";
+    //     ctx.fillRect( coord.x, coord.y, 2, 2 );
+    //     ctx.fillStyle = oldStyle;
+    // }
+
+    public drawLine(start: PointF2D, stop: PointF2D): void {
+        start = this.applyScreenTransformation(start);
+        stop = this.applyScreenTransformation(stop);
+        this.backend.renderLine(start, stop);
+    }
+
+    protected drawSkyLine(staffline: StaffLine): void {
+        // FIXME: Put into generic method to be used by bottom and sykline
+        const scale: number = 0.1;
+        const skyLine: number[] = staffline.SkyLine.map(v => (v - Math.max(...staffline.SkyLine)) * scale);
+        const indices: number[] = [];
+        let currentValue: number = 0;
+
+        for (let i: number = 0; i < skyLine.length; i++) {
+            if (skyLine[i] !== currentValue) {
+                indices.push(i);
+                currentValue = skyLine[i];
+            }
+        }
+
+        const absolute: PointF2D = staffline.PositionAndShape.AbsolutePosition;
+        if (indices.length > 0) {
+            // This should be done at the SkyLine getter -> downsampling
+            const samplingUnit: number = (skyLine.length / staffline.PositionAndShape.Size.width); //EngravingRules.Rules.SamplingUnit;
+
+            let horizontalStart: PointF2D = new PointF2D(absolute.x, absolute.y);
+            let horizontalEnd: PointF2D = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y);
+            this.drawLine(horizontalStart, horizontalEnd);
+
+            let verticalStart: PointF2D;
+            let verticalEnd: PointF2D;
+
+            if (skyLine[0] >= 0) {
+                verticalStart = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y);
+                verticalEnd = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y + skyLine[indices[0]]);
+                this.drawLine(verticalStart, verticalEnd);
+            }
+
+            for (let i: number = 1; i < indices.length; i++) {
+                horizontalStart = new PointF2D(indices[i - 1] / samplingUnit + absolute.x, absolute.y + skyLine[indices[i - 1]]);
+                horizontalEnd = new PointF2D(indices[i] / samplingUnit + absolute.x, absolute.y + skyLine[indices[i - 1]]);
+                this.drawLine(horizontalStart, horizontalEnd);
+
+                verticalStart = new PointF2D(indices[i] / samplingUnit + absolute.x, absolute.y + skyLine[indices[i - 1]]);
+                verticalEnd = new PointF2D(indices[i] / samplingUnit + absolute.x, absolute.y + skyLine[indices[i]]);
+                this.drawLine(verticalStart, verticalEnd);
+            }
+
+            if (indices[indices.length - 1] < skyLine.length) {
+                horizontalStart = new PointF2D(indices[indices.length - 1] / samplingUnit + absolute.x, absolute.y + skyLine[indices[indices.length - 1]]);
+                horizontalEnd = new PointF2D(absolute.x + staffline.PositionAndShape.Size.width, absolute.y + skyLine[indices[indices.length - 1]]);
+                this.drawLine(horizontalStart, horizontalEnd);
+            } else {
+                horizontalStart = new PointF2D(indices[indices.length - 1] / samplingUnit + absolute.x, absolute.y);
+                horizontalEnd = new PointF2D(absolute.x + staffline.PositionAndShape.Size.width, absolute.y);
+                this.drawLine(horizontalStart, horizontalEnd);
+            }
+        } else {
+            // Flat line
+            const start: PointF2D = new PointF2D(absolute.x, absolute.y);
+            const end: PointF2D = new PointF2D(absolute.x + staffline.PositionAndShape.Size.width, absolute.y);
+            this.drawLine(start, end);
+        }
+    }
+    protected drawBottomLine(staffline: StaffLine): void {
+        // staffline.BottomLine.forEach((value, idx) => this.drawPixel(new PointF2D(idx, value)));
+    }
+
 
     private drawStaffEntry(staffEntry: GraphicalStaffEntry): void {
         // Draw ChordSymbol

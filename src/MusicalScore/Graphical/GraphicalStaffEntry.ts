@@ -343,7 +343,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         }
     }
 
-    // FIXME: implement
+    /**
+     * Returns true if this staff entry has only rests
+     */
     public hasOnlyRests(): boolean {
         const hasOnlyRests: boolean = true;
         for (const graphicalNotes of this.notes) {

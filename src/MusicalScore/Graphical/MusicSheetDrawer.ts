@@ -338,6 +338,14 @@ export abstract class MusicSheetDrawer {
         if (staffLine.LyricsDashes.length > 0) {
             this.drawDashes(staffLine.LyricsDashes);
         }
+
+        if (this.graphicalMusicSheet.SkyLineVisible) {
+            this.drawSkyLine(staffLine);
+        }
+
+        if (this.graphicalMusicSheet.BottomLineVisible) {
+            this.drawBottomLine(staffLine);
+        }
     }
 
     /**

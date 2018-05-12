@@ -20,7 +20,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
  */
 export abstract class StaffMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
-    protected lastInstructionStaffEntry: GraphicalStaffEntry;
+    public lastInstructionStaffEntry: GraphicalStaffEntry;
 
     constructor(staff: Staff = undefined, parentSourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super();

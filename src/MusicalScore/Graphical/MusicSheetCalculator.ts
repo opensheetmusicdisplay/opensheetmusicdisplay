@@ -54,6 +54,7 @@ import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
 import {GraphicalLyricWord} from "./GraphicalLyricWord";
 import {GraphicalLine} from "./GraphicalLine";
 import {Label} from "../Label";
+import {SkyBottomLineCalculator} from "./SkyBottomLineCalculator";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -361,7 +362,7 @@ export abstract class MusicSheetCalculator {
             const graphicalLabel: GraphicalLabel = new GraphicalLabel(new Label(labelNumber), this.rules.MeasureNumberLabelHeight,
                                                                       TextAlignment.LeftBottom);
             // FIXME: Change if Skyline is available
-            // const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
+            const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
 
             // calculate LabelBoundingBox and set PSI parent
             graphicalLabel.setLabelPositionAndShapeBorders();
@@ -373,9 +374,7 @@ export abstract class MusicSheetCalculator {
             let relativeY: number;
 
             // and the corresponding SkyLine indeces
-            // tslint:disable-next-line:no-unused-variable
             let start: number = relativeX;
-            // tslint:disable-next-line:no-unused-variable
             let end: number = relativeX - graphicalLabel.PositionAndShape.BorderLeft + graphicalLabel.PositionAndShape.BorderMarginRight;
 
             // take into account the InstrumentNameLabel's at the beginning of the first MusicSystem
@@ -385,9 +384,7 @@ export abstract class MusicSheetCalculator {
             }
 
             // get the minimum corresponding SkyLine value
-            // FIXME: Change if Skyline is available
-            // const skyLineMinValue: number = skyBottomLineCalculator.getSkyLineMinInRange(staffLine, start, end);
-            const skyLineMinValue: number = 0;
+            const skyLineMinValue: number = skyBottomLineCalculator.getSkyLineMinInRange(staffLine, start, end);
 
             if (measure === staffLine.Measures[0]) {
                 // must take into account possible MusicSystem Bracket's
@@ -405,8 +402,8 @@ export abstract class MusicSheetCalculator {
             relativeY = Math.min(0, relativeY);
 
             graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(relativeX, relativeY);
-            // FIXME: Change if Skyline is available
-            // skyBottomLineCalculator.updateSkyLineInRange(staffLine, start, end, relativeY + graphicalLabel.PositionAndShape.BorderMarginTop);
+
+            skyBottomLineCalculator.updateSkyLineInRange(staffLine, start, end, relativeY + graphicalLabel.PositionAndShape.BorderMarginTop);
             musicSystem.MeasureNumberLabels.push(graphicalLabel);
         }
 
@@ -784,7 +781,8 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateSkyBottomLine(staffLine: StaffLine): void {
-        //Logging.debug("calculateSkyBottomLine not implemented");
+        const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules, staffLine);
+        skyBottomLineCalculator.calculateLines();
         return;
     }
 

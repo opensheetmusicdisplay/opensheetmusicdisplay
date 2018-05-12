@@ -33,6 +33,7 @@ import {GraphicalLabel} from "../GraphicalLabel";
 import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
+import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   constructor() {
@@ -168,6 +169,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * furthermore the y positions of the systems themselves.
    */
   protected calculateSystemYLayout(): void {
+    const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
+    for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
+            for (const musicSystem of graphicalMusicPage.MusicSystems) {
+                skyBottomLineCalculator.optimizeDistanceBetweenStaffLines(musicSystem);
+            }
+
+        // set y positions of systems using the previous system and a fixed distance.
+        // calculateMusicSystemsRelativePositions(graphicalMusicPage, skyBottomLineCalculator);
+    }
     for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
       const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
       if (!this.leadSheet) {
