@@ -126,8 +126,13 @@ export class RepetitionInstruction /*implements IComparable*/ {
             this.measureIndex !== other.measureIndex
             || this.type !== other.type
             || this.alignment !== other.alignment
-            || this.endingIndices.length !== other.endingIndices.length
         ) {
+            return false;
+        }
+        if (this.endingIndices === other.endingIndices) {
+            return true;
+        }
+        if (this.endingIndices === undefined || other.endingIndices === undefined) {
             return false;
         }
         for (let i: number = 0; i < this.endingIndices.length; i++) {

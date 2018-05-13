@@ -171,8 +171,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
       const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
       if (!this.leadSheet) {
-        let globalY: number = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
-          this.rules.TitleBottomDistance;
+        let globalY: number = this.rules.PageTopMargin;
+        if (idx === 0) {
+          globalY += this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.TitleBottomDistance;
+        }
         for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
           const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
           // calculate y positions of stafflines within system
