@@ -1,13 +1,14 @@
-import { EngravingRules } from "./EngravingRules";
-import { StaffLine } from "./StaffLine";
-import { PointF2D } from "../../Common/DataObjects/PointF2D";
-import { MusicSystem } from "./MusicSystem";
-import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
-import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
+import {EngravingRules} from "./EngravingRules";
+import {StaffLine} from "./StaffLine";
+import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import {MusicSystem} from "./MusicSystem";
+import {CanvasVexFlowBackend} from "./VexFlow/CanvasVexFlowBackend";
+import {VexFlowMeasure} from "./VexFlow/VexFlowMeasure";
+import {unitInPixels} from "./VexFlow/VexFlowMusicSheetDrawer";
+import {Logging} from "../../Common/Logging";
 
 export class SkyBottomLineCalculator {
     private mStaffLineParent: StaffLine;
-    private mSamplingUnit: number;
     private mSkyLine: number[];
     private mBottomLine: number[];
 
@@ -22,8 +23,7 @@ export class SkyBottomLineCalculator {
         // calculate arrayLength
         // FIXME: Do subsampling at getter!
         /* tslint:disable:no-unused-variable */
-        const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * EngravingRules.Rules.SamplingUnit), 1);
-
+        const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
         this.mSkyLine = [];
         this.mBottomLine = [];
 
@@ -39,6 +39,7 @@ export class SkyBottomLineCalculator {
             // must calculate first AbsolutePositions
             measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
 
+            // Create a temporary canvas outside the DOM to draw the measure in.
             const tmpCanvas: CanvasVexFlowBackend = new CanvasVexFlowBackend();
             tmpCanvas.initializeHeadless();
 
@@ -52,39 +53,82 @@ export class SkyBottomLineCalculator {
             measure.format();
             measure.getVFStave().setWidth(oldMeasureWidth);
             measure.draw(tmpCanvas.getContext());
-            // let img: any = (tmpCanvas.getCanvas() as any).toDataURL("image/png");
-            // document.write('<img src="' + img + '"/>');
 
-
-            //imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
+            // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
             // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
             // Since we are only interested in black or white we can take 32bit words at once
             const imageData: any = ctx.getImageData(0, 0, width, height);
             const rgbaLength: number = 4;
+            const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * EngravingRules.Rules.SamplingUnit), 1);
+            const tmpSkyLine: number[] = new Array(measureArrayLength);
+            const tmpBottomLine: number[] = new Array(measureArrayLength);
             for (let x: number = 0; x < width; x++) {
+                // SkyLine
                 for (let y: number = 0; y < height; y++) {
                     const yOffset: number = y * width * rgbaLength;
                     const bufIndex: number = yOffset + x * rgbaLength;
                     const alpha: number = imageData.data[bufIndex + 3];
                     if (alpha > 0) {
-                        this.mSkyLine.push(y);
+                        tmpSkyLine[x] = y;
                         break;
                     }
                 }
-            }
-            for (let x: number = 0; x < width; x++) {
+                // BottomLine
                 for (let y: number = height; y > 0; y--) {
                     const yOffset: number = y * width * rgbaLength;
                     const bufIndex: number = yOffset + x * rgbaLength;
                     const alpha: number = imageData.data[bufIndex + 3];
                     if (alpha > 0) {
-                        this.mBottomLine.push(y);
+                        tmpBottomLine[x] = y;
                         break;
                     }
                 }
             }
+            this.mSkyLine.push(...tmpSkyLine);
+            this.mBottomLine.push(...tmpBottomLine);
+
+            const debugTmpCanvas: boolean = false;
+            if (debugTmpCanvas) {
+                tmpSkyLine.forEach((y, x) => this.drawPixel(new PointF2D(x, y), tmpCanvas));
+                tmpBottomLine.forEach((y, x) => this.drawPixel(new PointF2D(x, y), tmpCanvas, "blue"));
+                const img: any = (tmpCanvas.getCanvas() as any).toDataURL("image/png");
+                document.write('<img src="' + img + '"/>');
+            }
             tmpCanvas.clear();
         }
+        // Subsampling
+        // The pixel width is bigger then the measure size in units. So we split the array into
+        // chunks with the size of MeasurePixelWidth/measureUnitWidth and reduce the value to its
+        // average
+        const arrayChunkSize: number = this.mSkyLine.length / arrayLength;
+
+        const subSampledSkyLine: number[] = [];
+        const subSampledBottomLine: number[] = [];
+        for (let chunkIndex: number = 0; chunkIndex < this.mSkyLine.length; chunkIndex += arrayChunkSize) {
+            const chunk: number[] = this.mSkyLine.slice(chunkIndex, chunkIndex + arrayChunkSize);
+            subSampledSkyLine.push(Math.min(...chunk));
+        }
+
+        this.mSkyLine = subSampledSkyLine;
+        if (this.mSkyLine.length !== arrayLength) {
+            Logging.warn(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength}) truncating`);
+            // this.mSkyLine = this.mSkyLine.slice(this.mSkyLine.length - arrayLength, this.mSkyLine.length);
+        }
+        if (this.mBottomLine.length !== arrayLength) {
+            //this.mBottomLine = new Array(arrayLength);
+            // Logging.warn(`BottomLine calculation was not correct (${this.mBottomLine.length} instead of ${arrayLength}) initalizing with zeros`);
+        }
+        // Remap the values from 0 to +/- height in units and attach it to the parent staff
+        this.mStaffLineParent.SkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
+        this.mStaffLineParent.BottomLine = this.mBottomLine.map(v => (v - Math.max(...this.mBottomLine)) / unitInPixels);
+    }
+
+    private drawPixel(coord: PointF2D, backend: CanvasVexFlowBackend, color: string = "#FF0000FF"): void {
+        const ctx: any = backend.getContext();
+        const oldStyle: string = ctx.fillStyle;
+        ctx.fillStyle = color;
+        ctx.fillRect( coord.x, coord.y, 2, 2 );
+        ctx.fillStyle = oldStyle;
     }
 
     /**
@@ -101,7 +145,7 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the SkyLine for a given Wedge.
-     * @param staffLine: StaffLine to update the skyline for
+     * @param staffLine: StaffLine to update the SkyLine for
      * @param start Start point of the wedge
      * @param end End point of the wedge
      */
@@ -172,7 +216,7 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the SkyLine for a given range with a given value
-     * @param staffLine: StaffLine to update the skyline for
+     * @param staffLine: StaffLine to update the SkyLine for
      * @param start Start index of the range
      * @param end End index of the range
      * @param value ??
@@ -245,8 +289,8 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * Resets a skyline in a range to its original value
-     * @param staffLine: StaffLine to reset the skyline in
+     * Resets a SkyLine in a range to its original value
+     * @param staffLine: StaffLine to reset the SkyLine in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range
      */
@@ -488,7 +532,7 @@ export class SkyBottomLineCalculator {
                 //     const height: number = (tmpCanvas.getCanvas() as any).height;
                 //     const ctx: any = (tmpCanvas.getContext() as any);
 
-                //     const skyline: number[] = new Array(width);
+                //     const SkyLine: number[] = new Array(width);
                 //     const bottomline: number[] = new Array(width);
 
                 //     console.time("whole Buffer");
@@ -503,7 +547,7 @@ export class SkyBottomLineCalculator {
                 //             const bufIndex: number = yOffset + x * rgbaLength;
                 //             const alpha: number = imageData.data[bufIndex + 3];
                 //             if (alpha > 0) {
-                //                 skyline[x] = y;
+                //                 SkyLine[x] = y;
                 //                 break;
                 //             }
                 //         }
@@ -528,7 +572,7 @@ export class SkyBottomLineCalculator {
                 //         ctx.fillStyle = oldStyle;
                 //      };
 
-                //     skyline.forEach((value, idx) => drawPixel(ctx, idx, value));
+                //     SkyLine.forEach((value, idx) => drawPixel(ctx, idx, value));
                 //     bottomline.forEach((value, idx) => drawPixel(ctx, idx, value));
 
                 //     img = (tmpCanvas.getCanvas() as any).toDataURL("image/png");
@@ -621,11 +665,7 @@ export class SkyBottomLineCalculator {
 
     //#region Getter / Setter
     get SamplingUnit(): number {
-        return this.mSamplingUnit;
-    }
-
-    set SamplingUnit(samplingUnit: number) {
-        this.mSamplingUnit = samplingUnit;
+        return EngravingRules.Rules.SamplingUnit;
     }
 
     get StaffLineParent(): StaffLine {

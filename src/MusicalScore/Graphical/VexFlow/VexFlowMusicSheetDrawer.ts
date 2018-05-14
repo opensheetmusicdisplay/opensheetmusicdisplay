@@ -13,6 +13,7 @@ import {VexFlowInstrumentBracket} from "./VexFlowInstrumentBracket";
 import {VexFlowInstrumentBrace} from "./VexFlowInstrumentBrace";
 import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
 import {StaffLine} from "../StaffLine";
+import { EngravingRules } from "../EngravingRules";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -90,14 +91,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
-    // private drawPixel(coord: PointF2D): void {
-    //     coord = this.applyScreenTransformation(coord);
-    //     const ctx: any = this.backend.getContext();
-    //     const oldStyle: string = ctx.fillStyle;
-    //     ctx.fillStyle = "#00FF00FF";
-    //     ctx.fillRect( coord.x, coord.y, 2, 2 );
-    //     ctx.fillStyle = oldStyle;
-    // }
+    private drawPixel(coord: PointF2D): void {
+        coord = this.applyScreenTransformation(coord);
+        const ctx: any = this.backend.getContext();
+        const oldStyle: string = ctx.fillStyle;
+        ctx.fillStyle = "#00FF00FF";
+        ctx.fillRect( coord.x, coord.y, 2, 2 );
+        ctx.fillStyle = oldStyle;
+    }
 
     public drawLine(start: PointF2D, stop: PointF2D): void {
         start = this.applyScreenTransformation(start);
@@ -106,11 +107,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawSkyLine(staffline: StaffLine): void {
-        // FIXME: Put into generic method to be used by bottom and sykline
-        const scale: number = 0.1;
-        const skyLine: number[] = staffline.SkyLine.map(v => (v - Math.max(...staffline.SkyLine)) * scale);
+        // // FIXME: Put into generic method to be used by bottom and sykline
+        const skyLine: number[] = staffline.SkyLine;
         const indices: number[] = [];
         let currentValue: number = 0;
+
+        const debugSubSample: boolean = false;
+        if (debugSubSample) {
+            skyLine.forEach((y, x) => this.drawPixel(new PointF2D(x, y)));
+            // staffline.BottomLine.forEach((y, x) => this.drawPixel(new PointF2D(x, y), tmpCanvas, "blue"));
+        }
 
         for (let i: number = 0; i < skyLine.length; i++) {
             if (skyLine[i] !== currentValue) {
@@ -121,8 +127,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         const absolute: PointF2D = staffline.PositionAndShape.AbsolutePosition;
         if (indices.length > 0) {
-            // This should be done at the SkyLine getter -> downsampling
-            const samplingUnit: number = (skyLine.length / staffline.PositionAndShape.Size.width); //EngravingRules.Rules.SamplingUnit;
+            const samplingUnit: number = EngravingRules.Rules.SamplingUnit; // (skyLine.length / staffline.PositionAndShape.Size.width);
 
             let horizontalStart: PointF2D = new PointF2D(absolute.x, absolute.y);
             let horizontalEnd: PointF2D = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y);
@@ -163,6 +168,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             this.drawLine(start, end);
         }
     }
+
     protected drawBottomLine(staffline: StaffLine): void {
         // staffline.BottomLine.forEach((value, idx) => this.drawPixel(new PointF2D(idx, value)));
     }
