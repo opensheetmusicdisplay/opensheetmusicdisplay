@@ -18,7 +18,7 @@ import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEn
 import {Logging} from "../../../Common/Logging";
 import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry";
 import { SystemLinePosition } from "../SystemLinePosition";
-import { OrnamentEnum } from "../../VoiceData/OrnamentContainer";
+import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -118,7 +118,7 @@ export class VexFlowConverter {
     public static accidental(accidental: AccidentalEnum): string {
         let acc: string;
         switch (accidental) {
-            case AccidentalEnum.NONE:
+            case AccidentalEnum.NATURAL:
                 acc = "n";
                 break;
             case AccidentalEnum.FLAT:
@@ -271,7 +271,7 @@ export class VexFlowConverter {
         }
     }
 
-    public static generateOrnaments(vfnote: Vex.Flow.StaveNote, ornament: OrnamentEnum): void {
+    public static generateOrnaments(vfnote: Vex.Flow.StaveNote, oContainer: OrnamentContainer): void {
         // Ornaments
         let vfPosition: number = Vex.Flow.Modifier.Position.ABOVE;
 
@@ -279,11 +279,9 @@ export class VexFlowConverter {
             vfPosition = Vex.Flow.Modifier.Position.BELOW;
         }
 
-        //for (const ornament of ornaments) {
-            // tslint:disable-next-line:switch-default
         let vfOrna: Vex.Flow.Ornament = undefined;
         // tslint:disable-next-line:switch-default
-        switch (ornament) {
+        switch (oContainer.GetOrnament) {
             case OrnamentEnum.DelayedInvertedTurn: {
                 vfOrna = new Vex.Flow.Ornament("turn_inverted");
                 vfOrna.setDelayed(true);
@@ -321,10 +319,15 @@ export class VexFlowConverter {
             }
         }
         if (vfOrna !== undefined) {
+            if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
+                vfOrna.setLowerAccidental(this.accidental(oContainer.AccidentalBelow));
+            }
+            if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
+                vfOrna.setUpperAccidental(this.accidental(oContainer.AccidentalAbove));
+            }
             vfOrna.setPosition(vfPosition);
             vfnote.addModifier(0, vfOrna);
         }
-        //}
     }
 
     /**

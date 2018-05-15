@@ -524,7 +524,7 @@ export class VexFlowMeasure extends StaffMeasure {
                 if (gnotes.hasOwnProperty(voiceID)) {
                     const vfnote: StaveNote = (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID];
                     if (gnotes[voiceID][0].sourceNote.ParentVoiceEntry.OrnamentContainer !== undefined) {
-                        VexFlowConverter.generateOrnaments(vfnote, gnotes[voiceID][0].sourceNote.ParentVoiceEntry.OrnamentContainer.GetOrnament);
+                        VexFlowConverter.generateOrnaments(vfnote, gnotes[voiceID][0].sourceNote.ParentVoiceEntry.OrnamentContainer);
                     }
                 }
             }
