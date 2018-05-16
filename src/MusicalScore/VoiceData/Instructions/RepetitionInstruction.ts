@@ -132,7 +132,8 @@ export class RepetitionInstruction /*implements IComparable*/ {
         if (this.endingIndices === other.endingIndices) {
             return true;
         }
-        if (this.endingIndices === undefined || other.endingIndices === undefined) {
+        if (this.endingIndices === undefined || other.endingIndices === undefined || 
+            this.endingIndices.length != other.endingIndices.length) {
             return false;
         }
         for (let i: number = 0; i < this.endingIndices.length; i++) {
