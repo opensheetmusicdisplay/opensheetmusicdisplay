@@ -10,8 +10,9 @@ import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet
  * A cursor which can iterate through the music sheet.
  */
 export class Cursor {
-  constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay) {
-    this.container = container;
+  constructor(openSheetMusicDisplay: OpenSheetMusicDisplay) {
+    this.pageIdx = 0;
+    this.container = openSheetMusicDisplay.backends[this.pageIdx].getInnerElement();
     this.openSheetMusicDisplay = openSheetMusicDisplay;
     const curs: HTMLElement = document.createElement("img");
     curs.style.position = "absolute";
@@ -20,6 +21,7 @@ export class Cursor {
     this.container.appendChild(curs);
   }
 
+  private pageIdx: number;
   private container: HTMLElement;
   private openSheetMusicDisplay: OpenSheetMusicDisplay;
   private manager: MusicPartManager;
@@ -55,6 +57,7 @@ export class Cursor {
     this.graphic.Cursors.length = 0;
     const iterator: MusicPartManagerIterator = this.iterator;
     if (iterator.EndReached || iterator.CurrentVoiceEntries === undefined || iterator.CurrentVoiceEntries.length === 0) {
+      // TODO: update self.page_idx and move to the next page
       return;
     }
     let x: number = 0, y: number = 0, height: number = 0;

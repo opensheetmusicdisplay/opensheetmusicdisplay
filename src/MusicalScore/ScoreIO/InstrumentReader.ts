@@ -380,7 +380,7 @@ export class InstrumentReader {
       }
       const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
       this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-      Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
+      Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e, e.stack);
     }
 
     this.previousMeasure = this.currentMeasure;

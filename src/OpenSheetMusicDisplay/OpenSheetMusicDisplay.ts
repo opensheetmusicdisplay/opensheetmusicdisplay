@@ -20,7 +20,7 @@ export class OpenSheetMusicDisplay {
      * @param container is either the ID, or the actual "div" element which will host the music sheet
      * @autoResize automatically resize the sheet to full page width on window resize
      */
-    constructor(container: string|HTMLElement, autoResize: boolean = false, backend: string = "svg") {
+    constructor(container: string|HTMLElement, autoResize: boolean = false, backendType: string = "svg") {
         // Store container element
         if (typeof container === "string") {
             // ID passed
@@ -33,20 +33,14 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
-        if (backend === "svg") {
-            this.backend = new SvgVexFlowBackend();
-        } else {
-            this.backend = new CanvasVexFlowBackend();
-        }
+        this.backendType = backendType;
+        this.backends = [];
+        this.setBackends(1);
 
-        this.backend.initialize(this.container);
-        this.canvas = this.backend.getCanvas();
-        const inner: HTMLElement = this.backend.getInnerElement();
-
-        // Create the drawer
-        this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, false);
         // Create the cursor
-        this.cursor = new Cursor(inner, this);
+        this.cursor = new Cursor(this);
+        // Create the drawer
+        this.drawer = new VexFlowMusicSheetDrawer(this.backends, false);
 
         if (autoResize) {
             this.autoResize();
@@ -55,13 +49,32 @@ export class OpenSheetMusicDisplay {
 
     public cursor: Cursor;
     public zoom: number = 1.0;
+    public backends: VexFlowBackend[];
 
     private container: HTMLElement;
-    private canvas: HTMLElement;
-    private backend: VexFlowBackend;
+    private backendType: string;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
+
+    private setBackends(count: number): void {
+        while (this.backends.length > count) {
+            delete this.backends[this.backends.length - 1];
+            this.backends.splice(0, 1);
+        }
+        while (this.backends.length < count) {
+            let backend: VexFlowBackend;
+            if (this.backendType === "svg") {
+                backend = new SvgVexFlowBackend();
+            } else {
+                backend = new CanvasVexFlowBackend();
+            }
+            backend.initialize(this.container);
+            this.backends.push(backend);
+        }
+        // Don't page break before the first canvas
+        this.backends[0].getCanvas().style.pageBreakBefore = "avoid";
+    }
 
     /**
      * Load a MusicXML file
@@ -143,23 +156,21 @@ export class OpenSheetMusicDisplay {
         //    return;
         //}
 
-        // Set page width
+        // Set page width and height
         this.sheet.pageWidth = width / this.zoom / 10.0;
+        this.sheet.rules.PageHeight = Math.floor(1.360001 * this.sheet.pageWidth);
+
         // Calculate again
         this.graphic.reCalculate();
+        this.setBackends(this.graphic.MusicPages.length);
         this.graphic.Cursors.length = 0;
-        /*this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(0, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(1, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(2, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(3, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(4, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(5, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(6, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(7, 4), OutlineAndFillStyleEnum.PlaybackCursor));*/
+
         // Update Sheet Page
-        const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
+        //let height: number = 0.0;
+        //for (let idx: number = 0, len: number = this.graphic.MusicPages.length; idx < len; ++idx)
+        //    height += this.graphic.MusicPages[idx].PositionAndShape.BorderBottom * 10.0 * this.zoom;
         this.drawer.clear();
-        this.drawer.resize(width, height);
+        this.drawer.resize(width, this.graphic);
         this.drawer.scale(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);

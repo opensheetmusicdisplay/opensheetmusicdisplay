@@ -49,7 +49,7 @@ export class GraphicalMusicPage extends GraphicalObject {
      */
     public setMusicPageAbsolutePosition(pageIndex: number, rules: EngravingRules): PointF2D {
         if (rules.PagePlacement === PagePlacementEnum.Down) {
-            return new PointF2D(0.0, pageIndex * rules.PageHeight);
+            return new PointF2D(0.0, 0.0);
         } else if (rules.PagePlacement === PagePlacementEnum.Right) {
             return new PointF2D(pageIndex * this.parent.ParentMusicSheet.pageWidth, 0.0);
         } else {

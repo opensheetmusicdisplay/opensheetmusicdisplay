@@ -18,6 +18,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.inner = this.canvas;
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
+        this.canvas.style.pageBreakBefore = "always";
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();

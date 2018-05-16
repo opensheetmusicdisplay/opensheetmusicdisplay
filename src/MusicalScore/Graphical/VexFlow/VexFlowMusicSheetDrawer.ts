@@ -9,9 +9,11 @@ import {GraphicalObject} from "../GraphicalObject";
 import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
-import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
-import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
-import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import {VexFlowInstrumentBracket} from "./VexFlowInstrumentBracket";
+import {VexFlowInstrumentBrace} from "./VexFlowInstrumentBrace";
+import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
+import {GraphicalMusicPage} from "../GraphicalMusicPage";
+import {GraphicalMusicSheet} from "../GraphicalMusicSheet";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -22,17 +24,33 @@ export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private backend: VexFlowBackend;
+    private backends: VexFlowBackend[];
     private zoom: number = 1.0;
+    private pageIdx: number = 0;
 
-    constructor(element: HTMLElement,
-                backend: VexFlowBackend,
+    constructor(backends: VexFlowBackend[],
                 isPreviewImageDrawer: boolean = false) {
         super(new VexFlowTextMeasurer(), isPreviewImageDrawer);
-        this.backend = backend;
+        this.backends = backends;
+        this.backend = backends[0];
+    }
+
+    public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        this.pageIdx = 0;
+        this.backend = this.backends[0];
+        super.drawSheet(graphicalMusicSheet);
+    }
+
+    protected drawPage(page: GraphicalMusicPage): void {
+        super.drawPage(page);
+        this.pageIdx += 1;
+        this.backend = this.backends[this.pageIdx];
     }
 
     public clear(): void {
-        this.backend.clear();
+        for (const backend of this.backends) {
+            backend.clear();
+        }
     }
 
     /**
@@ -41,20 +59,27 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     public scale(k: number): void {
         this.zoom = k;
-        this.backend.scale(this.zoom);
+        for (const backend of this.backends) {
+            backend.scale(this.zoom);
+        }
     }
 
     /**
      * Resize the rendering areas
      * @param x
-     * @param y
+     * @param zoom
      */
-    public resize(x: number, y: number): void {
-        this.backend.resize(x, y);
+    public resize(x: number, graphicalMusicSheet: GraphicalMusicSheet): void {
+        for (let idx: number = 0; idx < graphicalMusicSheet.MusicPages.length; idx++) {
+            const height: number = graphicalMusicSheet.MusicPages[idx].PositionAndShape.BorderBottom * 10.0 * this.zoom;
+            this.backends[idx].resize(x, height);
+        }
     }
 
     public translate(x: number, y: number): void {
-        this.backend.translate(x, y);
+        for (const backend of this.backends) {
+            backend.translate(x, y);
+        }
     }
 
     /**

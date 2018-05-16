@@ -154,11 +154,11 @@ export class EngravingRules {
         // Staff sizing Variables
         this.pagePlacementEnum = PagePlacementEnum.Down;
         this.pageHeight = 100001.0;
-        this.pageTopMargin = 5.0;
+        this.pageTopMargin = 10.0;
         this.pageBottomMargin = 5.0;
         this.pageLeftMargin = 5.0;
         this.pageRightMargin = 5.0;
-        this.titleTopDistance = 9.0;
+        this.titleTopDistance = 4.0;
         this.titleBottomDistance = 1.0;
         this.staffDistance = 7.0;
         this.betweenStaffDistance = 5.0;

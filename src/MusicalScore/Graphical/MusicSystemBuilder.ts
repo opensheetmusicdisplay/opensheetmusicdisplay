@@ -52,7 +52,7 @@ export class MusicSystemBuilder {
         this.measureList = measureList;
         this.symbolFactory = symbolFactory;
         this.currentMusicPage = this.createMusicPage();
-        this.currentPageHeight = 0.0;
+        this.currentPageHeight = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.TitleBottomDistance;
         this.numberOfVisibleStaffLines = numberOfStaffLines;
         this.activeRhythm = new Array(this.numberOfVisibleStaffLines);
         this.activeKeys = new Array(this.numberOfVisibleStaffLines);
@@ -178,16 +178,16 @@ export class MusicSystemBuilder {
         this.stretchMusicSystem(isPartEndingSystem);
         if (this.currentPageHeight + this.currentSystemParams.currentSystem.PositionAndShape.Size.height + this.rules.SystemDistance <= this.rules.PageHeight) {
             this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.Size.height + this.rules.SystemDistance;
-            if (
+            if (!isPartEndingSystem &&
                 this.currentPageHeight + this.currentSystemParams.currentSystem.PositionAndShape.Size.height
                 + this.rules.SystemDistance >= this.rules.PageHeight
             ) {
                 this.currentMusicPage = this.createMusicPage();
-                this.currentPageHeight = this.rules.PageTopMargin + this.rules.TitleTopDistance;
+                this.currentPageHeight = this.rules.PageTopMargin;
             }
         } else {
             this.currentMusicPage = this.createMusicPage();
-            this.currentPageHeight = this.rules.PageTopMargin + this.rules.TitleTopDistance;
+            this.currentPageHeight = this.rules.PageTopMargin;
         }
         this.currentSystemParams = new SystemBuildParameters();
         if (this.measureListIndex < this.measureList.length) {
