@@ -205,7 +205,7 @@ export abstract class MusicSheetCalculator {
         this.calculateLyricsPosition();
 
         // Add some white space at the end of the piece:
-        this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
+        // this.graphicalMusicSheet.MusicPages[0].PositionAndShape.BorderMarginBottom += 9;
 
         // transform Relative to Absolute Positions
         GraphicalMusicSheet.transformRelativeToAbsolutePosition(this.graphicalMusicSheet);
