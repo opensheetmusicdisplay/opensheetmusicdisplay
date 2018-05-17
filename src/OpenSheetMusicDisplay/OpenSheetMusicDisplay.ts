@@ -95,7 +95,7 @@ export class OpenSheetMusicDisplay {
                 return self.load(str.substr(3));
             }
             if (str.substr(0, 5) === "<?xml") {
-                // Parse the string representing an xml file                
+                // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(str, "application/xml");
             } else if (str.length < 2083) {

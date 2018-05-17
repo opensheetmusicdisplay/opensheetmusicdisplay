@@ -2,7 +2,6 @@ var path = require('path')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 var webpack = require('webpack')
 
-
 module.exports = {
     entry: {
         'opensheetmusicdisplay': './src/OpenSheetMusicDisplay/OpenSheetMusicDisplay.ts', // Main library
@@ -30,7 +29,7 @@ module.exports = {
             {
                 test: /\.node$/,
                 use: 'node-loader'
-              }
+            }
         ]
     },
     plugins: [
