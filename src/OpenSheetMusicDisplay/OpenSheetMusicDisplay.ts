@@ -13,6 +13,10 @@ import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
+import {JSDOM} from "jsdom";
+
+const window: any = (new JSDOM("<html><body></body></html>")).window;
+const document: HTMLDocument = window.document;
 
 export class OpenSheetMusicDisplay {
     /**
@@ -208,6 +212,7 @@ export class OpenSheetMusicDisplay {
         // this.canvas.width = 0;
         // this.canvas.height = 0;
     }
+
 
     /**
      * Attach the appropriate handler to the window.onResize event

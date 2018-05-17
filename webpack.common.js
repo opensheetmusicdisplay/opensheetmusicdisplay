@@ -2,11 +2,13 @@ var path = require('path')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 var webpack = require('webpack')
 
+
 module.exports = {
     entry: {
         'opensheetmusicdisplay': './src/OpenSheetMusicDisplay/OpenSheetMusicDisplay.ts', // Main library
         'demo': './demo/index.js' // Demo index
     },
+    target: 'node',
     output: {
         path: path.resolve(__dirname, 'build'),
         filename: '[name].js',

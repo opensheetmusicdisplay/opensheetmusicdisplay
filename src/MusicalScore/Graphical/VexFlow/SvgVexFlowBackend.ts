@@ -6,7 +6,10 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
+import {JSDOM} from "jsdom";
 
+const window: any = (new JSDOM("<html><body></body></html>")).window;
+const document: HTMLDocument = window.document;
 export class SvgVexFlowBackend extends VexFlowBackend {
 
     public getBackendType(): number {
@@ -16,9 +19,9 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     public initialize(container: HTMLElement): void {
         this.canvas = document.createElement("div");
         this.inner = this.canvas;
-        this.inner.style.position = "relative";
+        this.canvas.style.position = "relative";
         this.canvas.style.zIndex = "0";
-        container.appendChild(this.inner);
+        document.body.appendChild(this.canvas);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
 

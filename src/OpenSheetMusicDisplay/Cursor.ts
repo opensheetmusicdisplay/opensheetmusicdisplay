@@ -5,7 +5,10 @@ import {VexFlowStaffEntry} from "../MusicalScore/Graphical/VexFlow/VexFlowStaffE
 import {MusicSystem} from "../MusicalScore/Graphical/MusicSystem";
 import {OpenSheetMusicDisplay} from "./OpenSheetMusicDisplay";
 import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet";
+import {JSDOM} from "jsdom";
 
+const window: any = (new JSDOM("<html><body></body></html>")).window;
+const document: HTMLDocument = window.document;
 /**
  * A cursor which can iterate through the music sheet.
  */

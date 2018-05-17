@@ -47,8 +47,10 @@
   },
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
+    "@types/jsdom": "^11.0.4",
     "es6-promise": "^4.0.5",
     "increase-memory-limit": "^1.0.6",
+    "jsdom": "^11.10.0",
     "jszip": "^3.0.0",
     "loglevel": "^1.5.0",
     "shortid": "^2.2.6",
