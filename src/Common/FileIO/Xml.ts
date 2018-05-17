@@ -34,7 +34,7 @@ export class IXmlElement {
         }
         this.hasElements = elem.hasChildNodes();
         // Look for a value
-        if (elem.childNodes.length === 1 && elem.childNodes[0].nodeType === Node.TEXT_NODE) {
+        if (elem.childNodes.length === 1 && elem.childNodes[0].nodeType === 3) {
             this.value = elem.childNodes[0].nodeValue;
         } else {
             this.value = "";
@@ -75,7 +75,7 @@ export class IXmlElement {
         const nodes: NodeList = this.elem.childNodes;
         for (let i: number = 0, length: number = nodes.length; i < length; i += 1) {
             const node: Node = nodes[i];
-            if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === elementName) {
+            if (node.nodeType === 1 && node.nodeName.toLowerCase() === elementName) {
                 return new IXmlElement(node as Element);
             }
         }
@@ -95,7 +95,7 @@ export class IXmlElement {
         }
         for (let i: number = 0; i < nodes.length; i += 1) {
             const node: Node = nodes[i];
-            if (node.nodeType === Node.ELEMENT_NODE &&
+            if (node.nodeType === 1 &&
                 (nameUnset || node.nodeName.toLowerCase() === nodeName)
             ) {
                 ret.push(new IXmlElement(node as Element));

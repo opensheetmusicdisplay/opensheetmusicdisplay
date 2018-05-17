@@ -60,11 +60,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * @returns {MusicSheet}
      */
     public createMusicSheet(root: IXmlElement, path: string): MusicSheet {
-        try {
+        // try {
             return this._createMusicSheet(root, path);
-        } catch (e) {
-            Logging.log("MusicSheetReader.CreateMusicSheet", e);
-        }
+        // } catch (e) {
+        //     Logging.log("MusicSheetReader.CreateMusicSheet", e);i
+        // }
     }
 
     private _removeFromArray(list: any[], elem: any): void {

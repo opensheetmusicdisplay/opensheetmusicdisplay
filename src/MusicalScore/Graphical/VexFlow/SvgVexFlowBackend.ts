@@ -20,11 +20,12 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.canvas = document.createElement("div");
         this.inner = this.canvas;
         this.canvas.style.position = "relative";
+        this.canvas.style.width = "1000px";
+        this.canvas.style.height = "768px";
         this.canvas.style.zIndex = "0";
         document.body.appendChild(this.canvas);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
-
     }
 
     public getContext(): Vex.Flow.SVGContext {

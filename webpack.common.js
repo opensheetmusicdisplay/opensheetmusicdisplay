@@ -26,7 +26,11 @@ module.exports = {
                 test: /\.ts$/,
                 loader: 'ts-loader',
                 exclude: /(node_modules|bower_components)/
-            }
+            },
+            {
+                test: /\.node$/,
+                use: 'node-loader'
+              }
         ]
     },
     plugins: [

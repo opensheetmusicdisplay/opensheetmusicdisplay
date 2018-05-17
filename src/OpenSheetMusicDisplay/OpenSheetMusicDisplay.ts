@@ -62,7 +62,7 @@ export class OpenSheetMusicDisplay {
 
     private container: HTMLElement;
     private canvas: HTMLElement;
-    private backend: VexFlowBackend;
+    public backend: VexFlowBackend;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
@@ -95,7 +95,7 @@ export class OpenSheetMusicDisplay {
                 return self.load(str.substr(3));
             }
             if (str.substr(0, 5) === "<?xml") {
-                // Parse the string representing an xml file
+                // Parse the string representing an xml file                
                 const parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(str, "application/xml");
             } else if (str.length < 2083) {
@@ -115,7 +115,7 @@ export class OpenSheetMusicDisplay {
         let elem: Element;
         for (let i: number = 0, length: number = children.length; i < length; i += 1) {
             const node: Node = children[i];
-            if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === "score-partwise") {
+            if (node.nodeType === 1 && node.nodeName.toLowerCase() === "score-partwise") {
                 elem = <Element>node;
                 break;
             }
