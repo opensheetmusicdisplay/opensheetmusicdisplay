@@ -32,7 +32,7 @@ export class AJAX {
                     }
                 }
             };
-            xhttp.overrideMimeType("text/plain; charset=x-user-defined");
+            xhttp.overrideMimeType("text/xml");
             xhttp.open("GET", url, true);
             xhttp.send();
         });
