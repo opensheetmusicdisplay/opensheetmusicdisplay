@@ -54,7 +54,7 @@ export abstract class VexFlowBackend {
    */
   public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number): void;
 
-  public abstract renderLine(start: PointF2D, stop: PointF2D): void;
+  public abstract renderLine(start: PointF2D, stop: PointF2D, color: string): void;
 
   public abstract getBackendType(): number;
 

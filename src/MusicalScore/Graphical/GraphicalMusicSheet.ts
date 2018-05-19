@@ -57,7 +57,7 @@ export class GraphicalMusicSheet {
     private numberOfStaves: number;
     private leadSheet: boolean = false;
     private skyLineVisible: boolean = true;
-    private bottomLineVisible: boolean = false;
+    private bottomLineVisible: boolean = true;
 
     public get ParentMusicSheet(): MusicSheet {
         return this.musicSheet;

@@ -41,7 +41,7 @@ export class SkyBottomLineCalculator {
 
             // Create a temporary canvas outside the DOM to draw the measure in.
             const tmpCanvas: CanvasVexFlowBackend = new CanvasVexFlowBackend();
-            tmpCanvas.initializeHeadless();
+            tmpCanvas.initializeHeadless(measure.getVFStave().getWidth());
 
             const width: number = (tmpCanvas.getCanvas() as any).width;
             const height: number = (tmpCanvas.getCanvas() as any).height;
@@ -49,6 +49,9 @@ export class SkyBottomLineCalculator {
 
             measure.getVFStave().setY((measure.getVFStave() as any).y + 40);
             const oldMeasureWidth: number = measure.getVFStave().getWidth();
+            // We need to tell the VexFlow stave about the canvas width. This looks
+            // redundant because it should know the canvas but somehow it doesn't.
+            // Maybe I am overlooking something but for no this does the trick
             measure.getVFStave().setWidth(width);
             measure.format();
             measure.getVFStave().setWidth(oldMeasureWidth);
@@ -105,22 +108,23 @@ export class SkyBottomLineCalculator {
         const subSampledSkyLine: number[] = [];
         const subSampledBottomLine: number[] = [];
         for (let chunkIndex: number = 0; chunkIndex < this.mSkyLine.length; chunkIndex += arrayChunkSize) {
-            const chunk: number[] = this.mSkyLine.slice(chunkIndex, chunkIndex + arrayChunkSize);
+            let chunk: number[] = this.mSkyLine.slice(chunkIndex, chunkIndex + arrayChunkSize);
             subSampledSkyLine.push(Math.min(...chunk));
+            chunk = this.mBottomLine.slice(chunkIndex, chunkIndex + arrayChunkSize);
+            subSampledBottomLine.push(Math.max(...chunk));
         }
 
         this.mSkyLine = subSampledSkyLine;
+        this.mBottomLine = subSampledBottomLine;
         if (this.mSkyLine.length !== arrayLength) {
-            Logging.warn(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength}) truncating`);
-            // this.mSkyLine = this.mSkyLine.slice(this.mSkyLine.length - arrayLength, this.mSkyLine.length);
+            Logging.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength}) truncating`);
         }
         if (this.mBottomLine.length !== arrayLength) {
-            //this.mBottomLine = new Array(arrayLength);
-            // Logging.warn(`BottomLine calculation was not correct (${this.mBottomLine.length} instead of ${arrayLength}) initalizing with zeros`);
+            Logging.debug(`BottomLine calculation was not correct (${this.mBottomLine.length} instead of ${arrayLength}) initalizing with zeros`);
         }
         // Remap the values from 0 to +/- height in units and attach it to the parent staff
         this.mStaffLineParent.SkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
-        this.mStaffLineParent.BottomLine = this.mBottomLine.map(v => (v - Math.max(...this.mBottomLine)) / unitInPixels);
+        this.mStaffLineParent.BottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels);
     }
 
     private drawPixel(coord: PointF2D, backend: CanvasVexFlowBackend, color: string = "#FF0000FF"): void {
