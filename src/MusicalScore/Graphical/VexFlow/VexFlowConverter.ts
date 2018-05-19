@@ -362,14 +362,11 @@ export class VexFlowConverter {
             default:
         }
 
-        switch (clef.OctaveOffset) {
-            case 1:
-                annotation = "8va";
-                break;
-            case -1:
-                annotation = "8vb";
-                break;
-            default:
+        // annotations in vexflow don't allow bass and 8va. No matter the offset :(
+        if (clef.OctaveOffset === 1 && type !== "bass" ) {
+            annotation = "8va";
+        } else if (clef.OctaveOffset === -1) {
+            annotation = "8vb";
         }
         return { type, size, annotation };
     }

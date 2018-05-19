@@ -1,11 +1,11 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
-  "main": "dist/src/OpenSheetMusicDisplay/OpenSheetMusicDisplay.js",
-  "typings": "dist/src/OpenSheetMusicDisplay/OpenSheetMusicDisplay",
+  "main": "build/opensheetmusicdisplay.min.js",
+  "typings": "build/dist/src/OpenSheetMusicDisplay/OpenSheetMusicDisplay",
   "scripts": {
-    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
+    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --ignoreCompilerErrors --mode file ./src",
     "eslint": "eslint .",
     "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "npm-run-all eslint tslint",
@@ -23,16 +23,12 @@
     "lint"
   ],
   "files": [
-    "dist",
+    "build/dist/src",
+    "build/opensheetmusicdisplay.min.js",
     "AUTHORS",
     "CHANGELOG.md",
     "README.md",
-    "karma.conf.js",
-    "src",
-    "external",
-    "demo",
-    "tsconfig.json",
-    "tslint.json"
+    "external"
   ],
   "repository": {
     "type": "git",
@@ -93,7 +89,7 @@
     "tsify": "^3.0.0",
     "tslint": "^5.8.0",
     "tslint-loader": "^3.5.3",
-    "typedoc": "^0.10.0",
+    "typedoc": "^0.11.1",
     "typescript": "^2.6.1",
     "uglifyjs-webpack-plugin": "^1.2.4",
     "underscore-template-loader": "^1.0.0",

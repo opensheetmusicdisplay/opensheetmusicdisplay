@@ -13,7 +13,9 @@ var pathsToClean = [
 module.exports = merge(common, {
     output: {
         filename: '[name].min.js',
-        path: path.resolve(__dirname, 'build')
+        path: path.resolve(__dirname, 'build'),
+        library: 'opensheetmusicdisplay',
+        libraryTarget: 'umd'
     },
     mode: 'production',
     optimization: {
