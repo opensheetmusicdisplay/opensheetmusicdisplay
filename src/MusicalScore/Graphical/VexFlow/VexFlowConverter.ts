@@ -137,6 +137,13 @@ export class VexFlowConverter {
         return acc;
     }
 
+    public static GhostNote(frac: Fraction): Vex.Flow.GhostNote {
+        // const frac: Fraction = notes[0].graphicalNoteLength;
+        return new Vex.Flow.GhostNote({
+            duration: VexFlowConverter.duration(frac, false),
+        });
+    }
+
     /**
      * Convert a set of GraphicalNotes to a VexFlow StaveNote
      * @param notes form a chord on the staff

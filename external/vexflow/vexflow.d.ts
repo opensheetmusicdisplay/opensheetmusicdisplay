@@ -76,6 +76,15 @@ declare namespace Vex {
             public setStemDirection(direction: number): StemmableNote;
         }
 
+        export class GhostNote extends StemmableNote {
+            constructor(note_struct: any);
+            isRest(): boolean;
+
+            setStave(stave): void;
+
+            draw(): void;
+        }
+
         export class StaveNote extends StemmableNote {
             constructor(note_struct: any);
 
