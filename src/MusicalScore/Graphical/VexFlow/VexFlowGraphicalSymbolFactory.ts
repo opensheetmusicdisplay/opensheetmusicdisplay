@@ -22,6 +22,7 @@ import {GraphicalChordSymbolContainer} from "../GraphicalChordSymbolContainer";
 import {GraphicalLabel} from "../GraphicalLabel";
 import {EngravingRules} from "../EngravingRules";
 import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -95,19 +96,11 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift   The currently active octave transposition enum, needed for positioning the note vertically
      * @returns {GraphicalNote}
      */
-    public createNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
+    public createNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry,
                       activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined): GraphicalNote {
         // Creates the note:
-        const graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift, graphicalNoteLength);
-        if (note.ParentVoiceEntry !== undefined) {
-            // Adds the note to the right (graphical) voice (mynotes)
-            const voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
-            const mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
-            if (!(voiceID in mynotes)) {
-                mynotes[voiceID] = [];
-            }
-            mynotes[voiceID].push(graphicalNote);
-        }
+        const graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift, graphicalNoteLength);
+        graphicalVoiceEntry.notes.push(graphicalNote);
         return graphicalNote;
     }
 
@@ -115,14 +108,14 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * Create a Graphical Grace Note (smaller head, stem...) for given note and clef and as part of graphicalStaffEntry.
      * @param note
      * @param numberOfDots
-     * @param graphicalStaffEntry
+     * @param graphicalVoiceEntry
      * @param activeClef
      * @param octaveShift
      * @returns {GraphicalNote}
      */
-    public createGraceNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
+    public createGraceNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry,
                            activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
-        return new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift);
+        return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift);
     }
 
     /**

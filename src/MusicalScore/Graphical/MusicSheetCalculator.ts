@@ -54,6 +54,7 @@ import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
 import {GraphicalLyricWord} from "./GraphicalLyricWord";
 import {GraphicalLine} from "./GraphicalLine";
 import {Label} from "../Label";
+import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -929,7 +930,7 @@ export abstract class MusicSheetCalculator {
                                octaveShiftValue: OctaveEnum, grace: boolean = false, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
         this.calculateStemDirectionFromVoices(voiceEntry);
-        const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.findOrCreateGraphicalNotesListFromVoiceEntry(voiceEntry);
+        const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             const note: Note = voiceEntry.Notes[idx];
             if (sourceStaffEntry !== undefined && sourceStaffEntry.Link !== undefined && linkedNotes !== undefined && linkedNotes.indexOf(note) > -1) {
@@ -937,9 +938,9 @@ export abstract class MusicSheetCalculator {
             }
             let graphicalNote: GraphicalNote;
             if (grace) {
-                graphicalNote = this.symbolFactory.createGraceNote(note, graphicalStaffEntry, activeClef, octaveShiftValue);
+                graphicalNote = this.symbolFactory.createGraceNote(note, gve, activeClef, octaveShiftValue);
             } else {
-                graphicalNote = this.symbolFactory.createNote(note, graphicalStaffEntry, activeClef, octaveShiftValue, undefined);
+                graphicalNote = this.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, undefined);
             }
             if (note.NoteTie !== undefined) {
                 MusicSheetCalculator.addTieToTieTimestampsDict(tieTimestampListDict, note);
@@ -948,7 +949,7 @@ export abstract class MusicSheetCalculator {
                 this.checkNoteForAccidental(graphicalNote, accidentalCalculator, activeClef, octaveShiftValue, grace);
             }
             this.resetYPositionForLeadSheet(graphicalNote.PositionAndShape);
-            graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(graphicalNotes, graphicalNote);
+            graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(gve, graphicalNote);
             graphicalNote.PositionAndShape.calculateBoundingBox();
             if (!this.leadSheet) {
                 if (note.NoteBeam !== undefined) {
@@ -1036,13 +1037,14 @@ export abstract class MusicSheetCalculator {
                         }
                         const isLastTieNote: boolean = k === tieTimestamps.length - 1;
                         const tieFraction: Fraction = openTie.Fractions[k];
+                        const gve: GraphicalVoiceEntry =
+                            graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(openTie.Start.ParentVoiceEntry);
+
                         // GraphicalNote points to tieStartNote, but must get the correct Length (eg the correct Fraction of tieStartNote's Length)
-                        const tiedGraphicalNote: GraphicalNote = thisPointer.symbolFactory.createNote(openTie.Start, graphicalStaffEntry, activeClef,
+                        const tiedGraphicalNote: GraphicalNote = thisPointer.symbolFactory.createNote(openTie.Start, gve, activeClef,
                                                                                                       octaveShiftValue, tieFraction);
 
-                        const graphicalNotes: GraphicalNote[] =
-                            graphicalStaffEntry.findOrCreateGraphicalNotesListFromGraphicalNote(tiedGraphicalNote);
-                        graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(graphicalNotes, tiedGraphicalNote);
+                        graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(gve, tiedGraphicalNote);
 
                         thisPointer.handleTiedGraphicalNote(tiedGraphicalNote, beams, activeClef, octaveShiftValue, graphicalStaffEntry, tieFraction,
                                                             openTie, isLastTieNote);
@@ -1074,9 +1076,8 @@ export abstract class MusicSheetCalculator {
         graphicalStaffEntry.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
         if (!this.leadSheet) {
             const isGraceStaffEntry: boolean = graphicalStaffEntry.staffEntryParent !== undefined;
-            const graphicalStaffEntryNotes: GraphicalNote[][] = graphicalStaffEntry.notes;
-            for (let idx4: number = 0, len4: number = graphicalStaffEntryNotes.length; idx4 < len4; ++idx4) {
-                const graphicalNotes: GraphicalNote[] = graphicalStaffEntryNotes[idx4];
+            for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+                const graphicalNotes: GraphicalNote[] = gve.notes;
                 if (graphicalNotes.length === 0) {
                     continue;
                 }
@@ -1134,8 +1135,8 @@ export abstract class MusicSheetCalculator {
                         const measure: StaffMeasure = staffLine.Measures[idx4];
                         if (measure.staffEntries.length === 1) {
                             const gse: GraphicalStaffEntry = measure.staffEntries[0];
-                            if (gse.notes.length > 0 && gse.notes[0].length > 0) {
-                                const graphicalNote: GraphicalNote = gse.notes[0][0];
+                            if (gse.graphicalVoiceEntries.length > 0 && gse.graphicalVoiceEntries[0].notes.length > 0) {
+                                const graphicalNote: GraphicalNote = gse.graphicalVoiceEntries[0].notes[0];
                                 if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.Length)) {
                                     this.layoutMeasureWithWholeRest(graphicalNote, gse, measure);
                                 }
@@ -1148,18 +1149,18 @@ export abstract class MusicSheetCalculator {
     }
 
     protected optimizeRestNotePlacement(graphicalStaffEntry: GraphicalStaffEntry, measure: StaffMeasure): void {
-        if (graphicalStaffEntry.notes.length === 0) {
+        if (graphicalStaffEntry.graphicalVoiceEntries.length === 0) {
             return;
         }
-        const voice1Notes: GraphicalNote[] = graphicalStaffEntry.notes[0];
+        const voice1Notes: GraphicalNote[] = graphicalStaffEntry.graphicalVoiceEntries[0].notes;
         if (voice1Notes.length === 0) {
             return;
         }
         const voice1Note1: GraphicalNote = voice1Notes[0];
         const voice1Note1IsRest: boolean = voice1Note1.sourceNote.Pitch === undefined;
-        if (graphicalStaffEntry.notes.length === 2) {
+        if (graphicalStaffEntry.graphicalVoiceEntries.length === 2) {
             let voice2Note1IsRest: boolean = false;
-            const voice2Notes: GraphicalNote[] = graphicalStaffEntry.notes[1];
+            const voice2Notes: GraphicalNote[] = graphicalStaffEntry.graphicalVoiceEntries[1].notes;
             if (voice2Notes.length > 0) {
                 const voice2Note1: GraphicalNote = voice2Notes[0];
                 voice2Note1IsRest = voice2Note1.sourceNote.Pitch === undefined;
@@ -1174,10 +1175,10 @@ export abstract class MusicSheetCalculator {
             const staffEntryIndex: number = measure.staffEntries.indexOf(graphicalStaffEntry);
             const previousStaffEntry: GraphicalStaffEntry = measure.staffEntries[staffEntryIndex - 1];
             const nextStaffEntry: GraphicalStaffEntry = measure.staffEntries[staffEntryIndex + 1];
-            if (previousStaffEntry.notes.length === 1) {
-                const previousNote: GraphicalNote = previousStaffEntry.notes[0][0];
-                if (previousNote.sourceNote.NoteBeam !== undefined && nextStaffEntry.notes.length === 1) {
-                    const nextNote: GraphicalNote = nextStaffEntry.notes[0][0];
+            if (previousStaffEntry.graphicalVoiceEntries.length === 1) {
+                const previousNote: GraphicalNote = previousStaffEntry.graphicalVoiceEntries[0].notes[0];
+                if (previousNote.sourceNote.NoteBeam !== undefined && nextStaffEntry.graphicalVoiceEntries.length === 1) {
+                    const nextNote: GraphicalNote = nextStaffEntry.graphicalVoiceEntries[0].notes[0];
                     if (nextNote.sourceNote.NoteBeam !== undefined && previousNote.sourceNote.NoteBeam === nextNote.sourceNote.NoteBeam) {
                         this.calculateRestNotePlacementWithinGraphicalBeam(
                             graphicalStaffEntry, voice1Note1, previousNote,
@@ -1537,19 +1538,20 @@ export abstract class MusicSheetCalculator {
                 openOctaveShifts[staffIndex] = undefined;
             }
         }
+        // if there are no staffEntries in this measure, create a rest for the whole measure:
         if (measure.staffEntries.length === 0) {
             const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, staff);
             const note: Note = new Note(undefined, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
             const graphicalStaffEntry: GraphicalStaffEntry = this.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
             measure.addGraphicalStaffEntry(graphicalStaffEntry);
             graphicalStaffEntry.relInMeasureTimestamp = new Fraction(0, 1);
-            const graphicalNotes: GraphicalNote[] = [];
-            graphicalStaffEntry.notes.push(graphicalNotes);
-            const graphicalNote: GraphicalNote = this.symbolFactory.createNote(   note,
-                                                                                  graphicalStaffEntry,
-                                                                                  new ClefInstruction(),
-                                                                                  OctaveEnum.NONE, undefined);
-            graphicalNotes.push(graphicalNote);
+            const gve: GraphicalVoiceEntry = new GraphicalVoiceEntry(undefined, graphicalStaffEntry);
+            graphicalStaffEntry.graphicalVoiceEntries.push(gve);
+            const graphicalNote: GraphicalNote = this.symbolFactory.createNote( note,
+                                                                                gve,
+                                                                                new ClefInstruction(),
+                                                                                OctaveEnum.NONE, undefined);
+            gve.notes.push(graphicalNote);
         }
         return measure;
     }
@@ -1605,9 +1607,10 @@ export abstract class MusicSheetCalculator {
             const measures: StaffMeasure[] = this.graphicalMusicSheet.MeasureList[idx];
             for (let idx2: number = 0, len2: number = measures.length; idx2 < len2; ++idx2) {
                 const measure: StaffMeasure = measures[idx2];
-                for (let idx3: number = 0, len3: number = measure.staffEntries.length; idx3 < len3; ++idx3) {
-                    const graphicalStaffEntry: GraphicalStaffEntry = measure.staffEntries[idx3];
-                    if (graphicalStaffEntry.parentMeasure !== undefined && graphicalStaffEntry.notes.length > 0 && graphicalStaffEntry.notes[0].length > 0) {
+                for (const graphicalStaffEntry of measure.staffEntries) {
+                    if (graphicalStaffEntry.parentMeasure !== undefined
+                        && graphicalStaffEntry.graphicalVoiceEntries.length > 0
+                        && graphicalStaffEntry.graphicalVoiceEntries[0].notes.length > 0) {
                         this.layoutVoiceEntries(graphicalStaffEntry);
                         this.layoutStaffEntry(graphicalStaffEntry);
                     }
@@ -1722,8 +1725,8 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateTwoRestNotesPlacementWithCollisionDetection(graphicalStaffEntry: GraphicalStaffEntry): void {
-        const firstRestNote: GraphicalNote = graphicalStaffEntry.notes[0][0];
-        const secondRestNote: GraphicalNote = graphicalStaffEntry.notes[1][0];
+        const firstRestNote: GraphicalNote = graphicalStaffEntry.graphicalVoiceEntries[0].notes[0];
+        const secondRestNote: GraphicalNote = graphicalStaffEntry.graphicalVoiceEntries[1].notes[0];
         secondRestNote.PositionAndShape.RelativePosition = new PointF2D(0.0, 2.5);
         graphicalStaffEntry.PositionAndShape.calculateAbsolutePositionsRecursiveWithoutTopelement();
         firstRestNote.PositionAndShape.computeNonOverlappingPositionWithMargin(
@@ -1739,12 +1742,12 @@ export abstract class MusicSheetCalculator {
     private calculateRestNotePlacementWithCollisionDetectionFromGraphicalNote(graphicalStaffEntry: GraphicalStaffEntry): void {
         let restNote: GraphicalNote;
         let graphicalNotes: GraphicalNote[];
-        if (graphicalStaffEntry.notes[0][0].sourceNote.Pitch === undefined) {
-            restNote = graphicalStaffEntry.notes[0][0];
-            graphicalNotes = graphicalStaffEntry.notes[1];
+        if (graphicalStaffEntry.graphicalVoiceEntries[0].notes[0].sourceNote.Pitch === undefined) {
+            restNote = graphicalStaffEntry.graphicalVoiceEntries[0].notes[0];
+            graphicalNotes = graphicalStaffEntry.graphicalVoiceEntries[1].notes;
         } else {
-            graphicalNotes = graphicalStaffEntry.notes[0];
-            restNote = graphicalStaffEntry.notes[1][0];
+            graphicalNotes = graphicalStaffEntry.graphicalVoiceEntries[0].notes;
+            restNote = graphicalStaffEntry.graphicalVoiceEntries[1].notes[0];
         }
         let collision: boolean = false;
         graphicalStaffEntry.PositionAndShape.calculateAbsolutePositionsRecursiveWithoutTopelement();
@@ -1791,10 +1794,10 @@ export abstract class MusicSheetCalculator {
                             const graphicalTies: GraphicalTie[] = staffEntry.GraphicalTies;
                             for (let idx7: number = 0, len7: number = graphicalTies.length; idx7 < len7; ++idx7) {
                                 const graphicalTie: GraphicalTie = graphicalTies[idx7];
-                                if (graphicalTie.StartNote !== undefined && graphicalTie.StartNote.parentStaffEntry === staffEntry) {
+                                if (graphicalTie.StartNote !== undefined && graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry === staffEntry) {
                                     const tieIsAtSystemBreak: boolean = (
-                                        graphicalTie.StartNote.parentStaffEntry.parentMeasure.ParentStaffLine !==
-                                        graphicalTie.EndNote.parentStaffEntry.parentMeasure.ParentStaffLine
+                                        graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine !==
+                                        graphicalTie.EndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine
                                     );
                                     this.layoutGraphicalTie(graphicalTie, tieIsAtSystemBreak);
                                 }

@@ -235,20 +235,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
         first_note: vfStartNote,
       });
-      const measure1: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+      const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure1.vfTies.push(vfTie1);
 
       const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
         last_note: vfEndNote,
       });
-      const measure2: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+      const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure2.vfTies.push(vfTie2);
     } else {
       const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
         first_note: vfStartNote,
         last_note: vfEndNote,
       });
-      const measure: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+      const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure.vfTies.push(vfTie);
     }
   }
@@ -316,7 +316,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param openBeams a list of all currently open beams
    */
   protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
-    (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
+    (graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
   }
 
     protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
@@ -399,6 +399,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param openTuplets a list of all currently open tuplets
    */
   protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
-    (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleTuplet(graphicalNote, tuplet);
+    (graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).handleTuplet(graphicalNote, tuplet);
   }
 }

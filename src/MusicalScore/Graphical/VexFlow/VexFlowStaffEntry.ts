@@ -1,8 +1,8 @@
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {SourceStaffEntry} from "../../VoiceData/SourceStaffEntry";
-import {GraphicalNote} from "../GraphicalNote";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -10,7 +10,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
     }
 
     // The Graphical Notes belonging to this StaffEntry, sorted by voiceID
-    public graphicalNotes: { [voiceID: number]: GraphicalNote[]; } = {};
+    public psVoiceEntries: { [voiceID: number]: GraphicalVoiceEntry; } = {};
     // The corresponding VexFlow.StaveNotes
     public vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = {};
 
