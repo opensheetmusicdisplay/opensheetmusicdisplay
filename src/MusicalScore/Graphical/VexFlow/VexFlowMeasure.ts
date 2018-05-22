@@ -20,6 +20,8 @@ import {Tuplet} from "../../VoiceData/Tuplet";
 import { RepetitionInstructionEnum } from "../../VoiceData/Instructions/RepetitionInstruction";
 import { SystemLinePosition } from "../SystemLinePosition";
 import { StemDirectionType } from "../../VoiceData/VoiceEntry";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -44,11 +46,11 @@ export class VexFlowMeasure extends StaffMeasure {
     // VexFlow StaveConnectors (vertical lines)
     private connectors: Vex.Flow.StaveConnector[] = [];
     // Intermediate object to construct beams
-    private beams: { [voiceID: number]: [Beam, VexFlowStaffEntry[]][]; } = {};
+    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][]; } = {};
     // VexFlow Beams
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
     // Intermediate object to construct tuplets
-    private tuplets: { [voiceID: number]: [Tuplet, VexFlowStaffEntry[]][]; } = {};
+    private tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
     // VexFlow Tuplets
     private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
 
@@ -274,17 +276,8 @@ export class VexFlowMeasure extends StaffMeasure {
      * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
      */
     public layoutSymbols(): void {
-        //this.stave.format();
+        // vexflow does the x-layout
     }
-
-    //public addGraphicalStaffEntry(entry: VexFlowStaffEntry): void {
-    //    super.addGraphicalStaffEntry(entry);
-    //}
-    //
-    //public addGraphicalStaffEntryAtTimestamp(entry: VexFlowStaffEntry): void {
-    //    super.addGraphicalStaffEntryAtTimestamp(entry);
-    //    // TODO
-    //}
 
     /**
      * Draw this measure on a VexFlow CanvasContext
@@ -348,11 +341,11 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public handleBeam(graphicalNote: GraphicalNote, beam: Beam): void {
         const voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
-        let beams: [Beam, VexFlowStaffEntry[]][] = this.beams[voiceID];
+        let beams: [Beam, VexFlowVoiceEntry[]][] = this.beams[voiceID];
         if (beams === undefined) {
             beams = this.beams[voiceID] = [];
         }
-        let data: [Beam, VexFlowStaffEntry[]];
+        let data: [Beam, VexFlowVoiceEntry[]];
         for (const mybeam of beams) {
             if (mybeam[0] === beam) {
                 data = mybeam;
@@ -362,7 +355,7 @@ export class VexFlowMeasure extends StaffMeasure {
             data = [beam, []];
             beams.push(data);
         }
-        const parent: VexFlowStaffEntry = graphicalNote.parentStaffEntry as VexFlowStaffEntry;
+        const parent: VexFlowVoiceEntry = graphicalNote.parentVoiceEntry as VexFlowVoiceEntry;
         if (data[1].indexOf(parent) < 0) {
             data[1].push(parent);
         }
@@ -371,11 +364,11 @@ export class VexFlowMeasure extends StaffMeasure {
     public handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet): void {
         const voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
         tuplet = graphicalNote.sourceNote.NoteTuplet;
-        let tuplets: [Tuplet, VexFlowStaffEntry[]][] = this.tuplets[voiceID];
+        let tuplets: [Tuplet, VexFlowVoiceEntry[]][] = this.tuplets[voiceID];
         if (tuplets === undefined) {
             tuplets = this.tuplets[voiceID] = [];
         }
-        let currentTupletBuilder: [Tuplet, VexFlowStaffEntry[]];
+        let currentTupletBuilder: [Tuplet, VexFlowVoiceEntry[]];
         for (const t of tuplets) {
             if (t[0] === tuplet) {
                 currentTupletBuilder = t;
@@ -385,7 +378,7 @@ export class VexFlowMeasure extends StaffMeasure {
             currentTupletBuilder = [tuplet, []];
             tuplets.push(currentTupletBuilder);
         }
-        const parent: VexFlowStaffEntry = graphicalNote.parentStaffEntry as VexFlowStaffEntry;
+        const parent: VexFlowVoiceEntry = graphicalNote.parentVoiceEntry as VexFlowVoiceEntry;
         if (currentTupletBuilder[1].indexOf(parent) < 0) {
             currentTupletBuilder[1].push(parent);
         }
@@ -407,11 +400,18 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
                 for (const beam of this.beams[voiceID]) {
                     const notes: Vex.Flow.StaveNote[] = [];
-                    const staffEntries: VexFlowStaffEntry[] = beam[1];
-                    const autoStemBeam: boolean = staffEntries[0].graphicalNotes[voiceID][0].sourceNote.
-                                                    ParentVoiceEntry.StemDirection === StemDirectionType.Undefined;
-                    for (const entry of staffEntries) {
-                        const note: Vex.Flow.StaveNote = (<VexFlowStaffEntry>entry).vfNotes[voiceID];
+                    const psBeam: Beam = beam[0];
+                    const voiceEntries: VexFlowVoiceEntry[] = beam[1];
+
+                    let autoStemBeam: boolean = true;
+                    for (const gve of voiceEntries) {
+                        if (gve.parentVoiceEntry.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
+                            autoStemBeam = gve.parentVoiceEntry.StemDirection === StemDirectionType.Undefined;
+                        }
+                    }
+
+                    for (const entry of voiceEntries) {
+                        const note: Vex.Flow.StaveNote = (<VexFlowVoiceEntry>entry).vfStaveNote;
                         if (note !== undefined) {
                           notes.push(note);
                         }
@@ -447,9 +447,9 @@ export class VexFlowMeasure extends StaffMeasure {
                 }
                 for (const tupletBuilder of this.tuplets[voiceID]) {
                     const tupletStaveNotes: Vex.Flow.StaveNote[] = [];
-                    const tupletStaffEntries: VexFlowStaffEntry[] = tupletBuilder[1];
-                    for (const tupletStaffEntry of tupletStaffEntries) {
-                      tupletStaveNotes.push((tupletStaffEntry).vfNotes[voiceID]);
+                    const tupletVoiceEntries: VexFlowVoiceEntry[] = tupletBuilder[1];
+                    for (const tupletVoiceEntry of tupletVoiceEntries) {
+                      tupletStaveNotes.push((tupletVoiceEntry).vfStaveNote);
                     }
                     if (tupletStaveNotes.length > 1) {
                       const notesOccupied: number = 2;
@@ -471,16 +471,10 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     public staffMeasureCreatedCalculations(): void {
-        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
-
-            // create vex flow Notes:
-            const gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
-            for (const voiceID in gnotes) {
-                if (gnotes.hasOwnProperty(voiceID)) {
-                    const vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
-                    (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
-                }
+        for (const graphicalStaffEntry of this.staffEntries) {
+            // create vex flow Stave Notes:
+            for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+                (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve.notes);
             }
         }
 
@@ -489,21 +483,19 @@ export class VexFlowMeasure extends StaffMeasure {
 
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
-            const gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
+            const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             // create vex flow voices and add tickables to it:
-            const vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = this.vfVoices;
-            for (const voiceID in gnotes) {
-                if (gnotes.hasOwnProperty(voiceID)) {
-                    if (!(voiceID in vfVoices)) {
-                        vfVoices[voiceID] = new Vex.Flow.Voice({
-                            beat_value: this.parentSourceMeasure.Duration.Denominator,
-                            num_beats: this.parentSourceMeasure.Duration.Numerator,
-                            resolution: Vex.Flow.RESOLUTION,
-                        }).setMode(Vex.Flow.Voice.Mode.SOFT);
-                    }
-
-                    vfVoices[voiceID].addTickable(graphicalStaffEntry.vfNotes[voiceID]);
+            for (const gve of graphicalVoiceEntries) {
+                const voiceID: number = gve.parentVoiceEntry.ParentVoice.VoiceId;
+                if (!(voiceID in this.vfVoices)) {
+                    this.vfVoices[voiceID] = new Vex.Flow.Voice({
+                        beat_value: this.parentSourceMeasure.Duration.Denominator,
+                        num_beats: this.parentSourceMeasure.Duration.Numerator,
+                        resolution: Vex.Flow.RESOLUTION,
+                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
                 }
+
+                this.vfVoices[voiceID].addTickable((gve as VexFlowVoiceEntry).vfStaveNote);
             }
         }
         this.createArticulations();
@@ -513,13 +505,11 @@ export class VexFlowMeasure extends StaffMeasure {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
 
-            // create vex flow Notes:
-            const gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
-            for (const voiceID in gnotes) {
-                if (gnotes.hasOwnProperty(voiceID)) {
-                    const vfnote: StaveNote = (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID];
-                    VexFlowConverter.generateArticulations(vfnote, gnotes[voiceID][0].sourceNote.ParentVoiceEntry.Articulations);
-                }
+            // create vex flow articulation:
+            const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
+            for (const gve of graphicalVoiceEntries) {
+                const vfStaveNote: StaveNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+                VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0].sourceNote.ParentVoiceEntry.Articulations);
             }
         }
     }
@@ -561,7 +551,5 @@ export class VexFlowMeasure extends StaffMeasure {
 
         this.beginInstructionsWidth = beginInstructionsWidth / unitInPixels;
         this.endInstructionsWidth = endInstructionsWidth / unitInPixels;
-        //this.beginInstructionsWidth =  (this.stave.getNoteStartX() - this.stave.getX()) / unitInPixels;
-        //this.endInstructionsWidth = (this.stave.getX() + this.stave.getWidth() - this.stave.getNoteEndX()) / unitInPixels;
     }
 }
