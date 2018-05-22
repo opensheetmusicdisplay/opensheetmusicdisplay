@@ -360,9 +360,9 @@ export class VexFlowMeasure extends StaffMeasure {
                 const gNotesStartTimestamp: Fraction = gNotesPerVoice[0].sourceNote.getAbsoluteTimestamp();
 
                 // These 3 lines one render all "regular" notes:
-                const gnotes: { [voiceID: number]: GraphicalNote[]; } = staffEntry.graphicalNotes;
-                const vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceId]);
-                staffEntry.vfNotes[voiceId] = vfnote;
+                // const gnotes: { [voiceID: number]: GraphicalNote[]; } = staffEntry.graphicalNotes;
+                // const vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceId]);
+                // staffEntry.vfNotes[voiceId] = vfnote;
 
                 // find the voiceEntry end timestamp:
                 let gNotesEndTimestamp: Fraction = new Fraction();
@@ -383,9 +383,9 @@ export class VexFlowMeasure extends StaffMeasure {
                     // if this voice is new, check for a gap from measure start to the start of the current voice entry:
                     const gapFromMeasureStart: Fraction = Fraction.minus(gNotesStartTimestamp, this.parentSourceMeasure.AbsoluteTimestamp);
                     if (gapFromMeasureStart.RealValue > 0) {
-                        console.log("Ghost Found at start",  this)
+                        console.log("Ghost Found at start",  staffEntry.vfNotes[voiceId]);
                         const vfghost: Vex.Flow.GhostNote = VexFlowConverter.GhostNote(gapFromMeasureStart);
-                        // staffEntry.vfNotes[voiceId] = (vfghost as any);
+                        staffEntry.vfNotes[voiceId] = (vfghost as any);
                         // ToDo: fill the gap with a rest ghost note
                         // from this.parentSourceMeasure.AbsoluteTimestamp
                         // with length gapFromMeasureStart:
@@ -397,7 +397,7 @@ export class VexFlowMeasure extends StaffMeasure {
                     const restLength: Fraction = Fraction.minus(gNotesStartTimestamp, latestVoiceTimestamp);
 
                     if (restLength.RealValue > 0) {
-                        console.log("Ghost Found in between",  this)
+                        console.log("Ghost Found in between",  staffEntry.vfNotes[voiceId]);
                         // ToDo: fill the gap with a rest ghost note
                         // starting from latestVoiceTimestamp
                         // with length restLength:
@@ -421,7 +421,7 @@ export class VexFlowMeasure extends StaffMeasure {
                     // fill the gap with a rest ghost note
                     // starting from lastFraction
                     // with length restLength:
-                    console.log("Ghost Found at end",  this)
+                    console.log("Ghost Found at end",  this);
                 }
             }
         }
@@ -557,18 +557,17 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     public staffMeasureCreatedCalculations(): void {
+        for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+            // create vex flow Notes:
+            const gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
+            for (const voiceID in gnotes) {
+                if (gnotes.hasOwnProperty(voiceID)) {
+                    const vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
+                    (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
+                }
+            }
+        }
         this.fillMissingRests();
-        // for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
-        //     // create vex flow Notes:
-        //     const gnotes: { [voiceID: number]: GraphicalNote[]; } = graphicalStaffEntry.graphicalNotes;
-        //     for (const voiceID in gnotes) {
-        //         if (gnotes.hasOwnProperty(voiceID)) {
-        //             // console.log(gnotes[voiceID][0]);
-        //             // const vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceID]);
-        //             // (graphicalStaffEntry as VexFlowStaffEntry).vfNotes[voiceID] = vfnote;
-        //         }
-        //     }
-        // }
 
         this.finalizeBeams();
         this.finalizeTuplets();
