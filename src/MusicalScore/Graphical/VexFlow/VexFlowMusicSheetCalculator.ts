@@ -35,8 +35,10 @@ import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
+
   constructor() {
-    super(new VexFlowGraphicalSymbolFactory());
+    super();
+    MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
   }
 

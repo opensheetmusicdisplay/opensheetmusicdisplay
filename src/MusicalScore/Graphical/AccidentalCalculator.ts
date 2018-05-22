@@ -1,24 +1,19 @@
-import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {GraphicalNote} from "./GraphicalNote";
 import {Pitch} from "../../Common/DataObjects/Pitch";
 import {NoteEnum} from "../../Common/DataObjects/Pitch";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import { MusicSheetCalculator } from "./MusicSheetCalculator";
 
 /**
  * Compute the accidentals for notes according to the current key instruction
  */
 export class AccidentalCalculator {
-    private symbolFactory: IGraphicalSymbolFactory;
     private keySignatureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
     private currentAlterationsComparedToKeyInstructionList: number[] = [];
     private currentInMeasureNoteAlterationsDict: Dictionary<number, AccidentalEnum> = new Dictionary<number, AccidentalEnum>();
     private activeKeyInstruction: KeyInstruction;
-
-    constructor(symbolFactory: IGraphicalSymbolFactory) {
-        this.symbolFactory = symbolFactory;
-    }
 
     public get ActiveKeyInstruction(): KeyInstruction {
         return this.activeKeyInstruction;
@@ -77,7 +72,7 @@ export class AccidentalCalculator {
                 } else {
                     this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
                 }
-                this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
             }
         } else {
             if (pitch.Accidental !== AccidentalEnum.NONE) {
@@ -85,11 +80,11 @@ export class AccidentalCalculator {
                     this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
                 }
                 this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
-                this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
             } else {
                 if (isInCurrentAlterationsToKeyList) {
                     this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
-                    this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+                    MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
                 }
             }
         }

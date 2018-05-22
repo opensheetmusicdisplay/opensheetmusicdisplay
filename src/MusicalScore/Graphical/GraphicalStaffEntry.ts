@@ -16,6 +16,7 @@ import {AbstractGraphicalInstruction} from "./AbstractGraphicalInstruction";
 import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
+import { MusicSheetCalculator } from "./MusicSheetCalculator";
 
 /**
  * The graphical counterpart of a [[SourceStaffEntry]].
@@ -237,7 +238,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
         }
         // if not found in list, create new one and add to list:
-        const graphicalVoiceEntry: GraphicalVoiceEntry = new GraphicalVoiceEntry(voiceEntry, this);
+        const graphicalVoiceEntry: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, this);
         this.graphicalVoiceEntries.push(graphicalVoiceEntry);
 
         return graphicalVoiceEntry;
@@ -255,7 +256,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
         }
         // if not found in list, create new one and add to list:
-        const graphicalVoiceEntry: GraphicalVoiceEntry = new GraphicalVoiceEntry(graphicalNote.sourceNote.ParentVoiceEntry, this);
+        const graphicalVoiceEntry: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(graphicalNote.sourceNote.ParentVoiceEntry, this);
         this.graphicalVoiceEntries.push(graphicalVoiceEntry);
 
         return graphicalVoiceEntry;

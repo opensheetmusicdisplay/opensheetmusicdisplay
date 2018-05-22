@@ -14,6 +14,7 @@ import {StaffLine} from "../Graphical/StaffLine";
 import {StaffMeasure} from "../Graphical/StaffMeasure";
 import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalVoiceEntry } from "../Graphical/GraphicalVoiceEntry";
+import { VoiceEntry } from "../VoiceData/VoiceEntry";
 
 export interface IGraphicalSymbolFactory {
 
@@ -28,6 +29,8 @@ export interface IGraphicalSymbolFactory {
     createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: StaffMeasure): GraphicalStaffEntry;
 
     createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: StaffMeasure): GraphicalStaffEntry;
+
+    createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry;
 
     createNote(
         note: Note,

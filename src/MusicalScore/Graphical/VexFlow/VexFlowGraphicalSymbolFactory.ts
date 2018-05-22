@@ -23,6 +23,8 @@ import {GraphicalLabel} from "../GraphicalLabel";
 import {EngravingRules} from "../EngravingRules";
 import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { VoiceEntry } from "../../VoiceData/VoiceEntry";
+import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -85,6 +87,10 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: StaffMeasure): GraphicalStaffEntry {
         return new VexFlowStaffEntry(<VexFlowMeasure>measure, undefined, <VexFlowStaffEntry>staffEntryParent);
+    }
+
+    public createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry {
+        return new VexFlowVoiceEntry(parentVoiceEntry, parentStaffEntry);
     }
 
     /**
