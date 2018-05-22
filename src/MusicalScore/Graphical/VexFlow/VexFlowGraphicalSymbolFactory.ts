@@ -98,10 +98,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry,
                       activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined): GraphicalNote {
-        // Creates the note:
-        const graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift, graphicalNoteLength);
-        graphicalVoiceEntry.notes.push(graphicalNote);
-        return graphicalNote;
+        // Creates and returns the note:
+        return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift, graphicalNoteLength);
     }
 
     /**

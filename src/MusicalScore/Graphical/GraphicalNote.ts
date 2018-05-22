@@ -36,10 +36,6 @@ export class GraphicalNote extends GraphicalObject {
     public parentVoiceEntry: GraphicalVoiceEntry;
     public numberOfDots: number;
 
-    public get ParentList(): GraphicalNote[] {
-        return this.parentVoiceEntry.notes;
-    }
-
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;
         if (MusicSheetCalculator.transposeCalculator !== undefined) {
