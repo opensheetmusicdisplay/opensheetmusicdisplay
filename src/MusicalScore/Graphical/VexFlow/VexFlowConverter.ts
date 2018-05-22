@@ -177,16 +177,19 @@ export class VexFlowConverter {
             duration: duration,
             keys: keys,
         });
-        const wantedStemDirection: StemDirectionType = notes[0].sourceNote.ParentVoiceEntry.StemDirection;
-        switch (wantedStemDirection) {
-            case(StemDirectionType.Up):
-                vfnote.setStemDirection(Vex.Flow.Stem.UP);
-                break;
-            case (StemDirectionType.Down):
-                vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
-                break;
-            default:
-                break;
+
+        if (notes[0].sourceNote.ParentVoiceEntry !== undefined) {
+            const wantedStemDirection: StemDirectionType = notes[0].sourceNote.ParentVoiceEntry.StemDirection;
+            switch (wantedStemDirection) {
+                case(StemDirectionType.Up):
+                    vfnote.setStemDirection(Vex.Flow.Stem.UP);
+                    break;
+                case (StemDirectionType.Down):
+                    vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
+                    break;
+                default:
+                    break;
+            }
         }
 
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {

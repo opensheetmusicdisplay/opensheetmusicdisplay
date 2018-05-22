@@ -1541,11 +1541,13 @@ export abstract class MusicSheetCalculator {
         // if there are no staffEntries in this measure, create a rest for the whole measure:
         if (measure.staffEntries.length === 0) {
             const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, staff);
-            const note: Note = new Note(undefined, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
+            const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
+            const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
+            voiceEntry.Notes.push(note);
             const graphicalStaffEntry: GraphicalStaffEntry = this.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
             measure.addGraphicalStaffEntry(graphicalStaffEntry);
-            graphicalStaffEntry.relInMeasureTimestamp = new Fraction(0, 1);
-            const gve: GraphicalVoiceEntry = new GraphicalVoiceEntry(undefined, graphicalStaffEntry);
+            graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
+            const gve: GraphicalVoiceEntry = new GraphicalVoiceEntry(voiceEntry, graphicalStaffEntry);
             graphicalStaffEntry.graphicalVoiceEntries.push(gve);
             const graphicalNote: GraphicalNote = this.symbolFactory.createNote( note,
                                                                                 gve,

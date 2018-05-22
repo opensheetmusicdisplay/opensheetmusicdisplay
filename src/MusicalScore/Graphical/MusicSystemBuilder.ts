@@ -627,7 +627,6 @@ export class MusicSystemBuilder {
         const width: number = this.rules.MeasureLeftMargin + measure.beginInstructionsWidth + this.rules.MeasureRightMargin;
         measure.PositionAndShape.BorderRight = width;
         currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
-        measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
         return width;
     }
 
