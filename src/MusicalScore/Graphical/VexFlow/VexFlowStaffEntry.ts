@@ -23,8 +23,16 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             // This will let the tickable know how to calculate it's bounding box
             tickable.setStave(stave);
             // The middle of the tickable is also the OSMD BoundingBox center
-            const staveNote: Vex.Flow.StaveNote = (<Vex.Flow.StaveNote>tickable);
-            tickablePosition += staveNote.getNoteHeadEndX() - staveNote.getGlyphWidth() / 2;
+            if (tickable.getAttribute("type") === "StaveNote") {
+                // The middle of the tickable is also the OSMD BoundingBox center
+                const staveNote: Vex.Flow.StaveNote = tickable;
+                tickablePosition += staveNote.getNoteHeadEndX() - staveNote.getGlyphWidth() / 2;
+            } else {
+                console.log(tickable);
+                const ghostNote: Vex.Flow.GhostNote = tickable;
+                // That's basically the same as the StaveNote does.
+                tickablePosition = ghostNote.getAbsoluteX() + ghostNote.x_shift;
+            }
             numberOfValidTickables++;
         }
         tickablePosition = tickablePosition / numberOfValidTickables;
