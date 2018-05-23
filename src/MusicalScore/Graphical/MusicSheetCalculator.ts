@@ -507,16 +507,18 @@ export abstract class MusicSheetCalculator {
                 systemMaxCount += maxPosition;
                 additionalPageLength += maxPosition;
             }
-
-            systemMaxCount -= this.rules.BetweenStaffDistance;
-            let systemIterator: MusicSystem = staffLine.ParentMusicSystem.NextSystem;
-            while (systemIterator !== undefined) {
-                systemIterator.PositionAndShape.RelativePosition.y += systemMaxCount;
-                systemIterator = systemIterator.NextSystem;
-                additionalPageLength += systemMaxCount;
+            // Special care for single line systems
+            if (systemMaxCount !== 0) {
+                systemMaxCount -= this.rules.BetweenStaffDistance;
+                let systemIterator: MusicSystem = staffLine.ParentMusicSystem.NextSystem;
+                while (systemIterator !== undefined) {
+                    systemIterator.PositionAndShape.RelativePosition.y += systemMaxCount;
+                    systemIterator = systemIterator.NextSystem;
+                    additionalPageLength += systemMaxCount;
+                }
+                staffLine.ParentMusicSystem.Parent.PositionAndShape.BorderBottom += additionalPageLength;
+                // Update the instrument labels
             }
-            staffLine.ParentMusicSystem.Parent.PositionAndShape.BorderBottom += additionalPageLength;
-            // Update the instrument labels
             staffLine.ParentMusicSystem.setMusicSystemLabelsYPosition();
             /**
              * HACK END
