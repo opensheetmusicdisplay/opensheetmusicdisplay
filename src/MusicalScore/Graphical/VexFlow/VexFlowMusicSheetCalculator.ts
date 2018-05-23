@@ -3,10 +3,8 @@ import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
 import {StaffMeasure} from "../StaffMeasure";
 import {StaffLine} from "../StaffLine";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
-import {MusicSystem} from "../MusicSystem";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
-import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {GraphicalTie} from "../GraphicalTie";
 import {Tie} from "../../VoiceData/Tie";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
@@ -22,7 +20,6 @@ import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
-
 import Vex = require("vexflow");
 import {Logging} from "../../../Common/Logging";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
