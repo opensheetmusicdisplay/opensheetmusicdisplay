@@ -382,19 +382,7 @@ export class SkyBottomLineCalculator {
      * @param staffLine StaffLine to apply to
      */
     public getSkyLineMin(staffLine: StaffLine): number {
-        let minValue: number = Number.MAX_VALUE;
-        const len: number = staffLine.SkyLine.length;
-
-        for (let idx: number = 0; idx < len; ++idx) {
-            const f: number = staffLine.SkyLine[idx];
-            if (isNaN(f)) {
-                continue;
-            }
-
-            minValue = Math.min(f, minValue);
-        }
-
-        return minValue;
+        return Math.min(...staffLine.SkyLine.filter(s => !isNaN(s)));
     }
 
     public getSkyLineMinAtPoint(staffLine: StaffLine, point: number): number {
@@ -513,77 +501,15 @@ export class SkyBottomLineCalculator {
     public optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
         musicSystem.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
 
-        // const tmpCanvas: CanvasVexFlowBackend = new CanvasVexFlowBackend();
-        // tmpCanvas.initializeHeadless();
-
         // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
         if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
             for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
-                // const absoluteUpperPosition: number = musicSystem.StaffLines[i].PositionAndShape.AbsolutePosition.y;
-                // const absoluteLowerPosition: number = musicSystem.StaffLines[i + 1].PositionAndShape.AbsolutePosition.y;
-
-                // const upperBottomLine: number[] = musicSystem.StaffLines[i].BottomLine;
-                // const lowerSkyLine: number[] = musicSystem.StaffLines[i + 1].SkyLine;
-
-                // for (const measure of musicSystem.StaffLines[i].Measures as VexFlowMeasure[]) {
-                //     measure.getVFStave().setY((measure.getVFStave() as any).y + 40);
-                //     measure.format();
-                //     measure.draw(tmpCanvas.getContext());
-                //     let img: any = (tmpCanvas.getCanvas() as any).toDataURL("image/png");
-                //     // document.write('<img src="' + img + '"/>');
-
-                //     const width: number = (tmpCanvas.getCanvas() as any).width;
-                //     const height: number = (tmpCanvas.getCanvas() as any).height;
-                //     const ctx: any = (tmpCanvas.getContext() as any);
-
-                //     const SkyLine: number[] = new Array(width);
-                //     const bottomline: number[] = new Array(width);
-
-                //     console.time("whole Buffer");
-                //     //imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
-                //     // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
-                //     // Since we are only interested in black or white we can take 32bit words at once
-                //     const imageData: any = ctx.getImageData(0, 0, width, height);
-                //     const rgbaLength: number = 4;
-                //     for (let x: number = 0; x < width; x++) {
-                //         for (let y: number = 0; y < height; y++) {
-                //             const yOffset: number = y * width * rgbaLength;
-                //             const bufIndex: number = yOffset + x * rgbaLength;
-                //             const alpha: number = imageData.data[bufIndex + 3];
-                //             if (alpha > 0) {
-                //                 SkyLine[x] = y;
-                //                 break;
-                //             }
-                //         }
-                //     }
-                //     for (let x: number = 0; x < width; x++) {
-                //         for (let y: number = height; y > 0; y--) {
-                //             const yOffset: number = y * width * rgbaLength;
-                //             const bufIndex: number = yOffset + x * rgbaLength;
-                //             const alpha: number = imageData.data[bufIndex + 3];
-                //             if (alpha > 0) {
-                //                 bottomline[x] = y;
-                //                 break;
-                //             }
-                //         }
-                //     }
-                //     console.timeEnd("whole Buffer");
-
-                //     const drawPixel = function(ctx: any, x: number, y: number): void {
-                //         const oldStyle: string = ctx.fillStyle;
-                //         ctx.fillStyle = "#FF0000FF";
-                //         ctx.fillRect( x, y, 2, 2 );
-                //         ctx.fillStyle = oldStyle;
-                //      };
-
-                //     SkyLine.forEach((value, idx) => drawPixel(ctx, idx, value));
-                //     bottomline.forEach((value, idx) => drawPixel(ctx, idx, value));
-
-                //     img = (tmpCanvas.getCanvas() as any).toDataURL("image/png");
-                //     document.write('<img src="' + img + '"/>');
-
-                //     tmpCanvas.clear();
-                // }
+                const upperBottomLine: number = Math.max(...musicSystem.StaffLines[i].BottomLine);
+                const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
+                if (Math.abs(upperBottomLine) > EngravingRules.Rules.MinimumStaffLineDistance) {
+                    const offset: number = Math.abs(upperBottomLine) + EngravingRules.Rules.MinimumStaffLineDistance;
+                    this.updateStaffLinesRelativePosition(musicSystem, i + 1, offset);
+                }
             }
         }
     }
@@ -593,6 +519,19 @@ export class SkyBottomLineCalculator {
 
     //#region Private methods
 
+     /// <summary>
+    /// This method updates the System's StaffLine's RelativePosition (starting from the given index).
+    /// </summary>
+    /// <param name="musicSystem"></param>
+    /// <param name="index"></param>
+    /// <param name="value"></param>
+    private updateStaffLinesRelativePosition(musicSystem: MusicSystem, index: number, value: number): void {
+        for (let i: number = index; i < musicSystem.StaffLines.length; i++) {
+            musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y += value;
+        }
+
+        musicSystem.PositionAndShape.BorderBottom += value;
+    }
     // //FIXME: Replacement methods for all the get min max bottom sky calls
     // private getMinInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
     //     const floatVersion: boolean = true;
