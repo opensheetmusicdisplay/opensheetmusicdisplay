@@ -357,7 +357,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public getGraphicalVoiceEntriesPerVoice(voice: Voice): GraphicalVoiceEntry[] {
         const voiceEntries: GraphicalVoiceEntry[] = [];
-        for(const gse of this.staffEntries) {
+        for (const gse of this.staffEntries) {
            for (const gve of gse.graphicalVoiceEntries) {
                 if (gve.parentVoiceEntry.ParentVoice === voice) {
                     voiceEntries.push(gve);
@@ -379,15 +379,10 @@ export class VexFlowMeasure extends StaffMeasure {
 
         // 1) find front- and in-measure-gaps:
         for (const staffEntry of this.staffEntries as VexFlowStaffEntry[]) {
-            for (const gNotesPerVoice of staffEntry.notes) {
+            for (const gNotesPerVoice of staffEntry.graphicalVoiceEntries.map(gve => gve.notes)) {
                 // get voice id:
                 const voiceId: number = gNotesPerVoice[0].sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
                 const gNotesStartTimestamp: Fraction = gNotesPerVoice[0].sourceNote.getAbsoluteTimestamp();
-
-                // These 3 lines one render all "regular" notes:
-                // const gnotes: { [voiceID: number]: GraphicalNote[]; } = staffEntry.graphicalNotes;
-                // const vfnote: StaveNote = VexFlowConverter.StaveNote(gnotes[voiceId]);
-                // staffEntry.vfNotes[voiceId] = vfnote;
 
                 // find the voiceEntry end timestamp:
                 let gNotesEndTimestamp: Fraction = new Fraction();
@@ -408,9 +403,10 @@ export class VexFlowMeasure extends StaffMeasure {
                     // if this voice is new, check for a gap from measure start to the start of the current voice entry:
                     const gapFromMeasureStart: Fraction = Fraction.minus(gNotesStartTimestamp, this.parentSourceMeasure.AbsoluteTimestamp);
                     if (gapFromMeasureStart.RealValue > 0) {
-                        console.log("Ghost Found at start",  staffEntry.vfNotes[voiceId]);
+                        console.log("Ghost Found at start");
+                        /* tslint:disable-next-line:no-unused-variable */
                         const vfghost: Vex.Flow.GhostNote = VexFlowConverter.GhostNote(gapFromMeasureStart);
-                        staffEntry.vfNotes[voiceId] = (vfghost as any);
+                        // FIXME: Add to graphicalVoiceEntry
                         // ToDo: fill the gap with a rest ghost note
                         // from this.parentSourceMeasure.AbsoluteTimestamp
                         // with length gapFromMeasureStart:
@@ -422,7 +418,7 @@ export class VexFlowMeasure extends StaffMeasure {
                     const restLength: Fraction = Fraction.minus(gNotesStartTimestamp, latestVoiceTimestamp);
 
                     if (restLength.RealValue > 0) {
-                        console.log("Ghost Found in between",  staffEntry.vfNotes[voiceId]);
+                        console.log("Ghost Found in between");
                         // ToDo: fill the gap with a rest ghost note
                         // starting from latestVoiceTimestamp
                         // with length restLength:
