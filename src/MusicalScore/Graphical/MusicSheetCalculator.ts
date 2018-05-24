@@ -55,6 +55,7 @@ import {GraphicalLyricWord} from "./GraphicalLyricWord";
 import {GraphicalLine} from "./GraphicalLine";
 import {Label} from "../Label";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
+import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -1134,7 +1135,7 @@ export abstract class MusicSheetCalculator {
                         const measure: StaffMeasure = staffLine.Measures[idx4];
                         if (measure.staffEntries.length === 1) {
                             const gse: GraphicalStaffEntry = measure.staffEntries[0];
-                            if (gse.graphicalVoiceEntries.length > 0 && gse.graphicalVoiceEntries[0].notes.length > 0) {
+                            if (gse.graphicalVoiceEntries.length > 0 && gse.graphicalVoiceEntries[0].notes.length === 1) {
                                 const graphicalNote: GraphicalNote = gse.graphicalVoiceEntries[0].notes[0];
                                 if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.Length)) {
                                     this.layoutMeasureWithWholeRest(graphicalNote, gse, measure);
@@ -1542,7 +1543,11 @@ export abstract class MusicSheetCalculator {
         }
         // if there are no staffEntries in this measure, create a rest for the whole measure:
         if (measure.staffEntries.length === 0) {
-            const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, staff);
+            const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(
+                new VerticalSourceStaffEntryContainer(  measure.parentSourceMeasure,
+                                                        measure.parentSourceMeasure.AbsoluteTimestamp,
+                                                        measure.parentSourceMeasure.CompleteNumberOfStaves),
+                staff);
             const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
             const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
             voiceEntry.Notes.push(note);

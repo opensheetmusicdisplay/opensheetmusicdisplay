@@ -40,6 +40,8 @@ declare namespace Vex {
             public setStave(stave: Stave);
 
             public getBoundingBox(): BoundingBox;
+
+            public getAttribute(arg: string): string;
         }
 
         export class Voice {
@@ -55,9 +57,9 @@ declare namespace Vex {
 
             public setStave(stave: Stave): Voice;
 
-            public addTickables(notes: StaveNote[]): Voice;
+            public addTickables(tickables: Tickable[]): Voice;
 
-            public addTickable(note: StaveNote): Voice;
+            public addTickable(tickable: Tickable): Voice;
 
             public setMode(mode: any): Voice;
 
@@ -74,6 +76,13 @@ declare namespace Vex {
         export class StemmableNote extends Note {
             public getStemDirection(): number;
             public setStemDirection(direction: number): StemmableNote;
+            public x_shift: number;
+            public getAbsoluteX(): number;
+        }
+
+        export class GhostNote extends StemmableNote {
+            constructor(note_struct: any);
+            public setStave(stave): void;
         }
 
         export class StaveNote extends StemmableNote {
