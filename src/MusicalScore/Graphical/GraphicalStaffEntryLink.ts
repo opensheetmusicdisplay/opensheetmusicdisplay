@@ -41,10 +41,8 @@ export class GraphicalStaffEntryLink {
             const notes: GraphicalNote[] = [];
             for (let idx: number = 0, len: number = this.graphicalLinkedStaffEntries.length; idx < len; ++idx) {
                 const graphicalLinkedStaffEntry: GraphicalStaffEntry = this.graphicalLinkedStaffEntries[idx];
-                for (let idx2: number = 0, len2: number = graphicalLinkedStaffEntry.notes.length; idx2 < len2; ++idx2) {
-                    const graphicalNotes: GraphicalNote[] = graphicalLinkedStaffEntry.notes[idx2];
-                    for (let idx3: number = 0, len3: number = graphicalNotes.length; idx3 < len3; ++idx3) {
-                        const graphicalNote: GraphicalNote = graphicalNotes[idx3];
+                for (const gve of graphicalLinkedStaffEntry.graphicalVoiceEntries) {
+                    for (const graphicalNote of gve.notes) {
                         if (graphicalNote.sourceNote.ParentStaffEntry.Link !== undefined
                             && graphicalNote.sourceNote.ParentVoiceEntry === this.staffEntryLink.GetVoiceEntry) {
                             notes.push(graphicalNote);

@@ -10,7 +10,6 @@ import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {Voice} from "../VoiceData/Voice";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
-import {GraphicalNote} from "./GraphicalNote";
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import {BoundingBox} from "./BoundingBox";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
@@ -261,12 +260,10 @@ export abstract class StaffMeasure extends GraphicalObject {
         for (let idx: number = 0, len: number = voices.length; idx < len; ++idx) {
             const voice: Voice = voices[idx];
             const voiceDuration: Fraction = new Fraction(0, 1);
-            for (let idx2: number = 0, len2: number = this.staffEntries.length; idx2 < len2; ++idx2) {
-                const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx2];
-                for (let idx3: number = 0, len3: number = graphicalStaffEntry.notes.length; idx3 < len3; ++idx3) {
-                    const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx3];
-                    if (graphicalNotes.length > 0 && graphicalNotes[0].sourceNote.ParentVoiceEntry.ParentVoice === voice) {
-                        voiceDuration.Add(graphicalNotes[0].graphicalNoteLength);
+            for (const graphicalStaffEntry of this.staffEntries) {
+                for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+                    if (gve.parentVoiceEntry.ParentVoice === voice && gve.notes.length > 0) {
+                        voiceDuration.Add(gve.notes[0].graphicalNoteLength);
                     }
                 }
             }
