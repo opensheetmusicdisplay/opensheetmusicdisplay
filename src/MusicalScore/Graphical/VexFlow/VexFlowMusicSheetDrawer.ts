@@ -114,7 +114,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     protected drawBottomLine(staffline: StaffLine): void {
         const startPosition: PointF2D = new PointF2D(staffline.PositionAndShape.AbsolutePosition.x,
-                                                     staffline.PositionAndShape.AbsolutePosition.y + 4);
+                                                     staffline.PositionAndShape.AbsolutePosition.y);
         const width: number = staffline.PositionAndShape.Size.width;
         this.drawSampledLine(staffline.BottomLine, startPosition, width, "#0000FFFF");
     }
