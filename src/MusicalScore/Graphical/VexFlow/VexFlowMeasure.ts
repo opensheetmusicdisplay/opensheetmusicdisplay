@@ -658,7 +658,7 @@ export class VexFlowMeasure extends StaffMeasure {
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             // create vex flow Stave Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
-                (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve.notes);
+                (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
             }
         }
 

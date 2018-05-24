@@ -18,6 +18,7 @@ import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEn
 import {Logging} from "../../../Common/Logging";
 import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry";
 import { SystemLinePosition } from "../SystemLinePosition";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -145,35 +146,50 @@ export class VexFlowConverter {
     }
 
     /**
-     * Convert a set of GraphicalNotes to a VexFlow StaveNote
-     * @param notes form a chord on the staff
+     * Convert a GraphicalVoiceEntry to a VexFlow StaveNote
+     * @param gve the GraphicalVoiceEntry which can hold a note or a chord on the staff belonging to one voice
      * @returns {Vex.Flow.StaveNote}
      */
-    public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
+    public static StaveNote(gve: GraphicalVoiceEntry): Vex.Flow.StaveNote {
+        // VexFlow needs the notes ordered vertically in the other direction:
+        const notes: GraphicalNote[] = gve.notes.reverse();
+        const baseNote: GraphicalNote = notes[0];
+        if (baseNote.sourceNote.Pitch === undefined &&
+            new Fraction(1, 2).lt(baseNote.sourceNote.Length)) {
+                // test
+            }
         let keys: string[] = [];
         const accidentals: string[] = [];
-        const frac: Fraction = notes[0].graphicalNoteLength;
-        const isTuplet: boolean = notes[0].sourceNote.NoteTuplet !== undefined;
+        const frac: Fraction = baseNote.graphicalNoteLength;
+        const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
         let vfClefType: string = undefined;
-        let numDots: number = 0;
+        let numDots: number = baseNote.numberOfDots;
         for (const note of notes) {
-            const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
-            if (pitch === undefined) { // if it is a rest:
-              keys = ["b/4"];
-              duration += "r";
-              break;
+            if (numDots < note.numberOfDots) {
+                numDots = note.numberOfDots;
             }
+            // if it is a rest:
+            if (note.sourceNote.isRest()) {
+                // if it is a full measure rest:
+                if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
+                    duration = "w";
+                    numDots = 0;
+                }
+                keys = ["b/4"];
+                duration += "r";
+                break;
+            }
+
+            const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             keys.push(pitch[0]);
             accidentals.push(pitch[1]);
             if (!vfClefType) {
                 const vfClef: {type: string, annotation: string} = VexFlowConverter.Clef(pitch[2]);
                 vfClefType = vfClef.type;
             }
-            if (numDots < note.numberOfDots) {
-                numDots = note.numberOfDots;
-            }
         }
+
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             duration += "d";
         }
@@ -185,8 +201,8 @@ export class VexFlowConverter {
             keys: keys,
         });
 
-        if (notes[0].sourceNote.ParentVoiceEntry !== undefined) {
-            const wantedStemDirection: StemDirectionType = notes[0].sourceNote.ParentVoiceEntry.StemDirection;
+        if (gve.parentVoiceEntry !== undefined) {
+            const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.StemDirection;
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
                     vfnote.setStemDirection(Vex.Flow.Stem.UP);
