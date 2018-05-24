@@ -7,5 +7,5 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         super(parentVoiceEntry, parentStaffEntry);
     }
 
-    public vfStaveNote: Vex.Flow.StaveNote;
+    public vfStaveNote: Vex.Flow.StemmableNote;
 }

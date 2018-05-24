@@ -288,12 +288,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         }
     }
 
-<<<<<<< HEAD
     /**
      * Returns true if this staff entry has only rests
      */
-=======
->>>>>>> develop
     public hasOnlyRests(): boolean {
         const hasOnlyRests: boolean = true;
         for (const gve of this.graphicalVoiceEntries) {
