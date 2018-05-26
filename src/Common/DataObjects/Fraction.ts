@@ -170,6 +170,12 @@ export class Fraction {
   //   this.setRealValue();
   // }
 
+  /**
+   * Adds a Fraction to this Fraction.
+   * Attention: This changes the already existing Fraction, which might be referenced elsewhere!
+   * Use Fraction.plus() for creating a new Fraction object being the sum of two Fractions.
+   * @param fraction the Fraction to add.
+   */
   public Add(fraction: Fraction): void {
     // normally should check if denominator or fraction.denominator is 0 but in our case
     // a zero denominator doesn't make sense
@@ -181,6 +187,12 @@ export class Fraction {
     this.setRealValue();
   }
 
+  /**
+   * Subtracts a Fraction from this Fraction.
+   * Attention: This changes the already existing Fraction, which might be referenced elsewhere!
+   * Use Fraction.minus() for creating a new Fraction object being the difference of two Fractions.
+   * @param fraction the Fraction to subtract.
+   */
   public Sub(fraction: Fraction): void {
     // normally should check if denominator or fraction.denominator is 0 but in our case
     // a zero denominator doesn't make sense

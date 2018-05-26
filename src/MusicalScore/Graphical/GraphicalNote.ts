@@ -21,11 +21,7 @@ export class GraphicalNote extends GraphicalObject {
         if (graphicalNoteLength !== undefined) {
             this.graphicalNoteLength = graphicalNoteLength;
         } else {
-            if (note.NoteTie !== undefined) {
-                this.graphicalNoteLength = note.calculateNoteLengthWithoutTie();
-            } else {
-                this.graphicalNoteLength = note.Length;
-            }
+            this.graphicalNoteLength = note.Length;
         }
 
         this.numberOfDots = this.calculateNumberOfNeededDots(this.graphicalNoteLength);

@@ -159,7 +159,7 @@ export class VoiceEntry {
             return;
         }
         const baseNote: Note = this.notes[0];
-        const baselength: Fraction = baseNote.calculateNoteLengthWithoutTie();
+        const baselength: Fraction = baseNote.Length;
         const baseVoice: Voice = voiceEntryWithOrnament.ParentVoice;
         const baseTimestamp: Fraction = voiceEntryWithOrnament.Timestamp;
         let currentTimestamp: Fraction = Fraction.createFromFraction(baseTimestamp);
