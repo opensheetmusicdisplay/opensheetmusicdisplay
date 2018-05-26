@@ -220,35 +220,44 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
+    const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
+
     let vfStartNote: Vex.Flow.StaveNote = undefined;
+    let startNoteIndexInTie: number = 0;
     if (startNote !== undefined) {
       vfStartNote = startNote.vfnote[0];
+      startNoteIndexInTie = startNote.vfnote[1];
     }
 
-    const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
     let vfEndNote: Vex.Flow.StaveNote = undefined;
+    let endNoteIndexInTie: number = 0;
     if (endNote !== undefined) {
       vfEndNote = endNote.vfnote[0];
+      endNoteIndexInTie = endNote.vfnote[1];
     }
-
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
       const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        first_note: vfStartNote,
+        first_indices: [startNoteIndexInTie],
+        first_note: vfStartNote
       });
       const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure1.vfTies.push(vfTie1);
 
       const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        last_note: vfEndNote,
+        last_indices: [endNoteIndexInTie],
+        last_note: vfEndNote
       });
       const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure2.vfTies.push(vfTie2);
     } else {
+      // normal case
       const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+        first_indices: [startNoteIndexInTie],
         first_note: vfStartNote,
-        last_note: vfEndNote,
+        last_indices: [endNoteIndexInTie],
+        last_note: vfEndNote
       });
       const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure.vfTies.push(vfTie);
