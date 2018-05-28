@@ -461,7 +461,8 @@ export class SkyBottomLineCalculator {
                 const upperBottomLine: number = Math.max(...musicSystem.StaffLines[i].BottomLine);
                 // const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
                 if (Math.abs(upperBottomLine) > EngravingRules.Rules.MinimumStaffLineDistance) {
-                    const offset: number = Math.abs(upperBottomLine) + EngravingRules.Rules.MinimumStaffLineDistance;
+                    // Remove staffheight from offset. As it results in huge distances
+                    const offset: number = Math.abs(upperBottomLine) + EngravingRules.Rules.MinimumStaffLineDistance - EngravingRules.Rules.StaffHeight;
                     this.updateStaffLinesRelativePosition(musicSystem, i + 1, offset);
                 }
             }
