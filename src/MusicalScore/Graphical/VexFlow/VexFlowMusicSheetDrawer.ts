@@ -77,9 +77,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const voiceID in measure.vfVoices) {
             if (measure.vfVoices.hasOwnProperty(voiceID)) {
                 const tickables: Vex.Flow.Tickable[] = measure.vfVoices[voiceID].tickables;
-                for (const tick of tickables) {
-                    if ((<any>tick).getAttribute("type") === "StaveNote" && process.env.DEBUG) {
-                        tick.getBoundingBox().draw(this.backend.getContext());
+                if (process.env.DEBUG) {
+                    for (const tick of tickables) {
+                        if ((<any>tick).getAttribute("type") === "StaveNote") {
+                            tick.getBoundingBox().draw(this.backend.getContext());
+                        }
                     }
                 }
             }

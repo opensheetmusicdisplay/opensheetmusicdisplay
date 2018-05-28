@@ -273,4 +273,33 @@ export class OpenSheetMusicDisplay {
         window.setTimeout(startCallback, 0);
         window.setTimeout(endCallback, 1);
     }
+
+    //#region GETTER / SETTER
+    public set DrawSkyLine(value: boolean) {
+        this.graphic.SkyLineVisible = value;
+        this.render();
+    }
+
+    public get DrawSkyLine(): boolean {
+        return this.graphic.SkyLineVisible;
+    }
+
+    public set DrawBottomLine(value: boolean) {
+        this.graphic.BottomLineVisible = value;
+        this.render();
+    }
+
+    public get DrawBottomLine(): boolean {
+        return this.graphic.BottomLineVisible;
+    }
+
+    public set DrawBoundingBox(value: string) {
+        this.drawer.drawableBoundingBoxElement = value;
+        this.render();
+    }
+
+    public get DrawBoundingBox(): string {
+        return this.drawer.drawableBoundingBoxElement;
+    }
+    //#endregion
 }

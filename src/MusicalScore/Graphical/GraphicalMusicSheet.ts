@@ -55,8 +55,8 @@ export class GraphicalMusicSheet {
     //private systemImages: Dictionary<MusicSystem, SystemImageProperties> = new Dictionary<MusicSystem, SystemImageProperties>();
     private numberOfStaves: number;
     private leadSheet: boolean = false;
-    private skyLineVisible: boolean = true;
-    private bottomLineVisible: boolean = true;
+    private skyLineVisible: boolean = false;
+    private bottomLineVisible: boolean = false;
 
     public get ParentMusicSheet(): MusicSheet {
         return this.musicSheet;

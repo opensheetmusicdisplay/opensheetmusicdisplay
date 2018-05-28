@@ -18,7 +18,7 @@
     <img src="./favicon.ico?" class="ui image">
     <%= htmlWebpackPlugin.options.title %>
 </h1>
-<div class="ui three column grid container">
+<div class="ui four column grid container">
     <div class="column">
         <h3 class="ui header">Select a sample:</h3>
         <select class="ui selection dropdown" style="width:100px"  id="select"></select>
@@ -32,29 +32,33 @@
     </div>
     <div class="column">
         <h3 class="ui header">Cursor controls:</h3>
-        <div class="ui buttons">
-            <div class="ui animated fade button" id="show-cursor-btn">
-                <div class="visible content">Show</div>
-                <div class="hidden content">
-                    <i class="eye icon"></i>
+        <div>
+            <div class="ui vertical buttons">
+                <div class="ui animated fade button" id="show-cursor-btn">
+                    <div class="visible content">Show</div>
+                    <div class="hidden content">
+                        <i class="eye icon"></i>
+                    </div>
+                </div>
+                <div class="ui animated fade button" id="hide-cursor-btn">
+                    <div class="visible content">Hide</div>
+                    <div class="hidden content">
+                        <i class="eye slash icon"></i>
+                    </div>
                 </div>
             </div>
-            <div class="ui animated fade button" id="hide-cursor-btn">
-                <div class="visible content">Hide</div>
-                <div class="hidden content">
-                    <i class="eye slash icon"></i>
+            <div class="ui vertical buttons">
+                <div class="ui animated fade button" id="next-cursor-btn">
+                    <div class="visible content">Next</div>
+                    <div class="hidden content">
+                        <i class="arrow right icon"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="ui animated fade button" id="next-cursor-btn">
-                <div class="visible content">Next</div>
-                <div class="hidden content">
-                    <i class="arrow right icon"></i>
-                </div>
-            </div>
-            <div class="ui animated fade button" id="reset-cursor-btn">
-                <div class="visible content">Reset</div>
-                <div class="hidden content">
-                    <i class="undo icon"></i>
+                <div class="ui animated fade button" id="reset-cursor-btn">
+                    <div class="visible content">Reset</div>
+                    <div class="hidden content">
+                        <i class="undo icon"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -75,8 +79,24 @@
         <h4 class="ui header" id="zoom-str">???</h4>
     </div>
     <div class="column">
-            <h3 class="ui header">Current width:</h3>                
-            <h4 class="ui header" id="size-str">???</h4>
+        <h3 class="ui header">Show bounding box for:</h3>
+        <select class="ui selection dropdown" id="selectBounding">
+            <option value="none">None</option>
+            <option value="all">All</option>
+            <option value="VexFlowMeasure">Measures</option>
+            <option value="VexFlowStaffEntry">Staff entries</option>
+            <option value="GraphicalLabel">Labels</option>
+            <option value="VexFlowStaffLine">Staff lines</option>
+            <option value="SystemLine">System lines</option>
+            <option value="StaffLineActivitySymbol">Activity symbols</option>
+        </select>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Show debug information:</h3>
+        <div class="ui buttons">
+            <button class="ui button" id="skylineDebug">Skyline</button>
+            <button class="ui button" id="bottomlineDebug">Bottomline</button>
+        </div>
     </div>
 </div>
 <table cellspacing="0" style="max-width:700px;">
