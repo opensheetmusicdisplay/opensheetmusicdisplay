@@ -165,6 +165,8 @@ export class VexFlowConverter {
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
         let vfClefType: string = undefined;
         let numDots: number = baseNote.numberOfDots;
+        let alignCenter: boolean = false;
+        let xShift: number = 0;
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
@@ -175,6 +177,11 @@ export class VexFlowConverter {
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
                     duration = "w";
                     numDots = 0;
+                    // If it's a whole rest we want it smack in the middle. Apparently there is still an issue in vexflow:
+                    // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
+                    // if the measure has no modifiers.
+                    alignCenter = true;
+                    xShift = -25; // TODO: Either replace by EngravingRules entry or find a way to make it dependent on the modifiers
                 }
                 keys = ["b/4"];
                 duration += "r";
@@ -195,11 +202,14 @@ export class VexFlowConverter {
         }
 
         const vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
+            align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
             duration: duration,
-            keys: keys,
+            keys: keys
         });
+
+        vfnote.x_shift = xShift;
 
         if (gve.parentVoiceEntry !== undefined) {
             const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.StemDirection;
