@@ -19,7 +19,7 @@ import { NoteEnum } from "../../Common/DataObjects/Pitch";
 import { Staff } from "../VoiceData/Staff";
 import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
-import { Logging } from "../../Common/Logging";
+import * as log from "loglevel";
 import { Pitch } from "../../Common/DataObjects/Pitch";
 import { IXmlAttribute } from "../../Common/FileIO/Xml";
 import { CollectionUtil } from "../../Util/CollectionUtil";
@@ -109,7 +109,7 @@ export class VoiceGenerator {
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
-    //Logging.debug("read called:", restNote);
+    //log.debug("read called:", restNote);
     try {
       this.currentNote = restNote
         ? this.addRestNote(noteDuration)
@@ -331,7 +331,7 @@ export class VoiceGenerator {
    * @returns {Note}
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, graceNote: boolean, chord: boolean, guitarPro: boolean): Note {
-    //Logging.debug("addSingleNote called");
+    //log.debug("addSingleNote called");
     let noteAlter: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
@@ -376,7 +376,7 @@ export class VoiceGenerator {
                 }
               }
             } catch (ex) {
-              Logging.log("VoiceGenerator.addSingleNote read Step: ", ex.message);
+              log.info("VoiceGenerator.addSingleNote read Step: ", ex.message);
             }
 
           }
@@ -398,7 +398,7 @@ export class VoiceGenerator {
           }
         }
       } catch (ex) {
-        Logging.log("VoiceGenerator.addSingleNote: ", ex);
+        log.info("VoiceGenerator.addSingleNote: ", ex);
       }
     }
 

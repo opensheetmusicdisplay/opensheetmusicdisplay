@@ -17,7 +17,7 @@ import {GraphicalNote} from "./GraphicalNote";
 import {Instrument} from "../Instrument";
 import {BoundingBox} from "./BoundingBox";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
@@ -634,7 +634,7 @@ export class GraphicalMusicSheet {
         try {
             return this.GetClickableLabel(positionOnMusicSheet);
         } catch (ex) {
-            Logging.log("GraphicalMusicSheet.tryGetClickableObject", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
+            log.info("GraphicalMusicSheet.tryGetClickableObject", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
         }
 
         return undefined;
@@ -648,7 +648,7 @@ export class GraphicalMusicSheet {
             }
             return entry.getAbsoluteTimestamp();
         } catch (ex) {
-            Logging.log(
+            log.info(
                 "GraphicalMusicSheet.tryGetTimeStampFromPosition",
                 "positionOnMusicSheet: " + positionOnMusicSheet, ex
             );
@@ -680,7 +680,7 @@ export class GraphicalMusicSheet {
                 }
             }
         } catch (ex) {
-            Logging.log("GraphicalMusicSheet.getStaffEntry", ex);
+            log.info("GraphicalMusicSheet.getStaffEntry", ex);
         }
 
         return staffEntry;

@@ -15,7 +15,7 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
-import {Logging} from "../../../Common/Logging";
+import * as log from "loglevel";
 import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry";
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
@@ -312,7 +312,7 @@ export class VexFlowConverter {
 
         // Make sure size is either "default" or "small"
         if (size !== "default" && size !== "small") {
-            Logging.warn(`Invalid VexFlow clef size "${size}" specified. Using "default".`);
+            log.warn(`Invalid VexFlow clef size "${size}" specified. Using "default".`);
             size = "default";
         }
 
@@ -333,7 +333,7 @@ export class VexFlowConverter {
                         break;
                     default:
                         type = "treble";
-                        Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                        log.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
                 }
                 break;
 
@@ -351,7 +351,7 @@ export class VexFlowConverter {
                       break;
                   default:
                       type = "bass";
-                      Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                      log.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
                 }
                 break;
 
@@ -372,7 +372,7 @@ export class VexFlowConverter {
                       break;
                   default:
                       type = "alto";
-                      Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                      log.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
                 }
                 break;
 

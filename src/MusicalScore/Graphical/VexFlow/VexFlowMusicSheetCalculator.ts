@@ -24,7 +24,7 @@ import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
 import Vex = require("vexflow");
-import {Logging} from "../../../Common/Logging";
+import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
@@ -99,7 +99,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         }
         if (voices.length === 0) {
-            Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+            log.warn("Found a measure with no voices... Continuing anyway.", mvoices);
             continue;
         }
         formatter.joinVoices(voices);
