@@ -1,3 +1,4 @@
+import * as log from "loglevel";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
@@ -201,7 +202,7 @@ export class BoundingBox {
     public set Parent(value: BoundingBox) {
         this.parent = value;
         if (this.parent.ChildElements.indexOf(this) > -1) {
-            console.error("BoundingBox of " + (this.dataObject.constructor as any).name +
+            log.warn("BoundingBox of " + (this.dataObject.constructor as any).name +
             " already in children list of " + (this.parent.dataObject.constructor as any).name + "'s BoundingBox");
         } else {
             this.parent.ChildElements.push(this);

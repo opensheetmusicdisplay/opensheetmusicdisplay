@@ -1,3 +1,4 @@
+import * as log from "loglevel";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {SourceStaffEntry} from "../../VoiceData/SourceStaffEntry";
@@ -28,7 +29,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 const staveNote: Vex.Flow.StaveNote = tickable as Vex.Flow.StaveNote;
                 tickablePosition += staveNote.getNoteHeadEndX() - staveNote.getGlyphWidth() / 2;
             } else {
-                console.log(tickable);
+                log.trace(tickable);
                 const ghostNote: Vex.Flow.GhostNote = tickable;
                 // That's basically the same as the StaveNote does.
                 tickablePosition = ghostNote.getAbsoluteX() + ghostNote.x_shift;

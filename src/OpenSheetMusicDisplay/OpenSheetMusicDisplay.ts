@@ -175,7 +175,7 @@ export class OpenSheetMusicDisplay {
     public setLogLevel(level: string): void {
         switch (level) {
             case "trace":
-                log.setLevel(log.levels.WARN);
+                log.setLevel(log.levels.TRACE);
                 break;
             case "debug":
                 log.setLevel(log.levels.DEBUG);
