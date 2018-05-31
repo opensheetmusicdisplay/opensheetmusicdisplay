@@ -13,8 +13,8 @@ import {InstantaniousTempoExpression} from "../../VoiceData/Expressions/Instanta
 import {MoodExpression} from "../../VoiceData/Expressions/MoodExpression";
 import {UnknownExpression} from "../../VoiceData/Expressions/UnknownExpression";
 import {TextAlignment} from "../../../Common/Enums/TextAlignment";
-import {Logging} from "../../../Common/Logging";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
+import * as log from "loglevel";
 
 export enum PlacementEnum {
     Above = 0,
@@ -49,13 +49,13 @@ export class ExpressionReader {
                                     currentMeasureIndex: number,
                                     ignoreDivisionsOffset: boolean): void {
         this.initialize();
-        let offsetNode: IXmlElement = xmlNode.element("offset");
+        const offsetNode: IXmlElement = xmlNode.element("offset");
         if (offsetNode !== undefined && !ignoreDivisionsOffset) {
             try {
                 this.offsetDivisions = parseInt(offsetNode.value, 10);
             } catch (ex) {
-                let errorMsg: string = "ReaderErrorMessages/ExpressionOffsetError" + ", Invalid expression offset -> set to default.";
-                Logging.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
+                const errorMsg: string = "ReaderErrorMessages/ExpressionOffsetError" + ", Invalid expression offset -> set to default.";
+                log.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 this.offsetDivisions = 0;
             }
@@ -75,19 +75,19 @@ export class ExpressionReader {
             } else { this.directionTimestamp = Fraction.createFromFraction(offsetFraction); }
         }
 
-        let placeAttr: IXmlAttribute = xmlNode.attribute("placement");
+        const placeAttr: IXmlAttribute = xmlNode.attribute("placement");
         if (placeAttr !== undefined) {
             try {
-                let placementString: string = placeAttr.value;
+                const placementString: string = placeAttr.value;
                 if (placementString === "below") {
                     this.placement = PlacementEnum.Below;
                 } else if (placementString === "above") {
                     this.placement = PlacementEnum.Above;
                      }
             } catch (ex) {
-                let errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
-                                                                        "Invalid expression placement -> set to default.");
-                Logging.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
+                const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
+                                                                          "Invalid expression placement -> set to default.");
+                log.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 this.placement = PlacementEnum.Below;
             }
@@ -95,34 +95,34 @@ export class ExpressionReader {
         }
         if (this.placement === PlacementEnum.NotYetDefined) {
             try {
-                let directionTypeNode: IXmlElement = xmlNode.element("direction-type");
+                const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
                 if (directionTypeNode !== undefined) {
-                    let dynamicsNode: IXmlElement = directionTypeNode.element("dynamics");
+                    const dynamicsNode: IXmlElement = directionTypeNode.element("dynamics");
                     if (dynamicsNode !== undefined) {
-                        let defAttr: IXmlAttribute = dynamicsNode.attribute("default-y");
+                        const defAttr: IXmlAttribute = dynamicsNode.attribute("default-y");
                         if (defAttr !== undefined) {
                             this.readExpressionPlacement(defAttr, "read dynamics y pos");
                         }
                     }
-                    let wedgeNode: IXmlElement = directionTypeNode.element("wedge");
+                    const wedgeNode: IXmlElement = directionTypeNode.element("wedge");
                     if (wedgeNode !== undefined) {
-                        let defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
+                        const defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
                         if (defAttr !== undefined) {
                             this.readExpressionPlacement(defAttr, "read wedge y pos");
                         }
                     }
-                    let wordsNode: IXmlElement = directionTypeNode.element("words");
+                    const wordsNode: IXmlElement = directionTypeNode.element("words");
                     if (wordsNode !== undefined) {
-                        let defAttr: IXmlAttribute = wordsNode.attribute("default-y");
+                        const defAttr: IXmlAttribute = wordsNode.attribute("default-y");
                         if (defAttr !== undefined) {
                             this.readExpressionPlacement(defAttr, "read words y pos");
                         }
                     }
                 }
             } catch (ex) {
-                let errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
-                                                                        "Invalid expression placement -> set to default.");
-                Logging.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
+                const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/ExpressionPlacementError",
+                                                                          "Invalid expression placement -> set to default.");
+                log.debug("ExpressionReader.readExpressionParameters", errorMsg, ex);
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 this.placement = PlacementEnum.Below;
             }
@@ -139,32 +139,32 @@ export class ExpressionReader {
     public read(directionNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
         let isTempoInstruction: boolean = false;
         let isDynamicInstruction: boolean = false;
-        let n: IXmlElement = directionNode.element("sound");
+        const n: IXmlElement = directionNode.element("sound");
         if (n !== undefined) {
-            let tempoAttr: IXmlAttribute = n.attribute("tempo");
-            let dynAttr: IXmlAttribute = n.attribute("dynamics");
+            const tempoAttr: IXmlAttribute = n.attribute("tempo");
+            const dynAttr: IXmlAttribute = n.attribute("dynamics");
             if (tempoAttr) {
-                let match: string[] = tempoAttr.value.match(/\d+/);
+                const match: string[] = tempoAttr.value.match(/\d+/);
                 this.soundTempo = match !== undefined ? parseInt(match[0], 10) : 100;
                 isTempoInstruction = true;
             }
             if (dynAttr) {
-                let match: string[] = dynAttr.value.match(/\d+/);
+                const match: string[] = dynAttr.value.match(/\d+/);
                 this.soundDynamic = match !== undefined ? parseInt(match[0], 10) : 100;
                 isDynamicInstruction = true;
             }
         }
-        let dirNode: IXmlElement = directionNode.element("direction-type");
+        const dirNode: IXmlElement = directionNode.element("direction-type");
         if (dirNode === undefined) {
             return;
         }
         let dirContentNode: IXmlElement = dirNode.element("metronome");
         if (dirContentNode !== undefined) {
-            let beatUnit: IXmlElement = dirContentNode.element("beat-unit");
-            let hasDot: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
-            let bpm: IXmlElement = dirContentNode.element("per-minute");
+            const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
+            const hasDot: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
+            const bpm: IXmlElement = dirContentNode.element("per-minute");
             if (beatUnit !== undefined && bpm !== undefined) {
-                let useCurrentFractionForPositioning: boolean = (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
+                const useCurrentFractionForPositioning: boolean = (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
                 if (useCurrentFractionForPositioning) {
                     this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
                 }
@@ -172,15 +172,15 @@ export class ExpressionReader {
                 if (hasDot) {
                     text = "dotted " + text;
                 }
-                let bpmNumber: number = parseInt(bpm.value, 10);
+                const bpmNumber: number = parseInt(bpm.value, 10);
                 this.createNewTempoExpressionIfNeeded(currentMeasure);
-                let instantaniousTempoExpression: InstantaniousTempoExpression =
-                    new InstantaniousTempoExpression(   text,
-                                                        this.placement,
-                                                        this.staffNumber,
-                                                        bpmNumber,
-                                                        this.currentMultiTempoExpression,
-                                                        true);
+                const instantaniousTempoExpression: InstantaniousTempoExpression =
+                    new InstantaniousTempoExpression(text,
+                                                     this.placement,
+                                                     this.staffNumber,
+                                                     bpmNumber,
+                                                     this.currentMultiTempoExpression,
+                                                     true);
                 this.currentMultiTempoExpression.addExpression(instantaniousTempoExpression, "");
                 this.currentMultiTempoExpression.CombinedExpressionsText = text;
             }
@@ -189,7 +189,7 @@ export class ExpressionReader {
 
         dirContentNode = dirNode.element("dynamics");
         if (dirContentNode !== undefined) {
-            let fromNotation: boolean = directionNode.element("notations") !== undefined;
+            const fromNotation: boolean = directionNode.element("notations") !== undefined;
             this.interpretInstantaniousDynamics(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, fromNotation);
             return;
         }
@@ -199,7 +199,7 @@ export class ExpressionReader {
             if (isTempoInstruction) {
                 this.createNewTempoExpressionIfNeeded(currentMeasure);
                 this.currentMultiTempoExpression.CombinedExpressionsText = dirContentNode.value;
-                let instantaniousTempoExpression: InstantaniousTempoExpression =
+                const instantaniousTempoExpression: InstantaniousTempoExpression =
                     new InstantaniousTempoExpression(dirContentNode.value, this.placement, this.staffNumber, this.soundTempo, this.currentMultiTempoExpression);
                 this.currentMultiTempoExpression.addExpression(instantaniousTempoExpression, "");
             } else if (!isDynamicInstruction) {
@@ -225,25 +225,25 @@ export class ExpressionReader {
     }
     public addOctaveShift(directionNode: IXmlElement, currentMeasure: SourceMeasure, endTimestamp: Fraction): void {
         let octaveStaffNumber: number = 1;
-        let staffNode: IXmlElement = directionNode.element("staff");
+        const staffNode: IXmlElement = directionNode.element("staff");
         if (staffNode !== undefined) {
             try {
                 octaveStaffNumber = parseInt(staffNode.value, 10);
             } catch (ex) {
-                let errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/OctaveShiftStaffError",
-                                                                        "Invalid octave shift staff number -> set to default");
+                const errorMsg: string = ITextTranslation.translateText(  "ReaderErrorMessages/OctaveShiftStaffError",
+                                                                          "Invalid octave shift staff number -> set to default");
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 octaveStaffNumber = 1;
-                Logging.debug("ExpressionReader.addOctaveShift", errorMsg, ex);
+                log.debug("ExpressionReader.addOctaveShift", errorMsg, ex);
             }
         }
-        let directionTypeNode: IXmlElement = directionNode.element("direction-type");
+        const directionTypeNode: IXmlElement = directionNode.element("direction-type");
         if (directionTypeNode !== undefined) {
-            let octaveShiftNode: IXmlElement = directionTypeNode.element("octave-shift");
+            const octaveShiftNode: IXmlElement = directionTypeNode.element("octave-shift");
             if (octaveShiftNode !== undefined && octaveShiftNode.hasAttributes) {
                 try {
                     if (octaveShiftNode.attribute("size") !== undefined) {
-                        let size: number = parseInt(octaveShiftNode.attribute("size").value, 10);
+                        const size: number = parseInt(octaveShiftNode.attribute("size").value, 10);
                         let octave: number = 0;
                         if (size === 8) {
                             octave = 1;
@@ -251,9 +251,9 @@ export class ExpressionReader {
                             octave = 2;
                              }
                         if (octaveShiftNode.attribute("type") !== undefined) {
-                            let type: string = octaveShiftNode.attribute("type").value;
+                            const type: string = octaveShiftNode.attribute("type").value;
                             if (type === "up" || type === "down") {
-                                let octaveShift: OctaveShift = new OctaveShift(type, octave);
+                                const octaveShift: OctaveShift = new OctaveShift(type, octave);
                                 octaveShift.StaffNumber = octaveStaffNumber;
                                 this.createNewMultiExpressionIfNeeded(currentMeasure);
                                 this.getMultiExpression.OctaveShiftStart = octaveShift;
@@ -270,9 +270,9 @@ export class ExpressionReader {
                         }
                     }
                 } catch (ex) {
-                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/OctaveShiftError", "Error while reading octave shift.");
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/OctaveShiftError", "Error while reading octave shift.");
                     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                    Logging.debug("ExpressionReader.addOctaveShift", errorMsg, ex);
+                    log.debug("ExpressionReader.addOctaveShift", errorMsg, ex);
                 }
             }
         }
@@ -285,14 +285,14 @@ export class ExpressionReader {
     }
     private readExpressionPlacement(defAttr: IXmlAttribute, catchLogMessage: string): void {
         try {
-            let y: number = parseInt(defAttr.value, 10);
+            const y: number = parseInt(defAttr.value, 10);
             if (y < 0) {
                 this.placement = PlacementEnum.Below;
             } else if (y > 0) {
                 this.placement = PlacementEnum.Above;
                  }
         } catch (ex) {
-            Logging.debug("ExpressionReader.readExpressionParameters", catchLogMessage, ex);
+            log.debug("ExpressionReader.readExpressionParameters", catchLogMessage, ex);
         }
 
     }
@@ -304,13 +304,13 @@ export class ExpressionReader {
             if (dynamicsNode.hasAttributes && dynamicsNode.attribute("default-x") !== undefined) {
                 this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             }
-            let name: string = dynamicsNode.elements()[0].name;
+            const name: string = dynamicsNode.elements()[0].name;
             if (name !== undefined) {
                 let dynamicEnum: DynamicEnum;
                 try {
                     dynamicEnum = DynamicEnum[name];
                 } catch (err) {
-                    let errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DynamicError", "Error while reading dynamic.");
+                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DynamicError", "Error while reading dynamic.");
                     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                     return;
                 }
@@ -324,10 +324,10 @@ export class ExpressionReader {
                         this.openContinuousDynamicExpression.StartMultiExpression !== this.getMultiExpression) {
                         this.closeOpenContinuousDynamic();
                     }
-                    let instantaniousDynamicExpression: InstantaniousDynamicExpression = new InstantaniousDynamicExpression(name,
-                                                                                                                            this.soundDynamic,
-                                                                                                                            this.placement,
-                                                                                                                            this.staffNumber);
+                    const instantaniousDynamicExpression: InstantaniousDynamicExpression = new InstantaniousDynamicExpression(name,
+                                                                                                                              this.soundDynamic,
+                                                                                                                              this.placement,
+                                                                                                                              this.staffNumber);
                     this.getMultiExpression.addExpression(instantaniousDynamicExpression, "");
                     this.initialize();
                     if (this.activeInstantaniousDynamic !== undefined) {
@@ -338,7 +338,7 @@ export class ExpressionReader {
         }
     }
     private interpretWords(wordsNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
-        let text: string = wordsNode.value;
+        const text: string = wordsNode.value;
         if (text.length > 0) {
             if (wordsNode.hasAttributes && wordsNode.attribute("default-x") !== undefined) {
                 this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
@@ -381,11 +381,11 @@ export class ExpressionReader {
     }
     private addWedge(wedgeNode: IXmlElement, currentMeasureIndex: number): void {
         if (wedgeNode !== undefined && wedgeNode.hasAttributes) {
-            let type: string = wedgeNode.attribute("type").value.toLowerCase();
+            const type: string = wedgeNode.attribute("type").value.toLowerCase();
             try {
                 if (type === "crescendo" || type === "diminuendo") {
-                    let continuousDynamicExpression: ContinuousDynamicExpression = new ContinuousDynamicExpression( ContDynamicEnum[type],
-                                                                                                                    this.placement, this.staffNumber);
+                    const continuousDynamicExpression: ContinuousDynamicExpression = new ContinuousDynamicExpression(ContDynamicEnum[type],
+                                                                                                                     this.placement, this.staffNumber);
                     if (this.openContinuousDynamicExpression !== undefined) {
                         this.closeOpenContinuousDynamic();
                     }
@@ -402,9 +402,9 @@ export class ExpressionReader {
                     }
                 }
             } catch (ex) {
-                let errorMsg: string = "ReaderErrorMessages/WedgeError" + ", Error while reading Crescendo / Diminuendo.";
+                const errorMsg: string = "ReaderErrorMessages/WedgeError" + ", Error while reading Crescendo / Diminuendo.";
                 this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                Logging.debug("ExpressionReader.addWedge", errorMsg, ex);
+                log.debug("ExpressionReader.addWedge", errorMsg, ex);
             }
         }
     }
@@ -412,11 +412,11 @@ export class ExpressionReader {
         if (inputString === undefined) {
             return;
         }
-        let tmpInputString: string = inputString.trim();
+        const tmpInputString: string = inputString.trim();
         // split string at enumerating words or signs
-        let splitStrings: string[] = tmpInputString.split(/([\s,\r\n]and[\s,\r\n]|[\s,\r\n]und[\s,\r\n]|[\s,\r\n]e[\s,\r\n]|[\s,\r\n])+/g);
+        const splitStrings: string[] = tmpInputString.split(/([\s,\r\n]and[\s,\r\n]|[\s,\r\n]und[\s,\r\n]|[\s,\r\n]e[\s,\r\n]|[\s,\r\n])+/g);
 
-        for (let splitStr of splitStrings) {
+        for (const splitStr of splitStrings) {
             this.createExpressionFromString("", splitStr, currentMeasure, inputString);
         }
     }
@@ -455,7 +455,7 @@ export class ExpressionReader {
             // first check if there is already a tempo expression with the same function
             if (currentMeasure.TempoExpressions.length > 0) {
                 for (let idx: number = 0, len: number = currentMeasure.TempoExpressions.length; idx < len; ++idx) {
-                    let multiTempoExpression: MultiTempoExpression = currentMeasure.TempoExpressions[idx];
+                    const multiTempoExpression: MultiTempoExpression = currentMeasure.TempoExpressions[idx];
                     if (multiTempoExpression.Timestamp === this.directionTimestamp &&
                         multiTempoExpression.InstantaniousTempo !== undefined &&
                         multiTempoExpression.InstantaniousTempo.Label.indexOf(stringTrimmed) !== -1) {
@@ -466,19 +466,19 @@ export class ExpressionReader {
             this.createNewTempoExpressionIfNeeded(currentMeasure);
             this.currentMultiTempoExpression.CombinedExpressionsText = inputString;
             if (InstantaniousTempoExpression.isInputStringInstantaniousTempo(stringTrimmed)) {
-                let instantaniousTempoExpression: InstantaniousTempoExpression = new InstantaniousTempoExpression(  stringTrimmed,
-                                                                                                                    this.placement,
-                                                                                                                    this.staffNumber,
-                                                                                                                    this.soundTempo,
-                                                                                                                    this.currentMultiTempoExpression);
+                const instantaniousTempoExpression: InstantaniousTempoExpression = new InstantaniousTempoExpression(  stringTrimmed,
+                                                                                                                      this.placement,
+                                                                                                                      this.staffNumber,
+                                                                                                                      this.soundTempo,
+                                                                                                                      this.currentMultiTempoExpression);
                 this.currentMultiTempoExpression.addExpression(instantaniousTempoExpression, prefix);
                 return true;
             }
             if (ContinuousTempoExpression.isInputStringContinuousTempo(stringTrimmed)) {
-                let continuousTempoExpression: ContinuousTempoExpression = new ContinuousTempoExpression(   stringTrimmed,
-                                                                                                            this.placement,
-                                                                                                            this.staffNumber,
-                                                                                                            this.currentMultiTempoExpression);
+                const continuousTempoExpression: ContinuousTempoExpression = new ContinuousTempoExpression(   stringTrimmed,
+                                                                                                              this.placement,
+                                                                                                              this.staffNumber,
+                                                                                                              this.currentMultiTempoExpression);
                 this.currentMultiTempoExpression.addExpression(continuousTempoExpression, prefix);
                 return true;
             }
@@ -490,18 +490,18 @@ export class ExpressionReader {
                 if (this.openContinuousDynamicExpression !== undefined && this.openContinuousDynamicExpression.EndMultiExpression === undefined) {
                     this.closeOpenContinuousDynamic();
                 }
-                let instantaniousDynamicExpression: InstantaniousDynamicExpression = new InstantaniousDynamicExpression(stringTrimmed,
-                                                                                                                        this.soundDynamic,
-                                                                                                                        this.placement,
-                                                                                                                        this.staffNumber);
+                const instantaniousDynamicExpression: InstantaniousDynamicExpression = new InstantaniousDynamicExpression(stringTrimmed,
+                                                                                                                          this.soundDynamic,
+                                                                                                                          this.placement,
+                                                                                                                          this.staffNumber);
                 this.getMultiExpression.addExpression(instantaniousDynamicExpression, prefix);
                 return true;
             }
             if (ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
-                let continuousDynamicExpression: ContinuousDynamicExpression = new ContinuousDynamicExpression( undefined,
-                                                                                                                this.placement,
-                                                                                                                this.staffNumber,
-                                                                                                                stringTrimmed);
+                const continuousDynamicExpression: ContinuousDynamicExpression = new ContinuousDynamicExpression( undefined,
+                                                                                                                  this.placement,
+                                                                                                                  this.staffNumber,
+                                                                                                                  stringTrimmed);
                 if (this.openContinuousDynamicExpression !== undefined && this.openContinuousDynamicExpression.EndMultiExpression === undefined) {
                     this.closeOpenContinuousDynamic();
                 }
@@ -516,7 +516,7 @@ export class ExpressionReader {
         }
         if (MoodExpression.isInputStringMood(stringTrimmed)) {
             this.createNewMultiExpressionIfNeeded(currentMeasure);
-            let moodExpression: MoodExpression = new MoodExpression(stringTrimmed, this.placement, this.staffNumber);
+            const moodExpression: MoodExpression = new MoodExpression(stringTrimmed, this.placement, this.staffNumber);
             this.getMultiExpression.addExpression(moodExpression, prefix);
             return true;
         }
@@ -525,7 +525,7 @@ export class ExpressionReader {
         this.createNewMultiExpressionIfNeeded(currentMeasure);
         if (currentMeasure.TempoExpressions.length > 0) {
             for (let idx: number = 0, len: number = currentMeasure.TempoExpressions.length; idx < len; ++idx) {
-                let multiTempoExpression: MultiTempoExpression = currentMeasure.TempoExpressions[idx];
+                const multiTempoExpression: MultiTempoExpression = currentMeasure.TempoExpressions[idx];
                 if (multiTempoExpression.Timestamp === this.directionTimestamp &&
                     multiTempoExpression.InstantaniousTempo !== undefined &&
                     multiTempoExpression.EntriesList.length > 0 &&
@@ -540,7 +540,7 @@ export class ExpressionReader {
                 }
             }
         }
-        let unknownExpression: UnknownExpression = new UnknownExpression(stringTrimmed, this.placement, TextAlignment.CenterBottom, this.staffNumber);
+        const unknownExpression: UnknownExpression = new UnknownExpression(stringTrimmed, this.placement, TextAlignment.CenterBottom, this.staffNumber);
         this.getMultiExpression.addExpression(unknownExpression, prefix);
 
         return false;
