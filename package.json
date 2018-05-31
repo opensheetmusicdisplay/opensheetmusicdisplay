@@ -1,11 +1,11 @@
 {
   "name": "opensheetmusicdisplay",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
-  "main": "dist/src/OSMD/OSMD.js",
-  "typings": "dist/src/OSMD/OSMD",
+  "main": "build/opensheetmusicdisplay.min.js",
+  "typings": "build/dist/src/OpenSheetMusicDisplay/OpenSheetMusicDisplay",
   "scripts": {
-    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --mode file ./src/**/*.ts",
+    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --ignoreCompilerErrors --mode file ./src",
     "eslint": "eslint .",
     "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "npm-run-all eslint tslint",
@@ -16,22 +16,19 @@
     "build:doc": "cross-env STATIC_FILES_SUBFOLDER=sheets npm run build",
     "build:webpack": "webpack --progress --colors --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
-    "start": "webpack-dev-server --progress --colors --config webpack.dev.js"
+    "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
+    "fix-memory-limit": "increase-memory-limit"
   },
   "pre-commit": [
     "lint"
   ],
   "files": [
-    "dist",
+    "build/dist/src",
+    "build/opensheetmusicdisplay.min.js",
     "AUTHORS",
     "CHANGELOG.md",
     "README.md",
-    "karma.conf.js",
-    "src",
-    "external",
-    "demo",
-    "tsconfig.json",
-    "tslint.json"
+    "external"
   ],
   "repository": {
     "type": "git",
@@ -51,11 +48,12 @@
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
     "es6-promise": "^4.0.5",
+    "increase-memory-limit": "^1.0.6",
     "jszip": "^3.0.0",
     "loglevel": "^1.5.0",
     "shortid": "^2.2.6",
     "typescript-collections": "^1.1.2",
-    "vexflow": "^1.2.53"
+    "vexflow": "^1.2.84"
   },
   "devDependencies": {
     "@types/chai": "^4.0.3",
@@ -72,7 +70,7 @@
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
     "file-loader": "^1.1.8",
-    "html-webpack-plugin": "^2.30.1",
+    "html-webpack-plugin": "^3.1.0",
     "http-server": "^0.11.0",
     "jquery": "^3.2.1",
     "karma": "^2.0.0",
@@ -82,22 +80,23 @@
     "karma-firefox-launcher": "^1.0.0",
     "karma-mocha": "^1.1.1",
     "karma-mocha-reporter": "^2.0.4",
-    "karma-webpack": "^2.0.9",
+    "karma-webpack": "^3.0.0",
     "karma-xml2js-preprocessor": "^0.0.3",
     "mocha": "^4.1.0",
     "npm-run-all": "^4.1.2",
     "pre-commit": "^1.2.2",
-    "ts-loader": "^3.0.0",
+    "ts-loader": "^4.1.0",
     "tsify": "^3.0.0",
     "tslint": "^5.8.0",
     "tslint-loader": "^3.5.3",
-    "typedoc": "^0.10.0",
+    "typedoc": "^0.11.1",
     "typescript": "^2.6.1",
-    "uglifyjs-webpack-plugin": "^1.0.1",
-    "underscore-template-loader": "^0.8.0",
-    "webpack": "^3.5.5",
-    "webpack-dev-server": "2.7.1",
-    "webpack-merge": "^4.1.1",
+    "uglifyjs-webpack-plugin": "^1.2.4",
+    "underscore-template-loader": "^1.0.0",
+    "webpack": "^4.2.0",
+    "webpack-cli": "^2.0.13",
+    "webpack-dev-server": "3.1.1",
+    "webpack-merge": "^4.1.2",
     "webpack-visualizer-plugin": "^0.1.11"
   },
   "config": {

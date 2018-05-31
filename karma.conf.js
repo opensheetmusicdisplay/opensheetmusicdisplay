@@ -48,9 +48,10 @@ module.exports = function (config) {
             // webpack watches dependencies
 
             // copy parts of webpack configuration to use minimal effort here
-            devtool: 'cheap-module-eval-source-map',
+            devtool: process.env.CI ? false : 'cheap-module-eval-source-map',
+            mode: process.env.CI ? 'production' : 'development',
             module: {
-                loaders: common.module.loaders
+                rules: common.module.rules
             },
             resolve: common.resolve
         },
@@ -73,7 +74,9 @@ module.exports = function (config) {
 
         // web server port
         port: 9876,
-
+        // timeout in ms:
+        browserNoActivityTimeout: 100000,
+        captureTimeout: 60000,
         // enable / disable colors in the output (reporters and logs)
         colors: true,
 

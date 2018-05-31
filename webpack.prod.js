@@ -13,17 +13,19 @@ var pathsToClean = [
 module.exports = merge(common, {
     output: {
         filename: '[name].min.js',
-        path: path.resolve(__dirname, 'build')
+        path: path.resolve(__dirname, 'build'),
+        library: 'opensheetmusicdisplay',
+        libraryTarget: 'umd'
+    },
+    mode: 'production',
+    optimization: {
+        minimize: true
+        // splitChunks: {
+        //     chunks: 'all',
+        //     name: false
+        // }
     },
     plugins: [
-        new webpack.optimize.UglifyJsPlugin({
-            warnings: false,
-            beautify: false,
-            compress: true,
-            comments: false,
-            sourceMap: true,
-            parallel: true
-        }),
         // build optimization plugins
         new webpack.LoaderOptionsPlugin({
             minimize: true,

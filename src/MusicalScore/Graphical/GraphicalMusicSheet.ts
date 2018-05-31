@@ -16,9 +16,8 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
 import {GraphicalNote} from "./GraphicalNote";
 import {Instrument} from "../Instrument";
 import {BoundingBox} from "./BoundingBox";
-import {Note} from "../VoiceData/Note";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
@@ -513,7 +512,7 @@ export class GraphicalMusicSheet {
             if (closest === undefined) {
                 closest = note;
             } else {
-                if (note.parentStaffEntry.relInMeasureTimestamp === undefined) {
+                if (note.parentVoiceEntry.parentStaffEntry.relInMeasureTimestamp === undefined) {
                     continue;
                 }
                 const deltaNew: number = this.CalculateDistance(note.PositionAndShape.AbsolutePosition, clickPosition);
@@ -635,7 +634,7 @@ export class GraphicalMusicSheet {
         try {
             return this.GetClickableLabel(positionOnMusicSheet);
         } catch (ex) {
-            Logging.log("GraphicalMusicSheet.tryGetClickableObject", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
+            log.info("GraphicalMusicSheet.tryGetClickableObject", "positionOnMusicSheet: " + positionOnMusicSheet, ex);
         }
 
         return undefined;
@@ -649,7 +648,7 @@ export class GraphicalMusicSheet {
             }
             return entry.getAbsoluteTimestamp();
         } catch (ex) {
-            Logging.log(
+            log.info(
                 "GraphicalMusicSheet.tryGetTimeStampFromPosition",
                 "positionOnMusicSheet: " + positionOnMusicSheet, ex
             );
@@ -681,7 +680,7 @@ export class GraphicalMusicSheet {
                 }
             }
         } catch (ex) {
-            Logging.log("GraphicalMusicSheet.getStaffEntry", ex);
+            log.info("GraphicalMusicSheet.getStaffEntry", ex);
         }
 
         return staffEntry;
@@ -879,19 +878,6 @@ export class GraphicalMusicSheet {
         return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);
     }
 
-    public GetGraphicalNoteFromSourceNote(note: Note, containingGse: GraphicalStaffEntry): GraphicalNote {
-        for (let idx: number = 0, len: number = containingGse.notes.length; idx < len; ++idx) {
-            const graphicalNotes: GraphicalNote[] = containingGse.notes[idx];
-            for (let idx2: number = 0, len2: number = graphicalNotes.length; idx2 < len2; ++idx2) {
-                const graphicalNote: GraphicalNote = graphicalNotes[idx2];
-                if (graphicalNote.sourceNote === note) {
-                    return graphicalNote;
-                }
-            }
-        }
-        return undefined;
-    }
-
     private CalculateDistance(pt1: PointF2D, pt2: PointF2D): number {
         const deltaX: number = pt1.x - pt2.x;
         const deltaY: number = pt1.y - pt2.y;
@@ -900,24 +886,18 @@ export class GraphicalMusicSheet {
 
     /**
      * Return the longest StaffEntry duration from a GraphicalVerticalContainer.
-     * @param index
+     * @param index the index of the vertical container
      * @returns {Fraction}
      */
     private getLongestStaffEntryDuration(index: number): Fraction {
         let maxLength: Fraction = new Fraction(0, 1);
-        for (let idx: number = 0, len: number = this.verticalGraphicalStaffEntryContainers[index].StaffEntries.length; idx < len; ++idx) {
-            const graphicalStaffEntry: GraphicalStaffEntry = this.verticalGraphicalStaffEntryContainers[index].StaffEntries[idx];
+        for (const graphicalStaffEntry of this.verticalGraphicalStaffEntryContainers[index].StaffEntries) {
             if (graphicalStaffEntry === undefined) {
                 continue;
             }
-            for (let idx2: number = 0, len2: number = graphicalStaffEntry.notes.length; idx2 < len2; ++idx2) {
-                const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.notes[idx2];
-                for (let idx3: number = 0, len3: number = graphicalNotes.length; idx3 < len3; ++idx3) {
-                    const note: GraphicalNote = graphicalNotes[idx3];
-                    if (maxLength.lt(note.graphicalNoteLength)) {
-                        maxLength = note.graphicalNoteLength;
-                    }
-                }
+            const maxLengthInStaffEntry: Fraction = graphicalStaffEntry.findStaffEntryMaxNoteLength();
+            if (maxLength.lt(maxLengthInStaffEntry)) {
+                maxLength = maxLengthInStaffEntry;
             }
         }
         return maxLength;

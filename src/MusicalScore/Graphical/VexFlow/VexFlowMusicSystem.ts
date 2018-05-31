@@ -10,6 +10,7 @@ import {VexFlowConverter} from "./VexFlowConverter";
 import {StaffLine} from "../StaffLine";
 import {EngravingRules} from "../EngravingRules";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
+import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
@@ -39,9 +40,13 @@ export class VexFlowMusicSystem extends MusicSystem {
      */
     protected createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
                                musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
-        // ToDo: create line in Vexflow
+        const vfMeasure: VexFlowMeasure = topMeasure as VexFlowMeasure;
+        vfMeasure.addMeasureLine(lineType, linePosition);
         if (bottomMeasure) {
-            (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType));
+          // ToDo: feature/Repetitions
+          // create here the correct lines according to the given lineType.
+          (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType, linePosition));
+          (bottomMeasure as VexFlowMeasure).addMeasureLine(lineType, linePosition);
         }
         return new SystemLine(lineType, linePosition, this, topMeasure, bottomMeasure);
     }
@@ -56,7 +61,7 @@ export class VexFlowMusicSystem extends MusicSystem {
         // You could write this in one line but the linter doesn't let me.
         const firstVexStaff: VexFlowStaffLine = (firstStaffLine as VexFlowStaffLine);
         const lastVexStaff: VexFlowStaffLine = (lastStaffLine as VexFlowStaffLine);
-        const vexFlowBracket: VexFlowInstrumentBracket = new VexFlowInstrumentBracket(firstVexStaff, lastVexStaff);
+        const vexFlowBracket: VexFlowInstrumentBrace = new VexFlowInstrumentBrace(firstVexStaff, lastVexStaff);
         this.InstrumentBrackets.push(vexFlowBracket);
         return;
     }
@@ -67,10 +72,18 @@ export class VexFlowMusicSystem extends MusicSystem {
      * The recursion depth informs about the current depth level (needed for positioning)
      * @param firstStaffLine the upper staff line of the bracket to create
      * @param lastStaffLine the lower staff line of the bracket to create
-     * @param staffHeight
      * @param recursionDepth
      */
     protected createGroupBracket(firstStaffLine: StaffLine, lastStaffLine: StaffLine, recursionDepth: number): void {
+        const firstVexStaff: VexFlowStaffLine = (firstStaffLine as VexFlowStaffLine);
+        const lastVexStaff: VexFlowStaffLine = (lastStaffLine as VexFlowStaffLine);
+        if (recursionDepth === 0) {
+            const vexFlowBracket: VexFlowInstrumentBracket = new VexFlowInstrumentBracket(firstVexStaff, lastVexStaff, recursionDepth);
+            this.GroupBrackets.push(vexFlowBracket);
+        } else {
+            const vexFlowBrace: VexFlowInstrumentBrace = new VexFlowInstrumentBrace(firstVexStaff, lastVexStaff, recursionDepth);
+            this.GroupBrackets.push(vexFlowBrace);
+        }
         return;
     }
 }

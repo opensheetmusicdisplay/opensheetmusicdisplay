@@ -16,12 +16,15 @@ import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {GraphicalNote} from "../GraphicalNote";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
-import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {GraphicalChordSymbolContainer} from "../GraphicalChordSymbolContainer";
 import {GraphicalLabel} from "../GraphicalLabel";
 import {EngravingRules} from "../EngravingRules";
+import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { VoiceEntry } from "../../VoiceData/VoiceEntry";
+import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -86,6 +89,10 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
         return new VexFlowStaffEntry(<VexFlowMeasure>measure, undefined, <VexFlowStaffEntry>staffEntryParent);
     }
 
+    public createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry {
+        return new VexFlowVoiceEntry(parentVoiceEntry, parentStaffEntry);
+    }
+
     /**
      * Create a Graphical Note for given note and clef and as part of graphicalStaffEntry.
      * @param note
@@ -95,34 +102,24 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift   The currently active octave transposition enum, needed for positioning the note vertically
      * @returns {GraphicalNote}
      */
-    public createNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
+    public createNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry,
                       activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined): GraphicalNote {
-        // Creates the note:
-        const graphicalNote: GraphicalNote = new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift, graphicalNoteLength);
-        if (note.ParentVoiceEntry !== undefined) {
-            // Adds the note to the right (graphical) voice (mynotes)
-            const voiceID: number = note.ParentVoiceEntry.ParentVoice.VoiceId;
-            const mynotes: { [id: number]: GraphicalNote[]; } = (graphicalStaffEntry as VexFlowStaffEntry).graphicalNotes;
-            if (!(voiceID in mynotes)) {
-                mynotes[voiceID] = [];
-            }
-            mynotes[voiceID].push(graphicalNote);
-        }
-        return graphicalNote;
+        // Creates and returns the note:
+        return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift, graphicalNoteLength);
     }
 
     /**
      * Create a Graphical Grace Note (smaller head, stem...) for given note and clef and as part of graphicalStaffEntry.
      * @param note
      * @param numberOfDots
-     * @param graphicalStaffEntry
+     * @param graphicalVoiceEntry
      * @param activeClef
      * @param octaveShift
      * @returns {GraphicalNote}
      */
-    public createGraceNote(note: Note, graphicalStaffEntry: GraphicalStaffEntry,
+    public createGraceNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry,
                            activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
-        return new VexFlowGraphicalNote(note, graphicalStaffEntry, activeClef, octaveShift);
+        return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift);
     }
 
     /**
@@ -150,14 +147,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
         return;
     }
 
-    /**
-     * Adds a technical instruction at the given staff entry.
-     * @param technicalInstruction
-     * @param graphicalStaffEntry
-     */
-    public createGraphicalTechnicalInstruction(technicalInstruction: TechnicalInstruction, graphicalStaffEntry: GraphicalStaffEntry): void {
-        return;
-    }
+
 
     /**
      * Adds a clef change within a measure before the given staff entry.
@@ -185,4 +175,14 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
       graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
       graphicalStaffEntry.graphicalChordContainer = graphicalChordSymbolContainer;
     }
+
+    /**
+     * Adds a technical instruction at the given staff entry.
+     * @param technicalInstruction
+     * @param graphicalStaffEntry
+     */
+    public createGraphicalTechnicalInstruction(technicalInstruction: TechnicalInstruction, graphicalStaffEntry: GraphicalStaffEntry): void {
+        return;
+    }
+
 }

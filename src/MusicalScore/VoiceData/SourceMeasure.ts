@@ -1,7 +1,7 @@
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
 import {SourceStaffEntry} from "./SourceStaffEntry";
-import {RepetitionInstruction} from "./Instructions/RepetitionInstruction";
+import {RepetitionInstruction, RepetitionInstructionEnum} from "./Instructions/RepetitionInstruction";
 import {Staff} from "./Staff";
 import {VoiceEntry} from "./VoiceEntry";
 import {Voice} from "./Voice";
@@ -214,7 +214,7 @@ export class SourceMeasure extends BaseIdClass {
                 }
             }
         }
-        //Logging.debug("created new container: ", staffEntry, this.verticalSourceStaffEntryContainers);
+        //log.debug("created new container: ", staffEntry, this.verticalSourceStaffEntryContainers);
         return {createdNewContainer: true, staffEntry: staffEntry};
     }
 
@@ -400,6 +400,9 @@ export class SourceMeasure extends BaseIdClass {
     public beginsWithLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.FirstRepetitionInstructions.length; idx < len; ++idx) {
             const instr: RepetitionInstruction = this.FirstRepetitionInstructions[idx];
+            if (instr.type === RepetitionInstructionEnum.StartLine) {
+                return true;
+            }
             if (instr.parentRepetition !== undefined && instr === instr.parentRepetition.startMarker && !instr.parentRepetition.FromWords) {
                 return true;
             }
@@ -414,6 +417,10 @@ export class SourceMeasure extends BaseIdClass {
     public endsWithLineRepetition(): boolean {
         for (let idx: number = 0, len: number = this.LastRepetitionInstructions.length; idx < len; ++idx) {
             const instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
+            if (instruction.type === RepetitionInstructionEnum.BackJumpLine) {
+                return true;
+            }
+
             const rep: Repetition = instruction.parentRepetition;
             if (rep === undefined) {
                 continue;

@@ -39,6 +39,7 @@ export class VoiceEntry {
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
     private arpeggiosNotesIndices: number[] = [];
     private ornamentContainer: OrnamentContainer;
+    private stemDirection: StemDirectionType = StemDirectionType.Undefined;
 
     public get ParentSourceStaffEntry(): SourceStaffEntry {
         return this.parentSourceStaffEntry;
@@ -75,6 +76,13 @@ export class VoiceEntry {
     }
     public set OrnamentContainer(value: OrnamentContainer) {
         this.ornamentContainer = value;
+    }
+
+    public get StemDirection(): StemDirectionType {
+        return this.stemDirection;
+    }
+    public set StemDirection(value: StemDirectionType) {
+        this.stemDirection = value;
     }
 
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {
@@ -151,7 +159,7 @@ export class VoiceEntry {
             return;
         }
         const baseNote: Note = this.notes[0];
-        const baselength: Fraction = baseNote.calculateNoteLengthWithoutTie();
+        const baselength: Fraction = baseNote.Length;
         const baseVoice: Voice = voiceEntryWithOrnament.ParentVoice;
         const baseTimestamp: Fraction = voiceEntryWithOrnament.Timestamp;
         let currentTimestamp: Fraction = Fraction.createFromFraction(baseTimestamp);
@@ -324,4 +332,11 @@ export enum ArticulationEnum {
     unstress,
     detachedlegato,
     otherarticulation
+}
+
+export enum StemDirectionType {
+    Undefined = -1,
+    Up = 0,
+    Down = 1,
+    None = 2
 }

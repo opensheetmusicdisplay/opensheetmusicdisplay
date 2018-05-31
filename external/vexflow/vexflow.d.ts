@@ -1,4 +1,7 @@
+
+
 declare namespace Vex {
+
     export module Flow {
         const RESOLUTION: any;
 
@@ -27,6 +30,18 @@ declare namespace Vex {
             public getW(): number;
 
             public getH(): number;
+
+            public draw(ctx: Vex.Flow.RenderContext): void;
+        }
+
+        export class Tickable {
+            public reset(): void;
+
+            public setStave(stave: Stave);
+
+            public getBoundingBox(): BoundingBox;
+
+            public getAttribute(arg: string): string;
         }
 
         export class Voice {
@@ -34,20 +49,43 @@ declare namespace Vex {
 
             public static Mode: any;
 
+            public context: RenderContext;
+
+            public tickables: Tickable[];
+
             public getBoundingBox(): BoundingBox;
 
             public setStave(stave: Stave): Voice;
 
-            public addTickables(notes: StaveNote[]): Voice;
+            public addTickables(tickables: Tickable[]): Voice;
 
-            public addTickable(note: StaveNote): Voice;
+            public addTickable(tickable: Tickable): Voice;
 
             public setMode(mode: any): Voice;
 
             public draw(ctx: any, stave: Stave): void;
         }
 
-        export class StaveNote {
+        export class Note extends Tickable {
+        }
+
+        export class Stem {
+            public static UP: number;
+            public static DOWN: number;
+        }
+        export class StemmableNote extends Note {
+            public getStemDirection(): number;
+            public setStemDirection(direction: number): StemmableNote;
+            public x_shift: number;
+            public getAbsoluteX(): number;
+        }
+
+        export class GhostNote extends StemmableNote {
+            constructor(note_struct: any);
+            public setStave(stave): void;
+        }
+
+        export class StaveNote extends StemmableNote {
             constructor(note_struct: any);
 
             public getNoteHeadBounds(): any;
@@ -56,9 +94,13 @@ declare namespace Vex {
 
             public getNoteHeadEndX(): number;
 
+            public getGlyphWidth(): number;
+
             public addAccidental(index: number, accidental: Accidental): StaveNote;
 
             public addAnnotation(index: number, annotation: Annotation): StaveNote;
+
+            public addModifier(index: number, modifier: Modifier): StaveNote;
 
             public setStyle(style: any): void;
 
@@ -82,6 +124,10 @@ declare namespace Vex {
 
             public getX(): number;
 
+            public setBegBarType(type: any): Stave;
+
+            public setEndBarType(type: any): Stave;
+
             public addClef(clefSpec: string, size: any, annotation: any, position: any): void;
 
             public setEndClef(clefSpec: string, size: any, annotation: any): void;
@@ -96,11 +142,15 @@ declare namespace Vex {
 
             public getNoteStartX(): number;
 
+            public getModifierXShift(): number;
+
             public getNoteEndX(): number;
 
             public setNoteStartX(x: number): Stave;
 
             public setKeySignature(keySpec: any, cancelKeySpec: any, position: any): Stave;
+
+            public setText(text: string, position: number, options: any): void;
 
             public format(): void;
 
@@ -110,7 +160,10 @@ declare namespace Vex {
 
             public getLineForY(y: number): number;
 
+            public getYForLine(y: number): number;
+
             public getModifiers(pos: any, cat: any): Clef[]; // FIXME
+
             public setContext(ctx: RenderContext): Stave;
 
             public addModifier(mod: any, pos: any): void;
@@ -128,9 +181,31 @@ declare namespace Vex {
             public getWidth(): number;
 
             public getPadding(index: number): number;
+
+            public getPosition(): number;
+
+            public setPosition(position: number): Modifier;
         }
 
+
         export class StaveModifier extends Modifier {
+            public static get Position() {
+                return {
+                    LEFT: 1,
+                    RIGHT: 2,
+                    ABOVE: 3,
+                    BELOW: 4,
+                    BEGIN: 5,
+                    END: 6,
+                };
+            }
+
+            public getPosition(): number;
+
+        }
+
+        export class Repetition extends StaveModifier {
+            constructor(type: any, x: number, y_shift: number);
         }
 
         export class Clef extends StaveModifier {
@@ -159,13 +234,13 @@ declare namespace Vex {
 
             public resize(a: number, b: number): void;
 
-            public getContext(): CanvasContext|SVGContext;
+            public getContext(): CanvasContext | SVGContext;
         }
 
-        export class TimeSignature {
+        export class TimeSignature extends StaveModifier {
             constructor(timeSpec: string, customPadding?: any);
         }
-        export class KeySignature {
+        export class KeySignature extends StaveModifier {
             constructor(keySpec: string, cancelKeySpec: string, alterKeySpec?: string);
         }
 
@@ -174,6 +249,10 @@ declare namespace Vex {
         }
 
         export class Annotation {
+            constructor(type: string);
+        }
+
+        export class Articulation extends Modifier {
             constructor(type: string);
         }
 
@@ -220,6 +299,18 @@ declare namespace Vex {
             public setType(type: any): StaveConnector;
 
             public setContext(ctx: RenderContext): StaveConnector;
+
+            public setXShift(shift: number): StaveConnector;
+
+            public top_stave: Stave;
+
+            public bottom_stave: Stave;
+
+            public thickness: number;
+
+            public width: number;
+
+            public x_shift: number;
 
             public draw(): void;
         }

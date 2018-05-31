@@ -14,13 +14,13 @@ import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 
-export class OSMD {
+export class OpenSheetMusicDisplay {
     /**
      * The easy way of displaying a MusicXML sheet music file
      * @param container is either the ID, or the actual "div" element which will host the music sheet
      * @autoResize automatically resize the sheet to full page width on window resize
      */
-    constructor(container: string|HTMLElement, autoResize: boolean = false, backend: string = "canvas") {
+    constructor(container: string|HTMLElement, autoResize: boolean = false, backend: string = "svg") {
         // Store container element
         if (typeof container === "string") {
             // ID passed
@@ -30,7 +30,7 @@ export class OSMD {
             this.container = <HTMLElement>container;
         }
         if (!this.container) {
-            throw new Error("Please pass a valid div container to OSMD");
+            throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
         if (backend === "svg") {
@@ -72,7 +72,7 @@ export class OSMD {
         this.reset();
         if (typeof content === "string") {
             const str: string = <string>content;
-            const self: OSMD = this;
+            const self: OpenSheetMusicDisplay = this;
             if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
@@ -81,14 +81,19 @@ export class OSMD {
                     },
                     (err: any) => {
                         log.debug(err);
-                        throw new Error("OSMD: Invalid MXL file");
+                        throw new Error("OpenSheetMusicDisplay: Invalid MXL file");
                     }
                 );
+            }
+            // Javascript loads strings as utf-16, which is wonderful BS if you want to parse UTF-8 :S
+            if (str.substr(0, 3) === "\uf7ef\uf7bb\uf7bf") {
+                // UTF with BOM detected, truncate first three bytes and pass along
+                return self.load(str.substr(3));
             }
             if (str.substr(0, 5) === "<?xml") {
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
-                content = parser.parseFromString(str, "text/xml");
+                content = parser.parseFromString(str, "application/xml");
             } else if (str.length < 2083) {
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
@@ -100,7 +105,7 @@ export class OSMD {
         }
 
         if (!content || !(<any>content).nodeName) {
-            return Promise.reject(new Error("OSMD: The document which was provided is invalid"));
+            return Promise.reject(new Error("OpenSheetMusicDisplay: The document which was provided is invalid"));
         }
         const children: NodeList = (<Document>content).childNodes;
         let elem: Element;
@@ -112,7 +117,7 @@ export class OSMD {
             }
         }
         if (!elem) {
-            return Promise.reject(new Error("OSMD: Document is not a valid 'partwise' MusicXML"));
+            return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
         const score: IXmlElement = new IXmlElement(elem);
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
@@ -129,7 +134,7 @@ export class OSMD {
      */
     public render(): void {
         if (!this.graphic) {
-            throw new Error("OSMD: Before rendering a music sheet, please load a MusicXML file");
+            throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
         const width: number = this.container.offsetWidth;
         // Before introducing the following optimization (maybe irrelevant), tests
@@ -208,7 +213,7 @@ export class OSMD {
      * Attach the appropriate handler to the window.onResize event
      */
     private autoResize(): void {
-        const self: OSMD = this;
+        const self: OpenSheetMusicDisplay = this;
         this.handleResize(
             () => {
                 // empty

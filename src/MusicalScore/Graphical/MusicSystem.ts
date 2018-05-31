@@ -57,6 +57,11 @@ export abstract class MusicSystem extends GraphicalObject {
         this.parent = value;
     }
 
+    public get NextSystem(): MusicSystem {
+        const idxInParent: number = this.Parent.MusicSystems.indexOf(this);
+        return idxInParent !== this.Parent.MusicSystems.length ? this.Parent.MusicSystems[idxInParent + 1] : undefined;
+    }
+
     public get StaffLines(): StaffLine[] {
         return this.staffLines;
     }
@@ -242,14 +247,18 @@ export abstract class MusicSystem extends GraphicalObject {
                 continue;
             }
             let firstStaffLine: StaffLine = undefined;
+            let lastStaffLine: StaffLine = undefined;
             for (let idx2: number = 0, len2: number = this.staffLines.length; idx2 < len2; ++idx2) {
                 const staffLine: StaffLine = this.staffLines[idx2];
                 if (staffLine.ParentStaff === instrument1.Staves[0]) {
                     firstStaffLine = staffLine;
                 }
+                if (staffLine.ParentStaff === instrument2.Staves[0]) {
+                    lastStaffLine = staffLine;
+                }
             }
-            if (firstStaffLine !== undefined && firstStaffLine !== undefined) {
-                this.createGroupBracket(firstStaffLine, firstStaffLine, recursionDepth);
+            if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
+                this.createGroupBracket(firstStaffLine, lastStaffLine, recursionDepth);
             }
             if (instrumentGroup.InstrumentalGroups.length < 1) {
                 continue;
@@ -274,11 +283,9 @@ export abstract class MusicSystem extends GraphicalObject {
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(graphicalLabel, instrument);
-                //graphicalLabel.PositionAndShape.Parent = this.PositionAndShape;
-
                 // X-Position will be 0 (Label starts at the same PointF_2D with MusicSystem)
                 // Y-Position will be calculated after the y-Spacing
-                graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
+                // graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
             }
 
             // calculate maxLabelLength (needed for X-Spacing)

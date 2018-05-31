@@ -197,11 +197,7 @@ export class SourceStaffEntry {
             const voiceEntry: VoiceEntry = this.VoiceEntries[idx];
             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                 const note: Note = voiceEntry.Notes[idx2];
-                if (note.NoteTie !== undefined) {
-                    if (note.calculateNoteLengthWithoutTie().lt(duration)) {
-                        duration = note.calculateNoteLengthWithoutTie();
-                    }
-                } else if (note.Length.lt(duration)) {
+                if (note.Length.lt(duration)) {
                     duration = note.Length;
                 }
             }
@@ -216,14 +212,22 @@ export class SourceStaffEntry {
             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                 const note: Note = voiceEntry.Notes[idx2];
                 if (note.NoteTie !== undefined) {
-                    if (duration < note.calculateNoteLengthWithoutTie()) {
-                        duration = note.calculateNoteLengthWithoutTie();
-                        for (let idx3: number = 0, len3: number = note.NoteTie.Fractions.length; idx3 < len3; ++idx3) {
-                            const fraction: Fraction = note.NoteTie.Fractions[idx3];
-                            duration.Add(fraction);
+                    // only add notes from this and after this sse!!
+                    const tieRestDuration: Fraction = Fraction.createFromFraction(note.Length);
+                    let addFollowingNotes: boolean = false;
+                    for (const n of note.NoteTie.Notes) {
+                        if (n === note) {
+                            addFollowingNotes = true;
+                            continue;
+                        }
+                        if (addFollowingNotes) {
+                            tieRestDuration.Add(n.Length);
                         }
                     }
-                } else if (duration < note.Length) {
+                    if (duration.lt(note.NoteTie.Duration)) {
+                        duration = note.NoteTie.Duration;
+                    }
+                } else if (duration.lt(note.Length)) {
                     duration = note.Length;
                 }
             }

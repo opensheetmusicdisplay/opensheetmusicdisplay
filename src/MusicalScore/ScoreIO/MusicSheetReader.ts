@@ -6,7 +6,7 @@ import {IXmlElement} from "../../Common/FileIO/Xml";
 import {Instrument} from "../Instrument";
 import {ITextTranslation} from "../Interfaces/ITextTranslation";
 import {MusicSheetReadingException} from "../Exceptions";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
@@ -17,31 +17,26 @@ import {SubInstrument} from "../SubInstrument";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {Label} from "../Label";
-
-/**
- * To be implemented
- */
-type RepetitionInstructionReader = any;
-/**
- * To be implemented
- */
-type RepetitionCalculator = any;
+import {MusicSymbolModuleFactory} from "./MusicSymbolModuleFactory";
+import {IAfterSheetReadingModule} from "../Interfaces/IAfterSheetReadingModule";
+import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
+import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
-    //constructor(afterSheetReadingModules: IAfterSheetReadingModule[]) {
-    //  if (afterSheetReadingModules === undefined) {
-    //    this.afterSheetReadingModules = [];
-    //  } else {
-    //    this.afterSheetReadingModules = afterSheetReadingModules;
-    //  }
-    //  this.repetitionInstructionReader = MusicSymbolModuleFactory.createRepetitionInstructionReader();
-    //  this.repetitionCalculator = MusicSymbolModuleFactory.createRepetitionCalculator();
-    //}
+    constructor(afterSheetReadingModules: IAfterSheetReadingModule[] = undefined) {
+     if (afterSheetReadingModules === undefined) {
+       this.afterSheetReadingModules = [];
+     } else {
+       this.afterSheetReadingModules = afterSheetReadingModules;
+     }
+     this.repetitionInstructionReader = MusicSymbolModuleFactory.createRepetitionInstructionReader();
+     this.repetitionCalculator = MusicSymbolModuleFactory.createRepetitionCalculator();
+    }
 
     private repetitionInstructionReader: RepetitionInstructionReader;
     private repetitionCalculator: RepetitionCalculator;
-    // private afterSheetReadingModules: IAfterSheetReadingModule[];
+    private afterSheetReadingModules: IAfterSheetReadingModule[];
     private musicSheet: MusicSheet;
     private completeNumberOfStaves: number = 0;
     private currentMeasure: SourceMeasure;
@@ -68,7 +63,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         try {
             return this._createMusicSheet(root, path);
         } catch (e) {
-            Logging.log("MusicSheetReader.CreateMusicSheet", e);
+            log.info("MusicSheetReader.CreateMusicSheet", e);
         }
     }
 
@@ -176,16 +171,16 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (this.repetitionInstructionReader !== undefined) {
             this.repetitionInstructionReader.removeRedundantInstructions();
             if (this.repetitionCalculator !== undefined) {
-                this.repetitionCalculator.calculateRepetitions(this.musicSheet, this.repetitionInstructionReader.RepetitionInstructions);
+                this.repetitionCalculator.calculateRepetitions(this.musicSheet, this.repetitionInstructionReader.repetitionInstructions);
             }
         }
         this.musicSheet.checkForInstrumentWithNoVoice();
         this.musicSheet.fillStaffList();
         //this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SheetPlaybackSetting.BeatsPerMinute;
-        //for (let idx: number = 0, len: number = this.afterSheetReadingModules.length; idx < len; ++idx) {
-        //  let afterSheetReadingModule: IAfterSheetReadingModule = this.afterSheetReadingModules[idx];
-        //  afterSheetReadingModule.calculate(this.musicSheet);
-        //}
+        for (let idx: number = 0, len: number = this.afterSheetReadingModules.length; idx < len; ++idx) {
+         const afterSheetReadingModule: IAfterSheetReadingModule = this.afterSheetReadingModules[idx];
+         afterSheetReadingModule.calculate(this.musicSheet);
+        }
 
         return this.musicSheet;
     }
@@ -194,7 +189,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         const instrumentDict: { [_: string]: Instrument; } = this.createInstrumentGroups(partList);
         this.completeNumberOfStaves = this.getCompleteNumberOfStavesFromXml(partInst);
         if (partInst.length !== 0) {
-            // (*) this.repetitionInstructionReader.MusicSheet = this.musicSheet;
+            this.repetitionInstructionReader.MusicSheet = this.musicSheet;
             this.currentFraction = new Fraction(0, 1);
             this.currentMeasure = undefined;
             this.previousMeasure = undefined;
@@ -220,7 +215,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 currentInstrument.createStaves(instrumentNumberOfStaves);
                 instrumentReaders.push(new InstrumentReader(this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
                 if (this.repetitionInstructionReader !== undefined) {
-                    this.repetitionInstructionReader.XmlMeasureList[counter] = xmlMeasureList;
+                    this.repetitionInstructionReader.xmlMeasureList[counter] = xmlMeasureList;
                 }
                 counter++;
             }
@@ -503,7 +498,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 const filenameSplits: string[] = filename.split(".", 1);
                 this.musicSheet.Title = new Label(filenameSplits[0]);
             } catch (ex) {
-                Logging.log("MusicSheetReader.pushSheetLabels: ", ex);
+                log.info("MusicSheetReader.pushSheetLabels: ", ex);
             }
 
         }
@@ -752,7 +747,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                                 const result: number = <number>parseFloat(instrumentElement.value);
                                                 subInstrument.volume = result / 127.0;
                                             } catch (ex) {
-                                                Logging.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
+                                                log.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
                                             }
 
                                         } else if (instrumentElement.name === "pan") {
@@ -760,18 +755,18 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                                 const result: number = <number>parseFloat(instrumentElement.value);
                                                 subInstrument.pan = result / 64.0;
                                             } catch (ex) {
-                                                Logging.debug("ExpressionReader.readExpressionParameters", "read pan", ex);
+                                                log.debug("ExpressionReader.readExpressionParameters", "read pan", ex);
                                             }
 
                                         }
                                     } catch (ex) {
-                                        Logging.log("MusicSheetReader.createInstrumentGroups midi settings: ", ex);
+                                        log.info("MusicSheetReader.createInstrumentGroups midi settings: ", ex);
                                     }
 
                                 }
                             }
                         } catch (ex) {
-                            Logging.log("MusicSheetReader.createInstrumentGroups: ", ex);
+                            log.info("MusicSheetReader.createInstrumentGroups: ", ex);
                         }
 
                     }

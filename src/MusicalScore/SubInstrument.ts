@@ -1,6 +1,6 @@
 import {Instrument} from "./Instrument";
 import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
-import {Logging} from "../Common/Logging";
+import * as log from "loglevel";
 
 export class SubInstrument {
 
@@ -93,6 +93,7 @@ export class SubInstrument {
     private parseMidiInstrument(instrumentType: string): string {
         // FIXME: test this function
         try {
+            // find the best match for the given instrumentType:
             if (instrumentType) {
                 const tmpName: string = instrumentType.toLowerCase().trim();
                 for (const key in SubInstrument.midiInstrument) {
@@ -101,6 +102,7 @@ export class SubInstrument {
                     }
                 }
             }
+            // if the instrumentType didn't work, use the name:
             if (this.parentInstrument.Name) {
                 const tmpName: string = this.parentInstrument.Name.toLowerCase().trim();
                 for (const key in SubInstrument.midiInstrument) {
@@ -110,7 +112,7 @@ export class SubInstrument {
                 }
             }
         } catch (e) {
-            Logging.error("Error parsing MIDI Instrument. Default to Grand Piano.");
+            log.error("Error parsing MIDI Instrument. Default to Grand Piano.");
         }
         return "unnamed";
     }

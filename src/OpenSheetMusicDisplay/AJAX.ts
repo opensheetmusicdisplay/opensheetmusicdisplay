@@ -11,6 +11,7 @@ export class AJAX {
      */
     public static ajax(url: string): Promise<string> {
         let xhttp: XMLHttpRequest;
+        const mimeType: string = url.indexOf(".mxl") > -1 ? "text/plain; charset=x-user-defined" : "application/xml";
         if (XMLHttpRequest) {
             xhttp = new XMLHttpRequest();
         } else if (ActiveXObject) {
@@ -32,7 +33,7 @@ export class AJAX {
                     }
                 }
             };
-            xhttp.overrideMimeType("text/plain; charset=x-user-defined");
+            xhttp.overrideMimeType(mimeType);
             xhttp.open("GET", url, true);
             xhttp.send();
         });

@@ -3,7 +3,7 @@ import {MultiExpression} from "./MultiExpression";
 import {DynamicExpressionSymbolEnum} from "./DynamicExpressionSymbolEnum";
 //import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {InvalidEnumArgumentException} from "../../Exceptions";
-import {Logging} from "../../../Common/Logging";
+import * as log from "loglevel";
 
 export class InstantaniousDynamicExpression extends AbstractExpression {
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number) {
@@ -143,7 +143,7 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
         //    length += FontInfo.Info.getBoundingBox(symbol).Width;
         //}
         //return length;
-        Logging.debug("[Andrea] instantaniousDynamicExpression: not implemented: calculateLength!");
+        log.debug("[Andrea] instantaniousDynamicExpression: not implemented: calculateLength!");
         return 0.0;
     }
 
