@@ -104,7 +104,7 @@ export class VexFlowConverter {
      */
     public static pitch(pitch: Pitch, clef: ClefInstruction): [string, string, ClefInstruction] {
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        // The octave seems to need a shift of three FIXME?
+        // FIXME: The octave seems to need a shift of three?
         const octave: number = pitch.Octave - clef.OctaveOffset + 3;
         const acc: string = VexFlowConverter.accidental(pitch.Accidental);
         return [fund + "n/" + octave, acc, clef];

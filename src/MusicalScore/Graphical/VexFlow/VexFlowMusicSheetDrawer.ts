@@ -1,3 +1,4 @@
+import Vex = require("vexflow");
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -12,6 +13,9 @@ import {VexFlowBackend} from "./VexFlowBackend";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { StaffLine } from "../StaffLine";
+import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
+import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -118,6 +122,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
         vexBrace.draw(this.backend.getContext());
+    }
+
+    protected drawOctaveShifts(staffLine: StaffLine): void {
+        for (const graphicalOctaveShift of staffLine.OctaveShifts) {
+            if (graphicalOctaveShift) {
+                const ctx: Vex.Flow.RenderContext = this.backend.getContext();
+                const textBracket: Vex.Flow.TextBracket = (graphicalOctaveShift as VexFlowOctaveShift).getTextBracket();
+                textBracket.setContext(ctx);
+                textBracket.draw();
+            }
+        }
     }
 
     /**

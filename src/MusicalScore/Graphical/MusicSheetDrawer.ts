@@ -22,7 +22,6 @@ import {MusicSymbol} from "./MusicSymbol";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
-import {GraphicalOctaveShift} from "./GraphicalOctaveShift";
 import {GraphicalObject} from "./GraphicalObject";
 
 /**
@@ -338,6 +337,8 @@ export abstract class MusicSheetDrawer {
         if (staffLine.LyricsDashes.length > 0) {
             this.drawDashes(staffLine.LyricsDashes);
         }
+
+        this.drawOctaveShifts(staffLine);
     }
 
     /**
@@ -353,26 +354,8 @@ export abstract class MusicSheetDrawer {
     //
     // }
 
-    protected drawOctaveShift(staffLine: StaffLine, graphicalOctaveShift: GraphicalOctaveShift): void {
-        this.drawSymbol(graphicalOctaveShift.octaveSymbol, MusicSymbolDrawingStyle.Normal, graphicalOctaveShift.PositionAndShape.AbsolutePosition);
-        const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
-        if (graphicalOctaveShift.dashesStart.x < graphicalOctaveShift.dashesEnd.x) {
-            const horizontalLine: GraphicalLine = new GraphicalLine(graphicalOctaveShift.dashesStart, graphicalOctaveShift.dashesEnd,
-                                                                    this.rules.OctaveShiftLineWidth);
-            this.drawLineAsHorizontalRectangleWithOffset(horizontalLine, absolutePos, <number>GraphicalLayers.Notes);
-        }
-        if (!graphicalOctaveShift.endsOnDifferentStaffLine || graphicalOctaveShift.isSecondPart) {
-            let verticalLine: GraphicalLine;
-            const dashEnd: PointF2D = graphicalOctaveShift.dashesEnd;
-            const octShiftVertLineLength: number = this.rules.OctaveShiftVerticalLineLength;
-            const octShiftLineWidth: number = this.rules.OctaveShiftLineWidth;
-            if (graphicalOctaveShift.octaveSymbol === MusicSymbol.VA8 || graphicalOctaveShift.octaveSymbol === MusicSymbol.MA15) {
-                verticalLine = new GraphicalLine(dashEnd, new PointF2D(dashEnd.x, dashEnd.y + octShiftVertLineLength), octShiftLineWidth);
-            } else {
-                verticalLine = new GraphicalLine(new PointF2D(dashEnd.x, dashEnd.y - octShiftVertLineLength), dashEnd, octShiftLineWidth);
-            }
-            this.drawLineAsVerticalRectangleWithOffset(verticalLine, absolutePos, <number>GraphicalLayers.Notes);
-        }
+    protected drawOctaveShifts(staffLine: StaffLine): void {
+        return;
     }
 
     protected drawStaffLines(staffLine: StaffLine): void {

@@ -69,6 +69,15 @@ declare namespace Vex {
         export class Note extends Tickable {
         }
 
+        export class TextBracket {
+            constructor(note_struct: any);
+            
+            public setContext(ctx: RenderContext): TextBracket;
+
+            public draw(): void;
+
+        }
+
         export class Stem {
             public static UP: number;
             public static DOWN: number;
