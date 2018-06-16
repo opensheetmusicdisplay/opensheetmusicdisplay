@@ -276,8 +276,10 @@ export class OpenSheetMusicDisplay {
 
     //#region GETTER / SETTER
     public set DrawSkyLine(value: boolean) {
-        this.graphic.SkyLineVisible = value;
-        this.render();
+        if (this.graphic) {
+            this.graphic.SkyLineVisible = value;
+            this.render();
+        }
     }
 
     public get DrawSkyLine(): boolean {
@@ -285,8 +287,10 @@ export class OpenSheetMusicDisplay {
     }
 
     public set DrawBottomLine(value: boolean) {
-        this.graphic.BottomLineVisible = value;
-        this.render();
+        if (this.graphic) {
+            this.graphic.BottomLineVisible = value;
+            this.render();
+        }
     }
 
     public get DrawBottomLine(): boolean {

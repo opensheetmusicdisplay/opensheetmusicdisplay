@@ -5,14 +5,22 @@ import {CanvasVexFlowBackend} from "./VexFlow/CanvasVexFlowBackend";
 import {VexFlowMeasure} from "./VexFlow/VexFlowMeasure";
 import {unitInPixels} from "./VexFlow/VexFlowMusicSheetDrawer";
 import * as log from "loglevel";
-
+/**
+ * This class calculates and holds the skyline and bottom line information.
+ * It also has functions to update areas of the two lines if new elements are
+ * added to the staffline (e.g. measure number, annotations, ...)
+ */
 export class SkyBottomLineCalculator {
     private mStaffLineParent: StaffLine;
     private mSkyLine: number[];
     private mBottomLine: number[];
 
+    /**
+     * Create a new object of the calculator
+     * @param staffLineParent staffline where the calculator should be attached
+     */
     constructor(staffLineParent: StaffLine = undefined) {
-        this.StaffLineParent = staffLineParent;
+        this.mStaffLineParent = staffLineParent;
     }
 
     /**
@@ -23,9 +31,6 @@ export class SkyBottomLineCalculator {
         const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
         this.mSkyLine = [];
         this.mBottomLine = [];
-
-        // and initialize
-        this.initialize();
 
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
@@ -40,6 +45,8 @@ export class SkyBottomLineCalculator {
             const height: number = (tmpCanvas.getCanvas() as any).height;
             const ctx: any = (tmpCanvas.getContext() as any);
 
+            // This magic number is an offset from the top image border so that
+            // elements above the staffline can be drawn correctly.
             measure.getVFStave().setY((measure.getVFStave() as any).y + 40);
             const oldMeasureWidth: number = measure.getVFStave().getWidth();
             // We need to tell the VexFlow stave about the canvas width. This looks
@@ -92,7 +99,7 @@ export class SkyBottomLineCalculator {
             }
             tmpCanvas.clear();
         }
-        // Subsampling
+        // Subsampling:
         // The pixel width is bigger then the measure size in units. So we split the array into
         // chunks with the size of MeasurePixelWidth/measureUnitWidth and reduce the value to its
         // average
@@ -129,24 +136,13 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * This method initializes the Sky- and BottomLines with Float.Max and Float.Min correspondingly.
-     */
-    public initialize(): void {
-        for (let i: number = 0; i < this.SkyLine.length; i++) {
-            // TODO: Hope this MAX, MIN values work as expected. MIN might have to be negativ becuase float.MinValue is negative
-            this.SkyLine[i] = Number.MAX_VALUE;
-            this.BottomLine[i] = Number.MIN_VALUE;
-        }
-    }
-
-
-    /**
      * This method updates the SkyLine for a given Wedge.
      * @param  to update the SkyLine for
      * @param start Start point of the wedge
      * @param end End point of the wedge
      */
     public updateSkyLineWithWedge(start: PointF2D, end: PointF2D): void {
+        // FIXME: Refactor if wedges will be added. Current status is that vexflow will be used for this
         let startIndex: number = Math.floor(start.x * this.SamplingUnit);
         let endIndex: number = Math.ceil(end.x * this.SamplingUnit);
 
@@ -183,6 +179,7 @@ export class SkyBottomLineCalculator {
      * @param end End point of the wedge
      */
     public updateBottomLineWithWedge(start: PointF2D, end: PointF2D): void {
+        // FIXME: Refactor if wedges will be added. Current status is that vexflow will be used for this
         let startIndex: number = Math.floor(start.x * this.SamplingUnit);
         let endIndex: number = Math.ceil(end.x * this.SamplingUnit);
 
@@ -219,33 +216,7 @@ export class SkyBottomLineCalculator {
      * @param value ??
      */
     public updateSkyLineInRange(startIndex: number, endIndex: number, value: number): void {
-
-        //FIXME: Might be not or always needed in TypeScript
-        const floatVersion: boolean = true;
-
-        if (floatVersion) {
-            startIndex = Math.floor(startIndex * this.SamplingUnit);
-            endIndex = Math.ceil(endIndex * this.SamplingUnit);
-        }
-
-        if (startIndex < 0) {
-            startIndex = 0;
-        }
-        if (startIndex >= this.SkyLine.length) {
-            startIndex = this.SkyLine.length - 1;
-        }
-        if (endIndex < 0) {
-            endIndex = 0;
-        }
-        if (endIndex >= this.SkyLine.length) {
-            endIndex = this.SkyLine.length;
-        }
-
-        if (startIndex >= 0 && endIndex <= this.SkyLine.length) {
-            for (let i: number = startIndex; i < endIndex; i++) {
-                this.SkyLine[i] = value;
-            }
-        }
+        this.updateInRange(this.mSkyLine, startIndex, endIndex, value);
     }
 
     /**
@@ -279,10 +250,18 @@ export class SkyBottomLineCalculator {
         this.updateInRange(this.BottomLine, startIndex, endIndex);
     }
 
+    /**
+     * Update the whole skyline with a certain value
+     * @param value value to be set
+     */
     public updateSkyLineWithValue(value: number): void {
         this.SkyLine.forEach(sl => sl = value);
     }
 
+    /**
+     * Update the whole bottomline with a certain value
+     * @param value value to be set
+     */
     public updateBottomLineWithValue(value: number): void {
         this.BottomLine.forEach(bl => bl = value);
     }
@@ -317,7 +296,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the StaffLine Borders with the Sky- and BottomLines Min- and MaxValues.
-     * @param  to apply to
      */
     public updateStaffLineBorders(): void {
         this.mStaffLineParent.PositionAndShape.BorderTop = this.getSkyLineMin();
@@ -347,38 +325,7 @@ export class SkyBottomLineCalculator {
      * @param endIndex End index
      */
     public getSkyLineMinInRange(startIndex: number, endIndex: number): number {
-        // TODO: Refactor with private functions
-        // return this.getMinInRange(this.SkyLine, startIndex, endIndex);
-        //FIXME: Might be not or always needed in TypeScript
-        const floatVersion: boolean = true;
-
-        if (floatVersion) {
-            startIndex = Math.floor(startIndex * this.SamplingUnit);
-            endIndex = Math.ceil(endIndex * this.SamplingUnit);
-        }
-
-        let minValue: number = Number.MAX_VALUE;
-
-        if (startIndex < 0) {
-            startIndex = 0;
-        }
-        if (this.SkyLine !== undefined && startIndex >= this.SkyLine.length) {
-            startIndex = this.SkyLine.length - 1;
-        }
-        if (endIndex < 0) {
-            endIndex = 0;
-        }
-        if (this.SkyLine !== undefined && endIndex >= this.SkyLine.length) {
-            endIndex = this.SkyLine.length;
-        }
-
-        if (this.SkyLine !== undefined && startIndex >= 0 && endIndex <= this.SkyLine.length) {
-            for (let i: number = startIndex; i < endIndex; i++) {
-                minValue = Math.min(minValue, this.SkyLine[i]);
-            }
-        }
-
-        return minValue;
+        return this.getMinInRange(this.SkyLine, startIndex, endIndex);
     }
 
     /**
@@ -386,15 +333,7 @@ export class SkyBottomLineCalculator {
      * @param staffLine Staffline to apply to
      */
     public getBottomLineMax(): number {
-        let maxValue: number = Number.MIN_VALUE;
-        const len: number = this.BottomLine.length;
-
-        for (let idx: number = 0; idx < len; ++idx) {
-            const f: number = this.BottomLine[idx];
-            maxValue = Math.max(f, maxValue);
-        }
-
-        return maxValue;
+        return Math.max(...this.BottomLine.filter(s => !isNaN(s)));
     }
 
     public getBottomLineMaxAtPoint(point: number): number {
@@ -410,36 +349,7 @@ export class SkyBottomLineCalculator {
      * @param endIndex End index of the range
      */
     public getBottomLineMaxInRange(startIndex: number, endIndex: number): number {
-        //FIXME: Might be not or always needed in TypeScript
-        const floatVersion: boolean = true;
-
-        if (floatVersion) {
-            startIndex = Math.floor(startIndex * this.SamplingUnit);
-            endIndex = Math.ceil(endIndex * this.SamplingUnit);
-        }
-
-        let maxValue: number = Number.MIN_VALUE;
-
-        if (startIndex < 0) {
-            startIndex = 0;
-        }
-        if (this.BottomLine !== undefined && startIndex >= this.BottomLine.length) {
-            startIndex = this.BottomLine.length - 1;
-        }
-        if (endIndex < 0) {
-            endIndex = 0;
-        }
-        if (this.BottomLine !== undefined && endIndex >= this.BottomLine.length) {
-            endIndex = this.BottomLine.length;
-        }
-
-        if (this.BottomLine !== undefined && startIndex >= 0 && endIndex <= this.BottomLine.length) {
-            for (let i: number = startIndex; i < endIndex; i++) {
-                maxValue = Math.max(maxValue, this.BottomLine[i]);
-            }
-        }
-
-        return maxValue;
+        return this.getMaxInRange(this.BottomLine, startIndex, endIndex);
     }
 
 
@@ -473,69 +383,60 @@ export class SkyBottomLineCalculator {
         }
     }
 
-    // //FIXME: Replacement methods for all the get min max bottom sky calls
-    // private getMinInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
-    //     const floatVersion: boolean = true;
+    private getMinInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
+        startIndex = Math.floor(startIndex * this.SamplingUnit);
+        endIndex = Math.ceil(endIndex * this.SamplingUnit);
 
-    //     if (floatVersion) {
-    //         startIndex = Math.floor(startIndex * this.SamplingUnit);
-    //         endIndex = Math.ceil(endIndex * this.SamplingUnit);
-    //     }
+        if (skyBottomArray === undefined) {
+            // Highly questionable
+            return Number.MAX_VALUE;
+        }
 
-    //     if (skyBottomArray === undefined) {
-    //         // Highly questionable
-    //         return Number.MAX_VALUE;
-    //     }
+        if (startIndex < 0) {
+            startIndex = 0;
+        }
+        if (startIndex >= skyBottomArray.length) {
+            startIndex = skyBottomArray.length - 1;
+        }
+        if (endIndex < 0) {
+            endIndex = 0;
+        }
+        if (endIndex >= skyBottomArray.length) {
+            endIndex = skyBottomArray.length;
+        }
 
-    //     if (startIndex < 0) {
-    //         startIndex = 0;
-    //     }
-    //     if (startIndex >= skyBottomArray.length) {
-    //         startIndex = skyBottomArray.length - 1;
-    //     }
-    //     if (endIndex < 0) {
-    //         endIndex = 0;
-    //     }
-    //     if (endIndex >= skyBottomArray.length) {
-    //         endIndex = skyBottomArray.length;
-    //     }
+        if (startIndex >= 0 && endIndex <= skyBottomArray.length) {
+            return Math.min(...skyBottomArray.slice(startIndex, endIndex));
+        }
+    }
 
-    //     if (startIndex >= 0 && endIndex <= skyBottomArray.length) {
-    //         return Math.min(...skyBottomArray.slice(startIndex, endIndex));
-    //     }
-    // }
+    private getMaxInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
+        startIndex = Math.floor(startIndex * this.SamplingUnit);
+        endIndex = Math.ceil(endIndex * this.SamplingUnit);
 
-    // private getMaxInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
-    //     const floatVersion: boolean = true;
+        if (skyBottomArray === undefined) {
+            // Highly questionable
+            return Number.MIN_VALUE;
+        }
 
-    //     if (floatVersion) {
-    //         startIndex = Math.floor(startIndex * this.SamplingUnit);
-    //         endIndex = Math.ceil(endIndex * this.SamplingUnit);
-    //     }
+        if (startIndex < 0) {
+            startIndex = 0;
+        }
+        if (startIndex >= skyBottomArray.length) {
+            startIndex = skyBottomArray.length - 1;
+        }
+        if (endIndex < 0) {
+            endIndex = 0;
+        }
+        if (endIndex >= skyBottomArray.length) {
+            endIndex = skyBottomArray.length;
+        }
 
-    //     if (skyBottomArray === undefined) {
-    //         // Highly questionable
-    //         return Number.MIN_VALUE;
-    //     }
-
-    //     if (startIndex < 0) {
-    //         startIndex = 0;
-    //     }
-    //     if (startIndex >= skyBottomArray.length) {
-    //         startIndex = skyBottomArray.length - 1;
-    //     }
-    //     if (endIndex < 0) {
-    //         endIndex = 0;
-    //     }
-    //     if (endIndex >= skyBottomArray.length) {
-    //         endIndex = skyBottomArray.length;
-    //     }
-
-    //     if (startIndex >= 0 && endIndex <= skyBottomArray.length) {
-    //         return Math.max(...skyBottomArray.slice(startIndex, endIndex));
-    //     }
-    // }
-
+        if (startIndex >= 0 && endIndex <= skyBottomArray.length) {
+            return Math.max(...skyBottomArray.slice(startIndex, endIndex));
+        }
+    }
+    // FIXME: What does this do here?
     // private isStaffLineUpper(): boolean {
     //     const instrument: Instrument = this.StaffLineParent.ParentStaff.ParentInstrument;
 
@@ -545,9 +446,9 @@ export class SkyBottomLineCalculator {
     //         return false;
     //     }
     // }
-    //#endregion
+    // #endregion
 
-    //#region Getter / Setter
+    //#region Getter Setter
     get SamplingUnit(): number {
         return EngravingRules.Rules.SamplingUnit;
     }
@@ -556,27 +457,12 @@ export class SkyBottomLineCalculator {
         return this.mStaffLineParent;
     }
 
-    set StaffLineParent(staffLineParent: StaffLine) {
-        this.mStaffLineParent = staffLineParent;
-    }
-
     get SkyLine(): number[] {
         return this.mSkyLine;
-    }
-
-    //TODO: Really??
-    set SkyLine(skyLine: number[]) {
-        this.mSkyLine = skyLine;
     }
 
     get BottomLine(): number[] {
         return this.mBottomLine;
     }
-
-    //TODO: Really??
-    set BottomLine(bottomLine: number[]) {
-        this.mBottomLine = bottomLine;
-    }
-
     //#endregion
 }
