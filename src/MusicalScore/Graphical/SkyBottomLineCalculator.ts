@@ -11,9 +11,14 @@ import * as log from "loglevel";
  * added to the staffline (e.g. measure number, annotations, ...)
  */
 export class SkyBottomLineCalculator {
+    /** Parent Staffline where the skyline and bottom line is attached */
     private mStaffLineParent: StaffLine;
+    /** Internal array for the skyline */
     private mSkyLine: number[];
+    /** Internal array for the bottomline */
     private mBottomLine: number[];
+    /** Engraving rules for formatting */
+    private mRules: EngravingRules;
 
     /**
      * Create a new object of the calculator
@@ -21,6 +26,7 @@ export class SkyBottomLineCalculator {
      */
     constructor(staffLineParent: StaffLine) {
         this.mStaffLineParent = staffLineParent;
+        this.mRules = EngravingRules.Rules;
     }
 
     /**
@@ -32,37 +38,39 @@ export class SkyBottomLineCalculator {
         this.mSkyLine = [];
         this.mBottomLine = [];
 
+        // Create a temporary canvas outside the DOM to draw the measure in.
+        const tmpCanvas: any = new CanvasVexFlowBackend();
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
             // must calculate first AbsolutePositions
             measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
 
-            // Create a temporary canvas outside the DOM to draw the measure in.
-            const tmpCanvas: CanvasVexFlowBackend = new CanvasVexFlowBackend();
-            tmpCanvas.initializeHeadless(measure.getVFStave().getWidth());
-
-            const width: number = (tmpCanvas.getCanvas() as any).width;
-            const height: number = (tmpCanvas.getCanvas() as any).height;
-            const ctx: any = (tmpCanvas.getContext() as any);
+            // Pre initialize and get stuff for more performance
+            const vsStaff: any = measure.getVFStave();
+            tmpCanvas.initializeHeadless(vsStaff.getWidth());
+            const ctx: any = tmpCanvas.getContext();
+            const canvas: any = tmpCanvas.getCanvas();
+            const width: number = canvas.width;
+            const height: number = canvas.height;
 
             // This magic number is an offset from the top image border so that
             // elements above the staffline can be drawn correctly.
-            measure.getVFStave().setY((measure.getVFStave() as any).y + 40);
-            const oldMeasureWidth: number = measure.getVFStave().getWidth();
+            vsStaff.setY(vsStaff.y + 40);
+            const oldMeasureWidth: number = vsStaff.getWidth();
             // We need to tell the VexFlow stave about the canvas width. This looks
             // redundant because it should know the canvas but somehow it doesn't.
             // Maybe I am overlooking something but for no this does the trick
-            measure.getVFStave().setWidth(width);
+            vsStaff.setWidth(width);
             measure.format();
-            measure.getVFStave().setWidth(oldMeasureWidth);
-            measure.draw(tmpCanvas.getContext());
+            vsStaff.setWidth(oldMeasureWidth);
+            measure.draw(ctx);
 
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
             // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
             // Since we are only interested in black or white we can take 32bit words at once
             const imageData: any = ctx.getImageData(0, 0, width, height);
             const rgbaLength: number = 4;
-            const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * EngravingRules.Rules.SamplingUnit), 1);
+            const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * this.mRules.SamplingUnit), 1);
             const tmpSkyLine: number[] = new Array(measureArrayLength);
             const tmpBottomLine: number[] = new Array(measureArrayLength);
             for (let x: number = 0; x < width; x++) {
@@ -94,7 +102,7 @@ export class SkyBottomLineCalculator {
             if (debugTmpCanvas) {
                 tmpSkyLine.forEach((y, x) => this.drawPixel(new PointF2D(x, y), tmpCanvas));
                 tmpBottomLine.forEach((y, x) => this.drawPixel(new PointF2D(x, y), tmpCanvas, "blue"));
-                const img: any = (tmpCanvas.getCanvas() as any).toDataURL("image/png");
+                const img: any = canvas.toDataURL("image/png");
                 document.write('<img src="' + img + '"/>');
             }
             tmpCanvas.clear();
@@ -124,9 +132,15 @@ export class SkyBottomLineCalculator {
         }
         // Remap the values from 0 to +/- height in units
         this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
-        this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + EngravingRules.Rules.StaffHeight);
+        this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + this.mRules.StaffHeight);
     }
 
+    /**
+     * Debugging drawing function that can draw single pixels
+     * @param coord Point to draw to
+     * @param backend the backend to be used
+     * @param color the color to be used, default is red
+     */
     private drawPixel(coord: PointF2D, backend: CanvasVexFlowBackend, color: string = "#FF0000FF"): void {
         const ctx: any = backend.getContext();
         const oldStyle: string = ctx.fillStyle;
@@ -383,6 +397,12 @@ export class SkyBottomLineCalculator {
         }
     }
 
+    /**
+     * Get all values of the selected line inside the given range
+     * @param skyBottomArray Skyline or bottom line
+     * @param startIndex start index
+     * @param endIndex end index
+     */
     private getMinInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
         endIndex = Math.ceil(endIndex * this.SamplingUnit);
@@ -410,6 +430,12 @@ export class SkyBottomLineCalculator {
         }
     }
 
+    /**
+     * Get the maximum value inside the given indices
+     * @param skyBottomArray Skyline or bottom line
+     * @param startIndex start index
+     * @param endIndex end index
+     */
     private getMaxInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
         endIndex = Math.ceil(endIndex * this.SamplingUnit);
@@ -449,18 +475,22 @@ export class SkyBottomLineCalculator {
     // #endregion
 
     //#region Getter Setter
+    /** Sampling units that are used to quantize the sky and bottom line  */
     get SamplingUnit(): number {
-        return EngravingRules.Rules.SamplingUnit;
+        return this.mRules.SamplingUnit;
     }
 
+    /** Parent staffline where the skybottomline calculator is attached to */
     get StaffLineParent(): StaffLine {
         return this.mStaffLineParent;
     }
 
+    /** Get the plain skyline array */
     get SkyLine(): number[] {
         return this.mSkyLine;
     }
 
+    /** Get the plain bottomline array */
     get BottomLine(): number[] {
         return this.mBottomLine;
     }
