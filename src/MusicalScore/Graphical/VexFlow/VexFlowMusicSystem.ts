@@ -28,14 +28,14 @@ export class VexFlowMusicSystem extends MusicSystem {
         this.boundingBox.BorderMarginLeft = -width;
         this.boundingBox.XBordersHaveBeenSet = true;
 
-        const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator();
-        const top: number = skyBottomLineCalculator.getSkyLineMin(this.staffLines[0]);
+        const topSkyBottomLineCalculator: SkyBottomLineCalculator = this.staffLines[0].SkyBottomLineCalculator;
+        const top: number = topSkyBottomLineCalculator.getSkyLineMin();
         this.boundingBox.BorderTop = top;
         this.boundingBox.BorderMarginTop = top;
 
         const lastStaffLine: StaffLine = this.staffLines[this.staffLines.length - 1];
-        const bottom: number = skyBottomLineCalculator
-                    .getBottomLineMax(lastStaffLine)
+        const bottomSkyBottomLineCalculator: SkyBottomLineCalculator = lastStaffLine.SkyBottomLineCalculator;
+        const bottom: number = bottomSkyBottomLineCalculator.getBottomLineMax()
                     + lastStaffLine.PositionAndShape.RelativePosition.y;
         this.boundingBox.BorderBottom = bottom;
         this.boundingBox.BorderMarginBottom = bottom;

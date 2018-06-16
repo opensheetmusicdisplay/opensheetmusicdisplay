@@ -17,7 +17,7 @@ import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
 import {KeyEnum} from "../VoiceData/Instructions/KeyInstruction";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
 import { RepetitionInstructionReader } from "./MusicSymbolModules/RepetitionInstructionReader";
@@ -139,7 +139,7 @@ export class InstrumentReader {
             if (xmlNode.element("staff") !== undefined) {
               noteStaff = parseInt(xmlNode.element("staff").value, 10);
               if (isNaN(noteStaff)) {
-                Logging.debug("InstrumentReader.readNextXmlMeasure.get staff number");
+                log.debug("InstrumentReader.readNextXmlMeasure.get staff number");
                 noteStaff = 1;
               }
             }
@@ -172,13 +172,13 @@ export class InstrumentReader {
             } else {
               const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid Note Duration.");
               this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-              Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
+              log.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
               continue;
             }
           }
 
           const restNote: boolean = xmlNode.element("rest") !== undefined;
-          //Logging.log("New note found!", noteDivisions, noteDuration.toString(), restNote);
+          //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
           const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
@@ -189,7 +189,7 @@ export class InstrumentReader {
             this.inSourceMeasureInstrumentIndex + noteStaff - 1,
             this.currentStaff
           ).staffEntry;
-          //Logging.log("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
+          //log.info("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
 
           if (!this.currentVoiceGenerator.hasVoiceEntry() || (!isChord && !isGraceNote && !lastNoteWasGrace) || (!lastNoteWasGrace && isGraceNote)) {
             this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote);
@@ -255,7 +255,7 @@ export class InstrumentReader {
             if (isNaN(this.divisions)) {
               const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DivisionError",
                                                                       "Invalid divisions value at Instrument: ");
-              Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
+              log.debug("InstrumentReader.readNextXmlMeasure", errorMsg);
               this.divisions = this.readDivisionsFromNotes();
               if (this.divisions > 0) {
                 this.musicSheet.SheetErrors.push(errorMsg + this.instrument.Name);
@@ -380,7 +380,7 @@ export class InstrumentReader {
       }
       const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MeasureError", "Error while reading Measure.");
       this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-      Logging.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
+      log.debug("InstrumentReader.readNextXmlMeasure", errorMsg, e);
     }
 
     this.previousMeasure = this.currentMeasure;
@@ -589,7 +589,7 @@ export class InstrumentReader {
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             line = 2;
-            Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+            log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
           }
 
         }
@@ -617,7 +617,7 @@ export class InstrumentReader {
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             clefEnum = ClefEnum.G;
             line = 2;
-            Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, e);
+            log.debug("InstrumentReader.addAbstractInstruction", errorMsg, e);
           }
 
         }
@@ -665,7 +665,7 @@ export class InstrumentReader {
           );
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           key = 0;
-          Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
       }
@@ -684,7 +684,7 @@ export class InstrumentReader {
           );
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           keyEnum = KeyEnum.major;
-          Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
       }
@@ -754,7 +754,7 @@ export class InstrumentReader {
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
           num = 4;
           denom = 4;
-          Logging.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
+          log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
         if ((num === 4 && denom === 4) || (num === 2 && denom === 2)) {
@@ -978,7 +978,7 @@ export class InstrumentReader {
   //        );
   //        this.musicSheet.SheetErrors.pushTemp(errorMsg);
   //        directionStaffNumber = 1;
-  //        logging.debug("InstrumentReader.readExpressionStaffNumber", errorMsg, ex);
+  //        log.debug("InstrumentReader.readExpressionStaffNumber", errorMsg, ex);
   //      }
   //
   //    }
@@ -1012,7 +1012,7 @@ export class InstrumentReader {
               try {
                 noteDuration = parseInt(durationNode.value, 10);
               } catch (ex) {
-                Logging.debug("InstrumentReader.readDivisionsFromNotes", ex);
+                log.debug("InstrumentReader.readDivisionsFromNotes", ex);
                 continue;
               }
 

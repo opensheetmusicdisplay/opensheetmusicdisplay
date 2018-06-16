@@ -214,6 +214,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
+                console.warn(e.stack);
                 error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
                 onLoadingEnd(isCustom);
             }

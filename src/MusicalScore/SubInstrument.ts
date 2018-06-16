@@ -1,6 +1,6 @@
 import {Instrument} from "./Instrument";
 import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
-import {Logging} from "../Common/Logging";
+import * as log from "loglevel";
 
 export class SubInstrument {
 
@@ -112,7 +112,7 @@ export class SubInstrument {
                 }
             }
         } catch (e) {
-            Logging.error("Error parsing MIDI Instrument. Default to Grand Piano.");
+            log.error("Error parsing MIDI Instrument. Default to Grand Piano.");
         }
         return "unnamed";
     }

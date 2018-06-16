@@ -21,7 +21,7 @@ import {Tuplet} from "../../VoiceData/Tuplet";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 import Vex = require("vexflow");
-import {Logging} from "../../../Common/Logging";
+import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
@@ -31,6 +31,7 @@ import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
+import { MusicSystem } from "../MusicSystem";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
@@ -97,7 +98,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         }
         if (voices.length === 0) {
-            Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+            log.warn("Found a measure with no voices... Continuing anyway.", mvoices);
             continue;
         }
         formatter.joinVoices(voices);
@@ -132,8 +133,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
 
   protected updateStaffLineBorders(staffLine: StaffLine): void {
-      const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator();
-      skyBottomLineCalculator.updateStaffLineBorders(staffLine);
+      staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
   }
 
   protected staffMeasureCreatedCalculations(measure: StaffMeasure): void {
@@ -165,6 +165,42 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /**
+   * This method checks the distances between two System's StaffLines and if needed, shifts the lower down.
+   * @param musicSystem
+   */
+  public optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
+    musicSystem.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
+
+    // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
+    if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
+      for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
+        // const upperBottomLine: number = Math.max(...musicSystem.StaffLines[i].BottomLine);
+        const upperBottomLine: number = musicSystem.StaffLines[i].SkyBottomLineCalculator.getBottomLineMax();
+        // const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
+        if (Math.abs(upperBottomLine) > this.rules.MinimumStaffLineDistance) {
+          // Remove staffheight from offset. As it results in huge distances
+          const offset: number = Math.abs(upperBottomLine) + this.rules.MinimumStaffLineDistance - this.rules.StaffHeight;
+          this.updateStaffLinesRelativePosition(musicSystem, i + 1, offset);
+        }
+      }
+    }
+  }
+
+  /**
+   * This method updates the System's StaffLine's RelativePosition (starting from the given index).
+   * @param musicSystem
+   * @param index
+   * @param value
+   */
+  private updateStaffLinesRelativePosition(musicSystem: MusicSystem, index: number, value: number): void {
+    for (let i: number = index; i < musicSystem.StaffLines.length; i++) {
+      musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y += value;
+    }
+
+    musicSystem.PositionAndShape.BorderBottom += value;
+  }
+
+  /**
    * calculates the y positions of the staff lines within a system and
    * furthermore the y positions of the systems themselves.
    */
@@ -172,7 +208,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator();
     for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
             for (const musicSystem of graphicalMusicPage.MusicSystems) {
-                skyBottomLineCalculator.optimizeDistanceBetweenStaffLines(musicSystem);
+                this.optimizeDistanceBetweenStaffLines(musicSystem);
             }
 
             // set y positions of systems using the previous system and a fixed distance.
@@ -207,35 +243,44 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
+    const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
+
     let vfStartNote: Vex.Flow.StaveNote = undefined;
+    let startNoteIndexInTie: number = 0;
     if (startNote !== undefined) {
       vfStartNote = startNote.vfnote[0];
+      startNoteIndexInTie = startNote.vfnote[1];
     }
 
-    const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
     let vfEndNote: Vex.Flow.StaveNote = undefined;
+    let endNoteIndexInTie: number = 0;
     if (endNote !== undefined) {
       vfEndNote = endNote.vfnote[0];
+      endNoteIndexInTie = endNote.vfnote[1];
     }
-
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
       const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        first_note: vfStartNote,
+        first_indices: [startNoteIndexInTie],
+        first_note: vfStartNote
       });
       const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure1.vfTies.push(vfTie1);
 
       const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        last_note: vfEndNote,
+        last_indices: [endNoteIndexInTie],
+        last_note: vfEndNote
       });
       const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure2.vfTies.push(vfTie2);
     } else {
+      // normal case
       const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+        first_indices: [startNoteIndexInTie],
         first_note: vfStartNote,
-        last_note: vfEndNote,
+        last_indices: [endNoteIndexInTie],
+        last_note: vfEndNote
       });
       const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure.vfTies.push(vfTie);

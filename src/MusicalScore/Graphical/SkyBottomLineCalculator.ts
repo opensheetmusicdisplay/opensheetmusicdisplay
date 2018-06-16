@@ -1,11 +1,10 @@
 import {EngravingRules} from "./EngravingRules";
 import {StaffLine} from "./StaffLine";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
-import {MusicSystem} from "./MusicSystem";
 import {CanvasVexFlowBackend} from "./VexFlow/CanvasVexFlowBackend";
 import {VexFlowMeasure} from "./VexFlow/VexFlowMeasure";
 import {unitInPixels} from "./VexFlow/VexFlowMusicSheetDrawer";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 
 export class SkyBottomLineCalculator {
     private mStaffLineParent: StaffLine;
@@ -24,10 +23,6 @@ export class SkyBottomLineCalculator {
         const arrayLength: number = Math.max(Math.ceil(this.StaffLineParent.PositionAndShape.Size.width * this.SamplingUnit), 1);
         this.mSkyLine = [];
         this.mBottomLine = [];
-
-        // set pointers
-        this.StaffLineParent.SkyLine = this.mSkyLine;
-        this.StaffLineParent.BottomLine = this.mBottomLine;
 
         // and initialize
         this.initialize();
@@ -115,14 +110,14 @@ export class SkyBottomLineCalculator {
         this.mSkyLine = subSampledSkyLine;
         this.mBottomLine = subSampledBottomLine;
         if (this.mSkyLine.length !== arrayLength) {
-            Logging.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
+            log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
         }
         if (this.mBottomLine.length !== arrayLength) {
-            Logging.debug(`BottomLine calculation was not correct (${this.mBottomLine.length} instead of ${arrayLength})`);
+            log.debug(`BottomLine calculation was not correct (${this.mBottomLine.length} instead of ${arrayLength})`);
         }
-        // Remap the values from 0 to +/- height in units and attach it to the parent staff
-        this.mStaffLineParent.SkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
-        this.mStaffLineParent.BottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + EngravingRules.Rules.StaffHeight);
+        // Remap the values from 0 to +/- height in units
+        this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
+        this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + EngravingRules.Rules.StaffHeight);
     }
 
     private drawPixel(coord: PointF2D, backend: CanvasVexFlowBackend, color: string = "#FF0000FF"): void {
@@ -147,11 +142,11 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the SkyLine for a given Wedge.
-     * @param staffLine: StaffLine to update the SkyLine for
+     * @param  to update the SkyLine for
      * @param start Start point of the wedge
      * @param end End point of the wedge
      */
-    public updateSkyLineWithWedge(staffLine: StaffLine, start: PointF2D, end: PointF2D): void {
+    public updateSkyLineWithWedge(start: PointF2D, end: PointF2D): void {
         let startIndex: number = Math.floor(start.x * this.SamplingUnit);
         let endIndex: number = Math.ceil(end.x * this.SamplingUnit);
 
@@ -165,29 +160,29 @@ export class SkyBottomLineCalculator {
         if (startIndex < 0) {
             startIndex = 0;
         }
-        if (startIndex >= staffLine.BottomLine.length) {
-            startIndex = staffLine.BottomLine.length - 1;
+        if (startIndex >= this.BottomLine.length) {
+            startIndex = this.BottomLine.length - 1;
         }
         if (endIndex < 0) {
             endIndex = 0;
         }
-        if (endIndex >= staffLine.BottomLine.length) {
-            endIndex = staffLine.BottomLine.length;
+        if (endIndex >= this.BottomLine.length) {
+            endIndex = this.BottomLine.length;
         }
 
-        staffLine.SkyLine[startIndex] = start.y;
-        for (let i: number = startIndex + 1; i < Math.min(endIndex, staffLine.SkyLine.length); i++) {
-            staffLine.SkyLine[i] = staffLine.SkyLine[i - 1] + slope / this.SamplingUnit;
+        this.SkyLine[startIndex] = start.y;
+        for (let i: number = startIndex + 1; i < Math.min(endIndex, this.SkyLine.length); i++) {
+            this.SkyLine[i] = this.SkyLine[i - 1] + slope / this.SamplingUnit;
         }
     }
 
     /**
      * This method updates the BottomLine for a given Wedge.
-     * @param staffLine: StaffLine to update the bottomline for
+     * @param  to update the bottomline for
      * @param start Start point of the wedge
      * @param end End point of the wedge
      */
-    public updateBottomLineWithWedge(staffLine: StaffLine, start: PointF2D, end: PointF2D): void {
+    public updateBottomLineWithWedge(start: PointF2D, end: PointF2D): void {
         let startIndex: number = Math.floor(start.x * this.SamplingUnit);
         let endIndex: number = Math.ceil(end.x * this.SamplingUnit);
 
@@ -200,30 +195,30 @@ export class SkyBottomLineCalculator {
         if (startIndex < 0) {
             startIndex = 0;
         }
-        if (startIndex >= staffLine.BottomLine.length) {
-            startIndex = staffLine.BottomLine.length - 1;
+        if (startIndex >= this.BottomLine.length) {
+            startIndex = this.BottomLine.length - 1;
         }
         if (endIndex < 0) {
             endIndex = 0;
         }
-        if (endIndex >= staffLine.BottomLine.length) {
-            endIndex = staffLine.BottomLine.length;
+        if (endIndex >= this.BottomLine.length) {
+            endIndex = this.BottomLine.length;
         }
 
-        staffLine.BottomLine[startIndex] = start.y;
+        this.BottomLine[startIndex] = start.y;
         for (let i: number = startIndex + 1; i < endIndex; i++) {
-            staffLine.BottomLine[i] = staffLine.BottomLine[i - 1] + slope / this.SamplingUnit;
+            this.BottomLine[i] = this.BottomLine[i - 1] + slope / this.SamplingUnit;
         }
     }
 
     /**
      * This method updates the SkyLine for a given range with a given value
-     * @param staffLine: StaffLine to update the SkyLine for
+     * @param  to update the SkyLine for
      * @param start Start index of the range
      * @param end End index of the range
      * @param value ??
      */
-    public updateSkyLineInRange(staffLine: StaffLine, startIndex: number, endIndex: number, value: number): void {
+    public updateSkyLineInRange(startIndex: number, endIndex: number, value: number): void {
 
         //FIXME: Might be not or always needed in TypeScript
         const floatVersion: boolean = true;
@@ -236,60 +231,60 @@ export class SkyBottomLineCalculator {
         if (startIndex < 0) {
             startIndex = 0;
         }
-        if (startIndex >= staffLine.SkyLine.length) {
-            startIndex = staffLine.SkyLine.length - 1;
+        if (startIndex >= this.SkyLine.length) {
+            startIndex = this.SkyLine.length - 1;
         }
         if (endIndex < 0) {
             endIndex = 0;
         }
-        if (endIndex >= staffLine.SkyLine.length) {
-            endIndex = staffLine.SkyLine.length;
+        if (endIndex >= this.SkyLine.length) {
+            endIndex = this.SkyLine.length;
         }
 
-        if (startIndex >= 0 && endIndex <= staffLine.SkyLine.length) {
+        if (startIndex >= 0 && endIndex <= this.SkyLine.length) {
             for (let i: number = startIndex; i < endIndex; i++) {
-                staffLine.SkyLine[i] = value;
+                this.SkyLine[i] = value;
             }
         }
     }
 
     /**
      * This method updates the BottomLine for a given range with a given value
-     * @param staffLine: StaffLine to update the BottomLine for
+     * @param  to update the BottomLine for
      * @param start Start index of the range
      * @param end End index of the range
      * @param value ??
      */
-    public updateBottomLineInRange(staffLine: StaffLine, startIndex: number, endIndex: number, value: number): void {
-        this.updateInRange(staffLine.BottomLine, startIndex, endIndex, value);
+    public updateBottomLineInRange(startIndex: number, endIndex: number, value: number): void {
+        this.updateInRange(this.BottomLine, startIndex, endIndex, value);
     }
 
     /**
      * Resets a SkyLine in a range to its original value
-     * @param staffLine: StaffLine to reset the SkyLine in
+     * @param  to reset the SkyLine in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range
      */
-    public resetSkyLineInRange(staffLine: StaffLine, startIndex: number, endIndex: number): void {
-        this.updateInRange(staffLine.SkyLine, startIndex, endIndex);
+    public resetSkyLineInRange(startIndex: number, endIndex: number): void {
+        this.updateInRange(this.SkyLine, startIndex, endIndex);
     }
 
     /**
      * Resets a bottom line in a range to its original value
-     * @param staffLine: StaffLine to reset the bottomline in
+     * @param  to reset the bottomline in
      * @param startIndex Start index of the range
      * @param endIndex End index of the range
      */
-    public resetBottomLineInRange(staffLine: StaffLine, startIndex: number, endIndex: number): void {
-        this.updateInRange(staffLine.BottomLine, startIndex, endIndex);
+    public resetBottomLineInRange(startIndex: number, endIndex: number): void {
+        this.updateInRange(this.BottomLine, startIndex, endIndex);
     }
 
-    public updateSkyLineWithValue(staffLine: StaffLine, value: number): void {
-        staffLine.SkyLine.forEach(sl => sl = value);
+    public updateSkyLineWithValue(value: number): void {
+        this.SkyLine.forEach(sl => sl = value);
     }
 
-    public updateBottomLineWithValue(staffLine: StaffLine, value: number): void {
-        staffLine.BottomLine.forEach(bl => bl = value);
+    public updateBottomLineWithValue(value: number): void {
+        this.BottomLine.forEach(bl => bl = value);
     }
 
     public getLeftIndexForPointX(x: number, length: number): number {
@@ -322,27 +317,27 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the StaffLine Borders with the Sky- and BottomLines Min- and MaxValues.
-     * @param staffLine: StaffLine to apply to
+     * @param  to apply to
      */
-    public updateStaffLineBorders(staffLine: StaffLine): void {
-        staffLine.PositionAndShape.BorderTop = this.getSkyLineMin(staffLine);
-        staffLine.PositionAndShape.BorderMarginTop = this.getSkyLineMin(staffLine);
-        staffLine.PositionAndShape.BorderBottom = this.getBottomLineMax(staffLine);
-        staffLine.PositionAndShape.BorderMarginBottom = this.getBottomLineMax(staffLine);
+    public updateStaffLineBorders(): void {
+        this.mStaffLineParent.PositionAndShape.BorderTop = this.getSkyLineMin();
+        this.mStaffLineParent.PositionAndShape.BorderMarginTop = this.getSkyLineMin();
+        this.mStaffLineParent.PositionAndShape.BorderBottom = this.getBottomLineMax();
+        this.mStaffLineParent.PositionAndShape.BorderMarginBottom = this.getBottomLineMax();
     }
 
     /**
      * This method finds the minimum value of the SkyLine.
      * @param staffLine StaffLine to apply to
      */
-    public getSkyLineMin(staffLine: StaffLine): number {
-        return Math.min(...staffLine.SkyLine.filter(s => !isNaN(s)));
+    public getSkyLineMin(): number {
+        return Math.min(...this.SkyLine.filter(s => !isNaN(s)));
     }
 
-    public getSkyLineMinAtPoint(staffLine: StaffLine, point: number): number {
+    public getSkyLineMinAtPoint(point: number): number {
         const istart: number = Math.floor(point * this.SamplingUnit);
         const iend: number = Math.ceil(point * this.SamplingUnit);
-        return this.getSkyLineMinInRange(staffLine, istart, iend);
+        return this.getSkyLineMinInRange(istart, iend);
     }
 
     /**
@@ -351,9 +346,9 @@ export class SkyBottomLineCalculator {
      * @param startIndex Starting index
      * @param endIndex End index
      */
-    public getSkyLineMinInRange(staffLine: StaffLine, startIndex: number, endIndex: number): number {
+    public getSkyLineMinInRange(startIndex: number, endIndex: number): number {
         // TODO: Refactor with private functions
-        // return this.getMinInRange(staffLine.SkyLine, startIndex, endIndex);
+        // return this.getMinInRange(this.SkyLine, startIndex, endIndex);
         //FIXME: Might be not or always needed in TypeScript
         const floatVersion: boolean = true;
 
@@ -367,19 +362,19 @@ export class SkyBottomLineCalculator {
         if (startIndex < 0) {
             startIndex = 0;
         }
-        if (staffLine.SkyLine !== undefined && startIndex >= staffLine.SkyLine.length) {
-            startIndex = staffLine.SkyLine.length - 1;
+        if (this.SkyLine !== undefined && startIndex >= this.SkyLine.length) {
+            startIndex = this.SkyLine.length - 1;
         }
         if (endIndex < 0) {
             endIndex = 0;
         }
-        if (staffLine.SkyLine !== undefined && endIndex >= staffLine.SkyLine.length) {
-            endIndex = staffLine.SkyLine.length;
+        if (this.SkyLine !== undefined && endIndex >= this.SkyLine.length) {
+            endIndex = this.SkyLine.length;
         }
 
-        if (staffLine.SkyLine !== undefined && startIndex >= 0 && endIndex <= staffLine.SkyLine.length) {
+        if (this.SkyLine !== undefined && startIndex >= 0 && endIndex <= this.SkyLine.length) {
             for (let i: number = startIndex; i < endIndex; i++) {
-                minValue = Math.min(minValue, staffLine.SkyLine[i]);
+                minValue = Math.min(minValue, this.SkyLine[i]);
             }
         }
 
@@ -390,22 +385,22 @@ export class SkyBottomLineCalculator {
      * This method finds the maximum value of the BottomLine.
      * @param staffLine Staffline to apply to
      */
-    public getBottomLineMax(staffLine: StaffLine): number {
+    public getBottomLineMax(): number {
         let maxValue: number = Number.MIN_VALUE;
-        const len: number = staffLine.BottomLine.length;
+        const len: number = this.BottomLine.length;
 
         for (let idx: number = 0; idx < len; ++idx) {
-            const f: number = staffLine.BottomLine[idx];
+            const f: number = this.BottomLine[idx];
             maxValue = Math.max(f, maxValue);
         }
 
         return maxValue;
     }
 
-    public getBottomLineMaxAtPoint(staffLine: StaffLine, point: number): number {
+    public getBottomLineMaxAtPoint(point: number): number {
         const istart: number = Math.floor(point * this.SamplingUnit);
         const iend: number = Math.ceil(point * this.SamplingUnit);
-        return this.getBottomLineMaxInRange(staffLine, istart, iend);
+        return this.getBottomLineMaxInRange(istart, iend);
     }
 
     /**
@@ -414,7 +409,7 @@ export class SkyBottomLineCalculator {
      * @param startIndex Start index of the range
      * @param endIndex End index of the range
      */
-    public getBottomLineMaxInRange(staffLine: StaffLine, startIndex: number, endIndex: number): number {
+    public getBottomLineMaxInRange(startIndex: number, endIndex: number): number {
         //FIXME: Might be not or always needed in TypeScript
         const floatVersion: boolean = true;
 
@@ -428,48 +423,24 @@ export class SkyBottomLineCalculator {
         if (startIndex < 0) {
             startIndex = 0;
         }
-        if (staffLine.BottomLine !== undefined && startIndex >= staffLine.BottomLine.length) {
-            startIndex = staffLine.BottomLine.length - 1;
+        if (this.BottomLine !== undefined && startIndex >= this.BottomLine.length) {
+            startIndex = this.BottomLine.length - 1;
         }
         if (endIndex < 0) {
             endIndex = 0;
         }
-        if (staffLine.BottomLine !== undefined && endIndex >= staffLine.BottomLine.length) {
-            endIndex = staffLine.BottomLine.length;
+        if (this.BottomLine !== undefined && endIndex >= this.BottomLine.length) {
+            endIndex = this.BottomLine.length;
         }
 
-        if (staffLine.BottomLine !== undefined && startIndex >= 0 && endIndex <= staffLine.BottomLine.length) {
+        if (this.BottomLine !== undefined && startIndex >= 0 && endIndex <= this.BottomLine.length) {
             for (let i: number = startIndex; i < endIndex; i++) {
-                maxValue = Math.max(maxValue, staffLine.BottomLine[i]);
+                maxValue = Math.max(maxValue, this.BottomLine[i]);
             }
         }
 
         return maxValue;
     }
-
-    //#region Yspacing Position calculations
-    /// <summary>
-    /// This method checks the distances between two System's StaffLines and if needed, shifts the lower down.
-    /// </summary>
-    /// <param name="musicSystem"></param>
-    public optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
-        musicSystem.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
-
-        // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
-        if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
-            for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
-                const upperBottomLine: number = Math.max(...musicSystem.StaffLines[i].BottomLine);
-                // const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
-                if (Math.abs(upperBottomLine) > EngravingRules.Rules.MinimumStaffLineDistance) {
-                    // Remove staffheight from offset. As it results in huge distances
-                    const offset: number = Math.abs(upperBottomLine) + EngravingRules.Rules.MinimumStaffLineDistance - EngravingRules.Rules.StaffHeight;
-                    this.updateStaffLinesRelativePosition(musicSystem, i + 1, offset);
-                }
-            }
-        }
-    }
-
-    //#endregion
 
 
     //#region Private methods
@@ -502,19 +473,6 @@ export class SkyBottomLineCalculator {
         }
     }
 
-     /// <summary>
-    /// This method updates the System's StaffLine's RelativePosition (starting from the given index).
-    /// </summary>
-    /// <param name="musicSystem"></param>
-    /// <param name="index"></param>
-    /// <param name="value"></param>
-    private updateStaffLinesRelativePosition(musicSystem: MusicSystem, index: number, value: number): void {
-        for (let i: number = index; i < musicSystem.StaffLines.length; i++) {
-            musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y += value;
-        }
-
-        musicSystem.PositionAndShape.BorderBottom += value;
-    }
     // //FIXME: Replacement methods for all the get min max bottom sky calls
     // private getMinInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
     //     const floatVersion: boolean = true;

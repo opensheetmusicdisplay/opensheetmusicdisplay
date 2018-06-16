@@ -1,6 +1,6 @@
 import {PagePlacementEnum} from "./GraphicalMusicPage";
 //import {MusicSymbol} from "./MusicSymbol";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -315,7 +315,7 @@ export class EngravingRules {
             //        + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).width;
             //}
         } catch (ex) {
-            Logging.log("EngravingRules()", ex);
+            log.info("EngravingRules()", ex);
         }
 
     }
