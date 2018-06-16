@@ -1,58 +1,58 @@
-import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
-import {StaffLine} from "./StaffLine";
-import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
-import {EngravingRules} from "./EngravingRules";
-import {Tie} from "../VoiceData/Tie";
-import {Fraction} from "../../Common/DataObjects/Fraction";
-import {Note} from "../VoiceData/Note";
-import {MusicSheet} from "../MusicSheet";
-import {StaffMeasure} from "./StaffMeasure";
-import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
-import {LyricWord} from "../VoiceData/Lyrics/LyricsWord";
-import {SourceMeasure} from "../VoiceData/SourceMeasure";
-import {GraphicalMusicPage} from "./GraphicalMusicPage";
-import {GraphicalNote} from "./GraphicalNote";
-import {Beam} from "../VoiceData/Beam";
-import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
-import {VoiceEntry, StemDirectionType} from "../VoiceData/VoiceEntry";
-import {OrnamentContainer} from "../VoiceData/OrnamentContainer";
-import {ArticulationEnum} from "../VoiceData/VoiceEntry";
-import {Tuplet} from "../VoiceData/Tuplet";
-import {MusicSystem} from "./MusicSystem";
-import {GraphicalTie} from "./GraphicalTie";
-import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
-import {MultiExpression} from "../VoiceData/Expressions/MultiExpression";
-import {StaffEntryLink} from "../VoiceData/StaffEntryLink";
-import {MusicSystemBuilder} from "./MusicSystemBuilder";
-import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpression";
-import {Repetition} from "../MusicSource/Repetition";
-import {PointF2D} from "../../Common/DataObjects/PointF2D";
-import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
-import {BoundingBox} from "./BoundingBox";
-import {Instrument} from "../Instrument";
-import {GraphicalLabel} from "./GraphicalLabel";
-import {TextAlignment} from "../../Common/Enums/TextAlignment";
-import {VerticalGraphicalStaffEntryContainer} from "./VerticalGraphicalStaffEntryContainer";
-import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
-import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
-import {TechnicalInstruction} from "../VoiceData/Instructions/TechnicalInstruction";
-import {Pitch} from "../../Common/DataObjects/Pitch";
-import {LinkedVoice} from "../VoiceData/LinkedVoice";
-import {ColDirEnum} from "./BoundingBox";
-import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
-import {ITextMeasurer} from "../Interfaces/ITextMeasurer";
-import {ITransposeCalculator} from "../Interfaces/ITransposeCalculator";
-import {OctaveShiftParams} from "./OctaveShiftParams";
-import {AccidentalCalculator} from "./AccidentalCalculator";
-import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
-import {Staff} from "../VoiceData/Staff";
-import {OctaveShift} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
+import { StaffLine } from "./StaffLine";
+import { GraphicalMusicSheet } from "./GraphicalMusicSheet";
+import { EngravingRules } from "./EngravingRules";
+import { Tie } from "../VoiceData/Tie";
+import { Fraction } from "../../Common/DataObjects/Fraction";
+import { Note } from "../VoiceData/Note";
+import { MusicSheet } from "../MusicSheet";
+import { StaffMeasure } from "./StaffMeasure";
+import { ClefInstruction } from "../VoiceData/Instructions/ClefInstruction";
+import { LyricWord } from "../VoiceData/Lyrics/LyricsWord";
+import { SourceMeasure } from "../VoiceData/SourceMeasure";
+import { GraphicalMusicPage } from "./GraphicalMusicPage";
+import { GraphicalNote } from "./GraphicalNote";
+import { Beam } from "../VoiceData/Beam";
+import { OctaveEnum } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { VoiceEntry, StemDirectionType } from "../VoiceData/VoiceEntry";
+import { OrnamentContainer } from "../VoiceData/OrnamentContainer";
+import { ArticulationEnum } from "../VoiceData/VoiceEntry";
+import { Tuplet } from "../VoiceData/Tuplet";
+import { MusicSystem } from "./MusicSystem";
+import { GraphicalTie } from "./GraphicalTie";
+import { RepetitionInstruction } from "../VoiceData/Instructions/RepetitionInstruction";
+import { MultiExpression } from "../VoiceData/Expressions/MultiExpression";
+import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
+import { MusicSystemBuilder } from "./MusicSystemBuilder";
+import { MultiTempoExpression } from "../VoiceData/Expressions/MultiTempoExpression";
+import { Repetition } from "../MusicSource/Repetition";
+import { PointF2D } from "../../Common/DataObjects/PointF2D";
+import { SourceStaffEntry } from "../VoiceData/SourceStaffEntry";
+import { BoundingBox } from "./BoundingBox";
+import { Instrument } from "../Instrument";
+import { GraphicalLabel } from "./GraphicalLabel";
+import { TextAlignment } from "../../Common/Enums/TextAlignment";
+import { VerticalGraphicalStaffEntryContainer } from "./VerticalGraphicalStaffEntryContainer";
+import { KeyInstruction } from "../VoiceData/Instructions/KeyInstruction";
+import { AbstractNotationInstruction } from "../VoiceData/Instructions/AbstractNotationInstruction";
+import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
+import { Pitch } from "../../Common/DataObjects/Pitch";
+import { LinkedVoice } from "../VoiceData/LinkedVoice";
+import { ColDirEnum } from "./BoundingBox";
+import { IGraphicalSymbolFactory } from "../Interfaces/IGraphicalSymbolFactory";
+import { ITextMeasurer } from "../Interfaces/ITextMeasurer";
+import { ITransposeCalculator } from "../Interfaces/ITransposeCalculator";
+import { OctaveShiftParams } from "./OctaveShiftParams";
+import { AccidentalCalculator } from "./AccidentalCalculator";
+import { MidiInstrument } from "../VoiceData/Instructions/ClefInstruction";
+import { Staff } from "../VoiceData/Staff";
+import { OctaveShift } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import * as log from "loglevel";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
-import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
-import {GraphicalLyricWord} from "./GraphicalLyricWord";
-import {GraphicalLine} from "./GraphicalLine";
-import {Label} from "../Label";
+import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
+import { GraphicalLyricWord } from "./GraphicalLyricWord";
+import { GraphicalLine } from "./GraphicalLine";
+import { Label } from "../Label";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
@@ -215,8 +215,7 @@ export abstract class MusicSheetCalculator {
     /// This method calculates the relative Positions of all MusicSystems.
     /// </summary>
     /// <param name="graphicalMusicPage"></param>
-    /// <param name="skyBottomLineCalculator"></param>
-    protected calculateMusicSystemsRelativePositions(graphicalMusicPage: GraphicalMusicPage, skyBottomLineCalculator: SkyBottomLineCalculator): void {
+    protected calculateMusicSystemsRelativePositions(graphicalMusicPage: GraphicalMusicPage): void {
         // xPosition is always fix
         let relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin, 0);
 
@@ -258,6 +257,42 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
+    /**
+     * This method checks the distances between two System's StaffLines and if needed, shifts the lower down.
+     * @param musicSystem
+     */
+    protected optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
+        musicSystem.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
+
+        // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
+        if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
+            for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
+                // const upperBottomLine: number = Math.max(...musicSystem.StaffLines[i].BottomLine);
+                const upperBottomLine: number = musicSystem.StaffLines[i].SkyBottomLineCalculator.getBottomLineMax();
+                // const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
+                if (Math.abs(upperBottomLine) > this.rules.MinimumStaffLineDistance) {
+                    // Remove staffheight from offset. As it results in huge distances
+                    const offset: number = Math.abs(upperBottomLine) + this.rules.MinimumStaffLineDistance - this.rules.StaffHeight;
+                    this.updateStaffLinesRelativePosition(musicSystem, i + 1, offset);
+                }
+            }
+        }
+    }
+
+    /**
+     * This method updates the System's StaffLine's RelativePosition (starting from the given index).
+     * @param musicSystem
+     * @param index
+     * @param value
+     */
+    protected updateStaffLinesRelativePosition(musicSystem: MusicSystem, index: number, value: number): void {
+        for (let i: number = index; i < musicSystem.StaffLines.length; i++) {
+            musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y += value;
+        }
+
+        musicSystem.PositionAndShape.BorderBottom += value;
+    }
+
     protected calculateSystemYLayout(): void {
         throw new Error("abstract, not implemented");
     }
@@ -285,45 +320,45 @@ export abstract class MusicSheetCalculator {
      * @param isLastTieNote
      */
     protected handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
-                                      octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
-                                      openTie: Tie, isLastTieNote: boolean): void {
+        octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
+        openTie: Tie, isLastTieNote: boolean): void {
         throw new Error("abstract, not implemented");
     }
 
     protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
-                                     openLyricWords: LyricWord[]): void {
+        openLyricWords: LyricWord[]): void {
         throw new Error("abstract, not implemented");
     }
 
     protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
-                                        graphicalStaffEntry: GraphicalStaffEntry): void {
+        graphicalStaffEntry: GraphicalStaffEntry): void {
         throw new Error("abstract, not implemented");
     }
 
     protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
-                                            voiceEntry: VoiceEntry,
-                                            staffEntry: GraphicalStaffEntry): void {
+        voiceEntry: VoiceEntry,
+        staffEntry: GraphicalStaffEntry): void {
         throw new Error("abstract, not implemented");
     }
 
-  /**
-   * Adds a technical instruction at the given staff entry.
-   * @param technicalInstructions
-   * @param voiceEntry
-   * @param staffEntry
-   */
-  protected handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
-                                                  voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
-                                                    throw new Error("abstract, not implemented");
-  }
+    /**
+     * Adds a technical instruction at the given staff entry.
+     * @param technicalInstructions
+     * @param voiceEntry
+     * @param staffEntry
+     */
+    protected handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
+        voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
+        throw new Error("abstract, not implemented");
+    }
 
 
-  protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
+    protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
         throw new Error("abstract, not implemented");
     }
 
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
-                               graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
+        graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -332,7 +367,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry, startNote: GraphicalNote,
-                                 endNote: GraphicalNote): GraphicalTie {
+        endNote: GraphicalNote): GraphicalTie {
         throw new Error("abstract, not implemented");
     }
 
@@ -357,8 +392,8 @@ export abstract class MusicSheetCalculator {
                 !measure.parentSourceMeasure.ImplicitMeasure) {
                 if (measure.MeasureNumber !== 1 ||
                     (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0])) {
-                        this.calculateSingleMeasureNumberPlacement(measure, staffLine, musicSystem);
-                    }
+                    this.calculateSingleMeasureNumberPlacement(measure, staffLine, musicSystem);
+                }
                 currentMeasureNumber = measure.MeasureNumber;
             }
         }
@@ -373,7 +408,7 @@ export abstract class MusicSheetCalculator {
     private calculateSingleMeasureNumberPlacement(measure: StaffMeasure, staffLine: StaffLine, musicSystem: MusicSystem): void {
         const labelNumber: string = measure.MeasureNumber.toString();
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(new Label(labelNumber), this.rules.MeasureNumberLabelHeight,
-                                                                  TextAlignment.LeftBottom);
+            TextAlignment.LeftBottom);
 
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
@@ -383,7 +418,7 @@ export abstract class MusicSheetCalculator {
 
         // calculate relative Position
         const relativeX: number = staffLine.PositionAndShape.RelativePosition.x +
-                            measure.PositionAndShape.RelativePosition.x - graphicalLabel.PositionAndShape.BorderMarginLeft;
+            measure.PositionAndShape.RelativePosition.x - graphicalLabel.PositionAndShape.BorderMarginLeft;
         let relativeY: number;
 
         // and the corresponding SkyLine indeces
@@ -455,7 +490,7 @@ export abstract class MusicSheetCalculator {
 
                     // Position of Staffentry relative to StaffLine
                     const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +
-                                                        measureRelativePosition.x;
+                        measureRelativePosition.x;
 
                     let minMarginLeft: number = Number.MAX_VALUE;
                     let maxMarginRight: number = Number.MAX_VALUE;
@@ -469,7 +504,7 @@ export abstract class MusicSheetCalculator {
 
                     // check BottomLine in this range and take the maximum between the two values
                     const bottomLineMax: number = skyBottomLineCalculator.getBottomLineMaxInRange(minMarginLeft, maxMarginRight)
-                                                  + this.rules.StaffHeight;
+                        + this.rules.StaffHeight;
                     lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax);
                 }
             }
@@ -504,8 +539,8 @@ export abstract class MusicSheetCalculator {
         if (lyricsStaffEntriesList.length > 0) {
             const endX: number = staffLine.PositionAndShape.Size.width;
             const startX: number = lyricsStaffEntriesList[0].PositionAndShape.RelativePosition.x +
-            lyricsStaffEntriesList[0].PositionAndShape.BorderMarginLeft +
-            lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;
+                lyricsStaffEntriesList[0].PositionAndShape.BorderMarginLeft +
+                lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;
             skyBottomLineCalculator.updateBottomLineInRange(startX, endX, maxPosition);
         }
         return lyricsStaffEntriesList;
@@ -543,7 +578,7 @@ export abstract class MusicSheetCalculator {
      * @param staffIndex
      */
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
-                                         measureIndex: number, staffIndex: number): void {
+        measureIndex: number, staffIndex: number): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -553,7 +588,7 @@ export abstract class MusicSheetCalculator {
      * @param measureIndex
      */
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
-                                                 measureIndex: number): void {
+        measureIndex: number): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -588,7 +623,7 @@ export abstract class MusicSheetCalculator {
      * @param staffEntryLinks
      */
     protected handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry,
-                                   staffEntryLinks: StaffEntryLink[]): void {
+        staffEntryLinks: StaffEntryLink[]): void {
         log.debug("handleStaffEntryLink not implemented");
     }
 
@@ -741,7 +776,7 @@ export abstract class MusicSheetCalculator {
                 // let newPosition: PointF2D = new PointF2D(musicSystem.PositionAndShape.RelativePosition.x,
                 // musicSystem.PositionAndShape.RelativePosition.y - distance);
                 musicSystem.PositionAndShape.RelativePosition =
-                new PointF2D(musicSystem.PositionAndShape.RelativePosition.x, musicSystem.PositionAndShape.RelativePosition.y - distance);
+                    new PointF2D(musicSystem.PositionAndShape.RelativePosition.x, musicSystem.PositionAndShape.RelativePosition.y - distance);
             }
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
                 const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
@@ -794,7 +829,7 @@ export abstract class MusicSheetCalculator {
      * @param measure
      */
     protected layoutMeasureWithWholeRest(rest: GraphicalNote, gse: GraphicalStaffEntry,
-                                         measure: StaffMeasure): void {
+        measure: StaffMeasure): void {
         return;
     }
 
@@ -807,15 +842,15 @@ export abstract class MusicSheetCalculator {
     }
 
     protected layoutOrnament(ornaments: OrnamentContainer, voiceEntry: VoiceEntry,
-                             graphicalStaffEntry: GraphicalStaffEntry): void {
+        graphicalStaffEntry: GraphicalStaffEntry): void {
         return;
     }
 
     protected calculateRestNotePlacementWithinGraphicalBeam(graphicalStaffEntry: GraphicalStaffEntry,
-                                                            restNote: GraphicalNote,
-                                                            previousNote: GraphicalNote,
-                                                            nextStaffEntry: GraphicalStaffEntry,
-                                                            nextNote: GraphicalNote): void {
+        restNote: GraphicalNote,
+        previousNote: GraphicalNote,
+        nextStaffEntry: GraphicalStaffEntry,
+        nextNote: GraphicalNote): void {
         return;
     }
 
@@ -845,12 +880,12 @@ export abstract class MusicSheetCalculator {
      * @param rightOpen
      */
     protected layoutSingleRepetitionEnding(start: StaffMeasure, end: StaffMeasure, numberText: string,
-                                           offset: number, leftOpen: boolean, rightOpen: boolean): void {
+        offset: number, leftOpen: boolean, rightOpen: boolean): void {
         return;
     }
 
     protected calculateTempoExpressionsForSingleMultiTempoExpression(sourceMeasure: SourceMeasure, multiTempoExpression: MultiTempoExpression,
-                                                                     measureIndex: number): void {
+        measureIndex: number): void {
         return;
     }
 
@@ -901,11 +936,11 @@ export abstract class MusicSheetCalculator {
     }
 
     protected handleVoiceEntry(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
-                               accidentalCalculator: AccidentalCalculator, openLyricWords: LyricWord[],
-                               activeClef: ClefInstruction,
-                               openTuplets: Tuplet[], openBeams: Beam[],
-                               octaveShiftValue: OctaveEnum, grace: boolean = false, linkedNotes: Note[] = undefined,
-                               sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
+        accidentalCalculator: AccidentalCalculator, openLyricWords: LyricWord[],
+        activeClef: ClefInstruction,
+        openTuplets: Tuplet[], openBeams: Beam[],
+        octaveShiftValue: OctaveEnum, grace: boolean = false, linkedNotes: Note[] = undefined,
+        sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
         this.calculateStemDirectionFromVoices(voiceEntry);
         const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
@@ -950,9 +985,9 @@ export abstract class MusicSheetCalculator {
     }
 
     protected handleVoiceEntryGraceNotes(graceEntries: VoiceEntry[], graphicalGraceEntries: GraphicalStaffEntry[], graphicalStaffEntry: GraphicalStaffEntry,
-                                         accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
-                                         octaveShiftValue: OctaveEnum, lyricWords: LyricWord[],
-                                         tuplets: Tuplet[], beams: Beam[]): void {
+        accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
+        octaveShiftValue: OctaveEnum, lyricWords: LyricWord[],
+        tuplets: Tuplet[], beams: Beam[]): void {
         if (graceEntries !== undefined) {
             for (let idx: number = 0, len: number = graceEntries.length; idx < len; ++idx) {
                 const graceVoiceEntry: VoiceEntry = graceEntries[idx];
@@ -1096,7 +1131,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected getRelativePositionInStaffLineFromTimestamp(timestamp: Fraction, verticalIndex: number, staffLine: StaffLine,
-                                                          multiStaffInstrument: boolean, firstVisibleMeasureRelativeX: number = 0.0): PointF2D {
+        multiStaffInstrument: boolean, firstVisibleMeasureRelativeX: number = 0.0): PointF2D {
         let relative: PointF2D = new PointF2D();
         let leftStaffEntry: GraphicalStaffEntry = undefined;
         let rightStaffEntry: GraphicalStaffEntry = undefined;
@@ -1288,8 +1323,8 @@ export abstract class MusicSheetCalculator {
     }
 
     private createGraphicalMeasuresForSourceMeasure(sourceMeasure: SourceMeasure, accidentalCalculators: AccidentalCalculator[],
-                                                    openLyricWords: LyricWord[],
-                                                    openOctaveShifts: OctaveShiftParams[], activeClefs: ClefInstruction[]): StaffMeasure[] {
+        openLyricWords: LyricWord[],
+        openOctaveShifts: OctaveShiftParams[], activeClefs: ClefInstruction[]): StaffMeasure[] {
         this.initStaffMeasuresCreation();
         const verticalMeasureList: StaffMeasure[] = [];
         const openBeams: Beam[] = [];
@@ -1308,9 +1343,9 @@ export abstract class MusicSheetCalculator {
     }
 
     private createGraphicalMeasure(sourceMeasure: SourceMeasure, openTuplets: Tuplet[], openBeams: Beam[],
-                                   accidentalCalculator: AccidentalCalculator, activeClefs: ClefInstruction[],
-                                   openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
-                                   staffEntryLinks: StaffEntryLink[]): StaffMeasure {
+        accidentalCalculator: AccidentalCalculator, activeClefs: ClefInstruction[],
+        openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
+        staffEntryLinks: StaffEntryLink[]): StaffMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         const measure: StaffMeasure = MusicSheetCalculator.symbolFactory.createStaffMeasure(sourceMeasure, staff);
         measure.hasError = sourceMeasure.getErrorInMeasure(staffIndex);
@@ -1363,7 +1398,7 @@ export abstract class MusicSheetCalculator {
                 let octaveShiftValue: OctaveEnum = OctaveEnum.NONE;
                 if (openOctaveShifts[staffIndex] !== undefined) {
                     const octaveShiftParams: OctaveShiftParams = openOctaveShifts[staffIndex];
-                    if (octaveShiftParams.getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp)  &&
+                    if (octaveShiftParams.getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
                         sourceStaffEntry.AbsoluteTimestamp.lte(octaveShiftParams.getAbsoluteEndTimestamp)) {
                         octaveShiftValue = octaveShiftParams.getOpenOctaveShift.Type;
                     }
@@ -1422,9 +1457,9 @@ export abstract class MusicSheetCalculator {
         // if there are no staffEntries in this measure, create a rest for the whole measure:
         if (measure.staffEntries.length === 0) {
             const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(
-                new VerticalSourceStaffEntryContainer(  measure.parentSourceMeasure,
-                                                        measure.parentSourceMeasure.AbsoluteTimestamp,
-                                                        measure.parentSourceMeasure.CompleteNumberOfStaves),
+                new VerticalSourceStaffEntryContainer(measure.parentSourceMeasure,
+                    measure.parentSourceMeasure.AbsoluteTimestamp,
+                    measure.parentSourceMeasure.CompleteNumberOfStaves),
                 staff);
             const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
             const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
@@ -1434,17 +1469,17 @@ export abstract class MusicSheetCalculator {
             graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
             const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
             graphicalStaffEntry.graphicalVoiceEntries.push(gve);
-            const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote( note,
-                                                                                                gve,
-                                                                                                new ClefInstruction(),
-                                                                                                OctaveEnum.NONE, undefined);
+            const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
+                gve,
+                new ClefInstruction(),
+                OctaveEnum.NONE, undefined);
             gve.notes.push(graphicalNote);
         }
         return measure;
     }
 
     private checkNoteForAccidental(graphicalNote: GraphicalNote, accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
-                                   octaveEnum: OctaveEnum, grace: boolean = false): void {
+        octaveEnum: OctaveEnum, grace: boolean = false): void {
         let pitch: Pitch = graphicalNote.sourceNote.Pitch;
         const transpose: number = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
         if (transpose !== 0 && graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion) {
@@ -1753,11 +1788,11 @@ export abstract class MusicSheetCalculator {
         if (lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine === nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine) {
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
-            startStaffEntry.PositionAndShape.RelativePosition.x +
-            lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                startStaffEntry.PositionAndShape.RelativePosition.x +
+                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
             const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
-            endStaffentry.PositionAndShape.RelativePosition.x +
-            nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
+                endStaffentry.PositionAndShape.RelativePosition.x +
+                nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
             if ((endX - startX) > this.rules.BetweenSyllabelMaximumDistance) {
@@ -1788,7 +1823,7 @@ export abstract class MusicSheetCalculator {
 
             // calculate Dashes for the second StaffLine (only if endStaffEntry isn't the first StaffEntry of the StaffLine)
             if (!(endStaffentry === endStaffentry.parentMeasure.staffEntries[0] &&
-                    endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {
+                endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = nextStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
                 const secondEndX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
                     endStaffentry.PositionAndShape.RelativePosition.x +
@@ -1866,8 +1901,8 @@ export abstract class MusicSheetCalculator {
         let endStaffLine: StaffLine = undefined;
         const staffIndex: number = startStaffEntry.parentMeasure.ParentStaff.idInMusicSheet;
         for (let index: number = startStaffEntry.parentVerticalContainer.Index + 1;
-             index < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
-             ++index) {
+            index < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
+            ++index) {
             const gse: GraphicalStaffEntry = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[index].StaffEntries[staffIndex];
             if (gse === undefined) {
                 continue;
@@ -1914,7 +1949,7 @@ export abstract class MusicSheetCalculator {
             }
             // second Underscore in the endStaffLine until endStaffEntry (if endStaffEntry isn't the first StaffEntry of the StaffLine))
             if (!(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
-                    endStaffEntry.parentMeasure === endStaffEntry.parentMeasure.ParentStaffLine.Measures[0])) {
+                endStaffEntry.parentMeasure === endStaffEntry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = endStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
                 const secondEndX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                     endStaffEntry.PositionAndShape.RelativePosition.x +
@@ -1949,21 +1984,21 @@ export abstract class MusicSheetCalculator {
      * @param {number} y
      * @returns {number}
      */
-    private calculateRightAndLeftDashesForLyricWord (staffLine: StaffLine, startX: number, endX: number, y: number): number {
-        const leftDash: GraphicalLabel = new GraphicalLabel (new Label ("-"), this.rules.LyricsHeight, TextAlignment.CenterBottom);
+    private calculateRightAndLeftDashesForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): number {
+        const leftDash: GraphicalLabel = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignment.CenterBottom);
         leftDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(leftDash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
             this.staffLinesWithLyricWords.push(staffLine);
         }
         leftDash.PositionAndShape.Parent = staffLine.PositionAndShape;
-        const leftDashRelative: PointF2D = new PointF2D (startX, y);
+        const leftDashRelative: PointF2D = new PointF2D(startX, y);
         leftDash.PositionAndShape.RelativePosition = leftDashRelative;
-        const rightDash: GraphicalLabel = new GraphicalLabel (new Label ("-"), this.rules.LyricsHeight, TextAlignment.CenterBottom);
+        const rightDash: GraphicalLabel = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignment.CenterBottom);
         rightDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(rightDash);
         rightDash.PositionAndShape.Parent = staffLine.PositionAndShape;
-        const rightDashRelative: PointF2D = new PointF2D (endX, y);
+        const rightDashRelative: PointF2D = new PointF2D(endX, y);
         rightDash.PositionAndShape.RelativePosition = rightDashRelative;
         return (rightDash.PositionAndShape.RelativePosition.x - leftDash.PositionAndShape.RelativePosition.x);
     }
@@ -1976,8 +2011,8 @@ export abstract class MusicSheetCalculator {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
                         if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaniousDynamic !== undefined ||
                             (sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic !== undefined &&
-                            sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression ===
-                            sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)
+                                sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression ===
+                                sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)
                         ) {
                             this.calculateDynamicExpressionsForSingleMultiExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
@@ -2085,13 +2120,13 @@ export abstract class MusicSheetCalculator {
         if (hasLink) {
             // in case of StaffEntryLink don't check mainVoice / linkedVoice
             if (voiceEntry === voiceEntry.ParentSourceStaffEntry.VoiceEntries[0]) {
-            // set stem up:
-            voiceEntry.StemDirection = StemDirectionType.Up;
-            return;
+                // set stem up:
+                voiceEntry.StemDirection = StemDirectionType.Up;
+                return;
             } else {
-            // set stem down:
-            voiceEntry.StemDirection = StemDirectionType.Down;
-            return;
+                // set stem down:
+                voiceEntry.StemDirection = StemDirectionType.Down;
+                return;
             }
         } else {
             if (voiceEntry.ParentVoice instanceof LinkedVoice) {

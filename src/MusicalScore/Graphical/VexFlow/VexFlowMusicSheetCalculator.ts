@@ -165,54 +165,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /**
-   * This method checks the distances between two System's StaffLines and if needed, shifts the lower down.
-   * @param musicSystem
-   */
-  public optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
-    musicSystem.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
-
-    // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
-    if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
-      for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
-        // const upperBottomLine: number = Math.max(...musicSystem.StaffLines[i].BottomLine);
-        const upperBottomLine: number = musicSystem.StaffLines[i].SkyBottomLineCalculator.getBottomLineMax();
-        // const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
-        if (Math.abs(upperBottomLine) > this.rules.MinimumStaffLineDistance) {
-          // Remove staffheight from offset. As it results in huge distances
-          const offset: number = Math.abs(upperBottomLine) + this.rules.MinimumStaffLineDistance - this.rules.StaffHeight;
-          this.updateStaffLinesRelativePosition(musicSystem, i + 1, offset);
-        }
-      }
-    }
-  }
-
-  /**
-   * This method updates the System's StaffLine's RelativePosition (starting from the given index).
-   * @param musicSystem
-   * @param index
-   * @param value
-   */
-  private updateStaffLinesRelativePosition(musicSystem: MusicSystem, index: number, value: number): void {
-    for (let i: number = index; i < musicSystem.StaffLines.length; i++) {
-      musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y += value;
-    }
-
-    musicSystem.PositionAndShape.BorderBottom += value;
-  }
-
-  /**
    * calculates the y positions of the staff lines within a system and
    * furthermore the y positions of the systems themselves.
    */
   protected calculateSystemYLayout(): void {
-    const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator();
     for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
             for (const musicSystem of graphicalMusicPage.MusicSystems) {
                 this.optimizeDistanceBetweenStaffLines(musicSystem);
             }
 
             // set y positions of systems using the previous system and a fixed distance.
-            this.calculateMusicSystemsRelativePositions(graphicalMusicPage, skyBottomLineCalculator);
+            this.calculateMusicSystemsRelativePositions(graphicalMusicPage);
     }
   }
 

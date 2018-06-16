@@ -19,7 +19,7 @@ export class SkyBottomLineCalculator {
      * Create a new object of the calculator
      * @param staffLineParent staffline where the calculator should be attached
      */
-    constructor(staffLineParent: StaffLine = undefined) {
+    constructor(staffLineParent: StaffLine) {
         this.mStaffLineParent = staffLineParent;
     }
 
