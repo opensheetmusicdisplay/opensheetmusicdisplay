@@ -30,8 +30,6 @@ import {GraphicalLabel} from "../GraphicalLabel";
 import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
-import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
-import { MusicSystem } from "../MusicSystem";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 

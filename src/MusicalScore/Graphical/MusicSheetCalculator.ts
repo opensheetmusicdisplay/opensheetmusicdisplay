@@ -320,24 +320,24 @@ export abstract class MusicSheetCalculator {
      * @param isLastTieNote
      */
     protected handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
-        octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
-        openTie: Tie, isLastTieNote: boolean): void {
+                                      octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
+                                      openTie: Tie, isLastTieNote: boolean): void {
         throw new Error("abstract, not implemented");
     }
 
     protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
-        openLyricWords: LyricWord[]): void {
+                                     openLyricWords: LyricWord[]): void {
         throw new Error("abstract, not implemented");
     }
 
     protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
-        graphicalStaffEntry: GraphicalStaffEntry): void {
+                                        graphicalStaffEntry: GraphicalStaffEntry): void {
         throw new Error("abstract, not implemented");
     }
 
     protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
-        voiceEntry: VoiceEntry,
-        staffEntry: GraphicalStaffEntry): void {
+                                            voiceEntry: VoiceEntry,
+                                            staffEntry: GraphicalStaffEntry): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -348,7 +348,7 @@ export abstract class MusicSheetCalculator {
      * @param staffEntry
      */
     protected handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
-        voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
+                                                    voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -358,7 +358,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
-        graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
+                               graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -367,7 +367,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry, startNote: GraphicalNote,
-        endNote: GraphicalNote): GraphicalTie {
+                                 endNote: GraphicalNote): GraphicalTie {
         throw new Error("abstract, not implemented");
     }
 
@@ -408,7 +408,7 @@ export abstract class MusicSheetCalculator {
     private calculateSingleMeasureNumberPlacement(measure: StaffMeasure, staffLine: StaffLine, musicSystem: MusicSystem): void {
         const labelNumber: string = measure.MeasureNumber.toString();
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(new Label(labelNumber), this.rules.MeasureNumberLabelHeight,
-            TextAlignment.LeftBottom);
+                                                                  TextAlignment.LeftBottom);
 
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
@@ -578,7 +578,7 @@ export abstract class MusicSheetCalculator {
      * @param staffIndex
      */
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
-        measureIndex: number, staffIndex: number): void {
+                                         measureIndex: number, staffIndex: number): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -588,7 +588,7 @@ export abstract class MusicSheetCalculator {
      * @param measureIndex
      */
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
-        measureIndex: number): void {
+                                                 measureIndex: number): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -623,7 +623,7 @@ export abstract class MusicSheetCalculator {
      * @param staffEntryLinks
      */
     protected handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry,
-        staffEntryLinks: StaffEntryLink[]): void {
+                                   staffEntryLinks: StaffEntryLink[]): void {
         log.debug("handleStaffEntryLink not implemented");
     }
 
@@ -829,7 +829,7 @@ export abstract class MusicSheetCalculator {
      * @param measure
      */
     protected layoutMeasureWithWholeRest(rest: GraphicalNote, gse: GraphicalStaffEntry,
-        measure: StaffMeasure): void {
+                                         measure: StaffMeasure): void {
         return;
     }
 
@@ -842,15 +842,15 @@ export abstract class MusicSheetCalculator {
     }
 
     protected layoutOrnament(ornaments: OrnamentContainer, voiceEntry: VoiceEntry,
-        graphicalStaffEntry: GraphicalStaffEntry): void {
+                             graphicalStaffEntry: GraphicalStaffEntry): void {
         return;
     }
 
     protected calculateRestNotePlacementWithinGraphicalBeam(graphicalStaffEntry: GraphicalStaffEntry,
-        restNote: GraphicalNote,
-        previousNote: GraphicalNote,
-        nextStaffEntry: GraphicalStaffEntry,
-        nextNote: GraphicalNote): void {
+                                                            restNote: GraphicalNote,
+                                                            previousNote: GraphicalNote,
+                                                            nextStaffEntry: GraphicalStaffEntry,
+                                                            nextNote: GraphicalNote): void {
         return;
     }
 
@@ -880,12 +880,12 @@ export abstract class MusicSheetCalculator {
      * @param rightOpen
      */
     protected layoutSingleRepetitionEnding(start: StaffMeasure, end: StaffMeasure, numberText: string,
-        offset: number, leftOpen: boolean, rightOpen: boolean): void {
+                                           offset: number, leftOpen: boolean, rightOpen: boolean): void {
         return;
     }
 
     protected calculateTempoExpressionsForSingleMultiTempoExpression(sourceMeasure: SourceMeasure, multiTempoExpression: MultiTempoExpression,
-        measureIndex: number): void {
+                                                                     measureIndex: number): void {
         return;
     }
 
@@ -936,11 +936,11 @@ export abstract class MusicSheetCalculator {
     }
 
     protected handleVoiceEntry(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
-        accidentalCalculator: AccidentalCalculator, openLyricWords: LyricWord[],
-        activeClef: ClefInstruction,
-        openTuplets: Tuplet[], openBeams: Beam[],
-        octaveShiftValue: OctaveEnum, grace: boolean = false, linkedNotes: Note[] = undefined,
-        sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
+                               accidentalCalculator: AccidentalCalculator, openLyricWords: LyricWord[],
+                               activeClef: ClefInstruction,
+                               openTuplets: Tuplet[], openBeams: Beam[],
+                               octaveShiftValue: OctaveEnum, grace: boolean = false, linkedNotes: Note[] = undefined,
+                               sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
         this.calculateStemDirectionFromVoices(voiceEntry);
         const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
@@ -985,9 +985,9 @@ export abstract class MusicSheetCalculator {
     }
 
     protected handleVoiceEntryGraceNotes(graceEntries: VoiceEntry[], graphicalGraceEntries: GraphicalStaffEntry[], graphicalStaffEntry: GraphicalStaffEntry,
-        accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
-        octaveShiftValue: OctaveEnum, lyricWords: LyricWord[],
-        tuplets: Tuplet[], beams: Beam[]): void {
+                                         accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
+                                         octaveShiftValue: OctaveEnum, lyricWords: LyricWord[],
+                                         tuplets: Tuplet[], beams: Beam[]): void {
         if (graceEntries !== undefined) {
             for (let idx: number = 0, len: number = graceEntries.length; idx < len; ++idx) {
                 const graceVoiceEntry: VoiceEntry = graceEntries[idx];
@@ -1131,7 +1131,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected getRelativePositionInStaffLineFromTimestamp(timestamp: Fraction, verticalIndex: number, staffLine: StaffLine,
-        multiStaffInstrument: boolean, firstVisibleMeasureRelativeX: number = 0.0): PointF2D {
+                                                          multiStaffInstrument: boolean, firstVisibleMeasureRelativeX: number = 0.0): PointF2D {
         let relative: PointF2D = new PointF2D();
         let leftStaffEntry: GraphicalStaffEntry = undefined;
         let rightStaffEntry: GraphicalStaffEntry = undefined;
@@ -1323,8 +1323,8 @@ export abstract class MusicSheetCalculator {
     }
 
     private createGraphicalMeasuresForSourceMeasure(sourceMeasure: SourceMeasure, accidentalCalculators: AccidentalCalculator[],
-        openLyricWords: LyricWord[],
-        openOctaveShifts: OctaveShiftParams[], activeClefs: ClefInstruction[]): StaffMeasure[] {
+                                                    openLyricWords: LyricWord[],
+                                                    openOctaveShifts: OctaveShiftParams[], activeClefs: ClefInstruction[]): StaffMeasure[] {
         this.initStaffMeasuresCreation();
         const verticalMeasureList: StaffMeasure[] = [];
         const openBeams: Beam[] = [];
@@ -1343,9 +1343,9 @@ export abstract class MusicSheetCalculator {
     }
 
     private createGraphicalMeasure(sourceMeasure: SourceMeasure, openTuplets: Tuplet[], openBeams: Beam[],
-        accidentalCalculator: AccidentalCalculator, activeClefs: ClefInstruction[],
-        openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
-        staffEntryLinks: StaffEntryLink[]): StaffMeasure {
+                                   accidentalCalculator: AccidentalCalculator, activeClefs: ClefInstruction[],
+                                   openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
+                                   staffEntryLinks: StaffEntryLink[]): StaffMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         const measure: StaffMeasure = MusicSheetCalculator.symbolFactory.createStaffMeasure(sourceMeasure, staff);
         measure.hasError = sourceMeasure.getErrorInMeasure(staffIndex);
@@ -1458,8 +1458,8 @@ export abstract class MusicSheetCalculator {
         if (measure.staffEntries.length === 0) {
             const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(
                 new VerticalSourceStaffEntryContainer(measure.parentSourceMeasure,
-                    measure.parentSourceMeasure.AbsoluteTimestamp,
-                    measure.parentSourceMeasure.CompleteNumberOfStaves),
+                                                      measure.parentSourceMeasure.AbsoluteTimestamp,
+                                                      measure.parentSourceMeasure.CompleteNumberOfStaves),
                 staff);
             const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
             const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
@@ -1470,16 +1470,16 @@ export abstract class MusicSheetCalculator {
             const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
             graphicalStaffEntry.graphicalVoiceEntries.push(gve);
             const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
-                gve,
-                new ClefInstruction(),
-                OctaveEnum.NONE, undefined);
+                                                                                               gve,
+                                                                                               new ClefInstruction(),
+                                                                                               OctaveEnum.NONE, undefined);
             gve.notes.push(graphicalNote);
         }
         return measure;
     }
 
     private checkNoteForAccidental(graphicalNote: GraphicalNote, accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
-        octaveEnum: OctaveEnum, grace: boolean = false): void {
+                                   octaveEnum: OctaveEnum, grace: boolean = false): void {
         let pitch: Pitch = graphicalNote.sourceNote.Pitch;
         const transpose: number = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
         if (transpose !== 0 && graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion) {
