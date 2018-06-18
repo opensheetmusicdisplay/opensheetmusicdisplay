@@ -795,12 +795,6 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    protected calculateSkyBottomLine(staffLine: StaffLine): void {
-        const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
-        skyBottomLineCalculator.calculateLines();
-        return;
-    }
-
     protected calculateMarkedAreas(): void {
         //log.debug("calculateMarkedAreas not implemented");
         return;
@@ -1539,13 +1533,10 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateSkyBottomLines(): void {
-        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                    this.calculateSkyBottomLine(staffLine);
+        for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
+            for (const musicSystem of graphicalMusicPage.MusicSystems) {
+                for (const staffLine of musicSystem.StaffLines) {
+                    staffLine.SkyBottomLineCalculator.calculateLines();
                 }
             }
         }
