@@ -58,7 +58,7 @@
   "devDependencies": {
     "@types/chai": "^4.0.3",
     "@types/loglevel": "^1.4.29",
-    "@types/mocha": "^2.2.40",
+    "@types/mocha": "^5.2.3",
     "chai": "^4.1.0",
     "clean-webpack-plugin": "^0.1.18",
     "cross-env": "^5.1.3",
