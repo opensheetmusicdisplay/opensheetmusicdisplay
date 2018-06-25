@@ -16,7 +16,7 @@ import {EngravingRules} from "./Graphical/EngravingRules";
 import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
-import {Logging} from "../Common/Logging";
+import * as log from "loglevel";
 
 // FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
@@ -400,7 +400,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //        }
     //        return repetitions;
     //    } catch (ex) {
-    //        Logging.log("MusicSheet.IRepetitions get: ", ex);
+    //        log.info("MusicSheet.IRepetitions get: ", ex);
     //        return undefined;
     //    }
     //
@@ -423,7 +423,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         try {
             return this.getFirstSourceMeasure().MeasureNumber;
         } catch (ex) {
-            Logging.log("MusicSheet.FirstMeasureNumber: ", ex);
+            log.info("MusicSheet.FirstMeasureNumber: ", ex);
             return 0;
         }
 
@@ -432,7 +432,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         try {
             return this.getLastSourceMeasure().MeasureNumber;
         } catch (ex) {
-            Logging.log("MusicSheet.LastMeasureNumber: ", ex);
+            log.info("MusicSheet.LastMeasureNumber: ", ex);
             return 0;
         }
 

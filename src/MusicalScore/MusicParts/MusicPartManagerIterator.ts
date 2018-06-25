@@ -14,7 +14,7 @@ import {ContinuousDynamicExpression} from "../VoiceData/Expressions/ContinuousEx
 import {InstantaniousDynamicExpression} from "../VoiceData/Expressions/InstantaniousDynamicExpression";
 import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpression";
 import {AbstractExpression} from "../VoiceData/Expressions/AbstractExpression";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 
 export class MusicPartManagerIterator {
     constructor(manager: MusicPartManager, startTimestamp?: Fraction, endTimestamp?: Fraction) {
@@ -47,7 +47,7 @@ export class MusicPartManagerIterator {
             }
             this.currentTempoChangingExpression = this.activeTempoExpression;
         } catch (err) {
-            Logging.log("MusicPartManagerIterator: " + err);
+            log.info("MusicPartManagerIterator: " + err);
         }
 
     }

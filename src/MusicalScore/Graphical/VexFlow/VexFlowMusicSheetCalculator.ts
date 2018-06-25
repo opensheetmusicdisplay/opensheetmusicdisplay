@@ -24,7 +24,7 @@ import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
 
 import Vex = require("vexflow");
-import {Logging} from "../../../Common/Logging";
+import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
@@ -35,8 +35,10 @@ import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
+
   constructor() {
-    super(new VexFlowGraphicalSymbolFactory());
+    super();
+    MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
   }
 
@@ -97,7 +99,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         }
         if (voices.length === 0) {
-            Logging.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+            log.warn("Found a measure with no voices... Continuing anyway.", mvoices);
             continue;
         }
         formatter.joinVoices(voices);
@@ -218,37 +220,46 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      */
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
+    const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
+
     let vfStartNote: Vex.Flow.StaveNote = undefined;
+    let startNoteIndexInTie: number = 0;
     if (startNote !== undefined) {
       vfStartNote = startNote.vfnote[0];
+      startNoteIndexInTie = startNote.vfnote[1];
     }
 
-    const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
     let vfEndNote: Vex.Flow.StaveNote = undefined;
+    let endNoteIndexInTie: number = 0;
     if (endNote !== undefined) {
       vfEndNote = endNote.vfnote[0];
+      endNoteIndexInTie = endNote.vfnote[1];
     }
-
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
       const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        first_note: vfStartNote,
+        first_indices: [startNoteIndexInTie],
+        first_note: vfStartNote
       });
-      const measure1: VexFlowMeasure = (startNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+      const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure1.vfTies.push(vfTie1);
 
       const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        last_note: vfEndNote,
+        last_indices: [endNoteIndexInTie],
+        last_note: vfEndNote
       });
-      const measure2: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+      const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure2.vfTies.push(vfTie2);
     } else {
+      // normal case
       const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+        first_indices: [startNoteIndexInTie],
         first_note: vfStartNote,
-        last_note: vfEndNote,
+        last_indices: [endNoteIndexInTie],
+        last_note: vfEndNote
       });
-      const measure: VexFlowMeasure = (endNote.parentStaffEntry.parentMeasure as VexFlowMeasure);
+      const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
       measure.vfTies.push(vfTie);
     }
   }
@@ -316,7 +327,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param openBeams a list of all currently open beams
    */
   protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
-    (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
+    (graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
   }
 
     protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
@@ -399,6 +410,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param openTuplets a list of all currently open tuplets
    */
   protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
-    (graphicalNote.parentStaffEntry.parentMeasure as VexFlowMeasure).handleTuplet(graphicalNote, tuplet);
+    (graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).handleTuplet(graphicalNote, tuplet);
   }
 }

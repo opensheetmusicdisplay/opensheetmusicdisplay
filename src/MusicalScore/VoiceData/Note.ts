@@ -107,29 +107,6 @@ export class Note {
         return this.Pitch === undefined;
     }
 
-    public calculateNoteLengthWithoutTie(): Fraction {
-        const withoutTieLength: Fraction = this.length.clone();
-        if (this.tie !== undefined) {
-            for (const fraction of this.tie.Fractions) {
-                withoutTieLength.Sub(fraction);
-            }
-        }
-        return withoutTieLength;
-    }
-    public calculateNoteOriginalLength(originalLength: Fraction = this.length): Fraction {
-        if (this.tie !== undefined) {
-            originalLength = this.calculateNoteLengthWithoutTie();
-        }
-        if (this.tuplet !== undefined) {
-            return this.length;
-        }
-        if (originalLength.Numerator > 1) {
-            const exp: number = Math.floor(Math.log(originalLength.Denominator) / Math.LN2) - this.calculateNumberOfNeededDots(originalLength);
-            originalLength.Denominator = Math.pow(2, exp);
-            originalLength.Numerator = 1;
-        }
-        return originalLength;
-    }
     public ToString(): string {
         if (this.pitch !== undefined) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
@@ -156,37 +133,6 @@ export class Note {
         }
         return false;
     }
-
-    //public calculateTailSymbol(): number {
-    //    let length: number = this.Length.RealValue;
-    //    if (this.NoteTuplet) {
-    //        length = this.NoteTuplet.Fractions[this.NoteTuplet.getNoteIndex(this)].RealValue;
-    //    }
-    //    if (length < 0.25 && length >= 0.125) {
-    //        return 8;
-    //    } else if (length < 0.125 && length >= 0.0625) {
-    //        return 16;
-    //    } else if (length < 0.0625 && length >= 0.03125) {
-    //        return 32;
-    //    } else {
-    //        return 64;
-    //    }
-    //}
-
-    /**
-     * Return the number of dots needed to represent the given [[Fraction]].
-     * @param fraction
-     * @returns {number}
-     */
-    private calculateNumberOfNeededDots(fraction: Fraction = this.length): number {
-        // FIXME (Andrea) Test if correct
-        if (this.tuplet === undefined) {
-            return Math.floor(Math.log(fraction.Numerator) / Math.LN2);
-        } else {
-            return 0;
-        }
-    }
-
 }
 
 export enum Appearance {

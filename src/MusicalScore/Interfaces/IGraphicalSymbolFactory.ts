@@ -13,6 +13,8 @@ import {Staff} from "../VoiceData/Staff";
 import {StaffLine} from "../Graphical/StaffLine";
 import {StaffMeasure} from "../Graphical/StaffMeasure";
 import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
+import { GraphicalVoiceEntry } from "../Graphical/GraphicalVoiceEntry";
+import { VoiceEntry } from "../VoiceData/VoiceEntry";
 
 export interface IGraphicalSymbolFactory {
 
@@ -28,15 +30,18 @@ export interface IGraphicalSymbolFactory {
 
     createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: StaffMeasure): GraphicalStaffEntry;
 
+    createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry;
+
     createNote(
-        note: Note, graphicalStaffEntry: GraphicalStaffEntry,
+        note: Note,
+        graphicalVoiceEntry: GraphicalVoiceEntry,
         activeClef: ClefInstruction,
         octaveShift: OctaveEnum,
         graphicalNoteLength: Fraction): GraphicalNote;
 
     createGraceNote(
         note: Note,
-        graphicalStaffEntry: GraphicalStaffEntry,
+        graphicalVoiceEntry: GraphicalVoiceEntry,
         activeClef: ClefInstruction,
         octaveShift: OctaveEnum): GraphicalNote;
 

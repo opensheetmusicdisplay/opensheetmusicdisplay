@@ -4,7 +4,7 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
 import {MusicSheet} from "../MusicSheet";
 import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
 import {PartListEntry} from "./PartListEntry";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 
 export class Repetition extends PartListEntry /*implements IRepetition*/ {
     constructor(musicSheet: MusicSheet, virtualOverallRepetition: boolean) {
@@ -84,7 +84,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
                     this.numberOfEndings = endingNumber;
                 }
             } catch (err) {
-                Logging.error("Repetition: Exception.", err);
+                log.error("Repetition: Exception.", err);
             }
 
         }

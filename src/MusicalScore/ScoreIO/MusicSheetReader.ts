@@ -6,7 +6,7 @@ import {IXmlElement} from "../../Common/FileIO/Xml";
 import {Instrument} from "../Instrument";
 import {ITextTranslation} from "../Interfaces/ITextTranslation";
 import {MusicSheetReadingException} from "../Exceptions";
-import {Logging} from "../../Common/Logging";
+import * as log from "loglevel";
 import {IXmlAttribute} from "../../Common/FileIO/Xml";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {RhythmSymbolEnum} from "../VoiceData/Instructions/RhythmInstruction";
@@ -63,7 +63,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         try {
             return this._createMusicSheet(root, path);
         } catch (e) {
-            Logging.log("MusicSheetReader.CreateMusicSheet", e);
+            log.info("MusicSheetReader.CreateMusicSheet", e);
         }
     }
 
@@ -498,7 +498,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 const filenameSplits: string[] = filename.split(".", 1);
                 this.musicSheet.Title = new Label(filenameSplits[0]);
             } catch (ex) {
-                Logging.log("MusicSheetReader.pushSheetLabels: ", ex);
+                log.info("MusicSheetReader.pushSheetLabels: ", ex);
             }
 
         }
@@ -747,7 +747,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                                 const result: number = <number>parseFloat(instrumentElement.value);
                                                 subInstrument.volume = result / 127.0;
                                             } catch (ex) {
-                                                Logging.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
+                                                log.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
                                             }
 
                                         } else if (instrumentElement.name === "pan") {
@@ -755,18 +755,18 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                                 const result: number = <number>parseFloat(instrumentElement.value);
                                                 subInstrument.pan = result / 64.0;
                                             } catch (ex) {
-                                                Logging.debug("ExpressionReader.readExpressionParameters", "read pan", ex);
+                                                log.debug("ExpressionReader.readExpressionParameters", "read pan", ex);
                                             }
 
                                         }
                                     } catch (ex) {
-                                        Logging.log("MusicSheetReader.createInstrumentGroups midi settings: ", ex);
+                                        log.info("MusicSheetReader.createInstrumentGroups midi settings: ", ex);
                                     }
 
                                 }
                             }
                         } catch (ex) {
-                            Logging.log("MusicSheetReader.createInstrumentGroups: ", ex);
+                            log.info("MusicSheetReader.createInstrumentGroups: ", ex);
                         }
 
                     }

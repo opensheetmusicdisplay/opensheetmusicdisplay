@@ -16,7 +16,6 @@ import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
-import {IGraphicalSymbolFactory} from "../Interfaces/IGraphicalSymbolFactory";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
@@ -41,16 +40,13 @@ export class MusicSystemBuilder {
     private activeClefs: ClefInstruction[];
     private globalSystemIndex: number = 0;
     private leadSheet: boolean = false;
-    private symbolFactory: IGraphicalSymbolFactory;
 
     public initialize(
-        graphicalMusicSheet: GraphicalMusicSheet, measureList: StaffMeasure[][], numberOfStaffLines: number, symbolFactory: IGraphicalSymbolFactory
-    ): void {
+        graphicalMusicSheet: GraphicalMusicSheet, measureList: StaffMeasure[][], numberOfStaffLines: number): void {
         this.leadSheet = graphicalMusicSheet.LeadSheet;
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = this.graphicalMusicSheet.ParentMusicSheet.rules;
         this.measureList = measureList;
-        this.symbolFactory = symbolFactory;
         this.currentMusicPage = this.createMusicPage();
         this.currentPageHeight = 0.0;
         this.numberOfVisibleStaffLines = numberOfStaffLines;
@@ -257,7 +253,7 @@ export class MusicSystemBuilder {
      * @returns {MusicSystem}
      */
     private initMusicSystem(): MusicSystem {
-        const musicSystem: MusicSystem = this.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
+        const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
         this.currentMusicPage.MusicSystems.push(musicSystem);
         return musicSystem;
     }
@@ -329,7 +325,7 @@ export class MusicSystemBuilder {
      */
     private addStaffLineToMusicSystem(musicSystem: MusicSystem, relativeYPosition: number, staff: Staff): void {
         if (musicSystem !== undefined) {
-            const staffLine: StaffLine = this.symbolFactory.createStaffLine(musicSystem, staff);
+            const staffLine: StaffLine = MusicSheetCalculator.symbolFactory.createStaffLine(musicSystem, staff);
             musicSystem.StaffLines.push(staffLine);
             const boundingBox: BoundingBox = staffLine.PositionAndShape;
             const relativePosition: PointF2D = new PointF2D();
@@ -613,7 +609,7 @@ export class MusicSystemBuilder {
     private addExtraInstructionMeasure(visStaffIdx: number, keyInstruction: KeyInstruction, rhythmInstruction: RhythmInstruction): number {
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         const measures: StaffMeasure[] = [];
-        const measure: StaffMeasure = this.symbolFactory.createExtraStaffMeasure(currentSystem.StaffLines[visStaffIdx]);
+        const measure: StaffMeasure = MusicSheetCalculator.symbolFactory.createExtraStaffMeasure(currentSystem.StaffLines[visStaffIdx]);
         measures.push(measure);
         if (keyInstruction !== undefined) {
             measure.addKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
@@ -627,7 +623,6 @@ export class MusicSystemBuilder {
         const width: number = this.rules.MeasureLeftMargin + measure.beginInstructionsWidth + this.rules.MeasureRightMargin;
         measure.PositionAndShape.BorderRight = width;
         currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
-        measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
         return width;
     }
 
