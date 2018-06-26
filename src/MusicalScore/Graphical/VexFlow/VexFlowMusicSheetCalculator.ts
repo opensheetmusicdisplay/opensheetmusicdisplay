@@ -33,6 +33,7 @@ import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
+import { VexFlowInstantaniousDynamicExpression } from "./VexFlowInstantaniousDynamicExpression";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
@@ -264,13 +265,24 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-    /**
-     * Calculate a single OctaveShift for a [[MultiExpression]].
-     * @param sourceMeasure
-     * @param multiExpression
-     * @param measureIndex
-     * @param staffIndex
-     */
+  protected calculateDynamicExpressionsForSingleMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+    if (multiExpression.InstantaniousDynamic) {
+        const timeStamp: Fraction = multiExpression.Timestamp;
+        const staffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
+        const measure: StaffMeasure = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex];
+        const startStaffEntry: GraphicalStaffEntry = measure.findGraphicalStaffEntryFromTimestamp(timeStamp);
+        const idx: VexFlowInstantaniousDynamicExpression = new VexFlowInstantaniousDynamicExpression(multiExpression.InstantaniousDynamic, startStaffEntry);
+        (measure as VexFlowMeasure).instantaniousDynamics.push(idx);
+    }
+  }
+
+  /**
+   * Calculate a single OctaveShift for a [[MultiExpression]].
+   * @param sourceMeasure
+   * @param multiExpression
+   * @param measureIndex
+   * @param staffIndex
+   */
   protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     // calculate absolute Timestamp and startStaffLine (and EndStaffLine if needed)
     const octaveShift: OctaveShift = multiExpression.OctaveShiftStart;

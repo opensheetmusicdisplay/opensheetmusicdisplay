@@ -78,6 +78,14 @@ declare namespace Vex {
 
         }
 
+        export class TextNote extends Note {
+            constructor(note_struct: any);
+            
+            public setContext(ctx: RenderContext): TextBracket;
+
+            public draw(): void;
+        }
+
         export class Stem {
             public static UP: number;
             public static DOWN: number;

@@ -16,6 +16,8 @@ import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { StaffLine } from "../StaffLine";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
+import { GraphicalInstantaniousDynamicExpression } from "../GraphicalInstantaniousDynamicExpression";
+import { VexFlowInstantaniousDynamicExpression } from "./VexFlowInstantaniousDynamicExpression";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -131,6 +133,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 const textBracket: Vex.Flow.TextBracket = (graphicalOctaveShift as VexFlowOctaveShift).getTextBracket();
                 textBracket.setContext(ctx);
                 textBracket.draw();
+            }
+        }
+    }
+
+    protected drawInstantaniousDynamic(staffline: StaffLine): void {
+        for (const m of staffline.Measures as VexFlowMeasure[]) {
+            for (const idx of m.instantaniousDynamics as VexFlowInstantaniousDynamicExpression[]) {
+                const ctx: Vex.Flow.RenderContext = this.backend.getContext();
+                this.drawLabel(idx.Label, <number>GraphicalLayers.Notes);
             }
         }
     }

@@ -23,6 +23,7 @@ import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
+import { GraphicalInstantaniousDynamicExpression } from "./GraphicalInstantaniousDynamicExpression";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -339,6 +340,8 @@ export abstract class MusicSheetDrawer {
         }
 
         this.drawOctaveShifts(staffLine);
+
+        this.drawInstantaniousDynamic(staffLine);
     }
 
     /**
@@ -375,13 +378,13 @@ export abstract class MusicSheetDrawer {
     //         drawLineAsVerticalRectangle(ending.Right, absolutePosition, <number>GraphicalLayers.Notes);
     //     this.drawLabel(ending.Label, <number>GraphicalLayers.Notes);
     // }
-    // protected drawInstantaniousDynamic(expression: GraphicalInstantaniousDynamicExpression): void {
-    //     expression.ExpressionSymbols.forEach(function (expressionSymbol) {
-    //         let position: PointF2D = expressionSymbol.PositionAndShape.AbsolutePosition;
-    //         let symbol: MusicSymbol = expressionSymbol.GetSymbol;
-    //         drawSymbol(symbol, MusicSymbolDrawingStyle.Normal, position);
-    //     });
-    // }
+    protected drawInstantaniousDynamic(staffline: StaffLine): void {
+        // expression.ExpressionSymbols.forEach(function (expressionSymbol) {
+        //     let position: PointF2D = expressionSymbol.PositionAndShape.AbsolutePosition;
+        //     let symbol: MusicSymbol = expressionSymbol.GetSymbol;
+        //     drawSymbol(symbol, MusicSymbolDrawingStyle.Normal, position);
+        // });
+    }
     // protected drawContinuousDynamic(expression: GraphicalContinuousDynamicExpression,
     //     absolute: PointF2D): void {
     //     throw new Error("not implemented");

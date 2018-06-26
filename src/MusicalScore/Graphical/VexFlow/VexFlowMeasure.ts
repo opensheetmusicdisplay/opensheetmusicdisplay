@@ -24,6 +24,7 @@ import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import { Voice } from "../../VoiceData/Voice";
+import { VexFlowInstantaniousDynamicExpression } from "./VexFlowInstantaniousDynamicExpression";
 
 export class VexFlowMeasure extends StaffMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -32,28 +33,29 @@ export class VexFlowMeasure extends StaffMeasure {
         this.resetLayout();
     }
 
-    // octaveOffset according to active clef
+    /** octaveOffset according to active clef */
     public octaveOffset: number = 3;
-    // The VexFlow Voices in the measure
+    /** The VexFlow Voices in the measure */
     public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
-    // Call this function (if present) to x-format all the voices in the measure
+    /** Call this function (if present) to x-format all the voices in the measure */
     public formatVoices: (width: number) => void;
-    // The VexFlow Ties in the measure
+    /** The VexFlow Ties in the measure */
     public vfTies: Vex.Flow.StaveTie[] = [];
-    // The repetition instructions given as words or symbols (coda, dal segno..)
+    /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: Vex.Flow.Repetition[] = [];
-
-    // The VexFlow Stave (= one measure in a staffline)
+    /** Instant dynamics */
+    public instantaniousDynamics: VexFlowInstantaniousDynamicExpression[] = [];
+    /** The VexFlow Stave (= one measure in a staffline) */
     private stave: Vex.Flow.Stave;
-    // VexFlow StaveConnectors (vertical lines)
+    /** VexFlow StaveConnectors (vertical lines) */
     private connectors: Vex.Flow.StaveConnector[] = [];
-    // Intermediate object to construct beams
+    /** Intermediate object to construct beams */
     private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][]; } = {};
-    // VexFlow Beams
+    /** VexFlow Beams */
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
-    // Intermediate object to construct tuplets
+    /** Intermediate object to construct tuplets */
     private tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
-    // VexFlow Tuplets
+    /** VexFlow Tuplets */
     private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
 
     // Sets the absolute coordinates of the VFStave on the canvas
@@ -602,6 +604,13 @@ export class VexFlowMeasure extends StaffMeasure {
             }
         }
         this.createArticulations();
+        if (this.instantaniousDynamics.length > 0) {
+            this.createInstantDynamics();
+        }
+    }
+
+    private createInstantDynamics(): void {
+
     }
 
     private createArticulations(): void {
