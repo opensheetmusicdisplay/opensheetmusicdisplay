@@ -23,7 +23,6 @@ import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
-import { GraphicalInstantaniousDynamicExpression } from "./GraphicalInstantaniousDynamicExpression";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)

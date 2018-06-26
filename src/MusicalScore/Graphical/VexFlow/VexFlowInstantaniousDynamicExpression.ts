@@ -5,7 +5,6 @@ import { GraphicalLabel } from "../GraphicalLabel";
 import { Label } from "../../Label";
 import { TextAlignment } from "../../../Common/Enums/TextAlignment";
 import { EngravingRules } from "../EngravingRules";
-import { Fonts } from "../../../Common/Enums/Fonts";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniousDynamicExpression {

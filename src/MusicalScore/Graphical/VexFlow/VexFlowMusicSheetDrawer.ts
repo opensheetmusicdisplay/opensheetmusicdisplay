@@ -14,9 +14,7 @@ import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { StaffLine } from "../StaffLine";
-import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
-import { GraphicalInstantaniousDynamicExpression } from "../GraphicalInstantaniousDynamicExpression";
 import { VexFlowInstantaniousDynamicExpression } from "./VexFlowInstantaniousDynamicExpression";
 
 /**
@@ -140,7 +138,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawInstantaniousDynamic(staffline: StaffLine): void {
         for (const m of staffline.Measures as VexFlowMeasure[]) {
             for (const idx of m.instantaniousDynamics as VexFlowInstantaniousDynamicExpression[]) {
-                const ctx: Vex.Flow.RenderContext = this.backend.getContext();
                 this.drawLabel(idx.Label, <number>GraphicalLayers.Notes);
             }
         }
