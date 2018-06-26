@@ -1,4 +1,3 @@
-import * as log from "loglevel";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
 import {SourceStaffEntry} from "./SourceStaffEntry";
@@ -215,7 +214,6 @@ export class SourceMeasure extends BaseIdClass {
                 }
             }
         }
-        log.trace("created new container: ", staffEntry, this.verticalSourceStaffEntryContainers);
         return {createdNewContainer: true, staffEntry: staffEntry};
     }
 

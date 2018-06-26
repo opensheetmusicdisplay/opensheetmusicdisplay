@@ -202,7 +202,7 @@ export class BoundingBox {
     public set Parent(value: BoundingBox) {
         this.parent = value;
         if (this.parent.ChildElements.indexOf(this) > -1) {
-            log.warn("BoundingBox of " + (this.dataObject.constructor as any).name +
+            log.error("BoundingBox of " + (this.dataObject.constructor as any).name +
             " already in children list of " + (this.parent.dataObject.constructor as any).name + "'s BoundingBox");
         } else {
             this.parent.ChildElements.push(this);
