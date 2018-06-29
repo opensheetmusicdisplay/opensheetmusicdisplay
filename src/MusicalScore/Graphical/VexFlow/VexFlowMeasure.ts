@@ -581,7 +581,6 @@ export class VexFlowMeasure extends StaffMeasure {
                 (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
             }
         }
-
         this.finalizeBeams();
         this.finalizeTuplets();
 

@@ -665,9 +665,9 @@ export abstract class MusicSheetCalculator {
             }
         }
         // calculate Slurs
-        if (!this.leadSheet) {
-            this.calculateSlurs();
-        }
+        // if (!this.leadSheet) {
+        //     (this as VexFlowMusicSheetCalculator).calculateSlurs();
+        // }
         // calculate StaffEntry Ornaments
         // (must come after Slurs)
         if (!this.leadSheet) {
@@ -823,10 +823,6 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateTupletNumbers(): void {
-        return;
-    }
-
-    protected calculateSlurs(): void {
         return;
     }
 
