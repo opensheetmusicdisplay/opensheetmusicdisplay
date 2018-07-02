@@ -272,6 +272,15 @@ declare namespace Vex {
             public draw(): void;
         }
 
+        // interface for class Curve to draw slurs. The options are set to undefined
+        export class Curve {
+            constructor(from: StemmableNote, to: StemmableNote, options: any);
+            
+            public setContext(ctx: RenderContext): Curve;
+
+            public draw(): void;
+        }
+
         export class RenderContext {
             public scale(x: number, y: number): RenderContext;
             public fillRect(x: number, y: number, width: number, height: number): RenderContext

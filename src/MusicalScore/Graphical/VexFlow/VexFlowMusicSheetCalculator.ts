@@ -449,7 +449,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             for (const staffLine of musicSystem.StaffLines) {
                 const vfSlurs: VexFlowSlur[] = vfslursDict[staffLine.ParentStaff.idInMusicSheet];
                 for (let slurIndex: number = 0; slurIndex < vfSlurs.length; slurIndex++) {
-                    const newVFSlur: VexFlowSlur = VexFlowSlur.createFromVexflowSlur(vfSlurs[slurIndex]);
+                    const oldVFSlur: VexFlowSlur = vfSlurs[slurIndex];
+                    oldVFSlur.createVexFlowCurve();
+                    const newVFSlur: VexFlowSlur = VexFlowSlur.createFromVexflowSlur(oldVFSlur);
                     vfSlurs[slurIndex] = newVFSlur;
                 }
                 // add reference of slur array to the VexFlowStaffline class
@@ -502,9 +504,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                         }
                                         const vfSlur: VexFlowSlur = new VexFlowSlur(slur);
                                         vfSlurs.push(vfSlur); //add open... adding / removing is JUST DONE in the open... array
-                                        vfStaffLine.addVFSlurToVFStaffline(vfSlur); // every VFSlur is added to the array in the VFStaffline!
                                         vfSlur.voiceentrySlurStart = graphicalVoiceEntry;
-                                        vfSlur.staffentrySlurStart = graphicalStaffEntry;
+                                        vfStaffLine.addVFSlurToVFStaffline(vfSlur); // every VFSlur is added to the array in the VFStaffline!
                                     }
                                     if (slur.EndNote === graphicalNote.sourceNote) {
                                         const vfIndex: number = this.findIndexVFSlurFromSlur(vfSlurs, slur);
@@ -512,6 +513,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                             // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
                                             const vfSlur: VexFlowSlur = vfSlurs[vfIndex];
                                             vfSlur.voiceentrySlurEnd = graphicalVoiceEntry;
+                                            vfSlur.createVexFlowCurve();
                                             vfSlurs.splice(vfIndex, 1);
                                             //if (!vfSlur.StaffEntries.Contains(graphicalStaffEntry))
                                             //    vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry);

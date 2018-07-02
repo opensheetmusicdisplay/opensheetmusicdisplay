@@ -1,6 +1,7 @@
+import Vex = require("vexflow");
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
-import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
+import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 
 export class VexFlowSlur {
 
@@ -20,8 +21,19 @@ export class VexFlowSlur {
     }
 
     private parentSlur: Slur;
-    public voiceentrySlurStart: GraphicalVoiceEntry;
-    public voiceentrySlurEnd: GraphicalVoiceEntry;
-    public staffentrySlurStart: GraphicalStaffEntry;
-    public staffentrySlurEnd: GraphicalStaffEntry;
+
+    public voiceentrySlurStart: GraphicalVoiceEntry = undefined;
+    public voiceentrySlurEnd: GraphicalVoiceEntry = undefined;
+
+    public vfCurve: Vex.Flow.Curve;
+    public createVexFlowCurve(): void {
+        //if (this.voiceentrySlurStart !== undefined || this.voiceentrySlurEnd !== undefined) {
+            this.vfCurve = new Vex.Flow.Curve( (this.voiceentrySlurStart as VexFlowVoiceEntry).vfStaveNote,
+                                               (this.voiceentrySlurEnd as VexFlowVoiceEntry).vfStaveNote, undefined);
+        //}
+    }
 }
+
+
+
+

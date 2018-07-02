@@ -21,6 +21,7 @@ import * as log from "loglevel";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
 import { RepetitionInstructionReader } from "./MusicSymbolModules/RepetitionInstructionReader";
+import { SlurReader } from "./MusicSymbolModules/SlurReader";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -61,13 +62,13 @@ export class InstrumentReader {
         this.activeClefsHaveBeenInitialized[i] = false;
       }
       // FIXME createExpressionGenerators(instrument.Staves.length);
-      // (*) this.slurReader = MusicSymbolModuleFactory.createSlurReader(this.musicSheet);
+      this.slurReader = new SlurReader(this.musicSheet);
   }
 
   private repetitionInstructionReader: RepetitionInstructionReader;
   private xmlMeasureList: IXmlElement[];
   private musicSheet: MusicSheet;
-  private slurReader: any; // (*) SlurReader;
+  private slurReader: SlurReader;
   private instrument: Instrument;
   private voiceGeneratorsDict: { [n: number]: VoiceGenerator; } = {};
   private staffMainVoiceGeneratorDict: { [staffId: number]: VoiceGenerator } = {};

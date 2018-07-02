@@ -12,6 +12,8 @@ import {VexFlowBackend} from "./VexFlowBackend";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { StaffLine } from "../StaffLine";
+import { VexFlowStaffLine } from "./VexFlowStaffLine";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -64,6 +66,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     public calculatePixelDistance(unitDistance: number): number {
         return unitDistance * unitInPixels;
+    }
+
+    protected drawStaffLine(staffLine: StaffLine): void {
+        super.drawStaffLine(staffLine);
+        this.drawSlurs(staffLine as VexFlowStaffLine);
+    }
+
+    private drawSlurs(vfstaffLine: VexFlowStaffLine): void {
+        for (const slur of vfstaffLine.SlursInVFStaffLine) {
+            slur.vfCurve.setContext(this.backend.getContext()).draw();
+        }
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {
