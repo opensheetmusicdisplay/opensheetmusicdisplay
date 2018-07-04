@@ -576,7 +576,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         return;
     }
 
-    public staffMeasureCreatedCalculations(): void {
+    public graphicalMeasureCreatedCalculations(): void {
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             // create vex flow Stave Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
@@ -634,7 +634,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /**
-     * Return the VexFlow Stave corresponding to this StaffMeasure
+     * Return the VexFlow Stave corresponding to this graphicalMeasure
      * @returns {Vex.Flow.Stave}
      */
     public getVFStave(): Vex.Flow.Stave {
