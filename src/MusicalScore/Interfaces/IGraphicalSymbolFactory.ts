@@ -22,9 +22,9 @@ export interface IGraphicalSymbolFactory {
 
     createStaffLine(parentSystem: MusicSystem, parentStaff: Staff): StaffLine;
 
-    createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
+    createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
-    createExtraStaffMeasure(staffLine: StaffLine): GraphicalMeasure;
+    createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure;
 
     createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry;
 

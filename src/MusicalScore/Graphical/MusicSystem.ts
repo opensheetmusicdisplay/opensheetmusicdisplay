@@ -186,7 +186,7 @@ export abstract class MusicSystem extends GraphicalObject {
         return this.StaffLines[0].PositionAndShape.AbsolutePosition.x + this.StaffLines[0].StaffLines[0].End.x;
     }
 
-    public AddStaffMeasures(graphicalMeasures: GraphicalMeasure[]): void {
+    public AddGraphicalMeasures(graphicalMeasures: GraphicalMeasure[]): void {
         for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
             const graphicalMeasure: GraphicalMeasure = graphicalMeasures[idx];
             graphicalMeasure.parentMusicSystem = this;

@@ -81,11 +81,11 @@ export class MusicSystemBuilder {
 
         // go through measures and add to system until system gets too long -> finish system and start next system.
         while (this.measureListIndex < numberOfMeasures) {
-            const staffMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex];
-            for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
-                staffMeasures[idx].resetLayout();
+            const graphicalMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex];
+            for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
+                graphicalMeasures[idx].resetLayout();
             }
-            const sourceMeasure: SourceMeasure = staffMeasures[0].parentSourceMeasure;
+            const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
             const sourceMeasureEndsSystem: boolean = sourceMeasure.BreakSystemAfter;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             const isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
@@ -98,41 +98,41 @@ export class MusicSystemBuilder {
             // 2. the staff entries (= notes) and
             // 3. the end instructions (actually only clefs)
             const measureStartLine: SystemLinesEnum = this.getMeasureStartLine();
-            currentMeasureBeginInstructionsWidth += this.getLineWidth(staffMeasures[0], measureStartLine, isSystemStartMeasure);
+            currentMeasureBeginInstructionsWidth += this.getLineWidth(graphicalMeasures[0], measureStartLine, isSystemStartMeasure);
             if (!this.leadSheet) {
-                currentMeasureBeginInstructionsWidth += this.addBeginInstructions(staffMeasures, isSystemStartMeasure, isFirstSourceMeasure);
-                currentMeasureEndInstructionsWidth += this.addEndInstructions(staffMeasures);
+                currentMeasureBeginInstructionsWidth += this.addBeginInstructions(graphicalMeasures, isSystemStartMeasure, isFirstSourceMeasure);
+                currentMeasureEndInstructionsWidth += this.addEndInstructions(graphicalMeasures);
             }
             let currentMeasureVarWidth: number = 0;
             for (let i: number = 0; i < this.numberOfVisibleStaffLines; i++) {
-                currentMeasureVarWidth = Math.max(currentMeasureVarWidth, staffMeasures[i].minimumStaffEntriesWidth);
+                currentMeasureVarWidth = Math.max(currentMeasureVarWidth, graphicalMeasures[i].minimumStaffEntriesWidth);
             }
 
             // take into account the LineWidth after each Measure
             const measureEndLine: SystemLinesEnum = this.getMeasureEndLine();
-            currentMeasureEndInstructionsWidth += this.getLineWidth(staffMeasures[0], measureEndLine, isSystemStartMeasure);
+            currentMeasureEndInstructionsWidth += this.getLineWidth(graphicalMeasures[0], measureEndLine, isSystemStartMeasure);
             let nextMeasureBeginInstructionWidth: number = this.rules.MeasureLeftMargin;
 
             // Check if there are key or rhythm change instructions within the next measure:
             if (this.measureListIndex + 1 < this.measureList.length) {
-                const nextStaffMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex + 1];
-                const nextSourceMeasure: SourceMeasure = nextStaffMeasures[0].parentSourceMeasure;
+                const nextGraphicalMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex + 1];
+                const nextSourceMeasure: SourceMeasure = nextGraphicalMeasures[0].parentSourceMeasure;
                 if (nextSourceMeasure.hasBeginInstructions()) {
-                    nextMeasureBeginInstructionWidth += this.addBeginInstructions(nextStaffMeasures, false, false);
+                    nextMeasureBeginInstructionWidth += this.addBeginInstructions(nextGraphicalMeasures, false, false);
                 }
             }
             const totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
             const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
             if (isSystemStartMeasure || measureFitsInSystem) {
                 this.addMeasureToSystem(
-                    staffMeasures, measureStartLine, measureEndLine, totalMeasureWidth,
+                    graphicalMeasures, measureStartLine, measureEndLine, totalMeasureWidth,
                     currentMeasureBeginInstructionsWidth, currentMeasureVarWidth, currentMeasureEndInstructionsWidth
                 );
-                this.updateActiveClefs(sourceMeasure, staffMeasures);
+                this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
             } else {
                 // finalize current system and prepare a new one
-                this.finalizeCurrentAndCreateNewSystem(staffMeasures, previousMeasureEndsSystem);
+                this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, previousMeasureEndsSystem);
                 // don't increase measure index to check this measure now again
             }
             previousMeasureEndsSystem = sourceMeasureEndsSystem;
@@ -142,14 +142,14 @@ export class MusicSystemBuilder {
 
     /**
      * Set the Width of the staff-Measures of one source measure.
-     * @param staffMeasures
+     * @param graphicalMeasures
      * @param width
      * @param beginInstrWidth
      * @param endInstrWidth
      */
-    private setMeasureWidth(staffMeasures: GraphicalMeasure[], width: number, beginInstrWidth: number, endInstrWidth: number): void {
-        for (let idx: number = 0, len: number = staffMeasures.length; idx < len; ++idx) {
-            const measure: GraphicalMeasure = staffMeasures[idx];
+    private setMeasureWidth(graphicalMeasures: GraphicalMeasure[], width: number, beginInstrWidth: number, endInstrWidth: number): void {
+        for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
+            const measure: GraphicalMeasure = graphicalMeasures[idx];
             measure.setWidth(width);
             if (beginInstrWidth > 0) {
                 measure.beginInstructionsWidth = beginInstrWidth;
@@ -218,14 +218,14 @@ export class MusicSystemBuilder {
     }
 
     private addMeasureToSystem(
-        staffMeasures: GraphicalMeasure[], measureStartLine: SystemLinesEnum, measureEndLine: SystemLinesEnum,
+        graphicalMeasures: GraphicalMeasure[], measureStartLine: SystemLinesEnum, measureEndLine: SystemLinesEnum,
         totalMeasureWidth: number, currentMeasureBeginInstructionsWidth: number, currentVarWidth: number, currentMeasureEndInstructionsWidth: number
     ): void {
         this.currentSystemParams.systemMeasures.push({beginLine: measureStartLine, endLine: measureEndLine});
         this.setMeasureWidth(
-            staffMeasures, totalMeasureWidth, currentMeasureBeginInstructionsWidth, currentMeasureEndInstructionsWidth
+            graphicalMeasures, totalMeasureWidth, currentMeasureBeginInstructionsWidth, currentMeasureEndInstructionsWidth
         );
-        this.addStaveMeasuresToSystem(staffMeasures);
+        this.addStaveMeasuresToSystem(graphicalMeasures);
         this.currentSystemParams.currentWidth += totalMeasureWidth;
         this.currentSystemParams.currentSystemFixWidth += currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth;
         this.currentSystemParams.currentSystemVarWidth += currentVarWidth;
@@ -520,10 +520,10 @@ export class MusicSystemBuilder {
      * This has to be done after the measure is added to a system
      * (otherwise already the check if the measure fits to the system would update the active clefs..)
      * @param measure
-     * @param staffMeasures
+     * @param graphicalMeasures
      */
-    private updateActiveClefs(measure: SourceMeasure, staffMeasures: GraphicalMeasure[]): void {
-        for (let visStaffIdx: number = 0, len: number = staffMeasures.length; visStaffIdx < len; visStaffIdx++) {
+    private updateActiveClefs(measure: SourceMeasure, graphicalMeasures: GraphicalMeasure[]): void {
+        for (let visStaffIdx: number = 0, len: number = graphicalMeasures.length; visStaffIdx < len; visStaffIdx++) {
             const staffIndex: number = this.visibleStaffIndices[visStaffIdx];
             const firstEntry: SourceStaffEntry = measure.FirstInstructionsStaffEntries[staffIndex];
             if (firstEntry !== undefined) {
@@ -610,7 +610,7 @@ export class MusicSystemBuilder {
     private addExtraInstructionMeasure(visStaffIdx: number, keyInstruction: KeyInstruction, rhythmInstruction: RhythmInstruction): number {
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         const measures: GraphicalMeasure[] = [];
-        const measure: GraphicalMeasure = MusicSheetCalculator.symbolFactory.createExtraStaffMeasure(currentSystem.StaffLines[visStaffIdx]);
+        const measure: GraphicalMeasure = MusicSheetCalculator.symbolFactory.createExtraGraphicalMeasure(currentSystem.StaffLines[visStaffIdx]);
         measures.push(measure);
         if (keyInstruction !== undefined) {
             measure.addKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
@@ -629,13 +629,13 @@ export class MusicSystemBuilder {
 
     /**
      * Add all current vertical Measures to currentSystem.
-     * @param staffMeasures
+     * @param graphicalMeasures
      */
-    private addStaveMeasuresToSystem(staffMeasures: GraphicalMeasure[]): void {
-        if (staffMeasures[0] !== undefined) {
+    private addStaveMeasuresToSystem(graphicalMeasures: GraphicalMeasure[]): void {
+        if (graphicalMeasures[0] !== undefined) {
             const gmeasures: GraphicalMeasure[] = [];
-            for (let i: number = 0; i < staffMeasures.length; i++) {
-                gmeasures.push(staffMeasures[i]);
+            for (let i: number = 0; i < graphicalMeasures.length; i++) {
+                gmeasures.push(graphicalMeasures[i]);
             }
             const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
             for (let visStaffIdx: number = 0; visStaffIdx < this.numberOfVisibleStaffLines; visStaffIdx++) {
@@ -643,7 +643,7 @@ export class MusicSystemBuilder {
                 currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
                 measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
             }
-            currentSystem.AddStaffMeasures(gmeasures);
+            currentSystem.AddGraphicalMeasures(gmeasures);
         }
     }
 

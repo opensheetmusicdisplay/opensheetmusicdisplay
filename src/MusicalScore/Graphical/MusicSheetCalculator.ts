@@ -230,7 +230,7 @@ export abstract class MusicSheetCalculator {
     /**
      * Called for every source measure when generating the list of staff measures for it.
      */
-    protected initStaffMeasuresCreation(): void {
+    protected initGraphicalMeasuresCreation(): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -611,15 +611,15 @@ export abstract class MusicSheetCalculator {
         // visible 2D-MeasureList
         const visibleMeasureList: GraphicalMeasure[][] = [];
         for (let idx: number = 0, len: number = allMeasures.length; idx < len; ++idx) {
-            const staffMeasures: GraphicalMeasure[] = allMeasures[idx];
-            const visibleStaffMeasures: GraphicalMeasure[] = [];
-            for (let idx2: number = 0, len2: number = staffMeasures.length; idx2 < len2; ++idx2) {
-                const staffMeasure: GraphicalMeasure = allMeasures[idx][idx2];
-                if (staffMeasure.isVisible()) {
-                    visibleStaffMeasures.push(staffMeasure);
+            const graphicalMeasures: GraphicalMeasure[] = allMeasures[idx];
+            const visiblegraphicalMeasures: GraphicalMeasure[] = [];
+            for (let idx2: number = 0, len2: number = graphicalMeasures.length; idx2 < len2; ++idx2) {
+                const graphicalMeasure: GraphicalMeasure = allMeasures[idx][idx2];
+                if (graphicalMeasure.isVisible()) {
+                    visiblegraphicalMeasures.push(graphicalMeasure);
                 }
             }
-            visibleMeasureList.push(visibleStaffMeasures);
+            visibleMeasureList.push(visiblegraphicalMeasures);
         }
 
         // find out how many StaffLine Instances we need
@@ -857,7 +857,7 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
-    protected staffMeasureCreatedCalculations(measure: GraphicalMeasure): void {
+    protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
         return;
     }
 
@@ -1293,7 +1293,7 @@ export abstract class MusicSheetCalculator {
     private createGraphicalMeasuresForSourceMeasure(sourceMeasure: SourceMeasure, accidentalCalculators: AccidentalCalculator[],
                                                     openLyricWords: LyricWord[],
                                                     openOctaveShifts: OctaveShiftParams[], activeClefs: ClefInstruction[]): GraphicalMeasure[] {
-        this.initStaffMeasuresCreation();
+        this.initGraphicalMeasuresCreation();
         const verticalMeasureList: GraphicalMeasure[] = [];
         const openBeams: Beam[] = [];
         const openTuplets: Tuplet[] = [];
@@ -1303,7 +1303,7 @@ export abstract class MusicSheetCalculator {
                 sourceMeasure, openTuplets, openBeams,
                 accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
             );
-            this.staffMeasureCreatedCalculations(measure);
+            this.graphicalMeasureCreatedCalculations(measure);
             verticalMeasureList.push(measure);
         }
         this.graphicalMusicSheet.sourceToGraphicalMeasureLinks.setValue(sourceMeasure, verticalMeasureList);
@@ -1315,7 +1315,7 @@ export abstract class MusicSheetCalculator {
                                    openOctaveShifts: OctaveShiftParams[], openLyricWords: LyricWord[], staffIndex: number,
                                    staffEntryLinks: StaffEntryLink[]): GraphicalMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
-        const measure: GraphicalMeasure = MusicSheetCalculator.symbolFactory.createStaffMeasure(sourceMeasure, staff);
+        const measure: GraphicalMeasure = MusicSheetCalculator.symbolFactory.createGraphicalMeasure(sourceMeasure, staff);
         measure.hasError = sourceMeasure.getErrorInMeasure(staffIndex);
         if (sourceMeasure.FirstInstructionsStaffEntries[staffIndex] !== undefined) {
             for (let idx: number = 0, len: number = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions.length; idx < len; ++idx) {
@@ -1769,8 +1769,8 @@ export abstract class MusicSheetCalculator {
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
                 lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
-            const lastStaffMeasure: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
-            const endX: number = lastStaffMeasure.PositionAndShape.RelativePosition.x + lastStaffMeasure.PositionAndShape.Size.width;
+            const lastGraphicalMeasure: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
+            const endX: number = lastGraphicalMeasure.PositionAndShape.RelativePosition.x + lastGraphicalMeasure.PositionAndShape.Size.width;
             let y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
 
             // calculate Dashes for the first StaffLine
