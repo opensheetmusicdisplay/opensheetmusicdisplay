@@ -615,6 +615,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow articulation:
             const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             for (const gve of graphicalVoiceEntries) {
+                // TODO this is a lot of casting, and a VexFlowVoiceEntry is not supposed to have a StaveNote,
+                //  only a StemmableNote, which is a superclass of StaveNote, meaning StaveNote has more functionality.
+                // so, either VexFlowVoiceEntry should have a StaveNote member again instead of StemmableNote,
+                //  or we need to get the StaveNote from somewhere else.
+                // same issue in createOrnaments(). [sschmid]
                 const vfStaveNote: StaveNote = ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote);
                 VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0].sourceNote.ParentVoiceEntry.Articulations);
             }
