@@ -6,7 +6,7 @@ import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
 import {VexFlowStaffLine} from "./VexFlowStaffLine";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
-import {StaffMeasure} from "../StaffMeasure";
+import {GraphicalMeasure} from "../GraphicalMeasure";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {SourceStaffEntry} from "../../VoiceData/SourceStaffEntry";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
@@ -54,7 +54,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param staff
      * @returns {VexFlowMeasure}
      */
-    public createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): StaffMeasure {
+    public createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure {
         return new VexFlowMeasure(staff, undefined, sourceMeasure);
     }
 
@@ -63,7 +63,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param staffLine
      * @returns {VexFlowMeasure}
      */
-    public createExtraStaffMeasure(staffLine: StaffLine): StaffMeasure {
+    public createExtraStaffMeasure(staffLine: StaffLine): GraphicalMeasure {
         return new VexFlowMeasure(staffLine.ParentStaff, staffLine);
     }
 
@@ -73,7 +73,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param measure
      * @returns {VexFlowStaffEntry}
      */
-    public createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: StaffMeasure): GraphicalStaffEntry {
+    public createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry {
         return new VexFlowStaffEntry(<VexFlowMeasure>measure, sourceStaffEntry, undefined);
     }
 
@@ -85,7 +85,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param measure
      * @returns {VexFlowStaffEntry}
      */
-    public createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: StaffMeasure): GraphicalStaffEntry {
+    public createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry {
         return new VexFlowStaffEntry(<VexFlowMeasure>measure, undefined, <VexFlowStaffEntry>staffEntryParent);
     }
 

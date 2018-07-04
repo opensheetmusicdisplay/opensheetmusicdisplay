@@ -15,7 +15,7 @@ import {ArgumentOutOfRangeException} from "../Exceptions";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {MusicSystem} from "./MusicSystem";
-import {StaffMeasure} from "./StaffMeasure";
+import {GraphicalMeasure} from "./GraphicalMeasure";
 import {StaffLine} from "./StaffLine";
 import {SystemLine} from "./SystemLine";
 import {MusicSymbol} from "./MusicSymbol";
@@ -227,7 +227,7 @@ export abstract class MusicSheetDrawer {
         // empty
     }
 
-    protected drawMeasure(measure: StaffMeasure): void {
+    protected drawMeasure(measure: GraphicalMeasure): void {
         throw new Error("not implemented");
     }
 
