@@ -49,12 +49,12 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     }
 
     /**
-     * Construct an empty staffMeasure from the given source measure and staff.
+     * Construct an empty graphicalMeasure from the given source measure and staff.
      * @param sourceMeasure
      * @param staff
      * @returns {VexFlowMeasure}
      */
-    public createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure {
+    public createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure {
         return new VexFlowMeasure(staff, undefined, sourceMeasure);
     }
 
@@ -63,7 +63,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param staffLine
      * @returns {VexFlowMeasure}
      */
-    public createExtraStaffMeasure(staffLine: StaffLine): GraphicalMeasure {
+    public createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure {
         return new VexFlowMeasure(staffLine.ParentStaff, staffLine);
     }
 
