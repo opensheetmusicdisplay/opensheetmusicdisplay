@@ -4,7 +4,7 @@ import {Instrument} from "../Instrument";
 import {GraphicalLine} from "./GraphicalLine";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
-import {StaffMeasure} from "./StaffMeasure";
+import {GraphicalMeasure} from "./GraphicalMeasure";
 import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
@@ -16,7 +16,7 @@ import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
  * (one instrument, one line, until a line break)
  */
 export abstract class StaffLine extends GraphicalObject {
-    protected measures: StaffMeasure[] = [];
+    protected measures: GraphicalMeasure[] = [];
     protected staffLines: GraphicalLine[] = new Array(5);
     protected parentMusicSystem: MusicSystem;
     protected parentStaff: Staff;
@@ -33,11 +33,11 @@ export abstract class StaffLine extends GraphicalObject {
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
     }
 
-    public get Measures(): StaffMeasure[] {
+    public get Measures(): GraphicalMeasure[] {
         return this.measures;
     }
 
-    public set Measures(value: StaffMeasure[]) {
+    public set Measures(value: GraphicalMeasure[]) {
         this.measures = value;
     }
 
@@ -138,7 +138,7 @@ export abstract class StaffLine extends GraphicalObject {
     public findClosestStaffEntry(xPosition: number): GraphicalStaffEntry {
         let closestStaffentry: GraphicalStaffEntry = undefined;
         for (let idx: number = 0, len: number = this.Measures.length; idx < len; ++idx) {
-            const graphicalMeasure: StaffMeasure = this.Measures[idx];
+            const graphicalMeasure: GraphicalMeasure = this.Measures[idx];
             for (let idx2: number = 0, len2: number = graphicalMeasure.staffEntries.length; idx2 < len2; ++idx2) {
                 const graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx2];
                 if (

@@ -1,4 +1,4 @@
-import {StaffMeasure} from "./StaffMeasure";
+import {GraphicalMeasure} from "./GraphicalMeasure";
 import {StaffLine} from "./StaffLine";
 import {MusicSystem} from "./MusicSystem";
 import {SystemLinePosition} from "./SystemLinePosition";
@@ -10,7 +10,7 @@ import {EngravingRules} from "./EngravingRules";
 export class SystemLine extends GraphicalObject {
 
     constructor(lineType: SystemLinesEnum, linePosition: SystemLinePosition, musicSystem: MusicSystem,
-                topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined) {
+                topMeasure: GraphicalMeasure, bottomMeasure: GraphicalMeasure = undefined) {
         super();
         this.lineType = lineType;
         this.linePosition = linePosition;
@@ -25,8 +25,8 @@ export class SystemLine extends GraphicalObject {
     public linePosition: SystemLinePosition;
     public parentMusicSystem: MusicSystem;
     public parentTopStaffLine: StaffLine;
-    public topMeasure: StaffMeasure;
-    public bottomMeasure: StaffMeasure;
+    public topMeasure: GraphicalMeasure;
+    public bottomMeasure: GraphicalMeasure;
 
     /**
      * Return the width of the SystemLinesContainer for the given SystemLineType.

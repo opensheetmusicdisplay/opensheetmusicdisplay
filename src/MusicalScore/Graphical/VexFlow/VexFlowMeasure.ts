@@ -1,5 +1,5 @@
 import Vex = require("vexflow");
-import {StaffMeasure} from "../StaffMeasure";
+import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
@@ -26,7 +26,7 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
 import { Voice } from "../../VoiceData/Voice";
 import { VexFlowInstantaniousDynamicExpression } from "./VexFlowInstantaniousDynamicExpression";
 
-export class VexFlowMeasure extends StaffMeasure {
+export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;

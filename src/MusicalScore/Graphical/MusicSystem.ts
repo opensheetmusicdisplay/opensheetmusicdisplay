@@ -7,7 +7,7 @@ import {InstrumentalGroup} from "../InstrumentalGroup";
 import {TextAlignment} from "../../Common/Enums/TextAlignment";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {GraphicalLabel} from "./GraphicalLabel";
-import {StaffMeasure} from "./StaffMeasure";
+import {GraphicalMeasure} from "./GraphicalMeasure";
 import {GraphicalObject} from "./GraphicalObject";
 import {EngravingRules} from "./EngravingRules";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
@@ -28,7 +28,7 @@ export abstract class MusicSystem extends GraphicalObject {
     protected parent: GraphicalMusicPage;
     protected id: number;
     protected staffLines: StaffLine[] = [];
-    protected graphicalMeasures: StaffMeasure[][] = [];
+    protected graphicalMeasures: GraphicalMeasure[][] = [];
     protected labels: Dictionary<GraphicalLabel, Instrument> = new Dictionary<GraphicalLabel, Instrument>();
     protected measureNumberLabels: GraphicalLabel[] = [];
     protected maxLabelLength: number;
@@ -66,7 +66,7 @@ export abstract class MusicSystem extends GraphicalObject {
         return this.staffLines;
     }
 
-    public get GraphicalMeasures(): StaffMeasure[][] {
+    public get GraphicalMeasures(): GraphicalMeasure[][] {
         return this.graphicalMeasures;
     }
 
@@ -116,8 +116,8 @@ export abstract class MusicSystem extends GraphicalObject {
         if (this === this.parent.MusicSystems[0] && this.parent === this.parent.Parent.MusicPages[0]) {
             xPosition = this.maxLabelLength + systemLabelsRightMargin - lineWidth / 2;
         }
-        const top: StaffMeasure = this.staffLines[0].Measures[0];
-        let bottom: StaffMeasure = undefined;
+        const top: GraphicalMeasure = this.staffLines[0].Measures[0];
+        let bottom: GraphicalMeasure = undefined;
         if (this.staffLines.length > 1) {
             bottom = this.staffLines[this.staffLines.length - 1].Measures[0];
         }
@@ -142,13 +142,13 @@ export abstract class MusicSystem extends GraphicalObject {
      * @param measure
      */
     public createVerticalLineForMeasure(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
-                                        measureIndex: number, measure: StaffMeasure): void {
+                                        measureIndex: number, measure: GraphicalMeasure): void {
         const staffLine: StaffLine = measure.ParentStaffLine;
         const staffLineRelative: PointF2D = new PointF2D(staffLine.PositionAndShape.RelativePosition.x,
                                                          staffLine.PositionAndShape.RelativePosition.y);
         const staves: Staff[] = staffLine.ParentStaff.ParentInstrument.Staves;
         if (staffLine.ParentStaff === staves[0]) {
-            let bottomMeasure: StaffMeasure = undefined;
+            let bottomMeasure: GraphicalMeasure = undefined;
             if (staves.length > 1) {
                 bottomMeasure = this.getBottomStaffLine(staffLine).Measures[measureIndex];
             }
@@ -186,9 +186,9 @@ export abstract class MusicSystem extends GraphicalObject {
         return this.StaffLines[0].PositionAndShape.AbsolutePosition.x + this.StaffLines[0].StaffLines[0].End.x;
     }
 
-    public AddStaffMeasures(graphicalMeasures: StaffMeasure[]): void {
+    public AddStaffMeasures(graphicalMeasures: GraphicalMeasure[]): void {
         for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
-            const graphicalMeasure: StaffMeasure = graphicalMeasures[idx];
+            const graphicalMeasure: GraphicalMeasure = graphicalMeasures[idx];
             graphicalMeasure.parentMusicSystem = this;
         }
         this.graphicalMeasures.push(graphicalMeasures);
@@ -339,7 +339,7 @@ export abstract class MusicSystem extends GraphicalObject {
         let second: boolean = false;
         for (let i: number = 0; i < this.staffLines.length - 1; i++) {
             for (let idx: number = 0, len: number = this.staffLines[i].Measures.length; idx < len; ++idx) {
-                const measure: StaffMeasure = this.staffLines[i].Measures[idx];
+                const measure: GraphicalMeasure = this.staffLines[i].Measures[idx];
                 for (let idx2: number = 0, len2: number = measure.staffEntries.length; idx2 < len2; ++idx2) {
                     const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
                     if (staffEntry.sourceStaffEntry.Link !== undefined) {
@@ -348,7 +348,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 }
             }
             for (let idx: number = 0, len: number = this.staffLines[i + 1].Measures.length; idx < len; ++idx) {
-                const measure: StaffMeasure = this.staffLines[i + 1].Measures[idx];
+                const measure: GraphicalMeasure = this.staffLines[i + 1].Measures[idx];
                 for (let idx2: number = 0, len2: number = measure.staffEntries.length; idx2 < len2; ++idx2) {
                     const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
                     if (staffEntry.sourceStaffEntry.Link !== undefined) {
@@ -386,7 +386,7 @@ export abstract class MusicSystem extends GraphicalObject {
      * @param bottomMeasure
      */
     protected createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
-                               musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
+                               musicSystem: MusicSystem, topMeasure: GraphicalMeasure, bottomMeasure: GraphicalMeasure = undefined): SystemLine {
         throw new Error("not implemented");
     }
 
