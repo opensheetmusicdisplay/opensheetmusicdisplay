@@ -8,6 +8,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     // The available demos
         demos = {
+            "Expressions": "visual_compare/Expression_Test.musicxml"
             "Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "NinskaBanja_LoosMeasures.xml": "NinskaBanja_LoosMeasures.xml",
             "NiskaBanja_DoesNotRender": "NiskaBanja_DoesNotRender.xml",
@@ -111,8 +112,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 var width = document.body.clientWidth;
                 canvas.width = width;
                 try {
-                openSheetMusicDisplay.render();
-                } catch (e) {}
+                    openSheetMusicDisplay.render();
+                } catch (e) {
+                    console.warn(e.stack);
+                }
                 enable();
             }
         );
@@ -195,7 +198,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
-                error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
+                // error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
+                console.warn(e.stack);
                 onLoadingEnd(isCustom);
             }
         );
