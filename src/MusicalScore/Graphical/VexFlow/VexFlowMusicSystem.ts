@@ -2,7 +2,7 @@ import {MusicSystem} from "../MusicSystem";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {SystemLinePosition} from "../SystemLinePosition";
-import {StaffMeasure} from "../StaffMeasure";
+import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SystemLine} from "../SystemLine";
 import {VexFlowStaffLine} from "./VexFlowStaffLine";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -55,7 +55,7 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param bottomMeasure
      */
     protected createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
-                               musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
+                               musicSystem: MusicSystem, topMeasure: GraphicalMeasure, bottomMeasure: GraphicalMeasure = undefined): SystemLine {
         const vfMeasure: VexFlowMeasure = topMeasure as VexFlowMeasure;
         vfMeasure.addMeasureLine(lineType, linePosition);
         if (bottomMeasure) {

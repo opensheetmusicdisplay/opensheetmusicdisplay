@@ -1,5 +1,5 @@
 import Vex = require("vexflow");
-import {StaffMeasure} from "../StaffMeasure";
+import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
@@ -25,7 +25,7 @@ import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import { Voice } from "../../VoiceData/Voice";
 
-export class VexFlowMeasure extends StaffMeasure {
+export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;
@@ -574,7 +574,7 @@ export class VexFlowMeasure extends StaffMeasure {
         return;
     }
 
-    public staffMeasureCreatedCalculations(): void {
+    public graphicalMeasureCreatedCalculations(): void {
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             // create vex flow Stave Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
@@ -629,7 +629,7 @@ export class VexFlowMeasure extends StaffMeasure {
     }
 
     /**
-     * Return the VexFlow Stave corresponding to this StaffMeasure
+     * Return the VexFlow Stave corresponding to this graphicalMeasure
      * @returns {Vex.Flow.Stave}
      */
     public getVFStave(): Vex.Flow.Stave {

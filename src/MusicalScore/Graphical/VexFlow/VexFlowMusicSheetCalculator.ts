@@ -1,6 +1,6 @@
 import {MusicSheetCalculator} from "../MusicSheetCalculator";
 import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
-import {StaffMeasure} from "../StaffMeasure";
+import {GraphicalMeasure} from "../GraphicalMeasure";
 import {StaffLine} from "../StaffLine";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {GraphicalNote} from "../GraphicalNote";
@@ -41,18 +41,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected clearRecreatedObjects(): void {
     super.clearRecreatedObjects();
-    for (const staffMeasures of this.graphicalMusicSheet.MeasureList) {
-      for (const staffMeasure of staffMeasures) {
-        (<VexFlowMeasure>staffMeasure).clean();
+    for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
+      for (const graphicalMeasure of graphicalMeasures) {
+        (<VexFlowMeasure>graphicalMeasure).clean();
       }
     }
   }
 
     protected formatMeasures(): void {
-        for (const staffMeasures of this.graphicalMusicSheet.MeasureList) {
-            for (const staffMeasure of staffMeasures) {
-                (<VexFlowMeasure>staffMeasure).format();
-                for (const staffEntry of staffMeasure.staffEntries) {
+        for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
+            for (const graphicalMeasure of graphicalMeasures) {
+                (<VexFlowMeasure>graphicalMeasure).format();
+                for (const staffEntry of graphicalMeasure.staffEntries) {
                     (<VexFlowStaffEntry>staffEntry).calculateXPosition();
                 }
             }
@@ -74,7 +74,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param measures
    * @returns the minimum required x width of the source measure (=list of staff measures)
    */
-  protected calculateMeasureXLayout(measures: StaffMeasure[]): number {
+  protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
     // Finalize beams
     /*for (let measure of measures) {
      (measure as VexFlowMeasure).finalizeBeams();
@@ -134,8 +134,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
   }
 
-  protected staffMeasureCreatedCalculations(measure: StaffMeasure): void {
-    (measure as VexFlowMeasure).staffMeasureCreatedCalculations();
+  protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
+    (measure as VexFlowMeasure).graphicalMeasureCreatedCalculations();
   }
 
   /**
@@ -180,7 +180,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /**
    * Is called at the begin of the method for creating the vertically aligned staff measures belonging to one source measure.
    */
-  protected initStaffMeasuresCreation(): void {
+  protected initGraphicalMeasuresCreation(): void {
     return;
   }
 
