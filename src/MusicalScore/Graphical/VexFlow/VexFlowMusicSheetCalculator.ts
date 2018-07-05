@@ -333,47 +333,47 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     (graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
   }
 
-    protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
-        voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
-            const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
-                                                                                     graphicalStaffEntry,
-                                                                                     this.rules.LyricsHeight,
-                                                                                     this.rules.StaffHeight);
+  protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
+      voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
+          const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
+                                                                                   graphicalStaffEntry,
+                                                                                   this.rules.LyricsHeight,
+                                                                                   this.rules.StaffHeight);
 
-            graphicalStaffEntry.LyricsEntries.push(graphicalLyricEntry);
+          graphicalStaffEntry.LyricsEntries.push(graphicalLyricEntry);
 
-            // create corresponding GraphicalLabel
-            const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
-            graphicalLabel.setLabelPositionAndShapeBorders();
+          // create corresponding GraphicalLabel
+          const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
+          graphicalLabel.setLabelPositionAndShapeBorders();
 
-            if (lyricsEntry.Word !== undefined) {
-                const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);
-                let index: number = lyricWords.indexOf(lyricsEntry.Word);
-                if (index === -1) {
-                    lyricWords.push(lyricsEntry.Word);
-                    index = lyricWords.indexOf(lyricsEntry.Word);
+          if (lyricsEntry.Word !== undefined) {
+              const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);
+              let index: number = lyricWords.indexOf(lyricsEntry.Word);
+              if (index === -1) {
+                  lyricWords.push(lyricsEntry.Word);
+                  index = lyricWords.indexOf(lyricsEntry.Word);
+              }
+
+              if (this.graphicalLyricWords.length === 0 || index > this.graphicalLyricWords.length - 1) {
+                  const graphicalLyricWord: GraphicalLyricWord = new GraphicalLyricWord(lyricsEntry.Word);
+
+                  graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
+                  graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
+                  this.graphicalLyricWords.push(graphicalLyricWord);
+              } else {
+                  const graphicalLyricWord: GraphicalLyricWord = this.graphicalLyricWords[index];
+
+                  graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
+                  graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
+
+                  if (graphicalLyricWord.isFilled()) {
+                      lyricWords.splice(index, 1);
+                      this.graphicalLyricWords.splice(this.graphicalLyricWords.indexOf(graphicalLyricWord), 1);
+                  }
+              }
+          }
+      });
   }
-
-                if (this.graphicalLyricWords.length === 0 || index > this.graphicalLyricWords.length - 1) {
-                    const graphicalLyricWord: GraphicalLyricWord = new GraphicalLyricWord(lyricsEntry.Word);
-
-                    graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
-                    graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
-                    this.graphicalLyricWords.push(graphicalLyricWord);
-                } else {
-                    const graphicalLyricWord: GraphicalLyricWord = this.graphicalLyricWords[index];
-
-                    graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
-                    graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
-
-                    if (graphicalLyricWord.isFilled()) {
-                        lyricWords.splice(index, 1);
-                        this.graphicalLyricWords.splice(this.graphicalLyricWords.indexOf(graphicalLyricWord), 1);
-                    }
-                }
-            }
-        });
-    }
 
   protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
     return;

@@ -19,6 +19,7 @@ import * as log from "loglevel";
 import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry";
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -118,7 +119,7 @@ export class VexFlowConverter {
     public static accidental(accidental: AccidentalEnum): string {
         let acc: string;
         switch (accidental) {
-            case AccidentalEnum.NONE:
+            case AccidentalEnum.NATURAL:
                 acc = "n";
                 break;
             case AccidentalEnum.FLAT:
@@ -303,6 +304,65 @@ export class VexFlowConverter {
                 vfArt.setPosition(vfArtPosition);
                 vfnote.addModifier(0, vfArt);
             }
+        }
+    }
+
+    public static generateOrnaments(vfnote: Vex.Flow.StaveNote, oContainer: OrnamentContainer): void {
+        // Ornaments
+        let vfPosition: number = Vex.Flow.Modifier.Position.ABOVE;
+
+        if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
+            vfPosition = Vex.Flow.Modifier.Position.BELOW;
+        }
+
+        let vfOrna: Vex.Flow.Ornament = undefined;
+        // tslint:disable-next-line:switch-default
+        switch (oContainer.GetOrnament) {
+            case OrnamentEnum.DelayedInvertedTurn: {
+                vfOrna = new Vex.Flow.Ornament("turn_inverted");
+                vfOrna.setDelayed(true);
+                break;
+            }
+            case OrnamentEnum.DelayedTurn: {
+                vfOrna = new Vex.Flow.Ornament("turn");
+                vfOrna.setDelayed(true);
+                break;
+            }
+            case OrnamentEnum.InvertedMordent: {
+                vfOrna = new Vex.Flow.Ornament("mordent_inverted");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.InvertedTurn: {
+                vfOrna = new Vex.Flow.Ornament("turn_inverted");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.Mordent: {
+                vfOrna = new Vex.Flow.Ornament("mordent");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.Trill: {
+                vfOrna = new Vex.Flow.Ornament("tr");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.Turn: {
+                vfOrna = new Vex.Flow.Ornament("turn");
+                vfOrna.setDelayed(false);
+                break;
+            }
+        }
+        if (vfOrna !== undefined) {
+            if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
+                vfOrna.setLowerAccidental(this.accidental(oContainer.AccidentalBelow));
+            }
+            if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
+                vfOrna.setUpperAccidental(this.accidental(oContainer.AccidentalAbove));
+            }
+            vfOrna.setPosition(vfPosition);
+            vfnote.addModifier(0, vfOrna);
         }
     }
 
