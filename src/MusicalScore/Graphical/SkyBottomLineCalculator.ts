@@ -55,7 +55,7 @@ export class SkyBottomLineCalculator {
 
             // This magic number is an offset from the top image border so that
             // elements above the staffline can be drawn correctly.
-            vsStaff.setY(vsStaff.y + 40);
+            vsStaff.setY(vsStaff.y + 100);
             const oldMeasureWidth: number = vsStaff.getWidth();
             // We need to tell the VexFlow stave about the canvas width. This looks
             // redundant because it should know the canvas but somehow it doesn't.
@@ -327,9 +327,8 @@ export class SkyBottomLineCalculator {
     }
 
     public getSkyLineMinAtPoint(point: number): number {
-        const istart: number = Math.floor(point * this.SamplingUnit);
-        const iend: number = Math.ceil(point * this.SamplingUnit);
-        return this.getSkyLineMinInRange(istart, iend);
+        const index: number = Math.round(point * this.SamplingUnit);
+        return this.mSkyLine[index];
     }
 
     /**
@@ -351,9 +350,8 @@ export class SkyBottomLineCalculator {
     }
 
     public getBottomLineMaxAtPoint(point: number): number {
-        const istart: number = Math.floor(point * this.SamplingUnit);
-        const iend: number = Math.ceil(point * this.SamplingUnit);
-        return this.getBottomLineMaxInRange(istart, iend);
+        const index: number = Math.round(point * this.SamplingUnit);
+        return this.mBottomLine[index];
     }
 
     /**

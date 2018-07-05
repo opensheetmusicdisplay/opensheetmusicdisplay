@@ -28,10 +28,12 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     /**
      * Initialize a canvas without attaching it to a DOM node. Can be used to draw in background
      * @param width Width of the canvas
+     * @param height Height of the canvas
      */
-    public initializeHeadless(width: number = 300): void {
+    public initializeHeadless(width: number = 300, height: number = 300): void {
         this.canvas = document.createElement("canvas");
         (this.canvas as any).width = width;
+        (this.canvas as any).height = height;
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
