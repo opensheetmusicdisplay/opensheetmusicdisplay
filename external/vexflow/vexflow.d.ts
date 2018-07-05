@@ -189,16 +189,16 @@ declare namespace Vex {
 
 
         export class StaveModifier extends Modifier {
-            public static get Position() {
-                return {
-                    LEFT: 1,
-                    RIGHT: 2,
-                    ABOVE: 3,
-                    BELOW: 4,
-                    BEGIN: 5,
-                    END: 6,
-                };
-            }
+            // public static get Position() {
+            //     return {
+            //         LEFT: 1,
+            //         RIGHT: 2,
+            //         ABOVE: 3,
+            //         BELOW: 4,
+            //         BEGIN: 5,
+            //         END: 6,
+            //     };
+            // }
 
             public getPosition(): number;
 

@@ -10,19 +10,11 @@ export class VexFlowStaffLine extends StaffLine {
 
     protected slursInVFStaffLine: VexFlowSlur[] = [];
 
-    // public get SlursInVFStaffLine(): VexFlowSlur[] {
-    //     return this.slursInVFStaffLine;
-    // }
     public get SlursInVFStaffLine(): VexFlowSlur[] {
         return this.slursInVFStaffLine;
     }
-    public set SlursInVFStaffLine(vfSlurs: VexFlowSlur[]) { //(VFIndex: number, VFSlur: VexFlowSlur) {
+    public set SlursInVFStaffLine(vfSlurs: VexFlowSlur[]) {
         this.slursInVFStaffLine = vfSlurs;
-        // for (const vfsIndex in vfSlursDict) {
-        //     if (vfsIndex !== undefined) {
-        //         this.slursInVFStaffLine[vfsIndex] = vfSlursDict[vfsIndex];
-        //     }
-        // }
     }
     public addVFSlurToVFStaffline(vfSlur: VexFlowSlur): void {
         this.slursInVFStaffLine.push(vfSlur);

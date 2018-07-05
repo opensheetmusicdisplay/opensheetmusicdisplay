@@ -203,7 +203,7 @@ export class VexFlowMeasure extends StaffMeasure {
      */
     public addMeasureNumber(): void {
         const text: string = this.MeasureNumber.toString();
-        const position: number = Vex.Flow.StaveModifier.Position.ABOVE;
+        const position: number = StavePositionEnum.ABOVE;  //Vex.Flow.StaveModifier.Position.ABOVE;
         const options: any = {
             justification: 1,
             shift_x: 0,
@@ -644,9 +644,9 @@ export class VexFlowMeasure extends StaffMeasure {
         let endInstructionsWidth: number = 0;
         const modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
         for (const mod of modifiers) {
-            if (mod.getPosition() === Vex.Flow.StaveModifier.Position.BEGIN) {
+            if (mod.getPosition() === StavePositionEnum.BEGIN) {  //Vex.Flow.StaveModifier.Position.BEGIN) {
                 beginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
-            } else if (mod.getPosition() === Vex.Flow.StaveModifier.Position.END) {
+            } else if (mod.getPosition() === StavePositionEnum.END) { //Vex.Flow.StaveModifier.Position.END) {
                 endInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
             }
         }
@@ -654,4 +654,15 @@ export class VexFlowMeasure extends StaffMeasure {
         this.beginInstructionsWidth = beginInstructionsWidth / unitInPixels;
         this.endInstructionsWidth = endInstructionsWidth / unitInPixels;
     }
+}
+
+// Gives the position of the Stave - replaces the function get Position() in the description of class StaveModifier in vexflow.d.ts
+// The latter gave an error because function cannot be defined in the class descriptions in vexflow.d.ts
+export enum StavePositionEnum {
+    LEFT = 1,
+    RIGHT = 2,
+    ABOVE = 3,
+    BELOW = 4,
+    BEGIN = 5,
+    END = 6
 }
