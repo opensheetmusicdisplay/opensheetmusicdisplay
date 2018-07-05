@@ -373,8 +373,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             ) {
                 const firstStaffIndexOfInstrument: number = this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.musicSheet.Instruments[i]);
                 for (let staffIndex: number = 0; staffIndex < this.musicSheet.Instruments[i].Staves.length; staffIndex++) {
-                    if (!this.staffMeasureIsEmpty(firstStaffIndexOfInstrument + staffIndex)) {
-                        this.currentMeasure.setErrorInStaffMeasure(firstStaffIndexOfInstrument + staffIndex, true);
+                    if (!this.graphicalMeasureIsEmpty(firstStaffIndexOfInstrument + staffIndex)) {
+                        this.currentMeasure.setErrorInGraphicalMeasure(firstStaffIndexOfInstrument + staffIndex, true);
                         const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/MissingNotesError",
                                                                                 "Given Notes don't correspond to measure duration.");
                         this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
@@ -432,7 +432,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         return (counter === instrumentsDurations.length && maxInstrumentDuration !== new Fraction(0, 1));
     }
 
-    private staffMeasureIsEmpty(index: number): boolean {
+    private graphicalMeasureIsEmpty(index: number): boolean {
         let counter: number = 0;
         for (let i: number = 0; i < this.currentMeasure.VerticalSourceStaffEntryContainers.length; i++) {
             if (this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries[index] === undefined) {

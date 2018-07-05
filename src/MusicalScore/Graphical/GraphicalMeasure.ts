@@ -17,7 +17,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 /**
  * Represents a measure in the music sheet (one measure in one staff line)
  */
-export abstract class StaffMeasure extends GraphicalObject {
+export abstract class GraphicalMeasure extends GraphicalObject {
     protected firstInstructionStaffEntry: GraphicalStaffEntry;
     protected lastInstructionStaffEntry: GraphicalStaffEntry;
 

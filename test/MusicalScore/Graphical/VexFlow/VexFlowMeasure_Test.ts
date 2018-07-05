@@ -6,7 +6,7 @@ import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphica
 import {TestUtils} from "../../../Util/TestUtils";
 import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasure";
 import {SourceStaffEntry} from "../../../../src/MusicalScore/VoiceData/SourceStaffEntry";
-import {StaffMeasure} from "../../../../src/MusicalScore/Graphical/StaffMeasure";
+import {GraphicalMeasure} from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 
 /* tslint:disable:no-unused-expression */
@@ -34,7 +34,7 @@ describe("VexFlow Measure", () => {
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
       chai.expect(gms.MeasureList.length).to.equal(1);
       chai.expect(gms.MeasureList[0].length).to.equal(1);
-      const gm: StaffMeasure = gms.MeasureList[0][0];
+      const gm: GraphicalMeasure = gms.MeasureList[0][0];
       console.log(gm);
       done();
    });

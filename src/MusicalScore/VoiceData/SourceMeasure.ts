@@ -33,7 +33,7 @@ export class SourceMeasure extends BaseIdClass {
         this.firstInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.lastInstructionsStaffEntries = new Array(completeNumberOfStaves);
         for (let i: number = 0; i < completeNumberOfStaves; i++) {
-            this.staffMeasureErrors.push(false);
+            this.graphicalMeasureErrors.push(false);
             this.staffLinkedExpressions.push([]);
         }
     }
@@ -56,7 +56,7 @@ export class SourceMeasure extends BaseIdClass {
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
     private implicitMeasure: boolean;
     private breakSystemAfter: boolean;
-    private staffMeasureErrors: boolean[] = [];
+    private graphicalMeasureErrors: boolean[] = [];
     private firstInstructionsStaffEntries: SourceStaffEntry[];
     private lastInstructionsStaffEntries: SourceStaffEntry[];
     private firstRepetitionInstructions: RepetitionInstruction[] = [];
@@ -135,11 +135,11 @@ export class SourceMeasure extends BaseIdClass {
     }
 
     public getErrorInMeasure(staffIndex: number): boolean {
-        return this.staffMeasureErrors[staffIndex];
+        return this.graphicalMeasureErrors[staffIndex];
     }
 
-    public setErrorInStaffMeasure(staffIndex: number, hasError: boolean): void {
-        this.staffMeasureErrors[staffIndex] = hasError;
+    public setErrorInGraphicalMeasure(staffIndex: number, hasError: boolean): void {
+        this.graphicalMeasureErrors[staffIndex] = hasError;
     }
 
     public getNextMeasure(measures: SourceMeasure[]): SourceMeasure {

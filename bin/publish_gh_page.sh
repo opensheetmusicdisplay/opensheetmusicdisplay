@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Prepare files to be published
-npm run build
+npm run build:doc
 npm run docs
 
 # Clone github page
