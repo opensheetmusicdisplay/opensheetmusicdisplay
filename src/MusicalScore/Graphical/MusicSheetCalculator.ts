@@ -408,7 +408,8 @@ export abstract class MusicSheetCalculator {
     protected calculateSingleStaffLineLyricsPosition(staffLine: StaffLine, lyricVersesNumber: number[]): GraphicalStaffEntry[] {
         let numberOfVerses: number = 0;
         // FIXME: There is no class SkyBottomLineCalculator -> Fix value
-        let lyricsStartYPosition: number = this.rules.StaffHeight + 6.0; // Add offset to prevent collision
+        // TODO make lyric offset dynamic (also see above)
+        let lyricsStartYPosition: number = this.rules.StaffHeight + this.rules.LyricsYOffsetToStaffHeight; // Add offset to prevent collision
         const lyricsStaffEntriesList: GraphicalStaffEntry[] = [];
         // const skyBottomLineCalculator: SkyBottomLineCalculator = new SkyBottomLineCalculator(this.rules);
 
