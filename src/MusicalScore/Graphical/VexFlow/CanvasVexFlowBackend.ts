@@ -23,7 +23,20 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
+    }
 
+    /**
+     * Initialize a canvas without attaching it to a DOM node. Can be used to draw in background
+     * @param width Width of the canvas
+     * @param height Height of the canvas
+     */
+    public initializeHeadless(width: number = 300, height: number = 300): void {
+        this.canvas = document.createElement("canvas");
+        (this.canvas as any).width = width;
+        (this.canvas as any).height = height;
+        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
+        this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
+        this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
     }
 
     public getContext(): Vex.Flow.CanvasContext {
@@ -31,7 +44,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
 
     public clear(): void {
-        // Doesn't need to do anything
+        (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
     }
 
     public scale(k: number): void {
@@ -59,6 +72,16 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         this.canvasRenderingCtx.fillStyle = old;
         this.canvasRenderingCtx.globalAlpha = 1;
+    }
+
+    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF"): void {
+        const oldStyle: string | CanvasGradient | CanvasPattern = this.canvasRenderingCtx.strokeStyle;
+        this.canvasRenderingCtx.strokeStyle = color;
+        this.canvasRenderingCtx.beginPath();
+        this.canvasRenderingCtx.moveTo(start.x, start.y);
+        this.canvasRenderingCtx.lineTo(stop.x, stop.y);
+        this.canvasRenderingCtx.stroke();
+        this.canvasRenderingCtx.strokeStyle = oldStyle;
     }
 
     private ctx: Vex.Flow.CanvasContext;
