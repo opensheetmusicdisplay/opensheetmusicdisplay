@@ -214,7 +214,6 @@ export class SourceMeasure extends BaseIdClass {
                 }
             }
         }
-        //log.debug("created new container: ", staffEntry, this.verticalSourceStaffEntryContainers);
         return {createdNewContainer: true, staffEntry: staffEntry};
     }
 
