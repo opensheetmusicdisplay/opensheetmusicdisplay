@@ -47,6 +47,7 @@ export class SkyBottomLineCalculator {
 
             // Pre initialize and get stuff for more performance
             const vsStaff: any = measure.getVFStave();
+            // Headless because we are outside the DOM
             tmpCanvas.initializeHeadless(vsStaff.getWidth());
             const ctx: any = tmpCanvas.getContext();
             const canvas: any = tmpCanvas.getCanvas();
@@ -98,6 +99,7 @@ export class SkyBottomLineCalculator {
             this.mSkyLine.push(...tmpSkyLine);
             this.mBottomLine.push(...tmpBottomLine);
 
+            // Set to true to only show the "mini canvases" and the corresponding skylines
             const debugTmpCanvas: boolean = false;
             if (debugTmpCanvas) {
                 tmpSkyLine.forEach((y, x) => this.drawPixel(new PointF2D(x, y), tmpCanvas));

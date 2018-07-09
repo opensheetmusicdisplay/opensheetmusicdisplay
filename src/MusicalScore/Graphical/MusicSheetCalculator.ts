@@ -267,8 +267,9 @@ export abstract class MusicSheetCalculator {
         // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
         if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
             for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
-                // const upperBottomLine: number = Math.max(...musicSystem.StaffLines[i].BottomLine);
                 const upperBottomLine: number = musicSystem.StaffLines[i].SkyBottomLineCalculator.getBottomLineMax();
+                // TODO: Lower skyline should add to offset when there are items above the line. Currently no test
+                // file available
                 // const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
                 if (Math.abs(upperBottomLine) > this.rules.MinimumStaffLineDistance) {
                     // Remove staffheight from offset. As it results in huge distances
@@ -1494,19 +1495,6 @@ export abstract class MusicSheetCalculator {
     //     this.resetYPositionForLeadSheet(graphicalStaffEntry.PositionAndShape);
     //     measure.addGraphicalStaffEntryAtTimestamp(graphicalStaffEntry);
     //     return graphicalStaffEntry;
-    // }
-
-    // private updateSkyBottomLines(): void {
-    //     for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-    //         const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-    //         for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-    //             const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-    //             for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-    //                 const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-    //                 this.updateSkyBottomLine(staffLine);
-    //             }
-    //         }
-    //     }
     // }
 
     private handleStaffEntries(): void {

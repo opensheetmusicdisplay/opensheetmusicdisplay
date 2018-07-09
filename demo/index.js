@@ -9,8 +9,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     // The available demos
         demos = {
             "Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
-            "NinskaBanja_LoosMeasures.xml": "NinskaBanja_LoosMeasures.xml",
-            "NiskaBanja_DoesNotRender": "NiskaBanja_DoesNotRender.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
             "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
@@ -112,7 +110,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         // Create OSMD object and canvas
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, backendSelect.value);
-        console.log(openSheetMusicDisplay)
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);
 

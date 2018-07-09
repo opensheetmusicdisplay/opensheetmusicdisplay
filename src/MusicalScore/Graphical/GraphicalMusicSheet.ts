@@ -55,8 +55,6 @@ export class GraphicalMusicSheet {
     //private systemImages: Dictionary<MusicSystem, SystemImageProperties> = new Dictionary<MusicSystem, SystemImageProperties>();
     private numberOfStaves: number;
     private leadSheet: boolean = false;
-    private skyLineVisible: boolean = false;
-    private bottomLineVisible: boolean = false;
 
     public get ParentMusicSheet(): MusicSheet {
         return this.musicSheet;
@@ -160,22 +158,6 @@ export class GraphicalMusicSheet {
 
     public set LeadSheet(value: boolean) {
         this.leadSheet = value;
-    }
-
-    public get SkyLineVisible(): boolean {
-        return this.skyLineVisible;
-    }
-
-    public set SkyLineVisible(value: boolean) {
-        this.skyLineVisible = value;
-    }
-
-    public get BottomLineVisible(): boolean {
-        return this.bottomLineVisible;
-    }
-
-    public set BottomLineVisible(value: boolean) {
-        this.bottomLineVisible = value;
     }
 
     /**

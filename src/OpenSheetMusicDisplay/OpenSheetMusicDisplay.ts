@@ -276,25 +276,25 @@ export class OpenSheetMusicDisplay {
 
     //#region GETTER / SETTER
     public set DrawSkyLine(value: boolean) {
-        if (this.graphic) {
-            this.graphic.SkyLineVisible = value;
+        if (this.drawer) {
+            this.drawer.skyLineVisible = value;
             this.render();
         }
     }
 
     public get DrawSkyLine(): boolean {
-        return this.graphic.SkyLineVisible;
+        return this.drawer.skyLineVisible;
     }
 
     public set DrawBottomLine(value: boolean) {
-        if (this.graphic) {
-            this.graphic.BottomLineVisible = value;
+        if (this.drawer) {
+            this.drawer.bottomLineVisible = value;
             this.render();
         }
     }
 
     public get DrawBottomLine(): boolean {
-        return this.graphic.BottomLineVisible;
+        return this.drawer.bottomLineVisible;
     }
 
     public set DrawBoundingBox(value: string) {

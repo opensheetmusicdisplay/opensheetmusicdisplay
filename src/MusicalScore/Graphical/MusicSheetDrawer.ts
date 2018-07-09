@@ -43,6 +43,9 @@ export abstract class MusicSheetDrawer {
     public midiPlaybackAvailable: boolean;
     public drawableBoundingBoxElement: string = process.env.DRAW_BOUNDING_BOX_ELEMENT;
 
+    public skyLineVisible: boolean = false;
+    public bottomLineVisible: boolean = false;
+
     protected rules: EngravingRules;
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected textMeasurer: ITextMeasurer;
@@ -340,11 +343,11 @@ export abstract class MusicSheetDrawer {
             this.drawDashes(staffLine.LyricsDashes);
         }
 
-        if (this.graphicalMusicSheet.SkyLineVisible) {
+        if (this.skyLineVisible) {
             this.drawSkyLine(staffLine);
         }
 
-        if (this.graphicalMusicSheet.BottomLineVisible) {
+        if (this.bottomLineVisible) {
             this.drawBottomLine(staffLine);
         }
     }
@@ -463,10 +466,8 @@ export abstract class MusicSheetDrawer {
                                                          (relBoundingRect.width + 0), (relBoundingRect.height + 0));
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            if (type === "all") {
-                this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 1.2, TextAlignment.CenterCenter),
-                                 layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
-            }
+            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignment.CenterCenter),
+                             layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
         layer++;
         startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
