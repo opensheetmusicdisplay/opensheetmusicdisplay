@@ -127,10 +127,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * Will be only called if the displayed accidental is different from the original (e.g. a C# with C# as key instruction)
      * @param graphicalNote
      * @param pitch The pitch which will be rendered.
-     * @param grace
-     * @param graceScalingFactor
      */
-    public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
+    public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void {
         // ToDo: set accidental here from pitch.Accidental
         const note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
         note.setPitch(pitch);

@@ -1455,11 +1455,7 @@ export abstract class MusicSheetCalculator {
             );
         }
         graphicalNote.sourceNote.halfTone = pitch.getHalfTone();
-        let scalingFactor: number = 1.0;
-        if (grace) {
-            scalingFactor = this.rules.GraceNoteScalingFactor;
-        }
-        accidentalCalculator.checkAccidental(graphicalNote, pitch, grace, scalingFactor);
+        accidentalCalculator.checkAccidental(graphicalNote, pitch);
     }
 
     private updateSkyBottomLines(): void {

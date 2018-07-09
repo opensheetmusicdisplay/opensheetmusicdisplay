@@ -34,7 +34,7 @@ export class AccidentalCalculator {
         }
     }
 
-    public checkAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
+    public checkAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void {
         if (pitch === undefined) {
             return;
         }
@@ -48,7 +48,7 @@ export class AccidentalCalculator {
                 this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
             }
             this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
-            this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+            this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
         } else if (
             this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) !== -1
             && ((pitchKeyGivenInMeasureDict && this.currentInMeasureNoteAlterationsDict.getValue(pitchKey) !== pitch.Accidental)
@@ -72,7 +72,7 @@ export class AccidentalCalculator {
                 } else {
                     this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
                 }
-                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
             }
         } else {
             if (pitch.Accidental !== AccidentalEnum.NONE) {
@@ -80,11 +80,11 @@ export class AccidentalCalculator {
                     this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
                 }
                 this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
-                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+                MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
             } else {
                 if (isInCurrentAlterationsToKeyList) {
                     this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
-                    MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+                    MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
                 }
             }
         }
