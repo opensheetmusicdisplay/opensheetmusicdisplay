@@ -48,8 +48,8 @@ module.exports = function (config) {
             // webpack watches dependencies
 
             // copy parts of webpack configuration to use minimal effort here
-            devtool: 'cheap-module-eval-source-map',
-            mode: 'production',
+            devtool: process.env.CI ? false : 'cheap-module-eval-source-map',
+            mode: process.env.CI ? 'production' : 'development',
             module: {
                 rules: common.module.rules
             },
@@ -85,7 +85,10 @@ module.exports = function (config) {
         logLevel: config.LOG_ERROR,
 
         client: {
-            captureConsole: true
+            captureConsole: true,
+            mocha: {
+                timeout: process.env.timeout || 2000
+            }
         },
 
         // enable / disable watching file and executing tests whenever any file changes

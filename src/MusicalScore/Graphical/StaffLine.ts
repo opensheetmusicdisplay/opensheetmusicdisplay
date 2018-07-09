@@ -4,23 +4,23 @@ import {Instrument} from "../Instrument";
 import {GraphicalLine} from "./GraphicalLine";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
-import {StaffMeasure} from "./StaffMeasure";
+import {GraphicalMeasure} from "./GraphicalMeasure";
 import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
  * (one instrument, one line, until a line break)
  */
 export abstract class StaffLine extends GraphicalObject {
-    protected measures: StaffMeasure[] = [];
+    protected measures: GraphicalMeasure[] = [];
     protected staffLines: GraphicalLine[] = new Array(5);
     protected parentMusicSystem: MusicSystem;
     protected parentStaff: Staff;
-    protected skyLine: number[];
-    protected bottomLine: number[];
+    protected skyBottomLine: SkyBottomLineCalculator;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
 
@@ -29,13 +29,14 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentMusicSystem = parentSystem;
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
+        this.skyBottomLine = new SkyBottomLineCalculator(this);
     }
 
-    public get Measures(): StaffMeasure[] {
+    public get Measures(): GraphicalMeasure[] {
         return this.measures;
     }
 
-    public set Measures(value: StaffMeasure[]) {
+    public set Measures(value: GraphicalMeasure[]) {
         this.measures = value;
     }
 
@@ -84,20 +85,16 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentStaff = value;
     }
 
-    public get SkyLine(): number[] {
-        return this.skyLine;
+    public get SkyBottomLineCalculator(): SkyBottomLineCalculator {
+        return this.skyBottomLine;
     }
 
-    public set SkyLine(value: number[]) {
-        this.skyLine = value;
+    public get SkyLine(): number[] {
+        return this.skyBottomLine.SkyLine;
     }
 
     public get BottomLine(): number[] {
-        return this.bottomLine;
-    }
-
-    public set BottomLine(value: number[]) {
-        this.bottomLine = value;
+        return this.skyBottomLine.BottomLine;
     }
 
     public addActivitySymbolClickArea(): void {
@@ -128,7 +125,7 @@ export abstract class StaffLine extends GraphicalObject {
     public findClosestStaffEntry(xPosition: number): GraphicalStaffEntry {
         let closestStaffentry: GraphicalStaffEntry = undefined;
         for (let idx: number = 0, len: number = this.Measures.length; idx < len; ++idx) {
-            const graphicalMeasure: StaffMeasure = this.Measures[idx];
+            const graphicalMeasure: GraphicalMeasure = this.Measures[idx];
             for (let idx2: number = 0, len2: number = graphicalMeasure.staffEntries.length; idx2 < len2; ++idx2) {
                 const graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx2];
                 if (

@@ -4,28 +4,24 @@ import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {Pitch} from "../../Common/DataObjects/Pitch";
-import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
+import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 
 /**
  * The graphical counterpart of a [[Note]]
  */
 export class GraphicalNote extends GraphicalObject {
-    constructor(note: Note, parent: GraphicalStaffEntry, graphicalNoteLength: Fraction = undefined) {
+    constructor(note: Note, parent: GraphicalVoiceEntry, graphicalNoteLength: Fraction = undefined) {
         super();
         this.sourceNote = note;
-        this.parentStaffEntry = parent;
+        this.parentVoiceEntry = parent;
         this.PositionAndShape = new BoundingBox(this, parent.PositionAndShape);
         if (graphicalNoteLength !== undefined) {
             this.graphicalNoteLength = graphicalNoteLength;
         } else {
-            if (note.NoteTie !== undefined) {
-                this.graphicalNoteLength = note.calculateNoteLengthWithoutTie();
-            } else {
-                this.graphicalNoteLength = note.Length;
-            }
+            this.graphicalNoteLength = note.Length;
         }
 
         this.numberOfDots = this.calculateNumberOfNeededDots(this.graphicalNoteLength);
@@ -33,18 +29,8 @@ export class GraphicalNote extends GraphicalObject {
 
     public sourceNote: Note;
     public graphicalNoteLength: Fraction;
-    public parentStaffEntry: GraphicalStaffEntry;
+    public parentVoiceEntry: GraphicalVoiceEntry;
     public numberOfDots: number;
-
-    public get ParentList(): GraphicalNote[] {
-        for (let idx: number = 0, len: number = this.parentStaffEntry.notes.length; idx < len; ++idx) {
-            const graphicalNotes: GraphicalNote[] = this.parentStaffEntry.notes[idx];
-            if (graphicalNotes.indexOf(this) !== -1) {
-                return graphicalNotes;
-            }
-        }
-        return undefined;
-    }
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;

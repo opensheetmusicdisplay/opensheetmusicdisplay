@@ -1,4 +1,7 @@
+
+
 declare namespace Vex {
+
     export module Flow {
         const RESOLUTION: any;
 
@@ -28,7 +31,7 @@ declare namespace Vex {
 
             public getH(): number;
 
-            public draw(ctx: Vex.Flow.RenderContext) : void;            
+            public draw(ctx: Vex.Flow.RenderContext): void;
         }
 
         export class Tickable {
@@ -37,6 +40,8 @@ declare namespace Vex {
             public setStave(stave: Stave);
 
             public getBoundingBox(): BoundingBox;
+
+            public getAttribute(arg: string): string;
         }
 
         export class Voice {
@@ -52,9 +57,9 @@ declare namespace Vex {
 
             public setStave(stave: Stave): Voice;
 
-            public addTickables(notes: StaveNote[]): Voice;
+            public addTickables(tickables: Tickable[]): Voice;
 
-            public addTickable(note: StaveNote): Voice;
+            public addTickable(tickable: Tickable): Voice;
 
             public setMode(mode: any): Voice;
 
@@ -71,9 +76,16 @@ declare namespace Vex {
         export class StemmableNote extends Note {
             public getStemDirection(): number;
             public setStemDirection(direction: number): StemmableNote;
+            public x_shift: number;
+            public getAbsoluteX(): number;
         }
 
-        export class StaveNote extends StemmableNote{
+        export class GhostNote extends StemmableNote {
+            constructor(note_struct: any);
+            public setStave(stave): void;
+        }
+
+        export class StaveNote extends StemmableNote {
             constructor(note_struct: any);
 
             public getNoteHeadBounds(): any;
@@ -129,7 +141,7 @@ declare namespace Vex {
             public setWidth(width: number): Stave;
 
             public getNoteStartX(): number;
-            
+
             public getModifierXShift(): number;
 
             public getNoteEndX(): number;
@@ -137,6 +149,8 @@ declare namespace Vex {
             public setNoteStartX(x: number): Stave;
 
             public setKeySignature(keySpec: any, cancelKeySpec: any, position: any): Stave;
+
+            public setText(text: string, position: number, options: any): void;
 
             public format(): void;
 
@@ -149,7 +163,7 @@ declare namespace Vex {
             public getYForLine(y: number): number;
 
             public getModifiers(pos: any, cat: any): Clef[]; // FIXME
-            
+
             public setContext(ctx: RenderContext): Stave;
 
             public addModifier(mod: any, pos: any): void;
@@ -173,10 +187,21 @@ declare namespace Vex {
             public setPosition(position: number): Modifier;
         }
 
+
         export class StaveModifier extends Modifier {
-            public static Position: any;
-            
+            public static get Position() {
+                return {
+                    LEFT: 1,
+                    RIGHT: 2,
+                    ABOVE: 3,
+                    BELOW: 4,
+                    BEGIN: 5,
+                    END: 6,
+                };
+            }
+
             public getPosition(): number;
+
         }
 
         export class Repetition extends StaveModifier {
@@ -209,7 +234,7 @@ declare namespace Vex {
 
             public resize(a: number, b: number): void;
 
-            public getContext(): CanvasContext|SVGContext;
+            public getContext(): CanvasContext | SVGContext;
         }
 
         export class TimeSignature extends StaveModifier {
@@ -230,7 +255,7 @@ declare namespace Vex {
         export class Articulation extends Modifier {
             constructor(type: string);
         }
-        
+
         export class Beam {
             constructor(notes: StaveNote[], auto_stem: boolean);
 
@@ -252,8 +277,14 @@ declare namespace Vex {
             public fillRect(x: number, y: number, width: number, height: number): RenderContext
             public fillText(text: string, x: number, y: number): RenderContext;
             public setFont(family: string, size: number, weight: string): RenderContext;
+            public beginPath(): RenderContext;
+            public moveTo(x, y): RenderContext;
+            public lineTo(x, y): RenderContext;
+            public closePath(): RenderContext;
+            public stroke(): RenderContext;
             public save(): RenderContext;
             public restore(): RenderContext;
+            public lineWidth: number;
         }
 
         export class CanvasContext extends RenderContext {
@@ -265,10 +296,10 @@ declare namespace Vex {
             public attributes: any;
             public state: any;
         }
-        
+
         export class StaveConnector {
             constructor(top: Stave, bottom: Stave);
-                        
+
             public static type: any;
 
             public setType(type: any): StaveConnector;
@@ -278,9 +309,9 @@ declare namespace Vex {
             public setXShift(shift: number): StaveConnector;
 
             public top_stave: Stave;
-            
+
             public bottom_stave: Stave;
-            
+
             public thickness: number;
 
             public width: number;

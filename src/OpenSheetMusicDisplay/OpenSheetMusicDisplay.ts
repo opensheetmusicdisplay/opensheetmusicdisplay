@@ -85,10 +85,15 @@ export class OpenSheetMusicDisplay {
                     }
                 );
             }
+            // Javascript loads strings as utf-16, which is wonderful BS if you want to parse UTF-8 :S
+            if (str.substr(0, 3) === "\uf7ef\uf7bb\uf7bf") {
+                // UTF with BOM detected, truncate first three bytes and pass along
+                return self.load(str.substr(3));
+            }
             if (str.substr(0, 5) === "<?xml") {
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
-                content = parser.parseFromString(str, "text/xml");
+                content = parser.parseFromString(str, "application/xml");
             } else if (str.length < 2083) {
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
@@ -268,4 +273,37 @@ export class OpenSheetMusicDisplay {
         window.setTimeout(startCallback, 0);
         window.setTimeout(endCallback, 1);
     }
+
+    //#region GETTER / SETTER
+    public set DrawSkyLine(value: boolean) {
+        if (this.drawer) {
+            this.drawer.skyLineVisible = value;
+            this.render();
+        }
+    }
+
+    public get DrawSkyLine(): boolean {
+        return this.drawer.skyLineVisible;
+    }
+
+    public set DrawBottomLine(value: boolean) {
+        if (this.drawer) {
+            this.drawer.bottomLineVisible = value;
+            this.render();
+        }
+    }
+
+    public get DrawBottomLine(): boolean {
+        return this.drawer.bottomLineVisible;
+    }
+
+    public set DrawBoundingBox(value: string) {
+        this.drawer.drawableBoundingBoxElement = value;
+        this.render();
+    }
+
+    public get DrawBoundingBox(): string {
+        return this.drawer.drawableBoundingBoxElement;
+    }
+    //#endregion
 }

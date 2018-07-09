@@ -37,9 +37,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         error_tr,
         canvas,
         select,
+        selectBounding,
+        skylineDebug,
+        bottomlineDebug,
         zoomIn,
         zoomOut,
-        size,
         zoomDiv,
         custom,
         nextCursorBtn,
@@ -54,10 +56,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         err = document.getElementById("error-td");
         error_tr = document.getElementById("error-tr");
-        size = document.getElementById("size-str");
         zoomDiv = document.getElementById("zoom-str");
         custom = document.createElement("option");
         select = document.getElementById("select");
+        selectBounding = document.getElementById("selectBounding");
+        skylineDebug = document.getElementById("skylineDebug");
+        bottomlineDebug = document.getElementById("bottomlineDebug");
         zoomIn = document.getElementById("zoom-in-btn");
         zoomOut = document.getElementById("zoom-out-btn");
         canvas = document.createElement("div");
@@ -80,9 +84,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             select.appendChild(option);
         }
         select.onchange = selectOnChange;
+        selectBounding.onchange = selectBoundingOnChange;
 
         // Pre-select default music piece
-        select.value = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
 
         custom.appendChild(document.createTextNode("Custom"));
 
@@ -95,6 +99,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             zoom /= 1.2;
             scale();
         };
+
+        skylineDebug.onclick = function() {
+            openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+        }
+
+        bottomlineDebug .onclick = function() {
+            openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+        }
 
         // Create OSMD object and canvas
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, backendSelect.value);
@@ -174,6 +186,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
       window.setTimeout(endCallback, 1);
     }
 
+    function selectBoundingOnChange(evt) {
+        var value = evt.target.value;
+        openSheetMusicDisplay.DrawBoundingBox = value;
+    }
+
     function selectOnChange(str) {
         error();
         disable();
@@ -187,12 +204,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 return openSheetMusicDisplay.render();
             },
             function(e) {
+                console.warn(e.stack);
                 error("Error reading sheet: " + e);
             }
         ).then(
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
+                console.warn(e.stack);
                 error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
                 onLoadingEnd(isCustom);
             }
@@ -209,7 +228,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function logCanvasSize() {
-        size.innerHTML = canvas.offsetWidth + "px";
         zoomDiv.innerHTML = Math.floor(zoom * 100.0) + "%";
     }
 
