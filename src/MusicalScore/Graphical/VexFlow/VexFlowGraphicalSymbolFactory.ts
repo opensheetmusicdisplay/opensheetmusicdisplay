@@ -80,7 +80,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
      * Create an empty staffEntry which will be used for grace notes.
      * it will be linked to the given staffEntryParent, which is a staffEntry for normal notes.
-     * Grace notes are always given before (rarely also after) normal notes.
+     * Grace notes are almost always given before (rarely also after) normal notes.
      * @param staffEntryParent
      * @param measure
      * @returns {VexFlowStaffEntry}

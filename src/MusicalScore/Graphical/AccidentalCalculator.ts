@@ -56,7 +56,7 @@ export class AccidentalCalculator {
         ) {
             this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
             this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.Accidental);
-            this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch, grace, graceScalingFactor);
+            this.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
         }*/
 
         const isInCurrentAlterationsToKeyList: boolean = this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey) >= 0;

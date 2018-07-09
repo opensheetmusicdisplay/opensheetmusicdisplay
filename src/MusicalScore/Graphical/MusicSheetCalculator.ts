@@ -288,7 +288,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
-                               graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
+                               graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -907,7 +907,7 @@ export abstract class MusicSheetCalculator {
                                accidentalCalculator: AccidentalCalculator, openLyricWords: LyricWord[],
                                activeClef: ClefInstruction,
                                openTuplets: Tuplet[], openBeams: Beam[],
-                               octaveShiftValue: OctaveEnum, grace: boolean = false, linkedNotes: Note[] = undefined,
+                               octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
         this.calculateStemDirectionFromVoices(voiceEntry);
         const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
@@ -917,13 +917,13 @@ export abstract class MusicSheetCalculator {
                 continue;
             }
             let graphicalNote: GraphicalNote;
-            if (grace) {
+            if (voiceEntry.IsGrace) {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, octaveShiftValue);
             } else {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, undefined);
             }
             if (note.Pitch !== undefined) {
-                this.checkNoteForAccidental(graphicalNote, accidentalCalculator, activeClef, octaveShiftValue, grace);
+                this.checkNoteForAccidental(graphicalNote, accidentalCalculator, activeClef, octaveShiftValue);
             }
             this.resetYPositionForLeadSheet(graphicalNote.PositionAndShape);
             graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(gve, graphicalNote);
@@ -967,7 +967,7 @@ export abstract class MusicSheetCalculator {
                 this.handleVoiceEntry(
                     graceVoiceEntry, graceStaffEntry, accidentalCalculator, lyricWords,
                     activeClef, tuplets,
-                    beams, octaveShiftValue, true
+                    beams, octaveShiftValue
                 );
             }
         }
@@ -982,7 +982,6 @@ export abstract class MusicSheetCalculator {
     protected layoutVoiceEntries(graphicalStaffEntry: GraphicalStaffEntry): void {
         graphicalStaffEntry.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
         if (!this.leadSheet) {
-            const isGraceStaffEntry: boolean = graphicalStaffEntry.staffEntryParent !== undefined;
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 const graphicalNotes: GraphicalNote[] = gve.notes;
                 if (graphicalNotes.length === 0) {
@@ -990,7 +989,7 @@ export abstract class MusicSheetCalculator {
                 }
                 const voiceEntry: VoiceEntry = graphicalNotes[0].sourceNote.ParentVoiceEntry;
                 const hasPitchedNote: boolean = graphicalNotes[0].sourceNote.Pitch !== undefined;
-                this.layoutVoiceEntry(voiceEntry, graphicalNotes, graphicalStaffEntry, hasPitchedNote, isGraceStaffEntry);
+                this.layoutVoiceEntry(voiceEntry, graphicalNotes, graphicalStaffEntry, hasPitchedNote);
             }
         }
     }
@@ -1382,7 +1381,7 @@ export abstract class MusicSheetCalculator {
                         voiceEntry, graphicalStaffEntry,
                         accidentalCalculator, openLyricWords,
                         activeClefs[staffIndex], openTuplets,
-                        openBeams, octaveShiftValue, false, linkedNotes,
+                        openBeams, octaveShiftValue, linkedNotes,
                         sourceStaffEntry
                     );
                     this.handleVoiceEntryGraceNotes(
@@ -1447,7 +1446,7 @@ export abstract class MusicSheetCalculator {
     }
 
     private checkNoteForAccidental(graphicalNote: GraphicalNote, accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
-                                   octaveEnum: OctaveEnum, grace: boolean = false): void {
+                                   octaveEnum: OctaveEnum): void {
         let pitch: Pitch = graphicalNote.sourceNote.Pitch;
         const transpose: number = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
         if (transpose !== 0 && graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion) {
