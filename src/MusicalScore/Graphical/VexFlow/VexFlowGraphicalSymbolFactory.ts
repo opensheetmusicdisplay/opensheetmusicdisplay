@@ -80,7 +80,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
      * Create an empty staffEntry which will be used for grace notes.
      * it will be linked to the given staffEntryParent, which is a staffEntry for normal notes.
-     * Grace notes are always given before (rarely also after) normal notes.
+     * Grace notes are almost always given before (rarely also after) normal notes.
      * @param staffEntryParent
      * @param measure
      * @returns {VexFlowStaffEntry}
@@ -127,10 +127,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * Will be only called if the displayed accidental is different from the original (e.g. a C# with C# as key instruction)
      * @param graphicalNote
      * @param pitch The pitch which will be rendered.
-     * @param grace
-     * @param graceScalingFactor
      */
-    public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
+    public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void {
         // ToDo: set accidental here from pitch.Accidental
         const note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
         note.setPitch(pitch);

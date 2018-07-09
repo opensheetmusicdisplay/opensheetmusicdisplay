@@ -146,10 +146,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param graphicalNotes
    * @param graphicalStaffEntry
    * @param hasPitchedNote
-   * @param isGraceStaffEntry
    */
   protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry,
-                             hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
+                             hasPitchedNote: boolean): void {
     return;
   }
 
