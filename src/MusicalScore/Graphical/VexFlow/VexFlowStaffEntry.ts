@@ -43,5 +43,6 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
         this.PositionAndShape.RelativePosition.x = (tickablePosition - stave.getNoteStartX() + modifierOffset) / unitInPixels;
+        this.PositionAndShape.calculateBoundingBox();
     }
 }

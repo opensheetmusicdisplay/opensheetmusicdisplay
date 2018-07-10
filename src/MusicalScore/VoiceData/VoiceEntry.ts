@@ -17,14 +17,16 @@ import Dictionary from "typescript-collections/dist/lib/Dictionary";
 export class VoiceEntry {
     /**
      *
-     * @param timestamp - The relative timestamp within the source measure.
+     * @param timestamp The relative timestamp within the source measure.
      * @param parentVoice
      * @param parentSourceStaffEntry
+     * @param isGrace States whether the VoiceEntry has (only) grace notes.
      */
-    constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry) {
+    constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry, isGrace: boolean = false) {
         this.timestamp = timestamp;
         this.parentVoice = parentVoice;
         this.parentSourceStaffEntry = parentSourceStaffEntry;
+        this.isGrace = isGrace;
     }
 
     public graceVoiceEntriesBefore: VoiceEntry[];
@@ -34,6 +36,7 @@ export class VoiceEntry {
     private parentSourceStaffEntry: SourceStaffEntry;
     private timestamp: Fraction;
     private notes: Note[] = [];
+    private isGrace: boolean;
     private articulations: ArticulationEnum[] = [];
     private technicalInstructions: TechnicalInstruction[] = [];
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
@@ -55,6 +58,12 @@ export class VoiceEntry {
     }
     public get Notes(): Note[] {
         return this.notes;
+    }
+    public get IsGrace(): boolean {
+        return this.isGrace;
+    }
+    public set IsGrace(value: boolean) {
+        this.isGrace = value;
     }
     public get Articulations(): ArticulationEnum[] {
         return this.articulations;

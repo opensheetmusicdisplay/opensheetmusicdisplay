@@ -15,6 +15,13 @@ export class TestUtils {
         return ((window as any).__raw__)[path];
     }
 
+    public static getDivElement(document: Document): HTMLElement {
+        const div: HTMLElement = document.createElement("div");
+        const body: HTMLElement = document.getElementsByTagName("body")[0];
+        body.appendChild(div);
+        return div;
+    }
+
     /**
      * Retrieve from a XML document the first element with name "score-partwise"
      * @param doc is the XML Document

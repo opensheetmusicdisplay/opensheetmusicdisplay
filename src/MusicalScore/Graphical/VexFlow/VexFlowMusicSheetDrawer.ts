@@ -10,12 +10,13 @@ import {GraphicalObject} from "../GraphicalObject";
 import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
-import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
-import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
-import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
-import { StaffLine } from "../StaffLine";
-import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
-import { VexFlowInstantaniousDynamicExpression } from "./VexFlowInstantaniousDynamicExpression";
+import {VexFlowOctaveShift} from "./VexFlowOctaveShift";
+import {VexFlowInstantaniousDynamicExpression} from "./VexFlowInstantaniousDynamicExpression";
+import {VexFlowInstrumentBracket} from "./VexFlowInstrumentBracket";
+import {VexFlowInstrumentBrace} from "./VexFlowInstrumentBrace";
+import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
+import {StaffLine} from "../StaffLine";
+import {EngravingRules} from "../EngravingRules";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -76,22 +77,105 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
         measure.draw(this.backend.getContext());
-        for (const voiceID in measure.vfVoices) {
-            if (measure.vfVoices.hasOwnProperty(voiceID)) {
-                const tickables: Vex.Flow.Tickable[] = measure.vfVoices[voiceID].tickables;
-                for (const tick of tickables) {
-                    if ((<any>tick).getAttribute("type") === "StaveNote" && process.env.DEBUG) {
-                        tick.getBoundingBox().draw(this.backend.getContext());
-                    }
-                }
-            }
-        }
 
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
             this.drawStaffEntry(staffEntry);
         }
     }
+
+    // private drawPixel(coord: PointF2D): void {
+    //     coord = this.applyScreenTransformation(coord);
+    //     const ctx: any = this.backend.getContext();
+    //     const oldStyle: string = ctx.fillStyle;
+    //     ctx.fillStyle = "#00FF00FF";
+    //     ctx.fillRect( coord.x, coord.y, 2, 2 );
+    //     ctx.fillStyle = oldStyle;
+    // }
+
+    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF"): void {
+        start = this.applyScreenTransformation(start);
+        stop = this.applyScreenTransformation(stop);
+        this.backend.renderLine(start, stop, color);
+    }
+
+    protected drawSkyLine(staffline: StaffLine): void {
+        const startPosition: PointF2D = staffline.PositionAndShape.AbsolutePosition;
+        const width: number = staffline.PositionAndShape.Size.width;
+        this.drawSampledLine(staffline.SkyLine, startPosition, width);
+    }
+
+    protected drawBottomLine(staffline: StaffLine): void {
+        const startPosition: PointF2D = new PointF2D(staffline.PositionAndShape.AbsolutePosition.x,
+                                                     staffline.PositionAndShape.AbsolutePosition.y);
+        const width: number = staffline.PositionAndShape.Size.width;
+        this.drawSampledLine(staffline.BottomLine, startPosition, width, "#0000FFFF");
+    }
+
+    /**
+     * Draw a line with a width and start point in a chosen color (used for skyline/bottom line debugging) from
+     * a simple array
+     * @param line numeric array. 0 marks the base line. Direction given by sign. Dimensions in units
+     * @param startPosition Start position in units
+     * @param width Max line width in units
+     * @param color Color to paint in. Default is red
+     */
+    private drawSampledLine(line: number[], startPosition: PointF2D, width: number, color: string = "#FF0000FF"): void {
+        const indices: number[] = [];
+        let currentValue: number = 0;
+
+        for (let i: number = 0; i < line.length; i++) {
+            if (line[i] !== currentValue) {
+                indices.push(i);
+                currentValue = line[i];
+            }
+        }
+
+        const absolute: PointF2D = startPosition;
+        if (indices.length > 0) {
+            const samplingUnit: number = EngravingRules.Rules.SamplingUnit;
+
+            let horizontalStart: PointF2D = new PointF2D(absolute.x, absolute.y);
+            let horizontalEnd: PointF2D = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y);
+            this.drawLine(horizontalStart, horizontalEnd, color);
+
+            let verticalStart: PointF2D;
+            let verticalEnd: PointF2D;
+
+            if (line[0] >= 0) {
+                verticalStart = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y);
+                verticalEnd = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y + line[indices[0]]);
+                this.drawLine(verticalStart, verticalEnd, color);
+            }
+
+            for (let i: number = 1; i < indices.length; i++) {
+                horizontalStart = new PointF2D(indices[i - 1] / samplingUnit + absolute.x, absolute.y + line[indices[i - 1]]);
+                horizontalEnd = new PointF2D(indices[i] / samplingUnit + absolute.x, absolute.y + line[indices[i - 1]]);
+                this.drawLine(horizontalStart, horizontalEnd, color);
+
+                verticalStart = new PointF2D(indices[i] / samplingUnit + absolute.x, absolute.y + line[indices[i - 1]]);
+                verticalEnd = new PointF2D(indices[i] / samplingUnit + absolute.x, absolute.y + line[indices[i]]);
+                this.drawLine(verticalStart, verticalEnd, color);
+            }
+
+            if (indices[indices.length - 1] < line.length) {
+                horizontalStart = new PointF2D(indices[indices.length - 1] / samplingUnit + absolute.x, absolute.y + line[indices[indices.length - 1]]);
+                horizontalEnd = new PointF2D(absolute.x + width, absolute.y + line[indices[indices.length - 1]]);
+                this.drawLine(horizontalStart, horizontalEnd, color);
+            } else {
+                horizontalStart = new PointF2D(indices[indices.length - 1] / samplingUnit + absolute.x, absolute.y);
+                horizontalEnd = new PointF2D(absolute.x + width, absolute.y);
+                this.drawLine(horizontalStart, horizontalEnd, color);
+            }
+        } else {
+            // Flat line
+            const start: PointF2D = new PointF2D(absolute.x, absolute.y);
+            const end: PointF2D = new PointF2D(absolute.x + width, absolute.y);
+            this.drawLine(start, end, color);
+        }
+    }
+
+
 
     private drawStaffEntry(staffEntry: GraphicalStaffEntry): void {
         // Draw ChordSymbol

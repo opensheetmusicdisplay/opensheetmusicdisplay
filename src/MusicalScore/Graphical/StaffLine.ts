@@ -10,6 +10,7 @@ import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -23,6 +24,7 @@ export abstract class StaffLine extends GraphicalObject {
     protected skyLine: number[];
     protected bottomLine: number[];
     protected octaveShifts: GraphicalOctaveShift[] = [];
+    protected skyBottomLine: SkyBottomLineCalculator;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
 
@@ -31,6 +33,7 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentMusicSystem = parentSystem;
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
+        this.skyBottomLine = new SkyBottomLineCalculator(this);
     }
 
     public get Measures(): GraphicalMeasure[] {
@@ -86,20 +89,16 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentStaff = value;
     }
 
-    public get SkyLine(): number[] {
-        return this.skyLine;
+    public get SkyBottomLineCalculator(): SkyBottomLineCalculator {
+        return this.skyBottomLine;
     }
 
-    public set SkyLine(value: number[]) {
-        this.skyLine = value;
+    public get SkyLine(): number[] {
+        return this.skyBottomLine.SkyLine;
     }
 
     public get BottomLine(): number[] {
-        return this.bottomLine;
-    }
-
-    public set BottomLine(value: number[]) {
-        this.bottomLine = value;
+        return this.skyBottomLine.BottomLine;
     }
 
     public get OctaveShifts(): GraphicalOctaveShift[] {
