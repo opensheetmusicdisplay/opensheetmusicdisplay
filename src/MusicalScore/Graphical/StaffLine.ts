@@ -9,8 +9,8 @@ import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
-import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -21,8 +21,6 @@ export abstract class StaffLine extends GraphicalObject {
     protected staffLines: GraphicalLine[] = new Array(5);
     protected parentMusicSystem: MusicSystem;
     protected parentStaff: Staff;
-    protected skyLine: number[];
-    protected bottomLine: number[];
     protected octaveShifts: GraphicalOctaveShift[] = [];
     protected skyBottomLine: SkyBottomLineCalculator;
     protected lyricLines: GraphicalLine[] = [];

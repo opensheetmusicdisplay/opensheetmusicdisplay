@@ -33,12 +33,3 @@ export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniou
         return this.mLabel;
     }
 }
-// import { InstantaniousDynamicExpression } from "../../VoiceData/Expressions/InstantaniousDynamicExpression";
-// import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
-
-// export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniousDynamicExpression {
-
-//     constructor(instantaniousDynamicExpression: InstantaniousDynamicExpression, staffEntry: GraphicalStaffEntry) {
-//         super(instantaniousDynamicExpression);
-//     }
-// }
