@@ -56,7 +56,7 @@ export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniou
           // get the minimum corresponding SkyLine value
         const bottomLineMaxValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(start, end);
         relativeY = bottomLineMaxValue;
-        console.log(start, end, relativeY, this.mLabel.PositionAndShape.BorderMarginBottom)
+        // console.log(start, end, relativeY, this.mLabel.PositionAndShape.BorderMarginBottom)
         skyBottomLineCalculator.updateBottomLineInRange(start, end, relativeY + this.mLabel.PositionAndShape.BorderMarginBottom);
     }
 
