@@ -250,11 +250,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateDynamicExpressionsForSingleMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+
     if (multiExpression.InstantaniousDynamic) {
         const timeStamp: Fraction = multiExpression.Timestamp;
         const measure: GraphicalMeasure = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex];
         const startStaffEntry: GraphicalStaffEntry = measure.findGraphicalStaffEntryFromTimestamp(timeStamp);
         const idx: VexFlowInstantaniousDynamicExpression = new VexFlowInstantaniousDynamicExpression(multiExpression.InstantaniousDynamic, startStaffEntry);
+        idx.calculcateBottomLine(measure);
         (measure as VexFlowMeasure).instantaniousDynamics.push(idx);
     }
   }
