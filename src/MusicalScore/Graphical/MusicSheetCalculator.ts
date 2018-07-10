@@ -503,8 +503,7 @@ export abstract class MusicSheetCalculator {
                     }
 
                     // check BottomLine in this range and take the maximum between the two values
-                    const bottomLineMax: number = skyBottomLineCalculator.getBottomLineMaxInRange(minMarginLeft, maxMarginRight)
-                        + this.rules.StaffHeight;
+                    const bottomLineMax: number = skyBottomLineCalculator.getBottomLineMaxInRange(minMarginLeft, maxMarginRight);
                     lyricsStartYPosition = Math.max(lyricsStartYPosition, bottomLineMax);
                 }
             }
@@ -817,7 +816,7 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
-     * Do layout on staff measures with only consist of a full rest.
+     * Do layout on staff measures which only consist of a full rest.
      * @param rest
      * @param gse
      * @param measure
@@ -1178,7 +1177,7 @@ export abstract class MusicSheetCalculator {
     protected calculatePageLabels(page: GraphicalMusicPage): void {
 
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
-        // because the page are only available now
+        // because the page is only available now
         let firstSystemAbsoluteTopMargin: number = 10;
         if (page.MusicSystems.length > 0) {
             const firstMusicSystem: MusicSystem = page.MusicSystems[0];
@@ -1724,7 +1723,7 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
-        // the fill in the lyric word dashes and lyrics extends/underscores
+        // then fill in the lyric word dashes and lyrics extends/underscores
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
             for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
