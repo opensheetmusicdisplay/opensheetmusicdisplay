@@ -3,10 +3,8 @@ import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {StaffLine} from "../StaffLine";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
-import {MusicSystem} from "../MusicSystem";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
-import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {GraphicalTie} from "../GraphicalTie";
 import {Tie} from "../../VoiceData/Tie";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
@@ -22,7 +20,6 @@ import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
-
 import Vex = require("vexflow");
 import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
@@ -134,7 +131,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
 
   protected updateStaffLineBorders(staffLine: StaffLine): void {
-    return;
+      staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
   }
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -149,10 +146,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param graphicalNotes
    * @param graphicalStaffEntry
    * @param hasPitchedNote
-   * @param isGraceStaffEntry
    */
   protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry,
-                             hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
+                             hasPitchedNote: boolean): void {
     return;
   }
 
@@ -170,26 +166,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * furthermore the y positions of the systems themselves.
    */
   protected calculateSystemYLayout(): void {
-    for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-      const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-      if (!this.leadSheet) {
-        let globalY: number = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
-          this.rules.TitleBottomDistance;
-        for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-          const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-          // calculate y positions of stafflines within system
-          let y: number = 0;
-          for (const line of musicSystem.StaffLines) {
-            line.PositionAndShape.RelativePosition.y = y;
-            y += 10;
-          }
-          // set y positions of systems using the previous system and a fixed distance.
-          musicSystem.PositionAndShape.BorderBottom = y + 0;
-          musicSystem.PositionAndShape.RelativePosition.x = this.rules.PageLeftMargin + this.rules.SystemLeftMargin;
-          musicSystem.PositionAndShape.RelativePosition.y = globalY;
-          globalY += y + 5;
-        }
-      }
+    for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
+            for (const musicSystem of graphicalMusicPage.MusicSystems) {
+                this.optimizeDistanceBetweenStaffLines(musicSystem);
+            }
+
+            // set y positions of systems using the previous system and a fixed distance.
+            this.calculateMusicSystemsRelativePositions(graphicalMusicPage);
     }
   }
 

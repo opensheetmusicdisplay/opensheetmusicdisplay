@@ -284,8 +284,14 @@ declare namespace Vex {
             public fillRect(x: number, y: number, width: number, height: number): RenderContext
             public fillText(text: string, x: number, y: number): RenderContext;
             public setFont(family: string, size: number, weight: string): RenderContext;
+            public beginPath(): RenderContext;
+            public moveTo(x, y): RenderContext;
+            public lineTo(x, y): RenderContext;
+            public closePath(): RenderContext;
+            public stroke(): RenderContext;
             public save(): RenderContext;
             public restore(): RenderContext;
+            public lineWidth: number;
         }
 
         export class CanvasContext extends RenderContext {

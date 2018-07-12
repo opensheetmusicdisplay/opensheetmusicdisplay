@@ -28,7 +28,6 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 const staveNote: Vex.Flow.StaveNote = tickable as Vex.Flow.StaveNote;
                 tickablePosition += staveNote.getNoteHeadEndX() - staveNote.getGlyphWidth() / 2;
             } else {
-                console.log(tickable);
                 const ghostNote: Vex.Flow.GhostNote = tickable;
                 // That's basically the same as the StaveNote does.
                 tickablePosition = ghostNote.getAbsoluteX() + ghostNote.x_shift;
@@ -44,5 +43,6 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
         this.PositionAndShape.RelativePosition.x = (tickablePosition - stave.getNoteStartX() + modifierOffset) / unitInPixels;
+        this.PositionAndShape.calculateBoundingBox();
     }
 }

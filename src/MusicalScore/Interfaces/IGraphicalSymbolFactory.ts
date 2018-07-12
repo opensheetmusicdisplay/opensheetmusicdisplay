@@ -45,7 +45,7 @@ export interface IGraphicalSymbolFactory {
         activeClef: ClefInstruction,
         octaveShift: OctaveEnum): GraphicalNote;
 
-    addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void;
+    addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void;
 
     addFermataAtTiedEndNote(tiedNote: Note, graphicalStaffEntry: GraphicalStaffEntry): void;
 

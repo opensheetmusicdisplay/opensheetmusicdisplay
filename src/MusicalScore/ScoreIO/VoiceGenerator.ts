@@ -588,7 +588,7 @@ export class VoiceGenerator {
     let graceVoiceEntry: VoiceEntry = undefined;
     if (!graceChord) {
       graceVoiceEntry = new VoiceEntry(
-        new Fraction(0, 1), this.currentVoiceEntry.ParentVoice, this.currentStaffEntry
+        new Fraction(0, 1), this.currentVoiceEntry.ParentVoice, this.currentStaffEntry, true
       );
       if (this.currentVoiceEntry.graceVoiceEntriesBefore === undefined) {
         this.currentVoiceEntry.graceVoiceEntriesBefore = [];
