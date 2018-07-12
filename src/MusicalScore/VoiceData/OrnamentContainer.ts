@@ -35,5 +35,17 @@ export enum OrnamentEnum {
     DelayedTurn,
     DelayedInvertedTurn,
     Mordent,
-    InvertedMordent
+    InvertedMordent,
+    // the following ornaments are not yet supported by MusicXML (3.1).
+    // see musicXML manuals -> Ornaments
+    /*
+    UpPrall,
+    DownPrall,
+    PrallUp,
+    PrallDown,
+    UpMordent,
+    DownMordent,
+    LinePrall,
+    PrallPrall
+    */
 }
