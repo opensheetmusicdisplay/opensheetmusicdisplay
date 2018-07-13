@@ -55,7 +55,6 @@ export class VoiceGenerator {
   private currentStaffEntry: SourceStaffEntry;
   private lastBeamTag: string = "";
   private openBeam: Beam;
-  private openGraceBeam: Beam;
   private openTieDict: { [_: number]: Tie; } = {};
   private currentOctaveShift: number = 0;
   private tupletDict: { [_: number]: Tuplet; } = {};
@@ -454,52 +453,27 @@ export class VoiceGenerator {
         const currentBeamTag: string = mainBeamNode[0].value;
         if (beamNumber === 1 && mainBeamNode !== undefined) {
           if (currentBeamTag === "begin" && this.lastBeamTag !== currentBeamTag) {
-            if (note.ParentVoiceEntry.IsGrace) {
-              if (this.openGraceBeam !== undefined) {
-                this.handleOpenBeam();
-              }
-              this.openGraceBeam = new Beam();
-            } else {
               if (this.openBeam !== undefined) {
                 this.handleOpenBeam();
               }
               this.openBeam = new Beam();
-            }
           }
           this.lastBeamTag = currentBeamTag;
         }
         let sameVoiceEntry: boolean = false;
-        if (note.ParentVoiceEntry.IsGrace) {
-          if (this.openGraceBeam === undefined) {
-            return;
+        if (this.openBeam === undefined) {
+          return;
+        }
+        for (let idx: number = 0, len: number = this.openBeam.Notes.length; idx < len; ++idx) {
+          const beamNote: Note = this.openBeam.Notes[idx];
+          if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
+            sameVoiceEntry = true;
           }
-          for (let idx: number = 0, len: number = this.openGraceBeam.Notes.length; idx < len; ++idx) {
-            const beamNote: Note = this.openGraceBeam.Notes[idx];
-            if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
-              sameVoiceEntry = true;
-            }
-          }
-          if (!sameVoiceEntry) {
-            this.openGraceBeam.addNoteToBeam(note);
-            if (currentBeamTag === "end" && beamNumber === 1) {
-              this.openGraceBeam = undefined;
-            }
-          }
-        } else {
-          if (this.openBeam === undefined) {
-            return;
-          }
-          for (let idx: number = 0, len: number = this.openBeam.Notes.length; idx < len; ++idx) {
-            const beamNote: Note = this.openBeam.Notes[idx];
-            if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
-              sameVoiceEntry = true;
-            }
-          }
-          if (!sameVoiceEntry) {
-            this.openBeam.addNoteToBeam(note);
-            if (currentBeamTag === "end" && beamNumber === 1) {
-              this.openBeam = undefined;
-            }
+        }
+        if (!sameVoiceEntry) {
+          this.openBeam.addNoteToBeam(note);
+          if (currentBeamTag === "end" && beamNumber === 1) {
+            this.openBeam = undefined;
           }
         }
       }
