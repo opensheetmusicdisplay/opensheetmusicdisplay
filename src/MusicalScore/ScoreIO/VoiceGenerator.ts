@@ -78,9 +78,10 @@ export class VoiceGenerator {
    * @param musicTimestamp
    * @param parentStaffEntry
    * @param addToVoice
+   * @param isGrace States whether the new VoiceEntry (only) has grace notes
    */
-  public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean): void {
-    this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry);
+  public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean, isGrace: boolean = false): void {
+    this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry, isGrace);
     if (addToVoice) {
       this.voice.VoiceEntries.push(this.currentVoiceEntry);
     }
@@ -413,7 +414,7 @@ export class VoiceGenerator {
       this.handleGraceNote(node, note);
     }
     if (node.elements("beam") && !chord) {
-      this.createBeam(node, note, graceNote);
+      this.createBeam(node, note);
     }
     return note;
   }
@@ -440,7 +441,7 @@ export class VoiceGenerator {
    * @param note
    * @param grace
    */
-  private createBeam(node: IXmlElement, note: Note, grace: boolean): void {
+  private createBeam(node: IXmlElement, note: Note): void {
     try {
       const beamNode: IXmlElement = node.element("beam");
       let beamAttr: IXmlAttribute = undefined;
@@ -453,7 +454,7 @@ export class VoiceGenerator {
         const currentBeamTag: string = mainBeamNode[0].value;
         if (beamNumber === 1 && mainBeamNode !== undefined) {
           if (currentBeamTag === "begin" && this.lastBeamTag !== currentBeamTag) {
-            if (grace) {
+            if (note.ParentVoiceEntry.IsGrace) {
               if (this.openGraceBeam !== undefined) {
                 this.handleOpenBeam();
               }
@@ -468,7 +469,7 @@ export class VoiceGenerator {
           this.lastBeamTag = currentBeamTag;
         }
         let sameVoiceEntry: boolean = false;
-        if (grace) {
+        if (note.ParentVoiceEntry.IsGrace) {
           if (this.openGraceBeam === undefined) {
             return;
           }
@@ -574,11 +575,13 @@ export class VoiceGenerator {
       }
     }
     const graceNode: IXmlElement = node.element("grace");
+    let graceNoteSlash: boolean = false;
+    // TODO overlap with InstrumentReader.readNextXmlMeasure, which also checks whether there's a grace node in XML
     if (graceNode !== undefined && graceNode.attributes()) {
       if (graceNode.attribute("slash")) {
         const slash: string = graceNode.attribute("slash").value;
         if (slash === "yes") {
-          note.GraceNoteSlash = true;
+          graceNoteSlash = true;
         }
       }
     }
@@ -588,7 +591,7 @@ export class VoiceGenerator {
     let graceVoiceEntry: VoiceEntry = undefined;
     if (!graceChord) {
       graceVoiceEntry = new VoiceEntry(
-        new Fraction(0, 1), this.currentVoiceEntry.ParentVoice, this.currentStaffEntry, true
+        new Fraction(0, 1), this.currentVoiceEntry.ParentVoice, this.currentStaffEntry, true, graceNoteSlash
       );
       if (this.currentVoiceEntry.graceVoiceEntriesBefore === undefined) {
         this.currentVoiceEntry.graceVoiceEntriesBefore = [];
