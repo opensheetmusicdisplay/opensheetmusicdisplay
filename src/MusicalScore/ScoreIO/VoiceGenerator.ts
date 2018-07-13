@@ -174,41 +174,6 @@ export class VoiceGenerator {
   }
 
   /**
-   * Handle the GraceNotes that appear before the Measure's End
-   * and aren't assigned to any normal (with [[VoiceEntries]]) [[SourceStaffEntry]]s yet.
-   */
-  public checkForOpenGraceNotes(): void {
-    if (
-      this.currentStaffEntry !== undefined
-      && this.currentStaffEntry.VoiceEntries.length === 0
-      && this.currentVoiceEntry.graceVoiceEntriesBefore !== undefined
-      && this.currentVoiceEntry.graceVoiceEntriesBefore.length > 0
-    ) {
-      const voice: Voice = this.currentVoiceEntry.ParentVoice;
-      const horizontalIndex: number = this.currentMeasure.VerticalSourceStaffEntryContainers.indexOf(this.currentStaffEntry.VerticalContainerParent);
-      const verticalIndex: number = this.currentStaffEntry.VerticalContainerParent.StaffEntries.indexOf(this.currentStaffEntry);
-      const previousStaffEntry: SourceStaffEntry = this.currentMeasure.getPreviousSourceStaffEntryFromIndex(verticalIndex, horizontalIndex);
-      if (previousStaffEntry !== undefined) {
-        let previousVoiceEntry: VoiceEntry = undefined;
-        for (let idx: number = 0, len: number = previousStaffEntry.VoiceEntries.length; idx < len; ++idx) {
-          const voiceEntry: VoiceEntry = previousStaffEntry.VoiceEntries[idx];
-          if (voiceEntry.ParentVoice === voice) {
-            previousVoiceEntry = voiceEntry;
-            previousVoiceEntry.graceVoiceEntriesAfter = [];
-            for (let idx2: number = 0, len2: number = this.currentVoiceEntry.graceVoiceEntriesBefore.length; idx2 < len2; ++idx2) {
-              const graceVoiceEntry: VoiceEntry = this.currentVoiceEntry.graceVoiceEntriesBefore[idx2];
-              previousVoiceEntry.graceVoiceEntriesAfter.push(graceVoiceEntry);
-            }
-            this.currentVoiceEntry.graceVoiceEntriesBefore = [];
-            this.currentStaffEntry = undefined;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  /**
    * Create a new [[StaffEntryLink]] and sets the currenstStaffEntry accordingly.
    * @param index
    * @param currentStaff

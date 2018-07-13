@@ -354,7 +354,6 @@ export class InstrumentReader {
         if (this.voiceGeneratorsDict.hasOwnProperty(j)) {
           const voiceGenerator: VoiceGenerator = this.voiceGeneratorsDict[j];
           voiceGenerator.checkForOpenBeam();
-          voiceGenerator.checkForOpenGraceNotes();
         }
       }
       if (this.currentXmlMeasureIndex === this.xmlMeasureList.length - 1) {
