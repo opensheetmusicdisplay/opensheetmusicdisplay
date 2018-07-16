@@ -29,6 +29,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "Telemann - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
             "Telemann - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
             "Saltarello": "Saltarello.mxl",
+            "OSMD Function Test - All": "OSMD_function_test_all.mxl",
+            "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.mxl",
         },
 
         zoom = 1.0,
