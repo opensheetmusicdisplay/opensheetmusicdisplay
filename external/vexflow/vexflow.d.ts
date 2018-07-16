@@ -107,6 +107,14 @@ declare namespace Vex {
             public addDotToAll(): void;
         }
 
+        export class GraceNote extends StaveNote {
+            constructor(note_struct: any);
+        }
+
+        export class GraceNoteGroup extends Modifier {
+            constructor(grace_notes: [GraceNote], show_slur: boolean);
+        }
+
         export class StaveTie {
             constructor(notes_struct: any);
 

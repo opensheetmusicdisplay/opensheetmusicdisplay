@@ -192,6 +192,8 @@ export class InstrumentReader {
                 }
               }
             }
+
+            noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
           }
 
           let musicTimestamp: Fraction = currentFraction.clone();
@@ -208,6 +210,7 @@ export class InstrumentReader {
           if (!this.currentVoiceGenerator.hasVoiceEntry()
             || (!isChord && !isGraceNote && !lastNoteWasGrace)
             || (isGraceNote && !lastNoteWasGrace)
+            || (!isGraceNote && lastNoteWasGrace)
           ) {
             this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote, isGraceNote, graceNoteSlash);
           }
@@ -237,21 +240,16 @@ export class InstrumentReader {
           if (this.activeRhythm !== undefined) {
             // (*) this.musicSheet.SheetPlaybackSetting.Rhythm = this.activeRhythm.Rhythm;
           }
-          if (isTuplet) {
-            this.currentVoiceGenerator.read(
-              xmlNode, noteDuration, restNote,
-              this.currentStaffEntry, this.currentMeasure,
-              measureStartAbsoluteTimestamp,
-              this.maxTieNoteFraction, isChord, guitarPro
-            );
-          } else {
-            this.currentVoiceGenerator.read(
-              xmlNode, new Fraction(noteDivisions, 4 * this.divisions),
-              restNote, this.currentStaffEntry,
-              this.currentMeasure, measureStartAbsoluteTimestamp,
-              this.maxTieNoteFraction, isChord, guitarPro
-            );
+          if (!isTuplet && !isGraceNote) {
+            noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
+          this.currentVoiceGenerator.read(
+            xmlNode, noteDuration, restNote,
+            this.currentStaffEntry, this.currentMeasure,
+            measureStartAbsoluteTimestamp,
+            this.maxTieNoteFraction, isChord, guitarPro
+          );
+
           const notationsNode: IXmlElement = xmlNode.element("notations");
           if (notationsNode !== undefined && notationsNode.element("dynamics") !== undefined) {
             // (*) let expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];

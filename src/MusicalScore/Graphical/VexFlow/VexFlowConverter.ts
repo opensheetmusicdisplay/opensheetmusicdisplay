@@ -201,13 +201,19 @@ export class VexFlowConverter {
             duration += "d";
         }
 
-        const vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
+        let vfnote: Vex.Flow.StaveNote;
+        const vfnoteStruct: Object = {
             align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
             duration: duration,
             keys: keys
-        });
+        };
+        if (!gve.parentVoiceEntry.IsGrace) {
+            vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
+        } else {
+            vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
+        }
 
         vfnote.x_shift = xShift;
 
