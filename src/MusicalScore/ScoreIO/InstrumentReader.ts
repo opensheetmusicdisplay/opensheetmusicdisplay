@@ -179,7 +179,21 @@ export class InstrumentReader {
 
           const restNote: boolean = xmlNode.element("rest") !== undefined;
           //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
+
           const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
+          let graceNoteSlash: boolean = false;
+          if (isGraceNote) {
+            const graceNode: IXmlElement = xmlNode.element("grace");
+            if (graceNode && graceNode.attributes()) {
+              if (graceNode.attribute("slash")) {
+                const slash: string = graceNode.attribute("slash").value;
+                if (slash === "yes") {
+                  graceNoteSlash = true;
+                }
+              }
+            }
+          }
+
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
             musicTimestamp = previousFraction.clone();
@@ -191,8 +205,11 @@ export class InstrumentReader {
           ).staffEntry;
           //log.info("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
 
-          if (!this.currentVoiceGenerator.hasVoiceEntry() || (!isChord && !isGraceNote && !lastNoteWasGrace) || (!lastNoteWasGrace && isGraceNote)) {
-            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote, isGraceNote);
+          if (!this.currentVoiceGenerator.hasVoiceEntry()
+            || (!isChord && !isGraceNote && !lastNoteWasGrace)
+            || (isGraceNote && !lastNoteWasGrace)
+          ) {
+            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote, isGraceNote, graceNoteSlash);
           }
           if (!isGraceNote && !isChord) {
             previousFraction = currentFraction.clone();
@@ -222,7 +239,7 @@ export class InstrumentReader {
           }
           if (isTuplet) {
             this.currentVoiceGenerator.read(
-              xmlNode, noteDuration, restNote, isGraceNote,
+              xmlNode, noteDuration, restNote,
               this.currentStaffEntry, this.currentMeasure,
               measureStartAbsoluteTimestamp,
               this.maxTieNoteFraction, isChord, guitarPro
@@ -230,7 +247,7 @@ export class InstrumentReader {
           } else {
             this.currentVoiceGenerator.read(
               xmlNode, new Fraction(noteDivisions, 4 * this.divisions),
-              restNote, isGraceNote, this.currentStaffEntry,
+              restNote, this.currentStaffEntry,
               this.currentMeasure, measureStartAbsoluteTimestamp,
               this.maxTieNoteFraction, isChord, guitarPro
             );
