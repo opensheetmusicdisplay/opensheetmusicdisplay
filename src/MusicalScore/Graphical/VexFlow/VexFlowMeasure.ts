@@ -577,8 +577,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public graphicalMeasureCreatedCalculations(): void {
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             // create vex flow Stave Notes:
+            let graceNotesSlur: boolean = false;
+            let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+                if (gve.parentVoiceEntry.IsGrace) {
+                    graceGVoiceEntriesBefore.push(gve);
+                    if (!graceNotesSlur) {
+                        graceNotesSlur = gve.parentVoiceEntry.hasSlur();
+                    }
+                    continue;
+                }
                 (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
+                if (graceGVoiceEntriesBefore.length > 0) {
+                    const graceNotes: Vex.Flow.GraceNote[] = [];
+                    for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
+                        graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
+                    }
+                    const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceNotesSlur);
+                    (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes());
+                    graceGVoiceEntriesBefore = [];
+                }
             }
         }
 
@@ -597,7 +615,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
             // create vex flow voices and add tickables to it:
+            //let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const voiceEntry of restFilledEntries) {
+                if (!voiceEntry.parentVoiceEntry) {
+                    continue;
+                }
+                if (voiceEntry.parentVoiceEntry.IsGrace) {
+                    continue;
+                }
                 this.vfVoices[voice.VoiceId].addTickable((voiceEntry as VexFlowVoiceEntry).vfStaveNote);
             }
         }
@@ -611,6 +636,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow articulation:
             const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             for (const gve of graphicalVoiceEntries) {
+                if (gve.parentVoiceEntry.IsGrace) {
+                    continue;
+                }
                 const vfStaveNote: StaveNote = ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote);
                 VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0].sourceNote.ParentVoiceEntry.Articulations);
             }

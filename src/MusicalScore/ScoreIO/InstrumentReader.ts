@@ -210,9 +210,10 @@ export class InstrumentReader {
           if (!this.currentVoiceGenerator.hasVoiceEntry()
             || (!isChord && !isGraceNote && !lastNoteWasGrace)
             || (isGraceNote && !lastNoteWasGrace)
+            || (isGraceNote && !isChord)
             || (!isGraceNote && lastNoteWasGrace)
           ) {
-            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote, isGraceNote, graceNoteSlash);
+            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote && !isGraceNote, isGraceNote, graceNoteSlash);
           }
           if (!isGraceNote && !isChord) {
             previousFraction = currentFraction.clone();

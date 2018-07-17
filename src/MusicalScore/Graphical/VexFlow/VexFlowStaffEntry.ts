@@ -19,6 +19,9 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         let tickablePosition: number = 0;
         let numberOfValidTickables: number = 0;
         for (const gve of this.graphicalVoiceEntries) {
+            if (gve.parentVoiceEntry.IsGrace) {
+                continue;
+            }
             const tickable: Vex.Flow.StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
             // This will let the tickable know how to calculate it's bounding box
             tickable.setStave(stave);

@@ -32,9 +32,6 @@ export class VoiceEntry {
         this.graceNoteSlash = graceNoteSlash;
     }
 
-    public graceVoiceEntriesBefore: VoiceEntry[];
-    public graceVoiceEntriesAfter: VoiceEntry[];
-
     private parentVoice: Voice;
     private parentSourceStaffEntry: SourceStaffEntry;
     private timestamp: Fraction;

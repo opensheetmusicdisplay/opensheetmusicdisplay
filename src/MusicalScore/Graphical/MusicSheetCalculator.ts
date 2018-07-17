@@ -977,27 +977,6 @@ export abstract class MusicSheetCalculator {
         return octaveShiftValue;
     }
 
-    protected handleVoiceEntryGraceNotes(graceEntries: VoiceEntry[], graphicalGraceEntries: GraphicalStaffEntry[], graphicalStaffEntry: GraphicalStaffEntry,
-                                         accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
-                                         octaveShiftValue: OctaveEnum, lyricWords: LyricWord[],
-                                         tuplets: Tuplet[], beams: Beam[]): void {
-        if (graceEntries !== undefined) {
-            for (let idx: number = 0, len: number = graceEntries.length; idx < len; ++idx) {
-                const graceVoiceEntry: VoiceEntry = graceEntries[idx];
-                const graceStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createGraceStaffEntry(
-                    graphicalStaffEntry,
-                    graphicalStaffEntry.parentMeasure
-                );
-                graphicalGraceEntries.push(graceStaffEntry);
-                this.handleVoiceEntry(
-                    graceVoiceEntry, graceStaffEntry, accidentalCalculator, lyricWords,
-                    activeClef, tuplets,
-                    beams, octaveShiftValue
-                );
-            }
-        }
-    }
-
     protected resetYPositionForLeadSheet(psi: BoundingBox): void {
         if (this.leadSheet) {
             psi.RelativePosition = new PointF2D(psi.RelativePosition.x, 0.0);
@@ -1397,22 +1376,12 @@ export abstract class MusicSheetCalculator {
                 }
                 for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                     const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
-                    this.handleVoiceEntryGraceNotes(
-                        voiceEntry.graceVoiceEntriesBefore, graphicalStaffEntry.graceStaffEntriesBefore, graphicalStaffEntry,
-                        accidentalCalculator, activeClefs[staffIndex], octaveShiftValue, openLyricWords,
-                        openTuplets, openBeams
-                    );
                     octaveShiftValue = this.handleVoiceEntry(
                         voiceEntry, graphicalStaffEntry,
                         accidentalCalculator, openLyricWords,
                         activeClefs[staffIndex], openTuplets,
                         openBeams, octaveShiftValue, linkedNotes,
                         sourceStaffEntry
-                    );
-                    this.handleVoiceEntryGraceNotes(
-                        voiceEntry.graceVoiceEntriesAfter, graphicalStaffEntry.graceStaffEntriesAfter, graphicalStaffEntry,
-                        accidentalCalculator, activeClefs[staffIndex], octaveShiftValue, openLyricWords,
-                        openTuplets, openBeams
                     );
                 }
                 if (sourceStaffEntry.Instructions.length > 0) {

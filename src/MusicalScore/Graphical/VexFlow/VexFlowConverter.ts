@@ -154,10 +154,6 @@ export class VexFlowConverter {
         // VexFlow needs the notes ordered vertically in the other direction:
         const notes: GraphicalNote[] = gve.notes.reverse();
         const baseNote: GraphicalNote = notes[0];
-        if (baseNote.sourceNote.Pitch === undefined &&
-            new Fraction(1, 2).lt(baseNote.sourceNote.Length)) {
-                // test
-            }
         let keys: string[] = [];
         const accidentals: string[] = [];
         const frac: Fraction = baseNote.graphicalNoteLength;
