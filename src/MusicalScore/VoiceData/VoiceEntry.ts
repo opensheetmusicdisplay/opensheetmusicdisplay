@@ -24,12 +24,13 @@ export class VoiceEntry {
      * @param graceNoteSlash States whether the grace note(s) have a slash (Acciaccatura, played before the beat)
      */
     constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry,
-                isGrace: boolean = false, graceNoteSlash: boolean = false) {
+                isGrace: boolean = false, graceNoteSlash: boolean = false, graceSlur: boolean = false) {
         this.timestamp = timestamp;
         this.parentVoice = parentVoice;
         this.parentSourceStaffEntry = parentSourceStaffEntry;
         this.isGrace = isGrace;
         this.graceNoteSlash = graceNoteSlash;
+        this.graceSlur = graceSlur;
     }
 
     private parentVoice: Voice;
@@ -38,6 +39,7 @@ export class VoiceEntry {
     private notes: Note[] = [];
     private isGrace: boolean;
     private graceNoteSlash: boolean;
+    private graceSlur: boolean; // TODO grace slur system could be refined to be non-binary
     private articulations: ArticulationEnum[] = [];
     private technicalInstructions: TechnicalInstruction[] = [];
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
@@ -71,6 +73,12 @@ export class VoiceEntry {
     }
     public set GraceNoteSlash(value: boolean) {
         this.graceNoteSlash = value;
+    }
+    public get GraceSlur(): boolean {
+        return this.graceSlur;
+    }
+    public set GraceSlur(value: boolean) {
+        this.graceSlur = value;
     }
     public get Articulations(): ArticulationEnum[] {
         return this.articulations;

@@ -577,13 +577,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public graphicalMeasureCreatedCalculations(): void {
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             // create vex flow Stave Notes:
-            let graceNotesSlur: boolean = false;
+            let graceSlur: boolean = false;
             let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.parentVoiceEntry.IsGrace) {
                     graceGVoiceEntriesBefore.push(gve);
-                    if (!graceNotesSlur) {
-                        graceNotesSlur = gve.parentVoiceEntry.hasSlur();
+                    if (!graceSlur) {
+                        graceSlur = gve.parentVoiceEntry.GraceSlur;
                     }
                     continue;
                 }
@@ -593,7 +593,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
                         graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
                     }
-                    const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceNotesSlur);
+                    const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
                     (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes());
                     graceGVoiceEntriesBefore = [];
                 }

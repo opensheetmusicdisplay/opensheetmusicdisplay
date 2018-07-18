@@ -182,6 +182,7 @@ export class InstrumentReader {
 
           const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let graceNoteSlash: boolean = false;
+          let graceSlur: boolean = false;
           if (isGraceNote) {
             const graceNode: IXmlElement = xmlNode.element("grace");
             if (graceNode && graceNode.attributes()) {
@@ -194,6 +195,14 @@ export class InstrumentReader {
             }
 
             noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
+
+            const notationNode: IXmlElement = xmlNode.element("notations");
+            if (notationNode !== undefined) {
+              if (notationNode.element("slur") !== undefined) {
+                graceSlur = true;
+                // grace slurs could be non-binary, but VexFlow.GraceNoteGroup modifier system is currently only boolean for slurs.
+              }
+            }
           }
 
           let musicTimestamp: Fraction = currentFraction.clone();
@@ -213,7 +222,8 @@ export class InstrumentReader {
             || (isGraceNote && !isChord)
             || (!isGraceNote && lastNoteWasGrace)
           ) {
-            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote && !isGraceNote, isGraceNote, graceNoteSlash);
+            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote && !isGraceNote,
+                                                        isGraceNote, graceNoteSlash, graceSlur);
           }
           if (!isGraceNote && !isChord) {
             previousFraction = currentFraction.clone();

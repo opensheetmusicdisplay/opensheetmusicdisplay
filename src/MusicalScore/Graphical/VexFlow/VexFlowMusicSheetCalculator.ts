@@ -92,7 +92,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (mvoices.hasOwnProperty(voiceID)) {
                 voices.push(mvoices[voiceID]);
                 allVoices.push(mvoices[voiceID]);
-
             }
         }
         if (voices.length === 0) {
