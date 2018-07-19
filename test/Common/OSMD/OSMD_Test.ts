@@ -22,7 +22,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
     });
 
     it("load MXL from string", (done: MochaDone) => {
-        const mxl: string = TestUtils.getMXL("MozartTrio.mxl");
+        const mxl: string = TestUtils.getMXL("Mozart_Clarinet_Quintet_Excerpt.mxl");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
         opensheetmusicdisplay.load(mxl).then(
@@ -80,7 +80,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
     });
 
     it("load MXL Document by URL", (done: MochaDone) => {
-        const url: string = "base/test/data/MozartTrio.mxl";
+        const url: string = "base/test/data/Mozart_Clarinet_Quintet_Excerpt.mxl";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
         opensheetmusicdisplay.load(url).then(
