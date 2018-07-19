@@ -8,7 +8,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     // The available demos
         demos = {
-            "OSMD Function Test - Grace Notes (BB)": "OSMD_function_test_GraceNotes_bb.mxl",
             "Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
@@ -30,8 +29,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "Telemann - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
             "Telemann - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
             "Saltarello": "Saltarello.mxl",
-            "OSMD Function Test - All": "OSMD_function_test_all.mxl",
-            "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.mxl",
+            "OSMD Function Test - All": "OSMD_function_test_all.xml",
+            "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
+            "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
         },
 
         zoom = 1.0,
@@ -293,14 +293,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         reader.onload = function (res) {
             selectOnChange(res.target.result);
         };
-        if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".xml") > 0) {
+        var filename = event.dataTransfer.files[0].name;
+        if (filename.toLowerCase().indexOf(".xml") > 0
+            || filename.toLowerCase().indexOf(".musicxml") > 0) {
             reader.readAsText(event.dataTransfer.files[0]);
-        }
-        else if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".mxl") > 0){
+        } else if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".mxl") > 0){
             reader.readAsBinaryString(event.dataTransfer.files[0]);
         }
         else {
-            alert("No vaild .xml/.mxl file!");
+            alert("No vaild .xml/.mxl/.musicxml file!");
         }
     });
 }());
