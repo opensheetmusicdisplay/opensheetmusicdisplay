@@ -14,6 +14,7 @@ import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
+import StemmableNote = Vex.Flow.StemmableNote;
 import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
@@ -627,8 +628,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
         this.createArticulations();
+        this.createOrnaments();
     }
 
+    /**
+     * Create the articulations for all notes of the current staff entry
+     */
     private createArticulations(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
@@ -639,8 +644,27 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (gve.parentVoiceEntry.IsGrace) {
                     continue;
                 }
-                const vfStaveNote: StaveNote = ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote);
+                const vfStaveNote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
                 VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0].sourceNote.ParentVoiceEntry.Articulations);
+            }
+        }
+    }
+
+    /**
+     * Create the ornaments for all notes of the current staff entry
+     */
+    private createOrnaments(): void {
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
+            const gvoices: { [voiceID: number]: GraphicalVoiceEntry; } = graphicalStaffEntry.graphicalVoiceEntries;
+
+            for (const voiceID in gvoices) {
+                if (gvoices.hasOwnProperty(voiceID)) {
+                    const vfStaveNote: StemmableNote = (gvoices[voiceID] as VexFlowVoiceEntry).vfStaveNote;
+                    if (gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer !== undefined) {
+                        VexFlowConverter.generateOrnaments(vfStaveNote, gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer);
+                    }
+                }
             }
         }
     }
