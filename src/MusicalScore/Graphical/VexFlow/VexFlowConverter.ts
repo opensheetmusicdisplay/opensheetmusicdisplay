@@ -131,8 +131,20 @@ export class VexFlowConverter {
             case AccidentalEnum.DOUBLESHARP:
                 acc = "##";
                 break;
+            case AccidentalEnum.TRIPLESHARP:
+                acc = "++";
+                break;
             case AccidentalEnum.DOUBLEFLAT:
                 acc = "bb";
+                break;
+            case AccidentalEnum.TRIPLEFLAT:
+                acc = "bbs"; // there is no "bbb" in VexFlow yet, unfortunately.
+                break;
+            case AccidentalEnum.QUARTERTONESHARP:
+                acc = "+";
+                break;
+            case AccidentalEnum.QUARTERTONEFLAT:
+                acc = "d";
                 break;
             default:
         }

@@ -25,6 +25,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - All": "OSMD_function_test_all.xml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+            "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
             "L. Actor - Prelude (Sample)": "ActorPreludeSample.xml",
             "Anonymous - Saltarello": "Saltarello.mxl",
             "C. Debussy - Mandoline": "Debussy_Mandoline.xml",

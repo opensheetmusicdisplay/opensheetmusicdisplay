@@ -320,7 +320,7 @@ export class VoiceGenerator {
                   throw new MusicSheetReadingException(errorMsg, undefined);
                 }
               } else if (pitchElement.name === "alter") {
-                noteAlter = parseInt(pitchElement.value, 10);
+                noteAlter = parseFloat(pitchElement.value);
                 if (isNaN(noteAlter)) {
                   const errorMsg: string = ITextTranslation.translateText(
                     "ReaderErrorMessages/NoteAlterationError", "Invalid alteration while reading note."
@@ -328,7 +328,15 @@ export class VoiceGenerator {
                   this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                   throw new MusicSheetReadingException(errorMsg, undefined);
                 }
-
+                if (noteAlter === 0.5) {
+                  noteAlter = AccidentalEnum.QUARTERTONESHARP;
+                } else if (noteAlter === -0.5) {
+                  noteAlter = AccidentalEnum.QUARTERTONEFLAT;
+                } else if (noteAlter === 3) {
+                  noteAlter = AccidentalEnum.TRIPLESHARP;
+                } else if (noteAlter === -3) {
+                  noteAlter = AccidentalEnum.TRIPLEFLAT;
+                }
               } else if (pitchElement.name === "octave") {
                 noteOctave = parseInt(pitchElement.value, 10);
                 if (isNaN(noteOctave)) {

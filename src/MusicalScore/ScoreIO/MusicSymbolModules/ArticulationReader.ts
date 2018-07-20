@@ -13,13 +13,22 @@ export class ArticulationReader {
         return AccidentalEnum.NATURAL;
       case "sharp":
         return AccidentalEnum.SHARP;
-      case "sharp-sharp":
       case "double-sharp":
+      case "sharp-sharp":
         return AccidentalEnum.DOUBLESHARP;
+      case "triple-sharp":
+        return AccidentalEnum.TRIPLESHARP;
       case "flat":
         return AccidentalEnum.FLAT;
+      case "double-flat":
       case "flat-flat":
         return AccidentalEnum.DOUBLEFLAT;
+      case "triple-flat":
+        return AccidentalEnum.TRIPLEFLAT;
+      case "quarter-sharp":
+        return AccidentalEnum.QUARTERTONESHARP;
+      case "quarter-flat":
+        return AccidentalEnum.QUARTERTONEFLAT;
       default:
         return AccidentalEnum.NONE;
     }
