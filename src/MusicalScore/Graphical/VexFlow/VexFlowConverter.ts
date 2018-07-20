@@ -245,6 +245,15 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
+                if (accidentals[i] === "++") {
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("##"));
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("#"));
+                    continue;
+                } else if (accidentals[i] === "bbs") {
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("bb"));
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("b"));
+                    continue;
+                }
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i]));
             }
         }
