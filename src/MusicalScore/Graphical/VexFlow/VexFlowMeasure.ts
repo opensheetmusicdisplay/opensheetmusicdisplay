@@ -329,12 +329,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
-            // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
+            // set the width of the voices to the current measure width:
+            // (The width of the voices does not include the instructions (StaveModifiers))
+            this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
         }
-
-        // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
     }
 
     /**
@@ -693,18 +691,18 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * space needed by Instructions (in VexFlow: StaveModifiers)
      */
     private updateInstructionWidth(): void {
-        let beginInstructionsWidth: number = 0;
-        let endInstructionsWidth: number = 0;
+        let vfBeginInstructionsWidth: number = 0;
+        let vfEndInstructionsWidth: number = 0;
         const modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
         for (const mod of modifiers) {
             if (mod.getPosition() === Vex.Flow.StaveModifier.Position.BEGIN) {
-                beginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
+                vfBeginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
             } else if (mod.getPosition() === Vex.Flow.StaveModifier.Position.END) {
-                endInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
+                vfEndInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
             }
         }
 
-        this.beginInstructionsWidth = beginInstructionsWidth / unitInPixels;
-        this.endInstructionsWidth = endInstructionsWidth / unitInPixels;
+        this.beginInstructionsWidth = vfBeginInstructionsWidth / unitInPixels;
+        this.endInstructionsWidth = vfEndInstructionsWidth / unitInPixels;
     }
 }

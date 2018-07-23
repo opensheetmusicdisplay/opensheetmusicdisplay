@@ -51,14 +51,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected formatMeasures(): void {
       for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
         const graphicalMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
-        graphicalMeasure.formatVoices(graphicalMeasure.minimumStaffEntriesWidth);
-        for (const gM of verticalMeasureList) {
-          (<VexFlowMeasure>gM).format();
-        }
+        graphicalMeasure.format();
         for (const staffEntry of graphicalMeasure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
-        graphicalMeasure.PositionAndShape.calculateAbsolutePositionsOfChildren();
       }
   }
 
