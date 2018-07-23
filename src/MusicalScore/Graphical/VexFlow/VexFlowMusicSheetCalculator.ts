@@ -48,16 +48,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-    protected formatMeasures(): void {
-        for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
-            for (const graphicalMeasure of graphicalMeasures) {
-                (<VexFlowMeasure>graphicalMeasure).format();
-                for (const staffEntry of graphicalMeasure.staffEntries) {
-                    (<VexFlowStaffEntry>staffEntry).calculateXPosition();
-                }
-            }
+  protected formatMeasures(): void {
+      for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
+        const graphicalMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
+        graphicalMeasure.formatVoices(graphicalMeasure.minimumStaffEntriesWidth);
+        for (const gM of verticalMeasureList) {
+          (<VexFlowMeasure>gM).format();
         }
-    }
+        for (const staffEntry of graphicalMeasure.staffEntries) {
+          (<VexFlowStaffEntry>staffEntry).calculateXPosition();
+        }
+        graphicalMeasure.PositionAndShape.calculateAbsolutePositionsOfChildren();
+      }
+  }
 
   //protected clearSystemsAndMeasures(): void {
   //    for (let measure of measures) {
@@ -109,8 +112,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // firstMeasure.formatVoices = (w: number) => {
         //     formatter.format(allVoices, w);
         // };
+        MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, width);
         for (const measure of measures) {
-            measure.minimumStaffEntriesWidth = width;
             if (measure !== measures[0]) {
         (measure as VexFlowMeasure).formatVoices = undefined;
             } else {
@@ -120,8 +123,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         }
     }
+
+    for (const graphicalMeasure of measures) {
+      for (const staffEntry of graphicalMeasure.staffEntries) {
+        (<VexFlowStaffEntry>staffEntry).calculateXPosition();
+      }
+      graphicalMeasure.PositionAndShape.calculateAbsolutePositionsOfChildren();
+    }
     return width;
   }
+
+  public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
+    // throw new Error("abstract, not implemented");
+    return oldMinimumStaffEntriesWidth * 2;
+}
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
                                startNote: GraphicalNote, endNote: GraphicalNote): GraphicalTie {
