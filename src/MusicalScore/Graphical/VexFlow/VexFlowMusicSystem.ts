@@ -2,7 +2,7 @@ import {MusicSystem} from "../MusicSystem";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {SystemLinePosition} from "../SystemLinePosition";
-import {StaffMeasure} from "../StaffMeasure";
+import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SystemLine} from "../SystemLine";
 import {VexFlowStaffLine} from "./VexFlowStaffLine";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -11,6 +11,7 @@ import {StaffLine} from "../StaffLine";
 import {EngravingRules} from "../EngravingRules";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
+import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(parent: GraphicalMusicPage, id: number) {
@@ -26,6 +27,21 @@ export class VexFlowMusicSystem extends MusicSystem {
         this.boundingBox.BorderLeft = -width;
         this.boundingBox.BorderMarginLeft = -width;
         this.boundingBox.XBordersHaveBeenSet = true;
+
+        const topSkyBottomLineCalculator: SkyBottomLineCalculator = this.staffLines[0].SkyBottomLineCalculator;
+        const top: number = topSkyBottomLineCalculator.getSkyLineMin();
+        this.boundingBox.BorderTop = top;
+        this.boundingBox.BorderMarginTop = top;
+
+        const lastStaffLine: StaffLine = this.staffLines[this.staffLines.length - 1];
+        const bottomSkyBottomLineCalculator: SkyBottomLineCalculator = lastStaffLine.SkyBottomLineCalculator;
+        const bottom: number = bottomSkyBottomLineCalculator.getBottomLineMax()
+                    + lastStaffLine.PositionAndShape.RelativePosition.y;
+        this.boundingBox.BorderBottom = bottom;
+        this.boundingBox.BorderMarginBottom = bottom;
+
+        this.boundingBox.XBordersHaveBeenSet = true;
+        this.boundingBox.YBordersHaveBeenSet = true;
     }
 
     /**
@@ -39,7 +55,7 @@ export class VexFlowMusicSystem extends MusicSystem {
      * @param bottomMeasure
      */
     protected createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
-                               musicSystem: MusicSystem, topMeasure: StaffMeasure, bottomMeasure: StaffMeasure = undefined): SystemLine {
+                               musicSystem: MusicSystem, topMeasure: GraphicalMeasure, bottomMeasure: GraphicalMeasure = undefined): SystemLine {
         const vfMeasure: VexFlowMeasure = topMeasure as VexFlowMeasure;
         vfMeasure.addMeasureLine(lineType, linePosition);
         if (bottomMeasure) {

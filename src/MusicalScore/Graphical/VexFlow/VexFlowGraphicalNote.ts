@@ -1,18 +1,18 @@
 import Vex = require("vexflow");
 import {GraphicalNote} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
-import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 
 /**
  * The VexFlow version of a [[GraphicalNote]].
  */
 export class VexFlowGraphicalNote extends GraphicalNote {
-    constructor(note: Note, parent: GraphicalStaffEntry, activeClef: ClefInstruction,
+    constructor(note: Note, parent: GraphicalVoiceEntry, activeClef: ClefInstruction,
                 octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined) {
         super(note, parent, graphicalNoteLength);
         this.clef = activeClef;

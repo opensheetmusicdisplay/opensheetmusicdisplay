@@ -15,9 +15,11 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
-import {Logging} from "../../../Common/Logging";
+import * as log from "loglevel";
 import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry";
 import { SystemLinePosition } from "../SystemLinePosition";
+import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -117,7 +119,7 @@ export class VexFlowConverter {
     public static accidental(accidental: AccidentalEnum): string {
         let acc: string;
         switch (accidental) {
-            case AccidentalEnum.NONE:
+            case AccidentalEnum.NATURAL:
                 acc = "n";
                 break;
             case AccidentalEnum.FLAT:
@@ -129,69 +131,129 @@ export class VexFlowConverter {
             case AccidentalEnum.DOUBLESHARP:
                 acc = "##";
                 break;
+            case AccidentalEnum.TRIPLESHARP:
+                acc = "++";
+                break;
             case AccidentalEnum.DOUBLEFLAT:
                 acc = "bb";
+                break;
+            case AccidentalEnum.TRIPLEFLAT:
+                acc = "bbs"; // there is no "bbb" in VexFlow yet, unfortunately.
+                break;
+            case AccidentalEnum.QUARTERTONESHARP:
+                acc = "+";
+                break;
+            case AccidentalEnum.QUARTERTONEFLAT:
+                acc = "d";
                 break;
             default:
         }
         return acc;
     }
 
+    public static GhostNote(frac: Fraction): Vex.Flow.GhostNote {
+        // const frac: Fraction = notes[0].graphicalNoteLength;
+        return new Vex.Flow.GhostNote({
+            duration: VexFlowConverter.duration(frac, false),
+        });
+    }
+
     /**
-     * Convert a set of GraphicalNotes to a VexFlow StaveNote
-     * @param notes form a chord on the staff
+     * Convert a GraphicalVoiceEntry to a VexFlow StaveNote
+     * @param gve the GraphicalVoiceEntry which can hold a note or a chord on the staff belonging to one voice
      * @returns {Vex.Flow.StaveNote}
      */
-    public static StaveNote(notes: GraphicalNote[]): Vex.Flow.StaveNote {
+    public static StaveNote(gve: GraphicalVoiceEntry): Vex.Flow.StaveNote {
+        // VexFlow needs the notes ordered vertically in the other direction:
+        const notes: GraphicalNote[] = gve.notes.reverse();
+        const baseNote: GraphicalNote = notes[0];
         let keys: string[] = [];
         const accidentals: string[] = [];
-        const frac: Fraction = notes[0].graphicalNoteLength;
-        const isTuplet: boolean = notes[0].sourceNote.NoteTuplet !== undefined;
+        const frac: Fraction = baseNote.graphicalNoteLength;
+        const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
         let vfClefType: string = undefined;
-        let numDots: number = 0;
+        let numDots: number = baseNote.numberOfDots;
+        let alignCenter: boolean = false;
+        let xShift: number = 0;
         for (const note of notes) {
-            const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
-            if (pitch === undefined) { // if it is a rest:
-              keys = ["b/4"];
-              duration += "r";
-              break;
+            if (numDots < note.numberOfDots) {
+                numDots = note.numberOfDots;
             }
+            // if it is a rest:
+            if (note.sourceNote.isRest()) {
+                keys = ["b/4"];
+                // if it is a full measure rest:
+                if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
+                    keys = ["d/5"];
+                    duration = "w";
+                    numDots = 0;
+                    // If it's a whole rest we want it smack in the middle. Apparently there is still an issue in vexflow:
+                    // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
+                    // if the measure has no modifiers.
+                    alignCenter = true;
+                    xShift = -25; // TODO: Either replace by EngravingRules entry or find a way to make it dependent on the modifiers
+                }
+                duration += "r";
+                break;
+            }
+
+            const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             keys.push(pitch[0]);
             accidentals.push(pitch[1]);
             if (!vfClefType) {
                 const vfClef: {type: string, annotation: string} = VexFlowConverter.Clef(pitch[2]);
                 vfClefType = vfClef.type;
             }
-            if (numDots < note.numberOfDots) {
-                numDots = note.numberOfDots;
-            }
         }
+
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             duration += "d";
         }
 
-        const vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
+        let vfnote: Vex.Flow.StaveNote;
+        const vfnoteStruct: Object = {
+            align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
             duration: duration,
             keys: keys,
-        });
-        const wantedStemDirection: StemDirectionType = notes[0].sourceNote.ParentVoiceEntry.StemDirection;
-        switch (wantedStemDirection) {
-            case(StemDirectionType.Up):
-                vfnote.setStemDirection(Vex.Flow.Stem.UP);
-                break;
-            case (StemDirectionType.Down):
-                vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
-                break;
-            default:
-                break;
+            slash: gve.parentVoiceEntry.GraceNoteSlash
+        };
+        if (!gve.parentVoiceEntry.IsGrace) {
+            vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
+        } else {
+            vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
+        }
+
+        vfnote.x_shift = xShift;
+
+        if (gve.parentVoiceEntry !== undefined) {
+            const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.StemDirection;
+            switch (wantedStemDirection) {
+                case(StemDirectionType.Up):
+                    vfnote.setStemDirection(Vex.Flow.Stem.UP);
+                    break;
+                case (StemDirectionType.Down):
+                    vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
+                    break;
+                default:
+                    break;
+            }
         }
 
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
+                if (accidentals[i] === "++") {
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("##"));
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("#"));
+                    continue;
+                } else if (accidentals[i] === "bbs") {
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("bb"));
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("b"));
+                    continue;
+                }
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i]));
             }
         }
@@ -201,7 +263,7 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: Vex.Flow.StaveNote, articulations: ArticulationEnum[]): void {
+    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
         // Articulations:
         let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
 
@@ -270,6 +332,66 @@ export class VexFlowConverter {
         }
     }
 
+    public static generateOrnaments(vfnote: Vex.Flow.StemmableNote, oContainer: OrnamentContainer): void {
+        let vfPosition: number = Vex.Flow.Modifier.Position.ABOVE;
+        if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
+            vfPosition = Vex.Flow.Modifier.Position.BELOW;
+        }
+
+        let vfOrna: Vex.Flow.Ornament = undefined;
+        switch (oContainer.GetOrnament) {
+            case OrnamentEnum.DelayedInvertedTurn: {
+                vfOrna = new Vex.Flow.Ornament("turn_inverted");
+                vfOrna.setDelayed(true);
+                break;
+            }
+            case OrnamentEnum.DelayedTurn: {
+                vfOrna = new Vex.Flow.Ornament("turn");
+                vfOrna.setDelayed(true);
+                break;
+            }
+            case OrnamentEnum.InvertedMordent: {
+                vfOrna = new Vex.Flow.Ornament("mordent_inverted");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.InvertedTurn: {
+                vfOrna = new Vex.Flow.Ornament("turn_inverted");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.Mordent: {
+                vfOrna = new Vex.Flow.Ornament("mordent");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.Trill: {
+                vfOrna = new Vex.Flow.Ornament("tr");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            case OrnamentEnum.Turn: {
+                vfOrna = new Vex.Flow.Ornament("turn");
+                vfOrna.setDelayed(false);
+                break;
+            }
+            default: {
+                log.warn("unhandled OrnamentEnum type: " + oContainer.GetOrnament);
+                return;
+            }
+        }
+        if (vfOrna !== undefined) {
+            if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
+                vfOrna.setLowerAccidental(this.accidental(oContainer.AccidentalBelow));
+            }
+            if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
+                vfOrna.setUpperAccidental(this.accidental(oContainer.AccidentalAbove));
+            }
+            vfOrna.setPosition(vfPosition);
+            vfnote.addModifier(0, vfOrna);
+        }
+    }
+
     /**
      * Convert a ClefInstruction to a string represention of a clef type in VexFlow.
      *
@@ -286,7 +408,7 @@ export class VexFlowConverter {
 
         // Make sure size is either "default" or "small"
         if (size !== "default" && size !== "small") {
-            Logging.warn(`Invalid VexFlow clef size "${size}" specified. Using "default".`);
+            log.warn(`Invalid VexFlow clef size "${size}" specified. Using "default".`);
             size = "default";
         }
 
@@ -307,7 +429,7 @@ export class VexFlowConverter {
                         break;
                     default:
                         type = "treble";
-                        Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                        log.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
                 }
                 break;
 
@@ -325,7 +447,7 @@ export class VexFlowConverter {
                       break;
                   default:
                       type = "bass";
-                      Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                      log.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
                 }
                 break;
 
@@ -346,7 +468,7 @@ export class VexFlowConverter {
                       break;
                   default:
                       type = "alto";
-                      Logging.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
+                      log.error(`Clef ${ClefEnum[clef.ClefType]} on line ${clef.Line} not supported by VexFlow. Using default value "${type}".`);
                 }
                 break;
 
@@ -362,14 +484,11 @@ export class VexFlowConverter {
             default:
         }
 
-        switch (clef.OctaveOffset) {
-            case 1:
-                annotation = "8va";
-                break;
-            case -1:
-                annotation = "8vb";
-                break;
-            default:
+        // annotations in vexflow don't allow bass and 8va. No matter the offset :(
+        if (clef.OctaveOffset === 1 && type !== "bass" ) {
+            annotation = "8va";
+        } else if (clef.OctaveOffset === -1) {
+            annotation = "8vb";
         }
         return { type, size, annotation };
     }

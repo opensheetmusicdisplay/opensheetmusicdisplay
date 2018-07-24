@@ -8,7 +8,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     // The available demos
         demos = {
-            "Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
+            "L.v. Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
             "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
@@ -17,18 +17,23 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "J.S. Bach - Air": "JohannSebastianBach_Air.xml",
             "C. Gounod - Meditation": "CharlesGounod_Meditation.xml",
             "J. Haydn - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
-            "Mozart - An Chloe": "Mozart_AnChloe.xml",
-            "Mozart - Das Veilchen": "Mozart_DasVeilchen.xml",
-            "Mozart - Trio": "MozartTrio.mxl",
             "S. Joplin - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
             "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer.xml",
-            "ActorPreludeSample": "ActorPreludeSample.xml",
-            "R. Schumann - Dichterliebe": "Dichterliebe01.xml",
+            "W.A. Mozart - An Chloe": "Mozart_AnChloe.xml",
+            "W.A. Mozart - Das Veilchen": "Mozart_DasVeilchen.xml",
+            "W.A. Mozart - Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+            "OSMD Function Test - All": "OSMD_function_test_all.xml",
+            "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
+            "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+            "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
+            "F. Schubert - An Die Musik (Multiple Verses)": "Schubert_An_die_Musik.xml",
+            "L. Actor - Prelude (Sample)": "ActorPreludeSample.xml",
+            "Anonymous - Saltarello": "Saltarello.mxl",
             "C. Debussy - Mandoline": "Debussy_Mandoline.xml",
             "France Levasseur - Parlez Mois": "Parlez-moi.mxl",
+            "R. Schumann - Dichterliebe": "Dichterliebe01.xml",
             "Telemann - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
             "Telemann - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
-            "Saltarello": "Saltarello.mxl",
         },
 
         zoom = 1.0,
@@ -37,9 +42,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         error_tr,
         canvas,
         select,
+        selectBounding,
+        skylineDebug,
+        bottomlineDebug,
         zoomIn,
         zoomOut,
-        size,
         zoomDiv,
         custom,
         nextCursorBtn,
@@ -54,10 +61,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         err = document.getElementById("error-td");
         error_tr = document.getElementById("error-tr");
-        size = document.getElementById("size-str");
         zoomDiv = document.getElementById("zoom-str");
         custom = document.createElement("option");
         select = document.getElementById("select");
+        selectBounding = document.getElementById("selectBounding");
+        skylineDebug = document.getElementById("skylineDebug");
+        bottomlineDebug = document.getElementById("bottomlineDebug");
         zoomIn = document.getElementById("zoom-in-btn");
         zoomOut = document.getElementById("zoom-out-btn");
         canvas = document.createElement("div");
@@ -80,9 +89,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             select.appendChild(option);
         }
         select.onchange = selectOnChange;
+        selectBounding.onchange = selectBoundingOnChange;
 
         // Pre-select default music piece
-        select.value = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
 
         custom.appendChild(document.createTextNode("Custom"));
 
@@ -95,6 +104,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             zoom /= 1.2;
             scale();
         };
+
+        skylineDebug.onclick = function() {
+            openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+        }
+
+        bottomlineDebug .onclick = function() {
+            openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+        }
 
         // Create OSMD object and canvas
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, backendSelect.value);
@@ -174,6 +191,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
       window.setTimeout(endCallback, 1);
     }
 
+    function selectBoundingOnChange(evt) {
+        var value = evt.target.value;
+        openSheetMusicDisplay.DrawBoundingBox = value;
+    }
+
     function selectOnChange(str) {
         error();
         disable();
@@ -187,12 +209,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 return openSheetMusicDisplay.render();
             },
             function(e) {
+                console.warn(e.stack);
                 error("Error reading sheet: " + e);
             }
         ).then(
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
+                console.warn(e.stack);
                 error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
                 onLoadingEnd(isCustom);
             }
@@ -209,7 +233,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function logCanvasSize() {
-        size.innerHTML = canvas.offsetWidth + "px";
         zoomDiv.innerHTML = Math.floor(zoom * 100.0) + "%";
     }
 
@@ -272,14 +295,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         reader.onload = function (res) {
             selectOnChange(res.target.result);
         };
-        if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".xml") > 0) {
+        var filename = event.dataTransfer.files[0].name;
+        if (filename.toLowerCase().indexOf(".xml") > 0
+            || filename.toLowerCase().indexOf(".musicxml") > 0) {
             reader.readAsText(event.dataTransfer.files[0]);
-        }
-        else if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".mxl") > 0){
+        } else if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".mxl") > 0){
             reader.readAsBinaryString(event.dataTransfer.files[0]);
         }
         else {
-            alert("No vaild .xml/.mxl file!");
+            alert("No vaild .xml/.mxl/.musicxml file!");
         }
     });
 }());
