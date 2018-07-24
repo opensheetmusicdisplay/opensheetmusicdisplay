@@ -179,7 +179,32 @@ export class InstrumentReader {
 
           const restNote: boolean = xmlNode.element("rest") !== undefined;
           //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
+
           const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
+          let graceNoteSlash: boolean = false;
+          let graceSlur: boolean = false;
+          if (isGraceNote) {
+            const graceNode: IXmlElement = xmlNode.element("grace");
+            if (graceNode && graceNode.attributes()) {
+              if (graceNode.attribute("slash")) {
+                const slash: string = graceNode.attribute("slash").value;
+                if (slash === "yes") {
+                  graceNoteSlash = true;
+                }
+              }
+            }
+
+            noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
+
+            const notationNode: IXmlElement = xmlNode.element("notations");
+            if (notationNode !== undefined) {
+              if (notationNode.element("slur") !== undefined) {
+                graceSlur = true;
+                // grace slurs could be non-binary, but VexFlow.GraceNoteGroup modifier system is currently only boolean for slurs.
+              }
+            }
+          }
+
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
             musicTimestamp = previousFraction.clone();
@@ -191,8 +216,14 @@ export class InstrumentReader {
           ).staffEntry;
           //log.info("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
 
-          if (!this.currentVoiceGenerator.hasVoiceEntry() || (!isChord && !isGraceNote && !lastNoteWasGrace) || (!lastNoteWasGrace && isGraceNote)) {
-            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote);
+          if (!this.currentVoiceGenerator.hasVoiceEntry()
+            || (!isChord && !isGraceNote && !lastNoteWasGrace)
+            || (isGraceNote && !lastNoteWasGrace)
+            || (isGraceNote && !isChord)
+            || (!isGraceNote && lastNoteWasGrace)
+          ) {
+            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote && !isGraceNote,
+                                                        isGraceNote, graceNoteSlash, graceSlur);
           }
           if (!isGraceNote && !isChord) {
             previousFraction = currentFraction.clone();
@@ -220,21 +251,16 @@ export class InstrumentReader {
           if (this.activeRhythm !== undefined) {
             // (*) this.musicSheet.SheetPlaybackSetting.Rhythm = this.activeRhythm.Rhythm;
           }
-          if (isTuplet) {
-            this.currentVoiceGenerator.read(
-              xmlNode, noteDuration, restNote, isGraceNote,
-              this.currentStaffEntry, this.currentMeasure,
-              measureStartAbsoluteTimestamp,
-              this.maxTieNoteFraction, isChord, guitarPro
-            );
-          } else {
-            this.currentVoiceGenerator.read(
-              xmlNode, new Fraction(noteDivisions, 4 * this.divisions),
-              restNote, isGraceNote, this.currentStaffEntry,
-              this.currentMeasure, measureStartAbsoluteTimestamp,
-              this.maxTieNoteFraction, isChord, guitarPro
-            );
+          if (!isTuplet && !isGraceNote) {
+            noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
+          this.currentVoiceGenerator.read(
+            xmlNode, noteDuration, restNote,
+            this.currentStaffEntry, this.currentMeasure,
+            measureStartAbsoluteTimestamp,
+            this.maxTieNoteFraction, isChord, guitarPro
+          );
+
           const notationsNode: IXmlElement = xmlNode.element("notations");
           if (notationsNode !== undefined && notationsNode.element("dynamics") !== undefined) {
             // (*) let expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
@@ -354,7 +380,6 @@ export class InstrumentReader {
         if (this.voiceGeneratorsDict.hasOwnProperty(j)) {
           const voiceGenerator: VoiceGenerator = this.voiceGeneratorsDict[j];
           voiceGenerator.checkForOpenBeam();
-          voiceGenerator.checkForOpenGraceNotes();
         }
       }
       if (this.currentXmlMeasureIndex === this.xmlMeasureList.length - 1) {

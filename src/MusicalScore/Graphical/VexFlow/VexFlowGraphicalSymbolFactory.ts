@@ -77,18 +77,6 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
         return new VexFlowStaffEntry(<VexFlowMeasure>measure, sourceStaffEntry, undefined);
     }
 
-    /**
-     * Create an empty staffEntry which will be used for grace notes.
-     * it will be linked to the given staffEntryParent, which is a staffEntry for normal notes.
-     * Grace notes are almost always given before (rarely also after) normal notes.
-     * @param staffEntryParent
-     * @param measure
-     * @returns {VexFlowStaffEntry}
-     */
-    public createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry {
-        return new VexFlowStaffEntry(<VexFlowMeasure>measure, undefined, <VexFlowStaffEntry>staffEntryParent);
-    }
-
     public createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry {
         return new VexFlowVoiceEntry(parentVoiceEntry, parentStaffEntry);
     }

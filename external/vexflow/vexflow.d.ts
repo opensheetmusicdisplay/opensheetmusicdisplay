@@ -78,6 +78,7 @@ declare namespace Vex {
             public setStemDirection(direction: number): StemmableNote;
             public x_shift: number;
             public getAbsoluteX(): number;
+            public addModifier(index: number, modifier: Modifier): StemmableNote;
         }
 
         export class GhostNote extends StemmableNote {
@@ -105,6 +106,15 @@ declare namespace Vex {
             public setStyle(style: any): void;
 
             public addDotToAll(): void;
+        }
+
+        export class GraceNote extends StaveNote {
+            constructor(note_struct: any);
+        }
+
+        export class GraceNoteGroup extends Modifier {
+            constructor(grace_notes: GraceNote[], show_slur: boolean);
+            public beamNotes(): GraceNoteGroup;
         }
 
         export class StaveTie {
@@ -256,6 +266,13 @@ declare namespace Vex {
             constructor(type: string);
         }
 
+        export class Ornament extends Modifier {
+            constructor(type: string);
+            setDelayed(delayed: boolean): void;
+            setUpperAccidental(acc: string): void;
+            setLowerAccidental(acc: string): void;
+        }
+        
         export class Beam {
             constructor(notes: StaveNote[], auto_stem: boolean);
 

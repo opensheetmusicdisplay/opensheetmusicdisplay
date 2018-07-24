@@ -14,6 +14,7 @@ import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
+import StemmableNote = Vex.Flow.StemmableNote;
 import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
@@ -324,16 +325,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
+    // this currently formats multiple measures, see VexFlowMusicSheetCalculator.formatMeasures()
     public format(): void {
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices
         if (this.formatVoices) {
-            // The width of the voices does not include the instructions (StaveModifiers)
-            this.formatVoices((this.PositionAndShape.BorderRight - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
+            // set the width of the voices to the current measure width:
+            // (The width of the voices does not include the instructions (StaveModifiers))
+            this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
         }
-
-        // Force the width of the Begin Instructions
-        this.stave.setNoteStartX(this.stave.getX() + unitInPixels * this.beginInstructionsWidth);
     }
 
     /**
@@ -577,8 +577,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public graphicalMeasureCreatedCalculations(): void {
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             // create vex flow Stave Notes:
+            let graceSlur: boolean = false;
+            let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+                if (gve.parentVoiceEntry.IsGrace) {
+                    graceGVoiceEntriesBefore.push(gve);
+                    if (!graceSlur) {
+                        graceSlur = gve.parentVoiceEntry.GraceSlur;
+                    }
+                    continue;
+                }
                 (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
+                if (graceGVoiceEntriesBefore.length > 0) {
+                    const graceNotes: Vex.Flow.GraceNote[] = [];
+                    for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
+                        graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
+                    }
+                    const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
+                    (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes());
+                    graceGVoiceEntriesBefore = [];
+                }
             }
         }
 
@@ -597,13 +615,24 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
             // create vex flow voices and add tickables to it:
+            //let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const voiceEntry of restFilledEntries) {
+                if (!voiceEntry.parentVoiceEntry) {
+                    continue;
+                }
+                if (voiceEntry.parentVoiceEntry.IsGrace) {
+                    continue;
+                }
                 this.vfVoices[voice.VoiceId].addTickable((voiceEntry as VexFlowVoiceEntry).vfStaveNote);
             }
         }
         this.createArticulations();
+        this.createOrnaments();
     }
 
+    /**
+     * Create the articulations for all notes of the current staff entry
+     */
     private createArticulations(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
@@ -611,8 +640,30 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow articulation:
             const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             for (const gve of graphicalVoiceEntries) {
-                const vfStaveNote: StaveNote = ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote);
+                if (gve.parentVoiceEntry.IsGrace) {
+                    continue;
+                }
+                const vfStaveNote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
                 VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0].sourceNote.ParentVoiceEntry.Articulations);
+            }
+        }
+    }
+
+    /**
+     * Create the ornaments for all notes of the current staff entry
+     */
+    private createOrnaments(): void {
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
+            const gvoices: { [voiceID: number]: GraphicalVoiceEntry; } = graphicalStaffEntry.graphicalVoiceEntries;
+
+            for (const voiceID in gvoices) {
+                if (gvoices.hasOwnProperty(voiceID)) {
+                    const vfStaveNote: StemmableNote = (gvoices[voiceID] as VexFlowVoiceEntry).vfStaveNote;
+                    if (gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer !== undefined) {
+                        VexFlowConverter.generateOrnaments(vfStaveNote, gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer);
+                    }
+                }
             }
         }
     }
@@ -641,18 +692,18 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * space needed by Instructions (in VexFlow: StaveModifiers)
      */
     private updateInstructionWidth(): void {
-        let beginInstructionsWidth: number = 0;
-        let endInstructionsWidth: number = 0;
+        let vfBeginInstructionsWidth: number = 0;
+        let vfEndInstructionsWidth: number = 0;
         const modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
         for (const mod of modifiers) {
             if (mod.getPosition() === Vex.Flow.StaveModifier.Position.BEGIN) {
-                beginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
+                vfBeginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
             } else if (mod.getPosition() === Vex.Flow.StaveModifier.Position.END) {
-                endInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
+                vfEndInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
             }
         }
 
-        this.beginInstructionsWidth = beginInstructionsWidth / unitInPixels;
-        this.endInstructionsWidth = endInstructionsWidth / unitInPixels;
+        this.beginInstructionsWidth = vfBeginInstructionsWidth / unitInPixels;
+        this.endInstructionsWidth = vfEndInstructionsWidth / unitInPixels;
     }
 }
