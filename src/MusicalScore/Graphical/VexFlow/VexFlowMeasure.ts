@@ -325,6 +325,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
+    // this currently formats multiple measures, see VexFlowMusicSheetCalculator.formatMeasures()
     public format(): void {
         // If this is the first stave in the vertical measure, call the format
         // method to set the width of all the voices

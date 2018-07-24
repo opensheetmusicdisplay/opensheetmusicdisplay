@@ -180,7 +180,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             this.drawLabel(staffEntry.graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
         }
         if (staffEntry.LyricsEntries.length > 0) {
-            this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes, staffEntry);
+            this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
         }
     }
 
@@ -189,10 +189,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param lyricEntries Array of lyric entries to be drawn
      * @param layer Number of the layer that the lyrics should be drawn in
      */
-    private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number, staffEntry: GraphicalStaffEntry): void {
-        //lyricEntries.forEach(lyricsEntry => this.drawLabel(lyricsEntry.GraphicalLabel, layer, lyricsEntry.GetLyricsEntry.Parent.Notes, staffEntry));
+    private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
         lyricEntries.forEach(lyricsEntry => this.drawLabel(lyricsEntry.GraphicalLabel, layer));
-        // ((staffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote as Vex.Flow.Note).setWidth(100);
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
