@@ -9,6 +9,10 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         super(measure, sourceStaffEntry, staffEntryParent);
     }
 
+    // if there is a in-measure clef given before this staffEntry,
+    // it will be converted to a Vex.Flow.ClefNote and assigned to this variable:
+    public vfClefBefore: Vex.Flow.ClefNote;
+
     /**
      * Calculates the staff entry positions from the VexFlow stave information and the tickabels inside the staff.
      * This is needed in order to set the OSMD staff entries (which are almost the same as tickables) to the correct positionts.

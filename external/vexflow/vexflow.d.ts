@@ -225,7 +225,7 @@ declare namespace Vex {
         }
 
         export class Clef extends StaveModifier {
-            constructor(type: string, size: number, annotation: string);
+            constructor(type: string, size: string, annotation: string);
 
             public static category: string;
             public static types: { [type: string]: any; };
@@ -236,6 +236,10 @@ declare namespace Vex {
             public getBoundingBox(): BoundingBox;
 
             public setStave(stave: Stave): void;
+        }
+        
+        export class ClefNote  extends Note {
+            constructor(type: string, size: string, annotation: string);
         }
 
         export class Renderer {
