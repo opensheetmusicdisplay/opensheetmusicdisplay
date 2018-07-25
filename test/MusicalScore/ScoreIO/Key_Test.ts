@@ -3,7 +3,10 @@ import { MusicSheet }             from "../../../src/MusicalScore/MusicSheet";
 import { IXmlElement }            from "../../../src/Common/FileIO/Xml";
 import { KeyInstruction }         from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
 import { KeyEnum as KeyModeEnum } from "../../../src/MusicalScore/VoiceData/Instructions/KeyInstruction";
+import { VexFlowConverter } from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowConverter";
 import * as chai                  from "chai";
+import { AbstractNotationInstruction } from "../../../src/MusicalScore/VoiceData/Instructions/AbstractNotationInstruction";
+import { RhythmInstruction, RhythmSymbolEnum } from "../../../src/MusicalScore/VoiceData/Instructions/RhythmInstruction";
 
 let reader: MusicSheetReader;
 let parser: DOMParser;
@@ -257,17 +260,63 @@ describe("MusicXML parser for element 'key'", () => {
   });
 });
 
-function getMusicSheetWithKey(fifths: number = undefined, mode: string = undefined): MusicSheet {
-  const doc: Document = parser.parseFromString(getMusicXmlWithKey(fifths, mode), "text/xml");
+describe("VexFlowConverter for element 'key'", () => {
+  before((): void => {
+    reader = new MusicSheetReader();
+    parser = new DOMParser();
+  });
+
+  it("gives key signature G-major with no optional 'mode' element present", (done: MochaDone) => {
+    const keyInstruction: KeyInstruction = getMusicSheetWithKey(1, "").getFirstSourceMeasure().getKeyInstruction(0);
+    const vexflowKeySignature: string = VexFlowConverter.keySignature(keyInstruction);
+    const isGMajorOrEminor: boolean = ["G", "E"].indexOf(vexflowKeySignature.charAt(0)) !== -1;
+    chai.expect(isGMajorOrEminor).to.equal(true);
+    done();
+  });
+});
+
+// not key tests, but if we outsource this, we need to make getMusicSheetWithKey() accessible from other test files.
+describe("InstrumentReader for element 'time'", () => {
+  before((): void => {
+    reader = new MusicSheetReader();
+    parser = new DOMParser();
+  });
+
+  it("gives common time RythmSymbolEnum from xml", (done: MochaDone) => {
+    const instructions: AbstractNotationInstruction[] =
+      getMusicSheetWithKey(1, "major", "common").getFirstSourceMeasure().FirstInstructionsStaffEntries[0].Instructions;
+    for (const instruction of instructions) {
+      if (instruction instanceof RhythmInstruction) {
+        chai.expect(instruction.SymbolEnum).to.equal(RhythmSymbolEnum.COMMON);
+      }
+    }
+    done();
+  });
+
+  it("gives alla breve/cut time RythmSymbolEnum from xml", (done: MochaDone) => {
+    const instructions: AbstractNotationInstruction[] =
+      getMusicSheetWithKey(1, "major", "cut").getFirstSourceMeasure().FirstInstructionsStaffEntries[0].Instructions;
+    for (const instruction of instructions) {
+      if (instruction instanceof RhythmInstruction) {
+        chai.expect(instruction.SymbolEnum).to.equal(RhythmSymbolEnum.CUT);
+      }
+    }
+    done();
+  });
+});
+
+function getMusicSheetWithKey(fifths: number = undefined, mode: string = undefined, timeSymbol: string = ""): MusicSheet {
+  const doc: Document = parser.parseFromString(getMusicXmlWithKey(fifths, mode, timeSymbol), "text/xml");
   chai.expect(doc).to.not.be.undefined;
   const score: IXmlElement = new IXmlElement(doc.getElementsByTagName("score-partwise")[0]);
   chai.expect(score).to.not.be.undefined;
   return reader.createMusicSheet(score, "template.xml");
 }
 
-function getMusicXmlWithKey(fifths: number = undefined, mode: string = undefined): string {
+function getMusicXmlWithKey(fifths: number = undefined, mode: string = undefined, timeSymbol: string = ""): string {
   const modeElement: string = mode ? `<mode>${mode}</mode>` : "";
   const fifthsElement: string = fifths ? `<fifths>${fifths}</fifths>` : "";
+  const timeSymbolAttribute: string = timeSymbol ? `symbol="${timeSymbol}"` : "";
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
           <!DOCTYPE score-partwise PUBLIC
               "-//Recordare//DTD MusicXML 3.0 Partwise//EN"
@@ -286,7 +335,7 @@ function getMusicXmlWithKey(fifths: number = undefined, mode: string = undefined
                     ${fifthsElement}
                     ${modeElement}
                   </key>
-                  <time>
+                  <time ${timeSymbolAttribute}>
                     <beats>4</beats>
                     <beat-type>4</beat-type>
                   </time>
