@@ -781,9 +781,6 @@ export class InstrumentReader {
           log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
-        if ((num === 4 && denom === 4) || (num === 2 && denom === 2)) {
-          symbolEnum = RhythmSymbolEnum.NONE;
-        }
         this.abstractInstructions.push([1, new RhythmInstruction(
           new Fraction(num, denom, 0, false), symbolEnum
         )]);
