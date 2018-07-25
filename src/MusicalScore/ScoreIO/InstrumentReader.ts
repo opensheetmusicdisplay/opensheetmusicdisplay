@@ -711,7 +711,6 @@ export class InstrumentReader {
           keyEnum = KeyEnum.major;
           log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
-
       }
       const keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
       this.abstractInstructions.push([1, keyInstruction]);
