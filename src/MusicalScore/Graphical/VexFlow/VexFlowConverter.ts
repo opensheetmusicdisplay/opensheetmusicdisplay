@@ -533,7 +533,10 @@ export class VexFlowConverter {
             case KeyEnum.major:
                 ret = VexFlowConverter.majorMap[key.Key];
                 break;
+            // some XMLs don't have the mode set despite having a key signature.
             case KeyEnum.none:
+                ret = VexFlowConverter.majorMap[key.Key];
+                break;
             default:
                 ret = "C";
         }
