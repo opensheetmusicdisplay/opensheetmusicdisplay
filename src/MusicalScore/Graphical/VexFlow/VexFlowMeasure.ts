@@ -15,6 +15,7 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
 import StemmableNote = Vex.Flow.StemmableNote;
+import NoteSubGroup = Vex.Flow.NoteSubGroup;
 import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
@@ -650,7 +651,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
             // create vex flow voices and add tickables to it:
-            // let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const voiceEntry of restFilledEntries) {
                 if (!voiceEntry.parentVoiceEntry) {
                     continue;
@@ -663,10 +663,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // check for in-measure clefs:
                 // only add clefs in main voice (to not add them twice)
                 if (isMainVoice) {
-                    const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
+                    const vfse: VexFlowStaffEntry = voiceEntry.parentStaffEntry as VexFlowStaffEntry;
                     if (vfse.vfClefBefore !== undefined) {
-                        // add the clef as Vex.Flow.ClefNote
-                        this.vfVoices[voice.VoiceId].addTickable(vfse.vfClefBefore);
+                        const graphicalVoiceEntries: GraphicalVoiceEntry[] = vfse.graphicalVoiceEntries;
+                        if (graphicalVoiceEntries.length > 0) {
+                            // add clef as NoteSubGroup instead of note directly to get modifier layouting
+                            const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
+                            (graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.addModifier(0, clefModifier);
+                        }
                     }
                 }
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);

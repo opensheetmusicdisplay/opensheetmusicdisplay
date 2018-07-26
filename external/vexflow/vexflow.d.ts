@@ -203,6 +203,9 @@ declare namespace Vex {
             public setPosition(position: number): Modifier;
         }
 
+        export class NoteSubGroup extends Modifier {
+            constructor(notes: Object);
+        }
 
         export class StaveModifier extends Modifier {
             public static get Position() {
@@ -240,6 +243,8 @@ declare namespace Vex {
         
         export class ClefNote  extends Note {
             constructor(type: string, size: string, annotation: string);
+
+            public type: string;
         }
 
         export class Renderer {
