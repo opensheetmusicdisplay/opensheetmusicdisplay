@@ -5,35 +5,34 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     "use strict";
     var openSheetMusicDisplay;
     // folder of the sample files
-    var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
-        // demo sample files
+    var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
         samples = {
-            "L.v. Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
-            "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
-            "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
-            "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
-            "M. Clementi - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
-            "J.S. Bach - Praeludium In C Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
-            "J.S. Bach - Air": "JohannSebastianBach_Air.xml",
-            "C. Gounod - Meditation": "CharlesGounod_Meditation.xml",
-            "J. Haydn - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
-            "S. Joplin - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
-            "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer.xml",
-            "W.A. Mozart - An Chloe": "Mozart_AnChloe.xml",
-            "W.A. Mozart - Das Veilchen": "Mozart_DasVeilchen.xml",
-            "W.A. Mozart - Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+            "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
+            "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
+            "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
+            "Clementi, M. - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
+            "Clementi, M. - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
+            "Bach, J.S. - Praeludium In C Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+            "Bach, J.S. - Air": "JohannSebastianBach_Air.xml",
+            "Gounod, C. - Meditation": "CharlesGounod_Meditation.xml",
+            "Haydn, J. - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
+            "Joplin, S. - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
+            "Joplin, S. - The Entertainer": "ScottJoplin_The_Entertainer.xml",
+            "Mozart, W.A. - An Chloe": "Mozart_AnChloe.xml",
+            "Mozart, W.A. - Das Veilchen": "Mozart_DasVeilchen.xml",
+            "Mozart, W.A.- Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
             "OSMD Function Test - All": "OSMD_function_test_all.xml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
             "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
-            "F. Schubert - An Die Musik (Multiple Verses)": "Schubert_An_die_Musik.xml",
-            "L. Actor - Prelude (Sample)": "ActorPreludeSample.xml",
+            "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
+            "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
             "Anonymous - Saltarello": "Saltarello.mxl",
-            "C. Debussy - Mandoline": "Debussy_Mandoline.xml",
-            "France Levasseur - Parlez Mois": "Parlez-moi.mxl",
-            "R. Schumann - Dichterliebe": "Dichterliebe01.xml",
-            "Telemann - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
-            "Telemann - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
+            "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
+            "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
+            "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
+            "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
+            "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
         },
 
         zoom = 1.0,
@@ -201,7 +200,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         disable();
         var isCustom = typeof str === "string";
         if (!isCustom) {
-            str = folder + selectSample.value;
+            str = sampleFolder + selectSample.value;
         }
         zoom = 1.0;
         openSheetMusicDisplay.load(str).then(
