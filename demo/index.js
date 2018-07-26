@@ -4,10 +4,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 (function () {
     "use strict";
     var openSheetMusicDisplay;
-    // The folder of the demo files
+    // folder of the sample files
     var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
-    // The available demos
-        demos = {
+        // demo sample files
+        samples = {
             "L.v. Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
@@ -41,7 +41,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         err,
         error_tr,
         canvas,
-        select,
+        selectSample,
         selectBounding,
         skylineDebug,
         bottomlineDebug,
@@ -63,7 +63,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         error_tr = document.getElementById("error-tr");
         zoomDiv = document.getElementById("zoom-str");
         custom = document.createElement("option");
-        select = document.getElementById("select");
+        selectSample = document.getElementById("selectSample");
         selectBounding = document.getElementById("selectBounding");
         skylineDebug = document.getElementById("skylineDebug");
         bottomlineDebug = document.getElementById("bottomlineDebug");
@@ -80,15 +80,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         error();
 
         // Create select
-        for (name in demos) {
-            if (demos.hasOwnProperty(name)) {
+        for (name in samples) {
+            if (samples.hasOwnProperty(name)) {
                 option = document.createElement("option");
-                option.value = demos[name];
+                option.value = samples[name];
                 option.textContent = name;
             }
-            select.appendChild(option);
+            selectSample.appendChild(option);
         }
-        select.onchange = selectOnChange;
+        selectSample.onchange = selectSampleOnChange;
         selectBounding.onchange = selectBoundingOnChange;
 
         // Pre-select default music piece
@@ -158,7 +158,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             canvas.innerHTML = "";
             openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, value);
             openSheetMusicDisplay.setLogLevel('info');
-            selectOnChange();
+            selectSampleOnChange();
 
         });
     }
@@ -196,12 +196,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay.DrawBoundingBox = value;
     }
 
-    function selectOnChange(str) {
+    function selectSampleOnChange(str) {
         error();
         disable();
         var isCustom = typeof str === "string";
         if (!isCustom) {
-            str = folder + select.value;
+            str = folder + selectSample.value;
         }
         zoom = 1.0;
         openSheetMusicDisplay.load(str).then(
@@ -225,8 +225,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
     function onLoadingEnd(isCustom) {
         // Remove option from select
-        if (!isCustom && custom.parentElement === select) {
-            select.removeChild(custom);
+        if (!isCustom && custom.parentElement === selectSample) {
+            selectSample.removeChild(custom);
         }
         // Enable controls again
         enable();
@@ -259,18 +259,18 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     // Enable/Disable Controls
     function disable() {
         document.body.style.opacity = 0.3;
-        select.disabled = zoomIn.disabled = zoomOut.disabled = "disabled";
+        selectSample.disabled = zoomIn.disabled = zoomOut.disabled = "disabled";
     }
     function enable() {
         document.body.style.opacity = 1;
-        select.disabled = zoomIn.disabled = zoomOut.disabled = "";
+        selectSample.disabled = zoomIn.disabled = zoomOut.disabled = "";
         logCanvasSize();
     }
 
     // Register events: load, drag&drop
     window.addEventListener("load", function() {
         init();
-        selectOnChange();
+        selectSampleOnChange();
     });
     window.addEventListener("dragenter", function(event) {
         event.preventDefault();
@@ -288,12 +288,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             return;
         }
         // Add "Custom..." score
-        select.appendChild(custom);
+        selectSample.appendChild(custom);
         custom.selected = "selected";
         // Read dragged file
         var reader = new FileReader();
         reader.onload = function (res) {
-            selectOnChange(res.target.result);
+            selectSampleOnChange(res.target.result);
         };
         var filename = event.dataTransfer.files[0].name;
         if (filename.toLowerCase().indexOf(".xml") > 0
