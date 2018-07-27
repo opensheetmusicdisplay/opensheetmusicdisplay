@@ -663,14 +663,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // check for in-measure clefs:
                 // only add clefs in main voice (to not add them twice)
                 if (isMainVoice) {
-                    const vfse: VexFlowStaffEntry = voiceEntry.parentStaffEntry as VexFlowStaffEntry;
+                    const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
                     if (vfse.vfClefBefore !== undefined) {
-                        const graphicalVoiceEntries: GraphicalVoiceEntry[] = vfse.graphicalVoiceEntries;
-                        if (graphicalVoiceEntries.length > 0) {
-                            // add clef as NoteSubGroup instead of note directly to get modifier layouting
-                            const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
-                            (graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.addModifier(0, clefModifier);
-                        }
+                        // add clef as NoteSubGroup so that we get modifier layouting
+                        const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
+                        vexFlowVoiceEntry.vfStaveNote.addModifier(0, clefModifier);
                     }
                 }
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
