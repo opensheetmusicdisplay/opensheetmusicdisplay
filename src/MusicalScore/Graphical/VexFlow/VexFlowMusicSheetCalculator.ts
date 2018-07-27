@@ -3,10 +3,8 @@ import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {StaffLine} from "../StaffLine";
 import {VoiceEntry} from "../../VoiceData/VoiceEntry";
-import {MusicSystem} from "../MusicSystem";
 import {GraphicalNote} from "../GraphicalNote";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
-import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {GraphicalTie} from "../GraphicalTie";
 import {Tie} from "../../VoiceData/Tie";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
@@ -22,7 +20,6 @@ import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
-
 import Vex = require("vexflow");
 import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
@@ -33,6 +30,7 @@ import {GraphicalLabel} from "../GraphicalLabel";
 import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
+import {BoundingBox} from "../BoundingBox";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { VexFlowSlur } from "./VexFlowSlur";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
@@ -55,15 +53,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
     protected formatMeasures(): void {
-        for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
-            for (const graphicalMeasure of graphicalMeasures) {
-                (<VexFlowMeasure>graphicalMeasure).format();
-                for (const staffEntry of graphicalMeasure.staffEntries) {
+      for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
+        const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
+        // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
+        firstMeasure.format();
+        for (const staffEntry of firstMeasure.staffEntries) {
                     (<VexFlowStaffEntry>staffEntry).calculateXPosition();
                 }
             }
         }
-    }
 
   //protected clearSystemsAndMeasures(): void {
   //    for (let measure of measures) {
@@ -77,6 +75,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * This method is called within calculateXLayout.
    * The staff entries are aligned with minimum needed x distances.
    * The MinimumStaffEntriesWidth of every measure will be set - needed for system building.
+   * Here: prepares the VexFlow formatter for later formatting
    * @param measures
    * @returns the minimum required x width of the source measure (=list of staff measures)
    */
@@ -98,36 +97,87 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (mvoices.hasOwnProperty(voiceID)) {
                 voices.push(mvoices[voiceID]);
                 allVoices.push(mvoices[voiceID]);
-
             }
         }
         if (voices.length === 0) {
             log.warn("Found a measure with no voices... Continuing anyway.", mvoices);
             continue;
         }
+        // all voices that belong to one stave are collectively added to create a common context in VexFlow.
         formatter.joinVoices(voices);
     }
 
-    let width: number = 200;
+    let minStaffEntriesWidth: number = 200;
     if (allVoices.length > 0) {
         // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
         // FIXME: a more relaxed formatting of voices
-        width = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+        minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
         // firstMeasure.formatVoices = (w: number) => {
         //     formatter.format(allVoices, w);
         // };
+        MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
         for (const measure of measures) {
-            measure.minimumStaffEntriesWidth = width;
-            if (measure !== measures[0]) {
-        (measure as VexFlowMeasure).formatVoices = undefined;
-            } else {
-                (measure as VexFlowMeasure).formatVoices = (w: number) => {
+          measure.PositionAndShape.BorderRight = minStaffEntriesWidth;
+          if (measure === measures[0]) {
+            const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
+            // prepare format function for voices, will be called later for formatting measure again
+            vexflowMeasure.formatVoices = (w: number) => {
                     formatter.format(allVoices, w);
                 };
+            // format now for minimum width
+            vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
+          } else {
+            (measure as VexFlowMeasure).formatVoices = undefined;
             }
         }
     }
-    return width;
+
+    for (const graphicalMeasure of measures) {
+      for (const staffEntry of graphicalMeasure.staffEntries) {
+        // here the measure modifiers are not yet set, therefore the begin instruction width will be empty
+        (<VexFlowStaffEntry>staffEntry).calculateXPosition();
+  }
+    }
+    // update measure width from lyrics formatting
+    minStaffEntriesWidth = this.calculateMeasureWidthFromLyrics(measures, minStaffEntriesWidth);
+    return minStaffEntriesWidth;
+  }
+
+  public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
+    const minLyricsSpacing: number = 1;
+    let lastLyricsLabelHalfWidth: number = 0; // TODO lyrics entries may not be ordered correctly, create a dictionary
+    let lastStaffEntryXPosition: number = 0;
+    let elongationFactorMeasureWidth: number = 1;
+    for (const measure of measuresVertical) {
+      for (let i: number = 1; i < measure.staffEntries.length; i++) {
+        const staffEntry: GraphicalStaffEntry = measure.staffEntries[i];
+        if (staffEntry.LyricsEntries.length === 0) {
+          continue;
+        }
+        const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[0];
+        // TODO choose biggest lyrics entry or handle each separately and take maximum elongation
+
+        const lyricsBbox: BoundingBox = lyricsEntry.GraphicalLabel.PositionAndShape;
+        const lyricsLabelHalfWidth: number = lyricsBbox.Size.width / 2;
+        const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
+
+        const spaceNeededByLyrics: number = lastLyricsLabelHalfWidth + lyricsLabelHalfWidth + minLyricsSpacing;
+        /* make extra space for lyric word dashes. takes too much space currently. doesn't work correctly yet.
+        const nonStartingPartOfLyricWord: boolean = lyricsEntry.ParentLyricWord !== undefined &&
+        lyricsEntry !== lyricsEntry.ParentLyricWord.GraphicalLyricsEntries[0];
+        if (nonStartingPartOfLyricWord) {
+          spaceNeededByLyrics += minLyricsSpacing * 0;
+        }*/
+
+        const staffEntrySpacing: number = staffEntryXPosition - lastStaffEntryXPosition;
+        const elongationFactorMeasureWidthForCurrentLabels: number = spaceNeededByLyrics / staffEntrySpacing;
+        elongationFactorMeasureWidth = Math.max(elongationFactorMeasureWidth, elongationFactorMeasureWidthForCurrentLabels);
+
+        lastStaffEntryXPosition = staffEntryXPosition;
+        lastLyricsLabelHalfWidth = lyricsLabelHalfWidth;
+      }
+    }
+    return oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
@@ -137,7 +187,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
 
   protected updateStaffLineBorders(staffLine: StaffLine): void {
-    return;
+      staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
   }
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -152,10 +202,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param graphicalNotes
    * @param graphicalStaffEntry
    * @param hasPitchedNote
-   * @param isGraceStaffEntry
    */
   protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry,
-                             hasPitchedNote: boolean, isGraceStaffEntry: boolean): void {
+                             hasPitchedNote: boolean): void {
     return;
   }
 
@@ -173,28 +222,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * furthermore the y positions of the systems themselves.
    */
   protected calculateSystemYLayout(): void {
-    for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-      const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-      if (!this.leadSheet) {
-        let globalY: number = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
-          this.rules.TitleBottomDistance;
-        for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-          const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-          // calculate y positions of stafflines within system
-          let y: number = 0;
-          for (const line of musicSystem.StaffLines) {
-            line.PositionAndShape.RelativePosition.y = y;
-            y += 10;
+    for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
+            for (const musicSystem of graphicalMusicPage.MusicSystems) {
+                this.optimizeDistanceBetweenStaffLines(musicSystem);
           }
+
           // set y positions of systems using the previous system and a fixed distance.
-          musicSystem.PositionAndShape.BorderBottom = y + 0;
-          musicSystem.PositionAndShape.RelativePosition.x = this.rules.PageLeftMargin + this.rules.SystemLeftMargin;
-          musicSystem.PositionAndShape.RelativePosition.y = globalY;
-          globalY += y + 5;
+            this.calculateMusicSystemsRelativePositions(graphicalMusicPage);
         }
       }
-    }
-  }
 
   /**
    * Is called at the begin of the method for creating the vertically aligned staff measures belonging to one source measure.
@@ -298,7 +334,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // now create corresponding graphical symbol or Text in VexFlow:
       // use top measure and staffline for positioning.
       if (uppermostMeasure !== undefined) {
-        uppermostMeasure.addWordRepetition(repetitionInstruction.type);
+        uppermostMeasure.addWordRepetition(repetitionInstruction);
       }
     }
 

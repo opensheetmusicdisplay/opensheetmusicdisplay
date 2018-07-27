@@ -78,6 +78,7 @@ declare namespace Vex {
             public setStemDirection(direction: number): StemmableNote;
             public x_shift: number;
             public getAbsoluteX(): number;
+            public addModifier(index: number, modifier: Modifier): StemmableNote;
         }
 
         export class GhostNote extends StemmableNote {
@@ -105,6 +106,15 @@ declare namespace Vex {
             public setStyle(style: any): void;
 
             public addDotToAll(): void;
+        }
+
+        export class GraceNote extends StaveNote {
+            constructor(note_struct: any);
+        }
+
+        export class GraceNoteGroup extends Modifier {
+            constructor(grace_notes: GraceNote[], show_slur: boolean);
+            public beamNotes(): GraceNoteGroup;
         }
 
         export class StaveTie {
@@ -171,6 +181,12 @@ declare namespace Vex {
             public draw(): void;
 
             public addTimeSignature(sig: string): void;
+
+            public setVoltaType(type: number, number_t: number, y: number): void;
+        }
+
+        export class Volta extends StaveModifier {
+            public static type: any;
         }
 
         export class Modifier {
@@ -209,7 +225,7 @@ declare namespace Vex {
         }
 
         export class Clef extends StaveModifier {
-            constructor(type: string, size: number, annotation: string);
+            constructor(type: string, size: string, annotation: string);
 
             public static category: string;
             public static types: { [type: string]: any; };
@@ -220,6 +236,10 @@ declare namespace Vex {
             public getBoundingBox(): BoundingBox;
 
             public setStave(stave: Stave): void;
+        }
+        
+        export class ClefNote  extends Note {
+            constructor(type: string, size: string, annotation: string);
         }
 
         export class Renderer {
@@ -293,8 +313,14 @@ declare namespace Vex {
             public fillRect(x: number, y: number, width: number, height: number): RenderContext
             public fillText(text: string, x: number, y: number): RenderContext;
             public setFont(family: string, size: number, weight: string): RenderContext;
+            public beginPath(): RenderContext;
+            public moveTo(x, y): RenderContext;
+            public lineTo(x, y): RenderContext;
+            public closePath(): RenderContext;
+            public stroke(): RenderContext;
             public save(): RenderContext;
             public restore(): RenderContext;
+            public lineWidth: number;
         }
 
         export class CanvasContext extends RenderContext {

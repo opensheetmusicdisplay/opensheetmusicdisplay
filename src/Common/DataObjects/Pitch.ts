@@ -10,12 +10,16 @@ export enum NoteEnum {
 }
 
 export enum AccidentalEnum {
+    TRIPLEFLAT = -3,
     DOUBLEFLAT = -2,
     FLAT = -1,
     NONE = 0,
     SHARP = 1,
     DOUBLESHARP = 2,
-    NATURAL = 3
+    TRIPLESHARP = 3,
+    NATURAL = 4,
+    QUARTERTONESHARP = 0.5,
+    QUARTERTONEFLAT = -0.5
 }
 
 // This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.

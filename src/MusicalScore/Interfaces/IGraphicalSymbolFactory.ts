@@ -28,8 +28,6 @@ export interface IGraphicalSymbolFactory {
 
     createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry;
 
-    createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry;
-
     createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry;
 
     createNote(
@@ -45,7 +43,7 @@ export interface IGraphicalSymbolFactory {
         activeClef: ClefInstruction,
         octaveShift: OctaveEnum): GraphicalNote;
 
-    addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void;
+    addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void;
 
     addFermataAtTiedEndNote(tiedNote: Note, graphicalStaffEntry: GraphicalStaffEntry): void;
 

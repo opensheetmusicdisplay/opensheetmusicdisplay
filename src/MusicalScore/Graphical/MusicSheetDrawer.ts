@@ -41,6 +41,10 @@ export abstract class MusicSheetDrawer {
     public drawingParameters: DrawingParameters = new DrawingParameters();
     public splitScreenLineColor: number;
     public midiPlaybackAvailable: boolean;
+    public drawableBoundingBoxElement: string = process.env.DRAW_BOUNDING_BOX_ELEMENT;
+
+    public skyLineVisible: boolean = false;
+    public bottomLineVisible: boolean = false;
 
     protected rules: EngravingRules;
     protected graphicalMusicSheet: GraphicalMusicSheet;
@@ -338,6 +342,14 @@ export abstract class MusicSheetDrawer {
         if (staffLine.LyricsDashes.length > 0) {
             this.drawDashes(staffLine.LyricsDashes);
         }
+
+        if (this.skyLineVisible) {
+            this.drawSkyLine(staffLine);
+        }
+
+        if (this.bottomLineVisible) {
+            this.drawBottomLine(staffLine);
+        }
     }
 
     /**
@@ -433,8 +445,8 @@ export abstract class MusicSheetDrawer {
         }
         // Draw bounding boxes for debug purposes. This has to be at the end because only
         // then all the calculations and recalculations are done
-        if (process.env.DRAW_BOUNDING_BOX_ELEMENT) {
-            this.drawBoundingBoxes(page.PositionAndShape, 0, process.env.DRAW_BOUNDING_BOX_ELEMENT);
+        if (this.drawableBoundingBoxElement) {
+            this.drawBoundingBoxes(page.PositionAndShape, 0, this.drawableBoundingBoxElement);
         }
 
     }
@@ -454,7 +466,7 @@ export abstract class MusicSheetDrawer {
                                                          (relBoundingRect.width + 0), (relBoundingRect.height + 0));
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 1.2, TextAlignment.CenterCenter),
+            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignment.CenterCenter),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
         layer++;

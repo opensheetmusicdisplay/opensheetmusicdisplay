@@ -131,8 +131,20 @@ export class VexFlowConverter {
             case AccidentalEnum.DOUBLESHARP:
                 acc = "##";
                 break;
+            case AccidentalEnum.TRIPLESHARP:
+                acc = "++";
+                break;
             case AccidentalEnum.DOUBLEFLAT:
                 acc = "bb";
+                break;
+            case AccidentalEnum.TRIPLEFLAT:
+                acc = "bbs"; // there is no "bbb" in VexFlow yet, unfortunately.
+                break;
+            case AccidentalEnum.QUARTERTONESHARP:
+                acc = "+";
+                break;
+            case AccidentalEnum.QUARTERTONEFLAT:
+                acc = "d";
                 break;
             default:
         }
@@ -155,10 +167,6 @@ export class VexFlowConverter {
         // VexFlow needs the notes ordered vertically in the other direction:
         const notes: GraphicalNote[] = gve.notes.reverse();
         const baseNote: GraphicalNote = notes[0];
-        if (baseNote.sourceNote.Pitch === undefined &&
-            new Fraction(1, 2).lt(baseNote.sourceNote.Length)) {
-                // test
-            }
         let keys: string[] = [];
         const accidentals: string[] = [];
         const frac: Fraction = baseNote.graphicalNoteLength;
@@ -174,8 +182,10 @@ export class VexFlowConverter {
             }
             // if it is a rest:
             if (note.sourceNote.isRest()) {
+                keys = ["b/4"];
                 // if it is a full measure rest:
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
+                    keys = ["d/5"];
                     duration = "w";
                     numDots = 0;
                     // If it's a whole rest we want it smack in the middle. Apparently there is still an issue in vexflow:
@@ -184,7 +194,6 @@ export class VexFlowConverter {
                     alignCenter = true;
                     xShift = -25; // TODO: Either replace by EngravingRules entry or find a way to make it dependent on the modifiers
                 }
-                keys = ["b/4"];
                 duration += "r";
                 break;
             }
@@ -202,13 +211,20 @@ export class VexFlowConverter {
             duration += "d";
         }
 
-        const vfnote: Vex.Flow.StaveNote = new Vex.Flow.StaveNote({
+        let vfnote: Vex.Flow.StaveNote;
+        const vfnoteStruct: Object = {
             align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
             duration: duration,
-            keys: keys
-        });
+            keys: keys,
+            slash: gve.parentVoiceEntry.GraceNoteSlash
+        };
+        if (!gve.parentVoiceEntry.IsGrace) {
+            vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
+        } else {
+            vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
+        }
 
         vfnote.x_shift = xShift;
 
@@ -229,6 +245,15 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
+                if (accidentals[i] === "++") {
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("##"));
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("#"));
+                    continue;
+                } else if (accidentals[i] === "bbs") {
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("bb"));
+                    vfnote.addAccidental(i, new Vex.Flow.Accidental("b"));
+                    continue;
+                }
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i]));
             }
         }
@@ -238,7 +263,7 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: Vex.Flow.StaveNote, articulations: ArticulationEnum[]): void {
+    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
         // Articulations:
         let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
 
@@ -307,16 +332,13 @@ export class VexFlowConverter {
         }
     }
 
-    public static generateOrnaments(vfnote: Vex.Flow.StaveNote, oContainer: OrnamentContainer): void {
-        // Ornaments
+    public static generateOrnaments(vfnote: Vex.Flow.StemmableNote, oContainer: OrnamentContainer): void {
         let vfPosition: number = Vex.Flow.Modifier.Position.ABOVE;
-
         if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
             vfPosition = Vex.Flow.Modifier.Position.BELOW;
         }
 
         let vfOrna: Vex.Flow.Ornament = undefined;
-        // tslint:disable-next-line:switch-default
         switch (oContainer.GetOrnament) {
             case OrnamentEnum.DelayedInvertedTurn: {
                 vfOrna = new Vex.Flow.Ornament("turn_inverted");
@@ -352,6 +374,10 @@ export class VexFlowConverter {
                 vfOrna = new Vex.Flow.Ornament("turn");
                 vfOrna.setDelayed(false);
                 break;
+            }
+            default: {
+                log.warn("unhandled OrnamentEnum type: " + oContainer.GetOrnament);
+                return;
             }
         }
         if (vfOrna !== undefined) {
@@ -507,7 +533,10 @@ export class VexFlowConverter {
             case KeyEnum.major:
                 ret = VexFlowConverter.majorMap[key.Key];
                 break;
+            // some XMLs don't have the mode set despite having a key signature.
             case KeyEnum.none:
+                ret = VexFlowConverter.majorMap[key.Key];
+                break;
             default:
                 ret = "C";
         }

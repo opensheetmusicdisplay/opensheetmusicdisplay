@@ -1,7 +1,7 @@
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {VerticalSourceStaffEntryContainer} from "./VerticalSourceStaffEntryContainer";
 import {SourceStaffEntry} from "./SourceStaffEntry";
-import {RepetitionInstruction, RepetitionInstructionEnum} from "./Instructions/RepetitionInstruction";
+import {RepetitionInstruction, RepetitionInstructionEnum, AlignmentType} from "./Instructions/RepetitionInstruction";
 import {Staff} from "./Staff";
 import {VoiceEntry} from "./VoiceEntry";
 import {Voice} from "./Voice";
@@ -214,7 +214,6 @@ export class SourceMeasure extends BaseIdClass {
                 }
             }
         }
-        //log.debug("created new container: ", staffEntry, this.verticalSourceStaffEntryContainers);
         return {createdNewContainer: true, staffEntry: staffEntry};
     }
 
@@ -454,7 +453,7 @@ export class SourceMeasure extends BaseIdClass {
     }
 
     /**
-     * Check if this Measure is a Repetition Ending.
+     * Check if this Measure ends a Repetition.
      * @returns {boolean}
      */
     public endsWithWordRepetition(): boolean {
@@ -474,6 +473,26 @@ export class SourceMeasure extends BaseIdClass {
                 }
             }
             if (instruction === rep.forwardJumpInstruction) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public beginsRepetitionEnding(): boolean {
+        for (const instruction of this.FirstRepetitionInstructions) {
+            if (instruction.type === RepetitionInstructionEnum.Ending &&
+                instruction.alignment === AlignmentType.Begin) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public endsRepetitionEnding(): boolean {
+        for (const instruction of this.LastRepetitionInstructions) {
+            if (instruction.type === RepetitionInstructionEnum.Ending &&
+                instruction.alignment === AlignmentType.End) {
                 return true;
             }
         }

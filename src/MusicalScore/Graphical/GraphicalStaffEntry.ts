@@ -26,8 +26,6 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         super();
         this.parentMeasure = parentMeasure;
         this.graphicalVoiceEntries = [];
-        this.graceStaffEntriesBefore = [];
-        this.graceStaffEntriesAfter = [];
         this.sourceStaffEntry = sourceStaffEntry;
         if (staffEntryParent !== undefined) {
             this.staffEntryParent = staffEntryParent;
@@ -49,8 +47,6 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public sourceStaffEntry: SourceStaffEntry;
     public parentMeasure: GraphicalMeasure;
     public graphicalVoiceEntries: GraphicalVoiceEntry[];
-    public graceStaffEntriesBefore: GraphicalStaffEntry[];
-    public graceStaffEntriesAfter: GraphicalStaffEntry[];
     public staffEntryParent: GraphicalStaffEntry;
     public parentVerticalContainer: VerticalGraphicalStaffEntryContainer;
 
@@ -288,6 +284,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         }
     }
 
+    /**
+     * Returns true if this staff entry has only rests
+     */
     public hasOnlyRests(): boolean {
         const hasOnlyRests: boolean = true;
         for (const gve of this.graphicalVoiceEntries) {

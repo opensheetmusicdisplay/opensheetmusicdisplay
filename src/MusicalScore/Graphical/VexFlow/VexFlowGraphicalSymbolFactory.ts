@@ -1,3 +1,4 @@
+import Vex = require("vexflow");
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {MusicSystem} from "../MusicSystem";
@@ -25,6 +26,7 @@ import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInst
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+import { VexFlowConverter } from "./VexFlowConverter";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -77,18 +79,6 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
         return new VexFlowStaffEntry(<VexFlowMeasure>measure, sourceStaffEntry, undefined);
     }
 
-    /**
-     * Create an empty staffEntry which will be used for grace notes.
-     * it will be linked to the given staffEntryParent, which is a staffEntry for normal notes.
-     * Grace notes are always given before (rarely also after) normal notes.
-     * @param staffEntryParent
-     * @param measure
-     * @returns {VexFlowStaffEntry}
-     */
-    public createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry {
-        return new VexFlowStaffEntry(<VexFlowMeasure>measure, undefined, <VexFlowStaffEntry>staffEntryParent);
-    }
-
     public createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry {
         return new VexFlowVoiceEntry(parentVoiceEntry, parentStaffEntry);
     }
@@ -127,10 +117,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * Will be only called if the displayed accidental is different from the original (e.g. a C# with C# as key instruction)
      * @param graphicalNote
      * @param pitch The pitch which will be rendered.
-     * @param grace
-     * @param graceScalingFactor
      */
-    public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void {
+    public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void {
         // ToDo: set accidental here from pitch.Accidental
         const note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
         note.setPitch(pitch);
@@ -155,6 +143,9 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param clefInstruction
      */
     public createInStaffClef(graphicalStaffEntry: GraphicalStaffEntry, clefInstruction: ClefInstruction): void {
+        const se: VexFlowStaffEntry = graphicalStaffEntry as VexFlowStaffEntry;
+        const vfClefParams: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clefInstruction, "small");
+        se.vfClefBefore = new Vex.Flow.ClefNote(vfClefParams.type, vfClefParams.size, vfClefParams.annotation);
         return;
     }
 
