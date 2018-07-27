@@ -618,15 +618,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     graceGVoiceEntriesBefore.push(gve);
                     if (!graceSlur) {
                         graceSlur = gve.parentVoiceEntry.GraceSlur;
-                }
+                    }
                     continue;
-            }
+                }
                 (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
                 if (graceGVoiceEntriesBefore.length > 0) {
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
                         graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
-        }
+                    }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
                     (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes());
                     graceGVoiceEntriesBefore = [];
