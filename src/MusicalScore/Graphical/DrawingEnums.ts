@@ -36,7 +36,8 @@ export enum OutlineAndFillStyleEnum {
     Comment7,
     Comment8,
     Comment9,
-    Comment10
+    Comment10,
+    BackgroundWhite,
 }
 
 // tslint:disable-next-line:max-line-length A linebreak would be more confusing here
@@ -74,6 +75,7 @@ OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.Comment7, "Blanched
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.Comment8, "CornflowerBlue");
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.Comment9, "Cornsilk");
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.Comment10, "DarkGrey");
+OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.BackgroundWhite, "White");
 
 export enum StyleSets {
     MarkedArea,

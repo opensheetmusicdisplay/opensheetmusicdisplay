@@ -22,7 +22,10 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
+        this.ctx.setBackgroundFillStyle("#eed");
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
+        (this.canvasRenderingCtx as any).setBackgroundFillStyle("#eed");
+        // ((this.ctx as any).background_attributes as any)['stroke-width'] = 1;
     }
 
     /**
@@ -36,7 +39,9 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         (this.canvas as any).height = height;
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
+        this.ctx.setBackgroundFillStyle("#eed");
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
+        (this.canvasRenderingCtx as any).setBackgroundFillStyle("#eed");
     }
 
     public getContext(): Vex.Flow.CanvasContext {
@@ -44,6 +49,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
 
     public clear(): void {
+        this.ctx.setBackgroundFillStyle("#eed");
         (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
     }
 

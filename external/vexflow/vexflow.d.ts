@@ -320,13 +320,28 @@ declare namespace Vex {
         }
 
         export class CanvasContext extends RenderContext {
-            public vexFlowCanvasContext: CanvasRenderingContext2D;
+            public vexFlowCanvasContext: any;
+            public background_fillStyle: { fill: string };
+            public setBackgroundFillStyle(style: string);
+        }
+
+        export class CanvasRenderingContext2D { 
+            public setBackgroundFillStyle(style: string): void;
+            public canvas: HTMLElement;
+            public fillStyle: Object;
+            public font: Object;
+            public globalAlpha: Object;
+            public globalCompositeOperation: Object;
+            public imageSmoothingEnabled: boolean;
+            public lineCap: Object;
+            public lineDashOffset: Object;
         }
 
         export class SVGContext extends RenderContext {
             public svg: SVGElement;
             public attributes: any;
             public state: any;
+            public setBackgroundFillStyle(style: string): void;
         }
 
         export class StaveConnector {

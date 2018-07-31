@@ -21,7 +21,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
-
+        this.ctx.setBackgroundFillStyle("#eed");
     }
 
     public getContext(): Vex.Flow.SVGContext {
