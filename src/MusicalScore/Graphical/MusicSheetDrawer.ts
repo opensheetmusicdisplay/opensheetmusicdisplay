@@ -343,6 +343,11 @@ export abstract class MusicSheetDrawer {
             this.drawDashes(staffLine.LyricsDashes);
         }
 
+        // draw lyric lines (e.g. LyricExtends: "dich,___")
+        if (staffLine.LyricLines.length > 0) {
+            this.drawLyricLines(staffLine.LyricLines);
+        }
+
         if (this.skyLineVisible) {
             this.drawSkyLine(staffLine);
         }
@@ -350,6 +355,10 @@ export abstract class MusicSheetDrawer {
         if (this.bottomLineVisible) {
             this.drawBottomLine(staffLine);
         }
+    }
+
+    protected drawLyricLines(lyricLines: GraphicalLine[]): void {
+        // throw new Error("not implemented");
     }
 
     /**
