@@ -1744,8 +1744,9 @@ export abstract class MusicSheetCalculator {
                 nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
-            if ((endX - startX) > this.rules.BetweenSyllabelMaximumDistance) {
-                numberOfDashes = Math.ceil((endX - startX) / this.rules.BetweenSyllabelMaximumDistance);
+            if ((endX - startX) > this.rules.MinimumDistanceBetweenDashes * 3) {
+                // *3: need distance between word to first dash, dash to dash, dash to next word
+                numberOfDashes = Math.floor((endX - startX) / this.rules.MinimumDistanceBetweenDashes) - 1;
             }
             // check distance and create the adequate number of Dashes
             if (numberOfDashes === 1) {
@@ -1792,16 +1793,16 @@ export abstract class MusicSheetCalculator {
      */
     private calculateDashes(staffLine: StaffLine, startX: number, endX: number, y: number): void {
         let distance: number = endX - startX;
-        if (distance < this.rules.MinimumDistanceBetweenDashes) {
+        if (distance < this.rules.MinimumDistanceBetweenDashes * 3) {
             this.calculateSingleDashForLyricWord(staffLine, startX, endX, y);
         } else {
             // enough distance for more Dashes
-            const numberOfDashes: number = Math.floor(distance / this.rules.MinimumDistanceBetweenDashes);
-            const distanceBetweenDashes: number = distance / this.rules.MinimumDistanceBetweenDashes;
+            const numberOfDashes: number = Math.floor(distance / this.rules.MinimumDistanceBetweenDashes) - 1;
+            const distanceBetweenDashes: number = distance / (numberOfDashes + 1);
             let counter: number = 0;
 
-            startX += distanceBetweenDashes / 2;
-            endX -= distanceBetweenDashes / 2;
+            startX += distanceBetweenDashes;
+            endX -= distanceBetweenDashes;
             while (counter <= Math.floor(numberOfDashes / 2.0) && endX > startX) {
                 distance = this.calculateRightAndLeftDashesForLyricWord(staffLine, startX, endX, y);
                 startX += distanceBetweenDashes;
@@ -1809,9 +1810,10 @@ export abstract class MusicSheetCalculator {
                 counter++;
             }
 
-            // if the remaining distance isn't big enough for two Dashes (another check would be if numberOfDashes is uneven),
+            // if the remaining distance isn't big enough for two Dashes,
+            // but long enough for a middle dash inbetween,
             // then put the last Dash in the middle of the remaining distance
-            if (distance > distanceBetweenDashes) {
+            if (distance > distanceBetweenDashes * 2) {
                 this.calculateSingleDashForLyricWord(staffLine, startX, endX, y);
             }
         }

@@ -86,7 +86,8 @@ export class LyricsReader {
                             if (syllabic === "single" || syllabic === "end") {
                                 if (this.openLyricWords[currentLyricVerseNumber] !== undefined) { // word end given or some word still open
                                     this.currentLyricWord = this.openLyricWords[currentLyricVerseNumber];
-                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry);
+                                    const syllabelNumber: number = this.currentLyricWord.Syllables.length;
+                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, syllabelNumber);
                                     this.currentLyricWord.Syllables.push(lyricsEntry);
                                     delete this.openLyricWords[currentLyricVerseNumber];
                                     this.currentLyricWord = undefined;
