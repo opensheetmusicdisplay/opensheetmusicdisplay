@@ -15,6 +15,7 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
 import StemmableNote = Vex.Flow.StemmableNote;
+import NoteSubGroup = Vex.Flow.NoteSubGroup;
 import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
@@ -617,15 +618,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     graceGVoiceEntriesBefore.push(gve);
                     if (!graceSlur) {
                         graceSlur = gve.parentVoiceEntry.GraceSlur;
-                }
+                    }
                     continue;
-            }
+                }
                 (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
                 if (graceGVoiceEntriesBefore.length > 0) {
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
                         graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
-        }
+                    }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
                     (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes());
                     graceGVoiceEntriesBefore = [];
@@ -650,23 +651,23 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
             // create vex flow voices and add tickables to it:
-            // let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const voiceEntry of restFilledEntries) {
-                if (!voiceEntry.parentVoiceEntry) {
-                    continue;
+                if (voiceEntry.parentVoiceEntry) {
+                    if (voiceEntry.parentVoiceEntry.IsGrace) {
+                        continue;
+                    }
                 }
-                if (voiceEntry.parentVoiceEntry.IsGrace) {
-                    continue;
-                }
+
                 const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
 
                 // check for in-measure clefs:
                 // only add clefs in main voice (to not add them twice)
                 if (isMainVoice) {
                     const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
-                    if (vfse.vfClefBefore !== undefined) {
-                        // add the clef as Vex.Flow.ClefNote
-                        this.vfVoices[voice.VoiceId].addTickable(vfse.vfClefBefore);
+                    if (vfse && vfse.vfClefBefore !== undefined) {
+                        // add clef as NoteSubGroup so that we get modifier layouting
+                        const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
+                        vexFlowVoiceEntry.vfStaveNote.addModifier(0, clefModifier);
                     }
                 }
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
