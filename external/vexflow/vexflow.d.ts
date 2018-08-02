@@ -322,10 +322,12 @@ declare namespace Vex {
         export class CanvasContext extends RenderContext {
             public vexFlowCanvasContext: any;
             public background_fillStyle: { fill: string };
-            public setBackgroundFillStyle(style: string);
+            public setBackgroundFillStyle(style: string): void;
+            public clearRect(x: number, y: number, width: number, height: number): void;
         }
 
-        export class CanvasRenderingContext2D { 
+        export class CanvasRenderingContext2D {
+            public clearRect(x: number, y: number, width: number, height: number): void; 
             public setBackgroundFillStyle(style: string): void;
             public canvas: HTMLElement;
             public fillStyle: Object;

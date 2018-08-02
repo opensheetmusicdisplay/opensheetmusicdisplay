@@ -22,9 +22,10 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
-        this.ctx.setBackgroundFillStyle("#eed");
+        // (this.ctx as any).setBackgroundFillStyle("#eed");
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
-        (this.canvasRenderingCtx as any).setBackgroundFillStyle("#eed");
+        this.ctx.setBackgroundFillStyle("green");
+        (this.canvasRenderingCtx as any).setBackgroundFillStyle("red");
         // ((this.ctx as any).background_attributes as any)['stroke-width'] = 1;
     }
 
@@ -39,7 +40,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         (this.canvas as any).height = height;
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
-        this.ctx.setBackgroundFillStyle("#eed");
+        this.ctx.setBackgroundFillStyle("green");
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
         (this.canvasRenderingCtx as any).setBackgroundFillStyle("#eed");
     }
@@ -48,9 +49,15 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         return this.ctx;
     }
 
-    public clear(): void {
-        this.ctx.setBackgroundFillStyle("#eed");
-        (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
+    public clear(x: number, y: number, width: number, height: number): void {
+        if (width !== undefined) {
+            this.ctx.setBackgroundFillStyle("green");
+            (this.canvasRenderingCtx as any).setBackgroundFillStyle("red");
+
+            (this.canvasRenderingCtx as any).clearRect(x, y, width, height);
+            (this.ctx as any).clearRect(x, y, width, height);
+            // (this.canvasRenderingCtx as any).clear();
+        }
     }
 
     public scale(k: number): void {

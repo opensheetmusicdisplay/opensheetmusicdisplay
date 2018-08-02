@@ -21,14 +21,15 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
-        this.ctx.setBackgroundFillStyle("#eed");
+        this.ctx.setBackgroundFillStyle("brown");
+        // (this.ctx as any).background_fillStyle = "green";
     }
 
     public getContext(): Vex.Flow.SVGContext {
         return this.ctx;
     }
 
-    public clear(): void {
+    public clear(x: number, y: number, width: number, height: number): void {
         const { svg } = this.ctx;
         if (!svg) {
             return;
@@ -38,6 +39,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         while (svg.lastChild) {
             svg.removeChild(svg.lastChild);
         }
+        (this.ctx as any).clearRect(x, y, width, height);
     }
 
     public scale(k: number): void {

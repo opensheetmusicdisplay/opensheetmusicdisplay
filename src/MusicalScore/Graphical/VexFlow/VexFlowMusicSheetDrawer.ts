@@ -33,8 +33,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         this.backend = backend;
     }
 
-    public clear(): void {
-        this.backend.clear();
+    public clear(x: number, y: number, width: number, height: number): void {
+        this.backend.clear(x, y, width, height);
     }
 
     /**

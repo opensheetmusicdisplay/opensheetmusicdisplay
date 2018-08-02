@@ -39,7 +39,7 @@ export abstract class VexFlowBackend {
     this.renderer.resize(x, y);
   }
 
-  public abstract clear(): void;
+  public abstract clear(x: number, y: number, width: number, height: number): void;
 
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
