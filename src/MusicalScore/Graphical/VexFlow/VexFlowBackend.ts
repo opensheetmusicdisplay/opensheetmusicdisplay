@@ -40,6 +40,14 @@ export abstract class VexFlowBackend {
   }
 
   public abstract clear(x: number, y: number, width: number, height: number): void;
+  public abstract getBackgroundColor(): string;
+
+  /** sets background color.
+   * does not fill the background immediately, need rerender for that.
+   * setting color to "transparent" will skip drawing a background in clear().
+   * @param colorOrStyle color name (e.g. "white") or Vexflow style ("#FFF")
+   */
+  public abstract setBackgroundColor(colorOrStyle: string): void;
 
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,

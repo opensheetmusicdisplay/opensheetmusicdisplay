@@ -41,9 +41,17 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             svg.removeChild(svg.lastChild);
         }
 
-        if (x !== -1) {
+        if (x !== -1 && this.backgroundFillStyle !== "transparent") {
             (this.ctx as any).clearRect(x, y, width, height); // fill canvas with background color
         }
+    }
+
+    public getBackgroundColor(): string {
+        return this.backgroundFillStyle;
+    }
+
+    public setBackgroundColor(colorOrStyle: string): void {
+        this.backgroundFillStyle = colorOrStyle;
     }
 
     public scale(k: number): void {

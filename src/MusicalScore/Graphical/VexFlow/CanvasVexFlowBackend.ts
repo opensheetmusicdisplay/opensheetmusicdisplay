@@ -50,7 +50,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
 
     public clear(x: number = -1, y: number = -1, width: number = -1, height: number = -1): void {
-        if (x !== -1) {
+        if (x !== -1 && this.backgroundFillStyle !== "transparent") {
             const renderCtx: any = <any>this.canvasRenderingCtx;
             // fill canvas with background color
             renderCtx.setFillStyle(this.backgroundFillStyle);
@@ -61,6 +61,13 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
             // TODO this currently doesn't do anything in Vexflow.
             // Also, canvas width and height are often very small, smaller than sheet.pageWidth
         }
+    }
+
+    public getBackgroundColor(): string {
+        return this.backgroundFillStyle;
+    }
+    public setBackgroundColor(colorOrStyle: string): void {
+        this.backgroundFillStyle = colorOrStyle;
     }
 
     public scale(k: number): void {
