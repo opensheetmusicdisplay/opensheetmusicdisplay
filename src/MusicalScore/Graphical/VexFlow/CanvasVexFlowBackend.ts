@@ -51,12 +51,9 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
 
     public clear(x: number, y: number, width: number, height: number): void {
         if (width !== undefined) {
-            this.ctx.setBackgroundFillStyle("green");
-            (this.canvasRenderingCtx as any).setBackgroundFillStyle("red");
-
-            (this.canvasRenderingCtx as any).clearRect(x, y, width, height);
-            (this.ctx as any).clearRect(x, y, width, height);
-            // (this.canvasRenderingCtx as any).clear();
+            (this.canvasRenderingCtx as any).setFillStyle("white");
+            (this.canvasRenderingCtx as any).fillRect(x, y, width, height);
+            (this.canvasRenderingCtx as any).setFillStyle("black");
         }
     }
 
