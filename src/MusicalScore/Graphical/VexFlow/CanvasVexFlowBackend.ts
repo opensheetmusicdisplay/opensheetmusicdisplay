@@ -6,8 +6,10 @@ import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {VexFlowConverter} from "./VexFlowConverter";
+import { EngravingRules } from "../EngravingRules";
 
 export class CanvasVexFlowBackend extends VexFlowBackend {
+    private backgroundFillStyle: string = EngravingRules.Rules.BackgroundColorFillStyle;
 
     public getBackendType(): number {
         return Vex.Flow.Renderer.Backends.CANVAS;
@@ -22,11 +24,9 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
-        // (this.ctx as any).setBackgroundFillStyle("#eed");
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
-        this.ctx.setBackgroundFillStyle("green");
-        (this.canvasRenderingCtx as any).setBackgroundFillStyle("red");
-        // ((this.ctx as any).background_attributes as any)['stroke-width'] = 1;
+        this.ctx.setBackgroundFillStyle(this.backgroundFillStyle);
+        (this.canvasRenderingCtx as any).setBackgroundFillStyle(this.backgroundFillStyle);
     }
 
     /**
@@ -40,20 +40,26 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         (this.canvas as any).height = height;
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
-        this.ctx.setBackgroundFillStyle("green");
+        this.ctx.setBackgroundFillStyle(this.backgroundFillStyle);
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
-        (this.canvasRenderingCtx as any).setBackgroundFillStyle("#eed");
+        (this.canvasRenderingCtx as any).setBackgroundFillStyle(this.backgroundFillStyle);
     }
 
     public getContext(): Vex.Flow.CanvasContext {
         return this.ctx;
     }
 
-    public clear(x: number, y: number, width: number, height: number): void {
-        if (width !== undefined) {
-            (this.canvasRenderingCtx as any).setFillStyle("white");
-            (this.canvasRenderingCtx as any).fillRect(x, y, width, height);
-            (this.canvasRenderingCtx as any).setFillStyle("black");
+    public clear(x: number = -1, y: number = -1, width: number = -1, height: number = -1): void {
+        if (x !== -1) {
+            const renderCtx: any = <any>this.canvasRenderingCtx;
+            // fill canvas with background color
+            renderCtx.setFillStyle(this.backgroundFillStyle);
+            renderCtx.fillRect(x, y, width, height);
+            renderCtx.setFillStyle("black"); // there's no getFillStyle() right now.
+        } else {
+            // (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
+            // TODO this currently doesn't do anything in Vexflow.
+            // Also, canvas width and height are often very small, smaller than sheet.pageWidth
         }
     }
 

@@ -6,8 +6,10 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
+import { EngravingRules } from "../EngravingRules";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
+    private backgroundFillStyle: string = EngravingRules.Rules.BackgroundColorFillStyle;
 
     public getBackendType(): number {
         return Vex.Flow.Renderer.Backends.SVG;
@@ -21,15 +23,14 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
-        this.ctx.setBackgroundFillStyle("brown");
-        // (this.ctx as any).background_fillStyle = "green";
+        this.ctx.setBackgroundFillStyle(this.backgroundFillStyle);
     }
 
     public getContext(): Vex.Flow.SVGContext {
         return this.ctx;
     }
 
-    public clear(x: number, y: number, width: number, height: number): void {
+    public clear(x: number = -1, y: number = -1, width: number = -1, height: number = -1): void {
         const { svg } = this.ctx;
         if (!svg) {
             return;
@@ -39,7 +40,10 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         while (svg.lastChild) {
             svg.removeChild(svg.lastChild);
         }
-        (this.ctx as any).clearRect(x, y, width, height);
+
+        if (x !== -1) {
+            (this.ctx as any).clearRect(x, y, width, height); // fill canvas with background color
+        }
     }
 
     public scale(k: number): void {

@@ -158,16 +158,15 @@ export class OpenSheetMusicDisplay {
         this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(7, 4), OutlineAndFillStyleEnum.PlaybackCursor));*/
         // Update Sheet Page
         const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
-        // this.drawer.clear();
+        this.drawer.clear();
         this.drawer.resize(width, height);
         this.drawer.scale(this.zoom);
 
-        (this.drawer as any).clear(0, 0, width, height);
+        // clear and fill with background color
+        this.drawer.clear(0, 0, width, height);
 
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
-
-        // (this.drawer as any).clear(0, 0, width, height); // creates transparent rectangle
 
         // Update the cursor position
         this.cursor.update();

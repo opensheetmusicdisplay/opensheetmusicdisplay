@@ -90,7 +90,9 @@ export class EngravingRules {
     private lyricsHeight: number;
     private lyricsYOffsetToStaffHeight: number;
     private verticalBetweenLyricsDistance: number;
+    private horizontalBetweenLyricsDistance: number;
     private betweenSyllabelMaximumDistance: number;
+    private betweenSyllabelMinimumDistance: number;
     private minimumDistanceBetweenDashes: number;
     private bezierCurveStepSize: number;
     private tPower3: number[];
@@ -140,6 +142,7 @@ export class EngravingRules {
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
+    private backgroundColorFillStyle: string = "#FFF"; // white
 
     constructor() {
         // global variables
@@ -272,8 +275,10 @@ export class EngravingRules {
         this.lyricsHeight = 2.0; // actually size of lyrics
         this.lyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.verticalBetweenLyricsDistance = 0.5;
+        this.horizontalBetweenLyricsDistance = 0.3;
         this.betweenSyllabelMaximumDistance = 10.0;
-        this.minimumDistanceBetweenDashes = 5.0;
+        this.betweenSyllabelMinimumDistance = 0.4;
+        this.minimumDistanceBetweenDashes = 10;
 
         // expressions variables
         this.instantaniousTempoTextHeight = 2.3;
@@ -825,11 +830,23 @@ export class EngravingRules {
     public set VerticalBetweenLyricsDistance(value: number) {
         this.verticalBetweenLyricsDistance = value;
     }
+    public get HorizontalBetweenLyricsDistance(): number {
+        return this.horizontalBetweenLyricsDistance;
+    }
+    public set HorizontalBetweenLyricsDistance(value: number) {
+        this.horizontalBetweenLyricsDistance = value;
+    }
     public get BetweenSyllabelMaximumDistance(): number {
         return this.betweenSyllabelMaximumDistance;
     }
     public set BetweenSyllabelMaximumDistance(value: number) {
         this.betweenSyllabelMaximumDistance = value;
+    }
+    public get BetweenSyllabelMinimumDistance(): number {
+        return this.betweenSyllabelMinimumDistance;
+    }
+    public set BetweenSyllabelMinimumDistance(value: number) {
+        this.betweenSyllabelMinimumDistance = value;
     }
     public get MinimumDistanceBetweenDashes(): number {
         return this.minimumDistanceBetweenDashes;
@@ -1118,6 +1135,12 @@ export class EngravingRules {
     }
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
+    }
+    public get BackgroundColorFillStyle(): string {
+        return this.backgroundColorFillStyle;
+    }
+    public set BackgroundColorFillStyle(value: string) {
+        this.backgroundColorFillStyle = value;
     }
 
     /**

@@ -320,23 +320,12 @@ declare namespace Vex {
         }
 
         export class CanvasContext extends RenderContext {
-            public vexFlowCanvasContext: any;
+            public vexFlowCanvasContext: CanvasRenderingContext2D;
+            // TODO CanvasRenderingContext2D isn't defined anywhere, and defining it leads to problems.
+            // this somehow works, though.
             public background_fillStyle: { fill: string };
             public setBackgroundFillStyle(style: string): void;
-            public clearRect(x: number, y: number, width: number, height: number): void;
-        }
-
-        export class CanvasRenderingContext2D {
-            public clearRect(x: number, y: number, width: number, height: number): void; 
-            public setBackgroundFillStyle(style: string): void;
-            public canvas: HTMLElement;
-            public fillStyle: Object;
-            public font: Object;
-            public globalAlpha: Object;
-            public globalCompositeOperation: Object;
-            public imageSmoothingEnabled: boolean;
-            public lineCap: Object;
-            public lineDashOffset: Object;
+            public clear(x: number, y: number, width: number, height: number): void;
         }
 
         export class SVGContext extends RenderContext {
@@ -344,6 +333,7 @@ declare namespace Vex {
             public attributes: any;
             public state: any;
             public setBackgroundFillStyle(style: string): void;
+            public clear(x: number, y: number, width: number, height: number): void;
         }
 
         export class StaveConnector {

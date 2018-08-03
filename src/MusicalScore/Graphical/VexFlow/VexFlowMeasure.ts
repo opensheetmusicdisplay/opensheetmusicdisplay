@@ -652,19 +652,19 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
-                if (!voiceEntry.parentVoiceEntry) {
-                    continue;
+                if (voiceEntry.parentVoiceEntry) {
+                    if (voiceEntry.parentVoiceEntry.IsGrace) {
+                        continue;
+                    }
                 }
-                if (voiceEntry.parentVoiceEntry.IsGrace) {
-                    continue;
-                }
+
                 const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
 
                 // check for in-measure clefs:
                 // only add clefs in main voice (to not add them twice)
                 if (isMainVoice) {
                     const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
-                    if (vfse.vfClefBefore !== undefined) {
+                    if (vfse && vfse.vfClefBefore !== undefined) {
                         // add clef as NoteSubGroup so that we get modifier layouting
                         const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
                         vexFlowVoiceEntry.vfStaveNote.addModifier(0, clefModifier);
