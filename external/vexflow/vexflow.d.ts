@@ -333,6 +333,7 @@ declare namespace Vex {
             public attributes: any;
             public state: any;
             public setBackgroundFillStyle(style: string): void;
+            public background_attributes: any;
             public clear(x: number, y: number, width: number, height: number): void;
         }
 

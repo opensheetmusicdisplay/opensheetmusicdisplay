@@ -47,8 +47,16 @@ export class SvgVexFlowBackend extends VexFlowBackend {
                 // should in theory fill with transparency
                 // currently fills with bgcolor in vexflow
             } else {
-                const backgroundRectangle: RectangleF2D = new RectangleF2D(x, y, width, height);
-                this.renderRectangleByStyle(backgroundRectangle, this.backgroundFillStyle, 1);
+                // filling with background color currently prevents cursor showing if on z=-1
+                // note that rect works like canvascontext.fillRect right now
+                (this.ctx as any).rect(x, y, width, height, this.ctx.background_attributes);
+
+                // could also use clearRect for now
+                // (this.ctx as any).clearRect(x, y, width, height);
+
+                // this alternative prevents the cursor from showing (unless alpha<1)
+                // const backgroundRectangle: RectangleF2D = new RectangleF2D(x, y, width, height);
+                // this.renderRectangleByStyle(backgroundRectangle, this.backgroundFillStyle, 1);
             }
         }
     }

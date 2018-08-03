@@ -50,16 +50,20 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
 
     public clear(x: number = -1, y: number = -1, width: number = -1, height: number = -1): void {
-        if (x !== -1 && this.backgroundFillStyle !== "transparent") {
-            const renderCtx: any = <any>this.canvasRenderingCtx;
-            // fill canvas with background color
-            renderCtx.setFillStyle(this.backgroundFillStyle);
-            renderCtx.fillRect(x, y, width, height);
-            renderCtx.setFillStyle("black"); // there's no getFillStyle() right now.
-        } else {
-            // (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
-            // TODO this currently doesn't do anything in Vexflow.
-            // Also, canvas width and height are often very small, smaller than sheet.pageWidth
+        if (x !== -1) {
+            if (this.backgroundFillStyle === "transparent") {
+                // (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
+                // TODO clearRect currently doesn't do anything in Vexflow for Canvas.
+                // Also, canvas width and height are often very small, smaller than sheet.pageWidth
+            } else {
+                // fill canvas with background color
+                // TODO currently this prevents the cursor from showing if it's on z=-1
+                const renderCtx: any = <any>this.canvasRenderingCtx;
+                renderCtx.save();
+                renderCtx.setFillStyle(this.backgroundFillStyle);
+                renderCtx.fillRect(x, y, width, height);
+                renderCtx.restore(); // there's no getFillStyle() right now.
+            }
         }
     }
 

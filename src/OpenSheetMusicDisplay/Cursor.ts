@@ -15,7 +15,7 @@ export class Cursor {
     this.openSheetMusicDisplay = openSheetMusicDisplay;
     const curs: HTMLElement = document.createElement("img");
     curs.style.position = "absolute";
-    curs.style.zIndex = "-1";
+    curs.style.zIndex = "0";
     this.cursorElement = <HTMLImageElement>curs;
     this.container.appendChild(curs);
   }
@@ -144,7 +144,7 @@ export class Cursor {
     c.width = this.cursorElement.width;
     c.height = 1;
     const ctx: CanvasRenderingContext2D = c.getContext("2d");
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 0.3;
     // Generate the gradient
     const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
     gradient.addColorStop(0, "white"); // it was: "transparent"

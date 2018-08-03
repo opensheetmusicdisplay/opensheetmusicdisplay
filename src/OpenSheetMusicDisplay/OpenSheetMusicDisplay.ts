@@ -158,10 +158,10 @@ export class OpenSheetMusicDisplay {
         this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(7, 4), OutlineAndFillStyleEnum.PlaybackCursor));*/
         // Update Sheet Page
         const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
+
         this.drawer.clear();
         this.drawer.resize(width, height);
         this.drawer.scale(this.zoom);
-
         // clear and fill with background color
         this.drawer.clear(0, 0, width, height);
 
