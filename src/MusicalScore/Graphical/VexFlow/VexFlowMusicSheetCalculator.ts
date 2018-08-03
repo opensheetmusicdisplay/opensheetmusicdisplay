@@ -548,7 +548,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                             const vfSlur: VexFlowSlur = vfSlurs[vfIndex];
                                             vfSlur.voiceentrySlurEnd = graphicalVoiceEntry;
                                             vfSlur.createVexFlowCurve();
-                                            vfSlurs.splice(vfIndex, 1);
+                                            vfSlurs.splice(vfIndex - 1, 1);
                                             //if (!vfSlur.StaffEntries.Contains(graphicalStaffEntry))
                                             //    vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry);
                                         }
