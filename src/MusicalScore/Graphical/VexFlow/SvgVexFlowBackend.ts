@@ -41,8 +41,15 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             svg.removeChild(svg.lastChild);
         }
 
-        if (x !== -1 && this.backgroundFillStyle !== "transparent") {
-            (this.ctx as any).clearRect(x, y, width, height); // fill canvas with background color
+        if (x !== -1) {
+            if (this.backgroundFillStyle === "transparent") {
+                (this.ctx as any).clearRect(x, y, width, height);
+                // should in theory fill with transparency
+                // currently fills with bgcolor in vexflow
+            } else {
+                const backgroundRectangle: RectangleF2D = new RectangleF2D(x, y, width, height);
+                this.renderRectangleByStyle(backgroundRectangle, this.backgroundFillStyle, 1);
+            }
         }
     }
 
@@ -52,6 +59,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
 
     public setBackgroundColor(colorOrStyle: string): void {
         this.backgroundFillStyle = colorOrStyle;
+        this.ctx.setBackgroundFillStyle(colorOrStyle);
     }
 
     public scale(k: number): void {
@@ -73,10 +81,16 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.restore();
     }
     public renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number = 1): void {
+        const style: string = VexFlowConverter.style(styleId);
+        this.renderRectangleByStyle(rectangle, style, alpha);
+    }
+    private renderRectangleByStyle(rectangle: RectangleF2D, style: string, alpha: number = 1): void {
         this.ctx.save();
-        this.ctx.attributes.fill = VexFlowConverter.style(styleId);
+        this.ctx.attributes.fill = style;
         this.ctx.attributes["fill-opacity"] = alpha;
+        // this.ctx.attributes["stroke-width"] = 0;
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        // (<any>this.ctx).rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height, this.ctx.attributes);
         this.ctx.restore();
         this.ctx.attributes["fill-opacity"] = 1;
     }
