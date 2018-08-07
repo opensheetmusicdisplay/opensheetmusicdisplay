@@ -76,9 +76,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine): void {
         for (const slur of vfstaffLine.SlursInVFStaffLine) {
-            if (slur.vfCurve !== undefined) {
-                slur.vfCurve.setContext(this.backend.getContext()).draw();
-            }
+            slur.createVexFlowCurve();
+            //if (slur.vfCurve !== undefined) {
+            slur.vfCurve.setContext(this.backend.getContext()).draw();
+            //}
         }
     }
 

@@ -13,9 +13,6 @@ export class VexFlowStaffLine extends StaffLine {
     public get SlursInVFStaffLine(): VexFlowSlur[] {
         return this.slursInVFStaffLine;
     }
-    public set SlursInVFStaffLine(vfSlurs: VexFlowSlur[]) {
-        this.slursInVFStaffLine = vfSlurs;
-    }
     public addVFSlurToVFStaffline(vfSlur: VexFlowSlur): void {
         this.slursInVFStaffLine.push(vfSlur);
     }

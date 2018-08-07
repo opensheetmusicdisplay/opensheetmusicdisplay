@@ -1,7 +1,21 @@
 import Vex = require("vexflow");
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
-import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
-import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+
+export interface ICurveOptions {
+    spacing: number;
+    thickness: number;
+    x_shift: number;
+    y_shift: number;
+    position: CurvePositionEnum;
+    position_end: CurvePositionEnum;
+    invert: boolean;
+    cps: [{ x: number, y: number }, { x: number, y: number }];
+}
+
+export enum CurvePositionEnum {
+    NEAR_HEAD = 1,
+    NEAR_TOP = 2,
+}
 
 export class VexFlowSlur {
 
@@ -22,15 +36,37 @@ export class VexFlowSlur {
 
     private parentSlur: Slur;
 
-    public voiceentrySlurStart: GraphicalVoiceEntry = undefined;
-    public voiceentrySlurEnd: GraphicalVoiceEntry = undefined;
+    public vfStartNote: Vex.Flow.StemmableNote = undefined;
+    public vfEndNote: Vex.Flow.StemmableNote = undefined;
 
     public vfCurve: Vex.Flow.Curve;
+
+    public curve_Options(): ICurveOptions {
+        return {
+            cps: [{ x: 0, y: 10 }, { x: 0, y: 10 }],
+            invert: false,
+            position: CurvePositionEnum.NEAR_TOP,
+            position_end: CurvePositionEnum.NEAR_TOP,
+            spacing: 2,
+            thickness: 2,
+            x_shift: 0,
+            y_shift: 10
+        };
+    }
+
+    // public createVexFlowCurve(): void {
+    //     if (this.voiceentrySlurStart !== undefined || this.voiceentrySlurEnd !== undefined) {
+    //         this.vfCurve = new Vex.Flow.Curve( (this.voiceentrySlurStart as VexFlowVoiceEntry).vfStaveNote,
+    //                                            (this.voiceentrySlurEnd as VexFlowVoiceEntry).vfStaveNote,
+    //                                            this.curve_Options()
+    //                                         );
+    //     }
+    // }
     public createVexFlowCurve(): void {
-        if (this.voiceentrySlurStart !== undefined && this.voiceentrySlurEnd !== undefined) {
-            this.vfCurve = new Vex.Flow.Curve( (this.voiceentrySlurStart as VexFlowVoiceEntry).vfStaveNote,
-                                               (this.voiceentrySlurEnd as VexFlowVoiceEntry).vfStaveNote, undefined);
-        }
+            this.vfCurve = new Vex.Flow.Curve( this.vfStartNote,
+                                               this.vfEndNote,
+                                               undefined//this.curve_Options()
+                                            );
     }
 }
 
