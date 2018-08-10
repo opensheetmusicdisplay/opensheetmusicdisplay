@@ -159,9 +159,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
         let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
 
+        // spacing for multi-syllable words
         if (lyricsEntry.ParentLyricWord) {
-          if (lyricsEntry.GetLyricsEntry.SyllableIndex > 0) {
-            // give a little more spacing so that the dash between syllables fits
+          if (lyricsEntry.GetLyricsEntry.SyllableIndex > 0) { // syllables after first
+            // give a little more spacing for dash between syllables
             minLyricsSpacing = EngravingRules.Rules.BetweenSyllabelMinimumDistance;
           }
         }

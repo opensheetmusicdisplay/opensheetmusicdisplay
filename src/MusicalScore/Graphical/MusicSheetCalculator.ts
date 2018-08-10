@@ -1845,7 +1845,7 @@ export abstract class MusicSheetCalculator {
     private calculateLyricExtend(lyricEntry: GraphicalLyricEntry): void {
         let startY: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
         const startStaffEntry: GraphicalStaffEntry = lyricEntry.StaffEntryParent;
-        const startStaffLine: StaffLine = <StaffLine>lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
+        const startStaffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
 
         // find endstaffEntry and staffLine
         let endStaffEntry: GraphicalStaffEntry = undefined;
