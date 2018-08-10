@@ -14,6 +14,7 @@ export enum AccidentalEnum {
     DOUBLEFLAT = -2,
     FLAT = -1,
     NONE = 0, // == NATURAL for VexflowConverter.accidental()
+    NATURAL = 0,
     SHARP = 1,
     DOUBLESHARP = 2,
     TRIPLESHARP = 3,

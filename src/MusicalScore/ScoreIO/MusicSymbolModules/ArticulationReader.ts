@@ -10,7 +10,7 @@ export class ArticulationReader {
   private getAccEnumFromString(input: string): AccidentalEnum {
     switch (input) {
       case "natural":
-        return AccidentalEnum.NONE;
+        return AccidentalEnum.NATURAL;
       case "sharp":
         return AccidentalEnum.SHARP;
       case "double-sharp":
