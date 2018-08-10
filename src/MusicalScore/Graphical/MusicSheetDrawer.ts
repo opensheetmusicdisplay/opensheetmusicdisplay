@@ -358,7 +358,20 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawLyricLines(lyricLines: GraphicalLine[]): void {
-        // throw new Error("not implemented");
+        lyricLines.forEach(lyricLine => this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidthVexflow));
+    }
+
+    protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): void {
+        /* TODO
+        if (!this.isVisible(new BoundingBox(graphicalLine.Start,)) {
+            return;
+        }
+        */
+        this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
+    }
+
+    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
+        // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 
     /**

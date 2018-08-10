@@ -500,7 +500,7 @@ export abstract class MusicSheetCalculator {
                         measureRelativePosition.x;
 
                     let minMarginLeft: number = Number.MAX_VALUE;
-                    let maxMarginRight: number = Number.MAX_VALUE;
+                    let maxMarginRight: number = Number.MIN_VALUE;
 
                     // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
                     for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
@@ -1873,15 +1873,17 @@ export abstract class MusicSheetCalculator {
         // if on the same StaffLine
         if (startStaffLine === endStaffLine) {
             // start- and End margins from the text Labels
-            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
+            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.AbsolutePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                //lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                startStaffEntry.PositionAndShape.BorderMarginRight;
+            //const startX: number = lyricEntry.GraphicalLabel.PositionAndShape.AbsolutePosition.x;
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.BorderMarginRight;
-            // needed in order to line up with the Label's text bottom line (is the y psoition of the underscore)
+            // needed in order to line up with the Label's text bottom line (is the y position of the underscore)
             startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
-            // create a Line (as underscope after the LyricLabel's End)
+            // create a Line (as underscore after the LyricLabel's End)
             this.calculateSingleLyricWordWithUnderscore(startStaffLine, startX, endX, startY);
         } else { // start and end on different StaffLines
             // start margin from the text Label until the End of StaffLine

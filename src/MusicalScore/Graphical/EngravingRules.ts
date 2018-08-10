@@ -122,6 +122,7 @@ export class EngravingRules {
     private wedgeLineWidth: number;
     private tupletLineWidth: number;
     private lyricUnderscoreLineWidth: number;
+    private lyricUnderscoreLineWidthVexflow: number;
     private systemThinLineWidth: number;
     private systemBoldLineWidth: number;
     private systemRepetitionEndingLineWidth: number;
@@ -292,6 +293,7 @@ export class EngravingRules {
         this.wedgeLineWidth = 0.12;
         this.tupletLineWidth = 0.12;
         this.lyricUnderscoreLineWidth = 0.12;
+        this.lyricUnderscoreLineWidthVexflow = 1.3;
         this.systemThinLineWidth = 0.12;
         this.systemBoldLineWidth = EngravingRules.unit / 2.0;
         this.systemRepetitionEndingLineWidth = 0.12;
@@ -1020,6 +1022,12 @@ export class EngravingRules {
     }
     public set LyricUnderscoreLineWidth(value: number) {
         this.lyricUnderscoreLineWidth = value;
+    }
+    public get LyricUnderscoreLineWidthVexflow(): number {
+        return this.lyricUnderscoreLineWidthVexflow;
+    }
+    public set LyricUnderscoreLineWidthVexflow(value: number) {
+        this.LyricUnderscoreLineWidthVexflow = value;
     }
     public get SystemThinLineWidth(): number {
         return this.systemThinLineWidth;

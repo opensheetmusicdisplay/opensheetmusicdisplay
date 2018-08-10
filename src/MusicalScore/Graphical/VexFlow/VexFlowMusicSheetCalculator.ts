@@ -153,6 +153,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
         // TODO choose biggest lyrics entry or handle each separately and take maximum elongation
         const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[0];
+        if (lyricsEntry.GetLyricsEntry.extend) {
+          // TODO handle extends
+          continue;
+        }
         let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
 
         if (lyricsEntry.ParentLyricWord) {
