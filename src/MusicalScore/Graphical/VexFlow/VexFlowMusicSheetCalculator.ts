@@ -160,6 +160,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           continue;
         }
         // TODO handle each verse separately and take maximum spacing for elongation
+        // though this so far isn't needed for any piece and probably costs (some) performance
         const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[0]; // first verse, mostly sufficient
         if (lyricsEntry.GetLyricsEntry.extend) {
           // TODO handle extend, belongs to same lyrics entry as current word
