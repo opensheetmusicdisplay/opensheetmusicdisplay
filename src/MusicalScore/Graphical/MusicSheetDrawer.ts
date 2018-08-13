@@ -345,7 +345,7 @@ export abstract class MusicSheetDrawer {
 
         // draw lyric lines (e.g. LyricExtends: "dich,___")
         if (staffLine.LyricLines.length > 0) {
-            this.drawLyricLines(staffLine.LyricLines);
+            this.drawLyricLines(staffLine.LyricLines, staffLine);
         }
 
         if (this.skyLineVisible) {
@@ -357,8 +357,15 @@ export abstract class MusicSheetDrawer {
         }
     }
 
-    protected drawLyricLines(lyricLines: GraphicalLine[]): void {
-        lyricLines.forEach(lyricLine => this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidthVexflow));
+    protected drawLyricLines(lyricLines: GraphicalLine[], staffLine: StaffLine): void {
+        staffLine.LyricLines.forEach(lyricLine => {
+            // TODO maybe we should put this in the calculation (MusicSheetCalculator.calculateLyricExtend)
+            lyricLine.Start.y += staffLine.PositionAndShape.AbsolutePosition.y;
+            lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
+            lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
+            lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
+            this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidthVexflow);
+        });
     }
 
     protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): void {
