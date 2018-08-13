@@ -362,7 +362,7 @@ export abstract class MusicSheetDrawer {
         staffLine.LyricLines.forEach(lyricLine => {
             // TODO maybe we should put this in the calculation (MusicSheetCalculator.calculateLyricExtend)
             // then we can also remove staffLine argument
-            // but same addition doesn't work in calculateLyricExtend
+            // but same addition doesn't work in calculateLyricExtend, because y-spacing happens after lyrics positioning
             lyricLine.Start.y += staffLine.PositionAndShape.AbsolutePosition.y;
             lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
             lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
@@ -372,7 +372,7 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): void {
-        /* TODO
+        /* TODO similar checks as in drawLabel
         if (!this.isVisible(new BoundingBox(graphicalLine.Start,)) {
             return;
         }
