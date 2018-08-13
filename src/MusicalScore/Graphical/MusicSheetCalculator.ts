@@ -1873,14 +1873,17 @@ export abstract class MusicSheetCalculator {
         // if on the same StaffLine
         if (startStaffLine === endStaffLine) {
             // start- and End margins from the text Labels
-            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.AbsolutePosition.x +
+            const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
                 //lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
                 startStaffEntry.PositionAndShape.BorderMarginRight;
-            //const startX: number = lyricEntry.GraphicalLabel.PositionAndShape.AbsolutePosition.x;
+                // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
-                endStaffEntry.PositionAndShape.BorderMarginRight;
+                endStaffEntry.PositionAndShape.BorderMarginRight +
+                // add width of following note
+                EngravingRules.Rules.NoteHeadWidth; // estimated. Bbox doesn't exist yet
+                // + endStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             // needed in order to line up with the Label's text bottom line (is the y position of the underscore)
             startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
             // create a Line (as underscore after the LyricLabel's End)

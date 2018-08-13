@@ -128,6 +128,7 @@ export class EngravingRules {
     private systemRepetitionEndingLineWidth: number;
     private systemDotWidth: number;
     private distanceBetweenVerticalSystemLines: number;
+    private noteHeadWidth: number; // estimated
     private distanceBetweenDotAndLine: number;
     private octaveShiftLineWidth: number;
     private octaveShiftVerticalLineLength: number;
@@ -275,7 +276,7 @@ export class EngravingRules {
         this.lyricsHeight = 2.0; // actually size of lyrics
         this.lyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.verticalBetweenLyricsDistance = 0.5;
-        this.horizontalBetweenLyricsDistance = 0.3;
+        this.horizontalBetweenLyricsDistance = 0.1;
         this.betweenSyllabelMaximumDistance = 10.0;
         this.betweenSyllabelMinimumDistance = 0.4;
         this.minimumDistanceBetweenDashes = 10;
@@ -299,6 +300,7 @@ export class EngravingRules {
         this.systemRepetitionEndingLineWidth = 0.12;
         this.systemDotWidth = EngravingRules.unit / 5.0;
         this.distanceBetweenVerticalSystemLines = 0.35;
+        this.noteHeadWidth = this.distanceBetweenVerticalSystemLines * 2; // estimated
         this.distanceBetweenDotAndLine = 0.7;
         this.octaveShiftLineWidth = 0.12;
         this.octaveShiftVerticalLineLength = EngravingRules.unit;
@@ -1058,6 +1060,12 @@ export class EngravingRules {
     }
     public set DistanceBetweenVerticalSystemLines(value: number) {
         this.distanceBetweenVerticalSystemLines = value;
+    }
+    public get NoteHeadWidth(): number {
+        return this.noteHeadWidth;
+    }
+    public set NoteHeadWidth(value: number) {
+        this.noteHeadWidth = value;
     }
     public get DistanceBetweenDotAndLine(): number {
         return this.distanceBetweenDotAndLine;

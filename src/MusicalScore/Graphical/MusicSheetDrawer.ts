@@ -294,6 +294,16 @@ export abstract class MusicSheetDrawer {
         }
         for (const staffLine of musicSystem.StaffLines) {
             this.drawStaffLine(staffLine);
+
+            // draw lyric dashes
+            if (staffLine.LyricsDashes.length > 0) {
+                this.drawDashes(staffLine.LyricsDashes);
+            }
+
+            // draw lyric lines (e.g. LyricExtends: "dich,___")
+            if (staffLine.LyricLines.length > 0) {
+                this.drawLyricLines(staffLine.LyricLines, staffLine);
+            }
         }
         for (const systemLine of musicSystem.SystemLines) {
             this.drawSystemLineObject(systemLine);
@@ -339,15 +349,6 @@ export abstract class MusicSheetDrawer {
             this.drawMeasure(measure);
         }
 
-        if (staffLine.LyricsDashes.length > 0) {
-            this.drawDashes(staffLine.LyricsDashes);
-        }
-
-        // draw lyric lines (e.g. LyricExtends: "dich,___")
-        if (staffLine.LyricLines.length > 0) {
-            this.drawLyricLines(staffLine.LyricLines, staffLine);
-        }
-
         if (this.skyLineVisible) {
             this.drawSkyLine(staffLine);
         }
@@ -360,6 +361,8 @@ export abstract class MusicSheetDrawer {
     protected drawLyricLines(lyricLines: GraphicalLine[], staffLine: StaffLine): void {
         staffLine.LyricLines.forEach(lyricLine => {
             // TODO maybe we should put this in the calculation (MusicSheetCalculator.calculateLyricExtend)
+            // then we can also remove staffLine argument
+            // but same addition doesn't work in calculateLyricExtend
             lyricLine.Start.y += staffLine.PositionAndShape.AbsolutePosition.y;
             lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
             lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;

@@ -144,19 +144,28 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
     let lastLyricsLabelHalfWidth: number = 0; // TODO lyrics entries may not be ordered correctly, create a dictionary
     let lastStaffEntryXPosition: number = 0;
+    // let lastLyricsEntryText: string = ""; // for easier debug purposes
+    // let lyricsEntryText: string = ""; // for easier debug purposes
+    // let lyricExtend: boolean = false; // for easier debug purposes
     let elongationFactorMeasureWidth: number = 1;
     for (const measure of measuresVertical) {
-      for (let i: number = 0; i < measure.staffEntries.length; i++) {
-        const staffEntry: GraphicalStaffEntry = measure.staffEntries[i];
+      // sort staffEntries by position, so that we always compare neighboring staffEntries
+      const staffEntriesSorted: GraphicalStaffEntry[] = measure.staffEntries.sort(
+        (a: GraphicalStaffEntry, b: GraphicalStaffEntry) => {
+        return a.PositionAndShape.RelativePosition.x - b.PositionAndShape.RelativePosition.x;
+      });
+      for (let i: number = 0; i < staffEntriesSorted.length; i++) {
+        const staffEntry: GraphicalStaffEntry = staffEntriesSorted[i];
         if (staffEntry.LyricsEntries.length === 0) {
           continue;
         }
         // TODO choose biggest lyrics entry or handle each separately and take maximum elongation
         const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[0];
         if (lyricsEntry.GetLyricsEntry.extend) {
-          // TODO handle extends
-          continue;
+          // TODO handle extend, belongs to same lyrics entry as current word
+          // lyricExtend = true;
         }
+        // lyricsEntryText = lyricsEntry.GetLyricsEntry.Text;
         let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
 
         // spacing for multi-syllable words
@@ -191,6 +200,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // set up last measure information for next measure
         lastStaffEntryXPosition = staffEntryXPosition;
         lastLyricsLabelHalfWidth = lyricsLabelHalfWidth;
+        // lastLyricsEntryText = lyricsEntryText;
+        // lyricExtend = false; // reset for next measure
       }
     }
     return oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
