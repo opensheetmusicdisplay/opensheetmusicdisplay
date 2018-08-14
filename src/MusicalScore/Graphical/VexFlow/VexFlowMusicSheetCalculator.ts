@@ -73,7 +73,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * This method is called within calculateXLayout.
    * The staff entries are aligned with minimum needed x distances.
    * The MinimumStaffEntriesWidth of every measure will be set - needed for system building.
-   * Here: prepares the VexFlow formatter for later formatting
+   * Prepares the VexFlow formatter for later formatting
+   * Does not calculate measure width from lyrics (which is called from MusicSheetCalculator)
    * @param measures
    * @returns the minimum required x width of the source measure (=list of staff measures)
    */
@@ -136,8 +137,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         (<VexFlowStaffEntry>staffEntry).calculateXPosition();
       }
     }
-    // update measure width from lyrics formatting
-    minStaffEntriesWidth = this.calculateMeasureWidthFromLyrics(measures, minStaffEntriesWidth);
+    // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this
     return minStaffEntriesWidth;
   }
 
@@ -146,6 +146,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // information we need for the previous lyricsEntries to space the current one
     interface LyricEntryInfo {
+      extend: boolean;
       labelHalfWidth: number;
       staffEntryXPosition: number;
       text: string;
@@ -159,14 +160,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     for (const measure of measuresVertical) {
       const lastLyricEntryDict: LyricEntryDict = {}; // holds info about last lyrics entries for all verses
 
-      // let lyricExtend: boolean = false;
-      // sort staffEntries by position, so that we always compare neighboring staffEntries
-      const staffEntriesSorted: GraphicalStaffEntry[] = measure.staffEntries.sort(
-        (a: GraphicalStaffEntry, b: GraphicalStaffEntry) => {
-        return a.PositionAndShape.RelativePosition.x - b.PositionAndShape.RelativePosition.x;
-      });
-      for (let i: number = 0; i < staffEntriesSorted.length; i++) {
-        const staffEntry: GraphicalStaffEntry = staffEntriesSorted[i];
+      for (let i: number = 0; i < measure.staffEntries.length; i++) {
+        const staffEntry: GraphicalStaffEntry = measure.staffEntries[i];
         if (staffEntry.LyricsEntries.length === 0) {
           continue;
         }
@@ -174,10 +169,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (let j: number = 0; j < staffEntry.LyricsEntries.length; j++) {
           const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[j];
           // const lyricsEntryText = lyricsEntry.GetLyricsEntry.Text; // for easier debugging
-          if (lyricsEntry.GetLyricsEntry.extend) {
-            // TODO handle extend, belongs to same lyrics entry as current word
-            // lyricExtend = true;
-          }
           let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
 
           // spacing for multi-syllable words
@@ -194,6 +185,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
           // if we don't have a previous lyricEntry, skip spacing, just save lastLyricEntry information
           if (lastLyricEntryDict[j] !== undefined) {
+            if (lastLyricEntryDict[j].extend) {
+              // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
+            }
+
             const spaceNeededByLyrics: number =
               lastLyricEntryDict[j].labelHalfWidth + lyricsLabelHalfWidth + minLyricsSpacing;
 
@@ -204,7 +199,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
           // TODO for spacing between last lyric of a measure and first lyric of the next measure,
           // we need to look ahead into the next measure, because first note position is not affected
-          // by measure elongation
+          // by measure elongation. or return this elongation and let MusicSheetCalculator apply it to prev. measure
           // e.g. for Austrian national hymn:
           // if (lyricsEntry.GetLyricsEntry.Text === "kunfts") {
           //   elongationFactorMeasureWidth *= 1.5;
@@ -212,6 +207,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
           // set up last lyric entry information for next measure
           lastLyricEntryDict[j] = {
+            extend: lyricsEntry.GetLyricsEntry.extend,
             labelHalfWidth: lyricsLabelHalfWidth,
             measureNumber: measure.MeasureNumber,
             staffEntryXPosition: staffEntryXPosition,
@@ -222,6 +218,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
     }
     return oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
+    // calculateMeasureWidthFromLyrics is called afterwards from MusicSheetCalculator
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,

@@ -1880,10 +1880,11 @@ export abstract class MusicSheetCalculator {
                 // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
-                endStaffEntry.PositionAndShape.BorderMarginRight +
-                // add width of following note
-                EngravingRules.Rules.NoteHeadWidth; // estimated. Bbox doesn't exist yet
+                endStaffEntry.PositionAndShape.BorderMarginRight;
                 // + endStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
+                // TODO maybe add half-width of following note.
+                // though we don't have the vexflow note's bbox yet and extend layouting is unconstrained,
+                // we have more room for spacing without it.
             // needed in order to line up with the Label's text bottom line (is the y position of the underscore)
             startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
             // create a Line (as underscore after the LyricLabel's End)
