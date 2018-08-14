@@ -367,7 +367,7 @@ export abstract class MusicSheetDrawer {
             lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
             lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
             lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
-            this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidthVexflow);
+            this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidth);
         });
     }
 

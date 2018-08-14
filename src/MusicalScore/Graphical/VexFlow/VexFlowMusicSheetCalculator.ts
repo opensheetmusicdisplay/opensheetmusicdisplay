@@ -142,13 +142,24 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
-    let lastLyricsLabelHalfWidth: number = 0; // TODO lyrics entries may not be ordered correctly, create a dictionary
-    let lastStaffEntryXPosition: number = 0;
-    // let lastLyricsEntryText: string = ""; // for easier debug purposes
-    // let lyricsEntryText: string = ""; // for easier debug purposes
-    // let lyricExtend: boolean = false; // for easier debug purposes
     let elongationFactorMeasureWidth: number = 1;
+
+    // information we need for the previous lyricsEntries to space the current one
+    interface LyricEntryInfo {
+      labelHalfWidth: number;
+      staffEntryXPosition: number;
+      text: string;
+      measureNumber: number;
+    }
+    // holds lyrics entries for verses i
+    interface LyricEntryDict {
+      [i: number]: LyricEntryInfo;
+    }
+
     for (const measure of measuresVertical) {
+      const lastLyricEntryDict: LyricEntryDict = {}; // holds info about last lyrics entries for all verses
+
+      // let lyricExtend: boolean = false;
       // sort staffEntries by position, so that we always compare neighboring staffEntries
       const staffEntriesSorted: GraphicalStaffEntry[] = measure.staffEntries.sort(
         (a: GraphicalStaffEntry, b: GraphicalStaffEntry) => {
@@ -159,50 +170,55 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (staffEntry.LyricsEntries.length === 0) {
           continue;
         }
-        // TODO handle each verse separately and take maximum spacing for elongation
-        // though this so far isn't needed for any piece and probably costs (some) performance
-        const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[0]; // first verse, mostly sufficient
-        if (lyricsEntry.GetLyricsEntry.extend) {
-          // TODO handle extend, belongs to same lyrics entry as current word
-          // lyricExtend = true;
-        }
-        // lyricsEntryText = lyricsEntry.GetLyricsEntry.Text;
-        let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
-
-        // spacing for multi-syllable words
-        if (lyricsEntry.ParentLyricWord) {
-          if (lyricsEntry.GetLyricsEntry.SyllableIndex > 0) { // syllables after first
-            // give a little more spacing for dash between syllables
-            minLyricsSpacing = EngravingRules.Rules.BetweenSyllabelMinimumDistance;
+        // for all verses
+        for (let j: number = 0; j < staffEntry.LyricsEntries.length; j++) {
+          const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[j];
+          // const lyricsEntryText = lyricsEntry.GetLyricsEntry.Text; // for easier debugging
+          if (lyricsEntry.GetLyricsEntry.extend) {
+            // TODO handle extend, belongs to same lyrics entry as current word
+            // lyricExtend = true;
           }
+          let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
+
+          // spacing for multi-syllable words
+          if (lyricsEntry.ParentLyricWord) {
+            if (lyricsEntry.GetLyricsEntry.SyllableIndex > 0) { // syllables after first
+              // give a little more spacing for dash between syllables
+              minLyricsSpacing = EngravingRules.Rules.BetweenSyllabelMinimumDistance;
+            }
+          }
+
+          const lyricsBbox: BoundingBox = lyricsEntry.GraphicalLabel.PositionAndShape;
+          const lyricsLabelHalfWidth: number = lyricsBbox.Size.width / 2;
+          const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
+
+          // if we don't have a previous lyricEntry, skip spacing, just save lastLyricEntry information
+          if (lastLyricEntryDict[j] !== undefined) {
+            const spaceNeededByLyrics: number =
+              lastLyricEntryDict[j].labelHalfWidth + lyricsLabelHalfWidth + minLyricsSpacing;
+
+            const staffEntrySpacing: number = staffEntryXPosition - lastLyricEntryDict[j].staffEntryXPosition;
+            // get factor of how much we need to stretch the measure to space the current lyric with the last one
+            const elongationFactorMeasureWidthForCurrentLabels: number = spaceNeededByLyrics / staffEntrySpacing;
+            elongationFactorMeasureWidth = Math.max(elongationFactorMeasureWidth, elongationFactorMeasureWidthForCurrentLabels);
+          }
+          // TODO for spacing between last lyric of a measure and first lyric of the next measure,
+          // we need to look ahead into the next measure, because first note position is not affected
+          // by measure elongation
+          // e.g. for Austrian national hymn:
+          // if (lyricsEntry.GetLyricsEntry.Text === "kunfts") {
+          //   elongationFactorMeasureWidth *= 1.5;
+          // }
+
+          // set up last lyric entry information for next measure
+          lastLyricEntryDict[j] = {
+            labelHalfWidth: lyricsLabelHalfWidth,
+            measureNumber: measure.MeasureNumber,
+            staffEntryXPosition: staffEntryXPosition,
+            text: lyricsEntry.GetLyricsEntry.Text,
+            // lyricExtend: lyricExtend
+          };
         }
-
-        const lyricsBbox: BoundingBox = lyricsEntry.GraphicalLabel.PositionAndShape;
-        const lyricsLabelHalfWidth: number = lyricsBbox.Size.width / 2;
-        const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
-
-        if (i === 0) {
-          lastStaffEntryXPosition = staffEntryXPosition;
-          lastLyricsLabelHalfWidth = lyricsLabelHalfWidth;
-          // ignore first lyrics of measure
-          // TODO spacing the first lyrics compared to the last measure's last lyrics entry
-          // will require more sophisticated lastLyrics variable setting because of vertical order
-          continue;
-        }
-
-        const spaceNeededByLyrics: number =
-          lastLyricsLabelHalfWidth + lyricsLabelHalfWidth + minLyricsSpacing;
-
-        const staffEntrySpacing: number = staffEntryXPosition - lastStaffEntryXPosition;
-        // get factor of how much we need to stretch the measure to space the current lyric with the last one
-        const elongationFactorMeasureWidthForCurrentLabels: number = spaceNeededByLyrics / staffEntrySpacing;
-        elongationFactorMeasureWidth = Math.max(elongationFactorMeasureWidth, elongationFactorMeasureWidthForCurrentLabels);
-
-        // set up last measure information for next measure
-        lastStaffEntryXPosition = staffEntryXPosition;
-        lastLyricsLabelHalfWidth = lyricsLabelHalfWidth;
-        // lastLyricsEntryText = lyricsEntryText;
-        // lyricExtend = false; // reset for next measure
       }
     }
     return oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
