@@ -21,6 +21,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "Mozart, W.A. - An Chloe": "Mozart_AnChloe.xml",
             "Mozart, W.A. - Das Veilchen": "Mozart_DasVeilchen.xml",
             "Mozart, W.A.- Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+            "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
             "OSMD Function Test - All": "OSMD_function_test_all.xml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",

@@ -67,14 +67,19 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.attributes["fill-opacity"] = 1;
     }
 
-    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF"): void {
+    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2): void {
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(stop.x, stop.y);
+
         this.ctx.attributes.stroke = color;
-        this.ctx.lineWidth = 2;
-        this.ctx.attributes["stroke-linecap"] = "round";
+        //this.ctx.attributes.strokeStyle = color;
+        //this.ctx.attributes["font-weight"] = "bold";
+        //this.ctx.attributes["stroke-linecap"] = "round";
+
+        this.ctx.lineWidth = lineWidth;
+
         this.ctx.stroke();
         this.ctx.restore();
     }

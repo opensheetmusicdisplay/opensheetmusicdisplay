@@ -302,7 +302,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.stave.setWidth(width * unitInPixels);
         // Force the width of the Begin Instructions
         //this.stave.setNoteStartX(this.beginInstructionsWidth * UnitInPixels);
-
     }
 
     /**
