@@ -28,8 +28,6 @@ export interface IGraphicalSymbolFactory {
 
     createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry;
 
-    createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry;
-
     createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry;
 
     createNote(

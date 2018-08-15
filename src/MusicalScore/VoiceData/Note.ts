@@ -42,15 +42,8 @@ export class Note {
     private tuplet: Tuplet;
     private tie: Tie;
     private slurs: Slur[] = [];
-    private graceNoteSlash: boolean = false;
     private playbackInstrumentId: string = undefined;
 
-    public get GraceNoteSlash(): boolean {
-        return this.graceNoteSlash;
-    }
-    public set GraceNoteSlash(value: boolean) {
-        this.graceNoteSlash = value;
-    }
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
     }
