@@ -93,10 +93,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     //     ctx.fillStyle = oldStyle;
     // }
 
-    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF"): void {
+    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): void {
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
-        this.backend.renderLine(start, stop, color);
+        this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
     }
 
     protected drawSkyLine(staffline: StaffLine): void {

@@ -293,6 +293,16 @@ export abstract class MusicSheetDrawer {
         }
         for (const staffLine of musicSystem.StaffLines) {
             this.drawStaffLine(staffLine);
+
+            // draw lyric dashes
+            if (staffLine.LyricsDashes.length > 0) {
+                this.drawDashes(staffLine.LyricsDashes);
+            }
+
+            // draw lyric lines (e.g. LyricExtends: "dich,___")
+            if (staffLine.LyricLines.length > 0) {
+                this.drawLyricLines(staffLine.LyricLines, staffLine);
+            }
         }
         for (const systemLine of musicSystem.SystemLines) {
             this.drawSystemLineObject(systemLine);
@@ -353,6 +363,32 @@ export abstract class MusicSheetDrawer {
         if (this.bottomLineVisible) {
             this.drawBottomLine(staffLine);
         }
+    }
+
+    protected drawLyricLines(lyricLines: GraphicalLine[], staffLine: StaffLine): void {
+        staffLine.LyricLines.forEach(lyricLine => {
+            // TODO maybe we should put this in the calculation (MusicSheetCalculator.calculateLyricExtend)
+            // then we can also remove staffLine argument
+            // but same addition doesn't work in calculateLyricExtend, because y-spacing happens after lyrics positioning
+            lyricLine.Start.y += staffLine.PositionAndShape.AbsolutePosition.y;
+            lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
+            lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
+            lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
+            this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidth);
+        });
+    }
+
+    protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): void {
+        /* TODO similar checks as in drawLabel
+        if (!this.isVisible(new BoundingBox(graphicalLine.Start,)) {
+            return;
+        }
+        */
+        this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
+    }
+
+    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
+        // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 
     /**

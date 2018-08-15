@@ -500,7 +500,7 @@ export abstract class MusicSheetCalculator {
                         measureRelativePosition.x;
 
                     let minMarginLeft: number = Number.MAX_VALUE;
-                    let maxMarginRight: number = Number.MAX_VALUE;
+                    let maxMarginRight: number = Number.MIN_VALUE;
 
                     // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
                     for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
@@ -1744,8 +1744,9 @@ export abstract class MusicSheetCalculator {
                 nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
-            if ((endX - startX) > this.rules.BetweenSyllabelMaximumDistance) {
-                numberOfDashes = Math.ceil((endX - startX) / this.rules.BetweenSyllabelMaximumDistance);
+            if ((endX - startX) > this.rules.MinimumDistanceBetweenDashes * 3) {
+                // *3: need distance between word to first dash, dash to dash, dash to next word
+                numberOfDashes = Math.floor((endX - startX) / this.rules.MinimumDistanceBetweenDashes) - 1;
             }
             // check distance and create the adequate number of Dashes
             if (numberOfDashes === 1) {
@@ -1792,16 +1793,16 @@ export abstract class MusicSheetCalculator {
      */
     private calculateDashes(staffLine: StaffLine, startX: number, endX: number, y: number): void {
         let distance: number = endX - startX;
-        if (distance < this.rules.MinimumDistanceBetweenDashes) {
+        if (distance < this.rules.MinimumDistanceBetweenDashes * 3) {
             this.calculateSingleDashForLyricWord(staffLine, startX, endX, y);
         } else {
             // enough distance for more Dashes
-            const numberOfDashes: number = Math.floor(distance / this.rules.MinimumDistanceBetweenDashes);
-            const distanceBetweenDashes: number = distance / this.rules.MinimumDistanceBetweenDashes;
+            const numberOfDashes: number = Math.floor(distance / this.rules.MinimumDistanceBetweenDashes) - 1;
+            const distanceBetweenDashes: number = distance / (numberOfDashes + 1);
             let counter: number = 0;
 
-            startX += distanceBetweenDashes / 2;
-            endX -= distanceBetweenDashes / 2;
+            startX += distanceBetweenDashes;
+            endX -= distanceBetweenDashes;
             while (counter <= Math.floor(numberOfDashes / 2.0) && endX > startX) {
                 distance = this.calculateRightAndLeftDashesForLyricWord(staffLine, startX, endX, y);
                 startX += distanceBetweenDashes;
@@ -1809,9 +1810,10 @@ export abstract class MusicSheetCalculator {
                 counter++;
             }
 
-            // if the remaining distance isn't big enough for two Dashes (another check would be if numberOfDashes is uneven),
+            // if the remaining distance isn't big enough for two Dashes,
+            // but long enough for a middle dash inbetween,
             // then put the last Dash in the middle of the remaining distance
-            if (distance > distanceBetweenDashes) {
+            if (distance > distanceBetweenDashes * 2) {
                 this.calculateSingleDashForLyricWord(staffLine, startX, endX, y);
             }
         }
@@ -1843,7 +1845,7 @@ export abstract class MusicSheetCalculator {
     private calculateLyricExtend(lyricEntry: GraphicalLyricEntry): void {
         let startY: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
         const startStaffEntry: GraphicalStaffEntry = lyricEntry.StaffEntryParent;
-        const startStaffLine: StaffLine = <StaffLine>lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
+        const startStaffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
 
         // find endstaffEntry and staffLine
         let endStaffEntry: GraphicalStaffEntry = undefined;
@@ -1873,13 +1875,19 @@ export abstract class MusicSheetCalculator {
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                //lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                startStaffEntry.PositionAndShape.BorderMarginRight;
+                // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.BorderMarginRight;
-            // needed in order to line up with the Label's text bottom line (is the y psoition of the underscore)
+                // + endStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
+                // TODO maybe add half-width of following note.
+                // though we don't have the vexflow note's bbox yet and extend layouting is unconstrained,
+                // we have more room for spacing without it.
+            // needed in order to line up with the Label's text bottom line (is the y position of the underscore)
             startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
-            // create a Line (as underscope after the LyricLabel's End)
+            // create a Line (as underscore after the LyricLabel's End)
             this.calculateSingleLyricWordWithUnderscore(startStaffLine, startX, endX, startY);
         } else { // start and end on different StaffLines
             // start margin from the text Label until the End of StaffLine

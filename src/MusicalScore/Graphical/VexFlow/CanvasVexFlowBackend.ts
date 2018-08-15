@@ -74,7 +74,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvasRenderingCtx.globalAlpha = 1;
     }
 
-    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF"): void {
+    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number= 2): void {
         const oldStyle: string | CanvasGradient | CanvasPattern = this.canvasRenderingCtx.strokeStyle;
         this.canvasRenderingCtx.strokeStyle = color;
         this.canvasRenderingCtx.beginPath();

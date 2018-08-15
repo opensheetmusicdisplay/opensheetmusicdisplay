@@ -4,36 +4,36 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 (function () {
     "use strict";
     var openSheetMusicDisplay;
-    // The folder of the demo files
-    var folder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
-    // The available demos
-        demos = {
-            "L.v. Beethoven - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
-            "M. Clementi - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
-            "M. Clementi - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
-            "M. Clementi - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
-            "M. Clementi - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
-            "J.S. Bach - Praeludium In C Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
-            "J.S. Bach - Air": "JohannSebastianBach_Air.xml",
-            "C. Gounod - Meditation": "CharlesGounod_Meditation.xml",
-            "J. Haydn - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
-            "S. Joplin - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
-            "S. Joplin - The Entertainer": "ScottJoplin_The_Entertainer.xml",
-            "W.A. Mozart - An Chloe": "Mozart_AnChloe.xml",
-            "W.A. Mozart - Das Veilchen": "Mozart_DasVeilchen.xml",
-            "W.A. Mozart - Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+    // folder of the sample files
+    var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
+        samples = {
+            "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
+            "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
+            "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
+            "Clementi, M. - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
+            "Clementi, M. - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
+            "Bach, J.S. - Praeludium in C-Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+            "Bach, J.S. - Air": "JohannSebastianBach_Air.xml",
+            "Gounod, C. - Meditation": "CharlesGounod_Meditation.xml",
+            "Haydn, J. - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
+            "Joplin, S. - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
+            "Joplin, S. - The Entertainer": "ScottJoplin_The_Entertainer.xml",
+            "Mozart, W.A. - An Chloe": "Mozart_AnChloe.xml",
+            "Mozart, W.A. - Das Veilchen": "Mozart_DasVeilchen.xml",
+            "Mozart, W.A.- Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+            "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
             "OSMD Function Test - All": "OSMD_function_test_all.xml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
             "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
-            "F. Schubert - An Die Musik (Multiple Verses)": "Schubert_An_die_Musik.xml",
-            "L. Actor - Prelude (Sample)": "ActorPreludeSample.xml",
+            "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
+            "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
             "Anonymous - Saltarello": "Saltarello.mxl",
-            "C. Debussy - Mandoline": "Debussy_Mandoline.xml",
-            "France Levasseur - Parlez Mois": "Parlez-moi.mxl",
-            "R. Schumann - Dichterliebe": "Dichterliebe01.xml",
-            "Telemann - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
-            "Telemann - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
+            "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
+            "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
+            "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
+            "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
+            "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
         },
 
         zoom = 1.0,
@@ -41,7 +41,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         err,
         error_tr,
         canvas,
-        select,
+        selectSample,
         selectBounding,
         skylineDebug,
         bottomlineDebug,
@@ -63,7 +63,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         error_tr = document.getElementById("error-tr");
         zoomDiv = document.getElementById("zoom-str");
         custom = document.createElement("option");
-        select = document.getElementById("select");
+        selectSample = document.getElementById("selectSample");
         selectBounding = document.getElementById("selectBounding");
         skylineDebug = document.getElementById("skylineDebug");
         bottomlineDebug = document.getElementById("bottomlineDebug");
@@ -80,15 +80,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         error();
 
         // Create select
-        for (name in demos) {
-            if (demos.hasOwnProperty(name)) {
+        for (name in samples) {
+            if (samples.hasOwnProperty(name)) {
                 option = document.createElement("option");
-                option.value = demos[name];
+                option.value = samples[name];
                 option.textContent = name;
             }
-            select.appendChild(option);
+            selectSample.appendChild(option);
         }
-        select.onchange = selectOnChange;
+        selectSample.onchange = selectSampleOnChange;
         selectBounding.onchange = selectBoundingOnChange;
 
         // Pre-select default music piece
@@ -160,7 +160,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             canvas.innerHTML = "";
             openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, value);
             openSheetMusicDisplay.setLogLevel('info');
-            selectOnChange();
+            selectSampleOnChange();
 
         });
     }
@@ -198,12 +198,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay.DrawBoundingBox = value;
     }
 
-    function selectOnChange(str) {
+    function selectSampleOnChange(str) {
         error();
         disable();
         var isCustom = typeof str === "string";
         if (!isCustom) {
-            str = folder + select.value;
+            str = sampleFolder + selectSample.value;
         }
         zoom = 1.0;
         openSheetMusicDisplay.load(str).then(
@@ -227,8 +227,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
     function onLoadingEnd(isCustom) {
         // Remove option from select
-        if (!isCustom && custom.parentElement === select) {
-            select.removeChild(custom);
+        if (!isCustom && custom.parentElement === selectSample) {
+            selectSample.removeChild(custom);
         }
         // Enable controls again
         enable();
@@ -261,18 +261,18 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     // Enable/Disable Controls
     function disable() {
         document.body.style.opacity = 0.3;
-        select.disabled = zoomIn.disabled = zoomOut.disabled = "disabled";
+        selectSample.disabled = zoomIn.disabled = zoomOut.disabled = "disabled";
     }
     function enable() {
         document.body.style.opacity = 1;
-        select.disabled = zoomIn.disabled = zoomOut.disabled = "";
+        selectSample.disabled = zoomIn.disabled = zoomOut.disabled = "";
         logCanvasSize();
     }
 
     // Register events: load, drag&drop
     window.addEventListener("load", function() {
         init();
-        selectOnChange();
+        selectSampleOnChange();
     });
     window.addEventListener("dragenter", function(event) {
         event.preventDefault();
@@ -290,12 +290,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             return;
         }
         // Add "Custom..." score
-        select.appendChild(custom);
+        selectSample.appendChild(custom);
         custom.selected = "selected";
         // Read dragged file
         var reader = new FileReader();
         reader.onload = function (res) {
-            selectOnChange(res.target.result);
+            selectSampleOnChange(res.target.result);
         };
         var filename = event.dataTransfer.files[0].name;
         if (filename.toLowerCase().indexOf(".xml") > 0

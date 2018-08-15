@@ -90,7 +90,9 @@ export class EngravingRules {
     private lyricsHeight: number;
     private lyricsYOffsetToStaffHeight: number;
     private verticalBetweenLyricsDistance: number;
+    private horizontalBetweenLyricsDistance: number;
     private betweenSyllabelMaximumDistance: number;
+    private betweenSyllabelMinimumDistance: number;
     private minimumDistanceBetweenDashes: number;
     private bezierCurveStepSize: number;
     private tPower3: number[];
@@ -272,8 +274,10 @@ export class EngravingRules {
         this.lyricsHeight = 2.0; // actually size of lyrics
         this.lyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.verticalBetweenLyricsDistance = 0.5;
+        this.horizontalBetweenLyricsDistance = 0.4;
         this.betweenSyllabelMaximumDistance = 10.0;
-        this.minimumDistanceBetweenDashes = 5.0;
+        this.betweenSyllabelMinimumDistance = 0.5;
+        this.minimumDistanceBetweenDashes = 10;
 
         // expressions variables
         this.instantaniousTempoTextHeight = 2.3;
@@ -825,11 +829,23 @@ export class EngravingRules {
     public set VerticalBetweenLyricsDistance(value: number) {
         this.verticalBetweenLyricsDistance = value;
     }
+    public get HorizontalBetweenLyricsDistance(): number {
+        return this.horizontalBetweenLyricsDistance;
+    }
+    public set HorizontalBetweenLyricsDistance(value: number) {
+        this.horizontalBetweenLyricsDistance = value;
+    }
     public get BetweenSyllabelMaximumDistance(): number {
         return this.betweenSyllabelMaximumDistance;
     }
     public set BetweenSyllabelMaximumDistance(value: number) {
         this.betweenSyllabelMaximumDistance = value;
+    }
+    public get BetweenSyllabelMinimumDistance(): number {
+        return this.betweenSyllabelMinimumDistance;
+    }
+    public set BetweenSyllabelMinimumDistance(value: number) {
+        this.betweenSyllabelMinimumDistance = value;
     }
     public get MinimumDistanceBetweenDashes(): number {
         return this.minimumDistanceBetweenDashes;

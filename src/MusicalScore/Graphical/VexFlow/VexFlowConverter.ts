@@ -218,8 +218,9 @@ export class VexFlowConverter {
             clef: vfClefType,
             duration: duration,
             keys: keys,
-            slash: gve.parentVoiceEntry.GraceNoteSlash
+            slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
+
         if (!gve.parentVoiceEntry.IsGrace) {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         } else {
