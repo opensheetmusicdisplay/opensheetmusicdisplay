@@ -22,9 +22,9 @@ export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniou
                                          EngravingRules.Rules.ContinuousDynamicTextHeight,
                                          TextAlignment.LeftTop,
                                          staffEntry.PositionAndShape);
-        // FIXME: Add offset when skyline available
-        // const offset: number = staffEntry.parentMeasure.ParentStaffLine.SkyBottomCalculator ...
-        const offset: number = 5.5;
+
+        const offset: number = staffEntry.parentMeasure.ParentStaffLine
+                                       .SkyBottomLineCalculator.getBottomLineMaxInBoundingBox(staffEntry.parentMeasure.PositionAndShape);
         this.mLabel.PositionAndShape.RelativePosition.y += offset;
         this.mLabel.Label.fontStyle = FontStyles.BoldItalic;
     }

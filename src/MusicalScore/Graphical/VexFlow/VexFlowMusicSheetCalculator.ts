@@ -353,7 +353,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const measure: GraphicalMeasure = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex];
         const startStaffEntry: GraphicalStaffEntry = measure.findGraphicalStaffEntryFromTimestamp(timeStamp);
         const idx: VexFlowInstantaniousDynamicExpression = new VexFlowInstantaniousDynamicExpression(multiExpression.InstantaniousDynamic, startStaffEntry);
-        idx.calculcateBottomLine(measure);
+        // idx.calculcateBottomLine(measure);
         (measure as VexFlowMeasure).instantaniousDynamics.push(idx);
     }
   }
@@ -384,6 +384,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
                                                                                            staffIndex);
     }
+
     if (endMeasure !== undefined) {
         // calculate GraphicalOctaveShift and RelativePositions
         const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
@@ -394,7 +395,25 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
 
         graphicalOctaveShift.setStartNote(startStaffEntry);
-        graphicalOctaveShift.setEndNote(endStaffEntry);
+
+        if (endMeasure.ParentStaffLine !== startMeasure.ParentStaffLine) {
+          graphicalOctaveShift.endsOnDifferentStaffLine = true;
+          const lastMeasure: GraphicalMeasure = startMeasure.ParentStaffLine.Measures[startMeasure.ParentStaffLine.Measures.length - 1];
+          const lastNote: GraphicalStaffEntry = lastMeasure.staffEntries[lastMeasure.staffEntries.length - 1];
+          graphicalOctaveShift.setEndNote(lastNote);
+
+          // Now finish the shift on the next line
+          const remainingOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, endMeasure.PositionAndShape);
+          endMeasure.ParentStaffLine.OctaveShifts.push(remainingOctaveShift);
+          const firstMeasure: GraphicalMeasure = endMeasure.ParentStaffLine.Measures[0];
+          const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
+          remainingOctaveShift.setStartNote(firstNote);
+          remainingOctaveShift.setEndNote(endStaffEntry);
+        } else {
+          graphicalOctaveShift.setEndNote(endStaffEntry);
+        }
+    } else {
+      log.warn("End measure for octave shift is undefined! This should not happen!");
     }
   }
 

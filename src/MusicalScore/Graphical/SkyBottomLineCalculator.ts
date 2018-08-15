@@ -1,10 +1,11 @@
-import {EngravingRules} from "./EngravingRules";
-import {StaffLine} from "./StaffLine";
-import {PointF2D} from "../../Common/DataObjects/PointF2D";
-import {CanvasVexFlowBackend} from "./VexFlow/CanvasVexFlowBackend";
-import {VexFlowMeasure} from "./VexFlow/VexFlowMeasure";
-import {unitInPixels} from "./VexFlow/VexFlowMusicSheetDrawer";
+import { EngravingRules } from "./EngravingRules";
+import { StaffLine } from "./StaffLine";
+import { PointF2D } from "../../Common/DataObjects/PointF2D";
+import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
+import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
+import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 import * as log from "loglevel";
+import { BoundingBox } from "./BoundingBox";
 /**
  * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
@@ -147,7 +148,7 @@ export class SkyBottomLineCalculator {
         const ctx: any = backend.getContext();
         const oldStyle: string = ctx.fillStyle;
         ctx.fillStyle = color;
-        ctx.fillRect( coord.x, coord.y, 2, 2 );
+        ctx.fillRect(coord.x, coord.y, 2, 2);
         ctx.fillStyle = oldStyle;
     }
 
@@ -366,6 +367,37 @@ export class SkyBottomLineCalculator {
         return this.getMaxInRange(this.BottomLine, startIndex, endIndex);
     }
 
+    /**
+     * This method finds the BottomLine's maximum value within a given range.
+     * @param staffLine Staffline to find the max value in
+     * @param startIndex Start index of the range
+     * @param endIndex End index of the range
+     */
+
+
+    /**
+     * This method returns the maximum value of the bottom line around a specific
+     * bounding box. Will return undefined if the bounding box is not valid or inside staffline
+     * @param boundingBox Bounding box where the maximum should be retrieved from
+     * @returns Maximum value inside bounding box boundaries or undefined if not possible
+     */
+    public getBottomLineMaxInBoundingBox(boundingBox: BoundingBox): number {
+        // FIXME: See if this really works as expected!
+        let iteratorBB: BoundingBox = boundingBox;
+        let startIndex: number = boundingBox.BorderLeft;
+        let endIndex: number = boundingBox.BorderRight;
+        let successfull: boolean = false;
+        while (iteratorBB.Parent) {
+            if (iteratorBB === this.mStaffLineParent.PositionAndShape) {
+                successfull = true;
+                break;
+            }
+            startIndex += iteratorBB.BorderLeft;
+            endIndex += iteratorBB.BorderRight;
+            iteratorBB = iteratorBB.Parent;
+        }
+        return successfull ? this.getMaxInRange(this.BottomLine, startIndex, endIndex) : undefined;
+    }
 
     //#region Private methods
 
