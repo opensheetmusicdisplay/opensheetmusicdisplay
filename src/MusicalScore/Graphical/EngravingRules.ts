@@ -274,9 +274,9 @@ export class EngravingRules {
         this.lyricsHeight = 2.0; // actually size of lyrics
         this.lyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.verticalBetweenLyricsDistance = 0.5;
-        this.horizontalBetweenLyricsDistance = 0.3;
+        this.horizontalBetweenLyricsDistance = 0.4;
         this.betweenSyllabelMaximumDistance = 10.0;
-        this.betweenSyllabelMinimumDistance = 0.4;
+        this.betweenSyllabelMinimumDistance = 0.5;
         this.minimumDistanceBetweenDashes = 10;
 
         // expressions variables
