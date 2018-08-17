@@ -119,8 +119,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param pitch The pitch which will be rendered.
      */
     public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void {
-        // ToDo: set accidental here from pitch.Accidental
         const note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
+        // accidental is added in setPitch
         note.setPitch(pitch);
     }
 

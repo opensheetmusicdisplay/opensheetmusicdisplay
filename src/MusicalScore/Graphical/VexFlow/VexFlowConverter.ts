@@ -119,7 +119,7 @@ export class VexFlowConverter {
     public static accidental(accidental: AccidentalEnum): string {
         let acc: string;
         switch (accidental) {
-            case AccidentalEnum.NATURAL: // == NONE
+            case AccidentalEnum.NATURAL:
                 acc = "n";
                 break;
             case AccidentalEnum.FLAT:

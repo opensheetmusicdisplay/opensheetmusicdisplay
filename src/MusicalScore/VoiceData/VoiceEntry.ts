@@ -194,7 +194,7 @@ export class VoiceEntry {
                 const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
                 let alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 if (voiceEntryWithOrnament.OrnamentContainer.AccidentalAbove !== AccidentalEnum.NONE) {
-                    alteration = <AccidentalEnum><number>voiceEntryWithOrnament.ornamentContainer.AccidentalAbove;
+                    alteration = voiceEntryWithOrnament.ornamentContainer.AccidentalAbove;
                 }
                 for (let i: number = 0; i < 8; i++) {
                     currentTimestamp = Fraction.plus(baseTimestamp, new Fraction(i * length.Numerator, length.Denominator));
