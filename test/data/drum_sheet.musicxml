@@ -333,11 +333,6 @@
           </direction-type>
         <sound tempo="120"/>
         </direction>
-      <direction placement="above">
-        <direction-type>
-          <words default-y="40.00" relative-x="42.83" relative-y="31.56">Stave Text</words>
-          </direction-type>
-        </direction>
       <note default-x="76.67" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
@@ -377,11 +372,6 @@
         <notehead>x</notehead>
         <beam number="1">continue</beam>
         </note>
-      <direction placement="below">
-        <direction-type>
-          <words default-y="-80.00" relative-x="-6.76" relative-y="-5.64" font-style="italic" font-size="12">testing the text for staves</words>
-          </direction-type>
-        </direction>
       <note default-x="145.19" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
@@ -405,7 +395,7 @@
         <voice>1</voice>
         <type>eighth</type>
         <stem>up</stem>
-        <notehead filled="yes">x</notehead>
+        <notehead>x</notehead>
         <beam number="1">begin</beam>
         </note>
       <note default-x="190.87" default-y="5.00">
