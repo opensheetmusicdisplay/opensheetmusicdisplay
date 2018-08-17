@@ -103,12 +103,21 @@ export class VexFlowConverter {
      * @param pitch
      * @returns {string[]}
      */
-    public static pitch(pitch: Pitch, clef: ClefInstruction): [string, string, ClefInstruction] {
+    public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
+        // If we are not setting the pitch (transpose) then use the note's
+        if (pitch === undefined) {
+            pitch = note.sourceNote.Pitch;
+        }
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         // The octave seems to need a shift of three FIXME?
-        const octave: number = pitch.Octave - clef.OctaveOffset + 3;
+        const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
         const acc: string = VexFlowConverter.accidental(pitch.Accidental);
-        return [fund + "n/" + octave, acc, clef];
+        const noteHeadFilled: boolean = note.sourceNote.NoteHead.Filled;
+        let noteHead: string = '';
+        if (note !== undefined) {
+            noteHead = "/" + note.sourceNote.NoteHead.NoteHeadShape + ((noteHeadFilled) ? "2" : "1").toString(); // TODO: sort this out (1/2/3)
+        }
+        return [fund + "n/" + octave + noteHead, acc, note.Clef()];
     }
 
     /**
@@ -197,7 +206,6 @@ export class VexFlowConverter {
                 duration += "r";
                 break;
             }
-
             const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             keys.push(pitch[0]);
             accidentals.push(pitch[1]);

@@ -24,6 +24,7 @@ import { Pitch } from "../../Common/DataObjects/Pitch";
 import { IXmlAttribute } from "../../Common/FileIO/Xml";
 import { CollectionUtil } from "../../Util/CollectionUtil";
 import { ArticulationReader } from "./MusicSymbolModules/ArticulationReader";
+import { NoteHead } from "../VoiceData/NoteHead";
 
 /**
  * To be implemented
@@ -300,6 +301,9 @@ export class VoiceGenerator {
     let noteStep: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
     let playbackInstrumentId: string = undefined;
+    let noteHead: string = 'normal';
+    let noteHeadFilled: boolean = true;
+
     const xmlnodeElementsArr: IXmlElement[] = node.elements();
     for (let idx: number = 0, len: number = xmlnodeElementsArr.length; idx < len; ++idx) {
       const noteElement: IXmlElement = xmlnodeElementsArr[idx];
@@ -369,6 +373,12 @@ export class VoiceGenerator {
             playbackInstrumentId = noteElement.firstAttribute.value;
           }
         }
+        if (noteElement.name === "notehead") {
+          noteHead = noteElement.value;
+          if (noteElement.attribute("filled") !== null) {
+            noteHeadFilled = noteElement.attribute("filled").value === 'yes';
+          } 
+        }
       } catch (ex) {
         log.info("VoiceGenerator.addSingleNote: ", ex);
       }
@@ -379,6 +389,7 @@ export class VoiceGenerator {
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     note.PlaybackInstrumentId = playbackInstrumentId;
+    note.NoteHead = new NoteHead(noteHead, noteHeadFilled);
     this.currentVoiceEntry.Notes.push(note);
     if (node.elements("beam") && !chord) {
       this.createBeam(node, note);
