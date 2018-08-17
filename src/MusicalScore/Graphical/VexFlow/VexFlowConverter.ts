@@ -113,7 +113,7 @@ export class VexFlowConverter {
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
         const acc: string = VexFlowConverter.accidental(pitch.Accidental);
         const noteHeadFilled: boolean = note.sourceNote.NoteHead.Filled;
-        let noteHead: string = '';
+        let noteHead: string = "";
         if (note !== undefined) {
             noteHead = "/" + note.sourceNote.NoteHead.NoteHeadShape + ((noteHeadFilled) ? "2" : "1").toString(); // TODO: sort this out (1/2/3)
         }

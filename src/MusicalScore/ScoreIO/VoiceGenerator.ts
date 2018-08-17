@@ -301,7 +301,7 @@ export class VoiceGenerator {
     let noteStep: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
     let playbackInstrumentId: string = undefined;
-    let noteHead: string = 'normal';
+    let noteHead: string = "normal";
     let noteHeadFilled: boolean = true;
 
     const xmlnodeElementsArr: IXmlElement[] = node.elements();
@@ -376,8 +376,8 @@ export class VoiceGenerator {
         if (noteElement.name === "notehead") {
           noteHead = noteElement.value;
           if (noteElement.attribute("filled") !== null) {
-            noteHeadFilled = noteElement.attribute("filled").value === 'yes';
-          } 
+            noteHeadFilled = noteElement.attribute("filled").value === "yes";
+          }
         }
       } catch (ex) {
         log.info("VoiceGenerator.addSingleNote: ", ex);

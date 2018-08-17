@@ -26,8 +26,8 @@ export class NoteHead {
 
 // TODO: Add the rest from https://usermanuals.musicxml.com/MusicXML/Content/ST-MusicXML-notehead-value.htm
 export enum NoteHeadEnum {
-    NORMAL="",
-    DIAMOND="D",
-    TRIANGLE="T",
-    X="X"
+    NORMAL = "",
+    DIAMOND = "D",
+    TRIANGLE = "T",
+    X = "X"
 }
