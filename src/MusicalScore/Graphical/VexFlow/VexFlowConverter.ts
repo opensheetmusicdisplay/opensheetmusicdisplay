@@ -20,6 +20,7 @@ import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry"
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
+import { NoteHead, NoteHeadShape } from "../../VoiceData/NoteHead";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -104,20 +105,36 @@ export class VexFlowConverter {
      * @returns {string[]}
      */
     public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
-        // If we are not setting the pitch (transpose) then use the note's
-        if (pitch === undefined) {
-            pitch = note.sourceNote.Pitch;
-        }
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         // The octave seems to need a shift of three FIXME?
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
         const acc: string = VexFlowConverter.accidental(pitch.Accidental);
-        const noteHeadFilled: boolean = note.sourceNote.NoteHead.Filled;
-        let noteHead: string = "";
-        if (note !== undefined) {
-            noteHead = "/" + note.sourceNote.NoteHead.NoteHeadShape + ((noteHeadFilled) ? "2" : "1").toString(); // TODO: sort this out (1/2/3)
+        const noteHead: NoteHead = note.sourceNote.NoteHead;
+        let noteHeadCode: string = "";
+        if (noteHead !== undefined) { // TODO Somehow noteHead isn't undefined for normal note heads as it should be
+            noteHeadCode = this.NoteHeadCode(noteHead);
         }
-        return [fund + "n/" + octave + noteHead, acc, note.Clef()];
+        return [fund + "n/" + octave + noteHeadCode, acc, note.Clef()];
+    }
+
+    /** returns the Vexflow code for a note head. Some are still unsupported, see Vexflow/tables.js */
+    public static NoteHeadCode(noteHead: NoteHead): string {
+        const codeStart: string = "/";
+        const codeFilled: string = noteHead.Filled ? "2" : "1";
+        switch (noteHead.Shape) {
+            case NoteHeadShape.NORMAL:
+                return "";
+            case NoteHeadShape.DIAMOND:
+                return codeStart + "D" + codeFilled;
+            case NoteHeadShape.TRIANGLE:
+                return codeStart + "T" + codeFilled;
+            case NoteHeadShape.X:
+                return codeStart + "X" + codeFilled;
+            case NoteHeadShape.CIRCLEX:
+                return codeStart + "X3"; // circleX is "X3" in Vexflow for some reason
+            default:
+                return "";
+        }
     }
 
     /**
