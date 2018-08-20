@@ -90,8 +90,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      }*/
     // Format the voices
     const allVoices: Vex.Flow.Voice[] = [];
-    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({align_rests: true,
-    });
+    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
 
     for (const measure of measures) {
         const mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
@@ -124,7 +123,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
             // prepare format function for voices, will be called later for formatting measure again
             vexflowMeasure.formatVoices = (w: number) => {
-              formatter.format(allVoices, w);
+              formatter.format(allVoices, w, {
+                align_rests: true,
+          });
             };
             // format now for minimum width
             vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
