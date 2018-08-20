@@ -224,8 +224,8 @@ export class SourceStaffEntry {
                             tieRestDuration.Add(n.Length);
                         }
                     }
-                    if (duration.lt(note.NoteTie.Duration)) {
-                        duration = note.NoteTie.Duration;
+                    if (duration.lt(tieRestDuration)) {
+                        duration = tieRestDuration;
                     }
                 } else if (duration.lt(note.Length)) {
                     duration = note.Length;

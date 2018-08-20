@@ -6,14 +6,14 @@ declare namespace Vex {
         const RESOLUTION: any;
 
         export class Formatter {
-            constructor(opts?: any);
+            constructor();
 
             public hasMinTotalWidth: boolean;
             public minTotalWidth: number;
 
             public joinVoices(voices: Voice[]): void;
 
-            public format(voices: Voice[], width: number): void;
+            public format(voices: Voice[], width: number, options?: any): void;
 
             public preCalculateMinTotalWidth(voices: Voice[]): number;
         }
