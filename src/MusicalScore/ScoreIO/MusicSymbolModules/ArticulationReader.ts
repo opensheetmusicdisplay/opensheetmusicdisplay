@@ -9,26 +9,26 @@ export class ArticulationReader {
 
   private getAccEnumFromString(input: string): AccidentalEnum {
     switch (input) {
-      case "natural":
-        return AccidentalEnum.NATURAL;
       case "sharp":
         return AccidentalEnum.SHARP;
+      case "flat":
+          return AccidentalEnum.FLAT;
+      case "natural":
+        return AccidentalEnum.NATURAL;
       case "double-sharp":
       case "sharp-sharp":
         return AccidentalEnum.DOUBLESHARP;
-      case "triple-sharp":
-        return AccidentalEnum.TRIPLESHARP;
-      case "flat":
-        return AccidentalEnum.FLAT;
       case "double-flat":
       case "flat-flat":
         return AccidentalEnum.DOUBLEFLAT;
-      case "triple-flat":
-        return AccidentalEnum.TRIPLEFLAT;
       case "quarter-sharp":
         return AccidentalEnum.QUARTERTONESHARP;
       case "quarter-flat":
         return AccidentalEnum.QUARTERTONEFLAT;
+      case "triple-sharp":
+          return AccidentalEnum.TRIPLESHARP;
+      case "triple-flat":
+        return AccidentalEnum.TRIPLEFLAT;
       default:
         return AccidentalEnum.NONE;
     }
