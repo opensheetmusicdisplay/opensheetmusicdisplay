@@ -21,12 +21,13 @@ export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniou
         this.mLabel = new GraphicalLabel(new Label(this.Expression),
                                          EngravingRules.Rules.ContinuousDynamicTextHeight,
                                          TextAlignment.LeftTop,
-                                         staffEntry.PositionAndShape);
+                                         staffEntry ? staffEntry.PositionAndShape : undefined);
 
-        const offset: number = staffEntry.parentMeasure.ParentStaffLine
-                                       .SkyBottomLineCalculator.getBottomLineMaxInBoundingBox(staffEntry.parentMeasure.PositionAndShape);
+        const offset: number = staffEntry ? staffEntry.parentMeasure.ParentStaffLine
+                                       .SkyBottomLineCalculator.getBottomLineMaxInBoundingBox(staffEntry.parentMeasure.PositionAndShape) : 0;
         this.mLabel.PositionAndShape.RelativePosition.y += offset;
         this.mLabel.Label.fontStyle = FontStyles.BoldItalic;
+        this.mLabel.setLabelPositionAndShapeBorders();
     }
 
     public calculcateBottomLine(measure: GraphicalMeasure): void {

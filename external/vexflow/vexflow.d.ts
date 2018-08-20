@@ -23,13 +23,13 @@ declare namespace Vex {
 
             public mergeWith(bb: BoundingBox): BoundingBox;
 
-            public getX(): number;
+            public x: number;
 
-            public getY(): number;
+            public y: number;
 
-            public getW(): number;
+            public w: number;
 
-            public getH(): number;
+            public h: number;
 
             public draw(ctx: Vex.Flow.RenderContext): void;
         }

@@ -57,8 +57,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
         // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
         firstMeasure.format();
-        for (const staffEntry of firstMeasure.staffEntries) {
-          (<VexFlowStaffEntry>staffEntry).calculateXPosition();
+        for (const measure of verticalMeasureList) {
+          for (const staffEntry of measure.staffEntries) {
+            (<VexFlowStaffEntry>staffEntry).calculateXPosition();
+          }
         }
       }
   }
@@ -118,7 +120,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // };
         MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
         for (const measure of measures) {
-          measure.PositionAndShape.BorderRight = minStaffEntriesWidth;
           if (measure === measures[0]) {
             const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
             // prepare format function for voices, will be called later for formatting measure again
