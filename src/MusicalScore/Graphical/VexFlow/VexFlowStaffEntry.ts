@@ -44,11 +44,6 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             numberOfValidTickables++;
         }
         tickablePosition = tickablePosition / numberOfValidTickables;
-        // Calculate parent absolute position and reverse calculate the relative position
-        // All the modifiers signs, clefs, you name it have an offset in the measure. Therefore remove it.
-        // NOTE: Somehow vexflows shift is off by 25px.
-        const modifierOffset: number = stave.getModifierXShift(); // - (this.parentMeasure.MeasureNumber === 1 ? 25 : 0);
-        // const modifierOffset: number = 0;
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
         if (!(this.graphicalVoiceEntries[0] as VexFlowVoiceEntry).parentVoiceEntry.IsGrace) {
