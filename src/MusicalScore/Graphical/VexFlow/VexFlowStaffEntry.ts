@@ -29,6 +29,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             const tickable: Vex.Flow.StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
             // This will let the tickable know how to calculate it's bounding box
             tickable.setStave(stave);
+            // setting Borders from Vexflow to OSMD
+            (gve as VexFlowVoiceEntry).applyBordersFromVexflow();
             // The middle of the tickable is also the OSMD BoundingBox center
             if (tickable.getAttribute("type") === "StaveNote") {
                 // The middle of the tickable is also the OSMD BoundingBox center
@@ -42,15 +44,11 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
             numberOfValidTickables++;
         }
         tickablePosition = tickablePosition / numberOfValidTickables;
-        // Calculate parent absolute position and reverse calculate the relative position
-        // All the modifiers signs, clefs, you name it have an offset in the measure. Therefore remove it.
-        // NOTE: Somehow vexflows shift is off by 25px.
-        const modifierOffset: number = stave.getModifierXShift(); // - (this.parentMeasure.MeasureNumber === 1 ? 25 : 0);
-        // const modifierOffset: number = 0;
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
-        this.PositionAndShape.RelativePosition.x = (tickablePosition - stave.getNoteStartX() + modifierOffset) / unitInPixels
-            + 0.5; // half note head offset
+        if (!(this.graphicalVoiceEntries[0] as VexFlowVoiceEntry).parentVoiceEntry.IsGrace) {
+            this.PositionAndShape.RelativePosition.x = (this.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.getBoundingBox().x / unitInPixels;
+        }
         this.PositionAndShape.calculateBoundingBox();
     }
 }

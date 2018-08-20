@@ -26,6 +26,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
             "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
+            "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
             "Anonymous - Saltarello": "Saltarello.mxl",
@@ -127,8 +128,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 var width = document.body.clientWidth;
                 canvas.width = width;
                 try {
-                openSheetMusicDisplay.render();
-                } catch (e) {}
+                    openSheetMusicDisplay.render();
+                } catch (e) {
+                    console.warn(e.stack);
+                }
                 enable();
             }
         );

@@ -10,6 +10,7 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
  */
 export class GraphicalLabel extends Clickable {
     private label: Label;
+
     constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox = undefined) {
         super();
         this.label = label;

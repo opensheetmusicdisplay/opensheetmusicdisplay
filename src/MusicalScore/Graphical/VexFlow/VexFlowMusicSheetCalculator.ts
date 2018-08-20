@@ -12,7 +12,7 @@ import {MultiExpression} from "../../VoiceData/Expressions/MultiExpression";
 import {RepetitionInstruction} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {Beam} from "../../VoiceData/Beam";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
-import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
@@ -30,6 +30,8 @@ import {GraphicalLabel} from "../GraphicalLabel";
 import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
 import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
+import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
+import { VexFlowInstantaniousDynamicExpression } from "./VexFlowInstantaniousDynamicExpression";
 import {BoundingBox} from "../BoundingBox";
 import { EngravingRules } from "../EngravingRules";
 
@@ -55,8 +57,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
         // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
         firstMeasure.format();
-        for (const staffEntry of firstMeasure.staffEntries) {
-          (<VexFlowStaffEntry>staffEntry).calculateXPosition();
+        for (const measure of verticalMeasureList) {
+          for (const staffEntry of measure.staffEntries) {
+            (<VexFlowStaffEntry>staffEntry).calculateXPosition();
+          }
         }
       }
   }
@@ -86,8 +90,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
      }*/
     // Format the voices
     const allVoices: Vex.Flow.Voice[] = [];
-    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({align_rests: true,
-    });
+    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
 
     for (const measure of measures) {
         const mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
@@ -116,12 +119,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // };
         MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
         for (const measure of measures) {
-          measure.PositionAndShape.BorderRight = minStaffEntriesWidth;
           if (measure === measures[0]) {
             const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
             // prepare format function for voices, will be called later for formatting measure again
             vexflowMeasure.formatVoices = (w: number) => {
-              formatter.format(allVoices, w);
+              formatter.format(allVoices, w, {
+                align_rests: true,
+          });
             };
             // format now for minimum width
             vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
@@ -344,15 +348,75 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-    /**
-     * Calculate a single OctaveShift for a [[MultiExpression]].
-     * @param sourceMeasure
-     * @param multiExpression
-     * @param measureIndex
-     * @param staffIndex
-     */
+  protected calculateDynamicExpressionsForSingleMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+
+    if (multiExpression.InstantaniousDynamic) {
+        const timeStamp: Fraction = multiExpression.Timestamp;
+        const measure: GraphicalMeasure = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex];
+        const startStaffEntry: GraphicalStaffEntry = measure.findGraphicalStaffEntryFromTimestamp(timeStamp);
+        const idx: VexFlowInstantaniousDynamicExpression = new VexFlowInstantaniousDynamicExpression(multiExpression.InstantaniousDynamic, startStaffEntry);
+        // idx.calculcateBottomLine(measure);
+        (measure as VexFlowMeasure).instantaniousDynamics.push(idx);
+    }
+  }
+
+  /**
+   * Calculate a single OctaveShift for a [[MultiExpression]].
+   * @param sourceMeasure
+   * @param multiExpression
+   * @param measureIndex
+   * @param staffIndex
+   */
   protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-    return;
+    // calculate absolute Timestamp and startStaffLine (and EndStaffLine if needed)
+    const octaveShift: OctaveShift = multiExpression.OctaveShiftStart;
+
+    const startTimeStamp: Fraction = octaveShift.ParentStartMultiExpression.Timestamp;
+    const endTimeStamp: Fraction = octaveShift.ParentEndMultiExpression.Timestamp;
+
+    const startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
+
+    let endMeasure: GraphicalMeasure = undefined;
+    if (octaveShift.ParentEndMultiExpression !== undefined) {
+        endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
+                                                                                           staffIndex);
+    }
+    let startMeasure: GraphicalMeasure = undefined;
+    if (octaveShift.ParentEndMultiExpression !== undefined) {
+      startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
+                                                                                           staffIndex);
+    }
+
+    if (endMeasure !== undefined) {
+        // calculate GraphicalOctaveShift and RelativePositions
+        const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
+        startStaffLine.OctaveShifts.push(graphicalOctaveShift);
+
+        // calculate RelativePosition and Dashes
+        const startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+        const endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+
+        graphicalOctaveShift.setStartNote(startStaffEntry);
+
+        if (endMeasure.ParentStaffLine !== startMeasure.ParentStaffLine) {
+          graphicalOctaveShift.endsOnDifferentStaffLine = true;
+          const lastMeasure: GraphicalMeasure = startMeasure.ParentStaffLine.Measures[startMeasure.ParentStaffLine.Measures.length - 1];
+          const lastNote: GraphicalStaffEntry = lastMeasure.staffEntries[lastMeasure.staffEntries.length - 1];
+          graphicalOctaveShift.setEndNote(lastNote);
+
+          // Now finish the shift on the next line
+          const remainingOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, endMeasure.PositionAndShape);
+          endMeasure.ParentStaffLine.OctaveShifts.push(remainingOctaveShift);
+          const firstMeasure: GraphicalMeasure = endMeasure.ParentStaffLine.Measures[0];
+          const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
+          remainingOctaveShift.setStartNote(firstNote);
+          remainingOctaveShift.setEndNote(endStaffEntry);
+        } else {
+          graphicalOctaveShift.setEndNote(endStaffEntry);
+        }
+    } else {
+      log.warn("End measure for octave shift is undefined! This should not happen!");
+    }
   }
 
     /**

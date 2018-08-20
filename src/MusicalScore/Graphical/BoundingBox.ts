@@ -38,11 +38,12 @@ export class BoundingBox {
      * Create a bounding box
      * @param dataObject Graphical object where the bounding box will be attached
      * @param parent Parent bounding box of an object in a higher hierarchy position
-     * @param connectChildToParent Create a child to parent relationship too. Will be true by default
+     * @param isSymbol Defines the bounding box to be symbol thus not calculating it's boundaries by itself. NOTE: Borders need to be set!
      */
-    constructor(dataObject: Object = undefined, parent: BoundingBox = undefined) {
+    constructor(dataObject: Object = undefined, parent: BoundingBox = undefined, isSymbol: boolean = false) {
         this.parent = parent;
         this.dataObject = dataObject;
+        this.isSymbol = isSymbol;
         this.xBordersHaveBeenSet = false;
         this.yBordersHaveBeenSet = false;
         if (parent !== undefined) {
