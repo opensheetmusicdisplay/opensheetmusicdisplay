@@ -17,7 +17,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         super(note, parent, graphicalNoteLength);
         this.clef = activeClef;
         if (note.Pitch) {
-            this.vfpitch = VexFlowConverter.pitch(note.Pitch, this.clef);
+            this.vfpitch = VexFlowConverter.pitch(this, note.Pitch);
             this.vfpitch[1] = undefined;
         }
     }
@@ -42,7 +42,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
             }
         } else {
-            this.vfpitch = VexFlowConverter.pitch(pitch, this.clef);
+            this.vfpitch = VexFlowConverter.pitch(this, pitch);
         }
     }
 
@@ -53,5 +53,12 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      */
     public setIndex(note: Vex.Flow.StaveNote, index: number): void {
         this.vfnote = [note, index];
+    }
+
+    /**
+     * Gets the clef for this note
+     */
+    public Clef(): ClefInstruction {
+        return this.clef;
     }
 }
