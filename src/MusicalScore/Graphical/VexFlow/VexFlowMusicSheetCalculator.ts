@@ -212,13 +212,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             measureNumber: measure.MeasureNumber,
             staffEntryXPosition: staffEntryXPosition,
             text: lyricsEntry.GetLyricsEntry.Text,
-            // lyricExtend: lyricExtend
           };
         }
       }
     }
     return oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
-    // calculateMeasureWidthFromLyrics is called afterwards from MusicSheetCalculator
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
