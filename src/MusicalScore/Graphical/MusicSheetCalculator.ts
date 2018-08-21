@@ -56,6 +56,8 @@ import { Label } from "../Label";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+// FIXME: This shoud not be here
+import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -1963,6 +1965,8 @@ export abstract class MusicSheetCalculator {
     private calculateDynamicExpressions(): void {
         for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            // Clear list of all dynamic epxressions and fill again (needed if lines are removed)
+            this.graphicalMusicSheet.MeasureList[i].forEach(m => (m as VexFlowMeasure).instantaniousDynamics = []);
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {

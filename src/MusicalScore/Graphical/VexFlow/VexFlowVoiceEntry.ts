@@ -11,13 +11,15 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     }
 
     public applyBordersFromVexflow(): void {
-        const a: any = (this.vfStaveNote as any);
-        const bb: any = a.getBoundingBox();
-        this.PositionAndShape.RelativePosition.y = bb.y / unitInPixels;
+        const staveNote: any = (this.vfStaveNote as any);
+        const boundingBox: any = staveNote.getBoundingBox();
+        const modifierWidth: number = staveNote.getNoteHeadBeginX() - boundingBox.x;
+
+        this.PositionAndShape.RelativePosition.y = boundingBox.y / unitInPixels;
         this.PositionAndShape.BorderTop = 0;
-        this.PositionAndShape.BorderBottom = bb.h / unitInPixels;
-        this.PositionAndShape.BorderLeft = bb.x / unitInPixels;
-        this.PositionAndShape.BorderRight = bb.w / unitInPixels;
+        this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
+        this.PositionAndShape.BorderLeft = -(modifierWidth + staveNote.width / 2) / unitInPixels; // Left of our X origin is the modifier
+        this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
     }
 
     public set vfStaveNote(value: Vex.Flow.StemmableNote) {

@@ -485,6 +485,20 @@ export abstract class MusicSheetDrawer {
             let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderLeft,
                                                          startBox.AbsolutePosition.y + startBox.BorderTop ,
                                                          (relBoundingRect.width + 0), (relBoundingRect.height + 0));
+            this.drawLineAsHorizontalRectangle(new GraphicalLine(
+                                                             new PointF2D(startBox.AbsolutePosition.x - 1, startBox.AbsolutePosition.y),
+                                                             new PointF2D(startBox.AbsolutePosition.x + 1, startBox.AbsolutePosition.y),
+                                                             0.1,
+                                                             OutlineAndFillStyleEnum.BaseWritingColor),
+                                               layer - 1);
+
+            this.drawLineAsVerticalRectangle(new GraphicalLine(
+                                                                 new PointF2D(startBox.AbsolutePosition.x, startBox.AbsolutePosition.y - 1),
+                                                                 new PointF2D(startBox.AbsolutePosition.x, startBox.AbsolutePosition.y + 1),
+                                                                 0.1,
+                                                                 OutlineAndFillStyleEnum.BaseWritingColor),
+                                             layer - 1);
+
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
             this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignment.CenterCenter),

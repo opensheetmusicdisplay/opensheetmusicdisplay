@@ -327,6 +327,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
                 this.vfVoices[voiceID].draw(ctx, this.stave);
+                // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
             }
         }
         // Draw beams

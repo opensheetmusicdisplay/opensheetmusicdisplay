@@ -23,8 +23,10 @@ export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniou
                                          TextAlignment.LeftTop,
                                          staffEntry ? staffEntry.PositionAndShape : undefined);
 
-        const offset: number = staffEntry ? staffEntry.parentMeasure.ParentStaffLine
-                                       .SkyBottomLineCalculator.getBottomLineMaxInBoundingBox(staffEntry.parentMeasure.PositionAndShape) : 0;
+        let offset: number = staffEntry ? staffEntry.parentMeasure.ParentStaffLine
+                                     .SkyBottomLineCalculator.getBottomLineMaxInBoundingBox(staffEntry.parentMeasure.PositionAndShape) : 0;
+        // TODO: this should not happen: Bug in sbc?
+        offset = offset < 0 ? 0 : offset;
         this.mLabel.PositionAndShape.RelativePosition.y += offset;
         this.mLabel.Label.fontStyle = FontStyles.BoldItalic;
         this.mLabel.setLabelPositionAndShapeBorders();

@@ -20,35 +20,21 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
      */
     public calculateXPosition(): void {
         const stave: Vex.Flow.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave();
-        let tickablePosition: number = 0;
-        let numberOfValidTickables: number = 0;
-        for (const gve of this.graphicalVoiceEntries) {
-            if (gve.parentVoiceEntry.IsGrace) {
-                continue;
-            }
-            const tickable: Vex.Flow.StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
-            // This will let the tickable know how to calculate it's bounding box
-            tickable.setStave(stave);
-            // setting Borders from Vexflow to OSMD
-            (gve as VexFlowVoiceEntry).applyBordersFromVexflow();
-            // The middle of the tickable is also the OSMD BoundingBox center
-            if (tickable.getAttribute("type") === "StaveNote") {
-                // The middle of the tickable is also the OSMD BoundingBox center
-                const staveNote: Vex.Flow.StaveNote = tickable as Vex.Flow.StaveNote;
-                tickablePosition += staveNote.getNoteHeadEndX() - staveNote.getGlyphWidth() / 2;
-            } else {
-                const ghostNote: Vex.Flow.GhostNote = tickable;
-                // That's basically the same as the StaveNote does.
-                tickablePosition = ghostNote.getAbsoluteX() + ghostNote.x_shift;
-            }
-            numberOfValidTickables++;
-        }
-        tickablePosition = tickablePosition / numberOfValidTickables;
+
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
-        if (!(this.graphicalVoiceEntries[0] as VexFlowVoiceEntry).parentVoiceEntry.IsGrace) {
-            this.PositionAndShape.RelativePosition.x = (this.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote.getBoundingBox().x / unitInPixels;
+        let lastBorderLeft: number = 0;
+        for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
+            if (gve.vfStaveNote) {
+                gve.vfStaveNote.setStave(stave);
+                gve.applyBordersFromVexflow();
+                this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().x / unitInPixels;
+                if (gve.PositionAndShape.BorderLeft < lastBorderLeft) {
+                    lastBorderLeft = gve.PositionAndShape.BorderLeft;
+                }
+            }
         }
+        this.PositionAndShape.RelativePosition.x -= lastBorderLeft;
         this.PositionAndShape.calculateBoundingBox();
     }
 }
