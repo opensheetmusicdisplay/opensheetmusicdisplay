@@ -123,11 +123,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
             // prepare format function for voices, will be called later for formatting measure again
             vexflowMeasure.formatVoices = (w: number) => {
-              formatter.format(allVoices, w, {
-                align_rests: true,
-          });
+              formatter.format(allVoices, w);
+              // formatter.format(allVoices, w, {
+              //   align_rests: false, // TODO
+              //   // align_rests = true causes a Vexflow Exception for Mozart - An Chloe
+              //   // align_rests = false still aligns rests with beams according to Vexflow, but doesn't seem to do anything
+              // });
             };
-            // format now for minimum width
+            // format now for minimum width, calculateMeasureWidthFromLyrics later
             vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
           } else {
             (measure as VexFlowMeasure).formatVoices = undefined;
@@ -216,13 +219,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             measureNumber: measure.MeasureNumber,
             staffEntryXPosition: staffEntryXPosition,
             text: lyricsEntry.GetLyricsEntry.Text,
-            // lyricExtend: lyricExtend
           };
         }
       }
     }
     return oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
-    // calculateMeasureWidthFromLyrics is called afterwards from MusicSheetCalculator
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
