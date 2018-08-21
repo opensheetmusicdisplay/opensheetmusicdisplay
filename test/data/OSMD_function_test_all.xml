@@ -258,7 +258,7 @@
         <stem>down</stem>
         <notations>
           <ornaments>
-            <turn/>
+            <delayed-turn/>
             </ornaments>
           </notations>
         <lyric number="1" default-x="6.94" default-y="-80.00">
@@ -297,6 +297,11 @@
         <type>quarter</type>
         <dot/>
         <stem>up</stem>
+	<notations>
+	  <ornaments>
+	    <delayed-turn/>
+	    </ornaments>
+	  </notations>
         </note>
       <note default-x="341.71" default-y="-35.00">
         <pitch>
@@ -426,6 +431,10 @@
             <down-bow/>
             </technical>
           </notations>
+	<lyric number="1" default-x="6.58" default-y="-80.00">
+          <syllabic>single</syllabic>
+          <text>Downbow</text>
+          </lyric>
         </note>
       <note default-x="213.64" default-y="-5.00">
         <pitch>
