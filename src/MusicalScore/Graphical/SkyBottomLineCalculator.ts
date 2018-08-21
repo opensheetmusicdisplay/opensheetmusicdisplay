@@ -377,8 +377,9 @@ export class SkyBottomLineCalculator {
      * @returns Maximum value inside bounding box boundaries or undefined if not possible
      */
     public getBottomLineMaxInBoundingBox(boundingBox: BoundingBox): number {
-        const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginLeft);
-        const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginRight);
+        //TODO: Actually it should be the margin. But that one is not implemented
+        const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderLeft);
+        const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderRight);
         return this.getMaxInRange(this.mBottomLine, startPoint, endPoint);
     }
 
@@ -389,21 +390,21 @@ export class SkyBottomLineCalculator {
      * @param boundingBox Bounding box to be added
      * @param topBorder top
      */
-    private updateWithBoundingBoxRecursivly(boundingBox: BoundingBox): void {
+    public updateWithBoundingBoxRecursivly(boundingBox: BoundingBox): void {
         if (boundingBox.ChildElements && boundingBox.ChildElements.length > 0) {
             this.updateWithBoundingBoxRecursivly(boundingBox);
         } else {
-            const currentTopBorder: number = boundingBox.BorderMarginTop + boundingBox.AbsolutePosition.y;
-            const currentBottomBorder: number = boundingBox.BorderMarginBottom + boundingBox.AbsolutePosition.y;
+            const currentTopBorder: number = boundingBox.BorderTop + boundingBox.AbsolutePosition.y;
+            const currentBottomBorder: number = boundingBox.BorderBottom + boundingBox.AbsolutePosition.y;
 
             if (currentTopBorder < 0) {
-                const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginLeft);
-                const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginRight) ;
+                const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderLeft);
+                const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderRight) ;
 
                 this.updateInRange(this.mSkyLine, startPoint, endPoint, currentTopBorder);
             } else if (currentBottomBorder > this.mRules.StaffHeight) {
-                const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginLeft);
-                const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginRight);
+                const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderLeft);
+                const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderRight);
 
                 this.updateInRange(this.mBottomLine, startPoint, endPoint, currentBottomBorder);
             }

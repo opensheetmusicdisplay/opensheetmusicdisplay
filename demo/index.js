@@ -6,7 +6,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var openSheetMusicDisplay;
     // folder of the sample files
     var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
-        samples = {
+    samples = {
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
@@ -209,6 +209,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         zoom = 1.0;
         openSheetMusicDisplay.load(str).then(
             function() {
+                // This gives you access to the osmd object in the console. Do not use in productive code
+                window.osmd = openSheetMusicDisplay;
                 return openSheetMusicDisplay.render();
             },
             function(e) {

@@ -25,6 +25,7 @@ export abstract class StaffLine extends GraphicalObject {
     protected skyBottomLine: SkyBottomLineCalculator;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
+    protected abstractExpressions: GraphicalObject[] = [];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         super();
@@ -57,6 +58,14 @@ export abstract class StaffLine extends GraphicalObject {
 
     public get LyricLines(): GraphicalLine[] {
         return this.lyricLines;
+    }
+
+    public get AbstractExpressions(): GraphicalObject[] {
+        return this.abstractExpressions;
+    }
+
+    public set AbstractExpressions(value: GraphicalObject[]) {
+        this.abstractExpressions = value;
     }
 
     public set LyricLines(value: GraphicalLine[]) {

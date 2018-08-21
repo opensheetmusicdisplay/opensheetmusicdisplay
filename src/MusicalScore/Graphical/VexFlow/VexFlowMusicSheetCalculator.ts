@@ -34,6 +34,12 @@ import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
 import { VexFlowInstantaniousDynamicExpression } from "./VexFlowInstantaniousDynamicExpression";
 import {BoundingBox} from "../BoundingBox";
 import { EngravingRules } from "../EngravingRules";
+import { InstantaniousDynamicExpression } from "../../VoiceData/Expressions/InstantaniousDynamicExpression";
+import { PointF2D } from "../../../Common/DataObjects/PointF2D";
+import { GraphicalInstantaniousDynamicExpression } from "../GraphicalInstantaniousDynamicExpression";
+import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
+import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
+import { Staff } from "../../VoiceData/Staff";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
@@ -348,17 +354,125 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-  protected calculateDynamicExpressionsForSingleMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+  protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+
+    // calculate absolute Timestamp
+    const absoluteTimestamp: Fraction = multiExpression.AbsoluteTimestamp;
+    const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[measureIndex];
+    const staffLine: StaffLine = measures[staffIndex].ParentStaffLine;
 
     if (multiExpression.InstantaniousDynamic) {
-        const timeStamp: Fraction = multiExpression.Timestamp;
+        const instantaniousDynamic: InstantaniousDynamicExpression = multiExpression.InstantaniousDynamic;
+
+        const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+          absoluteTimestamp,
+          staffIndex,
+          staffLine,
+          staffLine.isPartOfMultiStaffInstrument());
+        if (Math.abs(startPosInStaffline.x) === 0) {
+          startPosInStaffline.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
+        }
         const measure: GraphicalMeasure = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex];
-        const startStaffEntry: GraphicalStaffEntry = measure.findGraphicalStaffEntryFromTimestamp(timeStamp);
-        const idx: VexFlowInstantaniousDynamicExpression = new VexFlowInstantaniousDynamicExpression(multiExpression.InstantaniousDynamic, startStaffEntry);
-        // idx.calculcateBottomLine(measure);
-        (measure as VexFlowMeasure).instantaniousDynamics.push(idx);
+        const graphicalInstantaniousDynamic: VexFlowInstantaniousDynamicExpression = new VexFlowInstantaniousDynamicExpression(
+          instantaniousDynamic,
+          staffLine,
+          measure);
+        (measure as VexFlowMeasure).instantaniousDynamics.push(graphicalInstantaniousDynamic);
+        this.calculateSingleGraphicalInstantaniousDynamicExpression(graphicalInstantaniousDynamic, staffLine, startPosInStaffline);
     }
   }
+
+  public calculateSingleGraphicalInstantaniousDynamicExpression(graphicalInstantaniousDynamic: VexFlowInstantaniousDynamicExpression,
+                                                                staffLine: StaffLine,
+                                                                relative: PointF2D): void {
+    // // add to StaffLine and set PSI relations
+    staffLine.AbstractExpressions.push(graphicalInstantaniousDynamic);
+    staffLine.PositionAndShape.ChildElements.push(graphicalInstantaniousDynamic.PositionAndShape);
+    if (this.staffLinesWithGraphicalExpressions.indexOf(staffLine) === -1) {
+        this.staffLinesWithGraphicalExpressions.push(staffLine);
+    }
+
+    // get Margin Dimensions
+    const left: number = relative.x + graphicalInstantaniousDynamic.PositionAndShape.BorderLeft;
+    const right: number = relative.x + graphicalInstantaniousDynamic.PositionAndShape.BorderRight;
+    const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+
+    // get possible previous Dynamic
+    let previousExpression: GraphicalInstantaniousDynamicExpression = undefined;
+    const expressionIndex: number = staffLine.AbstractExpressions.indexOf(graphicalInstantaniousDynamic);
+    if (expressionIndex > 0) {
+        previousExpression = (staffLine.AbstractExpressions[expressionIndex - 1] as GraphicalInstantaniousDynamicExpression);
+    }
+
+    // TODO: Not yet implemented
+    // // is previous a ContinuousDynamic?
+    // if (previousExpression && previousExpression instanceof GraphicalContinuousDynamicExpression)
+    // {
+    //     GraphicalContinuousDynamicExpression formerGraphicalContinuousDynamic =
+    //         (GraphicalContinuousDynamicExpression)previousExpression;
+
+    //     optimizeFormerContDynamicXPositionForInstDynamic(staffLine, skyBottomLineCalculator,
+    //                                                      graphicalInstantaniousDynamic,
+    //                                                      formerGraphicalContinuousDynamic, left, right);
+    // }
+    // // is previous a instantaniousDynamic?
+    // else
+    if (previousExpression && previousExpression instanceof GraphicalInstantaniousDynamicExpression) {
+        //const formerGraphicalInstantaniousDynamic: GraphicalInstantaniousDynamicExpression = previousExpression;
+
+        // optimizeFormerInstDynamicXPositionForInstDynamic(formerGraphicalInstantaniousDynamic,
+        //                                                  graphicalInstantaniousDynamic, ref relative, ref left, ref right);
+    }// End x-positioning overlap check
+
+    // calculate yPosition according to Placement
+    if (graphicalInstantaniousDynamic.InstantaniousDynamic.Placement === PlacementEnum.Above) {
+        const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+        let yPosition: number = 0;
+
+        // if StaffLine part of multiStafff Instrument and not the first one, ideal yPosition middle of distance between Staves
+        if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
+            const formerStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) - 1];
+            const difference: number = staffLine.PositionAndShape.RelativePosition.y -
+                               formerStaffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
+
+            // take always into account the size of the Dynamic
+            if (skyLineValue > -difference / 2) {
+                yPosition = -difference / 2;
+            } else {
+                yPosition = skyLineValue - graphicalInstantaniousDynamic.PositionAndShape.BorderBottom;
+            }
+        } else {
+            yPosition = skyLineValue - graphicalInstantaniousDynamic.PositionAndShape.BorderBottom;
+        }
+
+        graphicalInstantaniousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
+        skyBottomLineCalculator.updateSkyLineInRange(left, right, yPosition + graphicalInstantaniousDynamic.PositionAndShape.BorderTop);
+    } else if (graphicalInstantaniousDynamic.InstantaniousDynamic.Placement === PlacementEnum.Below) {
+        const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
+        let yPosition: number = 0;
+
+        // if StaffLine part of multiStafff Instrument and not the last one, ideal yPosition middle of distance between Staves
+        const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
+        if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
+            const nextStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) + 1];
+            const difference: number = nextStaffLine.PositionAndShape.RelativePosition.y -
+                               staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
+            const border: number = graphicalInstantaniousDynamic.PositionAndShape.BorderBottom;
+
+            // take always into account the size of the Dynamic
+            if (bottomLineValue + border < this.rules.StaffHeight + difference / 2) {
+                yPosition = this.rules.StaffHeight + difference / 2;
+            } else {
+                yPosition = bottomLineValue - graphicalInstantaniousDynamic.PositionAndShape.BorderTop;
+            }
+        } else {
+            yPosition = bottomLineValue - graphicalInstantaniousDynamic.PositionAndShape.BorderTop;
+        }
+
+        graphicalInstantaniousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
+        skyBottomLineCalculator.updateBottomLineInRange(left, right, yPosition + graphicalInstantaniousDynamic.PositionAndShape.BorderBottom);
+    }
+}
 
   /**
    * Calculate a single OctaveShift for a [[MultiExpression]].

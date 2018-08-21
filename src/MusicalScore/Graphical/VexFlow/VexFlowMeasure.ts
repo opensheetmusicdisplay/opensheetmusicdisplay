@@ -87,6 +87,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.connectors = [];
         // Clean up instructions
         this.resetLayout();
+        this.instantaniousDynamics = [];
     }
 
     /**
