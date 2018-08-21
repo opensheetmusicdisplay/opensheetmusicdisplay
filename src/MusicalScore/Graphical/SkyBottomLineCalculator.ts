@@ -1,3 +1,6 @@
+/* tslint:disable no-unused-variable */
+//FIXME: Enble tslint again when all functions are implemented and in use!
+
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
@@ -264,14 +267,14 @@ export class SkyBottomLineCalculator {
      * @param endIndex End index of the range
      */
     public resetBottomLineInRange(startIndex: number, endIndex: number): void {
-        this.updateInRange(this.BottomLine, startIndex, endIndex);
+        this.setInRange(this.BottomLine, startIndex, endIndex);
     }
 
     /**
      * Update the whole skyline with a certain value
      * @param value value to be set
      */
-    public updateSkyLineWithValue(value: number): void {
+    public setSkyLineWithValue(value: number): void {
         this.SkyLine.forEach(sl => sl = value);
     }
 
@@ -279,7 +282,7 @@ export class SkyBottomLineCalculator {
      * Update the whole bottomline with a certain value
      * @param value value to be set
      */
-    public updateBottomLineWithValue(value: number): void {
+    public setBottomLineWithValue(value: number): void {
         this.BottomLine.forEach(bl => bl = value);
     }
 
@@ -368,41 +371,47 @@ export class SkyBottomLineCalculator {
     }
 
     /**
-     * This method finds the BottomLine's maximum value within a given range.
-     * @param staffLine Staffline to find the max value in
-     * @param startIndex Start index of the range
-     * @param endIndex End index of the range
-     */
-
-
-    /**
      * This method returns the maximum value of the bottom line around a specific
      * bounding box. Will return undefined if the bounding box is not valid or inside staffline
      * @param boundingBox Bounding box where the maximum should be retrieved from
      * @returns Maximum value inside bounding box boundaries or undefined if not possible
      */
     public getBottomLineMaxInBoundingBox(boundingBox: BoundingBox): number {
-        // FIXME: See if this really works as expected!
-        let iteratorBB: BoundingBox = boundingBox;
-        let startIndex: number = boundingBox.BorderLeft;
-        let endIndex: number = boundingBox.BorderRight;
-        let successfull: boolean = false;
-        while (iteratorBB.Parent) {
-            if (iteratorBB === this.mStaffLineParent.PositionAndShape) {
-                successfull = true;
-                break;
-            }
-            startIndex += iteratorBB.BorderLeft;
-            endIndex += iteratorBB.BorderRight;
-            iteratorBB = iteratorBB.Parent;
-        }
-        return successfull ? this.getMaxInRange(this.BottomLine, startIndex, endIndex) : undefined;
+        const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginLeft);
+        const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginRight);
+        return this.getMaxInRange(this.mBottomLine, startPoint, endPoint);
     }
 
     //#region Private methods
 
     /**
-     * Update an array value inside a range
+     * Updates sky- and bottom line with a boundingBox and it's children
+     * @param boundingBox Bounding box to be added
+     * @param topBorder top
+     */
+    private updateWithBoundingBoxRecursivly(boundingBox: BoundingBox): void {
+        if (boundingBox.ChildElements && boundingBox.ChildElements.length > 0) {
+            this.updateWithBoundingBoxRecursivly(boundingBox);
+        } else {
+            const currentTopBorder: number = boundingBox.BorderMarginTop + boundingBox.AbsolutePosition.y;
+            const currentBottomBorder: number = boundingBox.BorderMarginBottom + boundingBox.AbsolutePosition.y;
+
+            if (currentTopBorder < 0) {
+                const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginLeft);
+                const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginRight) ;
+
+                this.updateInRange(this.mSkyLine, startPoint, endPoint, currentTopBorder);
+            } else if (currentBottomBorder > this.mRules.StaffHeight) {
+                const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginLeft);
+                const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderMarginRight);
+
+                this.updateInRange(this.mBottomLine, startPoint, endPoint, currentBottomBorder);
+            }
+        }
+    }
+
+    /**
+     * Update an array with the value given inside a range. NOTE: will only be updated if value > oldValue
      * @param array Array to fill in the new value
      * @param startIndex start index to begin with (default: 0)
      * @param endIndex end index of array (default: array length)
@@ -425,10 +434,37 @@ export class SkyBottomLineCalculator {
         }
 
         for (let i: number = startIndex; i < endIndex; i++) {
-            array[i] = value;
+            array[i] = value > array[i] ? value : array[i];
         }
     }
 
+    /**
+     * Sets the value given to the range inside the array. NOTE: will always update the value
+     * @param array Array to fill in the new value
+     * @param startIndex start index to begin with (default: 0)
+     * @param endIndex end index of array (default: array length)
+     * @param value value to fill in (default: 0)
+     */
+    private setInRange(array: number[], startIndex: number = 0, endIndex: number = array.length, value: number = 0): void {
+        startIndex = Math.floor(startIndex * this.SamplingUnit);
+        endIndex = Math.ceil(endIndex * this.SamplingUnit);
+
+        if (endIndex < startIndex) {
+            throw new Error("start index of line is greater then the end index");
+        }
+
+        if (startIndex < 0) {
+            startIndex = 0;
+        }
+
+        if (endIndex > array.length) {
+            endIndex = array.length;
+        }
+
+        for (let i: number = startIndex; i < endIndex; i++) {
+            array[i] = value;
+        }
+    }
     /**
      * Get all values of the selected line inside the given range
      * @param skyBottomArray Skyline or bottom line
