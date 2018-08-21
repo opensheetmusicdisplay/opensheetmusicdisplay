@@ -435,7 +435,7 @@ export class SkyBottomLineCalculator {
         }
 
         for (let i: number = startIndex; i < endIndex; i++) {
-            array[i] = value > array[i] ? value : array[i];
+            array[i] = Math.abs(value) > Math.abs(array[i]) ? value : array[i];
         }
     }
 
