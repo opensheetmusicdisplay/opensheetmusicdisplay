@@ -126,6 +126,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 if (!sampleLoaded) {
                     return;
                 }
+            },
+            function(){
                 disable();
             },
             function() {
