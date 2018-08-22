@@ -10,9 +10,11 @@ export class GraphicalSlurSorter {
         if (x.key > y.key) {
             return 1;
         }
+
         if (y.key > x.key) {
             return -1;
         }
+
         return 0;
     }
 }
