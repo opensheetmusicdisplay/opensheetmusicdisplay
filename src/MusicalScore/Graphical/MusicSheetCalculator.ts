@@ -717,7 +717,7 @@ export abstract class MusicSheetCalculator {
         // calculate StaffEntry ChordSymbols
         this.calculateChordSymbols();
         if (!this.leadSheet) {
-            // calculate all Instantanious/Continuous Dynamics Expressions
+            // calculate all Instantaneous/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
             // place neighbouring DynamicExpressions at the same height
             this.optimizeStaffLineDynamicExpressionsPositions();
@@ -1966,7 +1966,7 @@ export abstract class MusicSheetCalculator {
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
-                        if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaniousDynamic !== undefined ||
+                        if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaneousDynamic !== undefined ||
                             (sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic !== undefined &&
                                 sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression ===
                                 sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)

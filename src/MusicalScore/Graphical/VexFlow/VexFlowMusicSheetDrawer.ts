@@ -11,7 +11,7 @@ import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowOctaveShift} from "./VexFlowOctaveShift";
-import {VexFlowInstantaniousDynamicExpression} from "./VexFlowInstantaniousDynamicExpression";
+import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
 import {VexFlowInstrumentBracket} from "./VexFlowInstrumentBracket";
 import {VexFlowInstrumentBrace} from "./VexFlowInstrumentBrace";
 import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
@@ -219,9 +219,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
-    protected drawInstantaniousDynamic(staffline: StaffLine): void {
+    protected drawInstantaneousDynamic(staffline: StaffLine): void {
         for (const m of staffline.Measures as VexFlowMeasure[]) {
-            for (const idx of m.instantaniousDynamics as VexFlowInstantaniousDynamicExpression[]) {
+            for (const idx of m.instantaneousDynamics as VexFlowInstantaneousDynamicExpression[]) {
                 this.drawLabel(idx.Label, <number>GraphicalLayers.Notes);
             }
         }

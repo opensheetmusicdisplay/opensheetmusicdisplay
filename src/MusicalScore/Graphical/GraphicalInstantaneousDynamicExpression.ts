@@ -1,18 +1,18 @@
 import { GraphicalObject } from "./GraphicalObject";
 import { StaffLine } from "./StaffLine";
-import { InstantaniousDynamicExpression } from "../VoiceData/Expressions/InstantaniousDynamicExpression";
+import { InstantaneousDynamicExpression } from "../VoiceData/Expressions/InstantaneousDynamicExpression";
 import { GraphicalMeasure } from "./GraphicalMeasure";
 import { BoundingBox } from "./BoundingBox";
 
-export class GraphicalInstantaniousDynamicExpression extends GraphicalObject {
-    protected mInstantaniousDynamicExpression: InstantaniousDynamicExpression;
+export class GraphicalInstantaneousDynamicExpression extends GraphicalObject {
+    protected mInstantaneousDynamicExpression: InstantaneousDynamicExpression;
     protected mParentStaffLine: StaffLine;
     protected mMeasure: GraphicalMeasure;
 
-    constructor(instantaniousDynamic: InstantaniousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
+    constructor(instantaneousDynamic: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
         super();
         this.boundingBox = new BoundingBox(this, staffLine.PositionAndShape);
-        this.mInstantaniousDynamicExpression = instantaniousDynamic;
+        this.mInstantaneousDynamicExpression = instantaneousDynamic;
         this.mParentStaffLine = staffLine;
         this.mMeasure = measure;
     }

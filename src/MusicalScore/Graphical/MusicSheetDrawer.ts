@@ -354,7 +354,7 @@ export abstract class MusicSheetDrawer {
 
         this.drawOctaveShifts(staffLine);
 
-        this.drawInstantaniousDynamic(staffLine);
+        this.drawInstantaneousDynamic(staffLine);
 
         if (this.skyLineVisible) {
             this.drawSkyLine(staffLine);
@@ -425,7 +425,7 @@ export abstract class MusicSheetDrawer {
     //         drawLineAsVerticalRectangle(ending.Right, absolutePosition, <number>GraphicalLayers.Notes);
     //     this.drawLabel(ending.Label, <number>GraphicalLayers.Notes);
     // }
-    protected drawInstantaniousDynamic(staffline: StaffLine): void {
+    protected drawInstantaneousDynamic(staffline: StaffLine): void {
         // expression.ExpressionSymbols.forEach(function (expressionSymbol) {
         //     let position: PointF2D = expressionSymbol.PositionAndShape.AbsolutePosition;
         //     let symbol: MusicSymbol = expressionSymbol.GetSymbol;

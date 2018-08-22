@@ -1,5 +1,5 @@
-import { GraphicalInstantaniousDynamicExpression } from "../GraphicalInstantaniousDynamicExpression";
-import { InstantaniousDynamicExpression, DynamicEnum } from "../../VoiceData/Expressions/InstantaniousDynamicExpression";
+import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneousDynamicExpression";
+import { InstantaneousDynamicExpression, DynamicEnum } from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import { GraphicalLabel } from "../GraphicalLabel";
 import { Label } from "../../Label";
 import { TextAlignment } from "../../../Common/Enums/TextAlignment";
@@ -8,11 +8,11 @@ import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { StaffLine } from "../StaffLine";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 
-export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniousDynamicExpression {
+export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneousDynamicExpression {
     private mLabel: GraphicalLabel;
 
-    constructor(instantaniousDynamicExpression: InstantaniousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
-        super(instantaniousDynamicExpression, staffLine, measure);
+    constructor(instantaneousDynamicExpression: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
+        super(instantaneousDynamicExpression, staffLine, measure);
 
         this.mLabel = new GraphicalLabel(new Label(this.Expression),
                                          EngravingRules.Rules.ContinuousDynamicTextHeight,
@@ -24,12 +24,12 @@ export class VexFlowInstantaniousDynamicExpression extends GraphicalInstantaniou
         this.PositionAndShape.calculateBoundingBox();
     }
 
-    get InstantaniousDynamic(): InstantaniousDynamicExpression {
-        return this.mInstantaniousDynamicExpression;
+    get InstantaneousDynamic(): InstantaneousDynamicExpression {
+        return this.mInstantaneousDynamicExpression;
     }
 
     get Expression(): string {
-        return DynamicEnum[this.mInstantaniousDynamicExpression.DynEnum];
+        return DynamicEnum[this.mInstantaneousDynamicExpression.DynEnum];
     }
 
     get Label(): GraphicalLabel {
