@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 2.3.2</software>
-      <encoding-date>2018-08-21</encoding-date>
+      <encoding-date>2018-08-22</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -90,6 +90,11 @@
             </dynamics>
           </direction-type>
         <sound dynamics="17.78"/>
+        </direction>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="40.00" relative-x="-12.75" relative-y="6.30" font-weight="bold">Adagio</words>
+          </direction-type>
         </direction>
       <direction placement="above">
         <direction-type>
@@ -567,6 +572,11 @@
         </note>
       </measure>
     <measure number="9" width="171.37">
+      <direction placement="above">
+        <direction-type>
+          <words default-y="40.00" relative-x="2.46" relative-y="-16.02" font-weight="bold">Presto</words>
+          </direction-type>
+        </direction>
       <note default-x="12.00" default-y="-15.00">
         <pitch>
           <step>C</step>
