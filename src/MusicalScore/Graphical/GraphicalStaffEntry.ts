@@ -53,6 +53,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     private graphicalInstructions: AbstractGraphicalInstruction[] = [];
     private graphicalTies: GraphicalTie[] = [];
     private lyricsEntries: GraphicalLyricEntry[] = [];
+    private restNotes: GraphicalNote[] = undefined; // the rest notes contained in this StaffEntry
 
     public get GraphicalInstructions(): AbstractGraphicalInstruction[] {
         return this.graphicalInstructions;
@@ -298,5 +299,21 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
         }
         return hasOnlyRests;
+    }
+
+    public RestNotes(): GraphicalNote[] {
+        if (this.restNotes !== undefined) {
+            return this.restNotes;
+        }
+
+        this.restNotes = [];
+        for (const gve of this.graphicalVoiceEntries) {
+            for (const graphicalNote of gve.notes) {
+                if (graphicalNote.sourceNote.isRest()) {
+                    this.restNotes.push(graphicalNote);
+                }
+            }
+        }
+        return this.restNotes;
     }
 }

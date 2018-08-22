@@ -616,6 +616,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow Stave Notes:
             let graceSlur: boolean = false;
             let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
+            // let doubleRestNoteSkipped: boolean = false;
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.parentVoiceEntry.IsGrace) {
                     graceGVoiceEntriesBefore.push(gve);
@@ -624,6 +625,18 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     continue;
                 }
+                /* doesn't work yet, skipping one of two rests like this
+                if (gve.notes[0].sourceNote.isRest() && !doubleRestNoteSkipped) {
+                    const restNotesInStaffEntry: GraphicalNote[] = gve.parentStaffEntry.RestNotes();
+                    if (restNotesInStaffEntry.length === 2) {
+                        if (restNotesInStaffEntry[0].graphicalNoteLength.Equals(restNotesInStaffEntry[1].graphicalNoteLength)) {
+                            restNotesInStaffEntry.splice(0, 1);
+                            doubleRestNoteSkipped = true;
+                            continue;
+                        }
+                    }
+                }
+                */
                 (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
                 if (graceGVoiceEntriesBefore.length > 0) {
                     const graceNotes: Vex.Flow.GraceNote[] = [];

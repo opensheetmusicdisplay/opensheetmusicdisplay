@@ -183,6 +183,15 @@ export class VexFlowConverter {
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 keys = ["b/4"];
+                const restNotesInStaffEntry: GraphicalNote[] = note.parentVoiceEntry.parentStaffEntry.RestNotes();
+                if (restNotesInStaffEntry.length === 2) {
+                    // for two rest notes at same timestamp, put first on f/5 and second on e/4
+                    if (restNotesInStaffEntry.indexOf(note) === 0) {
+                        keys = ["f/5"];
+                    } else {
+                        keys = ["e/4"];
+                    }
+                }
                 // if it is a full measure rest:
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
                     keys = ["d/5"];

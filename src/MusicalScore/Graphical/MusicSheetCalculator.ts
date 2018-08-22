@@ -1075,13 +1075,13 @@ export abstract class MusicSheetCalculator {
             return;
         }
         const voice1Note1: GraphicalNote = voice1Notes[0];
-        const voice1Note1IsRest: boolean = voice1Note1.sourceNote.Pitch === undefined;
+        const voice1Note1IsRest: boolean = voice1Note1.sourceNote.isRest();
         if (graphicalStaffEntry.graphicalVoiceEntries.length === 2) {
             let voice2Note1IsRest: boolean = false;
             const voice2Notes: GraphicalNote[] = graphicalStaffEntry.graphicalVoiceEntries[1].notes;
             if (voice2Notes.length > 0) {
                 const voice2Note1: GraphicalNote = voice2Notes[0];
-                voice2Note1IsRest = voice2Note1.sourceNote.Pitch === undefined;
+                voice2Note1IsRest = voice2Note1.sourceNote.isRest();
             }
             if (voice1Note1IsRest && voice2Note1IsRest) {
                 this.calculateTwoRestNotesPlacementWithCollisionDetection(graphicalStaffEntry);
@@ -1592,7 +1592,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    private calculateTwoRestNotesPlacementWithCollisionDetection(graphicalStaffEntry: GraphicalStaffEntry): void {
+    protected calculateTwoRestNotesPlacementWithCollisionDetection(graphicalStaffEntry: GraphicalStaffEntry): void {
         const firstRestNote: GraphicalNote = graphicalStaffEntry.graphicalVoiceEntries[0].notes[0];
         const secondRestNote: GraphicalNote = graphicalStaffEntry.graphicalVoiceEntries[1].notes[0];
         secondRestNote.PositionAndShape.RelativePosition = new PointF2D(0.0, 2.5);
@@ -1604,6 +1604,7 @@ export abstract class MusicSheetCalculator {
         const relative: PointF2D = firstRestNote.PositionAndShape.RelativePosition;
         relative.y -= 1.0;
         firstRestNote.PositionAndShape.RelativePosition = relative;
+        // TODO connect this to VexFlow placement
         graphicalStaffEntry.PositionAndShape.calculateBoundingBox();
     }
 
