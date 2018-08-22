@@ -1,10 +1,11 @@
 import { Fraction } from "../../Common/DataObjects/Fraction";
-import { GraphicalSlur } from "./GraphicalSlur";
+import { Graphicalslur } from "./GraphicalSlur";
 
-interface GraphicalSlurSorterKeyValuePair {
+export interface GraphicalSlurSorterKeyValuePair {
     key: Fraction;
-    value: GraphicalSlur;
-    }
+    value: Graphicalslur;
+}
+
 export class GraphicalSlurSorter {
     public Compare (x: GraphicalSlurSorterKeyValuePair, y: GraphicalSlurSorterKeyValuePair ): number {
         if (x.key > y.key) {

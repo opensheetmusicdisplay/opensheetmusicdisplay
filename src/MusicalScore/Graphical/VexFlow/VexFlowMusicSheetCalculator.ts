@@ -32,10 +32,13 @@ import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {BoundingBox} from "../BoundingBox";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
-import { VexFlowSlur } from "./VexFlowSlur";
-import { VexFlowStaffLine } from "./VexFlowStaffLine";
+/* VexFlow Version - for later use
+// import { VexFlowSlur } from "./VexFlowSlur";
+// import { VexFlowStaffLine } from "./VexFlowStaffLine";
+// import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+*/
 import { EngravingRules } from "../EngravingRules";
-import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+import { Graphicalslur } from "../GraphicalSlur";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
@@ -469,9 +472,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   /**
    * Find the Index of the item of the array of all VexFlow Slurs that holds a specified slur
-   * @param vfSlurs
+   * @param gSlurs
    * @param slur
    */
+  public findIndexGraphicalSlurFromSlur(gSlurs: Graphicalslur[], slur: Slur): number {
+    for (let slurIndex: number = 0; slurIndex < gSlurs.length; slurIndex++) {
+        if (gSlurs[slurIndex].slur === slur) {
+            return slurIndex;
+        }
+    }
+  }
+  /* VexFlow Version - for later use
   public findIndexVFSlurFromSlur(vfSlurs: VexFlowSlur[], slur: Slur): number {
         for (let slurIndex: number = 0; slurIndex < vfSlurs.length; slurIndex++) {
             if (vfSlurs[slurIndex].vfSlur === slur) {
@@ -479,7 +490,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         }
   }
+  */
+
+  // Generate all Graphical Slurs and attach them to the staffline
   protected calculateSlurs(): void {
+    const openSlursDict: { [staffId: number]: Graphicalslur[]; } = {};
+    for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
+      openSlursDict[graphicalMeasure.ParentStaff.idInMusicSheet] = [];
+    }
+
+    /* VexFlow Version - for later use
     // Generate an empty dictonary to index an array of VexFlowSlur classes
     const vfOpenSlursDict: { [staffId: number]: VexFlowSlur[]; } = {}; //VexFlowSlur[]; } = {};
     // use first SourceMeasure to get all graphical measures to know how many staves are currently visible in this musicsheet
@@ -488,14 +508,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
         vfOpenSlursDict[graphicalMeasure.ParentStaff.idInMusicSheet] = [];
     }
-    // Object.keys(vfslursDict).forEach( key => {
+    */
 
-    // })
     for (const gmPage of this.graphicalMusicSheet.MusicPages) {
         for (const musicSystem  of gmPage.MusicSystems) {
-            // if a graphical slur reaches out of the last musicsystem, we have to create another graphical slur reaching into this musicsystem
-            // (one slur needs 2 graphical slurs)
             for (const staffLine of musicSystem.StaffLines) {
+                // if a graphical slur reaches out of the last musicsystem, we have to create another graphical slur reaching into this musicsystem
+                // (one slur needs 2 graphical slurs)
+                const openGraphicalSlurs: Graphicalslur[] = openSlursDict[staffLine.ParentStaff.idInMusicSheet];
+                for (let slurIndex: number = 0; slurIndex < openGraphicalSlurs.length; slurIndex++) {
+                  const oldGSlur: Graphicalslur = openGraphicalSlurs[slurIndex];
+                  const newGSlur: Graphicalslur = new Graphicalslur(oldGSlur.slur); //Graphicalslur.createFromSlur(oldSlur);
+                  newGSlur.slur.StartNote = undefined;
+                  staffLine.addSlurToStaffline(newGSlur); // every VFSlur is added to the array in the VFStaffline!
+                  openGraphicalSlurs[slurIndex] = newGSlur;
+                }
+
+                /* VexFlow Version - for later use
                 const vfOpenSlurs: VexFlowSlur[] = vfOpenSlursDict[staffLine.ParentStaff.idInMusicSheet];
                 const vfStaffLine: VexFlowStaffLine = <VexFlowStaffLine> staffLine;
                 for (let slurIndex: number = 0; slurIndex < vfOpenSlurs.length; slurIndex++) {
@@ -505,6 +534,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     vfStaffLine.addVFSlurToVFStaffline(newVFSlur); // every VFSlur is added to the array in the VFStaffline!
                     vfOpenSlurs[slurIndex] = newVFSlur;
                 }
+                */
+
                 // add reference of slur array to the VexFlowStaffline class
                 for (const graphicalMeasure of staffLine.Measures) {
                     for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
@@ -551,12 +582,29 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                                 break;
                                             }
                                         }
+
+                                        // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
+                                        const gSlur: Graphicalslur = new Graphicalslur(slur);
+                                        openGraphicalSlurs.push(gSlur);
+                                        staffLine.addSlurToStaffline(gSlur);
+
+                                        /* VexFlow Version - for later use
                                         const vfSlur: VexFlowSlur = new VexFlowSlur(slur);
                                         vfOpenSlurs.push(vfSlur); //add open... adding / removing is JUST DONE in the open... array
                                         vfSlur.vfStartNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
                                         vfStaffLine.addVFSlurToVFStaffline(vfSlur); // every VFSlur is added to the array in the VFStaffline!
+                                        */
                                     }
                                     if (slur.EndNote === graphicalNote.sourceNote) {
+                                        // Remove the Graphical Slur from the staffline if the note is the Endnote of a slur
+                                        const index: number = this.findIndexGraphicalSlurFromSlur(openGraphicalSlurs, slur);
+                                        if (index !== undefined) {
+                                            // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
+                                            // openGraphicalSlurs[index].createVexFlowCurve();
+                                            openGraphicalSlurs.splice(index, 1);
+                                        }
+
+                                        /* VexFlow Version - for later use
                                         const vfIndex: number = this.findIndexVFSlurFromSlur(vfOpenSlurs, slur);
                                         if (vfIndex !== undefined) {
                                             // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
@@ -565,6 +613,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                             vfSlur.createVexFlowCurve();
                                             vfOpenSlurs.splice(vfIndex, 1);
                                         }
+                                        */
                                     }
                                 }
                             }
@@ -605,13 +654,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                         //         //vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry);
                         //     }
                         // }
-                    }
-                }
+                    } // loop over StaffEntries
+                } // loop over Measures
+            } // loop over StaffLines
+
                 // Attach vfSlur array to the vfStaffline to be drawn
                 //vfStaffLine.SlursInVFStaffLine = vfSlurs;
-            }
-        }
-    }
+        } // loop over MusicSystems
+    } // loop over MusicPages
+
     // order VFslurs that were saved to the VFStaffline
     // for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
     //     for (const musicSystem of graphicalMusicPage.MusicSystems) {

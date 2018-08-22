@@ -10,6 +10,7 @@ import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { Graphicalslur } from "./GraphicalSlur";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -23,6 +24,9 @@ export abstract class StaffLine extends GraphicalObject {
     protected skyBottomLine: SkyBottomLineCalculator;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
+
+    // For displaying Slurs
+    protected graphicalSlurs: Graphicalslur[] = [];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         super();
@@ -95,6 +99,19 @@ export abstract class StaffLine extends GraphicalObject {
 
     public get BottomLine(): number[] {
         return this.skyBottomLine.BottomLine;
+    }
+
+    // get all Graphical Slurs of a staffline
+    public get GraphicalSlurs(): Graphicalslur[] {
+        return this.graphicalSlurs;
+    }
+
+    /**
+     * Add a given Graphical Slur to the staffline
+     * @param gSlur
+     */
+    public addSlurToStaffline(gSlur: Graphicalslur): void {
+        this.graphicalSlurs.push(gSlur);
     }
 
     public addActivitySymbolClickArea(): void {
