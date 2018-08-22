@@ -145,7 +145,7 @@ export class BoundingBox {
     }
 
     public get BorderMarginLeft(): number {
-        return this.borderMarginLeft;
+        return this.borderMarginLeft > this.borderLeft ? this.borderLeft : this.borderMarginLeft;
     }
 
     public set BorderMarginLeft(value: number) {
@@ -154,7 +154,7 @@ export class BoundingBox {
     }
 
     public get BorderMarginRight(): number {
-        return this.borderMarginRight;
+        return this.borderMarginRight < this.borderRight ? this.borderRight : this.borderMarginRight;
     }
 
     public set BorderMarginRight(value: number) {
@@ -163,7 +163,7 @@ export class BoundingBox {
     }
 
     public get BorderMarginTop(): number {
-        return this.borderMarginTop;
+        return this.borderMarginTop > this.borderTop ? this.borderTop : this.borderMarginTop;
     }
 
     public set BorderMarginTop(value: number) {
@@ -172,7 +172,7 @@ export class BoundingBox {
     }
 
     public get BorderMarginBottom(): number {
-        return this.borderMarginBottom;
+        return this.borderMarginBottom < this.borderBottom ? this.borderBottom : this.borderMarginBottom;
     }
 
     public set BorderMarginBottom(value: number) {
@@ -569,14 +569,14 @@ export class BoundingBox {
     }
 
     protected calculateRectangle(): void {
-        this.upperLeftCorner = new PointF2D(this.borderLeft, this.borderTop);
-        this.size = new SizeF2D(this.borderRight - this.borderLeft, this.borderBottom - this.borderTop);
+        this.upperLeftCorner = new PointF2D(this.BorderLeft, this.BorderTop);
+        this.size = new SizeF2D(this.BorderRight - this.BorderLeft, this.BorderBottom - this.BorderTop);
         this.boundingRectangle = RectangleF2D.createFromLocationAndSize(this.upperLeftCorner, this.size);
     }
 
     protected calculateMarginRectangle(): void {
-        this.upperLeftMarginCorner = new PointF2D(this.borderMarginLeft, this.borderMarginTop);
-        this.marginSize = new SizeF2D(this.borderMarginRight - this.borderMarginLeft, this.borderMarginBottom - this.borderMarginTop);
+        this.upperLeftMarginCorner = new PointF2D(this.BorderMarginLeft, this.BorderMarginTop);
+        this.marginSize = new SizeF2D(this.BorderMarginRight - this.BorderMarginLeft, this.BorderMarginBottom - this.BorderMarginTop);
         this.boundingMarginRectangle = RectangleF2D.createFromLocationAndSize(this.upperLeftMarginCorner, this.marginSize);
     }
 

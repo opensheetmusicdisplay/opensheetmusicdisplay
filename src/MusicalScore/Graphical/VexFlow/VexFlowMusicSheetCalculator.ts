@@ -379,13 +379,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           staffLine,
           measure);
         (measure as VexFlowMeasure).instantaneousDynamics.push(graphicalInstantaneousDynamic);
-        this.calculateSingleGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, staffLine, startPosInStaffline);
+        this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, staffLine, startPosInStaffline);
     }
   }
 
-  public calculateSingleGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression,
-                                                                staffLine: StaffLine,
-                                                                relative: PointF2D): void {
+  public calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression,
+                                                          staffLine: StaffLine,
+                                                          relative: PointF2D): void {
     // // add to StaffLine and set PSI relations
     staffLine.AbstractExpressions.push(graphicalInstantaneousDynamic);
     staffLine.PositionAndShape.ChildElements.push(graphicalInstantaneousDynamic.PositionAndShape);
@@ -394,8 +394,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     // get Margin Dimensions
-    const left: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderLeft;
-    const right: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderRight;
+    const left: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginLeft;
+    const right: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginRight;
     const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
     // get possible previous Dynamic
@@ -440,14 +440,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (skyLineValue > -difference / 2) {
                 yPosition = -difference / 2;
             } else {
-                yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderBottom;
+                yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
             }
         } else {
-            yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderBottom;
+            yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
         }
 
         graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
-        skyBottomLineCalculator.updateSkyLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderTop);
+        skyBottomLineCalculator.updateSkyLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop);
     } else if (graphicalInstantaneousDynamic.InstantaneousDynamic.Placement === PlacementEnum.Below) {
         const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
         let yPosition: number = 0;
@@ -458,20 +458,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const nextStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) + 1];
             const difference: number = nextStaffLine.PositionAndShape.RelativePosition.y -
                                staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
-            const border: number = graphicalInstantaneousDynamic.PositionAndShape.BorderBottom;
+            const border: number = graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
 
             // take always into account the size of the Dynamic
             if (bottomLineValue + border < this.rules.StaffHeight + difference / 2) {
                 yPosition = this.rules.StaffHeight + difference / 2;
             } else {
-                yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderTop;
+                yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
             }
         } else {
-            yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderTop;
+            yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
         }
 
         graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
-        skyBottomLineCalculator.updateBottomLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderBottom);
+        skyBottomLineCalculator.updateBottomLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom);
     }
 }
 
