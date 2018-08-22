@@ -4,6 +4,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 (function () {
     "use strict";
     var openSheetMusicDisplay;
+    var sampleLoaded = false;
     // folder of the sample files
     var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     samples = {
@@ -122,6 +123,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         // Set resize event handler
         new Resize(
             function(){
+                if (!sampleLoaded) {
+                    return;
+                }
+            },
+            function(){
                 disable();
             },
             function() {
@@ -229,6 +235,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function onLoadingEnd(isCustom) {
+        sampleLoaded = true;
         // Remove option from select
         if (!isCustom && custom.parentElement === selectSample) {
             selectSample.removeChild(custom);
