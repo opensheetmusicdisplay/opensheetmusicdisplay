@@ -26,6 +26,7 @@ import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import { Voice } from "../../VoiceData/Voice";
+import { VexFlowInstantaneousDynamicExpression } from "./VexFlowInstantaneousDynamicExpression";
 import { LinkedVoice } from "../../VoiceData/LinkedVoice";
 
 export class VexFlowMeasure extends GraphicalMeasure {
@@ -35,28 +36,29 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.resetLayout();
     }
 
-    // octaveOffset according to active clef
+    /** octaveOffset according to active clef */
     public octaveOffset: number = 3;
-    // The VexFlow Voices in the measure
+    /** The VexFlow Voices in the measure */
     public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
-    // Call this function (if present) to x-format all the voices in the measure
+    /** Call this function (if present) to x-format all the voices in the measure */
     public formatVoices: (width: number) => void;
-    // The VexFlow Ties in the measure
+    /** The VexFlow Ties in the measure */
     public vfTies: Vex.Flow.StaveTie[] = [];
-    // The repetition instructions given as words or symbols (coda, dal segno..)
+    /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: Vex.Flow.Repetition[] = [];
-
-    // The VexFlow Stave (= one measure in a staffline)
+    /** Instant dynamics */
+    public instantaneousDynamics: VexFlowInstantaneousDynamicExpression[] = [];
+    /** The VexFlow Stave (= one measure in a staffline) */
     private stave: Vex.Flow.Stave;
-    // VexFlow StaveConnectors (vertical lines)
+    /** VexFlow StaveConnectors (vertical lines) */
     private connectors: Vex.Flow.StaveConnector[] = [];
-    // Intermediate object to construct beams
+    /** Intermediate object to construct beams */
     private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][]; } = {};
-    // VexFlow Beams
+    /** VexFlow Beams */
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
-    // Intermediate object to construct tuplets
+    /** Intermediate object to construct tuplets */
     private tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
-    // VexFlow Tuplets
+    /** VexFlow Tuplets */
     private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
 
     // Sets the absolute coordinates of the VFStave on the canvas
@@ -85,6 +87,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.connectors = [];
         // Clean up instructions
         this.resetLayout();
+        this.instantaneousDynamics = [];
     }
 
     /**
@@ -302,7 +305,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.stave.setWidth(width * unitInPixels);
         // Force the width of the Begin Instructions
         //this.stave.setNoteStartX(this.beginInstructionsWidth * UnitInPixels);
-
     }
 
     /**
@@ -326,6 +328,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
                 this.vfVoices[voiceID].draw(ctx, this.stave);
+                // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
             }
         }
         // Draw beams

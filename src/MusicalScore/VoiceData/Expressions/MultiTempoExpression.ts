@@ -1,6 +1,6 @@
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {SourceMeasure} from "../SourceMeasure";
-import {InstantaniousTempoExpression} from "./InstantaniousTempoExpression";
+import {InstantaneousTempoExpression} from "./InstantaneousTempoExpression";
 import {PlacementEnum} from "./AbstractExpression";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {AbstractTempoExpression} from "./AbstractTempoExpression";
@@ -15,7 +15,7 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
 
     private timestamp: Fraction;
     private sourceMeasure: SourceMeasure;
-    private instantaneousTempo: InstantaniousTempoExpression;
+    private instantaneousTempo: InstantaneousTempoExpression;
     private continuousTempo: ContinuousTempoExpression;
     private expressions: TempoExpressionEntry[] = [];
     private combinedExpressionsText: string;
@@ -32,7 +32,7 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     public set SourceMeasureParent(value: SourceMeasure) {
         this.sourceMeasure = value;
     }
-    public get InstantaniousTempo(): InstantaniousTempoExpression {
+    public get InstantaneousTempo(): InstantaneousTempoExpression {
         return this.instantaneousTempo;
     }
     public get ContinuousTempo(): ContinuousTempoExpression {
@@ -50,8 +50,8 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     public getPlacementOfFirstEntry(): PlacementEnum {
         let placement: PlacementEnum = PlacementEnum.Above;
         if (this.expressions.length > 0) {
-            if (this.expressions[0].expression instanceof InstantaniousTempoExpression) {
-                placement = (<InstantaniousTempoExpression>(this.expressions[0].expression)).Placement;
+            if (this.expressions[0].expression instanceof InstantaneousTempoExpression) {
+                placement = (<InstantaneousTempoExpression>(this.expressions[0].expression)).Placement;
             } else if (this.expressions[0].expression instanceof ContinuousTempoExpression) {
                 placement = (<ContinuousTempoExpression>(this.expressions[0].expression)).Placement;
             }
@@ -60,7 +60,7 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     }
     public getFontstyleOfFirstEntry(): FontStyles {
         let fontStyle: FontStyles = FontStyles.Regular;
-        if (this.expressions[0].expression instanceof InstantaniousTempoExpression) {
+        if (this.expressions[0].expression instanceof InstantaneousTempoExpression) {
             fontStyle = FontStyles.Bold;
         } else if (this.expressions[0].expression instanceof ContinuousTempoExpression) {
             fontStyle = FontStyles.Italic;
@@ -70,9 +70,9 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     //public getFirstEntry(graphicalLabel: GraphicalLabel): AbstractGraphicalExpression {
     //    let indexOfFirstNotInstDynExpr: number = 0;
     //    if (this.expressions.length > 0) {
-    //        if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof InstantaniousTempoExpression)
-    //            return new GraphicalInstantaniousTempoExpression(
-    // <InstantaniousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
+    //        if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof InstantaneousTempoExpression)
+    //            return new GraphicalInstantaneousTempoExpression(
+    // <InstantaneousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
     //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousTempoExpression)
     //            return new GraphicalContinuousTempoExpression(
     // <ContinuousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
@@ -81,8 +81,8 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     //    return undefined;
     //}
     public addExpression(abstractTempoExpression: AbstractTempoExpression, prefix: string): void {
-        if (abstractTempoExpression instanceof InstantaniousTempoExpression) {
-            this.instantaneousTempo = <InstantaniousTempoExpression>abstractTempoExpression;
+        if (abstractTempoExpression instanceof InstantaneousTempoExpression) {
+            this.instantaneousTempo = <InstantaneousTempoExpression>abstractTempoExpression;
         } else if (abstractTempoExpression instanceof ContinuousTempoExpression) {
             this.continuousTempo = <ContinuousTempoExpression>abstractTempoExpression;
         }

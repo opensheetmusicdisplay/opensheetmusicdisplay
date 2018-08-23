@@ -293,7 +293,8 @@ export class VoiceGenerator {
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, chord: boolean, guitarPro: boolean): Note {
     //log.debug("addSingleNote called");
-    let noteAlter: AccidentalEnum = AccidentalEnum.NONE;
+    let noteAlter: number = 0;
+    let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
     let playbackInstrumentId: string = undefined;
@@ -325,15 +326,7 @@ export class VoiceGenerator {
                   this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                   throw new MusicSheetReadingException(errorMsg, undefined);
                 }
-                if (noteAlter === 0.5) {
-                  noteAlter = AccidentalEnum.QUARTERTONESHARP;
-                } else if (noteAlter === -0.5) {
-                  noteAlter = AccidentalEnum.QUARTERTONEFLAT;
-                } else if (noteAlter === 3) {
-                  noteAlter = AccidentalEnum.TRIPLESHARP;
-                } else if (noteAlter === -3) {
-                  noteAlter = AccidentalEnum.TRIPLEFLAT;
-                }
+                noteAccidental = Pitch.AccidentalFromHalfTones(noteAlter); // potentially overwritten by "accidental" noteElement
               } else if (pitchElement.name === "octave") {
                 noteOctave = parseInt(pitchElement.value, 10);
                 if (isNaN(noteOctave)) {
@@ -348,6 +341,11 @@ export class VoiceGenerator {
               log.info("VoiceGenerator.addSingleNote read Step: ", ex.message);
             }
 
+          }
+        } else if (noteElement.name === "accidental") {
+          const accidentalValue: string = noteElement.value;
+          if (accidentalValue === "natural") {
+            noteAccidental = AccidentalEnum.NATURAL;
           }
         } else if (noteElement.name === "unpitched") {
           const displayStep: IXmlElement = noteElement.element("display-step");
@@ -372,7 +370,7 @@ export class VoiceGenerator {
     }
 
     noteOctave -= Pitch.OctaveXmlDifference;
-    const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAlter);
+    const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     note.PlaybackInstrumentId = playbackInstrumentId;

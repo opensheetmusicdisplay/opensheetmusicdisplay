@@ -1,3 +1,4 @@
+import Vex = require("vexflow");
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -9,6 +10,8 @@ import {GraphicalObject} from "../GraphicalObject";
 import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
+import {VexFlowOctaveShift} from "./VexFlowOctaveShift";
+import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
@@ -145,10 +148,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     //     ctx.fillStyle = oldStyle;
     // }
 
-    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF"): void {
+    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): void {
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
-        this.backend.renderLine(start, stop, color);
+        this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
             }
 
     protected drawSkyLine(staffline: StaffLine): void {
@@ -258,6 +261,25 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
         vexBrace.draw(this.backend.getContext());
+    }
+
+    protected drawOctaveShifts(staffLine: StaffLine): void {
+        for (const graphicalOctaveShift of staffLine.OctaveShifts) {
+            if (graphicalOctaveShift) {
+                const ctx: Vex.Flow.RenderContext = this.backend.getContext();
+                const textBracket: Vex.Flow.TextBracket = (graphicalOctaveShift as VexFlowOctaveShift).getTextBracket();
+                textBracket.setContext(ctx);
+                textBracket.draw();
+            }
+        }
+    }
+
+    protected drawInstantaneousDynamic(staffline: StaffLine): void {
+        for (const m of staffline.Measures as VexFlowMeasure[]) {
+            for (const idx of m.instantaneousDynamics as VexFlowInstantaneousDynamicExpression[]) {
+                this.drawLabel(idx.Label, <number>GraphicalLayers.Notes);
+            }
+        }
     }
 
     /**

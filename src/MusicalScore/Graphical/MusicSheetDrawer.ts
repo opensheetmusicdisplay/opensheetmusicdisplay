@@ -22,7 +22,6 @@ import {MusicSymbol} from "./MusicSymbol";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
-import {GraphicalOctaveShift} from "./GraphicalOctaveShift";
 import {GraphicalObject} from "./GraphicalObject";
 
 /**
@@ -294,6 +293,16 @@ export abstract class MusicSheetDrawer {
         }
         for (const staffLine of musicSystem.StaffLines) {
             this.drawStaffLine(staffLine);
+
+            // draw lyric dashes
+            if (staffLine.LyricsDashes.length > 0) {
+                this.drawDashes(staffLine.LyricsDashes);
+            }
+
+            // draw lyric lines (e.g. LyricExtends: "dich,___")
+            if (staffLine.LyricLines.length > 0) {
+                this.drawLyricLines(staffLine.LyricLines, staffLine);
+            }
         }
         for (const systemLine of musicSystem.SystemLines) {
             this.drawSystemLineObject(systemLine);
@@ -343,10 +352,9 @@ export abstract class MusicSheetDrawer {
             this.drawDashes(staffLine.LyricsDashes);
         }
 
-        // draw lyric lines (e.g. LyricExtends: "dich,___")
-        if (staffLine.LyricLines.length > 0) {
-            this.drawLyricLines(staffLine.LyricLines);
-        }
+        this.drawOctaveShifts(staffLine);
+
+        this.drawInstantaneousDynamic(staffLine);
 
         if (this.skyLineVisible) {
             this.drawSkyLine(staffLine);
@@ -357,8 +365,30 @@ export abstract class MusicSheetDrawer {
         }
     }
 
-    protected drawLyricLines(lyricLines: GraphicalLine[]): void {
-        // throw new Error("not implemented");
+    protected drawLyricLines(lyricLines: GraphicalLine[], staffLine: StaffLine): void {
+        staffLine.LyricLines.forEach(lyricLine => {
+            // TODO maybe we should put this in the calculation (MusicSheetCalculator.calculateLyricExtend)
+            // then we can also remove staffLine argument
+            // but same addition doesn't work in calculateLyricExtend, because y-spacing happens after lyrics positioning
+            lyricLine.Start.y += staffLine.PositionAndShape.AbsolutePosition.y;
+            lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
+            lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
+            lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
+            this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidth);
+        });
+    }
+
+    protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): void {
+        /* TODO similar checks as in drawLabel
+        if (!this.isVisible(new BoundingBox(graphicalLine.Start,)) {
+            return;
+        }
+        */
+        this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
+    }
+
+    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
+        // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 
     /**
@@ -374,26 +404,8 @@ export abstract class MusicSheetDrawer {
     //
     // }
 
-    protected drawOctaveShift(staffLine: StaffLine, graphicalOctaveShift: GraphicalOctaveShift): void {
-        this.drawSymbol(graphicalOctaveShift.octaveSymbol, MusicSymbolDrawingStyle.Normal, graphicalOctaveShift.PositionAndShape.AbsolutePosition);
-        const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
-        if (graphicalOctaveShift.dashesStart.x < graphicalOctaveShift.dashesEnd.x) {
-            const horizontalLine: GraphicalLine = new GraphicalLine(graphicalOctaveShift.dashesStart, graphicalOctaveShift.dashesEnd,
-                                                                    this.rules.OctaveShiftLineWidth);
-            this.drawLineAsHorizontalRectangleWithOffset(horizontalLine, absolutePos, <number>GraphicalLayers.Notes);
-        }
-        if (!graphicalOctaveShift.endsOnDifferentStaffLine || graphicalOctaveShift.isSecondPart) {
-            let verticalLine: GraphicalLine;
-            const dashEnd: PointF2D = graphicalOctaveShift.dashesEnd;
-            const octShiftVertLineLength: number = this.rules.OctaveShiftVerticalLineLength;
-            const octShiftLineWidth: number = this.rules.OctaveShiftLineWidth;
-            if (graphicalOctaveShift.octaveSymbol === MusicSymbol.VA8 || graphicalOctaveShift.octaveSymbol === MusicSymbol.MA15) {
-                verticalLine = new GraphicalLine(dashEnd, new PointF2D(dashEnd.x, dashEnd.y + octShiftVertLineLength), octShiftLineWidth);
-            } else {
-                verticalLine = new GraphicalLine(new PointF2D(dashEnd.x, dashEnd.y - octShiftVertLineLength), dashEnd, octShiftLineWidth);
-            }
-            this.drawLineAsVerticalRectangleWithOffset(verticalLine, absolutePos, <number>GraphicalLayers.Notes);
-        }
+    protected drawOctaveShifts(staffLine: StaffLine): void {
+        return;
     }
 
     protected drawStaffLines(staffLine: StaffLine): void {
@@ -413,13 +425,13 @@ export abstract class MusicSheetDrawer {
     //         drawLineAsVerticalRectangle(ending.Right, absolutePosition, <number>GraphicalLayers.Notes);
     //     this.drawLabel(ending.Label, <number>GraphicalLayers.Notes);
     // }
-    // protected drawInstantaniousDynamic(expression: GraphicalInstantaniousDynamicExpression): void {
-    //     expression.ExpressionSymbols.forEach(function (expressionSymbol) {
-    //         let position: PointF2D = expressionSymbol.PositionAndShape.AbsolutePosition;
-    //         let symbol: MusicSymbol = expressionSymbol.GetSymbol;
-    //         drawSymbol(symbol, MusicSymbolDrawingStyle.Normal, position);
-    //     });
-    // }
+    protected drawInstantaneousDynamic(staffline: StaffLine): void {
+        // expression.ExpressionSymbols.forEach(function (expressionSymbol) {
+        //     let position: PointF2D = expressionSymbol.PositionAndShape.AbsolutePosition;
+        //     let symbol: MusicSymbol = expressionSymbol.GetSymbol;
+        //     drawSymbol(symbol, MusicSymbolDrawingStyle.Normal, position);
+        // });
+    }
     // protected drawContinuousDynamic(expression: GraphicalContinuousDynamicExpression,
     //     absolute: PointF2D): void {
     //     throw new Error("not implemented");
@@ -473,6 +485,20 @@ export abstract class MusicSheetDrawer {
             let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderLeft,
                                                          startBox.AbsolutePosition.y + startBox.BorderTop ,
                                                          (relBoundingRect.width + 0), (relBoundingRect.height + 0));
+            this.drawLineAsHorizontalRectangle(new GraphicalLine(
+                                                             new PointF2D(startBox.AbsolutePosition.x - 1, startBox.AbsolutePosition.y),
+                                                             new PointF2D(startBox.AbsolutePosition.x + 1, startBox.AbsolutePosition.y),
+                                                             0.1,
+                                                             OutlineAndFillStyleEnum.BaseWritingColor),
+                                               layer - 1);
+
+            this.drawLineAsVerticalRectangle(new GraphicalLine(
+                                                                 new PointF2D(startBox.AbsolutePosition.x, startBox.AbsolutePosition.y - 1),
+                                                                 new PointF2D(startBox.AbsolutePosition.x, startBox.AbsolutePosition.y + 1),
+                                                                 0.1,
+                                                                 OutlineAndFillStyleEnum.BaseWritingColor),
+                                             layer - 1);
+
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
             this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignment.CenterCenter),

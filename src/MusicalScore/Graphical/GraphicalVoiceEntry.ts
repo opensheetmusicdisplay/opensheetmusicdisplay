@@ -12,7 +12,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         super();
         this.parentVoiceEntry = parentVoiceEntry;
         this.parentStaffEntry = parentStaffEntry;
-        this.PositionAndShape = new BoundingBox(this, parentStaffEntry ? parentStaffEntry.PositionAndShape : undefined);
+        this.PositionAndShape = new BoundingBox(this, parentStaffEntry ? parentStaffEntry.PositionAndShape : undefined, true);
         this.notes = [];
     }
 

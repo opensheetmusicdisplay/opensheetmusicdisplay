@@ -10,6 +10,7 @@ import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
 
 /**
@@ -21,9 +22,11 @@ export abstract class StaffLine extends GraphicalObject {
     protected staffLines: GraphicalLine[] = new Array(5);
     protected parentMusicSystem: MusicSystem;
     protected parentStaff: Staff;
+    protected octaveShifts: GraphicalOctaveShift[] = [];
     protected skyBottomLine: SkyBottomLineCalculator;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
+    protected abstractExpressions: GraphicalObject[] = [];
 
     // For displaying Slurs
     protected graphicalSlurs: GraphicalSlur[] = [];
@@ -59,6 +62,14 @@ export abstract class StaffLine extends GraphicalObject {
 
     public get LyricLines(): GraphicalLine[] {
         return this.lyricLines;
+    }
+
+    public get AbstractExpressions(): GraphicalObject[] {
+        return this.abstractExpressions;
+    }
+
+    public set AbstractExpressions(value: GraphicalObject[]) {
+        this.abstractExpressions = value;
     }
 
     public set LyricLines(value: GraphicalLine[]) {
@@ -99,6 +110,14 @@ export abstract class StaffLine extends GraphicalObject {
 
     public get BottomLine(): number[] {
         return this.skyBottomLine.BottomLine;
+    }
+
+    public get OctaveShifts(): GraphicalOctaveShift[] {
+        return this.octaveShifts;
+    }
+
+    public set OctaveShifts(value: GraphicalOctaveShift[]) {
+        this.octaveShifts = value;
     }
 
     // get all Graphical Slurs of a staffline

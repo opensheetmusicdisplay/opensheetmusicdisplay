@@ -6,14 +6,14 @@ declare namespace Vex {
         const RESOLUTION: any;
 
         export class Formatter {
-            constructor(opts?: any);
+            constructor();
 
             public hasMinTotalWidth: boolean;
             public minTotalWidth: number;
 
             public joinVoices(voices: Voice[]): void;
 
-            public format(voices: Voice[], width: number): void;
+            public format(voices: Voice[], width: number, options?: any): void;
 
             public preCalculateMinTotalWidth(voices: Voice[]): number;
         }
@@ -23,13 +23,13 @@ declare namespace Vex {
 
             public mergeWith(bb: BoundingBox): BoundingBox;
 
-            public getX(): number;
+            public x: number;
 
-            public getY(): number;
+            public y: number;
 
-            public getW(): number;
+            public w: number;
 
-            public getH(): number;
+            public h: number;
 
             public draw(ctx: Vex.Flow.RenderContext): void;
         }
@@ -67,6 +67,23 @@ declare namespace Vex {
         }
 
         export class Note extends Tickable {
+        }
+
+        export class TextBracket {
+            constructor(note_struct: any);
+            
+            public setContext(ctx: RenderContext): TextBracket;
+
+            public draw(): void;
+
+        }
+
+        export class TextNote extends Note {
+            constructor(note_struct: any);
+            
+            public setContext(ctx: RenderContext): TextBracket;
+
+            public draw(): void;
         }
 
         export class Stem {

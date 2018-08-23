@@ -500,7 +500,7 @@ export abstract class MusicSheetCalculator {
                         measureRelativePosition.x;
 
                     let minMarginLeft: number = Number.MAX_VALUE;
-                    let maxMarginRight: number = Number.MAX_VALUE;
+                    let maxMarginRight: number = Number.MIN_VALUE;
 
                     // if more than one LyricEntry in StaffEntry, find minMarginLeft, maxMarginRight of all corresponding Labels
                     for (let i: number = 0; i < staffEntry.LyricsEntries.length; i++) {
@@ -717,7 +717,7 @@ export abstract class MusicSheetCalculator {
         // calculate StaffEntry ChordSymbols
         this.calculateChordSymbols();
         if (!this.leadSheet) {
-            // calculate all Instantanious/Continuous Dynamics Expressions
+            // calculate all Instantaneous/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
             // place neighbouring DynamicExpressions at the same height
             this.optimizeStaffLineDynamicExpressionsPositions();
@@ -863,7 +863,7 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
-    protected calculateDynamicExpressionsForSingleMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+    protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
         return;
     }
 
@@ -1845,7 +1845,7 @@ export abstract class MusicSheetCalculator {
     private calculateLyricExtend(lyricEntry: GraphicalLyricEntry): void {
         let startY: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
         const startStaffEntry: GraphicalStaffEntry = lyricEntry.StaffEntryParent;
-        const startStaffLine: StaffLine = <StaffLine>lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine;
+        const startStaffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
 
         // find endstaffEntry and staffLine
         let endStaffEntry: GraphicalStaffEntry = undefined;
@@ -1875,13 +1875,19 @@ export abstract class MusicSheetCalculator {
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                //lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                startStaffEntry.PositionAndShape.BorderMarginRight;
+                // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.BorderMarginRight;
-            // needed in order to line up with the Label's text bottom line (is the y psoition of the underscore)
+                // + endStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
+                // TODO maybe add half-width of following note.
+                // though we don't have the vexflow note's bbox yet and extend layouting is unconstrained,
+                // we have more room for spacing without it.
+            // needed in order to line up with the Label's text bottom line (is the y position of the underscore)
             startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
-            // create a Line (as underscope after the LyricLabel's End)
+            // create a Line (as underscore after the LyricLabel's End)
             this.calculateSingleLyricWordWithUnderscore(startStaffLine, startX, endX, startY);
         } else { // start and end on different StaffLines
             // start margin from the text Label until the End of StaffLine
@@ -1960,12 +1966,12 @@ export abstract class MusicSheetCalculator {
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
                     for (let k: number = 0; k < sourceMeasure.StaffLinkedExpressions[j].length; k++) {
-                        if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaniousDynamic !== undefined ||
+                        if (sourceMeasure.StaffLinkedExpressions[j][k].InstantaneousDynamic !== undefined ||
                             (sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic !== undefined &&
                                 sourceMeasure.StaffLinkedExpressions[j][k].StartingContinuousDynamic.StartMultiExpression ===
                                 sourceMeasure.StaffLinkedExpressions[j][k] && sourceMeasure.StaffLinkedExpressions[j][k].UnknownList.length === 0)
                         ) {
-                            this.calculateDynamicExpressionsForSingleMultiExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
+                            this.calculateDynamicExpressionsForMultiExpression(sourceMeasure.StaffLinkedExpressions[j][k], i, j);
                         }
                     }
                 }
