@@ -126,11 +126,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 if (!sampleLoaded) {
                     return;
                 }
-            },
-            function(){
+
                 disable();
-            },
-            function() {
+                },
+            function(){
+                if (!sampleLoaded) {
+                    return;
+                }
+
                 var width = document.body.clientWidth;
                 canvas.width = width;
                 try {
