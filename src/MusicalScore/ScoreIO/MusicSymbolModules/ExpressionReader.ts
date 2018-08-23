@@ -12,15 +12,10 @@ import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {InstantaneousTempoExpression} from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import {MoodExpression} from "../../VoiceData/Expressions/MoodExpression";
 import {UnknownExpression} from "../../VoiceData/Expressions/UnknownExpression";
+import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {TextAlignment} from "../../../Common/Enums/TextAlignment";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import * as log from "loglevel";
-
-export enum PlacementEnum {
-    Above = 0,
-    Below = 1,
-    NotYetDefined = 2
-}
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;

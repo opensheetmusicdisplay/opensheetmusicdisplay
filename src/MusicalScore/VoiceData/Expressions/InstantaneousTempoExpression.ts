@@ -20,7 +20,7 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     private static listInstantaneousTempoAndanteModerato: string[] = ["Andante moderato"]; //  }), TempoEnum.andanteModerato);
     private static listInstantaneousTempoAndante: string[] = ["Andante", "Gehend", "Schreitend", "at a walking pace"]; //  }), TempoEnum.andante);
     private static listInstantaneousTempoAndantino: string[] = ["Andantino"]; //  }), TempoEnum.andantino);
-    private static listInstantaneousTempoModerato: string[] = ["Moderato", "M��ig", "Mod�r�", "moderately"]; //  }), TempoEnum.moderato);
+    private static listInstantaneousTempoModerato: string[] = ["Moderato", "Mäßig", "Mod�r�", "moderately"]; //  }), TempoEnum.moderato);
     private static listInstantaneousTempoAllegretto: string[] = ["Allegretto", "fast"]; //  }), TempoEnum.allegretto);
     private static listInstantaneousTempoAllegroModerato: string[] = ["Allegro moderato"]; //  }), TempoEnum.allegroModerato);
     private static listInstantaneousTempoAllegro: string[] = ["Allegro", "Rapide", "Vite", "Rasch", "Schnell", "Fr�hlich"]; //  }), TempoEnum.allegro);
@@ -28,7 +28,7 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
     private static listInstantaneousTempoVivacissimo: string[] = ["Vivacissimo", "Sehr lebhaft", "Sehr lebendig"]; //  }), TempoEnum.vivacissimo);
     private static listInstantaneousTempoAllegrissimo: string[] = ["Allegrissimo", "very fast"]; //  }), TempoEnum.allegrissimo);
     private static listInstantaneousTempoPresto: string[] = ["Presto", "Sehr schnell", "Geschwind"]; //  }), TempoEnum.presto);
-    private static listInstantaneousTempoPrestissimo: string[] = ["Prestissimo", "�u�erst schnell"]; //  }), TempoEnum.prestissimo);
+    private static listInstantaneousTempoPrestissimo: string[] = ["Prestissimo", "äußerst schnell"]; //  }), TempoEnum.prestissimo);
     private static listInstantaneousTempoChangesGeneral: string[] = [
         "tempo primo",
         "a tempo",
@@ -75,7 +75,7 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         "liebevoll",
         "mit Leidenschaft",
         "mit Liebe",
-        "amour�s",
+        "amourös",
         "gesanglich",
         "mit Schwung",
         "mit Feuer",
@@ -87,16 +87,16 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         "freudig",
         "verspielt",
         "angemessen",
-        "grazi�s",
+        "graziös",
         "mit Grazie",
         "flink",
-        "beh�nde",
+        "behände",
         "traurig",
         "klagend",
-        "majest�tisch",
+        "majestätisch",
         "aber nicht zu sehr",
         "markant",
-        "gem��igt",
+        "gemäßigt",
         "viel",
         "sehr",
         "ersterbend",
@@ -108,12 +108,12 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         "entschlossen",
         "zupackend",
         "heiter",
-        "nachdr�cklich",
+        "nachdrücklich",
         "getragen",
         "gewichtig",
         "zart",
-        "z�rtlich",
-        "im angemessenen Zeitma�",
+        "zärtlich",
+        "im angemessenen Zeitmaß",
         "ruhig",
         "ein wenig",
         "alla marcia",
@@ -449,5 +449,6 @@ export enum TempoEnum {
     prestissimo,
     lastRealTempo,
     addon,
-    changes
+    changes,
+    metronomeMark
 }

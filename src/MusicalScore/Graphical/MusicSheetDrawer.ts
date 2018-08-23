@@ -23,6 +23,7 @@ import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
+import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -354,7 +355,7 @@ export abstract class MusicSheetDrawer {
 
         this.drawOctaveShifts(staffLine);
 
-        this.drawInstantaneousDynamic(staffLine);
+        this.drawExpressions(staffLine);
 
         if (this.skyLineVisible) {
             this.drawSkyLine(staffLine);
@@ -376,6 +377,10 @@ export abstract class MusicSheetDrawer {
             lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
             this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidth);
         });
+    }
+
+    protected drawExpressions(staffline: StaffLine): void {
+        // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 
     protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): void {
@@ -425,7 +430,7 @@ export abstract class MusicSheetDrawer {
     //         drawLineAsVerticalRectangle(ending.Right, absolutePosition, <number>GraphicalLayers.Notes);
     //     this.drawLabel(ending.Label, <number>GraphicalLayers.Notes);
     // }
-    protected drawInstantaneousDynamic(staffline: StaffLine): void {
+    protected drawInstantaneousDynamic(instantaneousDynamic: GraphicalInstantaneousDynamicExpression): void {
         // expression.ExpressionSymbols.forEach(function (expressionSymbol) {
         //     let position: PointF2D = expressionSymbol.PositionAndShape.AbsolutePosition;
         //     let symbol: MusicSymbol = expressionSymbol.GetSymbol;
@@ -480,11 +485,11 @@ export abstract class MusicSheetDrawer {
      */
     private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = "all"): void {
         const dataObjectString: string = (startBox.DataObject.constructor as any).name;
-        if (startBox.BoundingRectangle !== undefined && (dataObjectString === type || type === "all")) {
-            const relBoundingRect: RectangleF2D = startBox.BoundingRectangle;
-            let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderLeft,
-                                                         startBox.AbsolutePosition.y + startBox.BorderTop ,
-                                                         (relBoundingRect.width + 0), (relBoundingRect.height + 0));
+        if (dataObjectString === type || type === "all") {
+            let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderMarginLeft,
+                                                         startBox.AbsolutePosition.y + startBox.BorderMarginTop,
+                                                         startBox.BorderMarginRight - startBox.BorderMarginLeft,
+                                                         startBox.BorderMarginBottom - startBox.BorderMarginTop);
             this.drawLineAsHorizontalRectangle(new GraphicalLine(
                                                              new PointF2D(startBox.AbsolutePosition.x - 1, startBox.AbsolutePosition.y),
                                                              new PointF2D(startBox.AbsolutePosition.x + 1, startBox.AbsolutePosition.y),

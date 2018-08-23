@@ -50,19 +50,19 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     public getPlacementOfFirstEntry(): PlacementEnum {
         let placement: PlacementEnum = PlacementEnum.Above;
         if (this.expressions.length > 0) {
-            if (this.expressions[0].expression instanceof InstantaneousTempoExpression) {
-                placement = (<InstantaneousTempoExpression>(this.expressions[0].expression)).Placement;
-            } else if (this.expressions[0].expression instanceof ContinuousTempoExpression) {
-                placement = (<ContinuousTempoExpression>(this.expressions[0].expression)).Placement;
+            if (this.expressions[0].Expression instanceof InstantaneousTempoExpression) {
+                placement = (<InstantaneousTempoExpression>(this.expressions[0].Expression)).Placement;
+            } else if (this.expressions[0].Expression instanceof ContinuousTempoExpression) {
+                placement = (<ContinuousTempoExpression>(this.expressions[0].Expression)).Placement;
             }
         }
         return placement;
     }
     public getFontstyleOfFirstEntry(): FontStyles {
         let fontStyle: FontStyles = FontStyles.Regular;
-        if (this.expressions[0].expression instanceof InstantaneousTempoExpression) {
+        if (this.expressions[0].Expression instanceof InstantaneousTempoExpression) {
             fontStyle = FontStyles.Bold;
-        } else if (this.expressions[0].expression instanceof ContinuousTempoExpression) {
+        } else if (this.expressions[0].Expression instanceof ContinuousTempoExpression) {
             fontStyle = FontStyles.Italic;
         }
         return fontStyle;
@@ -70,12 +70,12 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     //public getFirstEntry(graphicalLabel: GraphicalLabel): AbstractGraphicalExpression {
     //    let indexOfFirstNotInstDynExpr: number = 0;
     //    if (this.expressions.length > 0) {
-    //        if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof InstantaneousTempoExpression)
+    //        if (this.expressions[indexOfFirstNotInstDynExpr].Expression instanceof InstantaneousTempoExpression)
     //            return new GraphicalInstantaneousTempoExpression(
-    // <InstantaneousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
-    //        else if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousTempoExpression)
+    // <InstantaneousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].Expression), graphicalLabel);
+    //        else if (this.expressions[indexOfFirstNotInstDynExpr].Expression instanceof ContinuousTempoExpression)
     //            return new GraphicalContinuousTempoExpression(
-    // <ContinuousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].expression), graphicalLabel);
+    // <ContinuousTempoExpression>(this.expressions[indexOfFirstNotInstDynExpr].Expression), graphicalLabel);
     //        else return undefined;
     //    }
     //    return undefined;
@@ -88,7 +88,7 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
         }
         const tempoExpressionEntry: TempoExpressionEntry = new TempoExpressionEntry();
         tempoExpressionEntry.prefix = prefix;
-        tempoExpressionEntry.expression = abstractTempoExpression;
+        tempoExpressionEntry.Expression = abstractTempoExpression;
         tempoExpressionEntry.label = abstractTempoExpression.Label;
         this.expressions.push(tempoExpressionEntry);
     }
@@ -110,6 +110,14 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
 
 export class TempoExpressionEntry {
     public prefix: string;
-    public expression: AbstractTempoExpression;
+    protected expression: AbstractTempoExpression;
     public label: string;
+
+    public get Expression(): AbstractTempoExpression {
+        return this.expression;
+    }
+
+    public set Expression(value: AbstractTempoExpression) {
+        this.expression = value;
+    }
 }

@@ -56,6 +56,13 @@ import { Label } from "../Label";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
+import { GraphicalObject } from "./GraphicalObject";
+import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
+import { InstantaneousTempoExpression, TempoEnum } from "../VoiceData/Expressions/InstantaneousTempoExpression";
+import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
+import { FontStyles } from "../../Common/Enums/FontStyles";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -885,9 +892,159 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
-    protected calculateTempoExpressionsForSingleMultiTempoExpression(sourceMeasure: SourceMeasure, multiTempoExpression: MultiTempoExpression,
-                                                                     measureIndex: number): void {
-        return;
+    protected calculateLabel(staffLine: StaffLine,
+                             relative: PointF2D,
+                             combinedString: string,
+                             style: FontStyles,
+                             placement: PlacementEnum,
+                             fontHeight: number): GraphicalLabel {
+        const label: Label = new Label(combinedString);
+        label.fontHeight = fontHeight;
+
+        // TODO_RR: TextHeight from first Entry
+        const graphLabel: GraphicalLabel = new GraphicalLabel(label, fontHeight, TextAlignment.CenterBottom, staffLine.PositionAndShape);
+        graphLabel.Label.fontStyle = style;
+        const marginFactor: number = 1.1;
+
+        if (placement === PlacementEnum.Below) {
+            graphLabel.Label.textAlignment = TextAlignment.LeftTop;
+        }
+
+        graphLabel.setLabelPositionAndShapeBorders();
+        graphLabel.PositionAndShape.BorderMarginBottom *= marginFactor;
+        graphLabel.PositionAndShape.BorderMarginTop *= marginFactor;
+        graphLabel.PositionAndShape.BorderMarginLeft *= marginFactor;
+        graphLabel.PositionAndShape.BorderMarginRight *= marginFactor;
+
+        let left: number = relative.x + graphLabel.PositionAndShape.BorderMarginLeft;
+        let right: number = relative.x + graphLabel.PositionAndShape.BorderMarginRight;
+
+        // check if GraphicalLabel exceeds the StaffLine's borders.
+        if (right > staffLine.PositionAndShape.Size.width) {
+            right = staffLine.PositionAndShape.Size.width - this.rules.MeasureRightMargin;
+            left = right - graphLabel.PositionAndShape.MarginSize.width;
+            relative.x = left - graphLabel.PositionAndShape.BorderMarginLeft;
+        }
+
+        // find allowed position (where the Label can be positioned) from Sky- BottomLine
+        let drawingHeight: number;
+        const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+        if (placement === PlacementEnum.Below) {
+            drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
+        } else {
+            drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+        }
+
+        // set RelativePosition
+        graphLabel.PositionAndShape.RelativePosition = new PointF2D(relative.x, drawingHeight);
+
+        // update Sky- BottomLine
+        if (placement === PlacementEnum.Below) {
+            skyBottomLineCalculator.updateBottomLineInRange(left, right, graphLabel.PositionAndShape.BorderMarginBottom + drawingHeight);
+        } else {
+            skyBottomLineCalculator.updateSkyLineInRange(left, right, graphLabel.PositionAndShape.BorderMarginTop + drawingHeight);
+        }
+        return graphLabel;
+    }
+
+    protected calculateTempoExpressionsForMultiTempoExpression(sourceMeasure: SourceMeasure, multiTempoExpression: MultiTempoExpression,
+                                                               measureIndex: number): void {
+        // calculate absolute Timestamp
+        const absoluteTimestamp: Fraction = Fraction.plus(sourceMeasure.AbsoluteTimestamp, multiTempoExpression.Timestamp);
+        const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[measureIndex];
+        let relative: PointF2D = new PointF2D();
+
+        if (multiTempoExpression.ContinuousTempo || multiTempoExpression.InstantaneousTempo) {
+            // TempoExpressions always on the first visible System's StaffLine
+            let staffLine: StaffLine = measures[0].ParentStaffLine;
+            let firstVisibleMeasureX: number = measures[0].PositionAndShape.RelativePosition.x;
+            let verticalIndex: number = 0;
+            for (let j: number = 0; j < measures.length; j++) {
+                if (!measures[j].ParentStaffLine || measures[j].ParentStaffLine.Measures.length === 0) {
+                    continue;
+                }
+
+                if (measures[j].ParentStaffLine.Measures.length > 0) {
+                    staffLine = measures[j].ParentStaffLine;
+                    firstVisibleMeasureX = measures[j].PositionAndShape.RelativePosition.x;
+                    verticalIndex = j;
+                    break;
+                }
+            }
+            relative = this.getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp,
+                                                                        verticalIndex,
+                                                                        staffLine,
+                                                                        staffLine.isPartOfMultiStaffInstrument(),
+                                                                        firstVisibleMeasureX);
+
+            // also placement Above
+            if (multiTempoExpression.EntriesList.length > 0 &&
+                multiTempoExpression.EntriesList[0].Expression instanceof InstantaneousTempoExpression) {
+                const instantaniousTempo: InstantaneousTempoExpression = (multiTempoExpression.EntriesList[0].Expression as InstantaneousTempoExpression);
+                instantaniousTempo.Placement = PlacementEnum.Above;
+
+                // if an InstantaniousTempoExpression exists at the very beginning then
+                // check if expression is positioned at ever first StaffEntry and
+                // check if MusicSystem is first MusicSystem
+                if (staffLine.Measures[0].staffEntries.length > 0 &&
+                    Math.abs(relative.x - staffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x) === 0 &&
+                    staffLine.ParentMusicSystem === staffLine.ParentMusicSystem.Parent.MusicSystems[0]) {
+                    const firstInstructionEntry: GraphicalStaffEntry = staffLine.Measures[0].FirstInstructionStaffEntry;
+                    if (firstInstructionEntry) {
+                        const lastIntruction: AbstractGraphicalInstruction = firstInstructionEntry.GraphicalInstructions.last();
+                        relative.x = lastIntruction.PositionAndShape.RelativePosition.x;
+                    }
+                }
+            }
+
+            // const addAtLastList: GraphicalObject[] = [];
+            for (const entry of multiTempoExpression.EntriesList) {
+                const graphLabel: GraphicalLabel = this.calculateLabel(staffLine,
+                                                                       relative,
+                                                                       entry.label,
+                                                                       multiTempoExpression.getFontstyleOfFirstEntry(),
+                                                                       entry.Expression.Placement,
+                                                                       EngravingRules.Rules.UnknownTextHeight);
+
+                if (entry.Expression instanceof InstantaneousTempoExpression) {
+                    let alreadyAdded: boolean = false;
+                    for (const expr of staffLine.AbstractExpressions) {
+                        if (expr instanceof GraphicalInstantaneousTempoExpression &&
+                           (expr as GraphicalInstantaneousTempoExpression).InstantaneousTempoExpression.Label === entry.Expression.Label) {
+                            alreadyAdded = true;
+                        }
+                    }
+
+                    if (alreadyAdded) {
+                        continue;
+                    }
+
+                    const graphicalTempoExpr: GraphicalInstantaneousTempoExpression = new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
+                    // in case of metronome mark:
+                    if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
+                        // use smaller font:
+                        graphLabel.Label.fontHeight = 1.2;
+                    }
+
+                    staffLine.AbstractExpressions.push(graphicalTempoExpr);
+                } else if (entry.Expression instanceof ContinuousTempoExpression) {
+                    // FIXME: Not yet implemented
+                    // let alreadyAdded: boolean = false;
+                    // for (const expr of staffLine.AbstractExpressions) {
+                    //     if (expr instanceof GraphicalContinuousTempoExpression &&
+                    //         expr.GetContinuousTempoExpression.Label === entry.Expression.Label) {
+                    //         alreadyAdded = true;
+                    //     }
+                    // }
+
+                    // if (alreadyAdded) {
+                    //     continue;
+                    // }
+
+                    // staffLine.AbstractExpressions.push(new GraphicalContinuousTempoExpression((ContinuousTempoExpression)(entry.Expression), graphLabel));
+                }
+            }
+        }
     }
 
     protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -2044,7 +2201,7 @@ export abstract class MusicSheetCalculator {
         for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.TempoExpressions.length; j++) {
-                this.calculateTempoExpressionsForSingleMultiTempoExpression(sourceMeasure, sourceMeasure.TempoExpressions[j], i);
+                this.calculateTempoExpressionsForMultiTempoExpression(sourceMeasure, sourceMeasure.TempoExpressions[j], i);
             }
         }
     }
