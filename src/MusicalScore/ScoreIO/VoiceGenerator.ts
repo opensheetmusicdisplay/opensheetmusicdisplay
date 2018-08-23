@@ -125,7 +125,9 @@ export class VoiceGenerator {
         }
         // read slurs
         const slurElements: IXmlElement[] = notationNode.elements("slur");
-        if (this.slurReader !== undefined && slurElements.length > 0) {
+        if (this.slurReader !== undefined &&
+            slurElements.length > 0 &&
+            !this.currentNote.ParentVoiceEntry.IsGrace) {
           this.slurReader.addSlur(slurElements, this.currentNote);
         }
         // read Tuplets

@@ -17,10 +17,10 @@ export class Matrix2D {
         const rotation: Matrix2D = new Matrix2D();
         const cos: number = Math.cos(angle);
         const sin: number = Math.sin(angle);
-        rotation[0][0] = cos;
-        rotation[0][1] = -sin;
-        rotation[1][0] = sin;
-        rotation[1][1] = cos;
+        rotation.matrix[0][0] = cos;
+        rotation.matrix[0][1] = -sin;
+        rotation.matrix[1][0] = sin;
+        rotation.matrix[1][1] = cos;
         return rotation;
     }
 
@@ -36,7 +36,7 @@ export class Matrix2D {
         const transpose: Matrix2D = new Matrix2D();
         for (let i: number = 0; i < 2; i++) {
             for (let j: number = 0; j < 2; j++) {
-                transpose[i][j] = this.matrix[j][i];
+                transpose.matrix[i][j] = this.matrix[j][i];
             }
         }
         return transpose;

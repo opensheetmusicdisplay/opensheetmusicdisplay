@@ -690,6 +690,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             return slurIndex;
         }
     }
+    return -1;
   }
   /* VexFlow Version - for later use
   public findIndexVFSlurFromSlur(vfSlurs: VexFlowSlur[], slur: Slur): number {
@@ -728,7 +729,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 for (let slurIndex: number = 0; slurIndex < openGraphicalSlurs.length; slurIndex++) {
                   const oldGSlur: GraphicalSlur = openGraphicalSlurs[slurIndex];
                   const newGSlur: GraphicalSlur = new GraphicalSlur(oldGSlur.slur); //Graphicalslur.createFromSlur(oldSlur);
-                  newGSlur.slur.StartNote = undefined;
                   staffLine.addSlurToStaffline(newGSlur); // every VFSlur is added to the array in the VFStaffline!
                   openGraphicalSlurs[slurIndex] = newGSlur;
                 }
@@ -780,8 +780,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                         for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
                             for (const graphicalNote of graphicalVoiceEntry.notes) {
                                 for (const slur of graphicalNote.sourceNote.NoteSlurs) {
+                                    // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
                                     if (slur.EndNote === undefined || slur.StartNote === undefined) {
-                                        continue;
+                                      continue;
                                     }
                                     // add new VexFlowSlur to List
                                     if (slur.StartNote === graphicalNote.sourceNote) {
@@ -807,7 +808,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                     if (slur.EndNote === graphicalNote.sourceNote) {
                                         // Remove the Graphical Slur from the staffline if the note is the Endnote of a slur
                                         const index: number = this.findIndexGraphicalSlurFromSlur(openGraphicalSlurs, slur);
-                                        if (index !== undefined) {
+                                        if (index >= 0) {
                                             // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
                                             const gSlur: GraphicalSlur = openGraphicalSlurs[index];
                                             if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
@@ -861,7 +862,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                         //     }
                         // }
 
-                        //add the present Staffentry to all these slurs that contain this Staffentry
+                        //add the present Staffentry to all open slurs that don't contain this Staffentry already
                         for (const gSlur of openGraphicalSlurs) {
                           if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
                             gSlur.staffEntries.push(graphicalStaffEntry);

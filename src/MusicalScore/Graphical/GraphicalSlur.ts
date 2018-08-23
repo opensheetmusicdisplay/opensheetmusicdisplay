@@ -8,7 +8,6 @@ import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
-import { GraphicalMeasure } from "./GraphicalMeasure";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
@@ -409,7 +408,7 @@ export class GraphicalSlur extends GraphicalCurve {
             //     }
             // }
         } else {
-            startX = (<GraphicalMeasure>staffLine.Measures[0]).FirstInstructionStaffEntry.PositionAndShape.BorderRight;
+            startX = staffLine.Measures[0].beginInstructionsWidth;
         }
 
         if (slurEndNote !== undefined) {
