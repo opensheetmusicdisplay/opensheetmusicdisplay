@@ -4,16 +4,19 @@ export class Matrix2D {
     private matrix: number[][];
 
     constructor() {
-        this.matrix = new Array(2);
+        this.matrix = [];
         for (let i: number = 0; i < 2; i++) {
-            this.matrix[i] = new Array(2);
+            this.matrix[i] = [];
+            for (let j: number = 0; j < 2; j++) {
+                this.matrix[i][j] = 0;
+            }
         }
     }
 
     public static getRotationMatrix(angle: number): Matrix2D {
         const rotation: Matrix2D = new Matrix2D();
-        const cos: number = <number>Math.cos(angle);
-        const sin: number = <number>Math.sin(angle);
+        const cos: number = Math.cos(angle);
+        const sin: number = Math.sin(angle);
         rotation[0][0] = cos;
         rotation[0][1] = -sin;
         rotation[1][0] = sin;

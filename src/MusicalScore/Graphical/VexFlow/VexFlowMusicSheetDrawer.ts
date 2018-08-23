@@ -15,6 +15,8 @@ import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import {StaffLine} from "../StaffLine";
 import {EngravingRules} from "../EngravingRules";
+import { GraphicalSlur } from "../GraphicalSlur";
+import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -71,16 +73,54 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     protected drawStaffLine(staffLine: StaffLine): void {
         super.drawStaffLine(staffLine);
-        this.drawSlurs(staffLine as VexFlowStaffLine);
+        const  absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+        this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
     }
 
-    private drawSlurs(vfstaffLine: VexFlowStaffLine): void {
-        for (const slur of vfstaffLine.SlursInVFStaffLine) {
-            slur.createVexFlowCurve();
-            //if (slur.vfCurve !== undefined) {
-            slur.vfCurve.setContext(this.backend.getContext()).draw();
-            //}
+    private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
+        for (const graphicalSlur of vfstaffLine.GraphicalSlurs) {
+            // slur.createVexFlowCurve();
+            // //if (slur.vfCurve !== undefined) {
+            // slur.vfCurve.setContext(this.backend.getContext()).draw();
+            // //}
+
+            this.drawSlur(graphicalSlur, absolutePos);
         }
+    }
+
+    private drawSlur(graphicalSlur: GraphicalSlur, abs: PointF2D): void {
+        const curvePointsInPixels: PointF2D[] = [];
+        // 1) create inner or original curve:
+        const p1: PointF2D = new PointF2D(graphicalSlur.bezierStartPt.x + abs.x, graphicalSlur.bezierStartPt.y + abs.y);
+        const p2: PointF2D = new PointF2D(graphicalSlur.bezierStartControlPt.x + abs.x, graphicalSlur.bezierStartControlPt.y + abs.y);
+        const p3: PointF2D = new PointF2D(graphicalSlur.bezierEndControlPt.x + abs.x, graphicalSlur.bezierEndControlPt.y + abs.y);
+        const p4: PointF2D = new PointF2D(graphicalSlur.bezierEndPt.x + abs.x, graphicalSlur.bezierEndPt.y + abs.y);
+
+        // put screen transformed points into array
+        curvePointsInPixels.push(this.applyScreenTransformation(p1));
+        curvePointsInPixels.push(this.applyScreenTransformation(p2));
+        curvePointsInPixels.push(this.applyScreenTransformation(p3));
+        curvePointsInPixels.push(this.applyScreenTransformation(p4));
+
+        // 2) create second outer curve to create a thickness for the curve:
+        if (graphicalSlur.placement === PlacementEnum.Above) {
+            p1.y -= 0.1;
+            p2.y -= 0.4;
+            p3.y -= 0.4;
+            p4.y -= 0.1;
+        } else {
+            p1.y += 0.1;
+            p2.y += 0.4;
+            p3.y += 0.4;
+            p4.y += 0.1;
+        }
+
+        // put screen transformed points into array
+        curvePointsInPixels.push(this.applyScreenTransformation(p1));
+        curvePointsInPixels.push(this.applyScreenTransformation(p2));
+        curvePointsInPixels.push(this.applyScreenTransformation(p3));
+        curvePointsInPixels.push(this.applyScreenTransformation(p4));
+        this.backend.renderCurve(curvePointsInPixels);
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {

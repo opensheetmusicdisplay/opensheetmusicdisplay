@@ -321,8 +321,10 @@ declare namespace Vex {
             public beginPath(): RenderContext;
             public moveTo(x, y): RenderContext;
             public lineTo(x, y): RenderContext;
+            public bezierCurveTo(cp1_x: number, cp1_y: number, cp2_x: number, cp2_y: number, end_x: number, end_y: number): RenderContext;
             public closePath(): RenderContext;
             public stroke(): RenderContext;
+            public fill(): RenderContext;
             public save(): RenderContext;
             public restore(): RenderContext;
             public lineWidth: number;

@@ -10,7 +10,7 @@ import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
-import { Graphicalslur } from "./GraphicalSlur";
+import { GraphicalSlur } from "./GraphicalSlur";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -26,7 +26,7 @@ export abstract class StaffLine extends GraphicalObject {
     protected lyricsDashes: GraphicalLabel[] = [];
 
     // For displaying Slurs
-    protected graphicalSlurs: Graphicalslur[] = [];
+    protected graphicalSlurs: GraphicalSlur[] = [];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         super();
@@ -102,7 +102,7 @@ export abstract class StaffLine extends GraphicalObject {
     }
 
     // get all Graphical Slurs of a staffline
-    public get GraphicalSlurs(): Graphicalslur[] {
+    public get GraphicalSlurs(): GraphicalSlur[] {
         return this.graphicalSlurs;
     }
 
@@ -110,7 +110,7 @@ export abstract class StaffLine extends GraphicalObject {
      * Add a given Graphical Slur to the staffline
      * @param gSlur
      */
-    public addSlurToStaffline(gSlur: Graphicalslur): void {
+    public addSlurToStaffline(gSlur: GraphicalSlur): void {
         this.graphicalSlurs.push(gSlur);
     }
 

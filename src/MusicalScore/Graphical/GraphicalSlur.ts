@@ -1,6 +1,5 @@
 
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
-import { VexFlowStaffEntry } from "./VexFlow/VexFlowStaffEntry";
 import { GraphicalNote } from "./GraphicalNote";
 import { GraphicalCurve } from "./GraphicalCurve";
 import { Slur } from "../VoiceData/Expressions/ContinuousExpressions/slur";
@@ -12,8 +11,9 @@ import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { GraphicalMeasure } from "./GraphicalMeasure";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
+import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 
-export class Graphicalslur extends GraphicalCurve {
+export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
 
     constructor(slur: Slur) {
@@ -22,7 +22,7 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     public slur: Slur;
-    public staffEntries: VexFlowStaffEntry[];
+    public staffEntries: GraphicalStaffEntry[] = [];
     public placement: PlacementEnum;
     public graceStart: boolean;
     public graceEnd: boolean;
@@ -31,12 +31,12 @@ export class Graphicalslur extends GraphicalCurve {
      *
      * @param rules
      */
-    public calculateSingleGraphicalslur(rules: EngravingRules): void {
+    public calculateCurve(rules: EngravingRules): void {
 
         // single GraphicalSlur means a single Curve, eg each GraphicalSlurObject is meant to be on the same StaffLine
         // a Slur can span more than one GraphicalSlurObjects
-        const startStaffEntry: VexFlowStaffEntry = this.staffEntries[0];
-        const endStaffEntry: VexFlowStaffEntry = this.staffEntries[this.staffEntries.length - 1];
+        const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
+        const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
 
         // where the Slur (not the graphicalObject) starts and ends (could belong to another StaffLine)
         let slurStartNote: GraphicalNote = startStaffEntry.findGraphicalNoteFromNote(this.slur.StartNote);
@@ -56,17 +56,18 @@ export class Graphicalslur extends GraphicalCurve {
 
         this.calculatePlacement(skyBottomLineCalculator, staffLine);
 
-        const startX: number = 0;
-        const endX: number = 0;
-        let startY: number = 0;
-        let endY: number = 0;
+        // the Start- and End Reference Points for the Sky-BottomLine
+        const startEndPoints: {startX: number, startY: number, endX: number, endY: number} =
+            this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, rules, skyBottomLineCalculator);
+
+        const startX: number = startEndPoints.startX;
+        const endX: number = startEndPoints.endX;
+        let startY: number = startEndPoints.startY;
+        let endY: number = startEndPoints.endY;
         const minAngle: number = rules.SlurTangentMinAngle;
         const maxAngle: number = rules.SlurTangentMaxAngle;
         let start: PointF2D, end: PointF2D;
         let points: PointF2D[];
-
-        // the Start- and End Reference Points for the Sky-BottomLine
-        this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, startX, startY, endX, endY, rules, skyBottomLineCalculator);
 
         if (this.placement === PlacementEnum.Above) {
             startY -= rules.SlurNoteHeadYOffset;
@@ -114,7 +115,7 @@ export class Graphicalslur extends GraphicalCurve {
             }
 
             // Angle between original x-Axis and Line from Start-Point to End-Point
-            const startEndLineAngleRadians: number = <number>(Math.atan((endY - startY) / (endX - startX)));
+            const startEndLineAngleRadians: number = (Math.atan((endY - startY) / (endX - startX)));
 
             // translate origin at Start (positiveY from Bottom to Top => change sign for Y)
             const start2: PointF2D = new PointF2D(0, 0);
@@ -160,9 +161,11 @@ export class Graphicalslur extends GraphicalCurve {
             }
 
             // calculate Curve's Control Points
-            let leftControlPoint: PointF2D = new PointF2D();
-            let rightControlPoint: PointF2D = new PointF2D();
-            this.calculateControlPoints(leftControlPoint, rightControlPoint, end2.x, leftAngle, rightAngle, transformedPoints);
+            const controlPoints: {leftControlPoint: PointF2D, rightControlPoint: PointF2D} =
+                this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints);
+
+            let leftControlPoint: PointF2D = controlPoints.leftControlPoint;
+            let rightControlPoint: PointF2D = controlPoints.rightControlPoint;
 
             // transform ControlPoints to original Coordinate System
                 // (rotate back and translate back)
@@ -254,30 +257,30 @@ export class Graphicalslur extends GraphicalCurve {
             }
 
             // Angle between original x-Axis and Line from Start-Point to End-Point
-            const startEndLineAngleRadians: number = <number>(Math.atan((endY - startY) / (endX - startX)));
+            const startEndLineAngleRadians: number = Math.atan((endY - startY) / (endX - startX));
             // translate origin at Start
             const start2: PointF2D = new PointF2D(0, 0);
             let end2: PointF2D = new PointF2D(endX - startX, endY - startY);
 
             // and Rotate at new Origin startEndLineAngle degrees
-                // clockwise/counterclockwise Rotation
-                // after Rotation end2.Y must be 0
-                // Inverse of RotationMatrix = TransposeMatrix of RotationMatrix
+            // clockwise/counterclockwise Rotation
+            // after Rotation end2.Y must be 0
+            // Inverse of RotationMatrix = TransposeMatrix of RotationMatrix
             let rotationMatrix: Matrix2D, transposeMatrix: Matrix2D;
             rotationMatrix = Matrix2D.getRotationMatrix(-startEndLineAngleRadians);
             transposeMatrix = rotationMatrix.getTransposeMatrix();
             end2 = rotationMatrix.vectorMultiplication(end2);
             const transformedPoints: PointF2D[] = this.calculateTranslatedAndRotatedPointListBelow(points, startX, startY, rotationMatrix);
 
-             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in BottomLine
-                // and tangent Lines characteristica
+            // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in BottomLine
+            // and tangent Lines characteristica
             const leftLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
             const rightLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
             const leftLineD: number = start2.y - start2.x * leftLineSlope;
             const rightLineD: number = end2.y - end2.x * rightLineSlope;
 
             // calculate IntersectionPoint of the 2 Lines
-                // if same Slope, then Point.X between Start and End and Point.Y fixed
+            // if same Slope, then Point.X between Start and End and Point.Y fixed
             const intersectionPoint: PointF2D = new PointF2D();
             let sameSlope: boolean = false;
             if (Math.abs(Math.abs(leftLineSlope) - Math.abs(rightLineSlope)) < 0.0001) {
@@ -290,7 +293,7 @@ export class Graphicalslur extends GraphicalCurve {
             }
 
             // calculate tangent Lines Angles
-                // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
+            // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
             const leftAngle: number = minAngle;
             const rightAngle: number = -minAngle;
             // if the calculated Slopes (left and right) are equal, then Angles have fixed values
@@ -299,12 +302,13 @@ export class Graphicalslur extends GraphicalCurve {
             }
 
             // calculate Curve's Control Points
-            let leftControlPoint: PointF2D = new PointF2D();
-            let rightControlPoint: PointF2D = new PointF2D();
-            this.calculateControlPoints(leftControlPoint, rightControlPoint, end2.x, leftAngle, rightAngle, transformedPoints);
+            const controlPoints: {leftControlPoint: PointF2D, rightControlPoint: PointF2D} =
+                this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints);
+            let leftControlPoint: PointF2D = controlPoints.leftControlPoint;
+            let rightControlPoint: PointF2D = controlPoints.rightControlPoint;
 
             // transform ControlPoints to original Coordinate System
-                // (rotate back and translate back)
+            // (rotate back and translate back)
             leftControlPoint = transposeMatrix.vectorMultiplication(leftControlPoint);
             leftControlPoint.x += startX;
             leftControlPoint.y += startY;
@@ -349,8 +353,9 @@ export class Graphicalslur extends GraphicalCurve {
         }
     }
 
+
     /**
-     *
+     * This method calculates the Start and End Positions of the Slur Curve.
      * @param slurStartNote
      * @param slurEndNote
      * @param staffLine
@@ -361,9 +366,16 @@ export class Graphicalslur extends GraphicalCurve {
      * @param rules
      * @param skyBottomLineCalculator
      */
-    private calculateStartAndEnd(slurStartNote: GraphicalNote, slurEndNote: GraphicalNote, staffLine: StaffLine,
-                                 startX: number, startY: number, endX: number, endY: number,
-                                 rules: EngravingRules, skyBottomLineCalculator: SkyBottomLineCalculator): void {
+    private calculateStartAndEnd(   slurStartNote: GraphicalNote,
+                                    slurEndNote: GraphicalNote,
+                                    staffLine: StaffLine,
+                                    rules: EngravingRules,
+                                    skyBottomLineCalculator: SkyBottomLineCalculator): {startX: number, startY: number, endX: number, endY: number} {
+        let startX: number = 0;
+        let startY: number = 0;
+        let endX: number = 0;
+        let endY: number = 0;
+
         if (slurStartNote !== undefined) {
             // must be relative to StaffLine
             startX = slurStartNote.PositionAndShape.RelativePosition.x + slurStartNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
@@ -469,10 +481,12 @@ export class Graphicalslur extends GraphicalCurve {
                 endY -= rules.SlursStartingAtSameStaffEntryYOffset;
             } else { endY += rules.SlursStartingAtSameStaffEntryYOffset; }
         }
+
+        return {startX, startY, endX, endY};
     }
 
     /**
-     *
+     * This method calculates the placement of the Curve.
      * @param skyBottomLineCalculator
      * @param staffLine
      */
@@ -486,19 +500,19 @@ export class Graphicalslur extends GraphicalCurve {
 
         // when lyrics are given place above:
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            const graphicalStaffEntry: VexFlowStaffEntry = this.staffEntries[idx];
+            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             if (graphicalStaffEntry.LyricsEntries.length > 0) {
                 this.placement = PlacementEnum.Above;
                 return;
             }
         }
-        const startStaffEntry: VexFlowStaffEntry = this.staffEntries[0];
-        const endStaffEntry: VexFlowStaffEntry = this.staffEntries[this.staffEntries.length - 1];
+        const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
+        const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
 
         // if any StaffEntry belongs to a Measure with multiple Voices, than
         // if Slur's StartNote belongs to a LinkedVoice Below else Above
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            const graphicalStaffEntry: VexFlowStaffEntry = this.staffEntries[idx];
+            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
             if (graphicalStaffEntry.parentMeasure.hasMultipleVoices()) {
                 if (this.slur.StartNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice) {
                     this.placement = PlacementEnum.Below;
@@ -546,7 +560,7 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
+     * This method calculates the Points between Start- and EndPoint (case above).
      * @param start
      * @param end
      * @param staffLine
@@ -573,7 +587,7 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
+     * This method calculates the Points between Start- and EndPoint (case below).
      * @param start
      * @param end
      * @param staffLine
@@ -601,7 +615,7 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
+     * This method calculates the maximum slope between StartPoint and BetweenPoints.
      * @param points
      * @param start
      * @param end
@@ -625,7 +639,7 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
+     * This method calculates the maximum slope between EndPoint and BetweenPoints.
      * @param points
      * @param start
      * @param end
@@ -649,7 +663,7 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
+     * This method returns the maximum (meaningful) points.Y.
      * @param points
      */
     private getPointListMaxY(points: PointF2D[]): number {
@@ -667,7 +681,7 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
+     * This method calculates the translated and rotated PointsList (case above).
      * @param points
      * @param startX
      * @param startY
@@ -689,7 +703,7 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
+     * This method calculates the translated and rotated PointsList (case below).
      * @param points
      * @param startX
      * @param startY
@@ -710,15 +724,8 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
-     * @param heightWidthRatio
-     */
-    private calculateFactor(heightWidthRatio: number): number {
-        return Graphicalslur.k * heightWidthRatio + Graphicalslur.d;
-    }
-
-    /**
-     *
+     * This method calculates the HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
+     * and the X-distance from StartPoint to EndPoint.
      * @param endX
      * @param points
      */
@@ -734,35 +741,35 @@ export class Graphicalslur extends GraphicalCurve {
     }
 
     /**
-     *
-     * @param leftControlPoint
-     * @param rightControlPoint
+     * This method calculates the 2 ControlPoints of the SlurCurve.
      * @param endX
      * @param leftAngle
      * @param rightAngle
      * @param points
      */
-    private calculateControlPoints(leftControlPoint: PointF2D, rightControlPoint: PointF2D, endX: number,
-                                   leftAngle: number, rightAngle: number, points: PointF2D[]): void {
+    private calculateControlPoints(endX: number,
+                                   leftAngle: number, rightAngle: number, points: PointF2D[]): { leftControlPoint: PointF2D, rightControlPoint: PointF2D } {
         // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
             // and the X-distance from StartPoint to EndPoint
             // use this HeightWidthRatio to get a "normalized" Factor (based on tested parameters)
             // this Factor denotes the Length of the TangentLine of the Curve (a proportion of the X-distance from StartPoint to EndPoint)
             // finally from this Length and the calculated Angles we get the coordinates of the Control Points
         const heightWidthRatio: number = this.calculateHeightWidthRatio(endX, points);
-        const factor: number = this.calculateFactor(heightWidthRatio);
+        const factor: number = GraphicalSlur.k * heightWidthRatio + GraphicalSlur.d;
 
-        const leftLength: number = endX * factor;
-        leftControlPoint.x = <number>(leftLength * Math.cos(leftAngle * Graphicalslur.degreesToRadiansFactor));
-        leftControlPoint.y = <number>(leftLength * Math.sin(leftAngle * Graphicalslur.degreesToRadiansFactor));
+        const relativeLength: number = endX * factor;
+        const leftControlPoint: PointF2D = new PointF2D();
+        leftControlPoint.x = <number>(relativeLength * Math.cos(leftAngle * GraphicalSlur.degreesToRadiansFactor));
+        leftControlPoint.y = <number>(relativeLength * Math.sin(leftAngle * GraphicalSlur.degreesToRadiansFactor));
 
-        const rightLength: number = endX * factor;
-        rightControlPoint.x = endX - <number>(rightLength * Math.cos(rightAngle * Graphicalslur.degreesToRadiansFactor));
-        rightControlPoint.y = -<number>(rightLength * Math.sin(rightAngle * Graphicalslur.degreesToRadiansFactor));
+        const rightControlPoint: PointF2D = new PointF2D();
+        rightControlPoint.x = endX - <number>(relativeLength * Math.cos(rightAngle * GraphicalSlur.degreesToRadiansFactor));
+        rightControlPoint.y = -<number>(relativeLength * Math.sin(rightAngle * GraphicalSlur.degreesToRadiansFactor));
+        return {leftControlPoint, rightControlPoint};
     }
 
     /**
-     *
+     * This method calculates the angles for the Curve's Tangent Lines.
      * @param leftAngle
      * @param rightAngle
      * @param leftLineSlope
@@ -773,14 +780,14 @@ export class Graphicalslur extends GraphicalCurve {
         // calculate Angles from the calculated Slopes, adding also a given angle
         const angle: number = 20;
 
-        let calculatedLeftAngle: number = <number>(Math.atan(leftLineSlope) / Graphicalslur.degreesToRadiansFactor);
+        let calculatedLeftAngle: number = <number>(Math.atan(leftLineSlope) / GraphicalSlur.degreesToRadiansFactor);
         if (leftLineSlope > 0) {
             calculatedLeftAngle += angle;
         } else {
             calculatedLeftAngle -= angle;
         }
 
-        let calculatedRightAngle: number = <number>(Math.atan(rightLineSlope) / Graphicalslur.degreesToRadiansFactor);
+        let calculatedRightAngle: number = <number>(Math.atan(rightLineSlope) / GraphicalSlur.degreesToRadiansFactor);
         if (rightLineSlope < 0) {
             calculatedRightAngle -= angle;
         } else {

@@ -1,9 +1,9 @@
 import { Fraction } from "../../Common/DataObjects/Fraction";
-import { Graphicalslur } from "./GraphicalSlur";
+import { GraphicalSlur } from "./GraphicalSlur";
 
 export interface GraphicalSlurSorterKeyValuePair {
     key: Fraction;
-    value: Graphicalslur;
+    value: GraphicalSlur;
 }
 
 export class GraphicalSlurSorter {
