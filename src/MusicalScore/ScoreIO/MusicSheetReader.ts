@@ -744,7 +744,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                             subInstrument.fixedKey = Math.max(0, parseInt(instrumentElement.value, 10));
                                         } else if (instrumentElement.name === "volume") {
                                             try {
-                                                const result: number = <number>parseFloat(instrumentElement.value);
+                                                const result: number = parseFloat(instrumentElement.value);
                                                 subInstrument.volume = result / 127.0;
                                             } catch (ex) {
                                                 log.debug("ExpressionReader.readExpressionParameters", "read volume", ex);
@@ -752,7 +752,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
                                         } else if (instrumentElement.name === "pan") {
                                             try {
-                                                const result: number = <number>parseFloat(instrumentElement.value);
+                                                const result: number = parseFloat(instrumentElement.value);
                                                 subInstrument.pan = result / 64.0;
                                             } catch (ex) {
                                                 log.debug("ExpressionReader.readExpressionParameters", "read pan", ex);

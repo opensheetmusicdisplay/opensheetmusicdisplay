@@ -759,12 +759,12 @@ export class GraphicalSlur extends GraphicalCurve {
 
         const relativeLength: number = endX * factor;
         const leftControlPoint: PointF2D = new PointF2D();
-        leftControlPoint.x = <number>(relativeLength * Math.cos(leftAngle * GraphicalSlur.degreesToRadiansFactor));
-        leftControlPoint.y = <number>(relativeLength * Math.sin(leftAngle * GraphicalSlur.degreesToRadiansFactor));
+        leftControlPoint.x = relativeLength * Math.cos(leftAngle * GraphicalSlur.degreesToRadiansFactor);
+        leftControlPoint.y = relativeLength * Math.sin(leftAngle * GraphicalSlur.degreesToRadiansFactor);
 
         const rightControlPoint: PointF2D = new PointF2D();
-        rightControlPoint.x = endX - <number>(relativeLength * Math.cos(rightAngle * GraphicalSlur.degreesToRadiansFactor));
-        rightControlPoint.y = -<number>(relativeLength * Math.sin(rightAngle * GraphicalSlur.degreesToRadiansFactor));
+        rightControlPoint.x = endX - (relativeLength * Math.cos(rightAngle * GraphicalSlur.degreesToRadiansFactor));
+        rightControlPoint.y = -(relativeLength * Math.sin(rightAngle * GraphicalSlur.degreesToRadiansFactor));
         return {leftControlPoint, rightControlPoint};
     }
 
@@ -780,14 +780,14 @@ export class GraphicalSlur extends GraphicalCurve {
         // calculate Angles from the calculated Slopes, adding also a given angle
         const angle: number = 20;
 
-        let calculatedLeftAngle: number = <number>(Math.atan(leftLineSlope) / GraphicalSlur.degreesToRadiansFactor);
+        let calculatedLeftAngle: number = Math.atan(leftLineSlope) / GraphicalSlur.degreesToRadiansFactor;
         if (leftLineSlope > 0) {
             calculatedLeftAngle += angle;
         } else {
             calculatedLeftAngle -= angle;
         }
 
-        let calculatedRightAngle: number = <number>(Math.atan(rightLineSlope) / GraphicalSlur.degreesToRadiansFactor);
+        let calculatedRightAngle: number = Math.atan(rightLineSlope) / GraphicalSlur.degreesToRadiansFactor;
         if (rightLineSlope < 0) {
             calculatedRightAngle -= angle;
         } else {
@@ -799,7 +799,7 @@ export class GraphicalSlur extends GraphicalCurve {
         rightAngle = Math.max(Math.min(rightAngle, calculatedRightAngle), -maxAngle);
     }
 
-    private static degreesToRadiansFactor: number = <number>(Math.PI / 180);
+    private static degreesToRadiansFactor: number = Math.PI / 180;
     private static k: number = 0.9;
     private static d: number = 0.2;
 }

@@ -14,7 +14,7 @@ export class GraphicalCurve {
         GraphicalCurve.bezierFactorOne = new Array(GraphicalCurve.bezierCurveStepSize);
         GraphicalCurve.bezierFactorTwo = new Array(GraphicalCurve.bezierCurveStepSize);
         for (let i: number = 0; i < GraphicalCurve.bezierCurveStepSize; i++) {
-            const t: number = <number> i / GraphicalCurve.bezierCurveStepSize;
+            const t: number =  i / GraphicalCurve.bezierCurveStepSize;
 
             GraphicalCurve.tPow3[i] = Math.pow(t, 3);
             GraphicalCurve.oneMinusTPow3[i] = Math.pow((1 - t), 3);
@@ -33,16 +33,16 @@ export class GraphicalCurve {
      * @param relativePosition
      */
     public calculateCurvePointAtIndex(relativePosition: number): PointF2D {
-        const index: number = <number> Math.round(relativePosition);
+        const index: number =  Math.round(relativePosition);
         if (index < 0 || index >= GraphicalCurve.bezierCurveStepSize) {
             return new PointF2D();
         }
 
-        return new PointF2D( <number> (GraphicalCurve.oneMinusTPow3[index] * this.bezierStartPt.x
+        return new PointF2D(  (GraphicalCurve.oneMinusTPow3[index] * this.bezierStartPt.x
             + GraphicalCurve.bezierFactorOne[index] * this.bezierStartControlPt.x
             + GraphicalCurve.bezierFactorTwo[index] * this.bezierEndControlPt.x
             + GraphicalCurve.tPow3[index] * this.bezierEndPt.x)
-            ,                <number> (GraphicalCurve.oneMinusTPow3[index] * this.bezierStartPt.y
+            ,                 (GraphicalCurve.oneMinusTPow3[index] * this.bezierStartPt.y
             + GraphicalCurve.bezierFactorOne[index] * this.bezierStartControlPt.y
             + GraphicalCurve.bezierFactorTwo[index] * this.bezierEndControlPt.y + GraphicalCurve.tPow3[index] * this.bezierEndPt.y));
     }
