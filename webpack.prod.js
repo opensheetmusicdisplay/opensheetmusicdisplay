@@ -18,6 +18,7 @@ module.exports = merge(common, {
         libraryTarget: 'umd'
     },
     mode: 'production',
+    devtool: 'source-map',
     optimization: {
         minimize: true
         // splitChunks: {

@@ -16,6 +16,8 @@
     "build:doc": "cross-env STATIC_FILES_SUBFOLDER=sheets npm run build",
     "build:webpack": "webpack --progress --colors --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
+    "build:webpack-common": "webpack --progress --colors --config webpack.common.js",
+    "stage": "npm run build && npm run build:webpack-dev",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
     "fix-memory-limit": "increase-memory-limit"
   },
@@ -25,6 +27,7 @@
   "files": [
     "build/dist/src",
     "build/opensheetmusicdisplay.min.js",
+    "build/opensheetmusicdisplay.debug.js",
     "AUTHORS",
     "CHANGELOG.md",
     "README.md",
