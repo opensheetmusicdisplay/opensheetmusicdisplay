@@ -2,7 +2,7 @@
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
 import { GraphicalNote } from "./GraphicalNote";
 import { GraphicalCurve } from "./GraphicalCurve";
-import { Slur } from "../VoiceData/Expressions/ContinuousExpressions/slur";
+import { Slur } from "../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
