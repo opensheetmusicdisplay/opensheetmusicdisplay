@@ -497,6 +497,19 @@ export class GraphicalSlur extends GraphicalCurve {
         //     return;
         // }
 
+        // if any StaffEntry belongs to a Measure with multiple Voices, than
+        // if Slur's Start- or End-Note belongs to a LinkedVoice Below else Above
+        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
+            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
+            if (graphicalStaffEntry.parentMeasure.hasMultipleVoices()) {
+                if (this.slur.StartNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice ||
+                    this.slur.EndNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice) {
+                    this.placement = PlacementEnum.Below;
+                } else { this.placement = PlacementEnum.Above; }
+                return;
+            }
+        }
+
         // when lyrics are given place above:
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
@@ -507,18 +520,6 @@ export class GraphicalSlur extends GraphicalCurve {
         }
         const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
         const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
-
-        // if any StaffEntry belongs to a Measure with multiple Voices, than
-        // if Slur's StartNote belongs to a LinkedVoice Below else Above
-        for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
-            const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.parentMeasure.hasMultipleVoices()) {
-                if (this.slur.StartNote.ParentVoiceEntry.ParentVoice instanceof LinkedVoice) {
-                    this.placement = PlacementEnum.Below;
-                } else { this.placement = PlacementEnum.Above; }
-                return;
-            }
-        }
 
         // Deactivated: single Voice, opposite to StemDirection
         // if (startStaffEntry.hasStem() && endStaffEntry.hasStem() && startStaffEntry.getStemDirection() === endStaffEntry.getStemDirection()) {

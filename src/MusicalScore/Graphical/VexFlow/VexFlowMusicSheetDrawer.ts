@@ -85,11 +85,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
         for (const graphicalSlur of vfstaffLine.GraphicalSlurs) {
-            // slur.createVexFlowCurve();
-            // //if (slur.vfCurve !== undefined) {
-            // slur.vfCurve.setContext(this.backend.getContext()).draw();
-            // //}
-
+            // don't draw crossed slurs, as their curve calculation is not implemented yet:
+            if (graphicalSlur.slur.isCrossed()) {
+                continue;
+            }
             this.drawSlur(graphicalSlur, absolutePos);
         }
     }

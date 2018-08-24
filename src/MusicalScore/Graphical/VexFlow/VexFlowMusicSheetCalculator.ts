@@ -882,6 +882,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (const musicSystem of graphicalMusicPage.MusicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
                 for (const gSlur of staffLine.GraphicalSlurs) {
+                    // crossed slurs will be handled later:
                     if (gSlur.slur.isCrossed()) {
                         continue;
                     }
