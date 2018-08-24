@@ -95,7 +95,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
             points[3].x,
             points[3].y
             );
-        this.ctx.moveTo(points[7].x, points[7].y);
+        this.ctx.lineTo(points[7].x, points[7].y);
         this.ctx.bezierCurveTo(
             points[6].x,
             points[6].y,
@@ -104,7 +104,8 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
             points[4].x,
             points[4].y
             );
-        this.ctx.stroke();
+        this.ctx.lineTo(points[0].x, points[0].y);
+        //this.ctx.stroke();
         this.ctx.closePath();
         this.ctx.fill();
     }

@@ -110,15 +110,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         // 2) create second outer curve to create a thickness for the curve:
         if (graphicalSlur.placement === PlacementEnum.Above) {
-            p1.y -= 0.1;
-            p2.y -= 0.4;
-            p3.y -= 0.4;
-            p4.y -= 0.1;
+            p1.y -= 0.05;
+            p2.y -= 0.3;
+            p3.y -= 0.3;
+            p4.y -= 0.05;
         } else {
-            p1.y += 0.1;
-            p2.y += 0.4;
-            p3.y += 0.4;
-            p4.y += 0.1;
+            p1.y += 0.05;
+            p2.y += 0.3;
+            p3.y += 0.3;
+            p4.y += 0.05;
         }
 
         // put screen transformed points into array
