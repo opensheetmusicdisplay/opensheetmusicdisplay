@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 2.3.2</software>
-      <encoding-date>2018-08-20</encoding-date>
+      <encoding-date>2018-08-27</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -46,23 +46,14 @@
     <score-part id="P1">
       <part-name>Drumset</part-name>
       <part-abbreviation>D. Set</part-abbreviation>
-      <score-instrument id="P1-I36">
-        <instrument-name>Acoustic Bass Drum</instrument-name>
-        </score-instrument>
       <score-instrument id="P1-I37">
         <instrument-name>Bass Drum 1</instrument-name>
         </score-instrument>
       <score-instrument id="P1-I38">
         <instrument-name>Side Stick</instrument-name>
         </score-instrument>
-      <score-instrument id="P1-I39">
-        <instrument-name>Acoustic Snare</instrument-name>
-        </score-instrument>
       <score-instrument id="P1-I41">
         <instrument-name>Electric Snare</instrument-name>
-        </score-instrument>
-      <score-instrument id="P1-I42">
-        <instrument-name>Low Floor Tom</instrument-name>
         </score-instrument>
       <score-instrument id="P1-I43">
         <instrument-name>Closed Hi-Hat</instrument-name>
@@ -73,29 +64,11 @@
       <score-instrument id="P1-I45">
         <instrument-name>Pedal Hi-Hat</instrument-name>
         </score-instrument>
-      <score-instrument id="P1-I46">
-        <instrument-name>Low Tom</instrument-name>
-        </score-instrument>
-      <score-instrument id="P1-I47">
-        <instrument-name>Open Hi-Hat</instrument-name>
-        </score-instrument>
-      <score-instrument id="P1-I48">
-        <instrument-name>Low-Mid Tom</instrument-name>
-        </score-instrument>
-      <score-instrument id="P1-I49">
-        <instrument-name>Hi-Mid Tom</instrument-name>
-        </score-instrument>
       <score-instrument id="P1-I50">
         <instrument-name>Crash Cymbal 1</instrument-name>
         </score-instrument>
-      <score-instrument id="P1-I51">
-        <instrument-name>High Tom</instrument-name>
-        </score-instrument>
       <score-instrument id="P1-I52">
         <instrument-name>Ride Cymbal 1</instrument-name>
-        </score-instrument>
-      <score-instrument id="P1-I53">
-        <instrument-name>Chinese Cymbal</instrument-name>
         </score-instrument>
       <score-instrument id="P1-I54">
         <instrument-name>Ride Bell</instrument-name>
@@ -103,14 +76,8 @@
       <score-instrument id="P1-I55">
         <instrument-name>Tambourine</instrument-name>
         </score-instrument>
-      <score-instrument id="P1-I56">
-        <instrument-name>Splash Cymbal</instrument-name>
-        </score-instrument>
       <score-instrument id="P1-I57">
         <instrument-name>Cowbell</instrument-name>
-        </score-instrument>
-      <score-instrument id="P1-I58">
-        <instrument-name>Crash Cymbal 2</instrument-name>
         </score-instrument>
       <score-instrument id="P1-I60">
         <instrument-name>Ride Cymbal 2</instrument-name>
@@ -122,13 +89,6 @@
         <instrument-name>Low Conga</instrument-name>
         </score-instrument>
       <midi-device port="1"></midi-device>
-      <midi-instrument id="P1-I36">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>36</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
       <midi-instrument id="P1-I37">
         <midi-channel>10</midi-channel>
         <midi-program>1</midi-program>
@@ -143,24 +103,10 @@
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
-      <midi-instrument id="P1-I39">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>39</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
       <midi-instrument id="P1-I41">
         <midi-channel>10</midi-channel>
         <midi-program>1</midi-program>
         <midi-unpitched>41</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
-      <midi-instrument id="P1-I42">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>42</midi-unpitched>
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
@@ -185,34 +131,6 @@
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
-      <midi-instrument id="P1-I46">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>46</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
-      <midi-instrument id="P1-I47">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>47</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
-      <midi-instrument id="P1-I48">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>48</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
-      <midi-instrument id="P1-I49">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>49</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
       <midi-instrument id="P1-I50">
         <midi-channel>10</midi-channel>
         <midi-program>1</midi-program>
@@ -220,24 +138,10 @@
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
-      <midi-instrument id="P1-I51">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>51</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
       <midi-instrument id="P1-I52">
         <midi-channel>10</midi-channel>
         <midi-program>1</midi-program>
         <midi-unpitched>52</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
-      <midi-instrument id="P1-I53">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>53</midi-unpitched>
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
@@ -255,24 +159,10 @@
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
-      <midi-instrument id="P1-I56">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>56</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
       <midi-instrument id="P1-I57">
         <midi-channel>10</midi-channel>
         <midi-program>1</midi-program>
         <midi-unpitched>57</midi-unpitched>
-        <volume>78.7402</volume>
-        <pan>0</pan>
-        </midi-instrument>
-      <midi-instrument id="P1-I58">
-        <midi-channel>10</midi-channel>
-        <midi-program>1</midi-program>
-        <midi-unpitched>58</midi-unpitched>
         <volume>78.7402</volume>
         <pan>0</pan>
         </midi-instrument>
@@ -300,11 +190,11 @@
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="273.22">
+    <measure number="1" width="282.72">
       <print>
         <system-layout>
           <system-margins>
-            <left-margin>0.00</left-margin>
+            <left-margin>-0.00</left-margin>
             <right-margin>0.00</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
@@ -337,7 +227,7 @@
         <notehead>x</notehead>
         <beam number="1">begin</beam>
         </note>
-      <note default-x="101.04" default-y="5.00">
+      <note default-x="102.22" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
           <display-octave>5</display-octave>
@@ -350,7 +240,7 @@
         <notehead>x</notehead>
         <beam number="1">continue</beam>
         </note>
-      <note default-x="125.41" default-y="5.00">
+      <note default-x="127.78" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
           <display-octave>5</display-octave>
@@ -363,7 +253,7 @@
         <notehead>x</notehead>
         <beam number="1">continue</beam>
         </note>
-      <note default-x="149.78" default-y="5.00">
+      <note default-x="153.34" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
           <display-octave>5</display-octave>
@@ -376,7 +266,7 @@
         <notehead>x</notehead>
         <beam number="1">end</beam>
         </note>
-      <note default-x="174.15" default-y="5.00">
+      <note default-x="178.89" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
           <display-octave>5</display-octave>
@@ -389,7 +279,7 @@
         <notehead>x</notehead>
         <beam number="1">begin</beam>
         </note>
-      <note default-x="198.52" default-y="-15.00">
+      <note default-x="204.45" default-y="-15.00">
         <unpitched>
           <display-step>C</display-step>
           <display-octave>5</display-octave>
@@ -402,7 +292,7 @@
         <notehead>x</notehead>
         <beam number="1">continue</beam>
         </note>
-      <note default-x="198.52" default-y="5.00">
+      <note default-x="204.45" default-y="5.00">
         <chord/>
         <unpitched>
           <display-step>G</display-step>
@@ -415,7 +305,7 @@
         <stem>up</stem>
         <notehead>x</notehead>
         </note>
-      <note default-x="222.88" default-y="5.00">
+      <note default-x="230.01" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
           <display-octave>5</display-octave>
@@ -428,7 +318,7 @@
         <notehead>x</notehead>
         <beam number="1">continue</beam>
         </note>
-      <note default-x="247.25" default-y="-15.00">
+      <note default-x="255.56" default-y="-15.00">
         <unpitched>
           <display-step>C</display-step>
           <display-octave>5</display-octave>
@@ -441,7 +331,7 @@
         <notehead>x</notehead>
         <beam number="1">end</beam>
         </note>
-      <note default-x="247.25" default-y="5.00">
+      <note default-x="255.56" default-y="5.00">
         <chord/>
         <unpitched>
           <display-step>G</display-step>
@@ -468,7 +358,7 @@
         <type>quarter</type>
         <stem>down</stem>
         </note>
-      <note default-x="125.41" default-y="-15.00">
+      <note default-x="127.78" default-y="-15.00">
         <unpitched>
           <display-step>C</display-step>
           <display-octave>5</display-octave>
@@ -479,7 +369,7 @@
         <type>quarter</type>
         <stem>down</stem>
         </note>
-      <note default-x="174.15" default-y="-35.00">
+      <note default-x="178.89" default-y="-35.00">
         <unpitched>
           <display-step>F</display-step>
           <display-octave>4</display-octave>
@@ -490,7 +380,7 @@
         <type>quarter</type>
         <stem>down</stem>
         </note>
-      <note default-x="222.88" default-y="-15.00">
+      <note default-x="230.01" default-y="-15.00">
         <unpitched>
           <display-step>C</display-step>
           <display-octave>5</display-octave>
@@ -502,7 +392,7 @@
         <stem>down</stem>
         </note>
       </measure>
-    <measure number="2" width="156.64">
+    <measure number="2" width="166.14">
       <note default-x="12.36" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
@@ -516,7 +406,7 @@
         <notehead>x</notehead>
         <beam number="1">begin</beam>
         </note>
-      <note default-x="36.96" default-y="5.00">
+      <note default-x="38.60" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
           <display-octave>5</display-octave>
@@ -529,7 +419,7 @@
         <notehead>x</notehead>
         <beam number="1">end</beam>
         </note>
-      <note default-x="61.56" default-y="-15.00">
+      <note default-x="64.84" default-y="-15.00">
         <unpitched>
           <display-step>C</display-step>
           <display-octave>5</display-octave>
@@ -541,7 +431,7 @@
         <stem>up</stem>
         <notehead>x</notehead>
         </note>
-      <note default-x="61.56" default-y="5.00">
+      <note default-x="64.84" default-y="5.00">
         <chord/>
         <unpitched>
           <display-step>G</display-step>
@@ -554,7 +444,7 @@
         <stem>up</stem>
         <notehead>x</notehead>
         </note>
-      <note default-x="99.93" default-y="5.00">
+      <note default-x="105.82" default-y="5.00">
         <unpitched>
           <display-step>G</display-step>
           <display-octave>5</display-octave>
@@ -580,7 +470,7 @@
         <type>half</type>
         <stem>down</stem>
         </note>
-      <note default-x="100.56" default-y="-25.00">
+      <note default-x="106.46" default-y="-25.00">
         <unpitched>
           <display-step>A</display-step>
           <display-octave>4</display-octave>
@@ -592,7 +482,7 @@
         <stem>down</stem>
         </note>
       </measure>
-    <measure number="3" width="175.36">
+    <measure number="3" width="184.86">
       <note default-x="12.00" default-y="-5.00">
         <unpitched>
           <display-step>E</display-step>
@@ -606,7 +496,7 @@
         <notehead>triangle</notehead>
         <beam number="1">begin</beam>
         </note>
-      <note default-x="38.03" default-y="-5.00">
+      <note default-x="39.56" default-y="-5.00">
         <unpitched>
           <display-step>E</display-step>
           <display-octave>5</display-octave>
@@ -619,7 +509,7 @@
         <notehead>triangle</notehead>
         <beam number="1">end</beam>
         </note>
-      <note default-x="64.06" default-y="-5.00">
+      <note default-x="67.12" default-y="-5.00">
         <unpitched>
           <display-step>E</display-step>
           <display-octave>5</display-octave>
@@ -631,7 +521,7 @@
         <stem>up</stem>
         <notehead>triangle</notehead>
         </note>
-      <note default-x="114.67" default-y="-5.00">
+      <note default-x="120.80" default-y="-5.00">
         <unpitched>
           <display-step>E</display-step>
           <display-octave>5</display-octave>
@@ -658,7 +548,7 @@
         <stem>down</stem>
         <notehead>x</notehead>
         </note>
-      <note default-x="64.43" default-y="-45.00">
+      <note default-x="67.50" default-y="-45.00">
         <unpitched>
           <display-step>D</display-step>
           <display-octave>4</display-octave>
@@ -671,7 +561,7 @@
         <notehead>x</notehead>
         <beam number="1">begin</beam>
         </note>
-      <note default-x="90.46" default-y="-45.00">
+      <note default-x="95.06" default-y="-45.00">
         <unpitched>
           <display-step>D</display-step>
           <display-octave>4</display-octave>
@@ -684,7 +574,7 @@
         <notehead>x</notehead>
         <beam number="1">end</beam>
         </note>
-      <note default-x="115.50" default-y="-45.00">
+      <note default-x="121.62" default-y="-45.00">
         <unpitched>
           <display-step>D</display-step>
           <display-octave>4</display-octave>
@@ -697,86 +587,39 @@
         <notehead>x</notehead>
         </note>
       </measure>
-    <measure number="4" width="231.13">
-      <note default-x="12.00" default-y="10.00">
+    <measure number="4" width="184.69">
+      <note default-x="12.00" default-y="0.00">
         <unpitched>
-          <display-step>A</display-step>
+          <display-step>F</display-step>
+          <display-octave>5</display-octave>
+          </unpitched>
+        <duration>4</duration>
+        <instrument id="P1-I54"/>
+        <voice>1</voice>
+        <type>half</type>
+        <stem>up</stem>
+        <notehead>diamond</notehead>
+        </note>
+      <note>
+        <rest/>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>eighth</type>
+        </note>
+      <note default-x="99.84" default-y="0.00">
+        <unpitched>
+          <display-step>F</display-step>
           <display-octave>5</display-octave>
           </unpitched>
         <duration>1</duration>
-        <instrument id="P1-I50"/>
+        <instrument id="P1-I54"/>
         <voice>1</voice>
         <type>eighth</type>
         <stem>up</stem>
-        <notehead>x</notehead>
+        <notehead>diamond</notehead>
         <beam number="1">begin</beam>
         </note>
-      <note default-x="38.39" default-y="0.00">
-        <unpitched>
-          <display-step>F</display-step>
-          <display-octave>5</display-octave>
-          </unpitched>
-        <duration>1</duration>
-        <instrument id="P1-I54"/>
-        <voice>1</voice>
-        <type>eighth</type>
-        <stem>up</stem>
-        <notehead>diamond</notehead>
-        <beam number="1">continue</beam>
-        </note>
-      <note default-x="66.38" default-y="10.00">
-        <unpitched>
-          <display-step>A</display-step>
-          <display-octave>5</display-octave>
-          </unpitched>
-        <duration>1</duration>
-        <instrument id="P1-I50"/>
-        <voice>1</voice>
-        <type>eighth</type>
-        <stem>up</stem>
-        <notehead>x</notehead>
-        <beam number="1">continue</beam>
-        </note>
-      <note default-x="92.77" default-y="0.00">
-        <unpitched>
-          <display-step>F</display-step>
-          <display-octave>5</display-octave>
-          </unpitched>
-        <duration>1</duration>
-        <instrument id="P1-I54"/>
-        <voice>1</voice>
-        <type>eighth</type>
-        <stem>up</stem>
-        <notehead>diamond</notehead>
-        <beam number="1">end</beam>
-        </note>
-      <note default-x="120.76" default-y="0.00">
-        <unpitched>
-          <display-step>F</display-step>
-          <display-octave>5</display-octave>
-          </unpitched>
-        <duration>1</duration>
-        <instrument id="P1-I52"/>
-        <voice>1</voice>
-        <type>eighth</type>
-        <stem>up</stem>
-        <notehead>x</notehead>
-        <beam number="1">begin</beam>
-        </note>
-      <note default-x="147.15" default-y="0.00">
-        <unpitched>
-          <display-step>F</display-step>
-          <display-octave>5</display-octave>
-          </unpitched>
-        <duration>1</duration>
-        <instrument id="P1-I54"/>
-        <voice>1</voice>
-        <type>eighth</type>
-        <stem>up</stem>
-        <notehead>diamond</notehead>
-        <beam number="1">continue</beam>
-        </note>
-      <note default-x="175.15" default-y="0.00">
+      <note default-x="128.12" default-y="0.00">
         <unpitched>
           <display-step>F</display-step>
           <display-octave>5</display-octave>
@@ -789,7 +632,7 @@
         <notehead>x</notehead>
         <beam number="1">continue</beam>
         </note>
-      <note default-x="201.54" default-y="0.00">
+      <note default-x="154.81" default-y="0.00">
         <unpitched>
           <display-step>F</display-step>
           <display-octave>5</display-octave>
@@ -811,7 +654,7 @@
         <voice>2</voice>
         <type>half</type>
         </note>
-      <note default-x="120.76" default-y="-35.00">
+      <note default-x="73.16" default-y="-35.00">
         <unpitched>
           <display-step>F</display-step>
           <display-octave>4</display-octave>
@@ -822,14 +665,11 @@
         <type>quarter</type>
         <stem>down</stem>
         </note>
-      <note>
-        <rest/>
+      <forward>
         <duration>2</duration>
-        <voice>2</voice>
-        <type>quarter</type>
-        </note>
+        </forward>
       </measure>
-    <measure number="5" width="156.13">
+    <measure number="5" width="164.59">
       <note default-x="12.00" default-y="-10.00">
         <unpitched>
           <display-step>D</display-step>
@@ -842,7 +682,7 @@
         <stem>up</stem>
         <notehead>diamond</notehead>
         </note>
-      <note default-x="48.23" default-y="-10.00">
+      <note default-x="50.35" default-y="-10.00">
         <unpitched>
           <display-step>D</display-step>
           <display-octave>5</display-octave>
@@ -854,7 +694,7 @@
         <stem>up</stem>
         <notehead>x</notehead>
         </note>
-      <note default-x="83.66" default-y="-20.00">
+      <note default-x="87.89" default-y="-20.00">
         <unpitched>
           <display-step>B</display-step>
           <display-octave>4</display-octave>
@@ -866,7 +706,7 @@
         <stem>up</stem>
         <notehead>x</notehead>
         </note>
-      <note default-x="119.10" default-y="-30.00">
+      <note default-x="125.44" default-y="-30.00">
         <unpitched>
           <display-step>G</display-step>
           <display-octave>4</display-octave>
@@ -878,16 +718,8 @@
         <stem>up</stem>
         <notehead>x</notehead>
         </note>
-      <backup>
-        <duration>8</duration>
-        </backup>
-      <note>
-        <rest/>
-        <duration>8</duration>
-        <voice>2</voice>
-        </note>
       </measure>
-    <measure number="6" width="118.13">
+    <measure number="6" width="127.62">
       <note>
         <rest/>
         <duration>8</duration>

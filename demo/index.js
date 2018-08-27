@@ -7,7 +7,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     // folder of the sample files
     var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
         samples = {
-            "OSMD Function Test - NoteHeadShapes": "OSMD_function_test_noteHeadShapes.musicxml",
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
@@ -27,6 +26,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
             "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
+            "OSMD Function Test - NoteHeadShapes": "OSMD_function_test_noteHeadShapes.musicxml",
             "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
