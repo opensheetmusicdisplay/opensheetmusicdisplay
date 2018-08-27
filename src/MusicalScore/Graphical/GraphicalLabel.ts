@@ -10,6 +10,14 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
  */
 export class GraphicalLabel extends Clickable {
     private label: Label;
+
+    /**
+     * Creates a new GraphicalLabel from a Label
+     * @param label  label object containing text
+     * @param textHeight Height of text
+     * @param alignment Alignement like left, right, top, ...
+     * @param parent Parent Bounding Box where the label is attached to
+     */
     constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox = undefined) {
         super();
         this.label = label;

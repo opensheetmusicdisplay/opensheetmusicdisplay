@@ -112,7 +112,7 @@ export class EngravingRules {
     private slurTangentMinAngle: number;
     private slurTangentMaxAngle: number;
     private slursStartingAtSameStaffEntryYOffset: number;
-    private instantaniousTempoTextHeight: number;
+    private instantaneousTempoTextHeight: number;
     private continuousDynamicTextHeight: number;
     private moodTextHeight: number;
     private unknownTextHeight: number;
@@ -280,7 +280,7 @@ export class EngravingRules {
         this.minimumDistanceBetweenDashes = 10;
 
         // expressions variables
-        this.instantaniousTempoTextHeight = 2.3;
+        this.instantaneousTempoTextHeight = 2.3;
         this.continuousDynamicTextHeight = 2.3;
         this.moodTextHeight = 2.3;
         this.unknownTextHeight = 2.0;
@@ -961,11 +961,11 @@ export class EngravingRules {
     public set SlursStartingAtSameStaffEntryYOffset(value: number) {
         this.slursStartingAtSameStaffEntryYOffset = value;
     }
-    public get InstantaniousTempoTextHeight(): number {
-        return this.instantaniousTempoTextHeight;
+    public get InstantaneousTempoTextHeight(): number {
+        return this.instantaneousTempoTextHeight;
     }
-    public set InstantaniousTempoTextHeight(value: number) {
-        this.instantaniousTempoTextHeight = value;
+    public set InstantaneousTempoTextHeight(value: number) {
+        this.instantaneousTempoTextHeight = value;
     }
     public get ContinuousDynamicTextHeight(): number {
         return this.continuousDynamicTextHeight;

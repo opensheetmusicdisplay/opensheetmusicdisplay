@@ -4,9 +4,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 (function () {
     "use strict";
     var openSheetMusicDisplay;
+    var sampleLoaded = false;
     // folder of the sample files
     var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
-        samples = {
+    samples = {
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
@@ -26,6 +27,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
             "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
+            "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
             "OSMD Function Test - NoteHeadShapes": "OSMD_function_test_noteHeadShapes.musicxml",
             "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
@@ -123,14 +125,24 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         // Set resize event handler
         new Resize(
             function(){
+                if (!sampleLoaded) {
+                    return;
+                }
+
                 disable();
-            },
-            function() {
+                },
+            function(){
+                if (!sampleLoaded) {
+                    return;
+                }
+
                 var width = document.body.clientWidth;
                 canvas.width = width;
                 try {
-                openSheetMusicDisplay.render();
-                } catch (e) {}
+                    openSheetMusicDisplay.render();
+                } catch (e) {
+                    console.warn(e.stack);
+                }
                 enable();
             }
         );
@@ -208,6 +220,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         zoom = 1.0;
         openSheetMusicDisplay.load(str).then(
             function() {
+                // This gives you access to the osmd object in the console. Do not use in productive code
+                window.osmd = openSheetMusicDisplay;
                 return openSheetMusicDisplay.render();
             },
             function(e) {
@@ -226,6 +240,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function onLoadingEnd(isCustom) {
+        sampleLoaded = true;
         // Remove option from select
         if (!isCustom && custom.parentElement === selectSample) {
             selectSample.removeChild(custom);

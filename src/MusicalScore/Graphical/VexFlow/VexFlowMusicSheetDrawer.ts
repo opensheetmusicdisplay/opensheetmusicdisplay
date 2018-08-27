@@ -1,3 +1,4 @@
+import Vex = require("vexflow");
 import {MusicSheetDrawer} from "../MusicSheetDrawer";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -9,11 +10,16 @@ import {GraphicalObject} from "../GraphicalObject";
 import {GraphicalLayers} from "../DrawingEnums";
 import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
+import {VexFlowOctaveShift} from "./VexFlowOctaveShift";
+import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
 import {VexFlowInstrumentBracket} from "./VexFlowInstrumentBracket";
 import {VexFlowInstrumentBrace} from "./VexFlowInstrumentBrace";
 import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
 import {StaffLine} from "../StaffLine";
 import {EngravingRules} from "../EngravingRules";
+import {GraphicalInstantaneousTempoExpression} from "../GraphicalInstantaneousTempoExpression";
+import {GraphicalInstantaneousDynamicExpression} from "../GraphicalInstantaneousDynamicExpression";
+import log = require("loglevel");
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -203,6 +209,52 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw InstrumentBrackets at beginning of line
         const vexBrace: VexFlowInstrumentBracket = (bracket as VexFlowInstrumentBracket);
         vexBrace.draw(this.backend.getContext());
+    }
+
+    protected drawOctaveShifts(staffLine: StaffLine): void {
+        for (const graphicalOctaveShift of staffLine.OctaveShifts) {
+            if (graphicalOctaveShift) {
+                const ctx: Vex.Flow.RenderContext = this.backend.getContext();
+                const textBracket: Vex.Flow.TextBracket = (graphicalOctaveShift as VexFlowOctaveShift).getTextBracket();
+                textBracket.setContext(ctx);
+                textBracket.draw();
+            }
+        }
+    }
+
+    protected drawExpressions(staffline: StaffLine): void {
+        // Draw all Expressions
+        for (const abstractGraphicalExpression of staffline.AbstractExpressions) {
+            // Draw InstantaniousDynamics
+            if (abstractGraphicalExpression instanceof GraphicalInstantaneousDynamicExpression) {
+                this.drawInstantaneousDynamic((abstractGraphicalExpression as VexFlowInstantaneousDynamicExpression));
+            // Draw InstantaniousTempo
+            } else if (abstractGraphicalExpression instanceof GraphicalInstantaneousTempoExpression) {
+                this.drawLabel((abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
+            // // Draw ContinuousDynamics
+            // } else if (abstractGraphicalExpression instanceof GraphicalContinuousDynamicExpression) {
+            // //     drawContinuousDynamic((GraphicalContinuousDynamicExpression)abstractGraphicalExpression, absolutePos);
+            // // Draw ContinuousTempo
+            // } else if (abstractGraphicalExpression instanceof GraphicalContinuousTempoExpression) {
+            //     this.drawLabel((abstractGraphicalExpression as GraphicalContinuousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
+            // // Draw Mood
+            // } else if (abstractGraphicalExpression instanceof GraphicalMoodExpression) {
+            //     GraphicalMoodExpression; graphicalMood = (GraphicalMoodExpression); abstractGraphicalExpression;
+            //     drawLabel(graphicalMood.GetGraphicalLabel, (int)GraphicalLayers.Notes);
+            // // Draw Unknown
+            // } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
+            //     GraphicalUnknownExpression; graphicalUnknown =
+            //         (GraphicalUnknownExpression); abstractGraphicalExpression;
+            //     drawLabel(graphicalUnknown.GetGraphicalLabel, (int)GraphicalLayers.Notes);
+            // }
+            } else {
+                log.warn("Unkown type of expression!");
+            }
+        }
+    }
+
+    protected drawInstantaneousDynamic(instantaneousDynamic: GraphicalInstantaneousDynamicExpression): void {
+        this.drawLabel((instantaneousDynamic as VexFlowInstantaneousDynamicExpression).Label, <number>GraphicalLayers.Notes);
     }
 
     /**
