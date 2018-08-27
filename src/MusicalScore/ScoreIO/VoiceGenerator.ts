@@ -302,7 +302,7 @@ export class VoiceGenerator {
     let noteStep: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
     let playbackInstrumentId: string = undefined;
-    let noteHeadShapeXml: string = "normal";
+    let noteHeadShapeXml: string = undefined;
     let noteHeadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
 
     const xmlnodeElementsArr: IXmlElement[] = node.elements();
@@ -313,6 +313,8 @@ export class VoiceGenerator {
           const noteElementsArr: IXmlElement[] = noteElement.elements();
           for (let idx2: number = 0, len2: number = noteElementsArr.length; idx2 < len2; ++idx2) {
             const pitchElement: IXmlElement = noteElementsArr[idx2];
+            noteHeadShapeXml = undefined; // reinitialize for each pitch
+            noteHeadFilledXml = undefined;
             try {
               if (pitchElement.name === "step") {
                 noteStep = NoteEnum[pitchElement.value];
@@ -387,7 +389,7 @@ export class VoiceGenerator {
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     note.PlaybackInstrumentId = playbackInstrumentId;
-    if (noteHeadShapeXml !== "normal") {
+    if (noteHeadShapeXml !== undefined && noteHeadShapeXml !== "normal") {
       note.NoteHead = new NoteHead(note, noteHeadShapeXml, noteHeadFilledXml);
     } // if normal, leave note head undefined to save performance
     this.currentVoiceEntry.Notes.push(note);

@@ -111,7 +111,7 @@ export class VexFlowConverter {
         const acc: string = VexFlowConverter.accidental(pitch.Accidental);
         const noteHead: NoteHead = note.sourceNote.NoteHead;
         let noteHeadCode: string = "";
-        if (noteHead !== undefined) { // TODO Somehow noteHead isn't undefined for normal note heads as it should be
+        if (noteHead !== undefined) {
             noteHeadCode = this.NoteHeadCode(noteHead);
         }
         return [fund + "n/" + octave + noteHeadCode, acc, note.Clef()];
