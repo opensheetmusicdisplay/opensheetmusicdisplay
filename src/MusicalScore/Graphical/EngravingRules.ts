@@ -1,6 +1,7 @@
 import {PagePlacementEnum} from "./GraphicalMusicPage";
 //import {MusicSymbol} from "./MusicSymbol";
 import * as log from "loglevel";
+import { TextAlignment } from "../../Common/Enums/TextAlignment";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -87,6 +88,7 @@ export class EngravingRules {
     private repetitionEndingLabelYOffset: number;
     private repetitionEndingLineYLowerOffset: number;
     private repetitionEndingLineYUpperOffset: number;
+    private lyricsAlignmentStandard: TextAlignment;
     private lyricsHeight: number;
     private lyricsYOffsetToStaffHeight: number;
     private verticalBetweenLyricsDistance: number;
@@ -271,6 +273,7 @@ export class EngravingRules {
         this.repetitionEndingLineYUpperOffset = 0.3;
 
         // Lyrics
+        this.lyricsAlignmentStandard = TextAlignment.LeftBottom;
         this.lyricsHeight = 2.0; // actually size of lyrics
         this.lyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.verticalBetweenLyricsDistance = 0.5;
@@ -810,6 +813,12 @@ export class EngravingRules {
     }
     public set RepetitionEndingLineYUpperOffset(value: number) {
         this.repetitionEndingLineYUpperOffset = value;
+    }
+    public get LyricsAlignmentStandard(): TextAlignment {
+        return this.lyricsAlignmentStandard;
+    }
+    public set LyricsAlignmentStandard(value: TextAlignment) {
+        this.lyricsAlignmentStandard = value;
     }
     public get LyricsHeight(): number {
         return this.lyricsHeight;

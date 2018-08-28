@@ -24,6 +24,7 @@ import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
+import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -155,6 +156,7 @@ export abstract class MusicSheetDrawer {
                 screenPosition.y -= <number>bitmapHeight / 2;
                 break;
             case TextAlignment.LeftBottom:
+                screenPosition.x -= unitInPixels;
                 screenPosition.y -= bitmapHeight;
                 break;
             case TextAlignment.CenterTop:

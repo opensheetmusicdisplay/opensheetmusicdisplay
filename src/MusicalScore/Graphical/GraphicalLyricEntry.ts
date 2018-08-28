@@ -3,8 +3,8 @@ import {GraphicalLyricWord} from "./GraphicalLyricWord";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {Label} from "../Label";
-import {TextAlignment} from "../../Common/Enums/TextAlignment";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import { EngravingRules } from "./EngravingRules";
 
 /**
  * The graphical counterpart of a [[LyricsEntry]]
@@ -21,10 +21,15 @@ export class GraphicalLyricEntry {
         this.graphicalLabel = new GraphicalLabel(
             new Label(lyricsEntry.Text),
             lyricsHeight,
-            TextAlignment.CenterBottom,
+            EngravingRules.Rules.LyricsAlignmentStandard,
             graphicalStaffEntry.PositionAndShape
         );
-        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, staffHeight);
+        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
+        // if (this.graphicalLabel.Label.textAlignment === TextAlignment.LeftBottom) {
+        //     this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(-1, staffHeight);
+        //         // x = 0 is center of note head in OSMD (left-most x in Vexflow)}
+        //         // this gets reset later
+        // }
     }
 
     // FIXME: This should actually be called LyricsEntry or be a function

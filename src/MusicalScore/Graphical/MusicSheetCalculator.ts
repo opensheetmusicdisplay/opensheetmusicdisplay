@@ -58,7 +58,6 @@ import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceSt
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
-import { GraphicalObject } from "./GraphicalObject";
 import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
 import { InstantaneousTempoExpression, TempoEnum } from "../VoiceData/Expressions/InstantaneousTempoExpression";
 import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
@@ -1892,13 +1891,17 @@ export abstract class MusicSheetCalculator {
 
         // if on the same StaffLine
         if (lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine === nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine) {
+            const lyricsAlignmentShift: number =
+                EngravingRules.Rules.LyricsAlignmentStandard === TextAlignment.LeftBottom ? (-1) : 0;
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight +
+                lyricsAlignmentShift;
             const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffentry.PositionAndShape.RelativePosition.x +
-                nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
+                nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft +
+                lyricsAlignmentShift;
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
             if ((endX - startX) > this.rules.MinimumDistanceBetweenDashes * 3) {
@@ -2034,10 +2037,13 @@ export abstract class MusicSheetCalculator {
                 startStaffEntry.PositionAndShape.RelativePosition.x +
                 //lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
                 startStaffEntry.PositionAndShape.BorderMarginRight;
+                // lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x; // = -1 for left-aligne
+                    // doesn't work, relativeX is always 0
                 // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.BorderMarginRight;
+                // lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x;
                 // + endStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
                 // TODO maybe add half-width of following note.
                 // though we don't have the vexflow note's bbox yet and extend layouting is unconstrained,

@@ -40,6 +40,7 @@ import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneo
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { Staff } from "../../VoiceData/Staff";
+import { TextAlignment } from "../../../Common/Enums/TextAlignment";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
@@ -160,7 +161,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // information we need for the previous lyricsEntries to space the current one
     interface LyricEntryInfo {
       extend: boolean;
-      labelHalfWidth: number;
+      labelWidth: number;
       staffEntryXPosition: number;
       text: string;
       measureNumber: number;
@@ -193,7 +194,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
 
           const lyricsBbox: BoundingBox = lyricsEntry.GraphicalLabel.PositionAndShape;
-          const lyricsLabelHalfWidth: number = lyricsBbox.Size.width / 2;
+          const lyricsLabelWidth: number = lyricsBbox.Size.width;
           const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
 
           // if we don't have a previous lyricEntry, skip spacing, just save lastLyricEntry information
@@ -202,26 +203,37 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
             }
 
-            const spaceNeededByLyrics: number =
-              lastLyricEntryDict[j].labelHalfWidth + lyricsLabelHalfWidth + minLyricsSpacing;
+            const labelAlignment: TextAlignment = lyricsEntry.GraphicalLabel.Label.textAlignment;
+            const currentSpacingToLastLyric: number = staffEntryXPosition - lastLyricEntryDict[j].staffEntryXPosition;
+            let spacingNeededToLastLyric: number;
+            let currentSpacingToMeasureEnd: number;
+            let spacingNeededToMeasureEnd: number;
+            const lyricOverlapAllowedIntoNextMeasure: number = 1.5; // TODO should be engraving rule?
+            const maxXInMeasure: number = oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
+            // when the lyrics are centered, we need to consider spacing differently than when they are left-aligned:
+            if (labelAlignment === TextAlignment.CenterBottom) {
+              spacingNeededToLastLyric =
+                lastLyricEntryDict[j].labelWidth / 2 + lyricsLabelWidth / 2 + minLyricsSpacing;
 
-            const staffEntrySpacing: number = staffEntryXPosition - lastLyricEntryDict[j].staffEntryXPosition;
-            // get factor of how much we need to stretch the measure to space the current lyric with the last one
-            const elongationFactorMeasureWidthForCurrentLabels: number = spaceNeededByLyrics / staffEntrySpacing;
+              currentSpacingToMeasureEnd = maxXInMeasure - (staffEntryXPosition + lyricsLabelWidth / 2);
+              spacingNeededToMeasureEnd = (lyricsLabelWidth / 2) - lyricOverlapAllowedIntoNextMeasure;
+              } else if (labelAlignment === TextAlignment.LeftBottom) {
+              spacingNeededToLastLyric = lastLyricEntryDict[j].labelWidth + minLyricsSpacing;
+              currentSpacingToMeasureEnd = maxXInMeasure - staffEntryXPosition;
+              spacingNeededToMeasureEnd = lyricsLabelWidth - lyricOverlapAllowedIntoNextMeasure;
+            }
+
+            // get factor of how much we need to stretch the measure to space the current lyric
+            const elongationFactorMeasureWidthForCurrentLabels: number = Math.max(
+                spacingNeededToLastLyric / currentSpacingToLastLyric,
+                spacingNeededToMeasureEnd / currentSpacingToMeasureEnd);
             elongationFactorMeasureWidth = Math.max(elongationFactorMeasureWidth, elongationFactorMeasureWidthForCurrentLabels);
           }
-          // TODO for spacing between last lyric of a measure and first lyric of the next measure,
-          // we need to look ahead into the next measure, because first note position is not affected
-          // by measure elongation. or return this elongation and let MusicSheetCalculator apply it to prev. measure
-          // e.g. for Austrian national hymn:
-          // if (lyricsEntry.GetLyricsEntry.Text === "kunfts") {
-          //   elongationFactorMeasureWidth *= 1.5;
-          // }
 
           // set up last lyric entry information for next measure
           lastLyricEntryDict[j] = {
             extend: lyricsEntry.GetLyricsEntry.extend,
-            labelHalfWidth: lyricsLabelHalfWidth,
+            labelWidth: lyricsLabelWidth,
             measureNumber: measure.MeasureNumber,
             staffEntryXPosition: staffEntryXPosition,
             text: lyricsEntry.GetLyricsEntry.Text,
