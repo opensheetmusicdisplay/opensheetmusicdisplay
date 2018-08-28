@@ -132,6 +132,8 @@ export class VexFlowConverter {
                 return codeStart + "X" + codeFilled;
             case NoteHeadShape.CIRCLEX:
                 return codeStart + "X3"; // circleX is "X3" in Vexflow for some reason
+            case NoteHeadShape.SLASH:
+                return ""; // slash is specified at end of duration string in Vexflow
             default:
                 return "";
         }
@@ -202,9 +204,17 @@ export class VexFlowConverter {
         let numDots: number = baseNote.numberOfDots;
         let alignCenter: boolean = false;
         let xShift: number = 0;
+        let slashNoteHead: boolean = false;
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
+            }
+            if (note.sourceNote.NoteHead) {
+                if (note.sourceNote.NoteHead.Shape === NoteHeadShape.SLASH) {
+                    slashNoteHead = true;
+                    // if we have slash heads and other heads in the voice entry, this will create the same head for all.
+                    // same problem with numDots. The slash case should be extremely rare though.
+                }
             }
             // if it is a rest:
             if (note.sourceNote.isRest()) {
@@ -234,6 +244,9 @@ export class VexFlowConverter {
 
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             duration += "d";
+        }
+        if (slashNoteHead) {
+            duration += "s"; // we have to specify a slash note head like this in Vexflow
         }
 
         let vfnote: Vex.Flow.StaveNote;

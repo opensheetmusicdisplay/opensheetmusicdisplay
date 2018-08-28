@@ -73,6 +73,8 @@ export class NoteHead {
                 return NoteHeadShape.TRIANGLE;
             case "x":
                 return NoteHeadShape.X;
+            case "slash":
+                return NoteHeadShape.SLASH;
             case "circle-x":
                 return NoteHeadShape.CIRCLEX;
             default:
@@ -87,6 +89,7 @@ export enum NoteHeadShape {
     CIRCLEX,
     DIAMOND,
     NORMAL,
+    SLASH,
     SQUARE,
     TRIANGLE,
     X,
