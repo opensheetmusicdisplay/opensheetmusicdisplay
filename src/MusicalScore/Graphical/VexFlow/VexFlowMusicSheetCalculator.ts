@@ -189,7 +189,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           if (lyricsEntry.ParentLyricWord) {
             if (lyricsEntry.GetLyricsEntry.SyllableIndex > 0) { // syllables after first
               // give a little more spacing for dash between syllables
-              minLyricsSpacing = EngravingRules.Rules.BetweenSyllabelMinimumDistance;
+              minLyricsSpacing = EngravingRules.Rules.BetweenSyllableMinimumDistance;
             }
           }
 
@@ -208,7 +208,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             let spacingNeededToLastLyric: number;
             let currentSpacingToMeasureEnd: number;
             let spacingNeededToMeasureEnd: number;
-            const lyricOverlapAllowedIntoNextMeasure: number = 1.5; // TODO should be engraving rule?
+            const lyricOverlapAllowedIntoNextMeasure: number =
+              EngravingRules.Rules.LyricOverlapAllowedIntoNextMeasure;
             const maxXInMeasure: number = oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
             // when the lyrics are centered, we need to consider spacing differently than when they are left-aligned:
             if (labelAlignment === TextAlignment.CenterBottom) {

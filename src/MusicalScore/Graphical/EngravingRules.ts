@@ -93,8 +93,9 @@ export class EngravingRules {
     private lyricsYOffsetToStaffHeight: number;
     private verticalBetweenLyricsDistance: number;
     private horizontalBetweenLyricsDistance: number;
-    private betweenSyllabelMaximumDistance: number;
-    private betweenSyllabelMinimumDistance: number;
+    private betweenSyllableMaximumDistance: number;
+    private betweenSyllableMinimumDistance: number;
+    private lyricOverlapAllowedIntoNextMeasure: number;
     private minimumDistanceBetweenDashes: number;
     private bezierCurveStepSize: number;
     private tPower3: number[];
@@ -273,13 +274,14 @@ export class EngravingRules {
         this.repetitionEndingLineYUpperOffset = 0.3;
 
         // Lyrics
-        this.lyricsAlignmentStandard = TextAlignment.LeftBottom;
+        this.lyricsAlignmentStandard = TextAlignment.CenterBottom;
         this.lyricsHeight = 2.0; // actually size of lyrics
         this.lyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.verticalBetweenLyricsDistance = 0.5;
-        this.horizontalBetweenLyricsDistance = 0.4;
-        this.betweenSyllabelMaximumDistance = 10.0;
-        this.betweenSyllabelMinimumDistance = 0.5;
+        this.horizontalBetweenLyricsDistance = 0.2;
+        this.betweenSyllableMaximumDistance = 10.0;
+        this.betweenSyllableMinimumDistance = 0.5;
+        this.lyricOverlapAllowedIntoNextMeasure = 3.5; // optimal for dashed last lyric, see Land der Berge
         this.minimumDistanceBetweenDashes = 10;
 
         // expressions variables
@@ -844,17 +846,23 @@ export class EngravingRules {
     public set HorizontalBetweenLyricsDistance(value: number) {
         this.horizontalBetweenLyricsDistance = value;
     }
-    public get BetweenSyllabelMaximumDistance(): number {
-        return this.betweenSyllabelMaximumDistance;
+    public get BetweenSyllableMaximumDistance(): number {
+        return this.betweenSyllableMaximumDistance;
     }
-    public set BetweenSyllabelMaximumDistance(value: number) {
-        this.betweenSyllabelMaximumDistance = value;
+    public set BetweenSyllableMaximumDistance(value: number) {
+        this.betweenSyllableMaximumDistance = value;
     }
-    public get BetweenSyllabelMinimumDistance(): number {
-        return this.betweenSyllabelMinimumDistance;
+    public get BetweenSyllableMinimumDistance(): number {
+        return this.betweenSyllableMinimumDistance;
     }
-    public set BetweenSyllabelMinimumDistance(value: number) {
-        this.betweenSyllabelMinimumDistance = value;
+    public set BetweenSyllableMinimumDistance(value: number) {
+        this.betweenSyllableMinimumDistance = value;
+    }
+    public get LyricOverlapAllowedIntoNextMeasure(): number {
+        return this.lyricOverlapAllowedIntoNextMeasure;
+    }
+    public set LyricOverlapAllowedIntoNextMeasure(value: number) {
+        this.lyricOverlapAllowedIntoNextMeasure = value;
     }
     public get MinimumDistanceBetweenDashes(): number {
         return this.minimumDistanceBetweenDashes;
