@@ -1,7 +1,7 @@
 import {PagePlacementEnum} from "./GraphicalMusicPage";
 //import {MusicSymbol} from "./MusicSymbol";
 import * as log from "loglevel";
-import { TextAlignment } from "../../Common/Enums/TextAlignment";
+import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -88,7 +88,7 @@ export class EngravingRules {
     private repetitionEndingLabelYOffset: number;
     private repetitionEndingLineYLowerOffset: number;
     private repetitionEndingLineYUpperOffset: number;
-    private lyricsAlignmentStandard: TextAlignment;
+    private lyricsAlignmentStandard: TextAlignmentEnum;
     private lyricsHeight: number;
     private lyricsYOffsetToStaffHeight: number;
     private verticalBetweenLyricsDistance: number;
@@ -274,13 +274,13 @@ export class EngravingRules {
         this.repetitionEndingLineYUpperOffset = 0.3;
 
         // Lyrics
-        this.lyricsAlignmentStandard = TextAlignment.CenterBottom;
+        this.lyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.lyricsHeight = 2.0; // actually size of lyrics
         this.lyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.verticalBetweenLyricsDistance = 0.5;
         this.horizontalBetweenLyricsDistance = 0.2;
         this.betweenSyllableMaximumDistance = 10.0;
-        this.betweenSyllableMinimumDistance = 0.5;
+        this.betweenSyllableMinimumDistance = 0.4;
         this.lyricOverlapAllowedIntoNextMeasure = 3.5; // optimal for dashed last lyric, see Land der Berge
         this.minimumDistanceBetweenDashes = 10;
 
@@ -816,10 +816,10 @@ export class EngravingRules {
     public set RepetitionEndingLineYUpperOffset(value: number) {
         this.repetitionEndingLineYUpperOffset = value;
     }
-    public get LyricsAlignmentStandard(): TextAlignment {
+    public get LyricsAlignmentStandard(): TextAlignmentEnum {
         return this.lyricsAlignmentStandard;
     }
-    public set LyricsAlignmentStandard(value: TextAlignment) {
+    public set LyricsAlignmentStandard(value: TextAlignmentEnum) {
         this.lyricsAlignmentStandard = value;
     }
     public get LyricsHeight(): number {

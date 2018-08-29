@@ -1,5 +1,5 @@
 import {Label} from "../Label";
-import {TextAlignment} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {Clickable} from "./Clickable";
 import {BoundingBox} from "./BoundingBox";
 import {EngravingRules} from "./EngravingRules";
@@ -18,7 +18,7 @@ export class GraphicalLabel extends Clickable {
      * @param alignment Alignement like left, right, top, ...
      * @param parent Parent Bounding Box where the label is attached to
      */
-    constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox = undefined) {
+    constructor(label: Label, textHeight: number, alignment: TextAlignmentEnum, parent: BoundingBox = undefined) {
         super();
         this.label = label;
         this.boundingBox = new BoundingBox(this, parent);
@@ -50,55 +50,55 @@ export class GraphicalLabel extends Clickable {
         const psi: BoundingBox = this.PositionAndShape;
 
         switch (this.Label.textAlignment) {
-            case TextAlignment.CenterBottom:
+            case TextAlignmentEnum.CenterBottom:
                 psi.BorderTop = -height;
                 psi.BorderLeft = -width / 2;
                 psi.BorderBottom = 0;
                 psi.BorderRight = width / 2;
                 break;
-            case TextAlignment.CenterCenter:
+            case TextAlignmentEnum.CenterCenter:
                 psi.BorderTop = -height / 2;
                 psi.BorderLeft = -width / 2;
                 psi.BorderBottom = height / 2;
                 psi.BorderRight = width / 2;
                 break;
-            case TextAlignment.CenterTop:
+            case TextAlignmentEnum.CenterTop:
                 psi.BorderTop = 0;
                 psi.BorderLeft = -width / 2;
                 psi.BorderBottom = height;
                 psi.BorderRight = width / 2;
                 break;
-            case TextAlignment.LeftBottom:
+            case TextAlignmentEnum.LeftBottom:
                 psi.BorderTop = -height;
                 psi.BorderLeft = 0;
                 psi.BorderBottom = 0;
                 psi.BorderRight = width;
                 break;
-            case TextAlignment.LeftCenter:
+            case TextAlignmentEnum.LeftCenter:
                 psi.BorderTop = -height / 2;
                 psi.BorderLeft = 0;
                 psi.BorderBottom = height / 2;
                 psi.BorderRight = width;
                 break;
-            case TextAlignment.LeftTop:
+            case TextAlignmentEnum.LeftTop:
                 psi.BorderTop = 0;
                 psi.BorderLeft = 0;
                 psi.BorderBottom = height;
                 psi.BorderRight = width;
                 break;
-            case TextAlignment.RightBottom:
+            case TextAlignmentEnum.RightBottom:
                 psi.BorderTop = -height;
                 psi.BorderLeft = -width;
                 psi.BorderBottom = 0;
                 psi.BorderRight = 0;
                 break;
-            case TextAlignment.RightCenter:
+            case TextAlignmentEnum.RightCenter:
                 psi.BorderTop = -height / 2;
                 psi.BorderLeft = -width;
                 psi.BorderBottom = height / 2;
                 psi.BorderRight = 0;
                 break;
-            case TextAlignment.RightTop:
+            case TextAlignmentEnum.RightTop:
                 psi.BorderTop = 0;
                 psi.BorderLeft = -width;
                 psi.BorderBottom = height;

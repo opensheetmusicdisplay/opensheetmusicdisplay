@@ -20,7 +20,6 @@ import {EngravingRules} from "../EngravingRules";
 import {GraphicalInstantaneousTempoExpression} from "../GraphicalInstantaneousTempoExpression";
 import {GraphicalInstantaneousDynamicExpression} from "../GraphicalInstantaneousDynamicExpression";
 import log = require("loglevel");
-import { TextAlignment } from "../../../Common/Enums/TextAlignment";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -271,11 +270,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                           bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { fontStyle, font, text } = graphicalLabel.Label;
-        if (graphicalLabel.Label.textAlignment === TextAlignment.LeftBottom) {
-            // TODO check for all left positions. also, this might be a hack. but otherwise it's not left-aligned.
-            // screenPosition.x -= unitInPixels; // Vexflow's x is the left-most, not center x
-        }
-
         this.backend.renderText(height, fontStyle, font, text, heightInPixel, screenPosition);
     }
 
