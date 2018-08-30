@@ -18,7 +18,7 @@
     <img src="./favicon.ico?" class="ui image">
     <%= htmlWebpackPlugin.options.title %>
 </h1>
-<div class="ui three column grid container">
+<div class="ui four column grid container">
     <div class="column">
         <h3 class="ui header">Select a sample:</h3>
         <select class="ui selection dropdown" id="selectSample" style="width:320px; height:40%"></select>
@@ -103,6 +103,12 @@
                     <label>Bottomline</label>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Debug controls:</h3>
+        <div class="ui vertical buttons">
+            <div class="ui button" id="debug-rerender-btn">Rerender</div>
         </div>
     </div>
 </div>
