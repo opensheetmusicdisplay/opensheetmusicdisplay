@@ -10,7 +10,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalRectangle} from "./GraphicalRectangle";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {Label} from "../Label";
-import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentAndPlacement} from "../../Common/Enums/TextAlignment";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
@@ -150,36 +150,36 @@ export abstract class MusicSheetDrawer {
         const bitmapWidth: number = <number>Math.ceil(widthInPixel);
         const bitmapHeight: number = <number>Math.ceil(heightInPixel * 1.2);
         switch (label.textAlignment) {
-            case TextAlignmentEnum.LeftTop:
+            case TextAlignmentAndPlacement.LeftTop:
                 break;
-            case TextAlignmentEnum.LeftCenter:
+            case TextAlignmentAndPlacement.LeftCenter:
                 screenPosition.y -= <number>bitmapHeight / 2;
                 break;
-            case TextAlignmentEnum.LeftBottom:
+            case TextAlignmentAndPlacement.LeftBottom:
                 screenPosition.y -= bitmapHeight;
                 // without the following, lyrics are not optically left-aligned. influences lyrics, dash positioning.
                 // TODO unify alignment shifts and our bbox position, which does not correspond to screenposition
                 screenPosition.x -= unitInPixels;
                 break;
-            case TextAlignmentEnum.CenterTop:
+            case TextAlignmentAndPlacement.CenterTop:
                 screenPosition.x -= <number>bitmapWidth / 2;
                 break;
-            case TextAlignmentEnum.CenterCenter:
+            case TextAlignmentAndPlacement.CenterCenter:
                 screenPosition.x -= <number>bitmapWidth / 2;
                 screenPosition.y -= <number>bitmapHeight / 2;
                 break;
-            case TextAlignmentEnum.CenterBottom:
+            case TextAlignmentAndPlacement.CenterBottom:
                 screenPosition.x -= <number>bitmapWidth / 2;
                 screenPosition.y -= bitmapHeight;
                 break;
-            case TextAlignmentEnum.RightTop:
+            case TextAlignmentAndPlacement.RightTop:
                 screenPosition.x -= bitmapWidth;
                 break;
-            case TextAlignmentEnum.RightCenter:
+            case TextAlignmentAndPlacement.RightCenter:
                 screenPosition.x -= bitmapWidth;
                 screenPosition.y -= <number>bitmapHeight / 2;
                 break;
-            case TextAlignmentEnum.RightBottom:
+            case TextAlignmentAndPlacement.RightBottom:
                 screenPosition.x -= bitmapWidth;
                 screenPosition.y -= bitmapHeight;
                 break;
@@ -510,7 +510,7 @@ export abstract class MusicSheetDrawer {
 
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentEnum.CenterCenter),
+            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentAndPlacement.CenterCenter),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
         layer++;

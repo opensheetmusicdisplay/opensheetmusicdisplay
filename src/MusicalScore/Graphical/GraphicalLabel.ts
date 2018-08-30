@@ -1,5 +1,5 @@
 import {Label} from "../Label";
-import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentAndPlacement} from "../../Common/Enums/TextAlignment";
 import {Clickable} from "./Clickable";
 import {BoundingBox} from "./BoundingBox";
 import {EngravingRules} from "./EngravingRules";
@@ -18,7 +18,7 @@ export class GraphicalLabel extends Clickable {
      * @param alignment Alignement like left, right, top, ...
      * @param parent Parent Bounding Box where the label is attached to
      */
-    constructor(label: Label, textHeight: number, alignment: TextAlignmentEnum, parent: BoundingBox = undefined) {
+    constructor(label: Label, textHeight: number, alignment: TextAlignmentAndPlacement, parent: BoundingBox = undefined) {
         super();
         this.label = label;
         this.boundingBox = new BoundingBox(this, parent);
@@ -50,55 +50,55 @@ export class GraphicalLabel extends Clickable {
         const bbox: BoundingBox = this.PositionAndShape;
 
         switch (this.Label.textAlignment) {
-            case TextAlignmentEnum.CenterBottom:
+            case TextAlignmentAndPlacement.CenterBottom:
                 bbox.BorderTop = -height;
                 bbox.BorderLeft = -width / 2;
                 bbox.BorderBottom = 0;
                 bbox.BorderRight = width / 2;
                 break;
-            case TextAlignmentEnum.CenterCenter:
+            case TextAlignmentAndPlacement.CenterCenter:
                 bbox.BorderTop = -height / 2;
                 bbox.BorderLeft = -width / 2;
                 bbox.BorderBottom = height / 2;
                 bbox.BorderRight = width / 2;
                 break;
-            case TextAlignmentEnum.CenterTop:
+            case TextAlignmentAndPlacement.CenterTop:
                 bbox.BorderTop = 0;
                 bbox.BorderLeft = -width / 2;
                 bbox.BorderBottom = height;
                 bbox.BorderRight = width / 2;
                 break;
-            case TextAlignmentEnum.LeftBottom:
+            case TextAlignmentAndPlacement.LeftBottom:
                 bbox.BorderTop = -height;
                 bbox.BorderLeft = -1;
                 bbox.BorderBottom = 0;
                 bbox.BorderRight = width - 1;
                 break;
-            case TextAlignmentEnum.LeftCenter:
+            case TextAlignmentAndPlacement.LeftCenter:
                 bbox.BorderTop = -height / 2;
                 bbox.BorderLeft = 0;
                 bbox.BorderBottom = height / 2;
                 bbox.BorderRight = width;
                 break;
-            case TextAlignmentEnum.LeftTop:
+            case TextAlignmentAndPlacement.LeftTop:
                 bbox.BorderTop = 0;
                 bbox.BorderLeft = 0;
                 bbox.BorderBottom = height;
                 bbox.BorderRight = width;
                 break;
-            case TextAlignmentEnum.RightBottom:
+            case TextAlignmentAndPlacement.RightBottom:
                 bbox.BorderTop = -height;
                 bbox.BorderLeft = -width;
                 bbox.BorderBottom = 0;
                 bbox.BorderRight = 0;
                 break;
-            case TextAlignmentEnum.RightCenter:
+            case TextAlignmentAndPlacement.RightCenter:
                 bbox.BorderTop = -height / 2;
                 bbox.BorderLeft = -width;
                 bbox.BorderBottom = height / 2;
                 bbox.BorderRight = 0;
                 break;
-            case TextAlignmentEnum.RightTop:
+            case TextAlignmentAndPlacement.RightTop:
                 bbox.BorderTop = 0;
                 bbox.BorderLeft = -width;
                 bbox.BorderBottom = height;

@@ -5,7 +5,7 @@ import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {Label} from "../Label";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import { EngravingRules } from "./EngravingRules";
-import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import { TextAlignmentAndPlacement } from "../../Common/Enums/TextAlignment";
 
 /**
  * The graphical counterpart of a [[LyricsEntry]]
@@ -19,13 +19,13 @@ export class GraphicalLyricEntry {
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
         this.graphicalStaffEntry = graphicalStaffEntry;
-        let lyricsTextAlignment: TextAlignmentEnum = EngravingRules.Rules.LyricsAlignmentStandard;
+        let lyricsTextAlignment: TextAlignmentAndPlacement = EngravingRules.Rules.LyricsAlignmentStandard;
         // for small notes with long text, use center alignment
         // TODO use this, fix center+left alignment combination spacing
         if (lyricsEntry.Text.length >= 4
             && lyricsEntry.Parent.Notes[0].Length.Denominator > 4
-            && lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
-            lyricsTextAlignment = TextAlignmentEnum.CenterBottom;
+            && lyricsTextAlignment === TextAlignmentAndPlacement.LeftBottom) {
+            lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
         }
         this.graphicalLabel = new GraphicalLabel(
             new Label(lyricsEntry.Text),

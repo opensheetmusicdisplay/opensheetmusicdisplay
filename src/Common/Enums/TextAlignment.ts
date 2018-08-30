@@ -6,7 +6,7 @@
  * which can be alignment or placement.
  * A function like "IsLeft" would be easier with the split.
  */
-export enum TextAlignmentEnum {
+export enum TextAlignmentAndPlacement {
     LeftTop,
     LeftCenter,
     LeftBottom,
@@ -19,21 +19,21 @@ export enum TextAlignmentEnum {
 }
 
 export class TextAlignment {
-    public static IsLeft(textAlignment: TextAlignmentEnum): boolean {
-        return textAlignment === TextAlignmentEnum.LeftTop
-            || textAlignment === TextAlignmentEnum.LeftCenter
-            || textAlignment === TextAlignmentEnum.LeftBottom;
+    public static IsLeft(textAlignment: TextAlignmentAndPlacement): boolean {
+        return textAlignment === TextAlignmentAndPlacement.LeftTop
+            || textAlignment === TextAlignmentAndPlacement.LeftCenter
+            || textAlignment === TextAlignmentAndPlacement.LeftBottom;
     }
 
-    public static IsCenterAligned(textAlignment: TextAlignmentEnum): boolean {
-        return textAlignment === TextAlignmentEnum.CenterTop
-            || textAlignment === TextAlignmentEnum.CenterCenter
-            || textAlignment === TextAlignmentEnum.CenterBottom;
+    public static IsCenterAligned(textAlignment: TextAlignmentAndPlacement): boolean {
+        return textAlignment === TextAlignmentAndPlacement.CenterTop
+            || textAlignment === TextAlignmentAndPlacement.CenterCenter
+            || textAlignment === TextAlignmentAndPlacement.CenterBottom;
     }
 
-    public static IsRight(textAlignment: TextAlignmentEnum): boolean {
-        return textAlignment === TextAlignmentEnum.RightTop
-            || textAlignment === TextAlignmentEnum.RightCenter
-            || textAlignment === TextAlignmentEnum.RightBottom;
+    public static IsRight(textAlignment: TextAlignmentAndPlacement): boolean {
+        return textAlignment === TextAlignmentAndPlacement.RightTop
+            || textAlignment === TextAlignmentAndPlacement.RightCenter
+            || textAlignment === TextAlignmentAndPlacement.RightBottom;
     }
 }
