@@ -31,7 +31,7 @@ import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {BoundingBox} from "./BoundingBox";
 import {Instrument} from "../Instrument";
 import {GraphicalLabel} from "./GraphicalLabel";
-import {TextAlignmentEnum, TextAlignment} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {VerticalGraphicalStaffEntryContainer} from "./VerticalGraphicalStaffEntryContainer";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
@@ -1892,17 +1892,13 @@ export abstract class MusicSheetCalculator {
 
         // if on the same StaffLine
         if (lyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine === nextLyricEntry.StaffEntryParent.parentMeasure.ParentStaffLine) {
-            const lyricsAlignmentShift: number =
-                TextAlignment.IsLeft(lyricEntry.GraphicalLabel.Label.textAlignment) ? (-1) : 0;
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
-                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight +
-                lyricsAlignmentShift;
+                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
             const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffentry.PositionAndShape.RelativePosition.x +
-                nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft +
-                lyricsAlignmentShift;
+                nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
             if ((endX - startX) > this.rules.MinimumDistanceBetweenDashes * 3) {
@@ -2033,22 +2029,15 @@ export abstract class MusicSheetCalculator {
         }
         // if on the same StaffLine
         if (startStaffLine === endStaffLine) {
-            const textAlignmentShift: number =
-                TextAlignment.IsLeft(lyricEntry.GraphicalLabel.Label.textAlignment) ? (-1) : 0;
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
-                //lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
-                startStaffEntry.PositionAndShape.BorderMarginRight +
-                textAlignmentShift;
-                // lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x; // = -1 for left-aligne
-                    // doesn't work, relativeX is always 0
+                startStaffEntry.PositionAndShape.BorderMarginRight;
+                // + lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
                 // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
-                endStaffEntry.PositionAndShape.BorderMarginRight +
-                textAlignmentShift;
-                // lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x;
+                endStaffEntry.PositionAndShape.BorderMarginRight;
                 // + endStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
                 // TODO maybe add half-width of following note.
                 // though we don't have the vexflow note's bbox yet and extend layouting is unconstrained,

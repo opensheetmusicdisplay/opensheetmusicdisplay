@@ -219,10 +219,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           const lyricsBbox: BoundingBox = lyricsEntry.GraphicalLabel.PositionAndShape;
           const lyricsLabelWidth: number = lyricsBbox.Size.width;
           const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
-          let lyricsXPosition: number = staffEntryXPosition;
-          if (TextAlignment.IsLeft(lyricAlignment)) {
-            lyricsXPosition -= 1;
-          }
+          const lyricsXPosition: number = staffEntryXPosition + lyricsBbox.BorderMarginLeft;
 
           if (lastLyricEntryDict[j] !== undefined) {
             if (lastLyricEntryDict[j].extend) {
@@ -242,7 +239,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           const maxXInMeasure: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
 
           // when the lyrics are centered, we need to consider spacing differently than when they are left-aligned:
-          if (TextAlignment.IsCenter(lyricAlignment)) {
+          if (TextAlignment.IsCenterAligned(lyricAlignment)) {
             lyricOverlapAllowedIntoNextMeasure /= 4; // reserve space for overlap from next measure. its first note can't be spaced.
             currentSpacingToMeasureEnd = maxXInMeasure - lyricsXPosition;
             spacingNeededToMeasureEnd = (lyricsLabelWidth / 2) - lyricOverlapAllowedIntoNextMeasure;
