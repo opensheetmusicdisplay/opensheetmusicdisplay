@@ -150,6 +150,8 @@ export abstract class MusicSheetDrawer {
         const bitmapWidth: number = <number>Math.ceil(widthInPixel);
         const bitmapHeight: number = <number>Math.ceil(heightInPixel * 1.2);
         switch (label.textAlignment) {
+            // the following have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
+            // TODO unify alignment shifts and our label/bbox position, which does not correspond to screenposition
             case TextAlignmentAndPlacement.LeftTop:
                 break;
             case TextAlignmentAndPlacement.LeftCenter:
@@ -157,9 +159,7 @@ export abstract class MusicSheetDrawer {
                 break;
             case TextAlignmentAndPlacement.LeftBottom:
                 screenPosition.y -= bitmapHeight;
-                // without the following, lyrics are not optically left-aligned. influences lyrics, dash positioning.
-                // TODO unify alignment shifts and our bbox position, which does not correspond to screenposition
-                screenPosition.x -= unitInPixels;
+                screenPosition.x -= unitInPixels; // lyrics-specific to align with notes
                 break;
             case TextAlignmentAndPlacement.CenterTop:
                 screenPosition.x -= <number>bitmapWidth / 2;
