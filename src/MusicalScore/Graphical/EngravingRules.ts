@@ -281,7 +281,7 @@ export class EngravingRules {
         this.horizontalBetweenLyricsDistance = 0.2;
         this.betweenSyllableMaximumDistance = 10.0;
         this.betweenSyllableMinimumDistance = 0.4;
-        this.lyricOverlapAllowedIntoNextMeasure = 3.5; // optimal for dashed last lyric, see Land der Berge
+        this.lyricOverlapAllowedIntoNextMeasure = 3.4; // optimal for dashed last lyric, see Land der Berge
         this.minimumDistanceBetweenDashes = 10;
 
         // expressions variables
