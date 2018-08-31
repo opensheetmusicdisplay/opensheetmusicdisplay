@@ -261,7 +261,7 @@ export class Fraction {
   //        return true;
   //    if (ReferenceEquals(f, undefined))
   //        return false;
-  //    return <number>this.numerator * f.denominator === <number>f.numerator * this.denominator;
+  //    return this.numerator * f.denominator === f.numerator * this.denominator;
   //}
 
   private setRealValue(): void {
@@ -291,20 +291,20 @@ export class Fraction {
       }
     }
     if (this.denominator > Fraction.maximumAllowedNumber) {
-      const factor: number = <number>this.denominator / Fraction.maximumAllowedNumber;
-      this.numerator = <number>Math.round(this.numerator / factor);
-      this.denominator = <number>Math.round(this.denominator / factor);
+      const factor: number = this.denominator / Fraction.maximumAllowedNumber;
+      this.numerator = Math.round(this.numerator / factor);
+      this.denominator = Math.round(this.denominator / factor);
     }
     if (this.numerator > Fraction.maximumAllowedNumber) {
-      const factor: number = <number>this.numerator / Fraction.maximumAllowedNumber;
-      this.numerator = <number>Math.round(this.numerator / factor);
-      this.denominator = <number>Math.round(this.denominator / factor);
+      const factor: number = this.numerator / Fraction.maximumAllowedNumber;
+      this.numerator = Math.round(this.numerator / factor);
+      this.denominator = Math.round(this.denominator / factor);
     }
   }
 
 
   //private static equals(f1: Fraction, f2: Fraction): boolean {
-  //    return <number>f1.numerator * f2.denominator === <number>f2.numerator * f1.denominator;
+  //    return f1.numerator * f2.denominator === f2.numerator * f1.denominator;
   //}
   //
   //public static ApproximateFractionFromValue(value: number, epsilonForPrecision: number): Fraction {
@@ -317,9 +317,9 @@ export class Fraction {
   //        }
   //        else {
   //            d++;
-  //            n = <number>Math.round(value * d);
+  //            n = Math.round(value * d);
   //        }
-  //        fraction = n / <number>d;
+  //        fraction = n / d;
   //    }
   //    return new Fraction(n, d);
   //}
@@ -330,7 +330,7 @@ export class Fraction {
   //}
 
   //public static getFraction(value: number, denominatorPrecision: number): Fraction {
-  //    let numerator: number = <number>Math.round(value / (1.0 / denominatorPrecision));
+  //    let numerator: number = Math.round(value / (1.0 / denominatorPrecision));
   //    return new Fraction(numerator, denominatorPrecision);
   //}
   //public static fractionMin(f1: Fraction, f2: Fraction): Fraction {

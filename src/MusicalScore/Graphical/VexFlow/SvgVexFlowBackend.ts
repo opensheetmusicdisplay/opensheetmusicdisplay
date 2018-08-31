@@ -9,6 +9,8 @@ import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
+    private ctx: Vex.Flow.SVGContext;
+
     public getBackendType(): number {
         return Vex.Flow.Renderer.Backends.SVG;
     }
@@ -84,5 +86,29 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.restore();
     }
 
-    private ctx: Vex.Flow.SVGContext;
+    public renderCurve(points: PointF2D[]): void {
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+        this.ctx.bezierCurveTo(
+            points[1].x,
+            points[1].y,
+            points[2].x,
+            points[2].y,
+            points[3].x,
+            points[3].y
+            );
+        this.ctx.lineTo(points[7].x, points[7].y);
+        this.ctx.bezierCurveTo(
+            points[6].x,
+            points[6].y,
+            points[5].x,
+            points[5].y,
+            points[4].x,
+            points[4].y
+            );
+        this.ctx.lineTo(points[0].x, points[0].y);
+        //this.ctx.stroke();
+        this.ctx.closePath();
+        this.ctx.fill();
+    }
 }

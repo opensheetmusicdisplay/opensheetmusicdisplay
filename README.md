@@ -20,6 +20,8 @@ OpenSheetMusicDisplay brings the two together and offers an open source turnkey 
 
 Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT license](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/LICENSE).
 
+See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki) for information about the source code and how to use OSMD.
+
 
 <!--# <a name="license"></a>License
 The MIT License (MIT)

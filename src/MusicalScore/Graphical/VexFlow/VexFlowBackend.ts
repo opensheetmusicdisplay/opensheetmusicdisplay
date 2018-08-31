@@ -56,6 +56,8 @@ export abstract class VexFlowBackend {
 
   public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number): void;
 
+  public abstract renderCurve(points: PointF2D[]): void;
+
   public abstract getBackendType(): number;
 
   protected renderer: Vex.Flow.Renderer;

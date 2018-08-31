@@ -146,26 +146,26 @@ export abstract class MusicSheetDrawer {
         const screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
         const heightInPixel: number = this.calculatePixelDistance(label.fontHeight);
         const widthInPixel: number = heightInPixel * this.textMeasurer.computeTextWidthToHeightRatio(label.text, label.font, label.fontStyle);
-        const bitmapWidth: number = <number>Math.ceil(widthInPixel);
-        const bitmapHeight: number = <number>Math.ceil(heightInPixel * 1.2);
+        const bitmapWidth: number = Math.ceil(widthInPixel);
+        const bitmapHeight: number = Math.ceil(heightInPixel * 1.2);
         switch (label.textAlignment) {
             case TextAlignment.LeftTop:
                 break;
             case TextAlignment.LeftCenter:
-                screenPosition.y -= <number>bitmapHeight / 2;
+                screenPosition.y -= bitmapHeight / 2;
                 break;
             case TextAlignment.LeftBottom:
                 screenPosition.y -= bitmapHeight;
                 break;
             case TextAlignment.CenterTop:
-                screenPosition.x -= <number>bitmapWidth / 2;
+                screenPosition.x -= bitmapWidth / 2;
                 break;
             case TextAlignment.CenterCenter:
-                screenPosition.x -= <number>bitmapWidth / 2;
-                screenPosition.y -= <number>bitmapHeight / 2;
+                screenPosition.x -= bitmapWidth / 2;
+                screenPosition.y -= bitmapHeight / 2;
                 break;
             case TextAlignment.CenterBottom:
-                screenPosition.x -= <number>bitmapWidth / 2;
+                screenPosition.x -= bitmapWidth / 2;
                 screenPosition.y -= bitmapHeight;
                 break;
             case TextAlignment.RightTop:
@@ -173,7 +173,7 @@ export abstract class MusicSheetDrawer {
                 break;
             case TextAlignment.RightCenter:
                 screenPosition.x -= bitmapWidth;
-                screenPosition.y -= <number>bitmapHeight / 2;
+                screenPosition.y -= bitmapHeight / 2;
                 break;
             case TextAlignment.RightBottom:
                 screenPosition.x -= bitmapWidth;

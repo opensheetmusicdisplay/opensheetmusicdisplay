@@ -726,7 +726,7 @@ export class GraphicalMusicSheet {
 
     public findClosestLeftStaffEntry(fractionalIndex: number, searchOnlyVisibleEntries: boolean): GraphicalStaffEntry {
         let foundEntry: GraphicalStaffEntry = undefined;
-        let leftIndex: number = <number>Math.floor(fractionalIndex);
+        let leftIndex: number = Math.floor(fractionalIndex);
         leftIndex = Math.min(this.VerticalGraphicalStaffEntryContainers.length - 1, leftIndex);
         for (let i: number = leftIndex; i >= 0; i--) {
             foundEntry = this.getStaffEntry(i);
@@ -745,7 +745,7 @@ export class GraphicalMusicSheet {
 
     public findClosestRightStaffEntry(fractionalIndex: number, returnOnlyVisibleEntries: boolean): GraphicalStaffEntry {
         let foundEntry: GraphicalStaffEntry = undefined;
-        const rightIndex: number = <number>Math.max(0, Math.ceil(fractionalIndex));
+        const rightIndex: number = Math.max(0, Math.ceil(fractionalIndex));
         for (let i: number = rightIndex; i < this.VerticalGraphicalStaffEntryContainers.length; i++) {
             foundEntry = this.getStaffEntry(i);
             if (foundEntry !== undefined) {

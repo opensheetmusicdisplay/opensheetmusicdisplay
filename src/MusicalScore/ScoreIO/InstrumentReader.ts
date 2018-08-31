@@ -22,6 +22,7 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
 import {ExpressionReader} from "./MusicSymbolModules/ExpressionReader";
 import { RepetitionInstructionReader } from "./MusicSymbolModules/RepetitionInstructionReader";
+import { SlurReader } from "./MusicSymbolModules/SlurReader";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -61,13 +62,13 @@ export class InstrumentReader {
         this.activeClefsHaveBeenInitialized[i] = false;
       }
       this.createExpressionGenerators(instrument.Staves.length);
-      // (*) this.slurReader = MusicSymbolModuleFactory.createSlurReader(this.musicSheet);
+      this.slurReader = new SlurReader(this.musicSheet);
   }
 
   private repetitionInstructionReader: RepetitionInstructionReader;
   private xmlMeasureList: IXmlElement[];
   private musicSheet: MusicSheet;
-  private slurReader: any; // (*) SlurReader;
+  private slurReader: SlurReader;
   private instrument: Instrument;
   private voiceGeneratorsDict: { [n: number]: VoiceGenerator; } = {};
   private staffMainVoiceGeneratorDict: { [staffId: number]: VoiceGenerator } = {};
@@ -271,7 +272,7 @@ export class InstrumentReader {
              expressionReader.read(
                xmlNode, this.currentMeasure, previousFraction
              );
-            }
+          }
           }
           lastNoteWasGrace = isGraceNote;
         } else if (xmlNode.name === "attributes") {
@@ -329,15 +330,15 @@ export class InstrumentReader {
           }
         } else if (xmlNode.name === "direction") {
           const directionTypeNode: IXmlElement = xmlNode.element("direction-type");
-          //(*) MetronomeReader.readMetronomeInstructions(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
+          // (*) MetronomeReader.readMetronomeInstructions(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
           let relativePositionInMeasure: number = Math.min(1, currentFraction.RealValue);
           if (this.activeRhythm !== undefined && this.activeRhythm.Rhythm !== undefined) {
             relativePositionInMeasure /= this.activeRhythm.Rhythm.RealValue;
           }
           let handeled: boolean = false;
           if (this.repetitionInstructionReader !== undefined) {
-            handeled = this.repetitionInstructionReader.handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode,
-                                                                                                       relativePositionInMeasure);
+            handeled = this.repetitionInstructionReader.handleRepetitionInstructionsFromWordsOrSymbols( directionTypeNode,
+                                                                                                        relativePositionInMeasure);
           }
           if (!handeled) {
            let expressionReader: ExpressionReader = this.expressionReaders[0];
@@ -393,7 +394,7 @@ export class InstrumentReader {
          const reader: ExpressionReader = this.expressionReaders[i];
          if (reader !== undefined) {
            reader.checkForOpenExpressions(this.currentMeasure, currentFraction);
-         }
+      }
         }
       }
     } catch (e) {
