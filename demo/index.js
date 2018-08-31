@@ -28,6 +28,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
             "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
             "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
+            "OSMD Function Test - NoteHeadShapes": "OSMD_function_test_noteHeadShapes.musicxml",
+            "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
             "Anonymous - Saltarello": "Saltarello.mxl",
