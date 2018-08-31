@@ -200,6 +200,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (lyricsEntry.LyricsEntry.SyllableIndex > 0) { // syllables after first
               // give a little more spacing for dash between syllables
               minLyricsSpacing = EngravingRules.Rules.BetweenSyllableMinimumDistance;
+              if (TextAlignment.IsCenterAligned(lyricsEntry.GraphicalLabel.Label.textAlignment)) {
+                minLyricsSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
+                // without this, there's not enough space for dashes between long syllables on eigth notes
+              }
             }
             const syllables: LyricsEntry[] = lyricsEntry.ParentLyricWord.GetLyricWord.Syllables;
             if (syllables.length > 1) {

@@ -280,7 +280,7 @@ export class EngravingRules {
         this.verticalBetweenLyricsDistance = 0.5;
         this.horizontalBetweenLyricsDistance = 0.2;
         this.betweenSyllableMaximumDistance = 10.0;
-        this.betweenSyllableMinimumDistance = 0.4;
+        this.betweenSyllableMinimumDistance = 0.5; // + 1.0 for CenterAlignment added in lyrics spacing
         this.lyricOverlapAllowedIntoNextMeasure = 3.4; // optimal for dashed last lyric, see Land der Berge
         this.minimumDistanceBetweenDashes = 10;
 
