@@ -31,7 +31,7 @@ import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {BoundingBox} from "./BoundingBox";
 import {Instrument} from "../Instrument";
 import {GraphicalLabel} from "./GraphicalLabel";
-import {TextAlignment} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentAndPlacement} from "../../Common/Enums/TextAlignment";
 import {VerticalGraphicalStaffEntryContainer} from "./VerticalGraphicalStaffEntryContainer";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
@@ -58,7 +58,6 @@ import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceSt
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AbstractGraphicalInstruction } from "./AbstractGraphicalInstruction";
-import { GraphicalObject } from "./GraphicalObject";
 import { GraphicalInstantaneousTempoExpression } from "./GraphicalInstantaneousTempoExpression";
 import { InstantaneousTempoExpression, TempoEnum } from "../VoiceData/Expressions/InstantaneousTempoExpression";
 import { ContinuousTempoExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
@@ -423,7 +422,7 @@ export abstract class MusicSheetCalculator {
     private calculateSingleMeasureNumberPlacement(measure: GraphicalMeasure, staffLine: StaffLine, musicSystem: MusicSystem): void {
         const labelNumber: string = measure.MeasureNumber.toString();
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(new Label(labelNumber), this.rules.MeasureNumberLabelHeight,
-                                                                  TextAlignment.LeftBottom);
+                                                                  TextAlignmentAndPlacement.LeftBottom);
 
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
@@ -534,7 +533,7 @@ export abstract class MusicSheetCalculator {
 
                 // read the verseNumber and get index of this number in the sorted LyricVerseNumbersList of Instrument
                 // eg verseNumbers: 2,3,4,6 => 1,2,3,4
-                const verseNumber: number = lyricEntry.GetLyricsEntry.VerseNumber;
+                const verseNumber: number = lyricEntry.LyricsEntry.VerseNumber;
                 const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
                 const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance;
 
@@ -576,7 +575,7 @@ export abstract class MusicSheetCalculator {
                     this.calculateSingleLyricWord(lyricEntry);
                 }
                 // calculate the underscore line extend if needed
-                if (lyricEntry.GetLyricsEntry.extend) {
+                if (lyricEntry.LyricsEntry.extend) {
                     this.calculateLyricExtend(lyricEntry);
                 }
             }
@@ -902,12 +901,12 @@ export abstract class MusicSheetCalculator {
         label.fontHeight = fontHeight;
 
         // TODO_RR: TextHeight from first Entry
-        const graphLabel: GraphicalLabel = new GraphicalLabel(label, fontHeight, TextAlignment.CenterBottom, staffLine.PositionAndShape);
+        const graphLabel: GraphicalLabel = new GraphicalLabel(label, fontHeight, TextAlignmentAndPlacement.CenterBottom, staffLine.PositionAndShape);
         graphLabel.Label.fontStyle = style;
         const marginFactor: number = 1.1;
 
         if (placement === PlacementEnum.Below) {
-            graphLabel.Label.textAlignment = TextAlignment.LeftTop;
+            graphLabel.Label.textAlignment = TextAlignmentAndPlacement.LeftTop;
         }
 
         graphLabel.setLabelPositionAndShapeBorders();
@@ -1167,7 +1166,8 @@ export abstract class MusicSheetCalculator {
         let maxLabelLength: number = 0.0;
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
             if (instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
-                const graphicalLabel: GraphicalLabel = new GraphicalLabel(instrument.NameLabel, this.rules.InstrumentLabelTextHeight, TextAlignment.LeftCenter);
+                const graphicalLabel: GraphicalLabel = new GraphicalLabel(
+                    instrument.NameLabel, this.rules.InstrumentLabelTextHeight, TextAlignmentAndPlacement.LeftCenter);
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 maxLabelLength = Math.max(maxLabelLength, graphicalLabel.PositionAndShape.MarginSize.width);
             }
@@ -1178,22 +1178,22 @@ export abstract class MusicSheetCalculator {
     protected calculateSheetLabelBoundingBoxes(): void {
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
         if (musicSheet.Title !== undefined) {
-            const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignment.CenterBottom);
+            const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentAndPlacement.CenterBottom);
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
         }
         if (musicSheet.Subtitle !== undefined) {
-            const subtitle: GraphicalLabel = new GraphicalLabel(musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignment.CenterCenter);
+            const subtitle: GraphicalLabel = new GraphicalLabel(musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentAndPlacement.CenterCenter);
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
         }
         if (musicSheet.Composer !== undefined) {
-            const composer: GraphicalLabel = new GraphicalLabel(musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignment.RightCenter);
+            const composer: GraphicalLabel = new GraphicalLabel(musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentAndPlacement.RightCenter);
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
         }
         if (musicSheet.Lyricist !== undefined) {
-            const lyricist: GraphicalLabel = new GraphicalLabel(musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignment.LeftCenter);
+            const lyricist: GraphicalLabel = new GraphicalLabel(musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentAndPlacement.LeftCenter);
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();
         }
@@ -1984,7 +1984,7 @@ export abstract class MusicSheetCalculator {
      * @param {number} y
      */
     private calculateSingleDashForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): void {
-        const dash: GraphicalLabel = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignment.CenterBottom);
+        const dash: GraphicalLabel = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentAndPlacement.CenterBottom);
         dash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(dash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
@@ -2032,8 +2032,8 @@ export abstract class MusicSheetCalculator {
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
-                //lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
                 startStaffEntry.PositionAndShape.BorderMarginRight;
+                // + lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
                 // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +
@@ -2099,7 +2099,7 @@ export abstract class MusicSheetCalculator {
      * @returns {number}
      */
     private calculateRightAndLeftDashesForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): number {
-        const leftDash: GraphicalLabel = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignment.CenterBottom);
+        const leftDash: GraphicalLabel = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentAndPlacement.CenterBottom);
         leftDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(leftDash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
@@ -2108,7 +2108,7 @@ export abstract class MusicSheetCalculator {
         leftDash.PositionAndShape.Parent = staffLine.PositionAndShape;
         const leftDashRelative: PointF2D = new PointF2D(startX, y);
         leftDash.PositionAndShape.RelativePosition = leftDashRelative;
-        const rightDash: GraphicalLabel = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignment.CenterBottom);
+        const rightDash: GraphicalLabel = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentAndPlacement.CenterBottom);
         rightDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(rightDash);
         rightDash.PositionAndShape.Parent = staffLine.PositionAndShape;

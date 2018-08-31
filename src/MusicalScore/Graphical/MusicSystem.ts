@@ -4,7 +4,7 @@ import {BoundingBox} from "./BoundingBox";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {InstrumentalGroup} from "../InstrumentalGroup";
-import {TextAlignment} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentAndPlacement} from "../../Common/Enums/TextAlignment";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {GraphicalMeasure} from "./GraphicalMeasure";
@@ -279,7 +279,7 @@ export abstract class MusicSystem extends GraphicalObject {
             for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
                 const instrument: Instrument = instruments[idx];
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
-                    instrument.NameLabel, instrumentLabelTextHeight, TextAlignment.LeftCenter, this.boundingBox
+                    instrument.NameLabel, instrumentLabelTextHeight, TextAlignmentAndPlacement.LeftCenter, this.boundingBox
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(graphicalLabel, instrument);
