@@ -20,6 +20,7 @@ import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry"
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
+import { NoteHead, NoteHeadShape } from "../../VoiceData/NoteHead";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -103,12 +104,39 @@ export class VexFlowConverter {
      * @param pitch
      * @returns {string[]}
      */
-    public static pitch(pitch: Pitch, clef: ClefInstruction): [string, string, ClefInstruction] {
+    public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        // FIXME: The octave seems to need a shift of three?
-        const octave: number = pitch.Octave - clef.OctaveOffset + 3;
+        // The octave seems to need a shift of three FIXME?
+        const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
         const acc: string = VexFlowConverter.accidental(pitch.Accidental);
-        return [fund + "n/" + octave, acc, clef];
+        const noteHead: NoteHead = note.sourceNote.NoteHead;
+        let noteHeadCode: string = "";
+        if (noteHead !== undefined) {
+            noteHeadCode = this.NoteHeadCode(noteHead);
+        }
+        return [fund + "n/" + octave + noteHeadCode, acc, note.Clef()];
+    }
+
+    /** returns the Vexflow code for a note head. Some are still unsupported, see Vexflow/tables.js */
+    public static NoteHeadCode(noteHead: NoteHead): string {
+        const codeStart: string = "/";
+        const codeFilled: string = noteHead.Filled ? "2" : "1";
+        switch (noteHead.Shape) {
+            case NoteHeadShape.NORMAL:
+                return "";
+            case NoteHeadShape.DIAMOND:
+                return codeStart + "D" + codeFilled;
+            case NoteHeadShape.TRIANGLE:
+                return codeStart + "T" + codeFilled;
+            case NoteHeadShape.X:
+                return codeStart + "X" + codeFilled;
+            case NoteHeadShape.CIRCLEX:
+                return codeStart + "X3"; // circleX is "X3" in Vexflow for some reason
+            case NoteHeadShape.SLASH:
+                return ""; // slash is specified at end of duration string in Vexflow
+            default:
+                return "";
+        }
     }
 
     /**
@@ -176,9 +204,17 @@ export class VexFlowConverter {
         let numDots: number = baseNote.numberOfDots;
         let alignCenter: boolean = false;
         let xShift: number = 0;
+        let slashNoteHead: boolean = false;
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
+            }
+            if (note.sourceNote.NoteHead) {
+                if (note.sourceNote.NoteHead.Shape === NoteHeadShape.SLASH) {
+                    slashNoteHead = true;
+                    // if we have slash heads and other heads in the voice entry, this will create the same head for all.
+                    // same problem with numDots. The slash case should be extremely rare though.
+                }
             }
             // if it is a rest:
             if (note.sourceNote.isRest()) {
@@ -197,7 +233,6 @@ export class VexFlowConverter {
                 duration += "r";
                 break;
             }
-
             const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             keys.push(pitch[0]);
             accidentals.push(pitch[1]);
@@ -209,6 +244,9 @@ export class VexFlowConverter {
 
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             duration += "d";
+        }
+        if (slashNoteHead) {
+            duration += "s"; // we have to specify a slash note head like this in Vexflow
         }
 
         let vfnote: Vex.Flow.StaveNote;

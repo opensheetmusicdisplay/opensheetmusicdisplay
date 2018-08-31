@@ -147,29 +147,29 @@ export abstract class MusicSheetDrawer {
         const screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
         const heightInPixel: number = this.calculatePixelDistance(label.fontHeight);
         const widthInPixel: number = heightInPixel * this.textMeasurer.computeTextWidthToHeightRatio(label.text, label.font, label.fontStyle);
-        const bitmapWidth: number = <number>Math.ceil(widthInPixel);
-        const bitmapHeight: number = <number>Math.ceil(heightInPixel * 1.2);
+        const bitmapWidth: number = Math.ceil(widthInPixel);
+        const bitmapHeight: number = Math.ceil(heightInPixel * 1.2);
         switch (label.textAlignment) {
             // the following have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
             // TODO unify alignment shifts and our label/bbox position, which does not correspond to screenposition
             case TextAlignmentAndPlacement.LeftTop:
                 break;
-            case TextAlignmentAndPlacement.LeftCenter:
-                screenPosition.y -= <number>bitmapHeight / 2;
+            case TextAlignment.LeftCenter:
+                screenPosition.y -= bitmapHeight / 2;
                 break;
             case TextAlignmentAndPlacement.LeftBottom:
                 screenPosition.y -= bitmapHeight;
                 screenPosition.x -= unitInPixels; // lyrics-specific to align with notes
                 break;
-            case TextAlignmentAndPlacement.CenterTop:
-                screenPosition.x -= <number>bitmapWidth / 2;
+            case TextAlignment.CenterTop:
+                screenPosition.x -= bitmapWidth / 2;
                 break;
-            case TextAlignmentAndPlacement.CenterCenter:
-                screenPosition.x -= <number>bitmapWidth / 2;
-                screenPosition.y -= <number>bitmapHeight / 2;
+            case TextAlignment.CenterCenter:
+                screenPosition.x -= bitmapWidth / 2;
+                screenPosition.y -= bitmapHeight / 2;
                 break;
-            case TextAlignmentAndPlacement.CenterBottom:
-                screenPosition.x -= <number>bitmapWidth / 2;
+            case TextAlignment.CenterBottom:
+                screenPosition.x -= bitmapWidth / 2;
                 screenPosition.y -= bitmapHeight;
                 break;
             case TextAlignmentAndPlacement.RightTop:
@@ -177,7 +177,7 @@ export abstract class MusicSheetDrawer {
                 break;
             case TextAlignmentAndPlacement.RightCenter:
                 screenPosition.x -= bitmapWidth;
-                screenPosition.y -= <number>bitmapHeight / 2;
+                screenPosition.y -= bitmapHeight / 2;
                 break;
             case TextAlignmentAndPlacement.RightBottom:
                 screenPosition.x -= bitmapWidth;

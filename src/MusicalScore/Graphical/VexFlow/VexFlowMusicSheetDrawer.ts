@@ -12,11 +12,14 @@ import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowOctaveShift} from "./VexFlowOctaveShift";
 import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
-import {VexFlowInstrumentBracket} from "./VexFlowInstrumentBracket";
-import {VexFlowInstrumentBrace} from "./VexFlowInstrumentBrace";
-import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
+import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
+import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import {StaffLine} from "../StaffLine";
 import {EngravingRules} from "../EngravingRules";
+import { GraphicalSlur } from "../GraphicalSlur";
+import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import {GraphicalInstantaneousTempoExpression} from "../GraphicalInstantaneousTempoExpression";
 import {GraphicalInstantaneousDynamicExpression} from "../GraphicalInstantaneousDynamicExpression";
 import log = require("loglevel");
@@ -74,6 +77,57 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         return unitDistance * unitInPixels;
     }
 
+    protected drawStaffLine(staffLine: StaffLine): void {
+        super.drawStaffLine(staffLine);
+        const  absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+        this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
+    }
+
+    private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
+        for (const graphicalSlur of vfstaffLine.GraphicalSlurs) {
+            // don't draw crossed slurs, as their curve calculation is not implemented yet:
+            if (graphicalSlur.slur.isCrossed()) {
+                continue;
+            }
+            this.drawSlur(graphicalSlur, absolutePos);
+        }
+    }
+
+    private drawSlur(graphicalSlur: GraphicalSlur, abs: PointF2D): void {
+        const curvePointsInPixels: PointF2D[] = [];
+        // 1) create inner or original curve:
+        const p1: PointF2D = new PointF2D(graphicalSlur.bezierStartPt.x + abs.x, graphicalSlur.bezierStartPt.y + abs.y);
+        const p2: PointF2D = new PointF2D(graphicalSlur.bezierStartControlPt.x + abs.x, graphicalSlur.bezierStartControlPt.y + abs.y);
+        const p3: PointF2D = new PointF2D(graphicalSlur.bezierEndControlPt.x + abs.x, graphicalSlur.bezierEndControlPt.y + abs.y);
+        const p4: PointF2D = new PointF2D(graphicalSlur.bezierEndPt.x + abs.x, graphicalSlur.bezierEndPt.y + abs.y);
+
+        // put screen transformed points into array
+        curvePointsInPixels.push(this.applyScreenTransformation(p1));
+        curvePointsInPixels.push(this.applyScreenTransformation(p2));
+        curvePointsInPixels.push(this.applyScreenTransformation(p3));
+        curvePointsInPixels.push(this.applyScreenTransformation(p4));
+
+        // 2) create second outer curve to create a thickness for the curve:
+        if (graphicalSlur.placement === PlacementEnum.Above) {
+            p1.y -= 0.05;
+            p2.y -= 0.3;
+            p3.y -= 0.3;
+            p4.y -= 0.05;
+        } else {
+            p1.y += 0.05;
+            p2.y += 0.3;
+            p3.y += 0.3;
+            p4.y += 0.05;
+        }
+
+        // put screen transformed points into array
+        curvePointsInPixels.push(this.applyScreenTransformation(p1));
+        curvePointsInPixels.push(this.applyScreenTransformation(p2));
+        curvePointsInPixels.push(this.applyScreenTransformation(p3));
+        curvePointsInPixels.push(this.applyScreenTransformation(p4));
+        this.backend.renderCurve(curvePointsInPixels);
+    }
+
     protected drawMeasure(measure: VexFlowMeasure): void {
         measure.setAbsoluteCoordinates(
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
@@ -84,8 +138,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
             this.drawStaffEntry(staffEntry);
-        }
-    }
+                    }
+                }
 
     // private drawPixel(coord: PointF2D): void {
     //     coord = this.applyScreenTransformation(coord);
@@ -100,20 +154,20 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
         this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
-    }
+            }
 
     protected drawSkyLine(staffline: StaffLine): void {
         const startPosition: PointF2D = staffline.PositionAndShape.AbsolutePosition;
         const width: number = staffline.PositionAndShape.Size.width;
         this.drawSampledLine(staffline.SkyLine, startPosition, width);
-    }
+        }
 
     protected drawBottomLine(staffline: StaffLine): void {
         const startPosition: PointF2D = new PointF2D(staffline.PositionAndShape.AbsolutePosition.x,
                                                      staffline.PositionAndShape.AbsolutePosition.y);
         const width: number = staffline.PositionAndShape.Size.width;
         this.drawSampledLine(staffline.BottomLine, startPosition, width, "#0000FFFF");
-    }
+        }
 
     /**
      * Draw a line with a width and start point in a chosen color (used for skyline/bottom line debugging) from
@@ -131,7 +185,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             if (line[i] !== currentValue) {
                 indices.push(i);
                 currentValue = line[i];
-            }
+    }
         }
 
         const absolute: PointF2D = startPosition;

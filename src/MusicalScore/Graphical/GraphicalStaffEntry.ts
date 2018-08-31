@@ -109,6 +109,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      * @returns {any}
      */
     public findEndTieGraphicalNoteFromNoteWithStartingSlur(tieNote: Note, slur: Slur): GraphicalNote {
+        if (tieNote === undefined) {
+            return undefined;
+        }
         for (const gve of this.graphicalVoiceEntries) {
             if (gve.parentVoiceEntry !== tieNote.ParentVoiceEntry) {
                 continue;
@@ -124,6 +127,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public findGraphicalNoteFromGraceNote(graceNote: Note): GraphicalNote {
+        if (graceNote === undefined) {
+            return undefined;
+        }
         for (const gve of this.graphicalVoiceEntries) {
             if (gve.parentVoiceEntry !== graceNote.ParentVoiceEntry) {
                 continue;
@@ -138,6 +144,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public findGraphicalNoteFromNote(note: Note): GraphicalNote {
+        if (note === undefined) {
+            return undefined;
+        }
         for (const gve of this.graphicalVoiceEntries) {
             if (gve.parentVoiceEntry !== note.ParentVoiceEntry) {
                 continue;
