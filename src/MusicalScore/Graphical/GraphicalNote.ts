@@ -52,7 +52,7 @@ export class GraphicalNote extends GraphicalObject {
       if (this.sourceNote === undefined || this.sourceNote.NoteTuplet === undefined) {
         while (product < expandedNumerator) {
           num++;
-          product = <number>Math.pow(2, num);
+          product = Math.pow(2, num);
         }
       }
       return Math.min(3, num - 1);

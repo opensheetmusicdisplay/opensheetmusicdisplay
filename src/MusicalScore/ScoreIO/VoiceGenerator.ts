@@ -24,16 +24,12 @@ import { Pitch } from "../../Common/DataObjects/Pitch";
 import { IXmlAttribute } from "../../Common/FileIO/Xml";
 import { CollectionUtil } from "../../Util/CollectionUtil";
 import { ArticulationReader } from "./MusicSymbolModules/ArticulationReader";
-
-/**
- * To be implemented
- */
-export type SlurReader = any;
+import { SlurReader } from "./MusicSymbolModules/SlurReader";
 
 export class VoiceGenerator {
   constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
     this.musicSheet = instrument.GetMusicSheet;
-    // this.slurReader = slurReader;
+    this.slurReader = slurReader;
     if (mainVoice !== undefined) {
       this.voice = new LinkedVoice(instrument, voiceId, mainVoice);
     } else {
@@ -44,7 +40,7 @@ export class VoiceGenerator {
     this.articulationReader = new ArticulationReader();
   }
 
-  // private slurReader: SlurReader;
+  private slurReader: SlurReader;
   private lyricsReader: LyricsReader;
   private articulationReader: ArticulationReader;
   private musicSheet: MusicSheet;
@@ -114,27 +110,30 @@ export class VoiceGenerator {
       this.currentNote = restNote
         ? this.addRestNote(noteDuration)
         : this.addSingleNote(noteNode, noteDuration, chord, guitarPro);
-
-      if (this.lyricsReader !== undefined && noteNode.elements("lyric") !== undefined) {
-        this.lyricsReader.addLyricEntry(noteNode.elements("lyric"), this.currentVoiceEntry);
+      // read lyrics
+      const lyricElements: IXmlElement[] = noteNode.elements("lyric");
+      if (this.lyricsReader !== undefined && lyricElements !== undefined) {
+        this.lyricsReader.addLyricEntry(lyricElements, this.currentVoiceEntry);
         this.voice.Parent.HasLyrics = true;
       }
       let hasTupletCommand: boolean = false;
       const notationNode: IXmlElement = noteNode.element("notations");
       if (notationNode !== undefined) {
-        // let articNode: IXmlElement = undefined;
-        // (*)
+        // read articulations
         if (this.articulationReader !== undefined) {
           this.readArticulations(notationNode, this.currentVoiceEntry);
         }
-        //let slurNodes: IXmlElement[] = undefined;
-        // (*)
-        //if (this.slurReader !== undefined && (slurNodes = notationNode.elements("slur")))
-        //    this.slurReader.addSlur(slurNodes, this.currentNote);
-        // check for Tuplets
-        const tupletNodeList: IXmlElement[] = notationNode.elements("tuplet");
-        if (tupletNodeList.length > 0) {
-          this.openTupletNumber = this.addTuplet(noteNode, tupletNodeList);
+        // read slurs
+        const slurElements: IXmlElement[] = notationNode.elements("slur");
+        if (this.slurReader !== undefined &&
+            slurElements.length > 0 &&
+            !this.currentNote.ParentVoiceEntry.IsGrace) {
+          this.slurReader.addSlur(slurElements, this.currentNote);
+        }
+        // read Tuplets
+        const tupletElements: IXmlElement[] = notationNode.elements("tuplet");
+        if (tupletElements.length > 0) {
+          this.openTupletNumber = this.addTuplet(noteNode, tupletElements);
           hasTupletCommand = true;
         }
         // check for Arpeggios
@@ -423,26 +422,26 @@ export class VoiceGenerator {
                 this.handleOpenBeam();
               }
               this.openBeam = new Beam();
-          }
+            }
           this.lastBeamTag = currentBeamTag;
         }
         let sameVoiceEntry: boolean = false;
         if (this.openBeam === undefined) {
-          return;
-        }
+            return;
+          }
         for (let idx: number = 0, len: number = this.openBeam.Notes.length; idx < len; ++idx) {
-          const beamNote: Note = this.openBeam.Notes[idx];
-          if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
-            sameVoiceEntry = true;
+            const beamNote: Note = this.openBeam.Notes[idx];
+            if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
+              sameVoiceEntry = true;
+            }
           }
-        }
         if (!sameVoiceEntry) {
-          this.openBeam.addNoteToBeam(note);
-          if (currentBeamTag === "end" && beamNumber === 1) {
-            this.openBeam = undefined;
+            this.openBeam.addNoteToBeam(note);
+            if (currentBeamTag === "end" && beamNumber === 1) {
+              this.openBeam = undefined;
+            }
           }
         }
-      }
     } catch (e) {
       const errorMsg: string = ITextTranslation.translateText(
         "ReaderErrorMessages/BeamError", "Error while reading beam."
