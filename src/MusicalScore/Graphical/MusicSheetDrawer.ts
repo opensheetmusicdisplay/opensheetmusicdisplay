@@ -154,21 +154,21 @@ export abstract class MusicSheetDrawer {
             // TODO unify alignment shifts and our label/bbox position, which does not correspond to screenposition
             case TextAlignmentAndPlacement.LeftTop:
                 break;
-            case TextAlignment.LeftCenter:
+            case TextAlignmentAndPlacement.LeftCenter:
                 screenPosition.y -= bitmapHeight / 2;
                 break;
             case TextAlignmentAndPlacement.LeftBottom:
                 screenPosition.y -= bitmapHeight;
                 screenPosition.x -= unitInPixels; // lyrics-specific to align with notes
                 break;
-            case TextAlignment.CenterTop:
+            case TextAlignmentAndPlacement.CenterTop:
                 screenPosition.x -= bitmapWidth / 2;
                 break;
-            case TextAlignment.CenterCenter:
+            case TextAlignmentAndPlacement.CenterCenter:
                 screenPosition.x -= bitmapWidth / 2;
                 screenPosition.y -= bitmapHeight / 2;
                 break;
-            case TextAlignment.CenterBottom:
+            case TextAlignmentAndPlacement.CenterBottom:
                 screenPosition.x -= bitmapWidth / 2;
                 screenPosition.y -= bitmapHeight;
                 break;

@@ -226,7 +226,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               }
             }
           }
-        }
 
           const lyricsBbox: BoundingBox = lyricsEntry.GraphicalLabel.PositionAndShape;
           const lyricsLabelWidth: number = lyricsBbox.Size.width;
@@ -302,6 +301,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             sourceNoteDuration: lyricsEntry.LyricsEntry.Parent.Notes[0].Length,
             text: lyricsEntry.LyricsEntry.Text,
           };
+        }
       }
     }
     return oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
