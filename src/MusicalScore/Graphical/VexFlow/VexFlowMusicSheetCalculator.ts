@@ -118,7 +118,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         }
         if (voices.length === 0) {
-            log.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+            log.info("Found a measure with no voices. Continuing anyway.", mvoices);
             continue;
         }
         // all voices that belong to one stave are collectively added to create a common context in VexFlow.
