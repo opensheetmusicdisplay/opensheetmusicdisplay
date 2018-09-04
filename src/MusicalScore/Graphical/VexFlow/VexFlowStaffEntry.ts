@@ -34,7 +34,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                     if (ex.toString().indexOf("UnformattedNote") !== -1) {
                         // can't call getBoundingBox on unformatted note. do nothing.
                     } else {
-                        throw new Error(ex); // TODO error handling
+                        throw new Error(ex);
+                        // there shouldn't be other errors. If there are, we need to add handling of them
                     }
                 }
                 if (gve.PositionAndShape.BorderLeft < lastBorderLeft) {
