@@ -118,7 +118,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (root === undefined) {
             throw new MusicSheetReadingException("Undefined root element");
         }
-        this.pushSheetLabels(root, path);
+        const pushSheetLabelsSuccess: boolean = this.pushSheetLabels(root, path);
+        if (!pushSheetLabelsSuccess) {
+            return undefined;
+        }
         const partlistNode: IXmlElement = root.element("part-list");
         if (partlistNode === undefined) {
             throw new MusicSheetReadingException("Undefined partListNode");
@@ -483,24 +486,25 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * @param root
      * @param filePath
      */
-    private pushSheetLabels(root: IXmlElement, filePath: string): void {
+    private pushSheetLabels(root: IXmlElement, filePath: string): boolean {
         this.readComposer(root);
         this.readTitle(root);
-        if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
-            this.readTitleAndComposerFromCredits(root);
-        }
-        if (this.musicSheet.Title === undefined) {
-            try {
+        try {
+            if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
+                this.readTitleAndComposerFromCredits(root);
+            }
+            if (this.musicSheet.Title === undefined) {
                 const barI: number = Math.max(
                     0, filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")
                 );
                 const filename: string = filePath.substr(barI);
                 const filenameSplits: string[] = filename.split(".", 1);
                 this.musicSheet.Title = new Label(filenameSplits[0]);
-            } catch (ex) {
-                log.info("MusicSheetReader.pushSheetLabels: ", ex);
             }
-
+            return true;
+        } catch (ex) {
+            log.debug("MusicSheetReader.pushSheetLabels: ", ex);
+            return false;
         }
     }
 

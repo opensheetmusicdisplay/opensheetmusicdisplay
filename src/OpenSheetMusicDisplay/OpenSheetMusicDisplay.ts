@@ -123,6 +123,10 @@ export class OpenSheetMusicDisplay {
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         const reader: MusicSheetReader = new MusicSheetReader();
         this.sheet = reader.createMusicSheet(score, "Unknown path");
+        if (this.sheet === undefined) {
+            // error loading sheet, probably already logged, do nothing
+            return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
+        }
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         log.info(`Loaded sheet ${this.sheet.TitleString} successfully.`);
