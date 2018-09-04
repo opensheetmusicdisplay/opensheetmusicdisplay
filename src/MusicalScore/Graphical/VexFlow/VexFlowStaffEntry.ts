@@ -27,8 +27,16 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
                 gve.vfStaveNote.setStave(stave);
-                gve.applyBordersFromVexflow();
-                this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().x / unitInPixels;
+                try {
+                    gve.applyBordersFromVexflow();
+                    this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().x / unitInPixels;
+                } catch (ex) {
+                    if (ex.toString().indexOf("UnformattedNote") !== -1) {
+                        // can't call getBoundingBox on unformatted note. do nothing.
+                    } else {
+                        throw new Error(ex); // TODO error handling
+                    }
+                }
                 if (gve.PositionAndShape.BorderLeft < lastBorderLeft) {
                     lastBorderLeft = gve.PositionAndShape.BorderLeft;
                 }

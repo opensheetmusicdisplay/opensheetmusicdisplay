@@ -64,6 +64,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             return this._createMusicSheet(root, path);
         } catch (e) {
             log.info("MusicSheetReader.CreateMusicSheet", e);
+            return undefined;
         }
     }
 
@@ -118,10 +119,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (root === undefined) {
             throw new MusicSheetReadingException("Undefined root element");
         }
-        const pushSheetLabelsSuccess: boolean = this.pushSheetLabels(root, path);
-        if (!pushSheetLabelsSuccess) {
-            return undefined;
-        }
+        this.pushSheetLabels(root, path);
         const partlistNode: IXmlElement = root.element("part-list");
         if (partlistNode === undefined) {
             throw new MusicSheetReadingException("Undefined partListNode");
@@ -486,7 +484,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * @param root
      * @param filePath
      */
-    private pushSheetLabels(root: IXmlElement, filePath: string): boolean {
+    private pushSheetLabels(root: IXmlElement, filePath: string): void {
         this.readComposer(root);
         this.readTitle(root);
         try {
@@ -501,10 +499,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 const filenameSplits: string[] = filename.split(".", 1);
                 this.musicSheet.Title = new Label(filenameSplits[0]);
             }
-            return true;
         } catch (ex) {
             log.debug("MusicSheetReader.pushSheetLabels: ", ex);
-            return false;
         }
     }
 

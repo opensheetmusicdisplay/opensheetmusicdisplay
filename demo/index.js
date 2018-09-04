@@ -113,7 +113,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
         }
 
-        bottomlineDebug .onclick = function() {
+        bottomlineDebug.onclick = function() {
             openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
         }
 
@@ -232,7 +232,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
-                console.warn(e.stack);
+                console.warn("Error rendering sheet: " + e + " StackTrace: \n" + e.stack);
                 error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
                 onLoadingEnd(isCustom);
             }
