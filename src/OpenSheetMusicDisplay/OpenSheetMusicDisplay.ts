@@ -39,7 +39,7 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
-        if (options.backend === "svg" || options.backend === undefined) {
+        if (options.backend.toLowerCase() === "svg" || options.backend === undefined) {
             this.backend = new SvgVexFlowBackend();
         } else {
             this.backend = new CanvasVexFlowBackend();
@@ -334,10 +334,10 @@ export class OpenSheetMusicDisplay {
 
 export interface OSMDOptions {
     autoBeam?: boolean; // not yet supported. will always autoBeam.
-    autoResize?: boolean;
+    autoResize?: boolean; // default is false
     autoStem?: boolean; // not yet supported. will always autoStem
-    backend?: string;
+    backend?: string; // Backend will be SVG if backend === "svg", otherwise Canvas
     disableCursor?: boolean; // will override this part of drawingParameters
     drawingParametersEnum?: DrawingParametersEnum;
     drawingParametersString?: string; // alternative to using the enum. only need to set one of these.
-  }
+}
