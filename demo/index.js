@@ -113,12 +113,17 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
         }
 
-        bottomlineDebug .onclick = function() {
+        bottomlineDebug.onclick = function() {
             openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
         }
 
         // Create OSMD object and canvas
-        openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, backendSelect.value);
+        openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
+            autoResize: false,
+            backend: backendSelect.value,
+            drawingParametersString: "default",
+            disableCursor: false,
+        });
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);
 
@@ -163,7 +168,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.cursor.hide();
         });
         showCursorBtn.addEventListener("click", function() {
-            openSheetMusicDisplay.cursor.show();
+            if (openSheetMusicDisplay.cursor) {
+                openSheetMusicDisplay.cursor.show();
+            } else {
+                console.info("can't show cursor, cursor was disabled by drawingParameters!");
+            }
         });
 
         backendSelect.addEventListener("change", function(e) {

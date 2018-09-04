@@ -13,6 +13,7 @@ import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
+import { DrawingParametersEnum, DrawingParameters } from "../MusicalScore/Graphical/DrawingParameters";
 
 export class OpenSheetMusicDisplay {
     /**
@@ -20,7 +21,12 @@ export class OpenSheetMusicDisplay {
      * @param container is either the ID, or the actual "div" element which will host the music sheet
      * @autoResize automatically resize the sheet to full page width on window resize
      */
-    constructor(container: string|HTMLElement, autoResize: boolean = false, backend: string = "svg") {
+    constructor(container: string|HTMLElement,
+                options: OSMDOptions = {
+                    autoResize: false,
+                    backend: "svg",
+                    drawingParametersEnum: DrawingParametersEnum.Default,
+                }) {
         // Store container element
         if (typeof container === "string") {
             // ID passed
@@ -33,10 +39,24 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
-        if (backend === "svg") {
+        if (options.backend === "svg" || options.backend === undefined) {
             this.backend = new SvgVexFlowBackend();
         } else {
             this.backend = new CanvasVexFlowBackend();
+        }
+
+        this.drawingParameters = new DrawingParameters();
+        if (options.drawingParametersEnum) {
+            this.drawingParameters.DrawingParametersEnum = options.drawingParametersEnum;
+        } else if (options.drawingParametersString) {
+            this.drawingParameters.DrawingParametersEnum =
+                DrawingParameters.DrawingParametersStringToEnum(options.drawingParametersString);
+        } else {
+            this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum.Default;
+        }
+
+        if (options.disableCursor) {
+            this.drawingParameters.drawCursors = false;
         }
 
         this.backend.initialize(this.container);
@@ -44,11 +64,14 @@ export class OpenSheetMusicDisplay {
         const inner: HTMLElement = this.backend.getInnerElement();
 
         // Create the drawer
-        this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, false);
-        // Create the cursor
-        this.cursor = new Cursor(inner, this);
+        this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
 
-        if (autoResize) {
+        if (this.drawingParameters.drawCursors) {
+            // Create the cursor
+            this.cursor = new Cursor(inner, this);
+        }
+
+        if (options.autoResize) {
             this.autoResize();
         }
     }
@@ -62,6 +85,7 @@ export class OpenSheetMusicDisplay {
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
+    private drawingParameters: DrawingParameters;
 
     /**
      * Load a MusicXML file
@@ -124,7 +148,9 @@ export class OpenSheetMusicDisplay {
         const reader: MusicSheetReader = new MusicSheetReader();
         this.sheet = reader.createMusicSheet(score, "Unknown path");
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
-        this.cursor.init(this.sheet.MusicPartManager, this.graphic);
+        if (this.drawingParameters.drawCursors) {
+            this.cursor.init(this.sheet.MusicPartManager, this.graphic);
+        }
         log.info(`Loaded sheet ${this.sheet.TitleString} successfully.`);
         return Promise.resolve({});
     }
@@ -147,15 +173,9 @@ export class OpenSheetMusicDisplay {
         this.sheet.pageWidth = width / this.zoom / 10.0;
         // Calculate again
         this.graphic.reCalculate();
-        this.graphic.Cursors.length = 0;
-        /*this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(0, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(1, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(2, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(3, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(4, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(5, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(6, 4), OutlineAndFillStyleEnum.PlaybackCursor));
-        this.graphic.Cursors.push(this.graphic.calculateCursorLineAtTimestamp(new Fraction(7, 4), OutlineAndFillStyleEnum.PlaybackCursor));*/
+        if (this.drawingParameters.drawCursors) {
+            this.graphic.Cursors.length = 0;
+        }
         // Update Sheet Page
         const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
         this.drawer.clear();
@@ -163,8 +183,10 @@ export class OpenSheetMusicDisplay {
         this.drawer.scale(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
-        // Update the cursor position
-        this.cursor.update();
+        if (this.drawingParameters.drawCursors) {
+            // Update the cursor position
+            this.cursor.update();
+        }
     }
 
     /**
@@ -201,7 +223,9 @@ export class OpenSheetMusicDisplay {
      * FIXME: Probably unnecessary
      */
     private reset(): void {
-        this.cursor.hide();
+        if (this.drawingParameters.drawCursors) {
+            this.cursor.hide();
+        }
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;
@@ -307,3 +331,13 @@ export class OpenSheetMusicDisplay {
     }
     //#endregion
 }
+
+export interface OSMDOptions {
+    autoBeam?: boolean; // not yet supported. will always autoBeam.
+    autoResize?: boolean;
+    autoStem?: boolean; // not yet supported. will always autoStem
+    backend?: string;
+    disableCursor?: boolean; // will override this part of drawingParameters
+    drawingParametersEnum?: DrawingParametersEnum;
+    drawingParametersString?: string; // alternative to using the enum. only need to set one of these.
+  }

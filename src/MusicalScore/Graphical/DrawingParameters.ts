@@ -1,4 +1,13 @@
+export enum DrawingParametersEnum {
+    AllOn,
+    Default, // default is AllOn for now
+    Leadsheet,
+    Preview,
+    Thumbnail,
+}
+
 export class DrawingParameters {
+    private drawingParametersEnum: DrawingParametersEnum; // will control other settings if changed with set method
     public drawHighlights: boolean;
     public drawErrors: boolean;
     public drawSelectionStartSymbol: boolean;
@@ -8,6 +17,45 @@ export class DrawingParameters {
     public drawScrollIndicator: boolean;
     public drawComments: boolean;
     public drawMarkedAreas: boolean;
+
+    public static DrawingParametersStringToEnum(stringParameter: string): DrawingParametersEnum {
+        switch (stringParameter.toLowerCase()) {
+            case "allOn":
+                return DrawingParametersEnum.AllOn;
+            case "default":
+                return DrawingParametersEnum.Default;
+            case "leadsheet":
+                return DrawingParametersEnum.Leadsheet;
+            case "preview":
+                return DrawingParametersEnum.Preview;
+            case "thumbnail":
+                return DrawingParametersEnum.Thumbnail;
+            default:
+                return DrawingParametersEnum.Default;
+        }
+    }
+
+    public set DrawingParametersEnum(drawingParametersEnum: DrawingParametersEnum) {
+        this.drawingParametersEnum = drawingParametersEnum;
+        switch (drawingParametersEnum) {
+            case DrawingParametersEnum.Default:
+            case DrawingParametersEnum.AllOn:
+                this.setForAllOn();
+                break;
+            case DrawingParametersEnum.Thumbnail:
+                this.setForThumbnail();
+                break;
+            case DrawingParametersEnum.Leadsheet:
+                this.setForLeadsheet();
+                break;
+            default:
+                this.setForAllOn();
+        }
+    }
+
+    public get DrawingParametersEnum(): DrawingParametersEnum {
+        return this.drawingParametersEnum;
+    }
 
     public setForAllOn(): void {
         this.drawHighlights = true;
@@ -21,7 +69,7 @@ export class DrawingParameters {
         this.drawMarkedAreas = true;
     }
 
-    public setForThumbmail(): void {
+    public setForThumbnail(): void {
         this.drawHighlights = false;
         this.drawErrors = false;
         this.drawSelectionStartSymbol = false;

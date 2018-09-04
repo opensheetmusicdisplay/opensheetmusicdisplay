@@ -53,14 +53,10 @@ export abstract class MusicSheetDrawer {
     private phonicScoreMode: PhonicScoreModes = PhonicScoreModes.Manual;
 
     constructor(textMeasurer: ITextMeasurer,
-                isPreviewImageDrawer: boolean = false) {
+                drawingParameters: DrawingParameters) {
         this.textMeasurer = textMeasurer;
         this.splitScreenLineColor = -1;
-        if (isPreviewImageDrawer) {
-            this.drawingParameters.setForThumbmail();
-        } else {
-            this.drawingParameters.setForAllOn();
-        }
+        this.drawingParameters = drawingParameters;
     }
 
     public set Mode(value: PhonicScoreModes) {
