@@ -9,17 +9,26 @@ export class ArticulationReader {
 
   private getAccEnumFromString(input: string): AccidentalEnum {
     switch (input) {
-      case "natural":
-        return AccidentalEnum.NATURAL;
       case "sharp":
         return AccidentalEnum.SHARP;
-      case "sharp-sharp":
-      case "double-sharp":
-        return AccidentalEnum.DOUBLESHARP;
       case "flat":
-        return AccidentalEnum.FLAT;
+          return AccidentalEnum.FLAT;
+      case "natural":
+        return AccidentalEnum.NATURAL;
+      case "double-sharp":
+      case "sharp-sharp":
+        return AccidentalEnum.DOUBLESHARP;
+      case "double-flat":
       case "flat-flat":
         return AccidentalEnum.DOUBLEFLAT;
+      case "quarter-sharp":
+        return AccidentalEnum.QUARTERTONESHARP;
+      case "quarter-flat":
+        return AccidentalEnum.QUARTERTONEFLAT;
+      case "triple-sharp":
+          return AccidentalEnum.TRIPLESHARP;
+      case "triple-flat":
+        return AccidentalEnum.TRIPLEFLAT;
       default:
         return AccidentalEnum.NONE;
     }
@@ -86,41 +95,36 @@ export class ArticulationReader {
    * @param currentVoiceEntry
    */
   public addTechnicalArticulations(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
-    let node: IXmlElement = xmlNode.element("up-bow");
-    if (node !== undefined) {
-      if (currentVoiceEntry.Articulations.indexOf(ArticulationEnum.upbow) === -1) {
-        currentVoiceEntry.Articulations.push(ArticulationEnum.upbow);
+    interface XMLElementToArticulationEnum {
+      [xmlElement: string]: ArticulationEnum;
+    }
+    const xmlElementToArticulationEnum: XMLElementToArticulationEnum = {
+      "down-bow": ArticulationEnum.downbow,
+      "open-string": ArticulationEnum.naturalharmonic,
+      "snap-pizzicato": ArticulationEnum.snappizzicato,
+      "stopped": ArticulationEnum.lefthandpizzicato,
+      "up-bow": ArticulationEnum.upbow,
+      // fingering is special case
+    };
+
+    for (const xmlArticulation in xmlElementToArticulationEnum) {
+      if (!xmlElementToArticulationEnum.hasOwnProperty(xmlArticulation)) {
+        continue;
+      }
+      const articulationEnum: ArticulationEnum = xmlElementToArticulationEnum[xmlArticulation];
+      const node: IXmlElement = xmlNode.element(xmlArticulation);
+      if (node !== undefined) {
+        if (currentVoiceEntry.Articulations.indexOf(articulationEnum) === -1) {
+          currentVoiceEntry.Articulations.push(articulationEnum);
+        }
       }
     }
-    node = xmlNode.element("down-bow");
-    if (node !== undefined) {
-      if (currentVoiceEntry.Articulations.indexOf(ArticulationEnum.downbow) === -1) {
-        currentVoiceEntry.Articulations.push(ArticulationEnum.downbow);
-      }
-    }
-    node = xmlNode.element("open-string");
-    if (node !== undefined) {
-      if (currentVoiceEntry.Articulations.indexOf(ArticulationEnum.naturalharmonic) === -1) {
-        currentVoiceEntry.Articulations.push(ArticulationEnum.naturalharmonic);
-      }
-    }
-    node = xmlNode.element("stopped");
-    if (node !== undefined) {
-      if (currentVoiceEntry.Articulations.indexOf(ArticulationEnum.lefthandpizzicato) === -1) {
-        currentVoiceEntry.Articulations.push(ArticulationEnum.lefthandpizzicato);
-      }
-    }
-    node = xmlNode.element("snap-pizzicato");
-    if (node !== undefined) {
-      if (currentVoiceEntry.Articulations.indexOf(ArticulationEnum.snappizzicato) === -1) {
-        currentVoiceEntry.Articulations.push(ArticulationEnum.snappizzicato);
-      }
-    }
-    node = xmlNode.element("fingering");
-    if (node !== undefined) {
+
+    const nodeFingering: IXmlElement = xmlNode.element("fingering");
+    if (nodeFingering !== undefined) {
       const currentTechnicalInstruction: TechnicalInstruction = new TechnicalInstruction();
       currentTechnicalInstruction.type = TechnicalInstructionType.Fingering;
-      currentTechnicalInstruction.value = node.value;
+      currentTechnicalInstruction.value = nodeFingering.value;
       currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
     }
   }
@@ -133,33 +137,29 @@ export class ArticulationReader {
   public addOrnament(ornamentsNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
     if (ornamentsNode !== undefined) {
       let ornament: OrnamentContainer = undefined;
-      let node: IXmlElement = ornamentsNode.element("trill-mark");
-      if (node !== undefined) {
-        ornament = new OrnamentContainer(OrnamentEnum.Trill);
+
+      interface XMLElementToOrnamentEnum {
+        [xmlElement: string]: OrnamentEnum;
       }
-      node = ornamentsNode.element("turn");
-      if (node !== undefined) {
-        ornament = new OrnamentContainer(OrnamentEnum.Turn);
-      }
-      node = ornamentsNode.element("inverted-turn");
-      if (node !== undefined) {
-        ornament = new OrnamentContainer(OrnamentEnum.InvertedTurn);
-      }
-      node = ornamentsNode.element("delayed-turn");
-      if (node !== undefined) {
-        ornament = new OrnamentContainer(OrnamentEnum.DelayedTurn);
-      }
-      node = ornamentsNode.element("delayed-inverted-turn");
-      if (node !== undefined) {
-        ornament = new OrnamentContainer(OrnamentEnum.DelayedInvertedTurn);
-      }
-      node = ornamentsNode.element("mordent");
-      if (node !== undefined) {
-        ornament = new OrnamentContainer(OrnamentEnum.Mordent);
-      }
-      node = ornamentsNode.element("inverted-mordent");
-      if (node !== undefined) {
-        ornament = new OrnamentContainer(OrnamentEnum.InvertedMordent);
+      const elementToOrnamentEnum: XMLElementToOrnamentEnum = {
+        "delayed-inverted-turn": OrnamentEnum.DelayedInvertedTurn,
+        "delayed-turn": OrnamentEnum.DelayedTurn,
+        "inverted-mordent": OrnamentEnum.InvertedMordent,
+        "inverted-turn": OrnamentEnum.InvertedTurn,
+        "mordent": OrnamentEnum.Mordent,
+        "trill-mark": OrnamentEnum.Trill,
+        "turn": OrnamentEnum.Turn,
+        // further ornaments are not yet supported by MusicXML (3.1).
+      };
+
+      for (const ornamentElement in elementToOrnamentEnum) {
+        if (!elementToOrnamentEnum.hasOwnProperty(ornamentElement)) {
+          continue;
+        }
+        const node: IXmlElement = ornamentsNode.element(ornamentElement);
+        if (node !== undefined) {
+          ornament = new OrnamentContainer(elementToOrnamentEnum[ornamentElement]);
+        }
       }
       if (ornament !== undefined) {
         const accidentalsList: IXmlElement[] = ornamentsNode.elements("accidental-mark");

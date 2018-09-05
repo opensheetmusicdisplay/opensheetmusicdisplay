@@ -8,7 +8,7 @@ import {Voice} from "../VoiceData/Voice";
 import {VoiceEntry} from "../VoiceData/VoiceEntry";
 import {GraphicalTie} from "./GraphicalTie";
 import {GraphicalObject} from "./GraphicalObject";
-import {StaffMeasure} from "./StaffMeasure";
+import {GraphicalMeasure} from "./GraphicalMeasure";
 import {GraphicalNote} from "./GraphicalNote";
 import {GraphicalChordSymbolContainer} from "./GraphicalChordSymbolContainer";
 import {GraphicalLyricEntry} from "./GraphicalLyricEntry";
@@ -22,12 +22,10 @@ import { MusicSheetCalculator } from "./MusicSheetCalculator";
  * The graphical counterpart of a [[SourceStaffEntry]].
  */
 export abstract class GraphicalStaffEntry extends GraphicalObject {
-    constructor(parentMeasure: StaffMeasure, sourceStaffEntry: SourceStaffEntry = undefined, staffEntryParent: GraphicalStaffEntry = undefined) {
+    constructor(parentMeasure: GraphicalMeasure, sourceStaffEntry: SourceStaffEntry = undefined, staffEntryParent: GraphicalStaffEntry = undefined) {
         super();
         this.parentMeasure = parentMeasure;
         this.graphicalVoiceEntries = [];
-        this.graceStaffEntriesBefore = [];
-        this.graceStaffEntriesAfter = [];
         this.sourceStaffEntry = sourceStaffEntry;
         if (staffEntryParent !== undefined) {
             this.staffEntryParent = staffEntryParent;
@@ -47,10 +45,8 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     // Extra member needed, as tie notes have no direct source entry with the right time stamp.
     public relInMeasureTimestamp: Fraction;
     public sourceStaffEntry: SourceStaffEntry;
-    public parentMeasure: StaffMeasure;
+    public parentMeasure: GraphicalMeasure;
     public graphicalVoiceEntries: GraphicalVoiceEntry[];
-    public graceStaffEntriesBefore: GraphicalStaffEntry[];
-    public graceStaffEntriesAfter: GraphicalStaffEntry[];
     public staffEntryParent: GraphicalStaffEntry;
     public parentVerticalContainer: VerticalGraphicalStaffEntryContainer;
 
@@ -113,6 +109,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      * @returns {any}
      */
     public findEndTieGraphicalNoteFromNoteWithStartingSlur(tieNote: Note, slur: Slur): GraphicalNote {
+        if (tieNote === undefined) {
+            return undefined;
+        }
         for (const gve of this.graphicalVoiceEntries) {
             if (gve.parentVoiceEntry !== tieNote.ParentVoiceEntry) {
                 continue;
@@ -128,6 +127,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public findGraphicalNoteFromGraceNote(graceNote: Note): GraphicalNote {
+        if (graceNote === undefined) {
+            return undefined;
+        }
         for (const gve of this.graphicalVoiceEntries) {
             if (gve.parentVoiceEntry !== graceNote.ParentVoiceEntry) {
                 continue;
@@ -142,6 +144,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public findGraphicalNoteFromNote(note: Note): GraphicalNote {
+        if (note === undefined) {
+            return undefined;
+        }
         for (const gve of this.graphicalVoiceEntries) {
             if (gve.parentVoiceEntry !== note.ParentVoiceEntry) {
                 continue;
@@ -288,6 +293,9 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         }
     }
 
+    /**
+     * Returns true if this staff entry has only rests
+     */
     public hasOnlyRests(): boolean {
         const hasOnlyRests: boolean = true;
         for (const gve of this.graphicalVoiceEntries) {

@@ -5,7 +5,7 @@ import {DynamicExpressionSymbolEnum} from "./DynamicExpressionSymbolEnum";
 import {InvalidEnumArgumentException} from "../../Exceptions";
 import * as log from "loglevel";
 
-export class InstantaniousDynamicExpression extends AbstractExpression {
+export class InstantaneousDynamicExpression extends AbstractExpression {
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number) {
         super();
         this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
@@ -40,7 +40,7 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
     };
 
     //private static weight: number;
-    private static listInstantaniousDynamics: string[] =  [
+    private static listInstantaneousDynamics: string[] =  [
         "pppppp", "ppppp", "pppp", "ppp", "pp", "p",
         "ffffff", "fffff", "ffff", "fff", "ff", "f",
         "mf", "mp", "sf", "sp", "spp", "fp", "rf", "rfz", "sfz", "sffz", "fz",
@@ -90,14 +90,14 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
         return this.length;
     }
     public get MidiVolume(): number {
-        return InstantaniousDynamicExpression.dynamicToRelativeVolumeDict[this.dynamicEnum] * 127;
+        return InstantaneousDynamicExpression.dynamicToRelativeVolumeDict[this.dynamicEnum] * 127;
     }
-    public static isInputStringInstantaniousDynamic(inputString: string): boolean {
+    public static isInputStringInstantaneousDynamic(inputString: string): boolean {
         if (inputString === undefined) { return false; }
-        return InstantaniousDynamicExpression.isStringInStringList(InstantaniousDynamicExpression.listInstantaniousDynamics, inputString);
+        return InstantaneousDynamicExpression.isStringInStringList(InstantaneousDynamicExpression.listInstantaneousDynamics, inputString);
     }
 
-    //public getInstantaniousDynamicSymbol(expressionSymbolEnum:DynamicExpressionSymbolEnum): FontInfo.MusicFontSymbol {
+    //public getInstantaneousDynamicSymbol(expressionSymbolEnum:DynamicExpressionSymbolEnum): FontInfo.MusicFontSymbol {
     //    switch (expressionSymbolEnum) {
     //        case DynamicExpressionSymbolEnum.p:
     //            return FontInfo.MusicFontSymbol.P;
@@ -139,11 +139,11 @@ export class InstantaniousDynamicExpression extends AbstractExpression {
         //for (let idx: number = 0, len: number = dynamic.length; idx < len; ++idx) {
         //    let c: string = dynamic[idx];
         //    let dynamicExpressionSymbol: DynamicExpressionSymbolEnum = this.getDynamicExpressionSymbol(c);
-        //    let symbol: FontInfo.MusicFontSymbol = this.getInstantaniousDynamicSymbol(dynamicExpressionSymbol);
+        //    let symbol: FontInfo.MusicFontSymbol = this.getInstantaneousDynamicSymbol(dynamicExpressionSymbol);
         //    length += FontInfo.Info.getBoundingBox(symbol).Width;
         //}
         //return length;
-        log.debug("[Andrea] instantaniousDynamicExpression: not implemented: calculateLength!");
+        log.debug("[Andrea] instantaneousDynamicExpression: not implemented: calculateLength!");
         return 0.0;
     }
 

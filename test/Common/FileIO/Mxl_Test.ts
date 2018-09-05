@@ -28,7 +28,7 @@ describe("MXL Tests", () => {
 
   // Test all the following mxl files:
   const scores: string[] = [
-    "MozartTrio.mxl",
+    "Mozart_Clarinet_Quintet_Excerpt.mxl",
   ];
   for (const score of scores) {
     testFile(score);

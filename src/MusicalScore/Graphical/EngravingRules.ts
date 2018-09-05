@@ -1,6 +1,7 @@
 import {PagePlacementEnum} from "./GraphicalMusicPage";
 //import {MusicSymbol} from "./MusicSymbol";
 import * as log from "loglevel";
+import { TextAlignmentAndPlacement } from "../../Common/Enums/TextAlignment";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -87,9 +88,14 @@ export class EngravingRules {
     private repetitionEndingLabelYOffset: number;
     private repetitionEndingLineYLowerOffset: number;
     private repetitionEndingLineYUpperOffset: number;
+    private lyricsAlignmentStandard: TextAlignmentAndPlacement;
     private lyricsHeight: number;
+    private lyricsYOffsetToStaffHeight: number;
     private verticalBetweenLyricsDistance: number;
-    private betweenSyllabelMaximumDistance: number;
+    private horizontalBetweenLyricsDistance: number;
+    private betweenSyllableMaximumDistance: number;
+    private betweenSyllableMinimumDistance: number;
+    private lyricOverlapAllowedIntoNextMeasure: number;
     private minimumDistanceBetweenDashes: number;
     private bezierCurveStepSize: number;
     private tPower3: number[];
@@ -109,7 +115,7 @@ export class EngravingRules {
     private slurTangentMinAngle: number;
     private slurTangentMaxAngle: number;
     private slursStartingAtSameStaffEntryYOffset: number;
-    private instantaniousTempoTextHeight: number;
+    private instantaneousTempoTextHeight: number;
     private continuousDynamicTextHeight: number;
     private moodTextHeight: number;
     private unknownTextHeight: number;
@@ -268,13 +274,18 @@ export class EngravingRules {
         this.repetitionEndingLineYUpperOffset = 0.3;
 
         // Lyrics
-        this.lyricsHeight = 2.0;
+        this.lyricsAlignmentStandard = TextAlignmentAndPlacement.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
+        this.lyricsHeight = 2.0; // actually size of lyrics
+        this.lyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.verticalBetweenLyricsDistance = 0.5;
-        this.betweenSyllabelMaximumDistance = 10.0;
-        this.minimumDistanceBetweenDashes = 5.0;
+        this.horizontalBetweenLyricsDistance = 0.2;
+        this.betweenSyllableMaximumDistance = 10.0;
+        this.betweenSyllableMinimumDistance = 0.5; // + 1.0 for CenterAlignment added in lyrics spacing
+        this.lyricOverlapAllowedIntoNextMeasure = 3.4; // optimal for dashed last lyric, see Land der Berge
+        this.minimumDistanceBetweenDashes = 10;
 
         // expressions variables
-        this.instantaniousTempoTextHeight = 2.3;
+        this.instantaneousTempoTextHeight = 2.3;
         this.continuousDynamicTextHeight = 2.3;
         this.moodTextHeight = 2.3;
         this.unknownTextHeight = 2.0;
@@ -805,11 +816,23 @@ export class EngravingRules {
     public set RepetitionEndingLineYUpperOffset(value: number) {
         this.repetitionEndingLineYUpperOffset = value;
     }
+    public get LyricsAlignmentStandard(): TextAlignmentAndPlacement {
+        return this.lyricsAlignmentStandard;
+    }
+    public set LyricsAlignmentStandard(value: TextAlignmentAndPlacement) {
+        this.lyricsAlignmentStandard = value;
+    }
     public get LyricsHeight(): number {
         return this.lyricsHeight;
     }
     public set LyricsHeight(value: number) {
         this.lyricsHeight = value;
+    }
+    public get LyricsYOffsetToStaffHeight(): number {
+        return this.lyricsYOffsetToStaffHeight;
+    }
+    public set LyricsYOffsetToStaffHeight(value: number) {
+        this.lyricsYOffsetToStaffHeight = value;
     }
     public get VerticalBetweenLyricsDistance(): number {
         return this.verticalBetweenLyricsDistance;
@@ -817,11 +840,29 @@ export class EngravingRules {
     public set VerticalBetweenLyricsDistance(value: number) {
         this.verticalBetweenLyricsDistance = value;
     }
-    public get BetweenSyllabelMaximumDistance(): number {
-        return this.betweenSyllabelMaximumDistance;
+    public get HorizontalBetweenLyricsDistance(): number {
+        return this.horizontalBetweenLyricsDistance;
     }
-    public set BetweenSyllabelMaximumDistance(value: number) {
-        this.betweenSyllabelMaximumDistance = value;
+    public set HorizontalBetweenLyricsDistance(value: number) {
+        this.horizontalBetweenLyricsDistance = value;
+    }
+    public get BetweenSyllableMaximumDistance(): number {
+        return this.betweenSyllableMaximumDistance;
+    }
+    public set BetweenSyllableMaximumDistance(value: number) {
+        this.betweenSyllableMaximumDistance = value;
+    }
+    public get BetweenSyllableMinimumDistance(): number {
+        return this.betweenSyllableMinimumDistance;
+    }
+    public set BetweenSyllableMinimumDistance(value: number) {
+        this.betweenSyllableMinimumDistance = value;
+    }
+    public get LyricOverlapAllowedIntoNextMeasure(): number {
+        return this.lyricOverlapAllowedIntoNextMeasure;
+    }
+    public set LyricOverlapAllowedIntoNextMeasure(value: number) {
+        this.lyricOverlapAllowedIntoNextMeasure = value;
     }
     public get MinimumDistanceBetweenDashes(): number {
         return this.minimumDistanceBetweenDashes;
@@ -937,11 +978,11 @@ export class EngravingRules {
     public set SlursStartingAtSameStaffEntryYOffset(value: number) {
         this.slursStartingAtSameStaffEntryYOffset = value;
     }
-    public get InstantaniousTempoTextHeight(): number {
-        return this.instantaniousTempoTextHeight;
+    public get InstantaneousTempoTextHeight(): number {
+        return this.instantaneousTempoTextHeight;
     }
-    public set InstantaniousTempoTextHeight(value: number) {
-        this.instantaniousTempoTextHeight = value;
+    public set InstantaneousTempoTextHeight(value: number) {
+        this.instantaneousTempoTextHeight = value;
     }
     public get ContinuousDynamicTextHeight(): number {
         return this.continuousDynamicTextHeight;

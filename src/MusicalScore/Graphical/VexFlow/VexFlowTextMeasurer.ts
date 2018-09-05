@@ -13,6 +13,8 @@ export class VexFlowTextMeasurer implements ITextMeasurer {
     }
     // The context of a canvas used internally to compute font sizes
     private context: CanvasRenderingContext2D;
+    public fontSize: number = 20;
+    public fontSizeStandard: number = this.fontSize;
 
     /**
      *
@@ -21,8 +23,13 @@ export class VexFlowTextMeasurer implements ITextMeasurer {
      * @param style
      * @returns {number}
      */
-    public computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles): number {
-        this.context.font = VexFlowConverter.font(20, style, font);
-        return this.context.measureText(text).width / 20;
+    public computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles, fontSize: number = this.fontSize): number {
+        this.context.font = VexFlowConverter.font(fontSize, style, font);
+        return this.context.measureText(text).width / fontSize;
+    }
+
+    public setFontSize(fontSize: number = this.fontSizeStandard): number {
+        this.fontSize = fontSize;
+        return fontSize;
     }
 }

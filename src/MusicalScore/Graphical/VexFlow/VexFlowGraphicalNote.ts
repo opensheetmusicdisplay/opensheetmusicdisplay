@@ -5,7 +5,7 @@ import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
-import {OctaveEnum} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 
 /**
@@ -16,12 +16,16 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined) {
         super(note, parent, graphicalNoteLength);
         this.clef = activeClef;
+        this.octaveShift = octaveShift;
         if (note.Pitch) {
-            this.vfpitch = VexFlowConverter.pitch(note.Pitch, this.clef);
+            // TODO: Maybe shift to Transpose function when available
+            const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(note.Pitch, octaveShift);
+            this.vfpitch = VexFlowConverter.pitch(this, drawPitch);
             this.vfpitch[1] = undefined;
         }
     }
 
+    public octaveShift: OctaveEnum;
     // The pitch of this note as given by VexFlowConverter.pitch
     public vfpitch: [string, string, ClefInstruction];
     // The corresponding VexFlow StaveNote (plus its index in the chord)
@@ -42,7 +46,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
             }
         } else {
-            this.vfpitch = VexFlowConverter.pitch(pitch, this.clef);
+            this.vfpitch = VexFlowConverter.pitch(this, pitch);
         }
     }
 
@@ -53,5 +57,12 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      */
     public setIndex(note: Vex.Flow.StaveNote, index: number): void {
         this.vfnote = [note, index];
+    }
+
+    /**
+     * Gets the clef for this note
+     */
+    public Clef(): ClefInstruction {
+        return this.clef;
     }
 }

@@ -2,8 +2,14 @@ p {
   margin: 0px 8px 8px 8px;
 }
 
+/* the select widths are not used for some reason, even if we don't set the style in index.html */
 select {
-  margin: 0px 8px 8px 8px;
+  width: 100px;
+  margin: 2px 8px 8px 8px;
+}
+
+#selectSample {
+  width: 320px;
 }
 
 .bignum {

@@ -1,19 +1,19 @@
 import {ContinuousDynamicExpression} from "../Expressions/ContinuousExpressions/ContinuousDynamicExpression";
-import {InstantaniousDynamicExpression} from "../Expressions/InstantaniousDynamicExpression";
+import {InstantaneousDynamicExpression} from "../Expressions/InstantaneousDynamicExpression";
 import {MultiExpression} from "../Expressions/MultiExpression";
 
 export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
-    constructor(dynamicExpression: ContinuousDynamicExpression|InstantaniousDynamicExpression, staffNumber: number) {
+    constructor(dynamicExpression: ContinuousDynamicExpression|InstantaneousDynamicExpression, staffNumber: number) {
         if (dynamicExpression instanceof ContinuousDynamicExpression) {
             this.continuousDynamicExpression = dynamicExpression;
-        } else if (dynamicExpression instanceof InstantaniousDynamicExpression) {
+        } else if (dynamicExpression instanceof InstantaneousDynamicExpression) {
             this.instantaneousDynamicExpression = dynamicExpression;
         }
         this.staffNumber = staffNumber;
     }
 
     public continuousDynamicExpression: ContinuousDynamicExpression;
-    public instantaneousDynamicExpression: InstantaniousDynamicExpression;
+    public instantaneousDynamicExpression: InstantaneousDynamicExpression;
     public staffNumber: number;
 
     public parMultiExpression(): MultiExpression {

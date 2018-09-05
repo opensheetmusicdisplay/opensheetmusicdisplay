@@ -30,7 +30,7 @@ export class PSMath {
             sumWeigtedValues += values[i] * weight;
             sumWeights += weight;
         }
-        return <number>(sumWeigtedValues / sumWeights);
+        return sumWeigtedValues / sumWeights;
     }
 
 }

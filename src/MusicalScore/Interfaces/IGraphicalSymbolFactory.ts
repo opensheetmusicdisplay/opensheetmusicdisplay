@@ -11,7 +11,7 @@ import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {Staff} from "../VoiceData/Staff";
 import {StaffLine} from "../Graphical/StaffLine";
-import {StaffMeasure} from "../Graphical/StaffMeasure";
+import {GraphicalMeasure} from "../Graphical/GraphicalMeasure";
 import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalVoiceEntry } from "../Graphical/GraphicalVoiceEntry";
 import { VoiceEntry } from "../VoiceData/VoiceEntry";
@@ -22,13 +22,11 @@ export interface IGraphicalSymbolFactory {
 
     createStaffLine(parentSystem: MusicSystem, parentStaff: Staff): StaffLine;
 
-    createStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): StaffMeasure;
+    createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
-    createExtraStaffMeasure(staffLine: StaffLine): StaffMeasure;
+    createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure;
 
-    createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: StaffMeasure): GraphicalStaffEntry;
-
-    createGraceStaffEntry(staffEntryParent: GraphicalStaffEntry, measure: StaffMeasure): GraphicalStaffEntry;
+    createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry;
 
     createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry;
 
@@ -45,7 +43,7 @@ export interface IGraphicalSymbolFactory {
         activeClef: ClefInstruction,
         octaveShift: OctaveEnum): GraphicalNote;
 
-    addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch, grace: boolean, graceScalingFactor: number): void;
+    addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void;
 
     addFermataAtTiedEndNote(tiedNote: Note, graphicalStaffEntry: GraphicalStaffEntry): void;
 

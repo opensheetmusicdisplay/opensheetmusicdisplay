@@ -1,6 +1,6 @@
 import {MusicSheet} from "../MusicSheet";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
-import {StaffMeasure} from "./StaffMeasure";
+import {GraphicalMeasure} from "./GraphicalMeasure";
 import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {VerticalGraphicalStaffEntryContainer} from "./VerticalGraphicalStaffEntryContainer";
 import {GraphicalLabel} from "./GraphicalLabel";
@@ -32,17 +32,17 @@ export class GraphicalMusicSheet {
         this.musicSheet = musicSheet;
         this.numberOfStaves = this.musicSheet.Staves.length;
         this.calculator = calculator;
-        this.sourceToGraphicalMeasureLinks = new Dictionary<SourceMeasure, StaffMeasure[]>();
+        this.sourceToGraphicalMeasureLinks = new Dictionary<SourceMeasure, GraphicalMeasure[]>();
         this.calculator.initialize(this);
     }
 
-    public sourceToGraphicalMeasureLinks: Dictionary<SourceMeasure, StaffMeasure[]>;
+    public sourceToGraphicalMeasureLinks: Dictionary<SourceMeasure, GraphicalMeasure[]>;
 
     private musicSheet: MusicSheet;
     //private fontInfo: FontInfo = FontInfo.Info;
     private calculator: MusicSheetCalculator;
     private musicPages: GraphicalMusicPage[] = [];
-    private measureList: StaffMeasure[][] = [];
+    private measureList: GraphicalMeasure[][] = [];
     private verticalGraphicalStaffEntryContainers: VerticalGraphicalStaffEntryContainer[] = [];
     private title: GraphicalLabel;
     private subtitle: GraphicalLabel;
@@ -76,11 +76,11 @@ export class GraphicalMusicSheet {
     //    return this.fontInfo;
     //}
 
-    public get MeasureList(): StaffMeasure[][] {
+    public get MeasureList(): GraphicalMeasure[][] {
         return this.measureList;
     }
 
-    public set MeasureList(value: StaffMeasure[][]) {
+    public set MeasureList(value: GraphicalMeasure[][]) {
         this.measureList = value;
     }
 
@@ -214,7 +214,7 @@ export class GraphicalMusicSheet {
      */
     public findGraphicalStaffEntryFromMeasureList(staffIndex: number, measureIndex: number, sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
         for (let i: number = measureIndex; i < this.measureList.length; i++) {
-            const graphicalMeasure: StaffMeasure = this.measureList[i][staffIndex];
+            const graphicalMeasure: GraphicalMeasure = this.measureList[i][staffIndex];
             for (let idx: number = 0, len: number = graphicalMeasure.staffEntries.length; idx < len; ++idx) {
                 const graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx];
                 if (graphicalStaffEntry.sourceStaffEntry === sourceStaffEntry) {
@@ -233,12 +233,12 @@ export class GraphicalMusicSheet {
      * @returns {any}
      */
     public findNextGraphicalStaffEntry(staffIndex: number, measureIndex: number, graphicalStaffEntry: GraphicalStaffEntry): GraphicalStaffEntry {
-        const graphicalMeasure: StaffMeasure = graphicalStaffEntry.parentMeasure;
+        const graphicalMeasure: GraphicalMeasure = graphicalStaffEntry.parentMeasure;
         const graphicalStaffEntryIndex: number = graphicalMeasure.staffEntries.indexOf(graphicalStaffEntry);
         if (graphicalStaffEntryIndex < graphicalMeasure.staffEntries.length - 1) {
             return graphicalMeasure.staffEntries[graphicalStaffEntryIndex + 1];
         } else if (measureIndex < this.measureList.length - 1) {
-            const nextMeasure: StaffMeasure = this.measureList[measureIndex + 1][staffIndex];
+            const nextMeasure: GraphicalMeasure = this.measureList[measureIndex + 1][staffIndex];
             if (nextMeasure.staffEntries.length > 0) {
                 return nextMeasure.staffEntries[0];
             }
@@ -246,8 +246,8 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
-    public getFirstVisibleMeasuresListFromIndeces(start: number, end: number): StaffMeasure[] {
-        const graphicalMeasures: StaffMeasure[] = [];
+    public getFirstVisibleMeasuresListFromIndeces(start: number, end: number): GraphicalMeasure[] {
+        const graphicalMeasures: GraphicalMeasure[] = [];
         const numberOfStaves: number = this.measureList[0].length;
         for (let i: number = start; i <= end; i++) {
             for (let j: number = 0; j < numberOfStaves; j++) {
@@ -260,9 +260,9 @@ export class GraphicalMusicSheet {
         return graphicalMeasures;
     }
 
-    public orderMeasuresByStaffLine(measures: StaffMeasure[]): StaffMeasure[][] {
-        const orderedMeasures: StaffMeasure[][] = [];
-        let mList: StaffMeasure[] = [];
+    public orderMeasuresByStaffLine(measures: GraphicalMeasure[]): GraphicalMeasure[][] {
+        const orderedMeasures: GraphicalMeasure[][] = [];
+        let mList: GraphicalMeasure[] = [];
         orderedMeasures.push(mList);
         for (let i: number = 0; i < measures.length; i++) {
             if (i === 0) {
@@ -426,11 +426,11 @@ export class GraphicalMusicSheet {
      * @param visibleMeasures
      * @returns {number[]}
      */
-    public getVisibleStavesIndecesFromSourceMeasure(visibleMeasures: StaffMeasure[]): number[] {
+    public getVisibleStavesIndecesFromSourceMeasure(visibleMeasures: GraphicalMeasure[]): number[] {
         const visibleInstruments: Instrument[] = [];
         const visibleStavesIndeces: number[] = [];
         for (let idx: number = 0, len: number = visibleMeasures.length; idx < len; ++idx) {
-            const graphicalMeasure: StaffMeasure = visibleMeasures[idx];
+            const graphicalMeasure: GraphicalMeasure = visibleMeasures[idx];
             const instrument: Instrument = graphicalMeasure.ParentStaff.ParentInstrument;
             if (visibleInstruments.indexOf(instrument) === -1) {
                 visibleInstruments.push(instrument);
@@ -452,7 +452,7 @@ export class GraphicalMusicSheet {
      * @param index
      * @returns {any}
      */
-    public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, index: number): StaffMeasure {
+    public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, index: number): GraphicalMeasure {
         for (let i: number = 0; i < this.measureList.length; i++) {
             if (this.measureList[i][0].parentSourceMeasure === sourceMeasure) {
                 return this.measureList[i][index];
@@ -461,12 +461,12 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
-    public getMeasureIndex(graphicalMeasure: StaffMeasure, measureIndex: number, inListIndex: number): boolean {
+    public getMeasureIndex(graphicalMeasure: GraphicalMeasure, measureIndex: number, inListIndex: number): boolean {
         measureIndex = 0;
         inListIndex = 0;
         for (; measureIndex < this.measureList.length; measureIndex++) {
             for (let idx: number = 0, len: number = this.measureList[measureIndex].length; idx < len; ++idx) {
-                const measure: StaffMeasure = this.measureList[measureIndex][idx];
+                const measure: GraphicalMeasure = this.measureList[measureIndex][idx];
                 if (measure === graphicalMeasure) {
                     return true;
                 }
@@ -726,7 +726,7 @@ export class GraphicalMusicSheet {
 
     public findClosestLeftStaffEntry(fractionalIndex: number, searchOnlyVisibleEntries: boolean): GraphicalStaffEntry {
         let foundEntry: GraphicalStaffEntry = undefined;
-        let leftIndex: number = <number>Math.floor(fractionalIndex);
+        let leftIndex: number = Math.floor(fractionalIndex);
         leftIndex = Math.min(this.VerticalGraphicalStaffEntryContainers.length - 1, leftIndex);
         for (let i: number = leftIndex; i >= 0; i--) {
             foundEntry = this.getStaffEntry(i);
@@ -745,7 +745,7 @@ export class GraphicalMusicSheet {
 
     public findClosestRightStaffEntry(fractionalIndex: number, returnOnlyVisibleEntries: boolean): GraphicalStaffEntry {
         let foundEntry: GraphicalStaffEntry = undefined;
-        const rightIndex: number = <number>Math.max(0, Math.ceil(fractionalIndex));
+        const rightIndex: number = Math.max(0, Math.ceil(fractionalIndex));
         for (let i: number = rightIndex; i < this.VerticalGraphicalStaffEntryContainers.length; i++) {
             foundEntry = this.getStaffEntry(i);
             if (foundEntry !== undefined) {
@@ -868,12 +868,12 @@ export class GraphicalMusicSheet {
         return followedInstrumentCount;
     }
 
-    public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): StaffMeasure[] {
+    public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): GraphicalMeasure[] {
         return this.sourceToGraphicalMeasureLinks.getValue(sourceMeasure);
     }
 
     public GetGraphicalFromSourceStaffEntry(sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
-        const graphicalMeasure: StaffMeasure = this.GetGraphicalFromSourceMeasure(sourceStaffEntry.VerticalContainerParent.ParentMeasure)
+        const graphicalMeasure: GraphicalMeasure = this.GetGraphicalFromSourceMeasure(sourceStaffEntry.VerticalContainerParent.ParentMeasure)
             [sourceStaffEntry.ParentStaff.idInMusicSheet];
         return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);
     }

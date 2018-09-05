@@ -1,5 +1,24 @@
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
+declare global {
+    interface Array<T> {
+        last(): T;
+        contains(elem: T): boolean;
+    }
+}
+
+if (!Array.prototype.last) {
+    Array.prototype.last = function<T>(): T {
+        return this[this.length - 1];
+    };
+}
+
+if (!Array.prototype.contains) {
+    Array.prototype.contains = function<T>(elem: T): boolean {
+        return this.indexOf(elem) !== -1;
+    };
+}
+
 /**
  * This class implements static methods to perform useful operations on lists, dictionaries, ...
  */

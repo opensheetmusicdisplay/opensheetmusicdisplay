@@ -1,6 +1,6 @@
 import {SourceMeasure} from "../SourceMeasure";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
-import {InstantaniousDynamicExpression} from "./InstantaniousDynamicExpression";
+import {InstantaneousDynamicExpression} from "./InstantaneousDynamicExpression";
 import {ContinuousDynamicExpression} from "./ContinuousExpressions/ContinuousDynamicExpression";
 import {OctaveShift} from "./ContinuousExpressions/OctaveShift";
 import {MoodExpression} from "./MoodExpression";
@@ -18,7 +18,7 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     private sourceMeasure: SourceMeasure;
     private staffNumber: number;
     private timestamp: Fraction;
-    private instantaniousDynamic: InstantaniousDynamicExpression;
+    private instantaneousDynamic: InstantaneousDynamicExpression;
     private endingContinuousDynamic: ContinuousDynamicExpression;
     private startingContinuousDynamic: ContinuousDynamicExpression;
     private unknownList: UnknownExpression[] = [];
@@ -49,11 +49,11 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     public get AbsoluteTimestamp(): Fraction {
         return Fraction.plus(this.timestamp, this.sourceMeasure.AbsoluteTimestamp);
     }
-    public get InstantaniousDynamic(): InstantaniousDynamicExpression {
-        return this.instantaniousDynamic;
+    public get InstantaneousDynamic(): InstantaneousDynamicExpression {
+        return this.instantaneousDynamic;
     }
-    public set InstantaniousDynamic(value: InstantaniousDynamicExpression) {
-        this.instantaniousDynamic = value;
+    public set InstantaneousDynamic(value: InstantaneousDynamicExpression) {
+        this.instantaneousDynamic = value;
     }
     public get EndingContinuousDynamic(): ContinuousDynamicExpression {
         return this.endingContinuousDynamic;
@@ -97,8 +97,8 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     public getPlacementOfFirstEntry(): PlacementEnum {
         let placement: PlacementEnum = PlacementEnum.Above;
         if (this.expressions.length > 0) {
-            if (this.expressions[0].expression instanceof InstantaniousDynamicExpression) {
-                placement = (<InstantaniousDynamicExpression>(this.expressions[0].expression)).Placement;
+            if (this.expressions[0].expression instanceof InstantaneousDynamicExpression) {
+                placement = (<InstantaneousDynamicExpression>(this.expressions[0].expression)).Placement;
             } else if (this.expressions[0].expression instanceof ContinuousDynamicExpression) {
                 placement = (<ContinuousDynamicExpression>(this.expressions[0].expression)).Placement;
             } else if (this.expressions[0].expression instanceof MoodExpression) {
@@ -124,7 +124,7 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     //}
     //public getFirstEntry(staffLine: StaffLine, graphLabel: GraphicalLabel): AbstractGraphicalExpression {
     //    let indexOfFirstNotInstDynExpr: number = 0;
-    //    if (this.expressions[0].expression instanceof InstantaniousDynamicExpression)
+    //    if (this.expressions[0].expression instanceof InstantaneousDynamicExpression)
     //        indexOfFirstNotInstDynExpr = 1;
     //    if (this.expressions.length > 0) {
     //        if (this.expressions[indexOfFirstNotInstDynExpr].expression instanceof ContinuousDynamicExpression)
@@ -139,12 +139,12 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     //    else return undefined;
     //}
     public addExpression(abstractExpression: AbstractExpression, prefix: string): void {
-        if (abstractExpression instanceof InstantaniousDynamicExpression) {
-            if (this.instantaniousDynamic !== undefined) {
-                this.removeExpressionFromEntryList(this.InstantaniousDynamic);
+        if (abstractExpression instanceof InstantaneousDynamicExpression) {
+            if (this.instantaneousDynamic !== undefined) {
+                this.removeExpressionFromEntryList(this.InstantaneousDynamic);
             }
-            this.instantaniousDynamic = <InstantaniousDynamicExpression>abstractExpression;
-            this.instantaniousDynamic.ParentMultiExpression = this;
+            this.instantaneousDynamic = <InstantaneousDynamicExpression>abstractExpression;
+            this.instantaneousDynamic.ParentMultiExpression = this;
         } else if (abstractExpression instanceof ContinuousDynamicExpression) {
             this.startingContinuousDynamic = <ContinuousDynamicExpression>abstractExpression;
         } else if (abstractExpression instanceof MoodExpression) {

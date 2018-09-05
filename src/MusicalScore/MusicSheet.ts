@@ -408,8 +408,8 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //public GetExpressionsStartTempoInBPM(): number {
     //    if (this.TimestampSortedTempoExpressionsList.length > 0) {
     //        let me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
-    //        if (me.InstantaniousTempo !== undefined) {
-    //            return me.InstantaniousTempo.TempoInBpm;
+    //        if (me.InstantaneousTempo !== undefined) {
+    //            return me.InstantaneousTempo.TempoInBpm;
     //        } else if (me.ContinuousTempo !== undefined) {
     //            return me.ContinuousTempo.StartTempo;
     //        }
@@ -457,11 +457,11 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //        let oldValue: Object = 0;
     //        if (parameter === undefined) { // FIXME MusicSheetParameters.MusicSheetTranspose) {
     //            oldValue = this.Transpose;
-    //            this.Transpose = <number>value;
+    //            this.Transpose = value;
     //        }
     //        if (parameter === undefined) { // FIXME MusicSheetParameters.StartTempoInBPM) {
     //            oldValue = this.UserStartTempoInBPM;
-    //            this.UserStartTempoInBPM = <number>value;
+    //            this.UserStartTempoInBPM = value;
     //        }
     //        if (parameter === undefined) { // FIXME MusicSheetParameters.HighlightErrors) {
     //            oldValue = value;

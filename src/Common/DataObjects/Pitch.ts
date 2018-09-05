@@ -9,13 +9,22 @@ export enum NoteEnum {
     B = 11
 }
 
+/** Describes Accidental types.
+ * Do not use the number values of these enum members directly for calculation anymore.
+ * To use these for pitch calculation, use pitch.AccidentalHalfTones()
+ *  or Pitch.HalfTonesFromAccidental(accidentalEnum).
+ */
 export enum AccidentalEnum {
-    DOUBLEFLAT = -2,
-    FLAT = -1,
-    NONE = 0,
-    SHARP = 1,
-    DOUBLESHARP = 2,
-    NATURAL = 3
+    SHARP,
+    FLAT,
+    NONE,
+    NATURAL,
+    DOUBLESHARP,
+    DOUBLEFLAT,
+    TRIPLESHARP,
+    TRIPLEFLAT,
+    QUARTERTONESHARP,
+    QUARTERTONEFLAT,
 }
 
 // This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.
@@ -65,7 +74,7 @@ export class Pitch {
      * @constructor
      */
     public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { value: number; overflow: number; } {
-        const newHalfTone: number = <number>pitch.fundamentalNote + <number>pitch.accidental + transpose;
+        const newHalfTone: number = <number>pitch.fundamentalNote + pitch.AccidentalHalfTones + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
@@ -89,19 +98,19 @@ export class Pitch {
 
     public static calcFrequency(obj: Pitch|number): number {
         let octaveSteps: number = 0;
-        let halftoneSteps: number;
+        let halfToneSteps: number;
         if (obj instanceof Pitch) {
             // obj is a pitch
             const pitch: Pitch = obj;
             octaveSteps = pitch.octave - 1;
-            halftoneSteps = <number>pitch.fundamentalNote - <number>NoteEnum.A + <number>pitch.accidental;
+            halfToneSteps = <number>pitch.fundamentalNote - <number>NoteEnum.A + pitch.AccidentalHalfTones;
         } else if (typeof obj === "number") {
             // obj is a fractional key
             const fractionalKey: number = obj;
-            halftoneSteps = fractionalKey - 57.0;
+            halfToneSteps = fractionalKey - 57.0;
         }
         // Return frequency:
-        return 440.0 * Math.pow(2, octaveSteps) * Math.pow(2, halftoneSteps / 12.0);
+        return 440.0 * Math.pow(2, octaveSteps) * Math.pow(2, halfToneSteps / 12.0);
     }
 
     public static calcFractionalKey(frequency: number): number {
@@ -123,7 +132,7 @@ export class Pitch {
     }
 
     public static fromHalftone(halftone: number): Pitch {
-        const octave: number = <number>Math.floor(<number>halftone / 12) - Pitch.octXmlDiff;
+        const octave: number = Math.floor(halftone / 12) - Pitch.octXmlDiff;
         const halftoneInOctave: number = halftone % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftoneInOctave;
         let accidental: AccidentalEnum = AccidentalEnum.NONE;
@@ -131,11 +140,11 @@ export class Pitch {
             fundamentalNote = <NoteEnum>(halftoneInOctave - 1);
             accidental = AccidentalEnum.SHARP;
         }
-        return new Pitch(fundamentalNote, <number>octave, accidental);
+        return new Pitch(fundamentalNote, octave, accidental);
     }
 
     public static ceiling(halftone: number): NoteEnum {
-        halftone = <number>(halftone) % 12;
+        halftone = (halftone) % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftone;
         if (this.pitchEnumValues.indexOf(fundamentalNote) === -1) {
             fundamentalNote = <NoteEnum>(halftone + 1);
@@ -156,8 +165,79 @@ export class Pitch {
         this.fundamentalNote = fundamentalNote;
         this.octave = octave;
         this.accidental = accidental;
-        this.halfTone = <number>(fundamentalNote) + (octave + Pitch.octXmlDiff) * 12 + <number>accidental;
+        this.halfTone = <number>(fundamentalNote) + (octave + Pitch.octXmlDiff) * 12 +
+            Pitch.HalfTonesFromAccidental(accidental);
         this.frequency = Pitch.calcFrequency(this);
+    }
+
+    /** Turns an AccidentalEnum into half tone steps for pitch calculation.
+     *
+     */
+    public static HalfTonesFromAccidental(accidental: AccidentalEnum): number {
+        // about equal performance to hashmap/dictionary. could be turned into hashmap for convenience
+        // switch is very slightly faster, but both are negligibly short anyways.
+        switch (accidental) {
+            // ordered from most to least common to improve average runtime
+            case AccidentalEnum.NONE:
+                return 0;
+            case AccidentalEnum.SHARP:
+                return 1;
+            case AccidentalEnum.FLAT:
+                return -1;
+            case AccidentalEnum.NATURAL:
+                return 0;
+            case AccidentalEnum.DOUBLESHARP:
+                return 2;
+            case AccidentalEnum.DOUBLEFLAT:
+                return -2;
+            case AccidentalEnum.QUARTERTONESHARP:
+                return 0.5;
+            case AccidentalEnum.QUARTERTONEFLAT:
+                return -0.5;
+            case AccidentalEnum.TRIPLESHARP: // very rare, in some classical pieces
+                return 3;
+            case AccidentalEnum.TRIPLEFLAT:
+                return -3;
+            default:
+                throw new Error("Unhandled AccidentalEnum value");
+                // return 0;
+        }
+    }
+
+    public static AccidentalFromHalfTones(halfTones: number): AccidentalEnum {
+        switch (halfTones) {
+            case 0:
+                // for enharmonic change, we won't get a Natural accidental. Maybe there are edge cases though?
+                return AccidentalEnum.NONE;
+            case 1:
+                return AccidentalEnum.SHARP;
+            case -1:
+                return AccidentalEnum.FLAT;
+            case 2:
+                return AccidentalEnum.DOUBLESHARP;
+            case -2:
+                return AccidentalEnum.DOUBLEFLAT;
+            case 0.5:
+                return AccidentalEnum.QUARTERTONESHARP;
+            case -0.5:
+                return AccidentalEnum.QUARTERTONEFLAT;
+            case 3:
+                return AccidentalEnum.TRIPLESHARP;
+            case -3:
+                return AccidentalEnum.TRIPLEFLAT;
+            default:
+                if (halfTones > 0 && halfTones < 1) {
+                    return AccidentalEnum.QUARTERTONESHARP;
+                } else if (halfTones < 0 && halfTones > -1) {
+                    return AccidentalEnum.QUARTERTONEFLAT;
+                }
+                // potentially unhandled or broken accidental halfTone value
+                return AccidentalEnum.QUARTERTONESHARP; // to signal unhandled value
+        }
+    }
+
+    public get AccidentalHalfTones(): number {
+        return Pitch.HalfTonesFromAccidental(this.accidental);
     }
 
     public get Octave(): number {
@@ -203,13 +283,13 @@ export class Pitch {
             case AccidentalEnum.FLAT:
             case AccidentalEnum.DOUBLEFLAT:
                 this.fundamentalNote = this.getPreviousFundamentalNote(this.fundamentalNote);
-                this.accidental = <AccidentalEnum>(this.halfTone - (<number>(this.fundamentalNote) +
+                this.accidental = Pitch.AccidentalFromHalfTones(this.halfTone - (<number>(this.fundamentalNote) +
                 (this.octave + Pitch.octXmlDiff) * 12));
                 break;
             case AccidentalEnum.SHARP:
             case AccidentalEnum.DOUBLESHARP:
                 this.fundamentalNote = this.getNextFundamentalNote(this.fundamentalNote);
-                this.accidental = <AccidentalEnum>(this.halfTone - (<number>(this.fundamentalNote) +
+                this.accidental = Pitch.AccidentalFromHalfTones(this.halfTone - (<number>(this.fundamentalNote) +
                 (this.octave + Pitch.octXmlDiff) * 12));
                 break;
             default:

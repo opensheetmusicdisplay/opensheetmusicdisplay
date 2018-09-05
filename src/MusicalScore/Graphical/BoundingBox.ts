@@ -1,3 +1,4 @@
+import * as log from "loglevel";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
@@ -37,11 +38,12 @@ export class BoundingBox {
      * Create a bounding box
      * @param dataObject Graphical object where the bounding box will be attached
      * @param parent Parent bounding box of an object in a higher hierarchy position
-     * @param connectChildToParent Create a child to parent relationship too. Will be true by default
+     * @param isSymbol Defines the bounding box to be symbol thus not calculating it's boundaries by itself. NOTE: Borders need to be set!
      */
-    constructor(dataObject: Object = undefined, parent: BoundingBox = undefined) {
+    constructor(dataObject: Object = undefined, parent: BoundingBox = undefined, isSymbol: boolean = false) {
         this.parent = parent;
         this.dataObject = dataObject;
+        this.isSymbol = isSymbol;
         this.xBordersHaveBeenSet = false;
         this.yBordersHaveBeenSet = false;
         if (parent !== undefined) {
@@ -143,7 +145,7 @@ export class BoundingBox {
     }
 
     public get BorderMarginLeft(): number {
-        return this.borderMarginLeft;
+        return this.borderMarginLeft > this.borderLeft ? this.borderLeft : this.borderMarginLeft;
     }
 
     public set BorderMarginLeft(value: number) {
@@ -152,7 +154,7 @@ export class BoundingBox {
     }
 
     public get BorderMarginRight(): number {
-        return this.borderMarginRight;
+        return this.borderMarginRight < this.borderRight ? this.borderRight : this.borderMarginRight;
     }
 
     public set BorderMarginRight(value: number) {
@@ -161,7 +163,7 @@ export class BoundingBox {
     }
 
     public get BorderMarginTop(): number {
-        return this.borderMarginTop;
+        return this.borderMarginTop > this.borderTop ? this.borderTop : this.borderMarginTop;
     }
 
     public set BorderMarginTop(value: number) {
@@ -170,7 +172,7 @@ export class BoundingBox {
     }
 
     public get BorderMarginBottom(): number {
-        return this.borderMarginBottom;
+        return this.borderMarginBottom < this.borderBottom ? this.borderBottom : this.borderMarginBottom;
     }
 
     public set BorderMarginBottom(value: number) {
@@ -201,7 +203,7 @@ export class BoundingBox {
     public set Parent(value: BoundingBox) {
         this.parent = value;
         if (this.parent.ChildElements.indexOf(this) > -1) {
-            console.error("BoundingBox of " + (this.dataObject.constructor as any).name +
+            log.error("BoundingBox of " + (this.dataObject.constructor as any).name +
             " already in children list of " + (this.parent.dataObject.constructor as any).name + "'s BoundingBox");
         } else {
             this.parent.ChildElements.push(this);
@@ -567,14 +569,14 @@ export class BoundingBox {
     }
 
     protected calculateRectangle(): void {
-        this.upperLeftCorner = new PointF2D(this.borderLeft, this.borderTop);
-        this.size = new SizeF2D(this.borderRight - this.borderLeft, this.borderBottom - this.borderTop);
+        this.upperLeftCorner = new PointF2D(this.BorderLeft, this.BorderTop);
+        this.size = new SizeF2D(this.BorderRight - this.BorderLeft, this.BorderBottom - this.BorderTop);
         this.boundingRectangle = RectangleF2D.createFromLocationAndSize(this.upperLeftCorner, this.size);
     }
 
     protected calculateMarginRectangle(): void {
-        this.upperLeftMarginCorner = new PointF2D(this.borderMarginLeft, this.borderMarginTop);
-        this.marginSize = new SizeF2D(this.borderMarginRight - this.borderMarginLeft, this.borderMarginBottom - this.borderMarginTop);
+        this.upperLeftMarginCorner = new PointF2D(this.BorderMarginLeft, this.BorderMarginTop);
+        this.marginSize = new SizeF2D(this.BorderMarginRight - this.BorderMarginLeft, this.BorderMarginBottom - this.BorderMarginTop);
         this.boundingMarginRectangle = RectangleF2D.createFromLocationAndSize(this.upperLeftMarginCorner, this.marginSize);
     }
 

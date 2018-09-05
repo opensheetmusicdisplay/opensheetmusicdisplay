@@ -17,23 +17,29 @@ import Dictionary from "typescript-collections/dist/lib/Dictionary";
 export class VoiceEntry {
     /**
      *
-     * @param timestamp - The relative timestamp within the source measure.
+     * @param timestamp The relative timestamp within the source measure.
      * @param parentVoice
      * @param parentSourceStaffEntry
+     * @param isGrace States whether the VoiceEntry has (only) grace notes.
+     * @param graceNoteSlash States whether the grace note(s) have a slash (Acciaccatura, played before the beat)
      */
-    constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry) {
+    constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry,
+                isGrace: boolean = false, graceNoteSlash: boolean = false, graceSlur: boolean = false) {
         this.timestamp = timestamp;
         this.parentVoice = parentVoice;
         this.parentSourceStaffEntry = parentSourceStaffEntry;
+        this.isGrace = isGrace;
+        this.graceNoteSlash = graceNoteSlash;
+        this.graceSlur = graceSlur;
     }
-
-    public graceVoiceEntriesBefore: VoiceEntry[];
-    public graceVoiceEntriesAfter: VoiceEntry[];
 
     private parentVoice: Voice;
     private parentSourceStaffEntry: SourceStaffEntry;
     private timestamp: Fraction;
     private notes: Note[] = [];
+    private isGrace: boolean;
+    private graceNoteSlash: boolean;
+    private graceSlur: boolean; // TODO grace slur system could be refined to be non-binary
     private articulations: ArticulationEnum[] = [];
     private technicalInstructions: TechnicalInstruction[] = [];
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
@@ -55,6 +61,24 @@ export class VoiceEntry {
     }
     public get Notes(): Note[] {
         return this.notes;
+    }
+    public get IsGrace(): boolean {
+        return this.isGrace;
+    }
+    public set IsGrace(value: boolean) {
+        this.isGrace = value;
+    }
+    public get GraceNoteSlash(): boolean {
+        return this.graceNoteSlash;
+    }
+    public set GraceNoteSlash(value: boolean) {
+        this.graceNoteSlash = value;
+    }
+    public get GraceSlur(): boolean {
+        return this.graceSlur;
+    }
+    public set GraceSlur(value: boolean) {
+        this.graceSlur = value;
     }
     public get Articulations(): ArticulationEnum[] {
         return this.articulations;
@@ -170,7 +194,7 @@ export class VoiceEntry {
                 const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
                 let alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
                 if (voiceEntryWithOrnament.OrnamentContainer.AccidentalAbove !== AccidentalEnum.NONE) {
-                    alteration = <AccidentalEnum><number>voiceEntryWithOrnament.ornamentContainer.AccidentalAbove;
+                    alteration = voiceEntryWithOrnament.ornamentContainer.AccidentalAbove;
                 }
                 for (let i: number = 0; i < 8; i++) {
                     currentTimestamp = Fraction.plus(baseTimestamp, new Fraction(i * length.Numerator, length.Denominator));

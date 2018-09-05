@@ -8,6 +8,7 @@ import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
+import {NoteHead} from "./NoteHead";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -42,15 +43,10 @@ export class Note {
     private tuplet: Tuplet;
     private tie: Tie;
     private slurs: Slur[] = [];
-    private graceNoteSlash: boolean = false;
     private playbackInstrumentId: string = undefined;
+    private noteHead: NoteHead = undefined;
 
-    public get GraceNoteSlash(): boolean {
-        return this.graceNoteSlash;
-    }
-    public set GraceNoteSlash(value: boolean) {
-        this.graceNoteSlash = value;
-    }
+
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
     }
@@ -101,6 +97,12 @@ export class Note {
     }
     public set PlaybackInstrumentId(value: string) {
         this.playbackInstrumentId = value;
+    }
+    public set NoteHead(value: NoteHead) {
+        this.noteHead = value;
+    }
+    public get NoteHead(): NoteHead {
+        return this.noteHead;
     }
 
     public isRest(): boolean {

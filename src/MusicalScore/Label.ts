@@ -1,4 +1,4 @@
-import {TextAlignment} from "../Common/Enums/TextAlignment";
+import {TextAlignmentAndPlacement} from "../Common/Enums/TextAlignment";
 import {OSMDColor} from "../Common/DataObjects/OSMDColor";
 import {Fonts} from "../Common/Enums/Fonts";
 import {FontStyles} from "../Common/Enums/FontStyles";
@@ -9,7 +9,7 @@ import {FontStyles} from "../Common/Enums/FontStyles";
  */
 export class Label {
 
-    constructor(text: string = "", alignment: TextAlignment = TextAlignment.LeftBottom, font: Fonts = Fonts.TimesNewRoman) {
+    constructor(text: string = "", alignment: TextAlignmentAndPlacement = TextAlignmentAndPlacement.LeftBottom, font: Fonts = Fonts.TimesNewRoman) {
         this.text = text;
         this.textAlignment = alignment;
         this.font = font;
@@ -20,7 +20,7 @@ export class Label {
     public font: Fonts;
     public fontStyle: FontStyles;
     public fontHeight: number;
-    public textAlignment: TextAlignment;
+    public textAlignment: TextAlignmentAndPlacement;
 
     public ToString(): string {
         return this.text;

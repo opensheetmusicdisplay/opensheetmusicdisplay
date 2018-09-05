@@ -86,7 +86,8 @@ export class LyricsReader {
                             if (syllabic === "single" || syllabic === "end") {
                                 if (this.openLyricWords[currentLyricVerseNumber] !== undefined) { // word end given or some word still open
                                     this.currentLyricWord = this.openLyricWords[currentLyricVerseNumber];
-                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry);
+                                    const syllableNumber: number = this.currentLyricWord.Syllables.length;
+                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, syllableNumber);
                                     this.currentLyricWord.Syllables.push(lyricsEntry);
                                     delete this.openLyricWords[currentLyricVerseNumber];
                                     this.currentLyricWord = undefined;
@@ -101,12 +102,13 @@ export class LyricsReader {
                                 }
                                 this.currentLyricWord = new LyricWord();
                                 this.openLyricWords[currentLyricVerseNumber] = this.currentLyricWord;
-                                lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry);
+                                lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, 0);
                                 this.currentLyricWord.Syllables.push(lyricsEntry);
                             } else if (syllabic === "middle") {
                                 if (this.openLyricWords[currentLyricVerseNumber] !== undefined) {
                                     this.currentLyricWord = this.openLyricWords[currentLyricVerseNumber];
-                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry);
+                                    const syllableNumber: number = this.currentLyricWord.Syllables.length;
+                                    lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, syllableNumber);
                                     this.currentLyricWord.Syllables.push(lyricsEntry);
                                 } else {
                                     // in case the wrong syllabel information is given, create a single Entry and add it to currentVoiceEntry

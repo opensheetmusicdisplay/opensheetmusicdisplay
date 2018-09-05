@@ -24,16 +24,13 @@ import { Pitch } from "../../Common/DataObjects/Pitch";
 import { IXmlAttribute } from "../../Common/FileIO/Xml";
 import { CollectionUtil } from "../../Util/CollectionUtil";
 import { ArticulationReader } from "./MusicSymbolModules/ArticulationReader";
-
-/**
- * To be implemented
- */
-export type SlurReader = any;
+import { SlurReader } from "./MusicSymbolModules/SlurReader";
+import { NoteHead } from "../VoiceData/NoteHead";
 
 export class VoiceGenerator {
   constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
     this.musicSheet = instrument.GetMusicSheet;
-    // this.slurReader = slurReader;
+    this.slurReader = slurReader;
     if (mainVoice !== undefined) {
       this.voice = new LinkedVoice(instrument, voiceId, mainVoice);
     } else {
@@ -44,7 +41,7 @@ export class VoiceGenerator {
     this.articulationReader = new ArticulationReader();
   }
 
-  // private slurReader: SlurReader;
+  private slurReader: SlurReader;
   private lyricsReader: LyricsReader;
   private articulationReader: ArticulationReader;
   private musicSheet: MusicSheet;
@@ -55,7 +52,6 @@ export class VoiceGenerator {
   private currentStaffEntry: SourceStaffEntry;
   private lastBeamTag: string = "";
   private openBeam: Beam;
-  private openGraceBeam: Beam;
   private openTieDict: { [_: number]: Tie; } = {};
   private currentOctaveShift: number = 0;
   private tupletDict: { [_: number]: Tuplet; } = {};
@@ -78,9 +74,11 @@ export class VoiceGenerator {
    * @param musicTimestamp
    * @param parentStaffEntry
    * @param addToVoice
+   * @param isGrace States whether the new VoiceEntry (only) has grace notes
    */
-  public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean): void {
-    this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry);
+  public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean,
+                          isGrace: boolean = false, graceNoteSlash: boolean = false, graceSlur: boolean = false): void {
+    this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry, isGrace, graceNoteSlash, graceSlur);
     if (addToVoice) {
       this.voice.VoiceEntries.push(this.currentVoiceEntry);
     }
@@ -95,7 +93,6 @@ export class VoiceGenerator {
    * @param noteDuration
    * @param divisions
    * @param restNote
-   * @param graceNote
    * @param parentStaffEntry
    * @param parentMeasure
    * @param measureStartAbsoluteTimestamp
@@ -104,7 +101,7 @@ export class VoiceGenerator {
    * @param guitarPro
    * @returns {Note}
    */
-  public read(noteNode: IXmlElement, noteDuration: Fraction, restNote: boolean, graceNote: boolean,
+  public read(noteNode: IXmlElement, noteDuration: Fraction, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean): Note {
     this.currentStaffEntry = parentStaffEntry;
@@ -113,32 +110,35 @@ export class VoiceGenerator {
     try {
       this.currentNote = restNote
         ? this.addRestNote(noteDuration)
-        : this.addSingleNote(noteNode, noteDuration, graceNote, chord, guitarPro);
-
-      if (this.lyricsReader !== undefined && noteNode.elements("lyric") !== undefined) {
-        this.lyricsReader.addLyricEntry(noteNode.elements("lyric"), this.currentVoiceEntry);
+        : this.addSingleNote(noteNode, noteDuration, chord, guitarPro);
+      // read lyrics
+      const lyricElements: IXmlElement[] = noteNode.elements("lyric");
+      if (this.lyricsReader !== undefined && lyricElements !== undefined) {
+        this.lyricsReader.addLyricEntry(lyricElements, this.currentVoiceEntry);
         this.voice.Parent.HasLyrics = true;
       }
       let hasTupletCommand: boolean = false;
       const notationNode: IXmlElement = noteNode.element("notations");
       if (notationNode !== undefined) {
-        // let articNode: IXmlElement = undefined;
-        // (*)
+        // read articulations
         if (this.articulationReader !== undefined) {
           this.readArticulations(notationNode, this.currentVoiceEntry);
         }
-        //let slurNodes: IXmlElement[] = undefined;
-        // (*)
-        //if (this.slurReader !== undefined && (slurNodes = notationNode.elements("slur")))
-        //    this.slurReader.addSlur(slurNodes, this.currentNote);
-        // check for Tuplets
-        const tupletNodeList: IXmlElement[] = notationNode.elements("tuplet");
-        if (tupletNodeList.length > 0) {
-          this.openTupletNumber = this.addTuplet(noteNode, tupletNodeList);
+        // read slurs
+        const slurElements: IXmlElement[] = notationNode.elements("slur");
+        if (this.slurReader !== undefined &&
+            slurElements.length > 0 &&
+            !this.currentNote.ParentVoiceEntry.IsGrace) {
+          this.slurReader.addSlur(slurElements, this.currentNote);
+        }
+        // read Tuplets
+        const tupletElements: IXmlElement[] = notationNode.elements("tuplet");
+        if (tupletElements.length > 0) {
+          this.openTupletNumber = this.addTuplet(noteNode, tupletElements);
           hasTupletCommand = true;
         }
         // check for Arpeggios
-        if (notationNode.element("arpeggiate") !== undefined && !graceNote) {
+        if (notationNode.element("arpeggiate") !== undefined && !this.currentVoiceEntry.IsGrace) {
           this.currentVoiceEntry.ArpeggiosNotesIndices.push(this.currentVoiceEntry.Notes.indexOf(this.currentNote));
         }
         // check for Ties - must be the last check
@@ -171,41 +171,6 @@ export class VoiceGenerator {
     }
 
     return this.currentNote;
-  }
-
-  /**
-   * Handle the GraceNotes that appear before the Measure's End
-   * and aren't assigned to any normal (with [[VoiceEntries]]) [[SourceStaffEntry]]s yet.
-   */
-  public checkForOpenGraceNotes(): void {
-    if (
-      this.currentStaffEntry !== undefined
-      && this.currentStaffEntry.VoiceEntries.length === 0
-      && this.currentVoiceEntry.graceVoiceEntriesBefore !== undefined
-      && this.currentVoiceEntry.graceVoiceEntriesBefore.length > 0
-    ) {
-      const voice: Voice = this.currentVoiceEntry.ParentVoice;
-      const horizontalIndex: number = this.currentMeasure.VerticalSourceStaffEntryContainers.indexOf(this.currentStaffEntry.VerticalContainerParent);
-      const verticalIndex: number = this.currentStaffEntry.VerticalContainerParent.StaffEntries.indexOf(this.currentStaffEntry);
-      const previousStaffEntry: SourceStaffEntry = this.currentMeasure.getPreviousSourceStaffEntryFromIndex(verticalIndex, horizontalIndex);
-      if (previousStaffEntry !== undefined) {
-        let previousVoiceEntry: VoiceEntry = undefined;
-        for (let idx: number = 0, len: number = previousStaffEntry.VoiceEntries.length; idx < len; ++idx) {
-          const voiceEntry: VoiceEntry = previousStaffEntry.VoiceEntries[idx];
-          if (voiceEntry.ParentVoice === voice) {
-            previousVoiceEntry = voiceEntry;
-            previousVoiceEntry.graceVoiceEntriesAfter = [];
-            for (let idx2: number = 0, len2: number = this.currentVoiceEntry.graceVoiceEntriesBefore.length; idx2 < len2; ++idx2) {
-              const graceVoiceEntry: VoiceEntry = this.currentVoiceEntry.graceVoiceEntriesBefore[idx2];
-              previousVoiceEntry.graceVoiceEntriesAfter.push(graceVoiceEntry);
-            }
-            this.currentVoiceEntry.graceVoiceEntriesBefore = [];
-            this.currentStaffEntry = undefined;
-            break;
-          }
-        }
-      }
-    }
   }
 
   /**
@@ -325,17 +290,20 @@ export class VoiceGenerator {
    * @param node
    * @param noteDuration
    * @param divisions
-   * @param graceNote
    * @param chord
    * @param guitarPro
    * @returns {Note}
    */
-  private addSingleNote(node: IXmlElement, noteDuration: Fraction, graceNote: boolean, chord: boolean, guitarPro: boolean): Note {
+  private addSingleNote(node: IXmlElement, noteDuration: Fraction, chord: boolean, guitarPro: boolean): Note {
     //log.debug("addSingleNote called");
-    let noteAlter: AccidentalEnum = AccidentalEnum.NONE;
+    let noteAlter: number = 0;
+    let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
     let playbackInstrumentId: string = undefined;
+    let noteHeadShapeXml: string = undefined;
+    let noteHeadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
+
     const xmlnodeElementsArr: IXmlElement[] = node.elements();
     for (let idx: number = 0, len: number = xmlnodeElementsArr.length; idx < len; ++idx) {
       const noteElement: IXmlElement = xmlnodeElementsArr[idx];
@@ -344,6 +312,8 @@ export class VoiceGenerator {
           const noteElementsArr: IXmlElement[] = noteElement.elements();
           for (let idx2: number = 0, len2: number = noteElementsArr.length; idx2 < len2; ++idx2) {
             const pitchElement: IXmlElement = noteElementsArr[idx2];
+            noteHeadShapeXml = undefined; // reinitialize for each pitch
+            noteHeadFilledXml = undefined;
             try {
               if (pitchElement.name === "step") {
                 noteStep = NoteEnum[pitchElement.value];
@@ -356,7 +326,7 @@ export class VoiceGenerator {
                   throw new MusicSheetReadingException(errorMsg, undefined);
                 }
               } else if (pitchElement.name === "alter") {
-                noteAlter = parseInt(pitchElement.value, 10);
+                noteAlter = parseFloat(pitchElement.value);
                 if (isNaN(noteAlter)) {
                   const errorMsg: string = ITextTranslation.translateText(
                     "ReaderErrorMessages/NoteAlterationError", "Invalid alteration while reading note."
@@ -364,7 +334,7 @@ export class VoiceGenerator {
                   this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                   throw new MusicSheetReadingException(errorMsg, undefined);
                 }
-
+                noteAccidental = Pitch.AccidentalFromHalfTones(noteAlter); // potentially overwritten by "accidental" noteElement
               } else if (pitchElement.name === "octave") {
                 noteOctave = parseInt(pitchElement.value, 10);
                 if (isNaN(noteOctave)) {
@@ -379,6 +349,11 @@ export class VoiceGenerator {
               log.info("VoiceGenerator.addSingleNote read Step: ", ex.message);
             }
 
+          }
+        } else if (noteElement.name === "accidental") {
+          const accidentalValue: string = noteElement.value;
+          if (accidentalValue === "natural") {
+            noteAccidental = AccidentalEnum.NATURAL;
           }
         } else if (noteElement.name === "unpitched") {
           const displayStep: IXmlElement = noteElement.element("display-step");
@@ -397,23 +372,28 @@ export class VoiceGenerator {
             playbackInstrumentId = noteElement.firstAttribute.value;
           }
         }
+        if (noteElement.name === "notehead") {
+          noteHeadShapeXml = noteElement.value;
+          if (noteElement.attribute("filled") !== null) {
+            noteHeadFilledXml = noteElement.attribute("filled").value === "yes";
+          }
+        }
       } catch (ex) {
         log.info("VoiceGenerator.addSingleNote: ", ex);
       }
     }
 
     noteOctave -= Pitch.OctaveXmlDifference;
-    const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAlter);
+    const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     note.PlaybackInstrumentId = playbackInstrumentId;
-    if (!graceNote) {
-      this.currentVoiceEntry.Notes.push(note);
-    } else {
-      this.handleGraceNote(node, note);
-    }
+    if (noteHeadShapeXml !== undefined && noteHeadShapeXml !== "normal") {
+      note.NoteHead = new NoteHead(note, noteHeadShapeXml, noteHeadFilledXml);
+    } // if normal, leave note head undefined to save performance
+    this.currentVoiceEntry.Notes.push(note);
     if (node.elements("beam") && !chord) {
-      this.createBeam(node, note, graceNote);
+      this.createBeam(node, note);
     }
     return note;
   }
@@ -440,7 +420,7 @@ export class VoiceGenerator {
    * @param note
    * @param grace
    */
-  private createBeam(node: IXmlElement, note: Note, grace: boolean): void {
+  private createBeam(node: IXmlElement, note: Note): void {
     try {
       const beamNode: IXmlElement = node.element("beam");
       let beamAttr: IXmlAttribute = undefined;
@@ -453,55 +433,30 @@ export class VoiceGenerator {
         const currentBeamTag: string = mainBeamNode[0].value;
         if (beamNumber === 1 && mainBeamNode !== undefined) {
           if (currentBeamTag === "begin" && this.lastBeamTag !== currentBeamTag) {
-            if (grace) {
-              if (this.openGraceBeam !== undefined) {
-                this.handleOpenBeam();
-              }
-              this.openGraceBeam = new Beam();
-            } else {
               if (this.openBeam !== undefined) {
                 this.handleOpenBeam();
               }
               this.openBeam = new Beam();
             }
-          }
           this.lastBeamTag = currentBeamTag;
         }
         let sameVoiceEntry: boolean = false;
-        if (grace) {
-          if (this.openGraceBeam === undefined) {
+        if (this.openBeam === undefined) {
             return;
           }
-          for (let idx: number = 0, len: number = this.openGraceBeam.Notes.length; idx < len; ++idx) {
-            const beamNote: Note = this.openGraceBeam.Notes[idx];
-            if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
-              sameVoiceEntry = true;
-            }
-          }
-          if (!sameVoiceEntry) {
-            this.openGraceBeam.addNoteToBeam(note);
-            if (currentBeamTag === "end" && beamNumber === 1) {
-              this.openGraceBeam = undefined;
-            }
-          }
-        } else {
-          if (this.openBeam === undefined) {
-            return;
-          }
-          for (let idx: number = 0, len: number = this.openBeam.Notes.length; idx < len; ++idx) {
+        for (let idx: number = 0, len: number = this.openBeam.Notes.length; idx < len; ++idx) {
             const beamNote: Note = this.openBeam.Notes[idx];
             if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
               sameVoiceEntry = true;
             }
           }
-          if (!sameVoiceEntry) {
+        if (!sameVoiceEntry) {
             this.openBeam.addNoteToBeam(note);
             if (currentBeamTag === "end" && beamNumber === 1) {
               this.openBeam = undefined;
             }
           }
         }
-      }
     } catch (e) {
       const errorMsg: string = ITextTranslation.translateText(
         "ReaderErrorMessages/BeamError", "Error while reading beam."
@@ -550,61 +505,6 @@ export class VoiceGenerator {
       } else {
         this.openBeam = undefined;
       }
-    }
-  }
-
-  private handleGraceNote(node: IXmlElement, note: Note): void {
-    let graceChord: boolean = false;
-    let type: string = "";
-    if (node.elements("type")) {
-      const typeNode: IXmlElement[] = node.elements("type");
-      if (typeNode) {
-        type = typeNode[0].value;
-        try {
-          note.Length = this.getNoteDurationFromType(type);
-          note.Length.Numerator = 1;
-        } catch (e) {
-          const errorMsg: string = ITextTranslation.translateText(
-            "ReaderErrorMessages/NoteDurationError", "Invalid note duration."
-          );
-          this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-          throw new MusicSheetReadingException(errorMsg, e);
-        }
-
-      }
-    }
-    const graceNode: IXmlElement = node.element("grace");
-    if (graceNode !== undefined && graceNode.attributes()) {
-      if (graceNode.attribute("slash")) {
-        const slash: string = graceNode.attribute("slash").value;
-        if (slash === "yes") {
-          note.GraceNoteSlash = true;
-        }
-      }
-    }
-    if (node.element("chord") !== undefined) {
-      graceChord = true;
-    }
-    let graceVoiceEntry: VoiceEntry = undefined;
-    if (!graceChord) {
-      graceVoiceEntry = new VoiceEntry(
-        new Fraction(0, 1), this.currentVoiceEntry.ParentVoice, this.currentStaffEntry
-      );
-      if (this.currentVoiceEntry.graceVoiceEntriesBefore === undefined) {
-        this.currentVoiceEntry.graceVoiceEntriesBefore = [];
-      }
-      this.currentVoiceEntry.graceVoiceEntriesBefore.push(graceVoiceEntry);
-    } else {
-      if (
-        this.currentVoiceEntry.graceVoiceEntriesBefore !== undefined
-        && this.currentVoiceEntry.graceVoiceEntriesBefore.length > 0
-      ) {
-        graceVoiceEntry = CollectionUtil.last(this.currentVoiceEntry.graceVoiceEntriesBefore);
-      }
-    }
-    if (graceVoiceEntry !== undefined) {
-      graceVoiceEntry.Notes.push(note);
-      note.ParentVoiceEntry = graceVoiceEntry;
     }
   }
 
