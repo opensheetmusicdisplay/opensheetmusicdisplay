@@ -22,6 +22,8 @@ Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT 
 
 See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki) for information about the source code and how to use OSMD.
 
+Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
+
 
 <!--# <a name="license"></a>License
 The MIT License (MIT)
