@@ -47,6 +47,12 @@ export class Cursor {
     // this.openSheetMusicDisplay.render();
   }
 
+  private getStaffEntriesFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
+    const measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.measureListIndex;
+    const staffIndex: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.idInMusicSheet;
+    return <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
+  }
+
   public update(): void {
     // Warning! This should NEVER call this.openSheetMusicDisplay.render()
     if (this.hidden) {
@@ -59,12 +65,11 @@ export class Cursor {
     }
     let x: number = 0, y: number = 0, height: number = 0;
 
+    const gseArr: VexFlowStaffEntry[] = iterator.CurrentVoiceEntries.map(ve => this.getStaffEntriesFromVoiceEntry(ve));
     const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[0];
-    const measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.measureListIndex;
-    const staffIndex: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.idInMusicSheet;
-    const gse: VexFlowStaffEntry =
-      <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
 
+    const gse: VexFlowStaffEntry =
+          gseArr.sort((a, b) => a.PositionAndShape.AbsolutePosition.x <= b.PositionAndShape.AbsolutePosition.x ? -1 : 1 )[0];
     x = gse.PositionAndShape.AbsolutePosition.x;
     const musicSystem: MusicSystem = gse.parentMeasure.parentMusicSystem;
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
