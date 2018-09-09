@@ -550,9 +550,10 @@ export abstract class MusicSheetCalculator {
         // update BottomLine (on the whole StaffLine's length)
         if (lyricsStaffEntriesList.length > 0) {
             const endX: number = staffLine.PositionAndShape.Size.width;
-            const startX: number = lyricsStaffEntriesList[0].PositionAndShape.RelativePosition.x +
+            let startX: number = lyricsStaffEntriesList[0].PositionAndShape.RelativePosition.x +
                 lyricsStaffEntriesList[0].PositionAndShape.BorderMarginLeft +
                 lyricsStaffEntriesList[0].parentMeasure.PositionAndShape.RelativePosition.x;
+            startX = startX > endX ? endX : startX;
             skyBottomLineCalculator.updateBottomLineInRange(startX, endX, maxPosition);
         }
         return lyricsStaffEntriesList;
