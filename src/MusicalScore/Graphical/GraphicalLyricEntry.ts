@@ -19,21 +19,24 @@ export class GraphicalLyricEntry {
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
         this.graphicalStaffEntry = graphicalStaffEntry;
-        let lyricsTextAlignment: TextAlignmentAndPlacement = EngravingRules.Rules.LyricsAlignmentStandard;
+        const lyricsTextAlignment: TextAlignmentAndPlacement = EngravingRules.Rules.LyricsAlignmentStandard;
         // for small notes with long text, use center alignment
         // TODO use this, fix center+left alignment combination spacing
         if (lyricsEntry.Text.length >= 4
             && lyricsEntry.Parent.Notes[0].Length.Denominator > 4
             && lyricsTextAlignment === TextAlignmentAndPlacement.LeftBottom) {
-            lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
+            // lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
         }
         this.graphicalLabel = new GraphicalLabel(
             new Label(lyricsEntry.Text),
             lyricsHeight,
-            EngravingRules.Rules.LyricsAlignmentStandard,
+            lyricsTextAlignment,
             graphicalStaffEntry.PositionAndShape
         );
-        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight); // TODO gets reset later
+        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
+        if (lyricsTextAlignment === TextAlignmentAndPlacement.LeftBottom) {
+            this.graphicalLabel.PositionAndShape.RelativePosition.x -= 1; // make lyrics optically left-aligned
+        }
     }
 
     public get LyricsEntry(): LyricsEntry {

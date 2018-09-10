@@ -542,7 +542,8 @@ export abstract class MusicSheetCalculator {
                 if (this.leadSheet) {
                     position = 3.4 + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * (sortedLyricVerseNumberIndex);
                 }
-                lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(0, position);
+                const previousRelativeX: number = lyricsEntryLabel.PositionAndShape.RelativePosition.x;
+                lyricsEntryLabel.PositionAndShape.RelativePosition = new PointF2D(previousRelativeX, position);
                 maxPosition = Math.max(maxPosition, position);
             }
         }
@@ -1896,9 +1897,12 @@ export abstract class MusicSheetCalculator {
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
+                lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x +
                 lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
+
             const endX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffentry.PositionAndShape.RelativePosition.x +
+                lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.x +
                 nextLyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
             const y: number = lyricEntry.GraphicalLabel.PositionAndShape.RelativePosition.y;
             let numberOfDashes: number = 1;
@@ -2033,8 +2037,7 @@ export abstract class MusicSheetCalculator {
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
-                startStaffEntry.PositionAndShape.BorderMarginRight;
-                // + lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginLeft;
+                lyricEntry.GraphicalLabel.PositionAndShape.BorderMarginRight;
                 // + startStaffLine.PositionAndShape.AbsolutePosition.x; // doesn't work, done in drawer
             const endX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 endStaffEntry.PositionAndShape.RelativePosition.x +

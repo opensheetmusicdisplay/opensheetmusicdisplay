@@ -24,7 +24,6 @@ import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
-import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -150,8 +149,9 @@ export abstract class MusicSheetDrawer {
         const bitmapWidth: number = Math.ceil(widthInPixel);
         const bitmapHeight: number = Math.ceil(heightInPixel * 1.2);
         switch (label.textAlignment) {
-            // the following have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
-            // TODO unify alignment shifts and our label/bbox position, which does not correspond to screenposition
+            // Adjust the OSMD-calculated positions to rendering coordinates
+            // These have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
+            // TODO isn't this a Vexflow-specific transformation that should be in VexflowMusicSheetDrawer?
             case TextAlignmentAndPlacement.LeftTop:
                 break;
             case TextAlignmentAndPlacement.LeftCenter:
@@ -159,7 +159,6 @@ export abstract class MusicSheetDrawer {
                 break;
             case TextAlignmentAndPlacement.LeftBottom:
                 screenPosition.y -= bitmapHeight;
-                screenPosition.x -= unitInPixels; // lyrics-specific to align with notes
                 break;
             case TextAlignmentAndPlacement.CenterTop:
                 screenPosition.x -= bitmapWidth / 2;

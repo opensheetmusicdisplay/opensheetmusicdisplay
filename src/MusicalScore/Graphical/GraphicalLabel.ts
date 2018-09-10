@@ -70,9 +70,9 @@ export class GraphicalLabel extends Clickable {
                 break;
             case TextAlignmentAndPlacement.LeftBottom:
                 bbox.BorderTop = -height;
-                bbox.BorderLeft = -1;
+                bbox.BorderLeft = 0;
                 bbox.BorderBottom = 0;
-                bbox.BorderRight = width - 1;
+                bbox.BorderRight = width;
                 break;
             case TextAlignmentAndPlacement.LeftCenter:
                 bbox.BorderTop = -height / 2;
