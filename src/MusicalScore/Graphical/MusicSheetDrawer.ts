@@ -10,7 +10,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalRectangle} from "./GraphicalRectangle";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {Label} from "../Label";
-import {TextAlignmentAndPlacement} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
@@ -152,33 +152,33 @@ export abstract class MusicSheetDrawer {
             // Adjust the OSMD-calculated positions to rendering coordinates
             // These have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
             // TODO isn't this a Vexflow-specific transformation that should be in VexflowMusicSheetDrawer?
-            case TextAlignmentAndPlacement.LeftTop:
+            case TextAlignmentEnum.LeftTop:
                 break;
-            case TextAlignmentAndPlacement.LeftCenter:
+            case TextAlignmentEnum.LeftCenter:
                 screenPosition.y -= bitmapHeight / 2;
                 break;
-            case TextAlignmentAndPlacement.LeftBottom:
+            case TextAlignmentEnum.LeftBottom:
                 screenPosition.y -= bitmapHeight;
                 break;
-            case TextAlignmentAndPlacement.CenterTop:
+            case TextAlignmentEnum.CenterTop:
                 screenPosition.x -= bitmapWidth / 2;
                 break;
-            case TextAlignmentAndPlacement.CenterCenter:
+            case TextAlignmentEnum.CenterCenter:
                 screenPosition.x -= bitmapWidth / 2;
                 screenPosition.y -= bitmapHeight / 2;
                 break;
-            case TextAlignmentAndPlacement.CenterBottom:
+            case TextAlignmentEnum.CenterBottom:
                 screenPosition.x -= bitmapWidth / 2;
                 screenPosition.y -= bitmapHeight;
                 break;
-            case TextAlignmentAndPlacement.RightTop:
+            case TextAlignmentEnum.RightTop:
                 screenPosition.x -= bitmapWidth;
                 break;
-            case TextAlignmentAndPlacement.RightCenter:
+            case TextAlignmentEnum.RightCenter:
                 screenPosition.x -= bitmapWidth;
                 screenPosition.y -= bitmapHeight / 2;
                 break;
-            case TextAlignmentAndPlacement.RightBottom:
+            case TextAlignmentEnum.RightBottom:
                 screenPosition.x -= bitmapWidth;
                 screenPosition.y -= bitmapHeight;
                 break;
@@ -509,7 +509,7 @@ export abstract class MusicSheetDrawer {
 
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentAndPlacement.CenterCenter),
+            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentEnum.CenterCenter),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
         layer++;

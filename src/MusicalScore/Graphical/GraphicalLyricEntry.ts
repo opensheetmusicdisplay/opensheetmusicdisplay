@@ -5,7 +5,7 @@ import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {Label} from "../Label";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import { EngravingRules } from "./EngravingRules";
-import { TextAlignmentAndPlacement } from "../../Common/Enums/TextAlignment";
+import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 
 /**
  * The graphical counterpart of a [[LyricsEntry]]
@@ -19,12 +19,12 @@ export class GraphicalLyricEntry {
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
         this.graphicalStaffEntry = graphicalStaffEntry;
-        const lyricsTextAlignment: TextAlignmentAndPlacement = EngravingRules.Rules.LyricsAlignmentStandard;
+        const lyricsTextAlignment: TextAlignmentEnum = EngravingRules.Rules.LyricsAlignmentStandard;
         // for small notes with long text, use center alignment
         // TODO use this, fix center+left alignment combination spacing
         if (lyricsEntry.Text.length >= 4
             && lyricsEntry.Parent.Notes[0].Length.Denominator > 4
-            && lyricsTextAlignment === TextAlignmentAndPlacement.LeftBottom) {
+            && lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
             // lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
         }
         this.graphicalLabel = new GraphicalLabel(
@@ -34,7 +34,7 @@ export class GraphicalLyricEntry {
             graphicalStaffEntry.PositionAndShape
         );
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
-        if (lyricsTextAlignment === TextAlignmentAndPlacement.LeftBottom) {
+        if (lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
             this.graphicalLabel.PositionAndShape.RelativePosition.x -= 1; // make lyrics optically left-aligned
         }
     }
