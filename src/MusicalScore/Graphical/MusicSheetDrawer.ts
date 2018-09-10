@@ -57,7 +57,7 @@ export abstract class MusicSheetDrawer {
         this.textMeasurer = textMeasurer;
         this.splitScreenLineColor = -1;
         if (isPreviewImageDrawer) {
-            this.drawingParameters.setForThumbmail();
+            this.drawingParameters.setForThumbnail();
         } else {
             this.drawingParameters.setForAllOn();
         }

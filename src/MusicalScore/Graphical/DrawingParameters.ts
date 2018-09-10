@@ -21,7 +21,7 @@ export class DrawingParameters {
         this.drawMarkedAreas = true;
     }
 
-    public setForThumbmail(): void {
+    public setForThumbnail(): void {
         this.drawHighlights = false;
         this.drawErrors = false;
         this.drawSelectionStartSymbol = false;
