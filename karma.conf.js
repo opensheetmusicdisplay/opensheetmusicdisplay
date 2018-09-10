@@ -67,7 +67,7 @@ module.exports = function (config) {
         // web server port
         port: 9876,
         // timeout in ms:
-        browserNoActivityTimeout: 100000,
+        browserNoActivityTimeout: 100000, // default 10000
         browserDisconnectTimeout: 10000, // default 2000
         browserDisconnectTolerance: 1, // default 0
         captureTimeout: 60000,
