@@ -500,7 +500,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 this.musicSheet.Title = new Label(filenameSplits[0]);
             }
         } catch (ex) {
-            log.debug("Error reading title or composer in MusicSheetReader.pushSheetLabels: ", ex);
+            log.info("MusicSheetReader.pushSheetLabels", "read title or composer", ex);
         }
     }
 
@@ -611,8 +611,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         let paperHeight: number = 0;
         let topSystemDistance: number = 0;
-        const defi: string = root.element("defaults").element("page-layout").element("page-height").value;
-        paperHeight = parseFloat(defi);
+        try {
+            const defi: string = root.element("defaults").element("page-layout").element("page-height").value;
+            paperHeight = parseFloat(defi);
+        } catch (e) {
+            log.info("MusicSheetReader.computeSystemYCoordinates(): couldn't find page height, not reading title/composer.");
+            return 0;
+        }
         let found: boolean = false;
         const parts: IXmlElement[] = root.elements("part");
         for (let idx: number = 0, len: number = parts.length; idx < len; ++idx) {

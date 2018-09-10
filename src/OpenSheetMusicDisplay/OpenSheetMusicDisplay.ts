@@ -122,7 +122,7 @@ export class OpenSheetMusicDisplay {
         const score: IXmlElement = new IXmlElement(elem);
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         const reader: MusicSheetReader = new MusicSheetReader();
-        this.sheet = reader.createMusicSheet(score, "Unknown path");
+        this.sheet = reader.createMusicSheet(score, "Untitled Score");
         if (this.sheet === undefined) {
             // error loading sheet, probably already logged, do nothing
             return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
