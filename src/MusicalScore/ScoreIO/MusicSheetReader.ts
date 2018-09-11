@@ -491,6 +491,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
                 this.readTitleAndComposerFromCredits(root); // this can also throw an error
             }
+        } catch (ex) {
+            log.info("MusicSheetReader.pushSheetLabels", "readTitleAndComposerFromCredits", ex);
+        }
+        try {
             if (this.musicSheet.Title === undefined) {
                 const barI: number = Math.max(
                     0, filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")
@@ -500,7 +504,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 this.musicSheet.Title = new Label(filenameSplits[0]);
             }
         } catch (ex) {
-            log.info("MusicSheetReader.pushSheetLabels", "read title or composer", ex);
+            log.info("MusicSheetReader.pushSheetLabels", "read title from file name", ex);
         }
     }
 
