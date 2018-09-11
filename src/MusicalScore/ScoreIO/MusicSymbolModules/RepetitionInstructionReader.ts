@@ -121,7 +121,7 @@ export class RepetitionInstructionReader {
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
     if (wordsNode !== undefined) {
-      const dsRegEx: string = "d\s?\.s\.";
+      const dsRegEx: string = "d\\s?\\.s\\."; // TS eliminates the first \
       // must Trim string and ToLower before compare
       const innerText: string = wordsNode.value.trim().toLowerCase();
       if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine")) {
@@ -133,7 +133,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      const dcRegEx: string = "d\.\s?c\.";
+      const dcRegEx: string = "d\\.\\s?c\\.";
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda")) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
@@ -162,7 +162,7 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "da\s?capo")) {
+        StringUtil.StringContainsSeparatedWord(innerText, "da\\s?capo")) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
@@ -172,7 +172,7 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "dal\s?segno")) {
+        StringUtil.StringContainsSeparatedWord(innerText, "dal\\s?segno")) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
@@ -181,7 +181,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "to\s?coda") ||
+      if (StringUtil.StringContainsSeparatedWord(innerText, "to\\s?coda") ||
         StringUtil.StringContainsSeparatedWord(innerText, "a (la )?coda")) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
