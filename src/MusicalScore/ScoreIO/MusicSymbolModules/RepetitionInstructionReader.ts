@@ -121,7 +121,7 @@ export class RepetitionInstructionReader {
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
     if (wordsNode !== undefined) {
-      const dsRegEx: string = "d\\s?\\.s\\."; // TS eliminates the first \
+      const dsRegEx: string = "d\\s?\\.s\\."; // Input for new RegExp(). TS eliminates the first \
       // must Trim string and ToLower before compare
       const innerText: string = wordsNode.value.trim().toLowerCase();
       if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine")) {
