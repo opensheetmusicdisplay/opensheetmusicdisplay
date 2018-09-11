@@ -152,7 +152,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "d\.\s?c\. al coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda")) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
