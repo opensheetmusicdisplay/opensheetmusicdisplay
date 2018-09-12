@@ -161,7 +161,7 @@ export abstract class MusicSheetCalculator {
         }
         this.handleStaffEntries();
         this.calculateVerticalContainersList();
-        this.setIndecesToVerticalGraphicalContainers();
+        this.setIndicesToVerticalGraphicalContainers();
     }
 
     /**
@@ -1454,7 +1454,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    private setIndecesToVerticalGraphicalContainers(): void {
+    private setIndicesToVerticalGraphicalContainers(): void {
         for (let i: number = 0; i < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length; i++) {
             this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[i].Index = i;
         }

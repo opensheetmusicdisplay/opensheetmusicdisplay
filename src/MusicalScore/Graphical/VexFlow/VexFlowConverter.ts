@@ -21,6 +21,7 @@ import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
 import { NoteHead, NoteHeadShape } from "../../VoiceData/NoteHead";
+import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -228,7 +229,8 @@ export class VexFlowConverter {
                     // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
                     // if the measure has no modifiers.
                     alignCenter = true;
-                    xShift = -25; // TODO: Either replace by EngravingRules entry or find a way to make it dependent on the modifiers
+                    xShift = -2.5 * unitInPixels; // TODO: Either replace by EngravingRules entry or find a way to make it dependent on the modifiers
+                    // affects VexFlowStaffEntry.calculateXPosition()
                 }
                 duration += "r";
                 break;
