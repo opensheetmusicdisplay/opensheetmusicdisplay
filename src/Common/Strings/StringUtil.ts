@@ -1,9 +1,6 @@
 ﻿export class StringUtil {
-  public static StringContainsSeparatedWord(str: string, word: string): boolean {
-    if (str === word ||
-      str.search(" " + word) !== -1 ||
-      str.search(word + " ") !== -1 ||
-      str.search(word + ".") !== -1) {
+  public static StringContainsSeparatedWord(str: string, wordRegExString: string): boolean {
+    if (new RegExp("( |^)" + wordRegExString + "([ .]|$)").test(str)) {
       return true;
     }
     return false;
