@@ -1,4 +1,4 @@
-<img alt="OSMD logo" src="https://opensheetmusicdisplay.org/assets/osmd_logo.svg" width="200"/>
+<img alt="OSMD logo" src="https://osmd.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg" width="200"/>
 
 # OpenSheetMusicDisplay
 
@@ -10,9 +10,9 @@
 [![Code Climate](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay/badges/gpa.svg)](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
-https://www.opensheetmusicdisplay.org/
+[opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/)
 
-OpenSheetMusicDisplay is the missing link between MusicXML and VexFlow. Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
+OpenSheetMusicDisplay renders MusicXML sheet music in the browser. It is the missing link between MusicXML and VexFlow. Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
 
 MusicXML is the de facto standard for sharing sheet music on the internet. VexFlow is widely used for rendering sheet music. It features an extensive note sign library attributable to its open source nature.
 
@@ -21,6 +21,8 @@ OpenSheetMusicDisplay brings the two together and offers an open source turnkey 
 Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT license](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/LICENSE).
 
 See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki) for information about the source code and how to use OSMD.
+
+Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
 
 
 <!--# <a name="license"></a>License

@@ -92,8 +92,26 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("load MXL Document by invalid URL", (done: MochaDone) => {
+    it("load something invalid by URL", (done: MochaDone) => {
         const url: string = "https://www.google.com";
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(url).then(
+            (_: {}) => {
+                done(new Error("Invalid URL appears to be loaded correctly"));
+            },
+            (exc: Error) => {
+                if (exc.message.toLowerCase().match(/opensheetmusicdisplay.*invalid/)) {
+                    done();
+                } else {
+                    done(new Error("Unexpected error: " + exc.message));
+                }
+            }
+        );
+    }).timeout(5000);
+
+    it("load invalid URL", (done: MochaDone) => {
+        const url: string = "https://www.afjkhfjkauu2ui3z2uiu.com";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(div);
         opensheetmusicdisplay.load(url).then(
@@ -139,8 +157,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
 
     before((): void => {
         // Create the container for the "test width" test
-        container1 = document.createElement("div");
-        document.body.appendChild(container1);
+        container1 = TestUtils.getDivElement(document);
     });
     after((): void => {
         // Destroy the container for the "test width" test

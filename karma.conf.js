@@ -13,24 +13,22 @@ module.exports = function (config) {
         // list of files to exclude
         exclude: [],
 
-        files: [{
-            pattern: 'src/**/*.ts',
-            included: false
-        }, {
-            pattern: 'test/**/*.ts',
-            included: true
-        }, {
-            pattern: 'test/data/*.xml',
-            included: true
-        }, {
-            pattern: 'test/data/*.mxl.base64',
-            included: true
-        }, {
-            pattern: 'test/data/*.mxl',
-            included: false,
-            watched: false,
-            served: true
-        }],
+        files: [
+            {
+                pattern: 'test/**/*.ts',
+                included: true
+            }, {
+                pattern: 'test/data/*.xml',
+                included: true
+            }, {
+                pattern: 'test/data/*.mxl.base64',
+                included: true
+            }, {
+                pattern: 'test/data/*.mxl',
+                included: false,
+                watched: false,
+                served: true
+            }],
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
@@ -38,7 +36,6 @@ module.exports = function (config) {
             'test/data/*.xml': ['xml2js'],
             'test/data/*.mxl.base64': ['base64-to-js'],
             // add webpack as preprocessor
-            'src/**/*.ts': ['webpack'],
             'test/**/*.ts': ['webpack']
         },
 
@@ -48,23 +45,18 @@ module.exports = function (config) {
             // webpack watches dependencies
 
             // copy parts of webpack configuration to use minimal effort here
-            devtool: process.env.CI ? false : 'cheap-module-eval-source-map',
+            devtool: process.env.CI ? false : 'inline-source-map',
             mode: process.env.CI ? 'production' : 'development',
             module: {
                 rules: common.module.rules
             },
             resolve: common.resolve
         },
-        webpackMiddleware: {
-            // webpack-dev-middleware configuration
-            // i. e.
-            noInfo: true
-        },
 
         // Required for Firefox and Chorme to work
         // see https://github.com/webpack-contrib/karma-webpack/issues/188
         mime: {
-            'text/x-typescript': ['ts', 'tsx']
+            'text/x-typescript': ['ts']
         },
 
         // test results reporter to use
@@ -75,14 +67,16 @@ module.exports = function (config) {
         // web server port
         port: 9876,
         // timeout in ms:
-        browserNoActivityTimeout: 100000,
+        browserNoActivityTimeout: 100000, // default 10000
+        browserDisconnectTimeout: 10000, // default 2000
+        browserDisconnectTolerance: 1, // default 0
         captureTimeout: 60000,
         // enable / disable colors in the output (reporters and logs)
         colors: true,
 
         // level of logging
         // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-        logLevel: config.LOG_ERROR,
+        logLevel: config.LOG_INFO,
 
         client: {
             captureConsole: true,
@@ -95,14 +89,19 @@ module.exports = function (config) {
         autoWatch: false,
 
         // start these browsers
-        browsers: [process.env.CI ? 'ChromeHeadlessNoSandbox' : 'ChromeHeadless'],
+        browsers: ['ChromeHeadlessNoSandbox'],
 
         // For security reasons, Google Chrome is unable to provide sandboxing
         // when it is running in container-based environments (e.g. CI).
         customLaunchers: {
             ChromeHeadlessNoSandbox: {
                 base: 'ChromeHeadless',
-                flags: ['--no-sandbox']
+                flags: ['--no-sandbox',
+                    '--disable-web-security']
+            },
+            ChromeNoSecurity: {
+                base: 'Chrome',
+                flags: ['--disable-web-security']
             }
         },
 

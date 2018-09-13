@@ -10,7 +10,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalRectangle} from "./GraphicalRectangle";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {Label} from "../Label";
-import {TextAlignmentAndPlacement} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {ArgumentOutOfRangeException} from "../Exceptions";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
@@ -24,7 +24,6 @@ import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
-import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -146,36 +145,36 @@ export abstract class MusicSheetDrawer {
         const bitmapWidth: number = Math.ceil(widthInPixel);
         const bitmapHeight: number = Math.ceil(heightInPixel * 1.2);
         switch (label.textAlignment) {
-            // the following have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
-            // TODO unify alignment shifts and our label/bbox position, which does not correspond to screenposition
-            case TextAlignmentAndPlacement.LeftTop:
+            // Adjust the OSMD-calculated positions to rendering coordinates
+            // These have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
+            // TODO isn't this a Vexflow-specific transformation that should be in VexflowMusicSheetDrawer?
+            case TextAlignmentEnum.LeftTop:
                 break;
-            case TextAlignmentAndPlacement.LeftCenter:
+            case TextAlignmentEnum.LeftCenter:
                 screenPosition.y -= bitmapHeight / 2;
                 break;
-            case TextAlignmentAndPlacement.LeftBottom:
-                screenPosition.y -= bitmapHeight;
-                screenPosition.x -= unitInPixels; // lyrics-specific to align with notes
-                break;
-            case TextAlignmentAndPlacement.CenterTop:
-                screenPosition.x -= bitmapWidth / 2;
-                break;
-            case TextAlignmentAndPlacement.CenterCenter:
-                screenPosition.x -= bitmapWidth / 2;
-                screenPosition.y -= bitmapHeight / 2;
-                break;
-            case TextAlignmentAndPlacement.CenterBottom:
-                screenPosition.x -= bitmapWidth / 2;
+            case TextAlignmentEnum.LeftBottom:
                 screenPosition.y -= bitmapHeight;
                 break;
-            case TextAlignmentAndPlacement.RightTop:
+            case TextAlignmentEnum.CenterTop:
+                screenPosition.x -= bitmapWidth / 2;
+                break;
+            case TextAlignmentEnum.CenterCenter:
+                screenPosition.x -= bitmapWidth / 2;
+                screenPosition.y -= bitmapHeight / 2;
+                break;
+            case TextAlignmentEnum.CenterBottom:
+                screenPosition.x -= bitmapWidth / 2;
+                screenPosition.y -= bitmapHeight;
+                break;
+            case TextAlignmentEnum.RightTop:
                 screenPosition.x -= bitmapWidth;
                 break;
-            case TextAlignmentAndPlacement.RightCenter:
+            case TextAlignmentEnum.RightCenter:
                 screenPosition.x -= bitmapWidth;
                 screenPosition.y -= bitmapHeight / 2;
                 break;
-            case TextAlignmentAndPlacement.RightBottom:
+            case TextAlignmentEnum.RightBottom:
                 screenPosition.x -= bitmapWidth;
                 screenPosition.y -= bitmapHeight;
                 break;
@@ -506,7 +505,7 @@ export abstract class MusicSheetDrawer {
 
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentAndPlacement.CenterCenter),
+            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentEnum.CenterCenter),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
         layer++;
