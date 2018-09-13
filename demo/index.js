@@ -171,7 +171,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             if (openSheetMusicDisplay.cursor) {
                 openSheetMusicDisplay.cursor.show();
             } else {
-                console.info("can't show cursor, cursor was disabled by drawingParameters!");
+                console.info("Can't show cursor, as it was disabled (e.g. by drawingParameters).");
             }
         });
 

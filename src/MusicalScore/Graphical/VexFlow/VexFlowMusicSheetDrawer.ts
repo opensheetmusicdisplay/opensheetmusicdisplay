@@ -23,7 +23,7 @@ import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import {GraphicalInstantaneousTempoExpression} from "../GraphicalInstantaneousTempoExpression";
 import {GraphicalInstantaneousDynamicExpression} from "../GraphicalInstantaneousDynamicExpression";
 import log = require("loglevel");
-import { DrawingParameters } from "../DrawingParameters";
+import {DrawingParameters} from "../DrawingParameters";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -38,7 +38,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     constructor(element: HTMLElement,
                 backend: VexFlowBackend,
-                drawingParameters: DrawingParameters) {
+                drawingParameters: DrawingParameters = new DrawingParameters()) {
         super(new VexFlowTextMeasurer(), drawingParameters);
         this.backend = backend;
     }

@@ -38,16 +38,14 @@ export class DrawingParameters {
     public set DrawingParametersEnum(drawingParametersEnum: DrawingParametersEnum) {
         this.drawingParametersEnum = drawingParametersEnum;
         switch (drawingParametersEnum) {
-            case DrawingParametersEnum.Default:
-            case DrawingParametersEnum.AllOn:
-                this.setForAllOn();
-                break;
             case DrawingParametersEnum.Thumbnail:
-                this.setForThumbnail();
-                break;
+            this.setForThumbnail();
+            break;
             case DrawingParametersEnum.Leadsheet:
-                this.setForLeadsheet();
-                break;
+            this.setForLeadsheet();
+            break;
+            case DrawingParametersEnum.AllOn:
+            case DrawingParametersEnum.Default:
             default:
                 this.setForAllOn();
         }

@@ -13,20 +13,17 @@ import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
-import { DrawingParametersEnum, DrawingParameters } from "../MusicalScore/Graphical/DrawingParameters";
+import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
+import {IOSMDOptions, OSMDOptions} from "./OSMDOptions";
 
 export class OpenSheetMusicDisplay {
     /**
      * The easy way of displaying a MusicXML sheet music file
      * @param container is either the ID, or the actual "div" element which will host the music sheet
-     * @autoResize automatically resize the sheet to full page width on window resize
+     * @param options an options object, see interface [[OSMDOptions]] and the OSMDOptionsStandard method.
      */
     constructor(container: string|HTMLElement,
-                options: OSMDOptions = {
-                    autoResize: false,
-                    backend: "svg",
-                    drawingParametersEnum: DrawingParametersEnum.Default,
-                }) {
+                options: IOSMDOptions = OSMDOptions.OSMDOptionsStandard()) {
         // Store container element
         if (typeof container === "string") {
             // ID passed
@@ -330,14 +327,4 @@ export class OpenSheetMusicDisplay {
         return this.drawer.drawableBoundingBoxElement;
     }
     //#endregion
-}
-
-export interface OSMDOptions {
-    autoBeam?: boolean; // not yet supported. will always autoBeam.
-    autoResize?: boolean; // default is false
-    autoStem?: boolean; // not yet supported. will always autoStem
-    backend?: string; // Backend will be SVG if backend === "svg", otherwise Canvas
-    disableCursor?: boolean; // will override this part of drawingParameters
-    drawingParametersEnum?: DrawingParametersEnum;
-    drawingParametersString?: string; // alternative to using the enum. only need to set one of these.
 }
