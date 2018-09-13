@@ -3,6 +3,8 @@ import {VexFlowMeasure} from "./VexFlowMeasure";
 import {SourceStaffEntry} from "../../VoiceData/SourceStaffEntry";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+import { Note } from "../../VoiceData/Note";
+import { EngravingRules } from "../EngravingRules";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -29,6 +31,13 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 gve.vfStaveNote.setStave(stave);
                 gve.applyBordersFromVexflow();
                 this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().x / unitInPixels;
+                const sourceNote: Note = gve.notes[0].sourceNote;
+                if (sourceNote.isRest() && sourceNote.Length.WholeValue === 1) { // whole rest
+                    this.PositionAndShape.RelativePosition.x +=
+                        EngravingRules.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                    gve.PositionAndShape.BorderLeft = -0.7;
+                    gve.PositionAndShape.BorderRight = 0.7;
+                }
                 if (gve.PositionAndShape.BorderLeft < lastBorderLeft) {
                     lastBorderLeft = gve.PositionAndShape.BorderLeft;
                 }
