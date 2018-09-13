@@ -36,7 +36,7 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
-        if (options.backend.toLowerCase() === "svg" || options.backend === undefined) {
+        if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
             this.backend = new SvgVexFlowBackend();
         } else {
             this.backend = new CanvasVexFlowBackend();

@@ -7,7 +7,8 @@ export enum DrawingParametersEnum {
 }
 
 export class DrawingParameters {
-    private drawingParametersEnum: DrawingParametersEnum; // will control other settings if changed with set method
+    /** will set other settings if changed with set method */
+    private drawingParametersEnum: DrawingParametersEnum;
     public drawHighlights: boolean;
     public drawErrors: boolean;
     public drawSelectionStartSymbol: boolean;
@@ -39,11 +40,11 @@ export class DrawingParameters {
         this.drawingParametersEnum = drawingParametersEnum;
         switch (drawingParametersEnum) {
             case DrawingParametersEnum.Thumbnail:
-            this.setForThumbnail();
-            break;
+                this.setForThumbnail();
+                break;
             case DrawingParametersEnum.Leadsheet:
-            this.setForLeadsheet();
-            break;
+                this.setForLeadsheet();
+                break;
             case DrawingParametersEnum.AllOn:
             case DrawingParametersEnum.Default:
             default:
