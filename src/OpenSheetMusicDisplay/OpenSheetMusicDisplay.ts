@@ -43,12 +43,11 @@ export class OpenSheetMusicDisplay {
         }
 
         this.drawingParameters = new DrawingParameters();
-        if (options.drawingParametersEnum) {
-            this.drawingParameters.DrawingParametersEnum = options.drawingParametersEnum;
-        } else if (options.drawingParametersString) {
-            this.drawingParameters.DrawingParametersEnum =
-                DrawingParameters.DrawingParametersStringToEnum(options.drawingParametersString);
-        } else {
+        if (options.drawingParameters) {
+            this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum[options.drawingParameters];
+            // can be undefined if invalid value (or none) given in options
+        }
+        if (this.drawingParameters.DrawingParametersEnum === undefined) {
             this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum.Default;
         }
 

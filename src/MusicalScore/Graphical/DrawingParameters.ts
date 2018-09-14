@@ -1,9 +1,9 @@
 export enum DrawingParametersEnum {
-    AllOn,
-    Default, // default is AllOn for now
-    Leadsheet,
-    Preview,
-    Thumbnail,
+    AllOn = "allon",
+    Default = "default", // default is AllOn for now
+    Leadsheet = "leadsheet",
+    Preview = "preview",
+    Thumbnail = "thumbnail",
 }
 
 export class DrawingParameters {
@@ -18,23 +18,6 @@ export class DrawingParameters {
     public drawScrollIndicator: boolean;
     public drawComments: boolean;
     public drawMarkedAreas: boolean;
-
-    public static DrawingParametersStringToEnum(stringParameter: string): DrawingParametersEnum {
-        switch (stringParameter.toLowerCase()) {
-            case "allOn":
-                return DrawingParametersEnum.AllOn;
-            case "default":
-                return DrawingParametersEnum.Default;
-            case "leadsheet":
-                return DrawingParametersEnum.Leadsheet;
-            case "preview":
-                return DrawingParametersEnum.Preview;
-            case "thumbnail":
-                return DrawingParametersEnum.Thumbnail;
-            default:
-                return DrawingParametersEnum.Default;
-        }
-    }
 
     public set DrawingParametersEnum(drawingParametersEnum: DrawingParametersEnum) {
         this.drawingParametersEnum = drawingParametersEnum;

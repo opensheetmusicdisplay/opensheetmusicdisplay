@@ -121,7 +121,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
             autoResize: false,
             backend: backendSelect.value,
-            drawingParametersString: "default",
+            drawingParameters: "default",
             disableCursor: false,
         });
         openSheetMusicDisplay.setLogLevel('info');
