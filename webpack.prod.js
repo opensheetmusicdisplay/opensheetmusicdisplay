@@ -35,6 +35,6 @@ module.exports = merge(common, {
             path: path.resolve(__dirname, 'build'),
             filename: './statistics.html'
         }),
-        new Cleaner(pathsToClean, {verbose: true, dry: false})
+        new Cleaner(pathsToClean, { verbose: true, dry: false })
     ]
 })

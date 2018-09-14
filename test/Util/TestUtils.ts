@@ -1,3 +1,5 @@
+import { OpenSheetMusicDisplay } from "../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+
 /**
  * This class collects useful methods to interact with test data.
  * During tests, XML and MXL documents are preprocessed by karma,
@@ -37,4 +39,12 @@ export class TestUtils {
         }
     }
 
+    public static createOpenSheetMusicDisplay(div: HTMLElement): OpenSheetMusicDisplay {
+        return new OpenSheetMusicDisplay(
+            div,
+            {
+                autoResize: false
+            }
+        );
+    }
 }

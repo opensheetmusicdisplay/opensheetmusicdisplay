@@ -48,11 +48,8 @@ describe("XML interface", () => {
             // Load the xml file content
             const score: Document = TestUtils.getScore(scoreName);
             const div: HTMLElement = document.createElement("div");
-            const openSheetMusicDisplay: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(
-                div,
-                {
-                    autoResize: false
-                });
+            const openSheetMusicDisplay: OpenSheetMusicDisplay =
+                TestUtils.createOpenSheetMusicDisplay(div);
             openSheetMusicDisplay.load(score);
             done();
         }).timeout(3000);
