@@ -45,10 +45,6 @@ export class OpenSheetMusicDisplay {
         this.drawingParameters = new DrawingParameters();
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum[options.drawingParameters];
-            // can be undefined if invalid value (or none) given in options
-        }
-        if (this.drawingParameters.DrawingParametersEnum === undefined) {
-            this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum.Default;
         }
 
         if (options.disableCursor) {
@@ -233,6 +229,7 @@ export class OpenSheetMusicDisplay {
      * Attach the appropriate handler to the window.onResize event
      */
     private autoResize(): void {
+
         const self: OpenSheetMusicDisplay = this;
         this.handleResize(
             () => {
@@ -249,7 +246,9 @@ export class OpenSheetMusicDisplay {
                 //    document.documentElement.offsetWidth
                 //);
                 //self.container.style.width = width + "px";
-                self.render();
+                if (this.graphic !== undefined) {
+                    self.render();
+                }
             }
         );
     }
@@ -260,6 +259,9 @@ export class OpenSheetMusicDisplay {
      * @param endCallback is the function called when resizing (kind-of) ends
      */
     private handleResize(startCallback: () => void, endCallback: () => void): void {
+        if (this.graphic === undefined) {
+            return;
+        }
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;

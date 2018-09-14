@@ -19,6 +19,10 @@ export class DrawingParameters {
     public drawComments: boolean;
     public drawMarkedAreas: boolean;
 
+    constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.Default) {
+        this.DrawingParametersEnum = drawingParameters;
+    }
+
     public set DrawingParametersEnum(drawingParametersEnum: DrawingParametersEnum) {
         this.drawingParametersEnum = drawingParametersEnum;
         switch (drawingParametersEnum) {

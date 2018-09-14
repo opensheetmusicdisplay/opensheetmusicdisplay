@@ -40,11 +40,6 @@ export class TestUtils {
     }
 
     public static createOpenSheetMusicDisplay(div: HTMLElement): OpenSheetMusicDisplay {
-        return new OpenSheetMusicDisplay(
-            div,
-            {
-                autoResize: false
-            }
-        );
+        return new OpenSheetMusicDisplay(div);
     }
 }
