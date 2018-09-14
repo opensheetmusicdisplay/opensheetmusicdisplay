@@ -91,7 +91,7 @@
     "tslint-loader": "^3.5.3",
     "typedoc": "^0.12.0",
     "typescript": "^2.6.1",
-    "uglifyjs-webpack-plugin": "^1.2.4",
+    "uglifyjs-webpack-plugin": "^2.0.0",
     "underscore-template-loader": "^1.0.0",
     "webpack": "^4.15.1",
     "webpack-cli": "^3.0.8",
