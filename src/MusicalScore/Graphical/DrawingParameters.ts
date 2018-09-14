@@ -1,4 +1,14 @@
+export enum DrawingParametersEnum {
+    AllOn = "allon",
+    Default = "default", // default is AllOn for now
+    Leadsheet = "leadsheet",
+    Preview = "preview",
+    Thumbnail = "thumbnail",
+}
+
 export class DrawingParameters {
+    /** will set other settings if changed with set method */
+    private drawingParametersEnum: DrawingParametersEnum;
     public drawHighlights: boolean;
     public drawErrors: boolean;
     public drawSelectionStartSymbol: boolean;
@@ -8,6 +18,30 @@ export class DrawingParameters {
     public drawScrollIndicator: boolean;
     public drawComments: boolean;
     public drawMarkedAreas: boolean;
+
+    constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.Default) {
+        this.DrawingParametersEnum = drawingParameters;
+    }
+
+    public set DrawingParametersEnum(drawingParametersEnum: DrawingParametersEnum) {
+        this.drawingParametersEnum = drawingParametersEnum;
+        switch (drawingParametersEnum) {
+            case DrawingParametersEnum.Thumbnail:
+                this.setForThumbnail();
+                break;
+            case DrawingParametersEnum.Leadsheet:
+                this.setForLeadsheet();
+                break;
+            case DrawingParametersEnum.AllOn:
+            case DrawingParametersEnum.Default:
+            default:
+                this.setForAllOn();
+        }
+    }
+
+    public get DrawingParametersEnum(): DrawingParametersEnum {
+        return this.drawingParametersEnum;
+    }
 
     public setForAllOn(): void {
         this.drawHighlights = true;
