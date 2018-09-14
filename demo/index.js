@@ -119,7 +119,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         // Create OSMD object and canvas
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
-            autoResize: false,
+            autoResize: true,
             backend: backendSelect.value,
             drawingParameters: "default",
             disableCursor: false,
@@ -187,7 +187,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function Resize(startCallback, endCallback) {
-
       var rtime;
       var timeout = false;
       var delta = 200;

@@ -45,10 +45,6 @@ export class OpenSheetMusicDisplay {
         this.drawingParameters = new DrawingParameters();
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum[options.drawingParameters];
-            // can be undefined if invalid value (or none) given in options
-        }
-        if (this.drawingParameters.DrawingParametersEnum === undefined) {
-            this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum.Default;
         }
 
         if (options.disableCursor) {
@@ -82,6 +78,9 @@ export class OpenSheetMusicDisplay {
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
     private drawingParameters: DrawingParameters;
+
+    private resizeStartCallback: () => void;
+    private resizeEndCallback: () => void;
 
     /**
      * Load a MusicXML file
@@ -233,36 +232,47 @@ export class OpenSheetMusicDisplay {
      * Attach the appropriate handler to the window.onResize event
      */
     private autoResize(): void {
-        const self: OpenSheetMusicDisplay = this;
-        this.handleResize(
-            () => {
-                // empty
-            },
-            () => {
-                // The following code is probably not needed
-                // (the width should adapt itself to the max allowed)
-                //let width: number = Math.max(
-                //    document.documentElement.clientWidth,
-                //    document.body.scrollWidth,
-                //    document.documentElement.scrollWidth,
-                //    document.body.offsetWidth,
-                //    document.documentElement.offsetWidth
-                //);
-                //self.container.style.width = width + "px";
-                self.render();
+        const OSMD: OpenSheetMusicDisplay = this;
+        this.resizeStartCallback = () => {
+            // empty
+        };
+        this.resizeEndCallback = () => {
+            // The following code is probably not needed
+            // (the width should adapt itself to the max allowed)
+            //let width: number = Math.max(
+            //    document.documentElement.clientWidth,
+            //    document.body.scrollWidth,
+            //    document.documentElement.scrollWidth,
+            //    document.body.offsetWidth,
+            //    document.documentElement.offsetWidth
+            //);
+            //OSMD.container.style.width = width + "px";
+            if (OSMD.graphic !== undefined) {
+                OSMD.render();
             }
-        );
+        };
     }
 
     /**
      * Helper function for managing window's onResize events
-     * @param startCallback is the function called when resizing starts
-     * @param endCallback is the function called when resizing (kind-of) ends
      */
-    private handleResize(startCallback: () => void, endCallback: () => void): void {
+    private handleResize(): void {
+        if (this.resizeStartCallback === undefined || this.resizeEndCallback === undefined) {
+            return;
+        }
+
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;
+
+        function resizeStart(): void {
+            rtime = (new Date()).getTime();
+            if (!timeout) {
+                this.resizeStartCallback();
+                rtime = (new Date()).getTime();
+                timeout = window.setTimeout(resizeEnd, delta);
+            }
+        }
 
         function resizeEnd(): void {
             timeout = undefined;
@@ -270,16 +280,7 @@ export class OpenSheetMusicDisplay {
             if ((new Date()).getTime() - rtime < delta) {
                 timeout = window.setTimeout(resizeEnd, delta);
             } else {
-                endCallback();
-            }
-        }
-
-        function resizeStart(): void {
-            rtime = (new Date()).getTime();
-            if (!timeout) {
-                startCallback();
-                rtime = (new Date()).getTime();
-                timeout = window.setTimeout(resizeEnd, delta);
+                this.resizeEndCallback();
             }
         }
 
@@ -290,8 +291,8 @@ export class OpenSheetMusicDisplay {
             window.addEventListener("resize", resizeStart);
         }
 
-        window.setTimeout(startCallback, 0);
-        window.setTimeout(endCallback, 1);
+        window.setTimeout(this.resizeStartCallback(), 0);
+        window.setTimeout(this.resizeEndCallback(), 1);
     }
 
     //#region GETTER / SETTER
