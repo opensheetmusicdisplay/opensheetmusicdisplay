@@ -336,6 +336,14 @@ export class BoundingBox {
         this.yBordersHaveBeenSet = true;
     }
 
+    public remove(child: BoundingBox): boolean {
+        const idx: number = this.ChildElements.indexOf(child);
+        if (idx > -1) {
+            this.ChildElements.splice(idx, 1);
+        }
+        return idx > 1;
+    }
+
     public calculateTopBottomBorders(): void {
         if (this.childElements.length === 0) {
             return;

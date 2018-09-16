@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 2.3.2</software>
-      <encoding-date>2018-08-22</encoding-date>
+      <encoding-date>2018-09-16</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -93,7 +93,7 @@
         </direction>
       <direction placement="above">
         <direction-type>
-          <words default-y="40.00" relative-x="-12.75" relative-y="6.30" font-weight="bold">Adagio</words>
+          <words default-y="40.00" relative-x="-59.61" relative-y="12.55" font-weight="bold">Adagio</words>
           </direction-type>
         </direction>
       <direction placement="above">
@@ -216,7 +216,7 @@
     <measure number="3" width="199.74">
       <direction placement="above">
         <direction-type>
-          <dynamics default-x="6.58" default-y="-80.00" relative-x="-6.11" relative-y="105.93">
+          <dynamics default-x="6.58" default-y="-80.00" relative-y="96.00">
             <mf/>
             </dynamics>
           </direction-type>
@@ -276,7 +276,7 @@
     <measure number="4" width="199.74">
       <direction placement="above">
         <direction-type>
-          <dynamics default-x="3.29" default-y="-80.00" relative-x="1.02" relative-y="102.87">
+          <dynamics default-x="3.29" default-y="-80.00" relative-y="96.00">
             <fz/>
             </dynamics>
           </direction-type>
@@ -340,7 +340,7 @@
         </direction>
       <direction placement="below">
         <direction-type>
-          <wedge type="crescendo" number="1" default-y="-65.00"/>
+          <wedge type="crescendo" number="1" default-y="-93.24"/>
           </direction-type>
         </direction>
       <note default-x="12.00" default-y="-50.00">
@@ -429,6 +429,19 @@
         <type>quarter</type>
         <stem>up</stem>
         </note>
+      <direction placement="below">
+        <direction-type>
+          <dynamics default-x="3.29" default-y="-80.00" relative-x="1.57" relative-y="-18.82">
+            <p/>
+            </dynamics>
+          </direction-type>
+        <sound dynamics="54.44"/>
+        </direction>
+      <direction placement="below">
+        <direction-type>
+          <wedge type="crescendo" number="1" default-y="-93.82" relative-x="40.79"/>
+          </direction-type>
+        </direction>
       <note default-x="205.86" default-y="-45.00">
         <pitch>
           <step>D</step>
@@ -442,6 +455,11 @@
       <direction placement="above">
         <direction-type>
           <octave-shift type="stop" size="15" number="1"/>
+          </direction-type>
+        </direction>
+      <direction placement="below">
+        <direction-type>
+          <wedge type="stop" number="1" relative-x="138.05"/>
           </direction-type>
         </direction>
       </measure>
@@ -514,7 +532,7 @@
         </note>
       <direction placement="below">
         <direction-type>
-          <dynamics default-x="6.58" default-y="-80.00" relative-y="6.00">
+          <dynamics default-x="6.58" default-y="-80.00" relative-x="3.14" relative-y="-20.67">
             <ff/>
             </dynamics>
           </direction-type>
@@ -556,9 +574,14 @@
     <measure number="8" width="171.37">
       <direction placement="above">
         <direction-type>
-          <dynamics default-x="6.58" default-y="-80.00" relative-x="-2.04" relative-y="105.93">
+          <dynamics default-x="6.58" default-y="-80.00" relative-y="96.00">
             <sfz/>
             </dynamics>
+          </direction-type>
+        </direction>
+      <direction placement="below">
+        <direction-type>
+          <wedge type="crescendo" number="1" default-y="-80.00"/>
           </direction-type>
         </direction>
       <note default-x="12.00" default-y="-20.00">
@@ -570,11 +593,16 @@
         <voice>1</voice>
         <type>whole</type>
         </note>
+      <direction placement="below">
+        <direction-type>
+          <wedge type="stop" number="1"/>
+          </direction-type>
+        </direction>
       </measure>
     <measure number="9" width="171.37">
       <direction placement="above">
         <direction-type>
-          <words default-y="40.00" relative-x="2.46" relative-y="-16.02" font-weight="bold">Presto</words>
+          <words default-y="40.00" font-weight="bold">Presto</words>
           </direction-type>
         </direction>
       <note default-x="12.00" default-y="-15.00">

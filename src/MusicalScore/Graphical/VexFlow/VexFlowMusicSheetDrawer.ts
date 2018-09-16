@@ -23,6 +23,7 @@ import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import {GraphicalInstantaneousTempoExpression} from "../GraphicalInstantaneousTempoExpression";
 import {GraphicalInstantaneousDynamicExpression} from "../GraphicalInstantaneousDynamicExpression";
 import log = require("loglevel");
+import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -285,10 +286,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             // Draw InstantaniousTempo
             } else if (abstractGraphicalExpression instanceof GraphicalInstantaneousTempoExpression) {
                 this.drawLabel((abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
-            // // Draw ContinuousDynamics
-            // } else if (abstractGraphicalExpression instanceof GraphicalContinuousDynamicExpression) {
-            // //     drawContinuousDynamic((GraphicalContinuousDynamicExpression)abstractGraphicalExpression, absolutePos);
-            // // Draw ContinuousTempo
+            // Draw ContinuousDynamics
+            } else if (abstractGraphicalExpression instanceof GraphicalContinuousDynamicExpression) {
+                const absolutePos: PointF2D = new PointF2D(10, 10);
+                this.drawContinuousDynamic((abstractGraphicalExpression as GraphicalContinuousDynamicExpression), absolutePos);
+            // Draw ContinuousTempo
             // } else if (abstractGraphicalExpression instanceof GraphicalContinuousTempoExpression) {
             //     this.drawLabel((abstractGraphicalExpression as GraphicalContinuousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
             // // Draw Mood

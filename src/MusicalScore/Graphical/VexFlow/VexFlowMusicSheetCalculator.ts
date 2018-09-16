@@ -32,7 +32,6 @@ import {GraphicalLyricWord} from "../GraphicalLyricWord";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
 import { VexFlowInstantaneousDynamicExpression } from "./VexFlowInstantaneousDynamicExpression";
-import {BoundingBox} from "../BoundingBox";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 /* VexFlow Version - for later use
 // import { VexFlowSlur } from "./VexFlowSlur";
@@ -48,6 +47,7 @@ import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { Staff } from "../../VoiceData/Staff";
 import { TextAlignmentEnum, TextAlignment } from "../../../Common/Enums/TextAlignment";
 import { GraphicalSlur } from "../GraphicalSlur";
+import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -456,6 +456,42 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         (measure as VexFlowMeasure).instantaneousDynamics.push(graphicalInstantaneousDynamic);
         this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, staffLine, startPosInStaffline);
     }
+    // if (multiExpression.StartingContinuousDynamic != null)
+    // {
+    //     ContinuousDynamicExpression continuousDynamic = multiExpression.StartingContinuousDynamic;
+    //     GraphicalContinuousDynamicExpression graphicalContinuousDynamic =
+    //         new GraphicalContinuousDynamicExpression(continuousDynamic, staffLine, this.rules.ContinuousDynamicTextHeight);
+    //     graphicalContinuousDynamic.StartMeasure = measures[staffIndex];
+    //     if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression != null) // if it is a wedge
+    //     {
+    //         startPosInStaffline = getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp, staffIndex, staffLine,
+    // staffLine.isPartOfMultiStaffInstrument());
+    //         if (startPosInStaffline.X <= 0)
+    //             startPosInStaffline.X = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
+    //         GraphicalMeasure endMeasure =
+    //             this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(continuousDynamic.EndMultiExpression.ParentSourceMeasure, staffIndex);
+
+    //         if (endMeasure != null)
+    //         {
+    //             graphicalContinuousDynamic.EndMeasure = endMeasure;
+    //             PsStaffLine endStaffLine = (PsStaffLine)endMeasure.ParentStaffLine;
+    //             Fraction endAbsoluteTimestamp = Fraction.createFromFraction(continuousDynamic.EndMultiExpression.AbsoluteTimestamp);
+
+    //             PointF_2D endPosInStaffLine = getRelativePositionInStaffLineFromTimestamp(endAbsoluteTimestamp, staffIndex, endStaffLine,
+    // endStaffLine.isPartOfMultiStaffInstrument(), 0, true, endMeasure);
+
+    //             calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, staffLine, endStaffLine, startPosInStaffline, endPosInStaffLine);
+    //         }
+    //     }
+    //     else if (graphicalContinuousDynamic.IsVerbal)
+    //     {
+    //         startPosInStaffline = getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp, staffIndex,
+    // staffLine, staffLine.isPartOfMultiStaffInstrument());
+    //         if (startPosInStaffline.X <= 0)
+    //             startPosInStaffline.X = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
+    //         calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, staffLine, null, startPosInStaffline, new PointF_2D(0, 0));
+    //     }
+    // }
   }
 
   public calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression,
@@ -480,20 +516,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         previousExpression = (staffLine.AbstractExpressions[expressionIndex - 1] as GraphicalInstantaneousDynamicExpression);
     }
 
-    // TODO: Not yet implemented
-    // // is previous a ContinuousDynamic?
-    // if (previousExpression && previousExpression instanceof GraphicalContinuousDynamicExpression)
-    // {
-    //     GraphicalContinuousDynamicExpression formerGraphicalContinuousDynamic =
-    //         (GraphicalContinuousDynamicExpression)previousExpression;
+    // is previous a ContinuousDynamic?
+    if (previousExpression && previousExpression instanceof GraphicalContinuousDynamicExpression) {
+        // GraphicalContinuousDynamicExpression formerGraphicalContinuousDynamic =
+        //     (GraphicalContinuousDynamicExpression)previousExpression;
 
-    //     optimizeFormerContDynamicXPositionForInstDynamic(staffLine, skyBottomLineCalculator,
-    //                                                      graphicalInstantaneousDynamic,
-    //                                                      formerGraphicalContinuousDynamic, left, right);
-    // }
-    // // is previous a instantaneousDynamic?
-    // else
-    if (previousExpression && previousExpression instanceof GraphicalInstantaneousDynamicExpression) {
+        // optimizeFormerContDynamicXPositionForInstDynamic(staffLine, skyBottomLineCalculator,
+        //                                                  graphicalInstantaneousDynamic,
+        //                                                  formerGraphicalContinuousDynamic, left, right);
+    } else if (previousExpression && previousExpression instanceof GraphicalInstantaneousDynamicExpression) {
         //const formerGraphicalInstantaneousDynamic: GraphicalInstantaneousDynamicExpression = previousExpression;
 
         // optimizeFormerInstDynamicXPositionForInstDynamic(formerGraphicalInstantaneousDynamic,
