@@ -1,7 +1,7 @@
 export enum DrawingParametersEnum {
     AllOn = "allon",
     Compact = "compact",
-    Default = "default", // default is AllOn for now
+    Default = "default",
     Leadsheet = "leadsheet",
     Preview = "preview",
     Thumbnail = "thumbnail",
@@ -22,6 +22,8 @@ export class DrawingParameters {
     public drawTitle: boolean = true;
     public drawCredits: boolean = true;
     public drawPartName: boolean = true;
+    /** Draw notes set to be invisible (print-object="no" in XML). */
+    public drawHiddenNotes: boolean = false;
 
     constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.Default) {
         this.DrawingParametersEnum = drawingParameters;
@@ -31,6 +33,9 @@ export class DrawingParameters {
     public set DrawingParametersEnum(drawingParametersEnum: DrawingParametersEnum) {
         this.drawingParametersEnum = drawingParametersEnum;
         switch (drawingParametersEnum) {
+            case DrawingParametersEnum.AllOn:
+                this.setForAllOn();
+                break;
             case DrawingParametersEnum.Thumbnail:
                 this.setForThumbnail();
                 break;
@@ -40,10 +45,9 @@ export class DrawingParameters {
             case DrawingParametersEnum.Compact:
                 this.setForCompactMode();
                 break;
-            case DrawingParametersEnum.AllOn:
             case DrawingParametersEnum.Default:
             default:
-                this.setForAllOn();
+                this.setForDefault();
         }
     }
 
@@ -64,6 +68,12 @@ export class DrawingParameters {
         this.drawTitle = true;
         this.drawCredits = true;
         this.drawPartName = true;
+        this.drawHiddenNotes = true;
+    }
+
+    public setForDefault(): void {
+        this.setForAllOn();
+        this.drawHiddenNotes = false;
     }
 
     public setForThumbnail(): void {
@@ -76,12 +86,14 @@ export class DrawingParameters {
         this.drawScrollIndicator = false;
         this.drawComments = true;
         this.drawMarkedAreas = true;
+        this.drawHiddenNotes = false;
     }
 
     public setForCompactMode(): void {
         this.drawTitle = false;
         this.drawCredits = false;
         this.drawPartName = false;
+        this.drawHiddenNotes = false;
     }
 
     public setForLeadsheet(): void {
