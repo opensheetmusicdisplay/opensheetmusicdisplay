@@ -16,11 +16,20 @@ import * as log from "loglevel";
 import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
 import {IOSMDOptions, OSMDOptions} from "./OSMDOptions";
 
+/**
+ * The main class and control point of OpenSheetMusicDisplay.<br>
+ * It can display MusicXML sheet music files in an HTML element container.<br>
+ * After the constructor, use load() and render() to load and render a MusicXML file.
+ */
 export class OpenSheetMusicDisplay {
     /**
-     * The easy way of displaying a MusicXML sheet music file
-     * @param container is either the ID, or the actual "div" element which will host the music sheet
-     * @param options an options object, see interface [[OSMDOptions]] and the OSMDOptionsStandard method.
+     * Creates and attaches an OpenSheetMusicDisplay object to an HTML element container.<br>
+     * After the constructor, use load() and render() to load and render a MusicXML file.
+     * @param container The container element OSMD will be rendered into.<br>
+     *                  Either a string specifying the ID of an HTML container element,<br>
+     *                  or a reference to the HTML element itself (e.g. div)
+     * @param options An object for rendering options like the backend (svg/canvas) or autoResize.<br>
+     *                For defaults see the OSMDOptionsStandard method in the [[OSMDOptions]] class.
      */
     constructor(container: string|HTMLElement,
                 options: IOSMDOptions = OSMDOptions.OSMDOptionsStandard()) {

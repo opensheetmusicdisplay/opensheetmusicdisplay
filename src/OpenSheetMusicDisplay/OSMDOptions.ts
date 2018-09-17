@@ -18,7 +18,9 @@ export interface IOSMDOptions {
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */
 export class OSMDOptions {
-    /** Returns the default options for OSMD used if no options are given in the constructor. */
+    /** Returns the default options for OSMD.
+     * These are e.g. used if no options are given in the [[OpenSheetMusicDisplay]] constructor.
+     */
     public static OSMDOptionsStandard(): IOSMDOptions {
         return {
             autoResize: true,

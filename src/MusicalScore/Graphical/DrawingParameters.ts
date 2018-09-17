@@ -1,5 +1,6 @@
 export enum DrawingParametersEnum {
     AllOn = "allon",
+    Compact = "compact",
     Default = "default", // default is AllOn for now
     Leadsheet = "leadsheet",
     Preview = "preview",
@@ -18,11 +19,15 @@ export class DrawingParameters {
     public drawScrollIndicator: boolean;
     public drawComments: boolean;
     public drawMarkedAreas: boolean;
+    public drawTitle: boolean = true;
+    public drawCredits: boolean = true;
+    public drawPartName: boolean = true;
 
     constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.Default) {
         this.DrawingParametersEnum = drawingParameters;
     }
 
+    /** Sets drawing parameters enum and changes settings flags accordingly. */
     public set DrawingParametersEnum(drawingParametersEnum: DrawingParametersEnum) {
         this.drawingParametersEnum = drawingParametersEnum;
         switch (drawingParametersEnum) {
@@ -31,6 +36,9 @@ export class DrawingParameters {
                 break;
             case DrawingParametersEnum.Leadsheet:
                 this.setForLeadsheet();
+                break;
+            case DrawingParametersEnum.Compact:
+                this.setForCompactMode();
                 break;
             case DrawingParametersEnum.AllOn:
             case DrawingParametersEnum.Default:
@@ -53,6 +61,9 @@ export class DrawingParameters {
         this.drawScrollIndicator = true;
         this.drawComments = true;
         this.drawMarkedAreas = true;
+        this.drawTitle = true;
+        this.drawCredits = true;
+        this.drawPartName = true;
     }
 
     public setForThumbnail(): void {
@@ -65,6 +76,12 @@ export class DrawingParameters {
         this.drawScrollIndicator = false;
         this.drawComments = true;
         this.drawMarkedAreas = true;
+    }
+
+    public setForCompactMode(): void {
+        this.drawTitle = false;
+        this.drawCredits = false;
+        this.drawPartName = false;
     }
 
     public setForLeadsheet(): void {
