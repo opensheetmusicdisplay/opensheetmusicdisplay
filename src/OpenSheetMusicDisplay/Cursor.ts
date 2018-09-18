@@ -28,6 +28,7 @@ export class Cursor {
   private hidden: boolean = true;
   private cursorElement: HTMLImageElement;
 
+  /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
     this.manager = manager;
     this.reset();
@@ -42,9 +43,6 @@ export class Cursor {
   public show(): void {
     this.hidden = false;
     this.update();
-    // Forcing the sheet to re-render is not necessary anymore,
-    // since the cursor is an HTML element.
-    // this.openSheetMusicDisplay.render();
   }
 
   private getStaffEntriesFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
