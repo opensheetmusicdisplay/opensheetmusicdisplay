@@ -239,7 +239,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
     function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
         var errorString = "Error " + loadingOrRenderingString + " sheet: " + e;
-        // if (process.env.DEBUG) { // people may not set an environment variable for debug.
+        // if (process.env.DEBUG) { // people may not set a debug environment variable for the demo.
+        // Always giving a StackTrace might give us more and better error reports.
+        // TODO for a release, StackTrace control could be reenabled
         errorString += "\n" + "StackTrace: \n" + e.stack;
         // }
         console.warn(errorString);
