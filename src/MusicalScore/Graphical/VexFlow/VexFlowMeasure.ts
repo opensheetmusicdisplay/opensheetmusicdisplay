@@ -644,6 +644,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
         for (const voice of voices) {
+            if (voice === undefined) {
+                continue;
+            }
             const isMainVoice: boolean = !(voice instanceof LinkedVoice);
 
             // add a vexFlow voice for this voice:

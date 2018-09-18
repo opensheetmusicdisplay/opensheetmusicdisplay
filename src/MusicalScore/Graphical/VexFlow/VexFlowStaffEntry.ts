@@ -29,6 +29,9 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
                 gve.vfStaveNote.setStave(stave);
+                if (!gve.vfStaveNote.preFormatted) {
+                    continue;
+                }
                 gve.applyBordersFromVexflow();
                 this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().x / unitInPixels;
                 const sourceNote: Note = gve.notes[0].sourceNote;

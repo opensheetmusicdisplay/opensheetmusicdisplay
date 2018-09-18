@@ -146,7 +146,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 try {
                     openSheetMusicDisplay.render();
                 } catch (e) {
-                    console.warn(e.stack);
+                    errorLoadingOrRenderingSheet(e, "rendering");
                 }
                 enable();
             }
@@ -233,18 +233,26 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 return openSheetMusicDisplay.render();
             },
             function(e) {
-                console.warn(e.stack);
-                error("Error reading sheet: " + e);
+                errorLoadingOrRenderingSheet(e, "rendering");
             }
         ).then(
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
-                console.warn(e.stack);
-                error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
+                errorLoadingOrRenderingSheet(e, "loading");
                 onLoadingEnd(isCustom);
             }
         );
+    }
+
+    function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
+        var errorString = "Error " + loadingOrRenderingString + " sheet: " + e;
+        // if (process.env.DEBUG) { // people may not set a debug environment variable for the demo.
+        // Always giving a StackTrace might give us more and better error reports.
+        // TODO for a release, StackTrace control could be reenabled
+        errorString += "\n" + "StackTrace: \n" + e.stack;
+        // }
+        console.warn(errorString);
     }
 
     function onLoadingEnd(isCustom) {
