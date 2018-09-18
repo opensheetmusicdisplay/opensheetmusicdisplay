@@ -9,7 +9,6 @@ import { StaffLine } from "../StaffLine";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 
 export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneousDynamicExpression {
-    private mLabel: GraphicalLabel;
 
     constructor(instantaneousDynamicExpression: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
         super(instantaneousDynamicExpression, staffLine, measure);
@@ -30,9 +29,5 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
 
     get Expression(): string {
         return DynamicEnum[this.mInstantaneousDynamicExpression.DynEnum];
-    }
-
-    get Label(): GraphicalLabel {
-        return this.mLabel;
     }
 }

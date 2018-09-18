@@ -1,16 +1,14 @@
-import { GraphicalObject } from "./GraphicalObject";
+
 import { StaffLine } from "./StaffLine";
 import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoExpression";
 import { GraphicalLabel } from "./GraphicalLabel";
+import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 
-export class GraphicalInstantaneousTempoExpression extends GraphicalObject {
+export class GraphicalInstantaneousTempoExpression extends AbstractGraphicalExpression {
     protected mTempoExpresssion: AbstractTempoExpression;
-    protected mParentStaffLine: StaffLine;
-    protected mLabel: GraphicalLabel;
 
     constructor(tempoExpresssion: AbstractTempoExpression, label: GraphicalLabel) {
-        super();
-        // this.boundingBox = new BoundingBox(this, staffLine.PositionAndShape);
+        super((label.PositionAndShape.Parent.DataObject as StaffLine));
         this.mTempoExpresssion = tempoExpresssion;
         this.mLabel = label;
     }

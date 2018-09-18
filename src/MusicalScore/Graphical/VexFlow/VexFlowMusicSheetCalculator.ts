@@ -48,6 +48,11 @@ import { Staff } from "../../VoiceData/Staff";
 import { TextAlignmentEnum, TextAlignment } from "../../../Common/Enums/TextAlignment";
 import { GraphicalSlur } from "../GraphicalSlur";
 import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
+import { BoundingBox } from "../BoundingBox";
+import { ContinuousDynamicExpression, ContDynamicEnum } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
+import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
+import { MusicSystem } from "../MusicSystem";
+import { VerticalGraphicalStaffEntryContainer } from "../VerticalGraphicalStaffEntryContainer";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -456,53 +461,425 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         (measure as VexFlowMeasure).instantaneousDynamics.push(graphicalInstantaneousDynamic);
         this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, staffLine, startPosInStaffline);
     }
-    // if (multiExpression.StartingContinuousDynamic != null)
+    if (multiExpression.StartingContinuousDynamic) {
+        const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
+        const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(continuousDynamic, staffLine);
+        graphicalContinuousDynamic.StartMeasure = measures[staffIndex];
+        // If it is a wedge
+        const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+          absoluteTimestamp, staffIndex, staffLine, staffLine.isPartOfMultiStaffInstrument());
+        if (startPosInStaffline.x <= 0) {
+            startPosInStaffline.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
+        }
+        if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
+            // const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+            //   absoluteTimestamp, staffIndex, staffLine, staffLine.isPartOfMultiStaffInstrument());
+            const endMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
+              continuousDynamic.EndMultiExpression.SourceMeasureParent, staffIndex);
+
+            if (endMeasure) {
+              graphicalContinuousDynamic.EndMeasure = endMeasure;
+              const endStaffLine: StaffLine = endMeasure.ParentStaffLine;
+              const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(continuousDynamic.EndMultiExpression.AbsoluteTimestamp);
+
+              const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+                  endAbsoluteTimestamp, staffIndex, endStaffLine, endStaffLine.isPartOfMultiStaffInstrument(), 0);
+
+              this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, startPosInStaffline, endStaffLine, endPosInStaffLine);
+            }
+        } else if (graphicalContinuousDynamic.IsVerbal) {
+          // const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+          //   absoluteTimestamp, staffIndex, staffLine, staffLine.isPartOfMultiStaffInstrument());
+          if (startPosInStaffline.x <= 0) {
+              startPosInStaffline.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
+          }
+          this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, startPosInStaffline);
+        }
+    }
+  }
+
+  /// <summary>
+  /// This method calculates the RelativePosition of a single GraphicalContinuousDynamic.
+  /// </summary>
+  /// <param name="continuousDynamic"></param>
+  /// <param name="startStaffLine"></param>
+  /// <param name="endStaffLine"></param>
+  /// <param name="startPosInStaffline"></param>
+  /// <param name="endPosInStaffline"></param>
+  public calculateGraphicalContinuousDynamic(continuousDynamic: VexFlowContinuousDynamicExpression,
+                                             startPosInStaffline: PointF2D,
+                                             endStaffLine?: StaffLine,
+                                             endPosInStaffline: PointF2D = new PointF2D(0, 0)): void {
+    const staffLine: StaffLine = continuousDynamic.ParentStaffLine;
+    const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+    // let expressionIndex: number;
+
+    // placement always below the currentStaffLine, with the exception of Voice Instrument (-> above)
+    const placement: PlacementEnum = continuousDynamic.ContinuousDynamic.Placement;
+
+    // if ContinuousDynamicExpression is given from words
+    if (continuousDynamic.IsVerbal) {
+      const graphLabel: GraphicalLabel = continuousDynamic.Label;
+      const left: number = startPosInStaffline.x + graphLabel.PositionAndShape.BorderMarginLeft;
+      const right: number = startPosInStaffline.x + graphLabel.PositionAndShape.BorderMarginRight;
+
+      // FIXME: This will be done in the AlignmentManager
+      // // check if previous Expression is InstantaniousDynamic
+      // expressionIndex = staffLine.AbstractExpressions.indexOf(continuousDynamic);
+      // if (expressionIndex > 0)
+      // {
+      //   const formerExpression: AbstractGraphicalExpression = staffLine.AbstractExpressions[expressionIndex - 1];
+      //   // optimizeFormerDynamicXPositionForContDynamicLabel(placement, formerExpression, graphLabel, ref startPosInStaffline, ref left, ref right);
+      // }// End x-positioning overlap check
+      let drawingHeight: number;
+      if (placement === PlacementEnum.Below) {
+        drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);    // Bottom line
+        graphLabel.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - graphLabel.PositionAndShape.BorderMarginTop);
+        skyBottomLineCalculator.updateBottomLineInRange(left, right,
+                                                        graphLabel.PositionAndShape.BorderMarginBottom + graphLabel.PositionAndShape.RelativePosition.y);
+      } else {
+        drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+        graphLabel.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - graphLabel.PositionAndShape.BorderMarginBottom);
+        skyBottomLineCalculator.updateSkyLineInRange(left, right,
+                                                     graphLabel.PositionAndShape.BorderMarginTop + graphLabel.PositionAndShape.RelativePosition.y);
+      }
+      //TODO: Seriously? Return? And the rest of this huge function? This should be split!
+      return;
+    }
+
+    // if ContinuousDynamicExpression is given from wedge
+    let secondGraphicalContinuousDynamic: VexFlowContinuousDynamicExpression = undefined;
+
+    // check if Expression spreads over the same StaffLine or not
+    const sameStaffLine: boolean = endStaffLine !== undefined && staffLine === endStaffLine;
+
+    // FIXME: This will be done in the AlignmentManager
+    // // check if previous Expression is InstantaniousDynamic
+    // expressionIndex = staffLine.AbstractExpressions.IndexOf(continuousDynamic);
+    // if (expressionIndex > 0)
     // {
-    //     ContinuousDynamicExpression continuousDynamic = multiExpression.StartingContinuousDynamic;
-    //     GraphicalContinuousDynamicExpression graphicalContinuousDynamic =
-    //         new GraphicalContinuousDynamicExpression(continuousDynamic, staffLine, this.rules.ContinuousDynamicTextHeight);
-    //     graphicalContinuousDynamic.StartMeasure = measures[staffIndex];
-    //     if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression != null) // if it is a wedge
-    //     {
-    //         startPosInStaffline = getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp, staffIndex, staffLine,
-    // staffLine.isPartOfMultiStaffInstrument());
-    //         if (startPosInStaffline.X <= 0)
-    //             startPosInStaffline.X = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
-    //         GraphicalMeasure endMeasure =
-    //             this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(continuousDynamic.EndMultiExpression.ParentSourceMeasure, staffIndex);
+    //   AbstractGraphicalExpression formerExpression = staffLine.AbstractExpressions[expressionIndex - 1];
+    //   optimizeFormerDynamicXPositionForContDynamicWedge(placement, formerExpression, startPosInStaffline, endPosInStaffline, staffLine, endStaffLine);
+    // }// End x-positioning overlap check
 
-    //         if (endMeasure != null)
-    //         {
-    //             graphicalContinuousDynamic.EndMeasure = endMeasure;
-    //             PsStaffLine endStaffLine = (PsStaffLine)endMeasure.ParentStaffLine;
-    //             Fraction endAbsoluteTimestamp = Fraction.createFromFraction(continuousDynamic.EndMultiExpression.AbsoluteTimestamp);
+    // last length check
+    if (sameStaffLine && endPosInStaffline.x - startPosInStaffline.x < this.rules.WedgeMinLength) {
+      endPosInStaffline.x = startPosInStaffline.x + this.rules.WedgeMinLength;
+    }
 
-    //             PointF_2D endPosInStaffLine = getRelativePositionInStaffLineFromTimestamp(endAbsoluteTimestamp, staffIndex, endStaffLine,
-    // endStaffLine.isPartOfMultiStaffInstrument(), 0, true, endMeasure);
+    let upperStartX: number = 0;
+    let upperEndX: number = 0;
+    let lowerStartX: number = 0;
+    let lowerEndX: number = 0;
 
-    //             calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, staffLine, endStaffLine, startPosInStaffline, endPosInStaffLine);
-    //         }
-    //     }
-    //     else if (graphicalContinuousDynamic.IsVerbal)
-    //     {
-    //         startPosInStaffline = getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp, staffIndex,
-    // staffLine, staffLine.isPartOfMultiStaffInstrument());
-    //         if (startPosInStaffline.X <= 0)
-    //             startPosInStaffline.X = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
-    //         calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, staffLine, null, startPosInStaffline, new PointF_2D(0, 0));
-    //     }
-    // }
+    if (!sameStaffLine) {
+      upperStartX = startPosInStaffline.x;
+      upperEndX = staffLine.PositionAndShape.Size.width;
+      lowerStartX = endStaffLine.Measures[0].beginInstructionsWidth + this.rules.WedgeHorizontalMargin;
+      lowerEndX = endPosInStaffline.x;
+
+      // must create a new Wedge
+      continuousDynamic.IsSplittedPart = true;
+      secondGraphicalContinuousDynamic = new VexFlowContinuousDynamicExpression(continuousDynamic.ContinuousDynamic, endStaffLine);
+      secondGraphicalContinuousDynamic.IsSplittedPart = true;
+    } else {
+      upperStartX = startPosInStaffline.x;
+      upperEndX = endPosInStaffline.x;
+      // continuousDynamic.EndStaffLine = endStaffLine;
+      continuousDynamic.EndMeasure = endStaffLine.Measures[0];
+    }
+
+    // the Height of the Expression's placement
+    let idealY: number = 0;
+    let secondIdealY: number = 0;
+
+    //currentMusicSystem and currentStaffLine
+    const musicSystem: MusicSystem = staffLine.ParentMusicSystem;
+    const currentStaffLineIndex: number = musicSystem.StaffLines.indexOf(staffLine);
+
+    if (placement === PlacementEnum.Below) {
+      // can be a single Staff Instrument or an Instrument with 2 Staves
+      let nextStaffLineIndex: number = 0;
+      if (currentStaffLineIndex < musicSystem.StaffLines.length - 1) {
+        nextStaffLineIndex = currentStaffLineIndex + 1;
+      }
+
+      // check, maybe currentStaffLine is the last of the MusicSystem (and it has a ContinuousDynamicExpression with placement below)
+      if (nextStaffLineIndex > currentStaffLineIndex) {
+        // currentStaffLine isn't the last of the MusicSystem
+        const nextStaffLine: StaffLine = musicSystem.StaffLines[nextStaffLineIndex];
+
+        const distanceBetweenStaffLines: number = nextStaffLine.PositionAndShape.RelativePosition.y -
+                                    staffLine.PositionAndShape.RelativePosition.y -
+                                    this.rules.StaffHeight;
+
+        // ideal Height is exactly between the two StaffLines
+        idealY = this.rules.StaffHeight + distanceBetweenStaffLines / 2;
+      } else {
+        // currentStaffLine is the MusicSystem's last
+        idealY = this.rules.WedgePlacementBelowY;
+      }
+
+      // must consider the upperWedge starting/ending tip for the comparison with the BottomLine
+      idealY -= this.rules.WedgeOpeningLength / 2;
+      if (!sameStaffLine) {
+        secondIdealY = idealY;
+      }
+
+      // must check BottomLine for possible collisions within the Length of the Expression
+      // find the corresponding max value for the given Length
+      let maxBottomLineValueForExpressionLength: number = skyBottomLineCalculator.getBottomLineMaxInRange(upperStartX, upperEndX);
+
+      // if collisions, then set the Height accordingly
+      if (maxBottomLineValueForExpressionLength > idealY) {
+        idealY = maxBottomLineValueForExpressionLength;
+      }
+
+      // special case - wedge must be drawn within the boundaries of a crossedBeam
+      const withinCrossedBeam: boolean = false;
+
+      if (currentStaffLineIndex < musicSystem.StaffLines.length - 1) {
+        // find GraphicalStaffEntries closest to wedge's xPositions
+        const closestToEndStaffEntry: GraphicalStaffEntry = staffLine.findClosestStaffEntry(upperEndX);
+        const closestToStartStaffEntry: GraphicalStaffEntry = staffLine.findClosestStaffEntry(upperStartX);
+
+        if (closestToStartStaffEntry && closestToEndStaffEntry) {
+          // must check both StaffLines
+          const startVerticalContainer: VerticalGraphicalStaffEntryContainer = closestToStartStaffEntry.parentVerticalContainer;
+          // const endVerticalContainer: VerticalGraphicalStaffEntryContainer = closestToEndStaffEntry.parentVerticalContainer;
+          if (startVerticalContainer) {
+            // TODO: Needs to be implemented?
+            // withinCrossedBeam = areStaffEntriesWithinCrossedBeam(startVerticalContainer, endVerticalContainer, currentStaffLineIndex, nextStaffLineIndex);
+          }
+
+          if (withinCrossedBeam) {
+            const nextStaffLine: StaffLine = musicSystem.StaffLines[nextStaffLineIndex];
+            const nextStaffLineMinSkyLineValue: number = nextStaffLine.SkyBottomLineCalculator.getSkyLineMinInRange(upperStartX, upperEndX);
+            const distanceBetweenStaffLines: number = nextStaffLine.PositionAndShape.RelativePosition.y -
+                                                      staffLine.PositionAndShape.RelativePosition.y;
+            const relativeSkyLineHeight: number = distanceBetweenStaffLines + nextStaffLineMinSkyLineValue;
+
+            if (relativeSkyLineHeight - this.rules.WedgeOpeningLength > this.rules.StaffHeight) {
+                idealY = relativeSkyLineHeight - this.rules.WedgeVerticalMargin;
+            } else {
+                idealY = this.rules.StaffHeight + this.rules.WedgeOpeningLength;
+            }
+
+            continuousDynamic.NotToBeRemoved = true;
+          }
+        }
+      }
+
+      // do the same in case of a Wedge ending at another StaffLine
+      if (!sameStaffLine) {
+        maxBottomLineValueForExpressionLength = endStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(lowerStartX, lowerEndX);
+
+        if (maxBottomLineValueForExpressionLength > secondIdealY) {
+          secondIdealY = maxBottomLineValueForExpressionLength;
+        }
+
+        secondIdealY += this.rules.WedgeOpeningLength / 2;
+      }
+
+      if (!withinCrossedBeam) {
+        idealY += this.rules.WedgeOpeningLength / 2;
+        idealY += this.rules.WedgeVerticalMargin;
+      }
+      if (!sameStaffLine) {
+        secondIdealY += this.rules.WedgeVerticalMargin;
+      }
+
+    } else if (placement === PlacementEnum.Above) {
+      // single Staff Instrument (eg Voice)
+      if (staffLine.ParentStaff.ParentInstrument.Staves.length === 1) {
+        // single Staff Voice Instrument
+        idealY = this.rules.WedgePlacementAboveY;
+      } else {
+        // Staff = not the first Staff of a 2-staved Instrument
+        let previousStaffLineIndex: number = 0;
+        if (currentStaffLineIndex > 0) {
+          previousStaffLineIndex = currentStaffLineIndex - 1;
+        }
+
+        const previousStaffLine: StaffLine = musicSystem.StaffLines[previousStaffLineIndex];
+        const distanceBetweenStaffLines: number = staffLine.PositionAndShape.RelativePosition.y -
+                                                  previousStaffLine.PositionAndShape.RelativePosition.y -
+                                                  this.rules.StaffHeight;
+
+        // ideal Height is exactly between the two StaffLines
+        idealY = -distanceBetweenStaffLines / 2;
+      }
+
+      // must consider the upperWedge starting/ending tip for the comparison with the SkyLine
+      idealY += this.rules.WedgeOpeningLength / 2;
+      if (!sameStaffLine) {
+        secondIdealY = idealY;
+      }
+
+      // must check SkyLine for possible collisions within the Length of the Expression
+      // find the corresponding min value for the given Length
+      let minSkyLineValueForExpressionLength: number = skyBottomLineCalculator.getSkyLineMinInRange(upperStartX, upperEndX);
+
+      // if collisions, then set the Height accordingly
+      if (minSkyLineValueForExpressionLength < idealY) {
+        idealY = minSkyLineValueForExpressionLength;
+      }
+      const withinCrossedBeam: boolean = false;
+
+      // special case - wedge must be drawn within the boundaries of a crossedBeam
+      if (staffLine.ParentStaff.ParentInstrument.Staves.length > 1 && currentStaffLineIndex > 0) {
+        // find GraphicalStaffEntries closest to wedge's xPositions
+        const closestToStartStaffEntry: GraphicalStaffEntry = staffLine.findClosestStaffEntry(upperStartX);
+        const closestToEndStaffEntry: GraphicalStaffEntry = staffLine.findClosestStaffEntry(upperEndX);
+
+        if (closestToStartStaffEntry && closestToEndStaffEntry) {
+          // must check both StaffLines
+          const startVerticalContainer: VerticalGraphicalStaffEntryContainer = closestToStartStaffEntry.parentVerticalContainer;
+          // const endVerticalContainer: VerticalGraphicalStaffEntryContainer = closestToEndStaffEntry.parentVerticalContainer;
+          const formerStaffLineIndex: number = currentStaffLineIndex - 1;
+          if (startVerticalContainer) {
+            // withinCrossedBeam = this.areStaffEntriesWithinCrossedBeam(startVerticalContainer,
+            // endVerticalContainer, currentStaffLineIndex, formerStaffLineIndex);
+          }
+
+          if (withinCrossedBeam) {
+            const formerStaffLine: StaffLine = musicSystem.StaffLines[formerStaffLineIndex];
+            const formerStaffLineMaxBottomLineValue: number = formerStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(upperStartX, upperEndX);
+            const distanceBetweenStaffLines: number = staffLine.PositionAndShape.RelativePosition.y -
+                                                      formerStaffLine.PositionAndShape.RelativePosition.y;
+            const relativeSkyLineHeight: number = distanceBetweenStaffLines - formerStaffLineMaxBottomLineValue;
+            idealY = (relativeSkyLineHeight - this.rules.StaffHeight) / 2 + this.rules.StaffHeight;
+          }
+        }
+      }
+
+      // do the same in case of a Wedge ending at another StaffLine
+      if (!sameStaffLine) {
+        minSkyLineValueForExpressionLength = endStaffLine.SkyBottomLineCalculator.getSkyLineMinInRange(lowerStartX, lowerEndX);
+
+        if (minSkyLineValueForExpressionLength < secondIdealY) {
+          secondIdealY = minSkyLineValueForExpressionLength;
+        }
+
+        secondIdealY -= this.rules.WedgeOpeningLength / 2;
+      }
+
+      if (!withinCrossedBeam) {
+        idealY -= this.rules.WedgeOpeningLength / 2;
+        idealY -= this.rules.WedgeVerticalMargin;
+      }
+      if (!sameStaffLine) {
+        secondIdealY -= this.rules.WedgeVerticalMargin;
+      }
+    }
+
+    // now we have the correct placement Height for the Expression
+    // the idealY is calculated relative to the currentStaffLine
+
+    // Crescendo (point to the left, opening to the right)
+    continuousDynamic.Lines.clear();
+    if (continuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+      if (sameStaffLine) {
+        const lineStart: PointF2D = new PointF2D(upperStartX, idealY);
+        const upperLineEnd: PointF2D = new PointF2D(upperEndX, idealY - this.rules.WedgeOpeningLength / 2);
+        const lowerLineEnd: PointF2D = new PointF2D(upperEndX, idealY + this.rules.WedgeOpeningLength / 2);
+
+        continuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
+        continuousDynamic.calcPsi(staffLine.PositionAndShape);
+
+        // update Sky-BottomLine
+        if (placement === PlacementEnum.Below) {
+          skyBottomLineCalculator.updateBottomLineWithWedge(lineStart, lowerLineEnd);
+        } else if (placement === PlacementEnum.Above) {
+          skyBottomLineCalculator.updateSkyLineWithWedge(lineStart, upperLineEnd);
+        }
+      } else {
+          // two different Wedges
+          const lineStart: PointF2D = new PointF2D(upperStartX, idealY);
+          let upperLineEnd: PointF2D = new PointF2D(upperEndX, idealY - this.rules.WedgeMeasureEndOpeningLength / 2);
+          let lowerLineEnd: PointF2D = new PointF2D(upperEndX, idealY + this.rules.WedgeMeasureEndOpeningLength / 2);
+
+          continuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
+          continuousDynamic.calcPsi(staffLine.PositionAndShape);
+
+          // update Sky-BottomLine
+          if (placement === PlacementEnum.Below) {
+            skyBottomLineCalculator.updateBottomLineWithWedge(lineStart, lowerLineEnd);
+          } else if (placement === PlacementEnum.Above) {
+            skyBottomLineCalculator.updateSkyLineWithWedge(lineStart, upperLineEnd);
+          }
+
+          const upperLineStart: PointF2D = new PointF2D(lowerStartX, secondIdealY - this.rules.WedgeMeasureBeginOpeningLength / 2);
+          const lowerLineStart: PointF2D = new PointF2D(lowerStartX, secondIdealY + this.rules.WedgeMeasureBeginOpeningLength / 2);
+          upperLineEnd = new PointF2D(lowerEndX, secondIdealY - this.rules.WedgeOpeningLength / 2);
+          lowerLineEnd = new PointF2D(lowerEndX, secondIdealY + this.rules.WedgeOpeningLength / 2);
+
+          secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
+          secondGraphicalContinuousDynamic.calcPsi(endStaffLine.PositionAndShape);
+
+          // update Sky-BottomLine
+          if (placement === PlacementEnum.Below) {
+            endStaffLine.SkyBottomLineCalculator.updateBottomLineWithWedge(lowerLineStart, lowerLineEnd);
+          } else if (placement === PlacementEnum.Above) {
+            endStaffLine.SkyBottomLineCalculator.updateSkyLineWithWedge(upperLineStart, upperLineEnd);
+          }
+      }
+    } else if (continuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+      if (sameStaffLine) {
+        const upperLineStart: PointF2D = new PointF2D(upperStartX, idealY - this.rules.WedgeOpeningLength / 2);
+        const lowerLineStart: PointF2D = new PointF2D(upperStartX, idealY + this.rules.WedgeOpeningLength / 2);
+        const lineEnd: PointF2D = new PointF2D(upperEndX, idealY);
+
+        continuousDynamic.createDiminuendoLines(upperStartX, upperEndX, idealY);
+        continuousDynamic.calcPsi(staffLine.PositionAndShape);
+
+        // update Sky-BottomLine
+        if (placement === PlacementEnum.Below) {
+          skyBottomLineCalculator.updateBottomLineWithWedge(lowerLineStart, lineEnd);
+        } else if (placement === PlacementEnum.Above) {
+          skyBottomLineCalculator.updateSkyLineWithWedge(upperLineStart, lineEnd);
+        }
+      } else {
+        let upperLineStart: PointF2D = new PointF2D(upperStartX, idealY - this.rules.WedgeOpeningLength / 2);
+        let lowerLineStart: PointF2D = new PointF2D(upperStartX, idealY + this.rules.WedgeOpeningLength / 2);
+        let upperLineEnd: PointF2D = new PointF2D(upperEndX, idealY - this.rules.WedgeMeasureEndOpeningLength / 2);
+        const lowerLineEnd: PointF2D = new PointF2D(upperEndX, idealY + this.rules.WedgeMeasureEndOpeningLength / 2);
+
+        continuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY);
+        continuousDynamic.calcPsi(staffLine.PositionAndShape);
+
+        // update Sky-BottomLine
+        if (placement === PlacementEnum.Below) {
+          skyBottomLineCalculator.updateBottomLineWithWedge(lowerLineStart, upperLineEnd);
+        } else if (placement === PlacementEnum.Above) {
+          skyBottomLineCalculator.updateSkyLineWithWedge(upperLineStart, lowerLineEnd);
+        }
+
+        upperLineStart = new PointF2D(lowerStartX, secondIdealY - this.rules.WedgeMeasureBeginOpeningLength / 2);
+        lowerLineStart = new PointF2D(lowerStartX, secondIdealY + this.rules.WedgeMeasureBeginOpeningLength / 2);
+        upperLineEnd = new PointF2D(lowerEndX, secondIdealY - this.rules.WedgeOpeningLength / 2);
+
+        secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
+        secondGraphicalContinuousDynamic.calcPsi(endStaffLine.PositionAndShape);
+
+        // update Sky-BottomLine
+        if (placement === PlacementEnum.Below) {
+          endStaffLine.SkyBottomLineCalculator.updateBottomLineWithWedge(lowerLineStart, upperLineEnd);
+        } else if (placement === PlacementEnum.Above) {
+          endStaffLine.SkyBottomLineCalculator.updateSkyLineWithWedge(upperLineStart, upperLineEnd);
+        }
+      }
+    } //End Diminuendo
   }
 
   public calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression,
                                                           staffLine: StaffLine,
                                                           relative: PointF2D): void {
     // // add to StaffLine and set PSI relations
-    staffLine.AbstractExpressions.push(graphicalInstantaneousDynamic);
-    staffLine.PositionAndShape.ChildElements.push(graphicalInstantaneousDynamic.PositionAndShape);
-    if (this.staffLinesWithGraphicalExpressions.indexOf(staffLine) === -1) {
-        this.staffLinesWithGraphicalExpressions.push(staffLine);
-    }
+    // staffLine.PositionAndShape.ChildElements.push(graphicalInstantaneousDynamic.PositionAndShape);
+    // if (this.staffLinesWithGraphicalExpressions.indexOf(staffLine) === -1) {
+    //     this.staffLinesWithGraphicalExpressions.push(staffLine);
+    // }
 
     // get Margin Dimensions
     const left: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginLeft;

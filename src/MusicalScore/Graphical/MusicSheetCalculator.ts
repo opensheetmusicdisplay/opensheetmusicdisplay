@@ -75,13 +75,25 @@ export abstract class MusicSheetCalculator {
     protected staffEntriesWithOrnaments: GraphicalStaffEntry[] = [];
     protected staffEntriesWithChordSymbols: GraphicalStaffEntry[] = [];
     protected staffLinesWithLyricWords: StaffLine[] = [];
-    protected staffLinesWithGraphicalExpressions: StaffLine[] = [];
 
     protected graphicalLyricWords: GraphicalLyricWord[] = [];
 
     protected graphicalMusicSheet: GraphicalMusicSheet;
     protected rules: EngravingRules;
     //protected symbolFactory: IGraphicalSymbolFactory;
+
+    /** All Stafflines with grpahical expressions in them */
+    public get StaffLinesWithGraphicalExpressions(): StaffLine[] {
+        // This code looks awekward at first but is only short for 2 nested
+        // for loops and a filter that pushes it's findings to an array
+        const results: StaffLine[] = [];
+        this.graphicalMusicSheet.MusicPages.
+        forEach(mp => mp.MusicSystems. // Iterate over all MusicPages
+            forEach(ms => results. // Iterate over all MusicSystems and push to result ...
+                push(...ms.StaffLines. // ... all Stafflines with AbstractExpressions
+                    filter(sl => sl.AbstractExpressions.length > 0))));
+        return results;
+    }
 
     public static get TextMeasurer(): ITextMeasurer {
         return MusicSheetCalculator.textMeasurer;
@@ -123,7 +135,7 @@ export abstract class MusicSheetCalculator {
         this.staffEntriesWithOrnaments = [];
         this.staffEntriesWithChordSymbols = [];
         this.staffLinesWithLyricWords = [];
-        this.staffLinesWithGraphicalExpressions = [];
+        // this.staffLinesWithGraphicalExpressions = [];
 
         this.graphicalMusicSheet.Initialize();
         const measureList: GraphicalMeasure[][] = this.graphicalMusicSheet.MeasureList;
@@ -1020,14 +1032,13 @@ export abstract class MusicSheetCalculator {
                         continue;
                     }
 
-                    const graphicalTempoExpr: GraphicalInstantaneousTempoExpression = new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
+                    // const graphicalTempoExpr: GraphicalInstantaneousTempoExpression =
+                    // new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
                     // in case of metronome mark:
                     if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
                         // use smaller font:
                         graphLabel.Label.fontHeight = 1.2;
                     }
-
-                    staffLine.AbstractExpressions.push(graphicalTempoExpr);
                 } else if (entry.Expression instanceof ContinuousTempoExpression) {
                     // FIXME: Not yet implemented
                     // let alreadyAdded: boolean = false;

@@ -1,7 +1,3 @@
-import { GraphicalObject } from "./GraphicalObject";
-import { GraphicalLabel } from "./GraphicalLabel";
-import { Label } from "../Label";
-import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { BoundingBox } from "./BoundingBox";
 import { GraphicalLine } from "./GraphicalLine";
 import { StaffLine } from "./StaffLine";
@@ -9,54 +5,58 @@ import { GraphicalMeasure } from "./GraphicalMeasure";
 import { EngravingRules } from "./EngravingRules";
 import { ContDynamicEnum, ContinuousDynamicExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
+import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 
-export class GraphicalContinuousDynamicExpression extends GraphicalObject {
-    private mGraphicalLabel: GraphicalLabel;
+/**
+ * This class prepares the graphical elements for a continuous expression. It calculates the wedges and
+ * wrappings if they are split over system breaks.
+ */
+export abstract class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpression {
+    /** Internal cache of read expression */
     private mContinuousDynamic: ContinuousDynamicExpression;
-    private mParentStaffLine: StaffLine;
+    /** True if expression is split over system borders */
     private mIsSplittedPart: boolean;
+    /** True if this expression should not be removed if re-rendered */
     private mNotToBeRemoved: boolean;
+    /** Holds the line objects that can be drawn via implementation */
     private mLines: GraphicalLine[] = [];
+    private mStartMeasure: GraphicalMeasure;
+    private mEndMeasure: GraphicalMeasure;
+    protected mRules: EngravingRules = EngravingRules.Rules;
 
-    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine, textHeight: number) {
-        super();
-        if (continuousDynamic.Label) {
-            this.mGraphicalLabel = new GraphicalLabel(new Label(continuousDynamic.Label), textHeight, TextAlignmentEnum.LeftCenter, staffLine.PositionAndShape);
-        }
+    /**
+     * Create a new instance of the GraphicalContinuousDynamicExpression
+     * @param continuousDynamic The continuous dynamic instruction read via ExpressionReader
+     * @param staffLine The staffline where the exoression is attached
+     */
+    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine) {
+        super(staffLine);
+
         this.mContinuousDynamic = continuousDynamic;
-        this.mParentStaffLine = staffLine;
         this.mIsSplittedPart = false;
         this.mNotToBeRemoved = false;
     }
 
     //#region Getter / Setter
 
-    /**
-     * The graphical measure where the parent continuous dynamic expression starts
-     */
-    public get StartMeasure(): GraphicalMeasure { return undefined; }
-
-    /**
-     * The graphical measure where the parent continuous dynamic expression ends
-     */
-    public get EndMeasure(): GraphicalMeasure { return undefined; }
-
-    /**
-     * Is true if this continuous expression is a wedge, that reaches over a system border and needs to be split into two.
-     */
-    public IsSplittedPart(): boolean { return this.mIsSplittedPart; }
-
-    /**
-     * Is true if the dynamic is not a symbol but a text instruction. E.g. "decrescendo"
-     */
-    public get IsVerbal(): boolean { return this.ContinuousDynamic.Label !== undefined; }
+    /** The graphical measure where the parent continuous dynamic expression starts */
+    public get StartMeasure(): GraphicalMeasure { return this.mStartMeasure; }
+    public set StartMeasure(value: GraphicalMeasure) { this.mStartMeasure = value; }
+    /** The graphical measure where the parent continuous dynamic expression ends */
+    public get EndMeasure(): GraphicalMeasure { return this.mEndMeasure; }
+    public set EndMeasure(value: GraphicalMeasure) { this.mEndMeasure = value; }
+    /**  Is true if this continuous expression is a wedge, that reaches over a system border and needs to be split into two. */
+    public get IsSplittedPart(): boolean { return this.mIsSplittedPart; }
+    public set IsSplittedPart(value: boolean) { this.mIsSplittedPart = value; }
+    /**  Is true if the dynamic is not a symbol but a text instruction. E.g. "decrescendo" */
+    public get IsVerbal(): boolean { return this.ContinuousDynamic.Label !== undefined && this.ContinuousDynamic.Label.length > 0; }
+    /** True if this expression should not be removed if re-rendered */
     public get NotToBeRemoved(): boolean { return this.mNotToBeRemoved; }
-    public get GraphicalLabel(): GraphicalLabel { return this.mGraphicalLabel; }
-
+    public set NotToBeRemoved(value: boolean) { this.mNotToBeRemoved = value; }
+    /** Holds the line objects that can be drawn via implementation */
     public get Lines(): GraphicalLine[] { return this.mLines; }
 
     public get ContinuousDynamic(): ContinuousDynamicExpression { return this.mContinuousDynamic; }
-    public get ParentStaffLine(): StaffLine { return this.mParentStaffLine; }
     //#endregion
 
     //#region Public methods
@@ -69,7 +69,8 @@ export class GraphicalContinuousDynamicExpression extends GraphicalObject {
      * @param wedgeOpeningLength length of the opening
      * @param wedgeLineWidth line width of the wedge
      */
-    public createCrescendoLines(startX: number, endX: number, y: number, wedgeOpeningLength: number, wedgeLineWidth: number): void {
+    public createCrescendoLines(startX: number, endX: number, y: number,
+                                wedgeOpeningLength: number = this.mRules.WedgeOpeningLength, wedgeLineWidth: number = this.mRules.WedgeLineWidth): void {
         const lineStart: PointF2D = new PointF2D(startX, y);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeOpeningLength / 2);
@@ -85,7 +86,9 @@ export class GraphicalContinuousDynamicExpression extends GraphicalObject {
      * @param wedgeOpeningLength length of the opening
      * @param wedgeLineWidth line width of the wedge
      */
-    public createFirstHalfCrescendoLines(startX: number, endX: number, y: number, wedgeMeasureEndOpeningLength: number, wedgeLineWidth: number): void {
+    public createFirstHalfCrescendoLines(startX: number, endX: number, y: number,
+                                         wedgeMeasureEndOpeningLength: number = this.mRules.WedgeMeasureEndOpeningLength,
+                                         wedgeLineWidth: number = this.mRules.WedgeLineWidth): void {
         const lineStart: PointF2D = new PointF2D(startX, y);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeMeasureEndOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeMeasureEndOpeningLength / 2);
@@ -103,7 +106,9 @@ export class GraphicalContinuousDynamicExpression extends GraphicalObject {
      * @param wedgeLineWidth line width of the wedge
      */
     public createSecondHalfCresendoLines(startX: number, endX: number, y: number,
-                                         wedgeMeasureBeginOpeningLength: number, wedgeOpeningLength: number, wedgeLineWidth: number): void {
+                                         wedgeMeasureBeginOpeningLength: number = this.mRules.WedgeMeasureBeginOpeningLength,
+                                         wedgeOpeningLength: number = this.mRules.WedgeOpeningLength,
+                                         wedgeLineWidth: number = this.mRules.WedgeLineWidth): void {
         const upperLineStart: PointF2D = new PointF2D(startX, y - wedgeMeasureBeginOpeningLength / 2);
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeMeasureBeginOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeOpeningLength / 2);
@@ -114,49 +119,51 @@ export class GraphicalContinuousDynamicExpression extends GraphicalObject {
     /**
      * This method recalculates the Crescendo Lines (for all cases).
      * @param startX left most starting point
-     * @param endX right mist ending point
+     * @param endX right most ending point
      * @param y y placement
-     * @param rules Engraving rules
      */
-    public recalculateCrescendoLines(startX: number, endX: number, y: number, rules: EngravingRules): void {
+    public recalculateCrescendoLines(startX: number, endX: number, y: number): void {
         const isSecondHalfSplit: boolean = Math.abs(this.Lines[0].Start.y - this.Lines[1].Start.y) > 0.0001;
         this.Lines.clear();
 
         if (isSecondHalfSplit) {
-            this.createSecondHalfCresendoLines(startX, endX, y, rules.WedgeMeasureBeginOpeningLength, rules.WedgeOpeningLength, rules.WedgeLineWidth);
+            this.createSecondHalfCresendoLines(startX, endX, y);
         } else if (this.IsSplittedPart) {
-            this.createFirstHalfCrescendoLines(startX, endX, y, rules.WedgeMeasureEndOpeningLength, rules.WedgeLineWidth);
+            this.createFirstHalfCrescendoLines(startX, endX, y);
         } else {
-            this.createCrescendoLines(startX, endX, y, rules.WedgeOpeningLength, rules.WedgeLineWidth);
+            this.createCrescendoLines(startX, endX, y);
         }
     }
 
-    /// <summary>
-    /// Calculate PointFs for Diminuendo Lines (full).
-    /// </summary>
-    /// <param name="startX"></param>
-    /// <param name="endX"></param>
-    /// <param name="y"></param>
-    /// <param name="wedgeOpeningLength"></param>
-    /// <param name="wedgeLineWidth"></param>
-    public createDiminuendoLines(startX: number, endX: number, y: number, wedgeOpeningLength: number, wedgeLineWidth: number): void {
+    /**
+     * Calculate diminuendo lines for system break (full).
+     * @param startX left most starting point
+     * @param endX right mist ending point
+     * @param y y placement
+     * @param wedgeOpeningLength length of the opening
+     * @param wedgeLineWidth line width of the wedge
+     */
+    public createDiminuendoLines(startX: number, endX: number, y: number,
+                                 wedgeOpeningLength: number = this.mRules.WedgeOpeningLength, wedgeLineWidth: number = this.mRules.WedgeLineWidth): void {
         const upperWedgeStart: PointF2D = new PointF2D(startX, y - wedgeOpeningLength / 2);
         const lowerWedgeStart: PointF2D = new PointF2D(startX, y + wedgeOpeningLength / 2);
         const wedgeEnd: PointF2D = new PointF2D(endX, y);
         this.addWedgeLines(wedgeEnd, upperWedgeStart, lowerWedgeStart, wedgeLineWidth);
     }
 
-    /// <summary>
-    /// Calculate PointFs for Diminuendo Lines (first part).
-    /// </summary>
-    /// <param name="startX"></param>
-    /// <param name="endX"></param>
-    /// <param name="y"></param>
-    /// <param name="wedgeOpeningLength"></param>
-    /// <param name="wedgeMeasureEndOpeningLength"></param>
-    /// <param name="wedgeLineWidth"></param>
+    /**
+     * Calculate diminuendo lines for system break (first part).
+     * @param startX left most starting point
+     * @param endX right mist ending point
+     * @param y y placement
+     * @param wedgeOpeningLength length of the opening
+     * @param wedgeMeasureEndOpeningLength length of opening at measure end
+     * @param wedgeLineWidth line width of the wedge
+     */
     public createFirstHalfDiminuendoLines(startX: number, endX: number, y: number,
-                                          wedgeOpeningLength: number, wedgeMeasureEndOpeningLength: number, wedgeLineWidth: number): void {
+                                          wedgeOpeningLength: number = this.mRules.WedgeOpeningLength,
+                                          wedgeMeasureEndOpeningLength: number = this.mRules.WedgeMeasureEndOpeningLength,
+                                          wedgeLineWidth: number = this.mRules.WedgeLineWidth): void {
         const upperLineStart: PointF2D = new PointF2D(startX, y - wedgeOpeningLength / 2);
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeMeasureEndOpeningLength / 2);
@@ -164,37 +171,38 @@ export class GraphicalContinuousDynamicExpression extends GraphicalObject {
         this.addDoubleLines(upperLineStart, lowerLineStart, upperLineEnd, lowerLineEnd, wedgeLineWidth);
     }
 
-    /// <summary>
-    /// Calculate PointFs for Diminuendo Lines (second part).
-    /// </summary>
-    /// <param name="startX"></param>
-    /// <param name="endX"></param>
-    /// <param name="y"></param>
-    /// <param name="wedgeMeasureBeginOpeningLength"></param>
-    /// <param name="wedgeLineWidth"></param>
-    public createSecondHalfDiminuendoLines(startX: number, endX: number, y: number, wedgeMeasureBeginOpeningLength: number, wedgeLineWidth: number): void {
+    /**
+     * Calculate diminuendo lines for system break (second part).
+     * @param startX left most starting point
+     * @param endX right mist ending point
+     * @param y y placement
+     * @param wedgeMeasureBeginOpeningLength length of opening at measure start
+     * @param wedgeLineWidth line width of the wedge
+     */
+    public createSecondHalfDiminuendoLines(startX: number, endX: number, y: number,
+                                           wedgeMeasureBeginOpeningLength: number = this.mRules.WedgeMeasureBeginOpeningLength,
+                                           wedgeLineWidth: number = this.mRules.WedgeLineWidth): void {
         const upperLineStart: PointF2D = new PointF2D(startX, y - wedgeMeasureBeginOpeningLength / 2);
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeMeasureBeginOpeningLength / 2);
         const lineEnd: PointF2D = new PointF2D(endX, y);
         this.addWedgeLines(lineEnd, upperLineStart, lowerLineStart, wedgeLineWidth);
     }
 
-    /// <summary>
-    /// This method recalculates the Diminuendo Lines (for all cases).
-    /// </summary>
-    /// <param name="startX"></param>
-    /// <param name="endX"></param>
-    /// <param name="yPosition"></param>
-    /// <param name="rules"></param>
-    public recalculateDiminuendoLines(startX: number, endX: number, yPosition: number, rules: EngravingRules): void {
+    /**
+     * This method recalculates the diminuendo lines (for all cases).
+     * @param startX left most starting point
+     * @param endX right most ending point
+     * @param y y placement
+     */
+    public recalculateDiminuendoLines(startX: number, endX: number, yPosition: number): void {
         const isFirstHalfSplit: boolean = Math.abs(this.Lines[0].End.y - this.Lines[1].End.y) > 0.0001;
         this.Lines.clear();
         if (isFirstHalfSplit) {
-            this.createFirstHalfDiminuendoLines(startX, endX, yPosition, rules.WedgeOpeningLength, rules.WedgeMeasureEndOpeningLength, rules.WedgeLineWidth);
+            this.createFirstHalfDiminuendoLines(startX, endX, yPosition);
         } else if (this.IsSplittedPart) {
-            this.createSecondHalfDiminuendoLines(startX, endX, yPosition, rules.WedgeMeasureBeginOpeningLength, rules.WedgeLineWidth);
+            this.createSecondHalfDiminuendoLines(startX, endX, yPosition);
         } else {
-            this.createDiminuendoLines(startX, endX, yPosition, rules.WedgeOpeningLength, rules.WedgeLineWidth);
+            this.createDiminuendoLines(startX, endX, yPosition);
         }
     }
 
@@ -204,8 +212,6 @@ export class GraphicalContinuousDynamicExpression extends GraphicalObject {
      */
     public calcPsi(parent: BoundingBox): void {
         let height: number = 0;
-
-        this.PositionAndShape = new BoundingBox(this, parent);
 
         if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
             this.PositionAndShape.BorderTop = this.Lines[0].End.y - this.Lines[0].Start.y;
@@ -233,9 +239,9 @@ export class GraphicalContinuousDynamicExpression extends GraphicalObject {
      */
     public cleanUp(): void {
         this.Lines.clear();
-        if (this.PositionAndShape) {
-            this.PositionAndShape.Parent.remove(this.PositionAndShape);
-        }
+        // if (this.PositionAndShape) {
+        //     this.PositionAndShape.Parent.remove(this.PositionAndShape);
+        // }
     }
     //#endregion
 

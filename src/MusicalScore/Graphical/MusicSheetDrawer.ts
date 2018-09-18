@@ -434,11 +434,20 @@ export abstract class MusicSheetDrawer {
     //         drawLineAsVerticalRectangle(ending.Right, absolutePosition, <number>GraphicalLayers.Notes);
     //     this.drawLabel(ending.Label, <number>GraphicalLayers.Notes);
     // }
+
+    /**
+     * Draws an instantaneous dynamic expression (p, pp, f, ff, ...) to the canvas
+     * @param instantaneousDynamic GraphicalInstantaneousDynamicExpression to be drawn
+     */
     protected drawInstantaneousDynamic(instantaneousDynamic: GraphicalInstantaneousDynamicExpression): void {
         throw new Error("not implemented");
     }
 
-    protected drawContinuousDynamic(expression: GraphicalContinuousDynamicExpression, absolute: PointF2D): void {
+    /**
+     * Draws a continuous dynamic expression (wedges) to the canvas
+     * @param expression GraphicalContinuousDynamicExpression to be drawn
+     */
+    protected drawContinuousDynamic(expression: GraphicalContinuousDynamicExpression): void {
         throw new Error("not implemented");
     }
 

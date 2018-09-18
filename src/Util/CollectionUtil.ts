@@ -2,8 +2,11 @@ import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 declare global {
     interface Array<T> {
+        /** Returns the last element from an array */
         last(): T;
+        /** Deletes all elements from an array */
         clear(): void;
+        /** Returns true if the element is found in the array */
         contains(elem: T): boolean;
     }
 }
@@ -15,8 +18,8 @@ if (!Array.prototype.last) {
 }
 
 if (!Array.prototype.clear) {
-    Array.prototype.clear = function(): void {
-        console.log("clearing");
+    Array.prototype.clear = function<T>(): void {
+        this.length = 0;
     };
 }
 
