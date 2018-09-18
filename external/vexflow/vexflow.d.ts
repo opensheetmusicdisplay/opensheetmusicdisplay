@@ -96,6 +96,7 @@ declare namespace Vex {
             public x_shift: number;
             public getAbsoluteX(): number;
             public addModifier(index: number, modifier: Modifier): StemmableNote;
+            public preFormatted: boolean;
         }
 
         export class GhostNote extends StemmableNote {

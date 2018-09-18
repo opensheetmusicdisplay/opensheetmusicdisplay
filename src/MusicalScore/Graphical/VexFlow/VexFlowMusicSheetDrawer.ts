@@ -25,6 +25,7 @@ import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneo
 import log = require("loglevel");
 import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
+import { DrawingParameters } from "../DrawingParameters";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -39,8 +40,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     constructor(element: HTMLElement,
                 backend: VexFlowBackend,
-                isPreviewImageDrawer: boolean = false) {
-        super(new VexFlowTextMeasurer(), isPreviewImageDrawer);
+                drawingParameters: DrawingParameters = new DrawingParameters()) {
+        super(new VexFlowTextMeasurer(), drawingParameters);
         this.backend = backend;
     }
 
