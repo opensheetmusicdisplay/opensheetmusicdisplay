@@ -3,9 +3,11 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
+    "noUnusedLocals": true,
     "outDir": "dist",
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "typeRoots": ["./node_modules/@types"]
   },
   "exclude": [
     "node_modules",
