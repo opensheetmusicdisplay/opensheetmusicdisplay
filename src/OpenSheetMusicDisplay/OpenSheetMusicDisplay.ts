@@ -51,26 +51,15 @@ export class OpenSheetMusicDisplay {
             this.backend = new CanvasVexFlowBackend();
         }
 
-        this.drawingParameters = new DrawingParameters();
-        if (options.drawingParameters) {
-            this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum[options.drawingParameters];
-        }
-
-        if (options.disableCursor) {
-            this.drawingParameters.drawCursors = false;
-        }
+        this.setDrawingParameters(options);
 
         this.backend.initialize(this.container);
         this.canvas = this.backend.getCanvas();
-        const inner: HTMLElement = this.backend.getInnerElement();
+        this.innerElement = this.backend.getInnerElement();
+        this.enableOrDisableCursor(this.drawingParameters.drawCursors);
 
         // Create the drawer
         this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
-
-        if (this.drawingParameters.drawCursors) {
-            // Create the cursor
-            this.cursor = new Cursor(inner, this);
-        }
 
         if (options.autoResize) {
             this.autoResize();
@@ -83,6 +72,7 @@ export class OpenSheetMusicDisplay {
     private container: HTMLElement;
     private canvas: HTMLElement;
     private backend: VexFlowBackend;
+    private innerElement: HTMLElement;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
@@ -305,7 +295,50 @@ export class OpenSheetMusicDisplay {
         window.setTimeout(endCallback, 1);
     }
 
+    /** Enable or disable (hide) the cursor.
+     * @param enable whether to enable (true) or disable (false) the cursor
+     */
+    public enableOrDisableCursor(enable: boolean): void {
+        this.drawingParameters.drawCursors = enable;
+        if (enable) {
+            if (!this.cursor) {
+                this.cursor = new Cursor(this.innerElement, this);
+                if (this.sheet && this.graphic) { // else init is called in load()
+                    this.cursor.init(this.sheet.MusicPartManager, this.graphic);
+                }
+            }
+        } else { // disable cursor
+            if (!this.cursor) {
+                return;
+            }
+            this.cursor.hide();
+            // this.cursor = undefined;
+            // TODO cursor should be disabled, not just hidden. otherwise user can just call osmd.cursor.hide().
+            // however, this could cause null calls (cursor.next() etc), maybe that needs some solution.
+        }
+    }
+
     //#region GETTER / SETTER
+    private setDrawingParameters(options: IOSMDOptions): void {
+        this.drawingParameters = new DrawingParameters();
+        if (options.drawingParameters) {
+            this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum[options.drawingParameters];
+        }
+        // individual drawing parameters options
+        if (options.disableCursor) {
+            this.drawingParameters.drawCursors = false;
+        }
+        if (options.drawHiddenNotes) {
+            this.drawingParameters.drawHiddenNotes = true;
+        }
+        if (options.defaultColorNoteHead) {
+            this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
+        }
+        if (options.defaultColorStem) {
+            this.drawingParameters.defaultColorStem = options.defaultColorStem;
+        }
+    }
+
     public set DrawSkyLine(value: boolean) {
         if (this.drawer) {
             this.drawer.skyLineVisible = value;

@@ -24,6 +24,8 @@ export class DrawingParameters {
     public drawPartName: boolean = true;
     /** Draw notes set to be invisible (print-object="no" in XML). */
     public drawHiddenNotes: boolean = false;
+    public defaultColorNoteHead: string; // TODO not yet supported
+    public defaultColorStem: string; // TODO not yet supported
 
     constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.Default) {
         this.DrawingParametersEnum = drawingParameters;
