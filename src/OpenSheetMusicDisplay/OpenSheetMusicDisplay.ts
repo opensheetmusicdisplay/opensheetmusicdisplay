@@ -331,6 +331,15 @@ export class OpenSheetMusicDisplay {
         if (options.drawHiddenNotes) {
             this.drawingParameters.drawHiddenNotes = true;
         }
+        if (options.drawTitle !== undefined) {
+            this.drawingParameters.drawTitle = options.drawTitle;
+        }
+        if (options.drawPartName !== undefined) {
+            this.drawingParameters.drawPartName = options.drawPartName;
+        }
+        if (options.drawCredits !== undefined) {
+            this.drawingParameters.drawCredits = options.drawCredits;
+        }
         if (options.defaultColorNoteHead) {
             this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
         }
