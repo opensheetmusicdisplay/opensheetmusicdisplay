@@ -239,9 +239,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
     function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
         var errorString = "Error " + loadingOrRenderingString + " sheet: " + e;
-        if (process.env.DEBUG) {
-            errorString += "\n" + "StackTrace: \n" + e.stack;
-        }
+        // if (process.env.DEBUG) { // people may not set an environment variable for debug.
+        errorString += "\n" + "StackTrace: \n" + e.stack;
+        // }
         console.warn(errorString);
     }
 
