@@ -2,11 +2,11 @@ import { DrawingParametersEnum } from "../MusicalScore/Graphical/DrawingParamete
 
 /** Possible options for the OpenSheetMusicDisplay constructor, none are mandatory. */
 export interface IOSMDOptions {
-    /** Not yet supported. Will always beam automatically. */
+    /** Not yet supported. Will always beam automatically. */ // TODO
     autoBeam?: boolean;
     /** Automatically resize score with canvas size. Default is true. */
     autoResize?: boolean;
-    /** Not yet supported. Will always place stems automatically. */
+    /** Not yet supported. Will always place stems automatically. */ // TODO
     autoStem?: boolean;
     /** Render Backend, will be SVG if given undefined, SVG or svg, otherwise Canvas. */
     backend?: string;
@@ -14,6 +14,12 @@ export interface IOSMDOptions {
     disableCursor?: boolean;
     /** Parameters like drawing a Leadsheet or (Thumbnail) Preview, disabling Cursor. */
     drawingParameters?: string | DrawingParametersEnum;
+    /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
+    drawHiddenNotes?: boolean;
+    /** Default color for a note head (without stem). Default black. Not yet supported. */ // TODO
+    defaultColorNoteHead?: string;
+    /** Default color for a note stem. Default black. Not yet supported. */ // TODO
+    defaultColorStem?: string;
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */
