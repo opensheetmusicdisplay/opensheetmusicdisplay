@@ -33,6 +33,12 @@ import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
 import { VexFlowInstantaneousDynamicExpression } from "./VexFlowInstantaneousDynamicExpression";
 import {BoundingBox} from "../BoundingBox";
+import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
+/* VexFlow Version - for later use
+// import { VexFlowSlur } from "./VexFlowSlur";
+// import { VexFlowStaffLine } from "./VexFlowStaffLine";
+// import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
+*/
 import { EngravingRules } from "../EngravingRules";
 import { InstantaneousDynamicExpression } from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
@@ -40,8 +46,12 @@ import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneo
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { Staff } from "../../VoiceData/Staff";
+import { TextAlignmentEnum, TextAlignment } from "../../../Common/Enums/TextAlignment";
+import { GraphicalSlur } from "../GraphicalSlur";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
+  /** space needed for a dash for lyrics spacing, calculated once */
+  private dashSpace: number;
 
   constructor() {
     super();
@@ -58,7 +68,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-  protected formatMeasures(): void {
+    protected formatMeasures(): void {
       for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
         const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
         // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
@@ -108,7 +118,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         }
         if (voices.length === 0) {
-            log.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+            log.info("Found a measure with no voices. Continuing anyway.", mvoices);
             continue;
         }
         // all voices that belong to one stave are collectively added to create a common context in VexFlow.
@@ -129,18 +139,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
             // prepare format function for voices, will be called later for formatting measure again
             vexflowMeasure.formatVoices = (w: number) => {
-              formatter.format(allVoices, w);
+                    formatter.format(allVoices, w);
               // formatter.format(allVoices, w, {
               //   align_rests: false, // TODO
               //   // align_rests = true causes a Vexflow Exception for Mozart - An Chloe
               //   // align_rests = false still aligns rests with beams according to Vexflow, but doesn't seem to do anything
               // });
-            };
+                };
             // format now for minimum width, calculateMeasureWidthFromLyrics later
             vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
           } else {
             (measure as VexFlowMeasure).formatVoices = undefined;
-          }
+            }
         }
     }
 
@@ -148,20 +158,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       for (const staffEntry of graphicalMeasure.staffEntries) {
         // here the measure modifiers are not yet set, therefore the begin instruction width will be empty
         (<VexFlowStaffEntry>staffEntry).calculateXPosition();
-      }
+  }
     }
     // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this
     return minStaffEntriesWidth;
   }
 
   public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
-    let elongationFactorMeasureWidth: number = 1;
+    let elongationFactorForMeasureWidth: number = 1;
 
     // information we need for the previous lyricsEntries to space the current one
     interface LyricEntryInfo {
       extend: boolean;
-      labelHalfWidth: number;
-      staffEntryXPosition: number;
+      labelWidth: number;
+      lyricsXPosition: number;
+      sourceNoteDuration: Fraction;
       text: string;
       measureNumber: number;
     }
@@ -171,65 +182,129 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     for (const measure of measuresVertical) {
-      const lastLyricEntryDict: LyricEntryDict = {}; // holds info about last lyrics entries for all verses
+      const lastLyricEntryDict: LyricEntryDict = {}; // holds info about last lyrics entries for all verses j
 
+      // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
       for (let i: number = 0; i < measure.staffEntries.length; i++) {
         const staffEntry: GraphicalStaffEntry = measure.staffEntries[i];
         if (staffEntry.LyricsEntries.length === 0) {
           continue;
         }
-        // for all verses
+        // for all verses j
         for (let j: number = 0; j < staffEntry.LyricsEntries.length; j++) {
           const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[j];
-          // const lyricsEntryText = lyricsEntry.GetLyricsEntry.Text; // for easier debugging
+          // const lyricsEntryText = lyricsEntry.LyricsEntry.Text; // for easier debugging
+          const lyricAlignment: TextAlignmentEnum = lyricsEntry.GraphicalLabel.Label.textAlignment;
           let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
+          // for quarter note in Vexflow, where spacing is halfed for each smaller note duration.
+
+          let lyricOverlapAllowedIntoNextMeasure: number =
+            EngravingRules.Rules.LyricOverlapAllowedIntoNextMeasure;
+          // TODO allow more overlap if there are no lyrics in next measure
 
           // spacing for multi-syllable words
           if (lyricsEntry.ParentLyricWord) {
-            if (lyricsEntry.GetLyricsEntry.SyllableIndex > 0) { // syllables after first
+            if (lyricsEntry.LyricsEntry.SyllableIndex > 0) { // syllables after first
               // give a little more spacing for dash between syllables
-              minLyricsSpacing = EngravingRules.Rules.BetweenSyllabelMinimumDistance;
+              minLyricsSpacing = EngravingRules.Rules.BetweenSyllableMinimumDistance;
+              if (TextAlignment.IsCenterAligned(lyricsEntry.GraphicalLabel.Label.textAlignment)) {
+                minLyricsSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
+                // without this, there's not enough space for dashes between long syllables on eigth notes
+              }
+            }
+            const syllables: LyricsEntry[] = lyricsEntry.ParentLyricWord.GetLyricWord.Syllables;
+            if (syllables.length > 1) {
+              if (lyricsEntry.LyricsEntry.SyllableIndex < syllables.length - 1) {
+                // if a middle syllable of a word, give less measure overlap into next measure, to give room for dash
+                if (this.dashSpace === undefined) {
+                  this.dashSpace = 1.5;
+                  // better method, doesn't work:
+                  // this.dashLength = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom)
+                  //   .PositionAndShape.Size.width; // always returns 0
+                }
+                lyricOverlapAllowedIntoNextMeasure -= this.dashSpace;
+              }
             }
           }
 
           const lyricsBbox: BoundingBox = lyricsEntry.GraphicalLabel.PositionAndShape;
-          const lyricsLabelHalfWidth: number = lyricsBbox.Size.width / 2;
+          const lyricsLabelWidth: number = lyricsBbox.Size.width;
           const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
+          const lyricsXPosition: number = staffEntryXPosition + lyricsBbox.BorderMarginLeft;
 
-          // if we don't have a previous lyricEntry, skip spacing, just save lastLyricEntry information
           if (lastLyricEntryDict[j] !== undefined) {
             if (lastLyricEntryDict[j].extend) {
               // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
+              // only necessary for center alignment
             }
-
-            const spaceNeededByLyrics: number =
-              lastLyricEntryDict[j].labelHalfWidth + lyricsLabelHalfWidth + minLyricsSpacing;
-
-            const staffEntrySpacing: number = staffEntryXPosition - lastLyricEntryDict[j].staffEntryXPosition;
-            // get factor of how much we need to stretch the measure to space the current lyric with the last one
-            const elongationFactorMeasureWidthForCurrentLabels: number = spaceNeededByLyrics / staffEntrySpacing;
-            elongationFactorMeasureWidth = Math.max(elongationFactorMeasureWidth, elongationFactorMeasureWidthForCurrentLabels);
           }
-          // TODO for spacing between last lyric of a measure and first lyric of the next measure,
-          // we need to look ahead into the next measure, because first note position is not affected
-          // by measure elongation. or return this elongation and let MusicSheetCalculator apply it to prev. measure
-          // e.g. for Austrian national hymn:
-          // if (lyricsEntry.GetLyricsEntry.Text === "kunfts") {
-          //   elongationFactorMeasureWidth *= 1.5;
-          // }
 
-          // set up last lyric entry information for next measure
+          let spacingNeededToLastLyric: number;
+          let currentSpacingToLastLyric: number; // undefined for first lyric in measure
+          if (lastLyricEntryDict[j]) {
+            currentSpacingToLastLyric = lyricsXPosition - lastLyricEntryDict[j].lyricsXPosition;
+          }
+
+          let currentSpacingToMeasureEnd: number;
+          let spacingNeededToMeasureEnd: number;
+          const maxXInMeasure: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
+
+          // when the lyrics are centered, we need to consider spacing differently than when they are left-aligned:
+          if (TextAlignment.IsCenterAligned(lyricAlignment)) {
+            lyricOverlapAllowedIntoNextMeasure /= 4; // reserve space for overlap from next measure. its first note can't be spaced.
+            currentSpacingToMeasureEnd = maxXInMeasure - lyricsXPosition;
+            spacingNeededToMeasureEnd = (lyricsLabelWidth / 2) - lyricOverlapAllowedIntoNextMeasure;
+            // spacing to last lyric only done if not first lyric in measure:
+            if (lastLyricEntryDict[j]) {
+              spacingNeededToLastLyric =
+                lastLyricEntryDict[j].labelWidth / 2 + lyricsLabelWidth / 2 + minLyricsSpacing;
+            }
+          } else if (TextAlignment.IsLeft(lyricAlignment)) {
+            currentSpacingToMeasureEnd = maxXInMeasure - lyricsXPosition;
+            spacingNeededToMeasureEnd = lyricsLabelWidth - lyricOverlapAllowedIntoNextMeasure;
+            if (lastLyricEntryDict[j]) {
+              spacingNeededToLastLyric = lastLyricEntryDict[j].labelWidth + minLyricsSpacing;
+            }
+          }
+
+          // get factor of how much we need to stretch the measure to space the current lyric
+          let elongationFactorForMeasureWidthForCurrentLyric: number = 1;
+          const elongationFactorNeededForMeasureEnd: number =
+            spacingNeededToMeasureEnd / currentSpacingToMeasureEnd;
+          let elongationFactorNeededForLastLyric: number = 1;
+          if (lastLyricEntryDict[j]) { // if previous lyric needs more spacing than measure end, take that spacing
+            const lastNoteDuration: Fraction = lastLyricEntryDict[j].sourceNoteDuration;
+            elongationFactorNeededForLastLyric = spacingNeededToLastLyric / currentSpacingToLastLyric;
+            if (lastNoteDuration.Denominator > 4) {
+              elongationFactorNeededForLastLyric *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
+              // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
+              // if we double the measure length, the distance between eigth notes only gets half of the added length
+              // compared to a quarter note.
+            }
+          }
+          elongationFactorForMeasureWidthForCurrentLyric = Math.max(
+            elongationFactorNeededForMeasureEnd,
+            elongationFactorNeededForLastLyric
+          );
+
+          elongationFactorForMeasureWidth = Math.max(
+            elongationFactorForMeasureWidth,
+            elongationFactorForMeasureWidthForCurrentLyric
+          );
+
+          // set up information about this lyric entry of verse j for next lyric entry of verse j
           lastLyricEntryDict[j] = {
-            extend: lyricsEntry.GetLyricsEntry.extend,
-            labelHalfWidth: lyricsLabelHalfWidth,
+            extend: lyricsEntry.LyricsEntry.extend,
+            labelWidth: lyricsLabelWidth,
+            lyricsXPosition: lyricsXPosition,
             measureNumber: measure.MeasureNumber,
-            staffEntryXPosition: staffEntryXPosition,
-            text: lyricsEntry.GetLyricsEntry.Text,
+            sourceNoteDuration: lyricsEntry.LyricsEntry.Parent.Notes[0].Length,
+            text: lyricsEntry.LyricsEntry.Text,
           };
         }
       }
     }
-    return oldMinimumStaffEntriesWidth * elongationFactorMeasureWidth;
+    return oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
@@ -277,12 +352,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
             for (const musicSystem of graphicalMusicPage.MusicSystems) {
                 this.optimizeDistanceBetweenStaffLines(musicSystem);
-            }
+          }
 
-            // set y positions of systems using the previous system and a fixed distance.
+          // set y positions of systems using the previous system and a fixed distance.
             this.calculateMusicSystemsRelativePositions(graphicalMusicPage);
-    }
-  }
+        }
+      }
 
   /**
    * Is called at the begin of the method for creating the vertically aligned staff measures belonging to one source measure.
@@ -475,13 +550,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 }
 
-  /**
-   * Calculate a single OctaveShift for a [[MultiExpression]].
-   * @param sourceMeasure
-   * @param multiExpression
-   * @param measureIndex
-   * @param staffIndex
-   */
+    /**
+     * Calculate a single OctaveShift for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
   protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     // calculate absolute Timestamp and startStaffLine (and EndStaffLine if needed)
     const octaveShift: OctaveShift = multiExpression.OctaveShiftStart;
@@ -495,7 +570,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (octaveShift.ParentEndMultiExpression !== undefined) {
         endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
                                                                                            staffIndex);
-    }
+  }
     let startMeasure: GraphicalMeasure = undefined;
     if (octaveShift.ParentEndMultiExpression !== undefined) {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
@@ -589,47 +664,47 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     (graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).handleBeam(graphicalNote, beam);
   }
 
-    protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
-        voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
-            const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
-                                                                                     graphicalStaffEntry,
-                                                                                     this.rules.LyricsHeight,
-                                                                                     this.rules.StaffHeight);
+  protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
+      voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
+          const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
+                                                                                   graphicalStaffEntry,
+                                                                                   this.rules.LyricsHeight,
+                                                                                   this.rules.StaffHeight);
 
-            graphicalStaffEntry.LyricsEntries.push(graphicalLyricEntry);
+          graphicalStaffEntry.LyricsEntries.push(graphicalLyricEntry);
 
-            // create corresponding GraphicalLabel
-            const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
-            graphicalLabel.setLabelPositionAndShapeBorders();
+          // create corresponding GraphicalLabel
+          const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
+          graphicalLabel.setLabelPositionAndShapeBorders();
 
-            if (lyricsEntry.Word !== undefined) {
-                const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);
-                let index: number = lyricWords.indexOf(lyricsEntry.Word);
-                if (index === -1) {
-                    lyricWords.push(lyricsEntry.Word);
-                    index = lyricWords.indexOf(lyricsEntry.Word);
+          if (lyricsEntry.Word !== undefined) {
+              const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);
+              let index: number = lyricWords.indexOf(lyricsEntry.Word);
+              if (index === -1) {
+                  lyricWords.push(lyricsEntry.Word);
+                  index = lyricWords.indexOf(lyricsEntry.Word);
+              }
+
+              if (this.graphicalLyricWords.length === 0 || index > this.graphicalLyricWords.length - 1) {
+                  const graphicalLyricWord: GraphicalLyricWord = new GraphicalLyricWord(lyricsEntry.Word);
+
+                  graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
+                  graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
+                  this.graphicalLyricWords.push(graphicalLyricWord);
+              } else {
+                  const graphicalLyricWord: GraphicalLyricWord = this.graphicalLyricWords[index];
+
+                  graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
+                  graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
+
+                  if (graphicalLyricWord.isFilled()) {
+                      lyricWords.splice(index, 1);
+                      this.graphicalLyricWords.splice(this.graphicalLyricWords.indexOf(graphicalLyricWord), 1);
+                  }
+              }
+          }
+      });
   }
-
-                if (this.graphicalLyricWords.length === 0 || index > this.graphicalLyricWords.length - 1) {
-                    const graphicalLyricWord: GraphicalLyricWord = new GraphicalLyricWord(lyricsEntry.Word);
-
-                    graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
-                    graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
-                    this.graphicalLyricWords.push(graphicalLyricWord);
-                } else {
-                    const graphicalLyricWord: GraphicalLyricWord = this.graphicalLyricWords[index];
-
-                    graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
-                    graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
-
-                    if (graphicalLyricWord.isFilled()) {
-                        lyricWords.splice(index, 1);
-                        this.graphicalLyricWords.splice(this.graphicalLyricWords.indexOf(graphicalLyricWord), 1);
-                    }
-                }
-            }
-        });
-    }
 
   protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
     return;
@@ -670,5 +745,219 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
     (graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure).handleTuplet(graphicalNote, tuplet);
+  }
+
+  /**
+   * Find the Index of the item of the array of all VexFlow Slurs that holds a specified slur
+   * @param gSlurs
+   * @param slur
+   */
+  public findIndexGraphicalSlurFromSlur(gSlurs: GraphicalSlur[], slur: Slur): number {
+    for (let slurIndex: number = 0; slurIndex < gSlurs.length; slurIndex++) {
+        if (gSlurs[slurIndex].slur === slur) {
+            return slurIndex;
+        }
+    }
+    return -1;
+  }
+  /* VexFlow Version - for later use
+  public findIndexVFSlurFromSlur(vfSlurs: VexFlowSlur[], slur: Slur): number {
+        for (let slurIndex: number = 0; slurIndex < vfSlurs.length; slurIndex++) {
+            if (vfSlurs[slurIndex].vfSlur === slur) {
+                return slurIndex;
+            }
+        }
+  }
+  */
+
+  // Generate all Graphical Slurs and attach them to the staffline
+  protected calculateSlurs(): void {
+    const openSlursDict: { [staffId: number]: GraphicalSlur[]; } = {};
+    for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
+      openSlursDict[graphicalMeasure.ParentStaff.idInMusicSheet] = [];
+    }
+
+    /* VexFlow Version - for later use
+    // Generate an empty dictonary to index an array of VexFlowSlur classes
+    const vfOpenSlursDict: { [staffId: number]: VexFlowSlur[]; } = {}; //VexFlowSlur[]; } = {};
+    // use first SourceMeasure to get all graphical measures to know how many staves are currently visible in this musicsheet
+    // foreach stave: create an empty array. It can later hold open slurs.
+    // Measure how many staves are visible and reserve space for them.
+    for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
+        vfOpenSlursDict[graphicalMeasure.ParentStaff.idInMusicSheet] = [];
+    }
+    */
+
+    for (const gmPage of this.graphicalMusicSheet.MusicPages) {
+        for (const musicSystem  of gmPage.MusicSystems) {
+            for (const staffLine of musicSystem.StaffLines) {
+                // if a graphical slur reaches out of the last musicsystem, we have to create another graphical slur reaching into this musicsystem
+                // (one slur needs 2 graphical slurs)
+                const openGraphicalSlurs: GraphicalSlur[] = openSlursDict[staffLine.ParentStaff.idInMusicSheet];
+                for (let slurIndex: number = 0; slurIndex < openGraphicalSlurs.length; slurIndex++) {
+                  const oldGSlur: GraphicalSlur = openGraphicalSlurs[slurIndex];
+                  const newGSlur: GraphicalSlur = new GraphicalSlur(oldGSlur.slur); //Graphicalslur.createFromSlur(oldSlur);
+                  staffLine.addSlurToStaffline(newGSlur); // every VFSlur is added to the array in the VFStaffline!
+                  openGraphicalSlurs[slurIndex] = newGSlur;
+                }
+
+                /* VexFlow Version - for later use
+                const vfOpenSlurs: VexFlowSlur[] = vfOpenSlursDict[staffLine.ParentStaff.idInMusicSheet];
+                const vfStaffLine: VexFlowStaffLine = <VexFlowStaffLine> staffLine;
+                for (let slurIndex: number = 0; slurIndex < vfOpenSlurs.length; slurIndex++) {
+                    const oldVFSlur: VexFlowSlur = vfOpenSlurs[slurIndex];
+                    const newVFSlur: VexFlowSlur = VexFlowSlur.createFromVexflowSlur(oldVFSlur);
+                    newVFSlur.vfStartNote = undefined;
+                    vfStaffLine.addVFSlurToVFStaffline(newVFSlur); // every VFSlur is added to the array in the VFStaffline!
+                    vfOpenSlurs[slurIndex] = newVFSlur;
+                }
+                */
+
+                // add reference of slur array to the VexFlowStaffline class
+                for (const graphicalMeasure of staffLine.Measures) {
+                    for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
+                        // for (var idx5: number = 0, len5 = graphicalStaffEntry.GraceStaffEntriesBefore.Count; idx5 < len5; ++idx5) {
+                        //     var graceStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.GraceStaffEntriesBefore[idx5];
+                        //     if (graceStaffEntry.Notes[0][0].SourceNote.NoteSlurs.Count > 0) {
+                        //         var graceNote: Note = graceStaffEntry.Notes[0][0].SourceNote;
+                        //         graceStaffEntry.RelInMeasureTimestamp = Fraction.createFromFraction(graphicalStaffEntry.RelInMeasureTimestamp);
+                        //         for (var idx6: number = 0, len6 = graceNote.NoteSlurs.Count; idx6 < len6; ++idx6) {
+                        //             var graceNoteSlur: Slur = graceNote.NoteSlurs[idx6];
+                        //             if (graceNoteSlur.StartNote == graceNote) {
+                        //                 var vfSlur: VexFlowSlur = new VexFlowSlur(graceNoteSlur);
+                        //                 vfSlur.GraceStart = true;
+                        //                 staffLine.GraphicalSlurs.Add(vfSlur);
+                        //                 openGraphicalSlurs[i].Add(vfSlur);
+                        //                 for (var j: number = graphicalStaffEntry.GraceStaffEntriesBefore.IndexOf(graceStaffEntry);
+                        //                     j < graphicalStaffEntry.GraceStaffEntriesBefore.Count; j++)
+                        //                        vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesBefore[j]);
+                        //             }
+                        //             if (graceNote == graceNoteSlur.EndNote) {
+                        //                 var vfSlur: VexFlowSlur = findGraphicalSlurFromSlur(openGraphicalSlurs[i], graceNoteSlur);
+                        //                 if (vfSlur != null) {
+                        //                     vfSlur.GraceEnd = true;
+                        //                     openGraphicalSlurs[i].Remove(vfSlur);
+                        //                     for (var j: number = 0; j <= graphicalStaffEntry.GraceStaffEntriesBefore.IndexOf(graceStaffEntry); j++)
+                        //                         vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesBefore[j]);
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+                        // }
+                        // loop over "normal" notes (= no gracenotes)
+                        for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
+                            for (const graphicalNote of graphicalVoiceEntry.notes) {
+                                for (const slur of graphicalNote.sourceNote.NoteSlurs) {
+                                    // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
+                                    if (slur.EndNote === undefined || slur.StartNote === undefined) {
+                                      continue;
+                                    }
+                                    // add new VexFlowSlur to List
+                                    if (slur.StartNote === graphicalNote.sourceNote) {
+                                        if (graphicalNote.sourceNote.NoteTie !== undefined) {
+                                            if (graphicalNote.parentVoiceEntry.parentStaffEntry.getAbsoluteTimestamp() !==
+                                            graphicalNote.sourceNote.NoteTie.StartNote.getAbsoluteTimestamp()) {
+                                                break;
+                                            }
+                                        }
+
+                                        // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
+                                        const gSlur: GraphicalSlur = new GraphicalSlur(slur);
+                                        openGraphicalSlurs.push(gSlur);
+                                        staffLine.addSlurToStaffline(gSlur);
+
+                                        /* VexFlow Version - for later use
+                                        const vfSlur: VexFlowSlur = new VexFlowSlur(slur);
+                                        vfOpenSlurs.push(vfSlur); //add open... adding / removing is JUST DONE in the open... array
+                                        vfSlur.vfStartNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
+                                        vfStaffLine.addVFSlurToVFStaffline(vfSlur); // every VFSlur is added to the array in the VFStaffline!
+                                        */
+                                    }
+                                    if (slur.EndNote === graphicalNote.sourceNote) {
+                                        // Remove the Graphical Slur from the staffline if the note is the Endnote of a slur
+                                        const index: number = this.findIndexGraphicalSlurFromSlur(openGraphicalSlurs, slur);
+                                        if (index >= 0) {
+                                            // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
+                                            const gSlur: GraphicalSlur = openGraphicalSlurs[index];
+                                            if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                                              gSlur.staffEntries.push(graphicalStaffEntry);
+                                            }
+
+                                            openGraphicalSlurs.splice(index, 1);
+                                        }
+
+                                        /* VexFlow Version - for later use
+                                        const vfIndex: number = this.findIndexVFSlurFromSlur(vfOpenSlurs, slur);
+                                        if (vfIndex !== undefined) {
+                                            // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
+                                            const vfSlur: VexFlowSlur = vfOpenSlurs[vfIndex];
+                                            vfSlur.vfEndNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
+                                            vfSlur.createVexFlowCurve();
+                                            vfOpenSlurs.splice(vfIndex, 1);
+                                        }
+                                        */
+                                    }
+                                }
+                            }
+                        }
+                        // for (var idx5: number = 0, len5 = graphicalStaffEntry.GraceStaffEntriesAfter.Count; idx5 < len5; ++idx5) {
+                        //     var graceStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.GraceStaffEntriesAfter[idx5];
+                        //     if (graceStaffEntry.Notes[0][0].SourceNote.NoteSlurs.Count > 0) {
+                        //         var graceNote: Note = graceStaffEntry.Notes[0][0].SourceNote;
+                        //         graceStaffEntry.RelInMeasureTimestamp = Fraction.createFromFraction(graphicalStaffEntry.RelInMeasureTimestamp);
+                        //         for (var idx6: number = 0, len6 = graceNote.NoteSlurs.Count; idx6 < len6; ++idx6) {
+                        //             var graceNoteSlur: Slur = graceNote.NoteSlurs[idx6];
+                        //             if (graceNoteSlur.StartNote == graceNote) {
+                        //                 var vfSlur: VexFlowSlur = new VexFlowSlur(graceNoteSlur);
+                        //                 vfSlur.GraceStart = true;
+                        //                 staffLine.GraphicalSlurs.Add(vfSlur);
+                        //                 openGraphicalSlurs[i].Add(vfSlur);
+                        //                 for (var j: number = graphicalStaffEntry.GraceStaffEntriesAfter.IndexOf(graceStaffEntry);
+                        //                      j < graphicalStaffEntry.GraceStaffEntriesAfter.Count; j++)
+                        //                        vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesAfter[j]);
+                        //             }
+                        //             if (graceNote == graceNoteSlur.EndNote) {
+                        //                 var vfSlur: VexFlowSlur = findGraphicalSlurFromSlur(openGraphicalSlurs[i], graceNoteSlur);
+                        //                 if (vfSlur != null) {
+                        //                     vfSlur.GraceEnd = true;
+                        //                     openGraphicalSlurs[i].Remove(vfSlur);
+                        //                     vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry);
+                        //                     for (var j: number = 0; j <= graphicalStaffEntry.GraceStaffEntriesAfter.IndexOf(graceStaffEntry); j++)
+                        //                         vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesAfter[j]);
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+                        // }
+
+                        //add the present Staffentry to all open slurs that don't contain this Staffentry already
+                        for (const gSlur of openGraphicalSlurs) {
+                          if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                            gSlur.staffEntries.push(graphicalStaffEntry);
+                          }
+                        }
+                    } // loop over StaffEntries
+                } // loop over Measures
+            } // loop over StaffLines
+
+                // Attach vfSlur array to the vfStaffline to be drawn
+                //vfStaffLine.SlursInVFStaffLine = vfSlurs;
+        } // loop over MusicSystems
+    } // loop over MusicPages
+
+    // order slurs that were saved to the Staffline
+    for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
+        for (const musicSystem of graphicalMusicPage.MusicSystems) {
+            for (const staffLine of musicSystem.StaffLines) {
+                for (const gSlur of staffLine.GraphicalSlurs) {
+                    // crossed slurs will be handled later:
+                    if (gSlur.slur.isCrossed()) {
+                        continue;
+                    }
+                    gSlur.calculateCurve(this.rules);
+                }
+            }
+        }
+    }
   }
 }

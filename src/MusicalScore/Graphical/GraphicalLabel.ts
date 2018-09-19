@@ -1,5 +1,5 @@
 import {Label} from "../Label";
-import {TextAlignment} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {Clickable} from "./Clickable";
 import {BoundingBox} from "./BoundingBox";
 import {EngravingRules} from "./EngravingRules";
@@ -18,7 +18,7 @@ export class GraphicalLabel extends Clickable {
      * @param alignment Alignement like left, right, top, ...
      * @param parent Parent Bounding Box where the label is attached to
      */
-    constructor(label: Label, textHeight: number, alignment: TextAlignment, parent: BoundingBox = undefined) {
+    constructor(label: Label, textHeight: number, alignment: TextAlignmentEnum, parent: BoundingBox = undefined) {
         super();
         this.label = label;
         this.boundingBox = new BoundingBox(this, parent);
@@ -47,68 +47,68 @@ export class GraphicalLabel extends Clickable {
             MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.text, this.Label.font, this.Label.fontStyle);
         const height: number = this.Label.fontHeight;
         const width: number = height * widthToHeightRatio;
-        const psi: BoundingBox = this.PositionAndShape;
+        const bbox: BoundingBox = this.PositionAndShape;
 
         switch (this.Label.textAlignment) {
-            case TextAlignment.CenterBottom:
-                psi.BorderTop = -height;
-                psi.BorderLeft = -width / 2;
-                psi.BorderBottom = 0;
-                psi.BorderRight = width / 2;
+            case TextAlignmentEnum.CenterBottom:
+                bbox.BorderTop = -height;
+                bbox.BorderLeft = -width / 2;
+                bbox.BorderBottom = 0;
+                bbox.BorderRight = width / 2;
                 break;
-            case TextAlignment.CenterCenter:
-                psi.BorderTop = -height / 2;
-                psi.BorderLeft = -width / 2;
-                psi.BorderBottom = height / 2;
-                psi.BorderRight = width / 2;
+            case TextAlignmentEnum.CenterCenter:
+                bbox.BorderTop = -height / 2;
+                bbox.BorderLeft = -width / 2;
+                bbox.BorderBottom = height / 2;
+                bbox.BorderRight = width / 2;
                 break;
-            case TextAlignment.CenterTop:
-                psi.BorderTop = 0;
-                psi.BorderLeft = -width / 2;
-                psi.BorderBottom = height;
-                psi.BorderRight = width / 2;
+            case TextAlignmentEnum.CenterTop:
+                bbox.BorderTop = 0;
+                bbox.BorderLeft = -width / 2;
+                bbox.BorderBottom = height;
+                bbox.BorderRight = width / 2;
                 break;
-            case TextAlignment.LeftBottom:
-                psi.BorderTop = -height;
-                psi.BorderLeft = 0;
-                psi.BorderBottom = 0;
-                psi.BorderRight = width;
+            case TextAlignmentEnum.LeftBottom:
+                bbox.BorderTop = -height;
+                bbox.BorderLeft = 0;
+                bbox.BorderBottom = 0;
+                bbox.BorderRight = width;
                 break;
-            case TextAlignment.LeftCenter:
-                psi.BorderTop = -height / 2;
-                psi.BorderLeft = 0;
-                psi.BorderBottom = height / 2;
-                psi.BorderRight = width;
+            case TextAlignmentEnum.LeftCenter:
+                bbox.BorderTop = -height / 2;
+                bbox.BorderLeft = 0;
+                bbox.BorderBottom = height / 2;
+                bbox.BorderRight = width;
                 break;
-            case TextAlignment.LeftTop:
-                psi.BorderTop = 0;
-                psi.BorderLeft = 0;
-                psi.BorderBottom = height;
-                psi.BorderRight = width;
+            case TextAlignmentEnum.LeftTop:
+                bbox.BorderTop = 0;
+                bbox.BorderLeft = 0;
+                bbox.BorderBottom = height;
+                bbox.BorderRight = width;
                 break;
-            case TextAlignment.RightBottom:
-                psi.BorderTop = -height;
-                psi.BorderLeft = -width;
-                psi.BorderBottom = 0;
-                psi.BorderRight = 0;
+            case TextAlignmentEnum.RightBottom:
+                bbox.BorderTop = -height;
+                bbox.BorderLeft = -width;
+                bbox.BorderBottom = 0;
+                bbox.BorderRight = 0;
                 break;
-            case TextAlignment.RightCenter:
-                psi.BorderTop = -height / 2;
-                psi.BorderLeft = -width;
-                psi.BorderBottom = height / 2;
-                psi.BorderRight = 0;
+            case TextAlignmentEnum.RightCenter:
+                bbox.BorderTop = -height / 2;
+                bbox.BorderLeft = -width;
+                bbox.BorderBottom = height / 2;
+                bbox.BorderRight = 0;
                 break;
-            case TextAlignment.RightTop:
-                psi.BorderTop = 0;
-                psi.BorderLeft = -width;
-                psi.BorderBottom = height;
-                psi.BorderRight = 0;
+            case TextAlignmentEnum.RightTop:
+                bbox.BorderTop = 0;
+                bbox.BorderLeft = -width;
+                bbox.BorderBottom = height;
+                bbox.BorderRight = 0;
                 break;
             default:
         }
-        psi.BorderMarginTop = psi.BorderTop - height * labelMarginBorderFactor;
-        psi.BorderMarginLeft = psi.BorderLeft - height * labelMarginBorderFactor;
-        psi.BorderMarginBottom = psi.BorderBottom + height * labelMarginBorderFactor;
-        psi.BorderMarginRight = psi.BorderRight + height * labelMarginBorderFactor;
+        bbox.BorderMarginTop = bbox.BorderTop - height * labelMarginBorderFactor;
+        bbox.BorderMarginLeft = bbox.BorderLeft - height * labelMarginBorderFactor;
+        bbox.BorderMarginBottom = bbox.BorderBottom + height * labelMarginBorderFactor;
+        bbox.BorderMarginRight = bbox.BorderRight + height * labelMarginBorderFactor;
     }
 }

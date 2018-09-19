@@ -96,6 +96,7 @@ declare namespace Vex {
             public x_shift: number;
             public getAbsoluteX(): number;
             public addModifier(index: number, modifier: Modifier): StemmableNote;
+            public preFormatted: boolean;
         }
 
         export class GhostNote extends StemmableNote {
@@ -225,16 +226,16 @@ declare namespace Vex {
         }
 
         export class StaveModifier extends Modifier {
-            public static get Position() {
-                return {
-                    LEFT: 1,
-                    RIGHT: 2,
-                    ABOVE: 3,
-                    BELOW: 4,
-                    BEGIN: 5,
-                    END: 6,
-                };
-            }
+            // public static get Position() {
+            //     return {
+            //         LEFT: 1,
+            //         RIGHT: 2,
+            //         ABOVE: 3,
+            //         BELOW: 4,
+            //         BEGIN: 5,
+            //         END: 6,
+            //     };
+            // }
 
             public getPosition(): number;
 
@@ -321,6 +322,15 @@ declare namespace Vex {
             public draw(): void;
         }
 
+        // interface for class Curve to draw slurs. The options are set to undefined
+        export class Curve {
+            constructor(from: StemmableNote, to: StemmableNote, options: any);
+            
+            public setContext(ctx: RenderContext): Curve;
+
+            public draw(): void;
+        }
+
         export class RenderContext {
             public scale(x: number, y: number): RenderContext;
             public fillRect(x: number, y: number, width: number, height: number): RenderContext
@@ -329,8 +339,10 @@ declare namespace Vex {
             public beginPath(): RenderContext;
             public moveTo(x, y): RenderContext;
             public lineTo(x, y): RenderContext;
+            public bezierCurveTo(cp1_x: number, cp1_y: number, cp2_x: number, cp2_y: number, end_x: number, end_y: number): RenderContext;
             public closePath(): RenderContext;
             public stroke(): RenderContext;
+            public fill(): RenderContext;
             public save(): RenderContext;
             public restore(): RenderContext;
             public lineWidth: number;

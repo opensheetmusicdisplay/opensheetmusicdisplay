@@ -8,55 +8,56 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     // folder of the sample files
     var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     samples = {
-            "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
-            "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
-            "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
-            "Clementi, M. - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
-            "Clementi, M. - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
-            "Bach, J.S. - Praeludium in C-Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
-            "Bach, J.S. - Air": "JohannSebastianBach_Air.xml",
-            "Gounod, C. - Meditation": "CharlesGounod_Meditation.xml",
-            "Haydn, J. - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
-            "Joplin, S. - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
-            "Joplin, S. - The Entertainer": "ScottJoplin_The_Entertainer.xml",
-            "Mozart, W.A. - An Chloe": "Mozart_AnChloe.xml",
-            "Mozart, W.A. - Das Veilchen": "Mozart_DasVeilchen.xml",
-            "Mozart, W.A.- Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
-            "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
-            "OSMD Function Test - All": "OSMD_function_test_all.xml",
-            "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
-            "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
-            "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
-            "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
-            "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
-            "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
-            "Anonymous - Saltarello": "Saltarello.mxl",
-            "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
-            "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
-            "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
-            "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
-            "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
-        },
+        "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
+        "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
+        "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
+        "Clementi, M. - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
+        "Clementi, M. - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
+        "Bach, J.S. - Praeludium in C-Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+        "Bach, J.S. - Air": "JohannSebastianBach_Air.xml",
+        "Gounod, C. - Méditation": "CharlesGounod_Meditation.xml",
+        "Haydn, J. - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
+        "Joplin, S. - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
+        "Joplin, S. - The Entertainer": "ScottJoplin_The_Entertainer.xml",
+        "Mozart, W.A. - An Chloe": "Mozart_AnChloe.xml",
+        "Mozart, W.A. - Das Veilchen": "Mozart_DasVeilchen.xml",
+        "Mozart, W.A.- Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+        "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
+        "OSMD Function Test - All": "OSMD_function_test_all.xml",
+        "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
+        "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+        "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
+        "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
+        "OSMD Function Test - NoteHeadShapes": "OSMD_function_test_noteHeadShapes.musicxml",
+        "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
+        "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
+        "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
+        "Anonymous - Saltarello": "Saltarello.mxl",
+        "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
+        "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
+        "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
+        "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
+        "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
+    },
 
-        zoom = 1.0,
+    zoom = 1.0,
     // HTML Elements in the page
-        err,
-        error_tr,
-        canvas,
-        selectSample,
-        selectBounding,
-        skylineDebug,
-        bottomlineDebug,
-        zoomIn,
-        zoomOut,
-        zoomDiv,
-        custom,
-        nextCursorBtn,
-        resetCursorBtn,
-        showCursorBtn,
-        hideCursorBtn,
-        backendSelect,
-        debugRerenderBtn;
+    err,
+    error_tr,
+    canvas,
+    selectSample,
+    selectBounding,
+    skylineDebug,
+    bottomlineDebug,
+    zoomIn,
+    zoomOut,
+    zoomDiv,
+    custom,
+    nextCursorBtn,
+    resetCursorBtn,
+    showCursorBtn,
+    hideCursorBtn,
+    backendSelect;
 
     // Initialization code
     function init() {
@@ -123,7 +124,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         }
 
         // Create OSMD object and canvas
-        openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, backendSelect.value);
+        openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
+            autoResize: true,
+            backend: backendSelect.value,
+            drawingParameters: "default",
+            disableCursor: false,
+        });
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);
 
@@ -146,7 +152,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 try {
                     openSheetMusicDisplay.render();
                 } catch (e) {
-                    console.warn(e.stack);
+                    errorLoadingOrRenderingSheet(e, "rendering");
                 }
                 enable();
             }
@@ -168,7 +174,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.cursor.hide();
         });
         showCursorBtn.addEventListener("click", function() {
-            openSheetMusicDisplay.cursor.show();
+            if (openSheetMusicDisplay.cursor) {
+                openSheetMusicDisplay.cursor.show();
+            } else {
+                console.info("Can't show cursor, as it was disabled (e.g. by drawingParameters).");
+            }
         });
 
         backendSelect.addEventListener("change", function(e) {
@@ -183,7 +193,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function Resize(startCallback, endCallback) {
-
       var rtime;
       var timeout = false;
       var delta = 200;
@@ -230,18 +239,26 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 return openSheetMusicDisplay.render();
             },
             function(e) {
-                console.warn(e.stack);
-                error("Error reading sheet: " + e);
+                errorLoadingOrRenderingSheet(e, "rendering");
             }
         ).then(
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
-                console.warn(e.stack);
-                error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
+                errorLoadingOrRenderingSheet(e, "loading");
                 onLoadingEnd(isCustom);
             }
         );
+    }
+
+    function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
+        var errorString = "Error " + loadingOrRenderingString + " sheet: " + e;
+        // if (process.env.DEBUG) { // people may not set a debug environment variable for the demo.
+        // Always giving a StackTrace might give us more and better error reports.
+        // TODO for a release, StackTrace control could be reenabled
+        errorString += "\n" + "StackTrace: \n" + e.stack;
+        // }
+        console.warn(errorString);
     }
 
     function onLoadingEnd(isCustom) {

@@ -132,7 +132,7 @@ export class Pitch {
     }
 
     public static fromHalftone(halftone: number): Pitch {
-        const octave: number = <number>Math.floor(<number>halftone / 12) - Pitch.octXmlDiff;
+        const octave: number = Math.floor(halftone / 12) - Pitch.octXmlDiff;
         const halftoneInOctave: number = halftone % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftoneInOctave;
         let accidental: AccidentalEnum = AccidentalEnum.NONE;
@@ -140,11 +140,11 @@ export class Pitch {
             fundamentalNote = <NoteEnum>(halftoneInOctave - 1);
             accidental = AccidentalEnum.SHARP;
         }
-        return new Pitch(fundamentalNote, <number>octave, accidental);
+        return new Pitch(fundamentalNote, octave, accidental);
     }
 
     public static ceiling(halftone: number): NoteEnum {
-        halftone = <number>(halftone) % 12;
+        halftone = (halftone) % 12;
         let fundamentalNote: NoteEnum = <NoteEnum>halftone;
         if (this.pitchEnumValues.indexOf(fundamentalNote) === -1) {
             fundamentalNote = <NoteEnum>(halftone + 1);

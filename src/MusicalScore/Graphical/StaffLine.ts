@@ -11,6 +11,7 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
+import { GraphicalSlur } from "./GraphicalSlur";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -26,6 +27,9 @@ export abstract class StaffLine extends GraphicalObject {
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
     protected abstractExpressions: GraphicalObject[] = [];
+
+    // For displaying Slurs
+    protected graphicalSlurs: GraphicalSlur[] = [];
 
     constructor(parentSystem: MusicSystem, parentStaff: Staff) {
         super();
@@ -114,6 +118,19 @@ export abstract class StaffLine extends GraphicalObject {
 
     public set OctaveShifts(value: GraphicalOctaveShift[]) {
         this.octaveShifts = value;
+    }
+
+    // get all Graphical Slurs of a staffline
+    public get GraphicalSlurs(): GraphicalSlur[] {
+        return this.graphicalSlurs;
+    }
+
+    /**
+     * Add a given Graphical Slur to the staffline
+     * @param gSlur
+     */
+    public addSlurToStaffline(gSlur: GraphicalSlur): void {
+        this.graphicalSlurs.push(gSlur);
     }
 
     public addActivitySymbolClickArea(): void {

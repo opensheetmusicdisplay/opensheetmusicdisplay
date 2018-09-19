@@ -20,8 +20,8 @@ import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
 import { RepetitionInstructionEnum, RepetitionInstruction, AlignmentType } from "../../VoiceData/Instructions/RepetitionInstruction";
-import { SystemLinePosition } from "../SystemLinePosition";
-import { StemDirectionType } from "../../VoiceData/VoiceEntry";
+import {SystemLinePosition} from "../SystemLinePosition";
+import {StemDirectionType} from "../../VoiceData/VoiceEntry";
 import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
@@ -209,7 +209,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      */
     public addMeasureNumber(): void {
         const text: string = this.MeasureNumber.toString();
-        const position: number = Vex.Flow.StaveModifier.Position.ABOVE;
+        const position: number = StavePositionEnum.ABOVE;  //Vex.Flow.StaveModifier.Position.ABOVE;
         const options: any = {
             justification: 1,
             shift_x: 0,
@@ -381,7 +381,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
            for (const gve of gse.graphicalVoiceEntries) {
                 if (voices.indexOf(gve.parentVoiceEntry.ParentVoice) === -1) {
                     voices.push(gve.parentVoiceEntry.ParentVoice);
-    }
+                }
             }
         }
         return voices;
@@ -644,14 +644,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
         for (const voice of voices) {
+            if (voice === undefined) {
+                continue;
+            }
             const isMainVoice: boolean = !(voice instanceof LinkedVoice);
 
             // add a vexFlow voice for this voice:
             this.vfVoices[voice.VoiceId] = new Vex.Flow.Voice({
-                            beat_value: this.parentSourceMeasure.Duration.Denominator,
-                            num_beats: this.parentSourceMeasure.Duration.Numerator,
-                            resolution: Vex.Flow.RESOLUTION,
-                        }).setMode(Vex.Flow.Voice.Mode.SOFT);
+                        beat_value: this.parentSourceMeasure.Duration.Denominator,
+                        num_beats: this.parentSourceMeasure.Duration.Numerator,
+                        resolution: Vex.Flow.RESOLUTION,
+                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
 
             const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
             // create vex flow voices and add tickables to it:
@@ -747,9 +750,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         let vfEndInstructionsWidth: number = 0;
         const modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
         for (const mod of modifiers) {
-            if (mod.getPosition() === Vex.Flow.StaveModifier.Position.BEGIN) {
+            if (mod.getPosition() === StavePositionEnum.BEGIN) {  //Vex.Flow.StaveModifier.Position.BEGIN) {
                 vfBeginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
-            } else if (mod.getPosition() === Vex.Flow.StaveModifier.Position.END) {
+            } else if (mod.getPosition() === StavePositionEnum.END) { //Vex.Flow.StaveModifier.Position.END) {
                 vfEndInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
             }
         }
@@ -757,4 +760,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.beginInstructionsWidth = vfBeginInstructionsWidth / unitInPixels;
         this.endInstructionsWidth = vfEndInstructionsWidth / unitInPixels;
     }
+}
+
+// Gives the position of the Stave - replaces the function get Position() in the description of class StaveModifier in vexflow.d.ts
+// The latter gave an error because function cannot be defined in the class descriptions in vexflow.d.ts
+export enum StavePositionEnum {
+    LEFT = 1,
+    RIGHT = 2,
+    ABOVE = 3,
+    BELOW = 4,
+    BEGIN = 5,
+    END = 6
 }

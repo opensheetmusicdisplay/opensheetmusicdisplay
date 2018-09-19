@@ -3,8 +3,9 @@ import {GraphicalLyricWord} from "./GraphicalLyricWord";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {Label} from "../Label";
-import {TextAlignment} from "../../Common/Enums/TextAlignment";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
+import { EngravingRules } from "./EngravingRules";
+import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 
 /**
  * The graphical counterpart of a [[LyricsEntry]]
@@ -18,17 +19,27 @@ export class GraphicalLyricEntry {
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
         this.graphicalStaffEntry = graphicalStaffEntry;
+        const lyricsTextAlignment: TextAlignmentEnum = EngravingRules.Rules.LyricsAlignmentStandard;
+        // for small notes with long text, use center alignment
+        // TODO use this, fix center+left alignment combination spacing
+        if (lyricsEntry.Text.length >= 4
+            && lyricsEntry.Parent.Notes[0].Length.Denominator > 4
+            && lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
+            // lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
+        }
         this.graphicalLabel = new GraphicalLabel(
             new Label(lyricsEntry.Text),
             lyricsHeight,
-            TextAlignment.CenterBottom,
+            lyricsTextAlignment,
             graphicalStaffEntry.PositionAndShape
         );
-        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, staffHeight);
+        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0, staffHeight);
+        if (lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
+            this.graphicalLabel.PositionAndShape.RelativePosition.x -= 1; // make lyrics optically left-aligned
+        }
     }
 
-    // FIXME: This should actually be called LyricsEntry or be a function
-    public get GetLyricsEntry(): LyricsEntry {
+    public get LyricsEntry(): LyricsEntry {
         return this.lyricsEntry;
     }
     public get ParentLyricWord(): GraphicalLyricWord {
