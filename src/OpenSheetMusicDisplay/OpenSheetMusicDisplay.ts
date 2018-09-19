@@ -15,6 +15,7 @@ import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
 import {IOSMDOptions, OSMDOptions} from "./OSMDOptions";
+import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -326,7 +327,8 @@ export class OpenSheetMusicDisplay {
     private setDrawingParameters(options: IOSMDOptions): void {
         this.drawingParameters = new DrawingParameters();
         if (options.drawingParameters) {
-            this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum[options.drawingParameters];
+            this.drawingParameters.DrawingParametersEnum =
+                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
         }
         // individual drawing parameters options
         if (options.disableCursor) {
@@ -336,10 +338,13 @@ export class OpenSheetMusicDisplay {
             this.drawingParameters.drawHiddenNotes = true;
         }
         if (options.drawTitle !== undefined) {
-            this.drawingParameters.drawTitle = options.drawTitle;
+            this.drawingParameters.DrawTitle = options.drawTitle;
         }
-        if (options.drawPartName !== undefined) {
-            this.drawingParameters.drawPartName = options.drawPartName;
+        if (options.drawPartNames !== undefined) {
+            this.drawingParameters.DrawPartNames = options.drawPartNames;
+        }
+        if (options.drawLyricist !== undefined) {
+            this.drawingParameters.DrawLyricist = options.drawLyricist;
         }
         if (options.drawCredits !== undefined) {
             this.drawingParameters.drawCredits = options.drawCredits;

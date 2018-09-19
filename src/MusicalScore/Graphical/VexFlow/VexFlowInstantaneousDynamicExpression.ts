@@ -14,9 +14,13 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
     constructor(instantaneousDynamicExpression: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
         super(instantaneousDynamicExpression, staffLine, measure);
 
-        this.mLabel = new GraphicalLabel(new Label(this.Expression),
+        let labelAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterTop;
+        if (EngravingRules.Rules.CompactMode) {
+            labelAlignment = TextAlignmentEnum.LeftBottom;
+        }
+        this.mLabel = new GraphicalLabel(new Label(this.Expression, labelAlignment),
                                          EngravingRules.Rules.ContinuousDynamicTextHeight,
-                                         TextAlignmentEnum.CenterTop,
+                                         labelAlignment,
                                          this.PositionAndShape);
 
         this.mLabel.Label.fontStyle = FontStyles.BoldItalic;

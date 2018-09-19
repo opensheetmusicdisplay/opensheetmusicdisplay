@@ -13,9 +13,11 @@ export class EngravingRules {
     private sheetMinimumDistanceBetweenTitleAndSubtitle: number;
     private sheetComposerHeight: number;
     private sheetAuthorHeight: number;
+    private compactMode: boolean;
     private pagePlacementEnum: PagePlacementEnum;
     private pageHeight: number;
     private pageTopMargin: number;
+    private pageTopMarginNarrow: number;
     private pageBottomMargin: number;
     private pageLeftMargin: number;
     private pageRightMargin: number;
@@ -146,6 +148,11 @@ export class EngravingRules {
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
+    private renderComposer: boolean;
+    private renderTitle: boolean;
+    private renderSubtitle: boolean;
+    private renderLyricist: boolean;
+    private renderInstrumentNames: boolean;
 
     constructor() {
         // global variables
@@ -159,9 +166,11 @@ export class EngravingRules {
         this.sheetAuthorHeight = 2.0;
 
         // Staff sizing Variables
+        this.compactMode = false;
         this.pagePlacementEnum = PagePlacementEnum.Down;
         this.pageHeight = 100001.0;
         this.pageTopMargin = 5.0;
+        this.pageTopMarginNarrow = 0.0; // for compact mode
         this.pageBottomMargin = 5.0;
         this.pageLeftMargin = 5.0;
         this.pageRightMargin = 5.0;
@@ -319,6 +328,13 @@ export class EngravingRules {
         this.measureDynamicsMaxScalingFactor = 2.5;
         this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
 
+        // Render options (whether to render specific or invisible elements)
+        this.renderComposer = true;
+        this.renderTitle = true;
+        this.renderSubtitle = true;
+        this.renderLyricist = true;
+        this.renderInstrumentNames = true;
+
         this.populateDictionaries();
         try {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
@@ -374,6 +390,12 @@ export class EngravingRules {
     public set PagePlacement(value: PagePlacementEnum) {
         this.pagePlacementEnum = value;
     }
+    public get CompactMode(): boolean {
+        return this.compactMode;
+    }
+    public set CompactMode(value: boolean) {
+        this.compactMode = value;
+    }
     public get PageHeight(): number {
         return this.pageHeight;
     }
@@ -385,6 +407,12 @@ export class EngravingRules {
     }
     public set PageTopMargin(value: number) {
         this.pageTopMargin = value;
+    }
+    public get PageTopMarginNarrow(): number {
+        return this.pageTopMarginNarrow;
+    }
+    public set PageTopMarginNarrow(value: number) {
+        this.pageTopMarginNarrow = value;
     }
     public get PageBottomMargin(): number {
         return this.pageBottomMargin;
@@ -1159,6 +1187,36 @@ export class EngravingRules {
     }
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
+    }
+    public get RenderComposer(): boolean {
+        return this.renderComposer;
+    }
+    public set RenderComposer(value: boolean) {
+        this.renderComposer = value;
+    }
+    public get RenderTitle(): boolean {
+        return this.renderTitle;
+    }
+    public set RenderTitle(value: boolean) {
+        this.renderTitle = value;
+    }
+    public get RenderSubtitle(): boolean {
+        return this.renderSubtitle;
+    }
+    public set RenderSubtitle(value: boolean) {
+        this.renderSubtitle = value;
+    }
+    public get RenderLyricist(): boolean {
+        return this.renderLyricist;
+    }
+    public set RenderLyricist(value: boolean) {
+        this.renderLyricist = value;
+    }
+    public get RenderInstrumentNames(): boolean {
+        return this.renderInstrumentNames;
+    }
+    public set RenderInstrumentNames(value: boolean) {
+        this.renderInstrumentNames = value;
     }
 
     /**

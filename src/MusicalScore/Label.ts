@@ -9,7 +9,7 @@ import {FontStyles} from "../Common/Enums/FontStyles";
  */
 export class Label {
 
-    constructor(text: string = "", alignment: TextAlignmentEnum = TextAlignmentEnum.LeftBottom, font: Fonts = Fonts.TimesNewRoman) {
+    constructor(text: string = "", alignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom, font: Fonts = Fonts.TimesNewRoman) {
         this.text = text;
         this.textAlignment = alignment;
         this.font = font;

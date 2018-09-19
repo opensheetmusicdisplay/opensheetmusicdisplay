@@ -128,8 +128,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
             autoResize: true,
             backend: backendSelect.value,
-            drawingParameters: "default",
+            drawingParameters: "default", // try compact (instead of default)
             disableCursor: false,
+            drawPartNames: true, // try false
+            // drawTitle: true,
         });
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);

@@ -31,7 +31,7 @@ import {SourceStaffEntry} from "../VoiceData/SourceStaffEntry";
 import {BoundingBox} from "./BoundingBox";
 import {Instrument} from "../Instrument";
 import {GraphicalLabel} from "./GraphicalLabel";
-import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
+import {TextAlignmentEnum, TextAlignment, TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {VerticalGraphicalStaffEntryContainer} from "./VerticalGraphicalStaffEntryContainer";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
@@ -232,14 +232,27 @@ export abstract class MusicSheetCalculator {
         // xPosition is always fix
         let relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin, 0);
 
+        if (EngravingRules.Rules.CompactMode) {
+            relativePosition.y += EngravingRules.Rules.PageTopMarginNarrow;
+        } else {
+            relativePosition.y += EngravingRules.Rules.PageTopMargin;
+        }
+
         // first System is handled extra
         const firstMusicSystem: MusicSystem = graphicalMusicPage.MusicSystems[0];
         if (graphicalMusicPage === graphicalMusicPage.Parent.MusicPages[0]) {
-            relativePosition.y = this.rules.PageTopMargin + this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
-                this.rules.TitleBottomDistance;
+            if (EngravingRules.Rules.RenderTitle) {
+                relativePosition.y += this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
+                    this.rules.TitleBottomDistance;
+            }
         } else {
-            relativePosition.y = this.rules.PageTopMargin + this.rules.TitleTopDistance;
+            if (EngravingRules.Rules.RenderTitle) {
+                relativePosition.y += this.rules.PageTopMargin + this.rules.TitleTopDistance;
+            } else {
+                relativePosition.y = this.rules.PageTopMargin;
+            }
         }
+
         firstMusicSystem.PositionAndShape.RelativePosition = relativePosition;
 
         for (let i: number = 1; i < graphicalMusicPage.MusicSystems.length; i++) {
@@ -435,7 +448,7 @@ export abstract class MusicSheetCalculator {
             measure.PositionAndShape.RelativePosition.x - graphicalLabel.PositionAndShape.BorderMarginLeft;
         let relativeY: number;
 
-        // and the corresponding SkyLine indeces
+        // and the corresponding SkyLine indices
         let start: number = relativeX;
         let end: number = relativeX - graphicalLabel.PositionAndShape.BorderLeft + graphicalLabel.PositionAndShape.BorderMarginRight;
 
@@ -898,12 +911,13 @@ export abstract class MusicSheetCalculator {
                              combinedString: string,
                              style: FontStyles,
                              placement: PlacementEnum,
-                             fontHeight: number): GraphicalLabel {
-        const label: Label = new Label(combinedString);
+                             fontHeight: number,
+                             textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom): GraphicalLabel {
+        const label: Label = new Label(combinedString, textAlignment);
         label.fontHeight = fontHeight;
 
         // TODO_RR: TextHeight from first Entry
-        const graphLabel: GraphicalLabel = new GraphicalLabel(label, fontHeight, TextAlignmentEnum.CenterBottom, staffLine.PositionAndShape);
+        const graphLabel: GraphicalLabel = new GraphicalLabel(label, fontHeight, label.textAlignment, staffLine.PositionAndShape);
         graphLabel.Label.fontStyle = style;
         const marginFactor: number = 1.1;
 
@@ -985,27 +999,36 @@ export abstract class MusicSheetCalculator {
                 instantaniousTempo.Placement = PlacementEnum.Above;
 
                 // if an InstantaniousTempoExpression exists at the very beginning then
-                // check if expression is positioned at ever first StaffEntry and
+                // check if expression is positioned at first ever StaffEntry and
                 // check if MusicSystem is first MusicSystem
                 if (staffLine.Measures[0].staffEntries.length > 0 &&
                     Math.abs(relative.x - staffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x) === 0 &&
                     staffLine.ParentMusicSystem === staffLine.ParentMusicSystem.Parent.MusicSystems[0]) {
                     const firstInstructionEntry: GraphicalStaffEntry = staffLine.Measures[0].FirstInstructionStaffEntry;
                     if (firstInstructionEntry) {
-                        const lastIntruction: AbstractGraphicalInstruction = firstInstructionEntry.GraphicalInstructions.last();
-                        relative.x = lastIntruction.PositionAndShape.RelativePosition.x;
+                        const lastInstruction: AbstractGraphicalInstruction = firstInstructionEntry.GraphicalInstructions.last();
+                        relative.x = lastInstruction.PositionAndShape.RelativePosition.x;
+                    }
+                    if (EngravingRules.Rules.CompactMode) {
+                        relative.x = staffLine.PositionAndShape.RelativePosition.x +
+                            staffLine.Measures[0].PositionAndShape.RelativePosition.x;
                     }
                 }
             }
 
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
+                let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
+                if (EngravingRules.Rules.CompactMode) {
+                    textAlignment = TextAlignmentEnum.LeftBottom;
+                }
                 const graphLabel: GraphicalLabel = this.calculateLabel(staffLine,
                                                                        relative,
                                                                        entry.label,
                                                                        multiTempoExpression.getFontstyleOfFirstEntry(),
                                                                        entry.Expression.Placement,
-                                                                       EngravingRules.Rules.UnknownTextHeight);
+                                                                       EngravingRules.Rules.UnknownTextHeight,
+                                                                       textAlignment);
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
                     let alreadyAdded: boolean = false;
@@ -1178,6 +1201,9 @@ export abstract class MusicSheetCalculator {
     }
 
     protected maxInstrNameLabelLength(): number {
+        if (!EngravingRules.Rules.RenderInstrumentNames) {
+            return 0;
+        }
         let maxLabelLength: number = 0.0;
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
             if (instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
@@ -1192,22 +1218,22 @@ export abstract class MusicSheetCalculator {
 
     protected calculateSheetLabelBoundingBoxes(): void {
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
-        if (musicSheet.Title !== undefined) {
+        if (musicSheet.Title !== undefined && EngravingRules.Rules.RenderTitle) {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
         }
-        if (musicSheet.Subtitle !== undefined) {
+        if (musicSheet.Subtitle !== undefined && EngravingRules.Rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = new GraphicalLabel(musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter);
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
         }
-        if (musicSheet.Composer !== undefined) {
+        if (musicSheet.Composer !== undefined && EngravingRules.Rules.RenderComposer) {
             const composer: GraphicalLabel = new GraphicalLabel(musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter);
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
         }
-        if (musicSheet.Lyricist !== undefined) {
+        if (musicSheet.Lyricist !== undefined && EngravingRules.Rules.RenderLyricist) {
             const lyricist: GraphicalLabel = new GraphicalLabel(musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter);
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();

@@ -12,7 +12,7 @@ export interface IOSMDOptions {
     backend?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
-    /** Parameters like drawing a Leadsheet or (Thumbnail) Preview, disabling Cursor. */
+    /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
     /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
     drawHiddenNotes?: boolean;
@@ -20,12 +20,14 @@ export interface IOSMDOptions {
     defaultColorNoteHead?: string;
     /** Default color for a note stem. Default black. Not yet supported. */ // TODO
     defaultColorStem?: string;
-    /** Whether to draw the title of the piece. Not yet supported. */ // TODO
+    /** Whether to draw the title of the piece. */
     drawTitle?: boolean;
-    /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. Not yet supported. */ // TODO
+    /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. */
     drawCredits?: boolean;
-    /** Whether to draw part (instrument) names. Not yet supported. */ // TODO
-    drawPartName?: boolean;
+    /** Whether to draw part (instrument) names. */
+    drawPartNames?: boolean;
+    /** Whether to draw the lyricist's name, if given. */
+    drawLyricist?: boolean;
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */
@@ -37,7 +39,7 @@ export class OSMDOptions {
         return {
             autoResize: true,
             backend: "svg",
-            drawingParameters: DrawingParametersEnum.Default,
+            drawingParameters: DrawingParametersEnum.default,
         };
     }
 }

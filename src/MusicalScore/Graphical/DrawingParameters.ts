@@ -1,10 +1,13 @@
+import { EngravingRules } from "./EngravingRules";
+import { DrawingMode } from "./DrawingMode";
+
 export enum DrawingParametersEnum {
-    AllOn = "allon",
-    Compact = "compact",
-    Default = "default",
-    Leadsheet = "leadsheet",
-    Preview = "preview",
-    Thumbnail = "thumbnail",
+    allon = "allon",
+    compact = "compact",
+    default = "default",
+    leadsheet = "leadsheet",
+    preview = "preview",
+    thumbnail = "thumbnail",
 }
 
 export class DrawingParameters {
@@ -20,14 +23,17 @@ export class DrawingParameters {
     public drawComments: boolean;
     public drawMarkedAreas: boolean;
     public drawTitle: boolean = true;
+    public drawSubtitle: boolean = true;
+    public drawLyricist: boolean = true;
+    public drawComposer: boolean = true;
     public drawCredits: boolean = true;
-    public drawPartName: boolean = true;
+    public drawPartNames: boolean = true;
     /** Draw notes set to be invisible (print-object="no" in XML). */
     public drawHiddenNotes: boolean = false;
     public defaultColorNoteHead: string; // TODO not yet supported
     public defaultColorStem: string; // TODO not yet supported
 
-    constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.Default) {
+    constructor(drawingParameters: DrawingParametersEnum = DrawingParametersEnum.default) {
         this.DrawingParametersEnum = drawingParameters;
     }
 
@@ -35,19 +41,19 @@ export class DrawingParameters {
     public set DrawingParametersEnum(drawingParametersEnum: DrawingParametersEnum) {
         this.drawingParametersEnum = drawingParametersEnum;
         switch (drawingParametersEnum) {
-            case DrawingParametersEnum.AllOn:
+            case DrawingParametersEnum.allon:
                 this.setForAllOn();
                 break;
-            case DrawingParametersEnum.Thumbnail:
+            case DrawingParametersEnum.thumbnail:
                 this.setForThumbnail();
                 break;
-            case DrawingParametersEnum.Leadsheet:
+            case DrawingParametersEnum.leadsheet:
                 this.setForLeadsheet();
                 break;
-            case DrawingParametersEnum.Compact:
+            case DrawingParametersEnum.compact:
                 this.setForCompactMode();
                 break;
-            case DrawingParametersEnum.Default:
+            case DrawingParametersEnum.default:
             default:
                 this.setForDefault();
         }
@@ -68,8 +74,9 @@ export class DrawingParameters {
         this.drawComments = true;
         this.drawMarkedAreas = true;
         this.drawTitle = true;
+        this.drawSubtitle = true;
         this.drawCredits = true;
-        this.drawPartName = true;
+        this.drawPartNames = true;
         this.drawHiddenNotes = true;
     }
 
@@ -92,9 +99,18 @@ export class DrawingParameters {
     }
 
     public setForCompactMode(): void {
+        this.setForDefault();
+        EngravingRules.Rules.CompactMode = true;
         this.drawTitle = false;
+        EngravingRules.Rules.RenderTitle = false;
+        this.drawSubtitle = false;
+        EngravingRules.Rules.RenderSubtitle = false;
+        this.drawComposer = false;
+        EngravingRules.Rules.RenderComposer = false;
+        this.drawLyricist = false;
+        EngravingRules.Rules.RenderLyricist = false;
         this.drawCredits = false;
-        this.drawPartName = false;
+        this.drawPartNames = true;
         this.drawHiddenNotes = false;
     }
 
@@ -108,5 +124,45 @@ export class DrawingParameters {
         this.drawScrollIndicator = true;
         this.drawComments = true;
         this.drawMarkedAreas = true;
+    }
+
+    //#region GETTER / SETTER
+    public get DrawTitle(): boolean {
+        return this.drawTitle;
+    }
+
+    public set DrawTitle(value: boolean) {
+        this.drawTitle = value;
+        EngravingRules.Rules.RenderTitle = value;
+        if (!value) { // don't draw subtitle if title isn't drawn
+            this.DrawSubtitle = false;
+        }
+    }
+
+    public get DrawSubtitle(): boolean {
+        return this.drawSubtitle;
+    }
+
+    public set DrawSubtitle(value: boolean) {
+        this.drawTitle = value;
+        EngravingRules.Rules.RenderSubtitle = value;
+    }
+
+    public get DrawLyricist(): boolean {
+        return this.drawLyricist;
+    }
+
+    public set DrawLyricist(value: boolean) {
+        this.drawLyricist = value;
+        EngravingRules.Rules.RenderLyricist = value;
+    }
+
+    public get DrawPartNames(): boolean {
+        return this.drawPartNames;
+    }
+
+    public set DrawPartNames(value: boolean) {
+        this.drawPartNames = value;
+        EngravingRules.Rules.RenderInstrumentNames = value;
     }
 }
