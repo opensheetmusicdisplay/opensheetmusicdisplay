@@ -720,18 +720,27 @@ export class InstrumentReader {
       this.abstractInstructions.push([1, keyInstruction]);
     }
     if (node.element("time") !== undefined) {
-      let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
       const timeNode: IXmlElement = node.element("time");
+      let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
+      let timePrintObject: boolean = true;
       if (timeNode !== undefined && timeNode.hasAttributes) {
-        const firstAttr: IXmlAttribute = timeNode.firstAttribute;
-        if (firstAttr.name === "symbol") {
-          if (firstAttr.value === "common") {
+        const symbolAttribute: IXmlAttribute = timeNode.attribute("symbol");
+        if (symbolAttribute) {
+          if (symbolAttribute.value === "common") {
             symbolEnum = RhythmSymbolEnum.COMMON;
-          } else if (firstAttr.value === "cut") {
+          } else if (symbolAttribute.value === "cut") {
             symbolEnum = RhythmSymbolEnum.CUT;
           }
         }
+
+        const printObjectAttribute: IXmlAttribute = timeNode.attribute("print-object");
+        if (printObjectAttribute) {
+          if (printObjectAttribute.value === "no") {
+            timePrintObject = false;
+          }
+        }
       }
+
       let num: number = 0;
       let denom: number = 0;
       const senzaMisura: boolean = (timeNode !== undefined && timeNode.element("senza-misura") !== undefined);
@@ -785,9 +794,11 @@ export class InstrumentReader {
           log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
-        this.abstractInstructions.push([1, new RhythmInstruction(
+        const newRhythmInstruction: RhythmInstruction = new RhythmInstruction(
           new Fraction(num, denom, 0, false), symbolEnum
-        )]);
+        );
+        newRhythmInstruction.PrintObject = timePrintObject;
+        this.abstractInstructions.push([1, newRhythmInstruction]);
       } else {
         this.abstractInstructions.push([1, new RhythmInstruction(new Fraction(4, 4, 0, false), RhythmSymbolEnum.NONE)]);
       }

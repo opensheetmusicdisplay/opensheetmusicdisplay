@@ -488,7 +488,7 @@ export class MusicSystemBuilder {
             measure.addKeyAtBegin(currentKey, previousKey, currentClef);
             keyAdded = true;
         }
-        if (currentRhythm !== undefined) {
+        if (currentRhythm !== undefined && currentRhythm.PrintObject) {
             measure.addRhythmAtBegin(currentRhythm);
             rhythmAdded = true;
         }
@@ -615,7 +615,7 @@ export class MusicSystemBuilder {
         if (keyInstruction !== undefined) {
             measure.addKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
         }
-        if (rhythmInstruction !== undefined) {
+        if (rhythmInstruction !== undefined && rhythmInstruction.PrintObject) {
             measure.addRhythmAtBegin(rhythmInstruction);
         }
         measure.PositionAndShape.BorderLeft = 0.0;
