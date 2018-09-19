@@ -99,18 +99,20 @@ export class VoiceGenerator {
    * @param maxTieNoteFraction
    * @param chord
    * @param guitarPro
+   * @param printObject whether the note should be rendered (true) or invisible (false)
    * @returns {Note}
    */
   public read(noteNode: IXmlElement, noteDuration: Fraction, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
-              measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean): Note {
+              measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
+              printObject: boolean = true): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
     //log.debug("read called:", restNote);
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteDuration)
-        : this.addSingleNote(noteNode, noteDuration, chord, guitarPro);
+        ? this.addRestNote(noteDuration, printObject)
+        : this.addSingleNote(noteNode, noteDuration, chord, guitarPro, printObject);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
       if (this.lyricsReader !== undefined && lyricElements !== undefined) {
@@ -294,7 +296,8 @@ export class VoiceGenerator {
    * @param guitarPro
    * @returns {Note}
    */
-  private addSingleNote(node: IXmlElement, noteDuration: Fraction, chord: boolean, guitarPro: boolean): Note {
+  private addSingleNote(node: IXmlElement, noteDuration: Fraction, chord: boolean, guitarPro: boolean,
+                        printObject: boolean = true): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
@@ -387,6 +390,7 @@ export class VoiceGenerator {
     const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
+    note.PrintObject = printObject;
     note.PlaybackInstrumentId = playbackInstrumentId;
     if (noteHeadShapeXml !== undefined && noteHeadShapeXml !== "normal") {
       note.NoteHead = new NoteHead(note, noteHeadShapeXml, noteHeadFilledXml);
@@ -404,9 +408,10 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(noteDuration: Fraction): Note {
+  private addRestNote(noteDuration: Fraction, printObject: boolean = true): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
+    restNote.PrintObject = printObject;
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeam !== undefined) {
       this.openBeam.ExtendedNoteList.push(restNote);

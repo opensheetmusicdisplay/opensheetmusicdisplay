@@ -1100,10 +1100,23 @@ export abstract class MusicSheetCalculator {
                                openTuplets: Tuplet[], openBeams: Beam[],
                                octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
+        let voiceEntryHasPrintableNotes: boolean = false;
+        for (const note of voiceEntry.Notes) {
+            if (note.PrintObject) {
+                voiceEntryHasPrintableNotes = true;
+                break;
+            }
+        }
+        if (!voiceEntryHasPrintableNotes) {
+            return; // do not create a GraphicalVoiceEntry without graphical notes in it, will cause problems
+        }
         this.calculateStemDirectionFromVoices(voiceEntry);
         const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             const note: Note = voiceEntry.Notes[idx];
+            if (note === undefined || !note.PrintObject) {
+                continue;
+            }
             if (sourceStaffEntry !== undefined && sourceStaffEntry.Link !== undefined && linkedNotes !== undefined && linkedNotes.indexOf(note) > -1) {
                 continue;
             }

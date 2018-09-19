@@ -132,15 +132,13 @@ export class InstrumentReader {
       const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
       for (const xmlNode of xmlMeasureListArr) {
         if (xmlNode.name === "note") {
+          let printObject: boolean = true;
           if (xmlNode.hasAttributes && xmlNode.attribute("print-object") &&
               xmlNode.attribute("print-object").value === "no") {
-            // TODO handle invisible notes. should be parsed, optionally displayed via DrawingParameter.
-            // if (xmlNode.attribute("print-spacing")) {
-            //   if (xmlNode.attribute("print-spacing").value === "yes" {
-            //     // give spacing for invisible notes even when not displayed
-            //   else {
-            //     // don't print and don't give spacing. might still need to parse to keep measure model intact
-            continue; // TODO for now, just skip invisible notes. remove continue when implementing display invisible notes option
+              printObject = false; // note will not be rendered, but still parsed for Playback etc.
+              // if (xmlNode.attribute("print-spacing")) {
+              //   if (xmlNode.attribute("print-spacing").value === "yes" {
+              //     // TODO give spacing for invisible notes even when not displayed. might be hard with Vexflow formatting
           }
           let noteStaff: number = 1;
           if (this.instrument.Staves.length > 1) {
@@ -266,7 +264,7 @@ export class InstrumentReader {
             xmlNode, noteDuration, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
-            this.maxTieNoteFraction, isChord, guitarPro
+            this.maxTieNoteFraction, isChord, guitarPro, printObject
           );
 
           const notationsNode: IXmlElement = xmlNode.element("notations");
