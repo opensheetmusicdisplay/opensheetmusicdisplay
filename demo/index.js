@@ -57,7 +57,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     resetCursorBtn,
     showCursorBtn,
     hideCursorBtn,
-    backendSelect;
+    backendSelect,
+    debugReRenderBtn;
 
     // Initialization code
     function init() {
@@ -79,6 +80,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         backendSelect = document.getElementById("backend-select");
+        debugReRenderBtn = document.getElementById("debug-re-render-btn");
+
 
         // Hide error
         error();
@@ -115,6 +118,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         bottomlineDebug.onclick = function() {
             openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+        }
+
+        debugReRenderBtn.onclick = function() {
+            rerender();
         }
 
         // Create OSMD object and canvas
@@ -273,6 +280,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         disable();
         window.setTimeout(function(){
             openSheetMusicDisplay.zoom = zoom;
+            openSheetMusicDisplay.render();
+            enable();
+        }, 0);
+    }
+
+    function rerender() {
+        disable();
+        window.setTimeout(function(){
             openSheetMusicDisplay.render();
             enable();
         }, 0);
