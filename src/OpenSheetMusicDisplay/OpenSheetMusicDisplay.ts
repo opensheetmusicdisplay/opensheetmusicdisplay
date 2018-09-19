@@ -15,7 +15,6 @@ import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
 import {IOSMDOptions, OSMDOptions} from "./OSMDOptions";
-import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>

@@ -1,5 +1,4 @@
 import { EngravingRules } from "./EngravingRules";
-import { DrawingMode } from "./DrawingMode";
 
 export enum DrawingParametersEnum {
     allon = "allon",
