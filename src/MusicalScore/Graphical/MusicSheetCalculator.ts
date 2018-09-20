@@ -224,12 +224,11 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
-    /// <summary>
-    /// This method calculates the relative Positions of all MusicSystems.
-    /// </summary>
-    /// <param name="graphicalMusicPage"></param>
+    /** Calculates the relative Positions of all MusicSystems.
+     *
+     */
     protected calculateMusicSystemsRelativePositions(graphicalMusicPage: GraphicalMusicPage): void {
-        // xPosition is always fix
+        // xPosition is always fixed
         let relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin, 0);
 
         if (EngravingRules.Rules.CompactMode) {

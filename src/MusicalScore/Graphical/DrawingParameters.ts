@@ -72,11 +72,14 @@ export class DrawingParameters {
         this.drawScrollIndicator = true;
         this.drawComments = true;
         this.drawMarkedAreas = true;
-        this.drawTitle = true;
-        this.drawSubtitle = true;
+        this.DrawTitle = true;
+        this.DrawSubtitle = true;
+        this.DrawComposer = true;
+        this.DrawLyricist = true;
         this.drawCredits = true;
-        this.drawPartNames = true;
+        this.DrawPartNames = true;
         this.drawHiddenNotes = true;
+        EngravingRules.Rules.CompactMode = false;
     }
 
     public setForDefault(): void {
@@ -143,11 +146,23 @@ export class DrawingParameters {
         return this.drawSubtitle;
     }
 
-    /** Enable or disable drawing the Subtitle of the piece. If disabled, will disable drawing Title as well. */
+    /** Enable or disable drawing the Subtitle of the piece. If enabled, will enable drawing Title as well. */
     public set DrawSubtitle(value: boolean) {
-        this.drawTitle = value;
         this.drawSubtitle = value;
         EngravingRules.Rules.RenderSubtitle = value;
+        if (value) {
+            this.DrawTitle = true; // if subtitle is drawn, title needs to be drawn as well
+        }
+    }
+
+    public get DrawComposer(): boolean {
+        return this.drawComposer;
+    }
+
+    /** Enable or disable drawing a label for the Composer of the piece. */
+    public set DrawComposer(value: boolean) {
+        this.drawComposer = value;
+        EngravingRules.Rules.RenderComposer = value;
     }
 
     public get DrawLyricist(): boolean {
