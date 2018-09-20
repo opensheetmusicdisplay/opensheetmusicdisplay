@@ -1222,21 +1222,29 @@ export abstract class MusicSheetCalculator {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
+        } else if (!EngravingRules.Rules.RenderTitle) {
+            this.graphicalMusicSheet.Title = undefined; // clear label if rendering it was disabled after last render
         }
         if (musicSheet.Subtitle !== undefined && EngravingRules.Rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = new GraphicalLabel(musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter);
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
+        } else if (!EngravingRules.Rules.RenderSubtitle) {
+            this.graphicalMusicSheet.Subtitle = undefined;
         }
         if (musicSheet.Composer !== undefined && EngravingRules.Rules.RenderComposer) {
             const composer: GraphicalLabel = new GraphicalLabel(musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter);
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
+        } else if (!EngravingRules.Rules.RenderComposer) {
+            this.graphicalMusicSheet.Composer = undefined;
         }
         if (musicSheet.Lyricist !== undefined && EngravingRules.Rules.RenderLyricist) {
             const lyricist: GraphicalLabel = new GraphicalLabel(musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter);
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();
+        } else if (!EngravingRules.Rules.RenderLyricist) {
+            this.graphicalMusicSheet.Lyricist = undefined;
         }
     }
 
