@@ -130,6 +130,7 @@ export class DrawingParameters {
         return this.drawTitle;
     }
 
+    /** Enable or disable drawing the Title of the piece. If disabled, will disable drawing Subtitle as well. */
     public set DrawTitle(value: boolean) {
         this.drawTitle = value;
         EngravingRules.Rules.RenderTitle = value;
@@ -142,8 +143,10 @@ export class DrawingParameters {
         return this.drawSubtitle;
     }
 
+    /** Enable or disable drawing the Subtitle of the piece. If disabled, will disable drawing Title as well. */
     public set DrawSubtitle(value: boolean) {
         this.drawTitle = value;
+        this.drawSubtitle = value;
         EngravingRules.Rules.RenderSubtitle = value;
     }
 

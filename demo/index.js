@@ -131,7 +131,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             drawingParameters: "default", // try compact (instead of default)
             disableCursor: false,
             drawPartNames: true, // try false
-            // drawTitle: true,
+            // drawTitle: false,
+            // drawSubtitle: false
         });
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);

@@ -20,8 +20,10 @@ export interface IOSMDOptions {
     defaultColorNoteHead?: string;
     /** Default color for a note stem. Default black. Not yet supported. */ // TODO
     defaultColorStem?: string;
-    /** Whether to draw the title of the piece. */
+    /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
     drawTitle?: boolean;
+    /** Whether to draw the subtitle of the piece. If false, disables drawing Title as well. */
+    drawSubtitle?: boolean;
     /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. */
     drawCredits?: boolean;
     /** Whether to draw part (instrument) names. */

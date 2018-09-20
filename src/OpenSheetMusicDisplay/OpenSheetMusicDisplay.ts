@@ -339,6 +339,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawTitle !== undefined) {
             this.drawingParameters.DrawTitle = options.drawTitle;
         }
+        if (options.drawSubtitle !== undefined) {
+            this.drawingParameters.DrawSubtitle = options.drawSubtitle;
+        }
         if (options.drawPartNames !== undefined) {
             this.drawingParameters.DrawPartNames = options.drawPartNames;
         }
