@@ -22,9 +22,9 @@ export interface IOSMDOptions {
     defaultColorStem?: string;
     /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
     drawTitle?: boolean;
-    /** Whether to draw the subtitle of the piece. If false, disables drawing Title as well. */
+    /** Whether to draw the subtitle of the piece. If true, enables drawing Title as well. */
     drawSubtitle?: boolean;
-    /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. */
+    /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. Not yet supported. */ // TODO
     drawCredits?: boolean;
     /** Whether to draw part (instrument) names. */
     drawPartNames?: boolean;
