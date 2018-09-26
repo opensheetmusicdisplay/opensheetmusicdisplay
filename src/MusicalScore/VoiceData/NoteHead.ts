@@ -69,6 +69,7 @@ export class NoteHead {
                 return NoteHeadShape.SQUARE;
             case "la": // Musescore displays this as a square
                 return NoteHeadShape.SQUARE;
+            case "do":
             case "triangle":
                 return NoteHeadShape.TRIANGLE;
             case "x":
@@ -78,7 +79,7 @@ export class NoteHead {
             case "circle-x":
                 return NoteHeadShape.CIRCLEX;
             default:
-                log.warn("unhandled shapeTypeXml: " + shapeTypeXml);
+                log.info("unsupported/unhandled xml notehead '" + shapeTypeXml + "'. Using normal notehead.");
                 return NoteHeadShape.NORMAL;
         }
     }
