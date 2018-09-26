@@ -6,13 +6,16 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
  */
 export class Tuplet {
 
-    constructor(tupletLabelNumber: number) {
+    constructor(tupletLabelNumber: number, bracket: boolean = false) {
         this.tupletLabelNumber = tupletLabelNumber;
+        this.bracket = bracket;
     }
 
     private tupletLabelNumber: number;
     private notes: Note[][] = [];
     private fractions: Fraction[] = [];
+    /** Whether this tuplet has a bracket. (e.g. showing |--3--| or just 3 for a triplet) */
+    private bracket: boolean;
 
     public get TupletLabelNumber(): number {
         return this.tupletLabelNumber;
@@ -36,6 +39,14 @@ export class Tuplet {
 
     public set Fractions(value: Fraction[]) {
         this.fractions = value;
+    }
+
+    public get Bracket(): boolean {
+        return this.bracket;
+    }
+
+    public set Bracket(value: boolean) {
+        this.bracket = value;
     }
 
     /**

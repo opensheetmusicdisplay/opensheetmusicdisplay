@@ -64,6 +64,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             return this._createMusicSheet(root, path);
         } catch (e) {
             log.info("MusicSheetReader.CreateMusicSheet", e);
+            return undefined;
         }
     }
 
@@ -486,21 +487,24 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private pushSheetLabels(root: IXmlElement, filePath: string): void {
         this.readComposer(root);
         this.readTitle(root);
-        if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
-            this.readTitleAndComposerFromCredits(root);
+        try {
+            if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
+                this.readTitleAndComposerFromCredits(root); // this can also throw an error
+            }
+        } catch (ex) {
+            log.info("MusicSheetReader.pushSheetLabels", "readTitleAndComposerFromCredits", ex);
         }
-        if (this.musicSheet.Title === undefined) {
-            try {
+        try {
+            if (this.musicSheet.Title === undefined) {
                 const barI: number = Math.max(
                     0, filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")
                 );
                 const filename: string = filePath.substr(barI);
                 const filenameSplits: string[] = filename.split(".", 1);
                 this.musicSheet.Title = new Label(filenameSplits[0]);
-            } catch (ex) {
-                log.info("MusicSheetReader.pushSheetLabels: ", ex);
             }
-
+        } catch (ex) {
+            log.info("MusicSheetReader.pushSheetLabels", "read title from file name", ex);
         }
     }
 
@@ -611,8 +615,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         let paperHeight: number = 0;
         let topSystemDistance: number = 0;
-        const defi: string = root.element("defaults").element("page-layout").element("page-height").value;
-        paperHeight = parseFloat(defi);
+        try {
+            const defi: string = root.element("defaults").element("page-layout").element("page-height").value;
+            paperHeight = parseFloat(defi);
+        } catch (e) {
+            log.info("MusicSheetReader.computeSystemYCoordinates(): couldn't find page height, not reading title/composer.");
+            return 0;
+        }
         let found: boolean = false;
         const parts: IXmlElement[] = root.elements("part");
         for (let idx: number = 0, len: number = parts.length; idx < len; ++idx) {

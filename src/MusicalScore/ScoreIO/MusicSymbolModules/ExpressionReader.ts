@@ -13,9 +13,10 @@ import {InstantaneousTempoExpression} from "../../VoiceData/Expressions/Instanta
 import {MoodExpression} from "../../VoiceData/Expressions/MoodExpression";
 import {UnknownExpression} from "../../VoiceData/Expressions/UnknownExpression";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
-import {TextAlignmentAndPlacement} from "../../../Common/Enums/TextAlignment";
+import {TextAlignmentEnum} from "../../../Common/Enums/TextAlignment";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import * as log from "loglevel";
+import { EngravingRules } from "../../Graphical/EngravingRules";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -535,8 +536,12 @@ export class ExpressionReader {
                 }
             }
         }
+        let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
+        if (EngravingRules.Rules.CompactMode) {
+            textAlignment = TextAlignmentEnum.LeftBottom;
+        }
         const unknownExpression: UnknownExpression = new UnknownExpression(
-            stringTrimmed, this.placement, TextAlignmentAndPlacement.CenterBottom, this.staffNumber);
+            stringTrimmed, this.placement, textAlignment, this.staffNumber);
         this.getMultiExpression.addExpression(unknownExpression, prefix);
 
         return false;

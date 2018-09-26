@@ -2,7 +2,7 @@ import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneo
 import { InstantaneousDynamicExpression, DynamicEnum } from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import { GraphicalLabel } from "../GraphicalLabel";
 import { Label } from "../../Label";
-import { TextAlignmentAndPlacement } from "../../../Common/Enums/TextAlignment";
+import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
 import { EngravingRules } from "../EngravingRules";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { StaffLine } from "../StaffLine";
@@ -14,9 +14,13 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
     constructor(instantaneousDynamicExpression: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
         super(instantaneousDynamicExpression, staffLine, measure);
 
-        this.mLabel = new GraphicalLabel(new Label(this.Expression),
+        let labelAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterTop;
+        if (EngravingRules.Rules.CompactMode) {
+            labelAlignment = TextAlignmentEnum.LeftBottom;
+        }
+        this.mLabel = new GraphicalLabel(new Label(this.Expression, labelAlignment),
                                          EngravingRules.Rules.ContinuousDynamicTextHeight,
-                                         TextAlignmentAndPlacement.CenterTop,
+                                         labelAlignment,
                                          this.PositionAndShape);
 
         this.mLabel.Label.fontStyle = FontStyles.BoldItalic;

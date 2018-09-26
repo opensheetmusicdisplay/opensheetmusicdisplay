@@ -57,7 +57,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     resetCursorBtn,
     showCursorBtn,
     hideCursorBtn,
-    backendSelect;
+    backendSelect,
+    debugReRenderBtn;
 
     // Initialization code
     function init() {
@@ -79,6 +80,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         backendSelect = document.getElementById("backend-select");
+        debugReRenderBtn = document.getElementById("debug-re-render-btn");
+
 
         // Hide error
         error();
@@ -113,12 +116,28 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
         }
 
-        bottomlineDebug .onclick = function() {
+        bottomlineDebug.onclick = function() {
             openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
         }
 
+        debugReRenderBtn.onclick = function() {
+            rerender();
+        }
+
         // Create OSMD object and canvas
-        openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, backendSelect.value);
+        openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
+            autoResize: true,
+            backend: backendSelect.value,
+            drawingParameters: "default", // try compact (instead of default)
+            disableCursor: false,
+            drawPartNames: true, // try false
+            // drawTitle: false,
+            // drawSubtitle: false,
+
+            // tupletsBracketed: true,
+            // tripletsBracketed: true,
+            // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
+        });
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);
 
@@ -141,7 +160,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 try {
                     openSheetMusicDisplay.render();
                 } catch (e) {
-                    console.warn(e.stack);
+                    errorLoadingOrRenderingSheet(e, "rendering");
                 }
                 enable();
             }
@@ -163,7 +182,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.cursor.hide();
         });
         showCursorBtn.addEventListener("click", function() {
-            openSheetMusicDisplay.cursor.show();
+            if (openSheetMusicDisplay.cursor) {
+                openSheetMusicDisplay.cursor.show();
+            } else {
+                console.info("Can't show cursor, as it was disabled (e.g. by drawingParameters).");
+            }
         });
 
         backendSelect.addEventListener("change", function(e) {
@@ -178,7 +201,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function Resize(startCallback, endCallback) {
-
       var rtime;
       var timeout = false;
       var delta = 200;
@@ -225,18 +247,26 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 return openSheetMusicDisplay.render();
             },
             function(e) {
-                console.warn(e.stack);
-                error("Error reading sheet: " + e);
+                errorLoadingOrRenderingSheet(e, "rendering");
             }
         ).then(
             function() {
                 return onLoadingEnd(isCustom);
             }, function(e) {
-                console.warn(e.stack);
-                error("Error rendering sheet: " + process.env.DEBUG ? e.stack : e);
+                errorLoadingOrRenderingSheet(e, "loading");
                 onLoadingEnd(isCustom);
             }
         );
+    }
+
+    function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
+        var errorString = "Error " + loadingOrRenderingString + " sheet: " + e;
+        // if (process.env.DEBUG) { // people may not set a debug environment variable for the demo.
+        // Always giving a StackTrace might give us more and better error reports.
+        // TODO for a release, StackTrace control could be reenabled
+        errorString += "\n" + "StackTrace: \n" + e.stack;
+        // }
+        console.warn(errorString);
     }
 
     function onLoadingEnd(isCustom) {
@@ -257,6 +287,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         disable();
         window.setTimeout(function(){
             openSheetMusicDisplay.zoom = zoom;
+            openSheetMusicDisplay.render();
+            enable();
+        }, 0);
+    }
+
+    function rerender() {
+        disable();
+        window.setTimeout(function(){
             openSheetMusicDisplay.render();
             enable();
         }, 0);

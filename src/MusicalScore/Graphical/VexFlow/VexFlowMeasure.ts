@@ -25,9 +25,10 @@ import {StemDirectionType} from "../../VoiceData/VoiceEntry";
 import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
-import { Voice } from "../../VoiceData/Voice";
-import { VexFlowInstantaneousDynamicExpression } from "./VexFlowInstantaneousDynamicExpression";
-import { LinkedVoice } from "../../VoiceData/LinkedVoice";
+import {Voice} from "../../VoiceData/Voice";
+import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
+import {LinkedVoice} from "../../VoiceData/LinkedVoice";
+import {EngravingRules} from "../EngravingRules";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -595,10 +596,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     if (tupletStaveNotes.length > 1) {
                       const notesOccupied: number = 2;
+                      const tuplet: Tuplet = tupletBuilder[0];
+                      const bracketed: boolean = tuplet.Bracket ||
+                        (tuplet.TupletLabelNumber === 3 && EngravingRules.Rules.TripletsBracketed) ||
+                        (tuplet.TupletLabelNumber !== 3 && EngravingRules.Rules.TupletsBracketed);
                       vftuplets.push(new Vex.Flow.Tuplet( tupletStaveNotes,
                                                           {
+                                                            bracketed: bracketed,
                                                             notes_occupied: notesOccupied,
-                                                            num_notes: tupletStaveNotes.length //, location: -1, ratioed: true
+                                                            num_notes: tupletStaveNotes.length, //, location: -1, ratioed: true
+                                                            ratioed: EngravingRules.Rules.TupletsRatioed,
                                                           }));
                     } else {
                         log.debug("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
@@ -625,11 +632,18 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     continue;
                 }
-                (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
+                if (gve.notes[0].sourceNote.PrintObject) {
+                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
+                } else {
+                    graceGVoiceEntriesBefore = []; // if note is not rendered, its grace notes might need to be removed
+                    continue;
+                }
                 if (graceGVoiceEntriesBefore.length > 0) {
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
-                        graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
+                        if (graceGVoiceEntriesBefore[i].notes[0].sourceNote.PrintObject) {
+                            graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
+                        }
                     }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
                     (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes());
@@ -644,6 +658,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
         for (const voice of voices) {
+            if (voice === undefined) {
+                continue;
+            }
             const isMainVoice: boolean = !(voice instanceof LinkedVoice);
 
             // add a vexFlow voice for this voice:

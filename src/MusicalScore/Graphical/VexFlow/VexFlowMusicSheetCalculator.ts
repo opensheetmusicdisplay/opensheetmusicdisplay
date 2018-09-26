@@ -46,7 +46,7 @@ import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneo
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { Staff } from "../../VoiceData/Staff";
-import { TextAlignmentAndPlacement, TextAlignment } from "../../../Common/Enums/TextAlignment";
+import { TextAlignmentEnum, TextAlignment } from "../../../Common/Enums/TextAlignment";
 import { GraphicalSlur } from "../GraphicalSlur";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
@@ -118,7 +118,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
         }
         if (voices.length === 0) {
-            log.warn("Found a measure with no voices... Continuing anyway.", mvoices);
+            log.info("Found a measure with no voices. Continuing anyway.", mvoices);
             continue;
         }
         // all voices that belong to one stave are collectively added to create a common context in VexFlow.
@@ -194,7 +194,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (let j: number = 0; j < staffEntry.LyricsEntries.length; j++) {
           const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[j];
           // const lyricsEntryText = lyricsEntry.LyricsEntry.Text; // for easier debugging
-          const lyricAlignment: TextAlignmentAndPlacement = lyricsEntry.GraphicalLabel.Label.textAlignment;
+          const lyricAlignment: TextAlignmentEnum = lyricsEntry.GraphicalLabel.Label.textAlignment;
           let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
           // for quarter note in Vexflow, where spacing is halfed for each smaller note duration.
 

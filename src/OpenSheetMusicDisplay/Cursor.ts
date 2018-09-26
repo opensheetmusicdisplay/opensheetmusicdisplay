@@ -28,6 +28,7 @@ export class Cursor {
   private hidden: boolean = true;
   private cursorElement: HTMLImageElement;
 
+  /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
     this.manager = manager;
     this.reset();
@@ -42,9 +43,12 @@ export class Cursor {
   public show(): void {
     this.hidden = false;
     this.update();
-    // Forcing the sheet to re-render is not necessary anymore,
-    // since the cursor is an HTML element.
-    // this.openSheetMusicDisplay.render();
+  }
+
+  private getStaffEntriesFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
+    const measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.measureListIndex;
+    const staffIndex: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.idInMusicSheet;
+    return <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
   }
 
   public update(): void {
@@ -59,12 +63,11 @@ export class Cursor {
     }
     let x: number = 0, y: number = 0, height: number = 0;
 
-    const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[0];
-    const measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.measureListIndex;
-    const staffIndex: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.idInMusicSheet;
+    // get all staff entries inside the current voice entry
+    const gseArr: VexFlowStaffEntry[] = iterator.CurrentVoiceEntries.map(ve => this.getStaffEntriesFromVoiceEntry(ve));
+    // sort them by x position and take the leftmost entry
     const gse: VexFlowStaffEntry =
-      <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
-
+          gseArr.sort((a, b) => a.PositionAndShape.AbsolutePosition.x <= b.PositionAndShape.AbsolutePosition.x ? -1 : 1 )[0];
     x = gse.PositionAndShape.AbsolutePosition.x;
     const musicSystem: MusicSystem = gse.parentMeasure.parentMusicSystem;
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;

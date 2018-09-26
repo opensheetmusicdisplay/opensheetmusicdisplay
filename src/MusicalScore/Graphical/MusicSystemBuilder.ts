@@ -65,11 +65,13 @@ export class MusicSystemBuilder {
         // the first System - create also its Labels
         this.currentSystemParams.currentSystem = this.initMusicSystem();
         this.layoutSystemStaves();
-        this.currentSystemParams.currentSystem.createMusicSystemLabel(
-            this.rules.InstrumentLabelTextHeight,
-            this.rules.SystemLabelsRightMargin,
-            this.rules.LabelMarginBorderFactor
-        );
+        if (EngravingRules.Rules.RenderInstrumentNames) {
+            this.currentSystemParams.currentSystem.createMusicSystemLabel(
+                this.rules.InstrumentLabelTextHeight,
+                this.rules.SystemLabelsRightMargin,
+                this.rules.LabelMarginBorderFactor
+            );
+        }
         this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.RelativePosition.y;
 
         let numberOfMeasures: number = 0;
@@ -329,18 +331,17 @@ export class MusicSystemBuilder {
             musicSystem.StaffLines.push(staffLine);
             const boundingBox: BoundingBox = staffLine.PositionAndShape;
             const relativePosition: PointF2D = new PointF2D();
-            if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
+            if (musicSystem.Parent.MusicSystems[0] === musicSystem &&
+                musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0] &&
+                !EngravingRules.Rules.CompactMode) {
                 relativePosition.x = this.rules.FirstSystemMargin;
+                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width - this.rules.FirstSystemMargin;
             } else {
                 relativePosition.x = 0.0;
+                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width;
             }
             relativePosition.y = relativeYPosition;
             boundingBox.RelativePosition = relativePosition;
-            if (musicSystem.Parent.MusicSystems[0] === musicSystem && musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0]) {
-                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width - this.rules.FirstSystemMargin;
-            } else {
-                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width;
-            }
             boundingBox.BorderLeft = 0.0;
             boundingBox.BorderTop = 0.0;
             boundingBox.BorderBottom = this.rules.StaffHeight;
@@ -488,7 +489,7 @@ export class MusicSystemBuilder {
             measure.addKeyAtBegin(currentKey, previousKey, currentClef);
             keyAdded = true;
         }
-        if (currentRhythm !== undefined) {
+        if (currentRhythm !== undefined && currentRhythm.PrintObject) {
             measure.addRhythmAtBegin(currentRhythm);
             rhythmAdded = true;
         }
@@ -615,7 +616,7 @@ export class MusicSystemBuilder {
         if (keyInstruction !== undefined) {
             measure.addKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
         }
-        if (rhythmInstruction !== undefined) {
+        if (rhythmInstruction !== undefined && rhythmInstruction.PrintObject) {
             measure.addRhythmAtBegin(rhythmInstruction);
         }
         measure.PositionAndShape.BorderLeft = 0.0;
