@@ -132,7 +132,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             disableCursor: false,
             drawPartNames: true, // try false
             // drawTitle: false,
-            // drawSubtitle: false
+            // drawSubtitle: false,
+
+            // tupletsBracketed: true,
+            // tripletsBracketed: true,
+            // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);

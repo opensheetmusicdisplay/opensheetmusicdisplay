@@ -520,6 +520,7 @@ export class VoiceGenerator {
    * @returns {number}
    */
   private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
+    let bracketed: boolean = false; // xml bracket attribute value
     if (tupletNodeList !== undefined && tupletNodeList.length > 1) {
       let timeModNode: IXmlElement = node.element("time-modification");
       if (timeModNode !== undefined) {
@@ -529,8 +530,12 @@ export class VoiceGenerator {
       for (let idx: number = 0, len: number = tupletNodeListArr.length; idx < len; ++idx) {
         const tupletNode: IXmlElement = tupletNodeListArr[idx];
         if (tupletNode !== undefined && tupletNode.attributes()) {
-          const type: string = tupletNode.attribute("type").value;
-          if (type === "start") {
+          const bracketAttr: Attr = tupletNode.attribute("bracket");
+          if (bracketAttr && bracketAttr.value === "yes") {
+            bracketed = true;
+          }
+          const type: Attr = tupletNode.attribute("type");
+          if (type && type.value === "start") {
             let tupletNumber: number = 1;
             if (tupletNode.attribute("number")) {
               tupletNumber = parseInt(tupletNode.attribute("number").value, 10);
@@ -547,7 +552,7 @@ export class VoiceGenerator {
               }
 
             }
-            const tuplet: Tuplet = new Tuplet(tupletLabelNumber);
+            const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
             if (this.tupletDict[tupletNumber] !== undefined) {
               delete this.tupletDict[tupletNumber];
               if (Object.keys(this.tupletDict).length === 0) {
@@ -563,7 +568,7 @@ export class VoiceGenerator {
             tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
             this.currentNote.NoteTuplet = tuplet;
             this.openTupletNumber = tupletNumber;
-          } else if (type === "stop") {
+          } else if (type.value === "stop") {
             let tupletNumber: number = 1;
             if (tupletNode.attribute("number")) {
               tupletNumber = parseInt(tupletNode.attribute("number").value, 10);
@@ -595,6 +600,11 @@ export class VoiceGenerator {
         }
         const noTupletNumbering: boolean = isNaN(tupletnumber);
 
+        const bracketAttr: Attr = n.attribute("bracket");
+        if (bracketAttr && bracketAttr.value === "yes") {
+          bracketed = true;
+        }
+
         if (type === "start") {
           let tupletLabelNumber: number = 0;
           let timeModNode: IXmlElement = node.element("time-modification");
@@ -618,7 +628,7 @@ export class VoiceGenerator {
           }
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (tuplet === undefined) {
-            tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber);
+            tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
           }
           const subnotelist: Note[] = [];
           subnotelist.push(this.currentNote);

@@ -25,9 +25,10 @@ import {StemDirectionType} from "../../VoiceData/VoiceEntry";
 import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
-import { Voice } from "../../VoiceData/Voice";
-import { VexFlowInstantaneousDynamicExpression } from "./VexFlowInstantaneousDynamicExpression";
-import { LinkedVoice } from "../../VoiceData/LinkedVoice";
+import {Voice} from "../../VoiceData/Voice";
+import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
+import {LinkedVoice} from "../../VoiceData/LinkedVoice";
+import {EngravingRules} from "../EngravingRules";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -595,10 +596,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     if (tupletStaveNotes.length > 1) {
                       const notesOccupied: number = 2;
+                      const tuplet: Tuplet = tupletBuilder[0];
+                      const bracketed: boolean = tuplet.Bracket ||
+                        (tuplet.TupletLabelNumber === 3 && EngravingRules.Rules.TripletsBracketed) ||
+                        (tuplet.TupletLabelNumber !== 3 && EngravingRules.Rules.TupletsBracketed);
                       vftuplets.push(new Vex.Flow.Tuplet( tupletStaveNotes,
                                                           {
+                                                            bracketed: bracketed,
                                                             notes_occupied: notesOccupied,
-                                                            num_notes: tupletStaveNotes.length //, location: -1, ratioed: true
+                                                            num_notes: tupletStaveNotes.length, //, location: -1, ratioed: true
+                                                            ratioed: EngravingRules.Rules.TupletsRatioed,
                                                           }));
                     } else {
                         log.debug("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");

@@ -30,6 +30,17 @@ export interface IOSMDOptions {
     drawPartNames?: boolean;
     /** Whether to draw the lyricist's name, if given. */
     drawLyricist?: boolean;
+    /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
+    tupletsRatioed?: boolean;
+    /** Whether all tuplets should be bracketed (e.g. |--5--| instead of 5). Default false.
+     * If false, only tuplets given as bracketed in XML (bracket="yes") will be bracketed.
+     */
+    tupletsBracketed?: boolean;
+    /** Whether all triplets should be bracketed. Overrides tupletsBracketed for triplets.
+     * If false, only triplets given as bracketed in XML (bracket="yes") will be bracketed.
+     * (Bracketing all triplets can be cluttering)
+     */
+    tripletsBracketed?: boolean;
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */

@@ -15,6 +15,7 @@ import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
 import {IOSMDOptions, OSMDOptions} from "./OSMDOptions";
+import {EngravingRules} from "../MusicalScore/Graphical/EngravingRules";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -338,6 +339,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.drawTitle !== undefined) {
             this.drawingParameters.DrawTitle = options.drawTitle;
+            // TODO these settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
+            // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
+            // see tuplets settings below for the immediate approach
         }
         if (options.drawSubtitle !== undefined) {
             this.drawingParameters.DrawSubtitle = options.drawSubtitle;
@@ -356,6 +360,15 @@ export class OpenSheetMusicDisplay {
         }
         if (options.defaultColorStem) {
             this.drawingParameters.defaultColorStem = options.defaultColorStem;
+        }
+        if (options.tupletsRatioed) {
+            EngravingRules.Rules.TupletsRatioed = true;
+        }
+        if (options.tupletsBracketed) {
+            EngravingRules.Rules.TupletsBracketed = true;
+        }
+        if (options.tripletsBracketed) {
+            EngravingRules.Rules.TripletsBracketed = true;
         }
     }
 
