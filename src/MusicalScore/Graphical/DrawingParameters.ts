@@ -103,16 +103,11 @@ export class DrawingParameters {
     public setForCompactMode(): void {
         this.setForDefault();
         EngravingRules.Rules.CompactMode = true;
-        this.drawTitle = false;
-        EngravingRules.Rules.RenderTitle = false;
-        this.drawSubtitle = false;
-        EngravingRules.Rules.RenderSubtitle = false;
-        this.drawComposer = false;
-        EngravingRules.Rules.RenderComposer = false;
-        this.drawLyricist = false;
-        EngravingRules.Rules.RenderLyricist = false;
+        this.DrawTitle = false;
+        this.DrawComposer = false;
+        this.DrawLyricist = false;
+        // this.DrawPartNames = true; // unnecessary
         this.drawCredits = false;
-        this.drawPartNames = true;
         this.drawHiddenNotes = false;
     }
 
