@@ -16,6 +16,7 @@
     "build:doc": "cross-env STATIC_FILES_SUBFOLDER=sheets npm run build",
     "build:webpack": "webpack --progress --colors --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
+    "build:webpack-sourcemap": "webpack --progress --colors --config webpack.sourcemap.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
     "fix-memory-limit": "increase-memory-limit"
   },
