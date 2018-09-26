@@ -95,33 +95,47 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             }
             selectSample.appendChild(option);
         }
-        selectSample.onchange = selectSampleOnChange;
-        selectBounding.onchange = selectBoundingOnChange;
+        if (selectSample) {
+            selectSample.onchange = selectSampleOnChange;
+        }
+        if (selectBounding) {
+            selectBounding.onchange = selectBoundingOnChange;
+        }
 
         // Pre-select default music piece
 
         custom.appendChild(document.createTextNode("Custom"));
 
         // Create zoom controls
-        zoomIn.onclick = function () {
-            zoom *= 1.2;
-            scale();
-        };
-        zoomOut.onclick = function () {
-            zoom /= 1.2;
-            scale();
-        };
-
-        skylineDebug.onclick = function() {
-            openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+        if (zoomIn) {
+            zoomIn.onclick = function () {
+                zoom *= 1.2;
+                scale();
+            };
+        }
+        if (zoomOut) {
+            zoomOut.onclick = function () {
+                zoom /= 1.2;
+                scale();
+            };
         }
 
-        bottomlineDebug.onclick = function() {
-            openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+        if (skylineDebug) {
+            skylineDebug.onclick = function() {
+                openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+            }
         }
 
-        debugReRenderBtn.onclick = function() {
-            rerender();
+        if (bottomlineDebug) {
+            bottomlineDebug.onclick = function() {
+                openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+            }
+        }
+
+        if (debugReRenderBtn) {
+            debugReRenderBtn.onclick = function() {
+                rerender();
+            }
         }
 
         // Create OSMD object and canvas
