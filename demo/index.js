@@ -134,8 +134,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             // drawTitle: false,
             // drawSubtitle: false,
             drawFingerings: true,
+            fingeringPosition: "left", // try right, above, below
 
-            // tupletsBracketed: true,
+            // tupletsBracketed: true, // creates brackets for all tuplets except triplets, even when not set by xml
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });

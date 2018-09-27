@@ -1,7 +1,8 @@
-import {PagePlacementEnum} from "./GraphicalMusicPage";
+import { PagePlacementEnum } from "./GraphicalMusicPage";
 //import {MusicSymbol} from "./MusicSymbol";
 import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -166,6 +167,7 @@ export class EngravingRules {
     private renderLyricist: boolean;
     private renderInstrumentNames: boolean;
     private renderFingerings: boolean;
+    private fingeringPosition: PlacementEnum;
 
     constructor() {
         // global variables
@@ -351,6 +353,7 @@ export class EngravingRules {
         this.renderLyricist = true;
         this.renderInstrumentNames = true;
         this.renderFingerings = true;
+        this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
 
         this.populateDictionaries();
         try {
@@ -1258,6 +1261,12 @@ export class EngravingRules {
     }
     public set RenderFingerings(value: boolean) {
         this.renderFingerings = value;
+    }
+    public get FingeringPosition(): PlacementEnum {
+        return this.fingeringPosition;
+    }
+    public set FingeringPosition(value: PlacementEnum) {
+        this.fingeringPosition = value;
     }
 
     /**

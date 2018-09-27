@@ -31,6 +31,7 @@ import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -699,9 +700,37 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const technicalInstructions: TechnicalInstruction[] = voiceEntry.parentVoiceEntry.TechnicalInstructions;
                     for (let i: number = 0; i < technicalInstructions.length; i++) {
                         const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
-                        const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
-                        fretFinger.setPosition(Vex.Flow.Modifier.Position.LEFT); // could be EngravingRule, though ABOVE doesn't work for chords
-                        vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
+                        const fingeringPosition: PlacementEnum = EngravingRules.Rules.FingeringPosition;
+                        let modifierPosition: any; // Vex.Flow.Modifier.Position
+                        switch (fingeringPosition) {
+                            default:
+                            case PlacementEnum.Left:
+                                modifierPosition = Vex.Flow.Modifier.Position.LEFT;
+                                break;
+                            case PlacementEnum.Right:
+                                modifierPosition = Vex.Flow.Modifier.Position.RIGHT;
+                                break;
+                            case PlacementEnum.Above:
+                                modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
+                                break;
+                            case PlacementEnum.Below:
+                                modifierPosition = Vex.Flow.Modifier.Position.BELOW;
+                        }
+
+                        // for left and right use FretHandFinger
+                        if (fingeringPosition === PlacementEnum.Left || fingeringPosition === PlacementEnum.Right) {
+                            const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
+                            fretFinger.setPosition(modifierPosition);
+                            vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
+                        // for above and below use StringNumber
+                        } else if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
+                            const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(technicalInstruction.value);
+                            (<any>stringNumber).radius = 0; // hack to remove the circle around the number
+                            stringNumber.setPosition(modifierPosition);
+                            const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1;
+                            stringNumber.setOffsetY(offsetYSign * i * stringNumber.getWidth() * 2 / 3);
+                            vexFlowVoiceEntry.vfStaveNote.addModifier(i, stringNumber);
+                        }
                     }
                 }
 

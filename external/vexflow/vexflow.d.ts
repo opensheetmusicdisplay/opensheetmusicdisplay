@@ -227,6 +227,11 @@ declare namespace Vex {
             constructor(finger: string);
         }
 
+        export class StringNumber extends Modifier {
+            constructor(string: string);
+            setOffsetY(value: number);
+        }
+
         export class NoteSubGroup extends Modifier {
             constructor(notes: Object);
         }

@@ -11,10 +11,26 @@ export class AbstractExpression {
         }
         return false;
     }
+
+    public static PlacementEnumFromString(placementString: string): PlacementEnum {
+        switch (placementString.toLowerCase()) {
+            case "above":
+                return PlacementEnum.Above;
+            case "below":
+                return PlacementEnum.Below;
+            default:
+            case "left":
+                return PlacementEnum.Left;
+            case "right":
+                return PlacementEnum.Right;
+        }
+    }
 }
 
 export enum PlacementEnum {
     Above = 0,
     Below = 1,
-    NotYetDefined = 2
+    Left = 2,
+    Right = 3,
+    NotYetDefined = 4
 }

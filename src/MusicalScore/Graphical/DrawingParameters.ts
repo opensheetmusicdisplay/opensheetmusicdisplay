@@ -1,4 +1,5 @@
 import { EngravingRules } from "./EngravingRules";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 
 export enum DrawingParametersEnum {
     allon = "allon",
@@ -27,6 +28,7 @@ export class DrawingParameters {
     public drawComposer: boolean = true;
     public drawCredits: boolean = true;
     public drawPartNames: boolean = true;
+    public fingeringPosition: PlacementEnum = PlacementEnum.Left;
     /** Draw notes set to be invisible (print-object="no" in XML). */
     public drawHiddenNotes: boolean = false;
     public defaultColorNoteHead: string; // TODO not yet supported
@@ -176,5 +178,14 @@ export class DrawingParameters {
     public set DrawPartNames(value: boolean) {
         this.drawPartNames = value;
         EngravingRules.Rules.RenderInstrumentNames = value;
+    }
+
+    public get FingeringPosition(): PlacementEnum {
+        return this.fingeringPosition;
+    }
+
+    public set FingeringPosition(value: PlacementEnum) {
+        this.fingeringPosition = value;
+        EngravingRules.Rules.FingeringPosition = value;
     }
 }
