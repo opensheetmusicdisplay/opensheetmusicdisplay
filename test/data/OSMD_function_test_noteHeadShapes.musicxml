@@ -550,7 +550,7 @@
         <stem>up</stem>
         <lyric number="1" default-x="6.22" default-y="-80.00">
           <syllabic>single</syllabic>
-          <text>/</text>
+          <text>slashed</text>
           </lyric>
         </note>
       <note default-x="69.62" default-y="-30.00">
@@ -564,7 +564,7 @@
         <stem>up</stem>
         <lyric number="1" default-x="8.48" default-y="-80.00">
           <syllabic>single</syllabic>
-          <text>back/</text>
+          <text>backslashed</text>
           </lyric>
         </note>
       </measure>
@@ -580,7 +580,7 @@
         <stem>up</stem>
         <lyric number="1" default-x="6.22" default-y="-80.00">
           <syllabic>single</syllabic>
-          <text>none</text>
+          <text>invertedTriangle</text>
           </lyric>
         </note>
       <note default-x="69.64" default-y="-30.00">
@@ -606,7 +606,7 @@
         <stem>up</stem>
         <lyric number="1" default-x="6.22" default-y="-80.00">
           <syllabic>single</syllabic>
-          <text>invertedTriangle</text>
+          <text>none</text>
           </lyric>
         </note>
       <note default-x="159.08" default-y="-30.00">
@@ -618,6 +618,11 @@
         <voice>1</voice>
         <type>half</type>
         <stem>up</stem>
+		<lyric number="1" default-x="8.48" default-y="-80.00">
+          <syllabic>single</syllabic>
+          <text>etc</text>
+          </lyric>
+        </note>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
