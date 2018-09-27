@@ -19,7 +19,7 @@ import NoteSubGroup = Vex.Flow.NoteSubGroup;
 import * as log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
-import { RepetitionInstructionEnum, RepetitionInstruction, AlignmentType } from "../../VoiceData/Instructions/RepetitionInstruction";
+import {RepetitionInstructionEnum, RepetitionInstruction, AlignmentType} from "../../VoiceData/Instructions/RepetitionInstruction";
 import {SystemLinePosition} from "../SystemLinePosition";
 import {StemDirectionType} from "../../VoiceData/VoiceEntry";
 import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
@@ -29,6 +29,8 @@ import {Voice} from "../../VoiceData/Voice";
 import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
 import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
+import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
+import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -691,6 +693,18 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         vexFlowVoiceEntry.vfStaveNote.addModifier(0, clefModifier);
                     }
                 }
+
+                // add fingering
+                if (voiceEntry.parentVoiceEntry && EngravingRules.Rules.RenderFingerings) {
+                    const technicalInstructions: TechnicalInstruction[] = voiceEntry.parentVoiceEntry.TechnicalInstructions;
+                    for (let i: number = 0; i < technicalInstructions.length; i++) {
+                        const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
+                        const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
+                        fretFinger.setPosition(Vex.Flow.Modifier.Position.LEFT); // could be EngravingRule, though ABOVE doesn't work for chords
+                        vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
+                    }
+                }
+
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
             }
         }
@@ -728,8 +742,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             for (const voiceID in gvoices) {
                 if (gvoices.hasOwnProperty(voiceID)) {
                     const vfStaveNote: StemmableNote = (gvoices[voiceID] as VexFlowVoiceEntry).vfStaveNote;
-                    if (gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer !== undefined) {
-                        VexFlowConverter.generateOrnaments(vfStaveNote, gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer);
+                    const ornamentContainer: OrnamentContainer = gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer;
+                    if (ornamentContainer !== undefined) {
+                        VexFlowConverter.generateOrnaments(vfStaveNote, ornamentContainer);
                     }
                 }
             }

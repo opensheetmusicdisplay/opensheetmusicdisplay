@@ -165,6 +165,7 @@ export class EngravingRules {
     private renderSubtitle: boolean;
     private renderLyricist: boolean;
     private renderInstrumentNames: boolean;
+    private renderFingerings: boolean;
 
     constructor() {
         // global variables
@@ -349,6 +350,7 @@ export class EngravingRules {
         this.renderSubtitle = true;
         this.renderLyricist = true;
         this.renderInstrumentNames = true;
+        this.renderFingerings = true;
 
         this.populateDictionaries();
         try {
@@ -1250,6 +1252,12 @@ export class EngravingRules {
     }
     public set RenderInstrumentNames(value: boolean) {
         this.renderInstrumentNames = value;
+    }
+    public get RenderFingerings(): boolean {
+        return this.renderFingerings;
+    }
+    public set RenderFingerings(value: boolean) {
+        this.renderFingerings = value;
     }
 
     /**

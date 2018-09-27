@@ -26,10 +26,12 @@ export interface IOSMDOptions {
     drawSubtitle?: boolean;
     /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. Not yet supported. */ // TODO
     drawCredits?: boolean;
-    /** Whether to draw part (instrument) names. */
-    drawPartNames?: boolean;
     /** Whether to draw the lyricist's name, if given. */
     drawLyricist?: boolean;
+    /** Whether to draw part (instrument) names. */
+    drawPartNames?: boolean;
+    /** Whether to draw fingerings (only left to the note for now). Default true. */
+    drawFingerings?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
     tupletsRatioed?: boolean;
     /** Whether all tuplets should be bracketed (e.g. |--5--| instead of 5). Default false.

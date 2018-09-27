@@ -133,6 +133,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             drawPartNames: true, // try false
             // drawTitle: false,
             // drawSubtitle: false,
+            drawFingerings: true,
 
             // tupletsBracketed: true,
             // tripletsBracketed: true,

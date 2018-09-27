@@ -334,6 +334,8 @@ export class OpenSheetMusicDisplay {
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
         }
+        // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.
+        // note that every option can be undefined, which doesn't mean the option should be set to false.
         if (options.drawHiddenNotes) {
             this.drawingParameters.drawHiddenNotes = true;
         }
@@ -346,14 +348,17 @@ export class OpenSheetMusicDisplay {
         if (options.drawSubtitle !== undefined) {
             this.drawingParameters.DrawSubtitle = options.drawSubtitle;
         }
-        if (options.drawPartNames !== undefined) {
-            this.drawingParameters.DrawPartNames = options.drawPartNames;
-        }
         if (options.drawLyricist !== undefined) {
             this.drawingParameters.DrawLyricist = options.drawLyricist;
         }
         if (options.drawCredits !== undefined) {
             this.drawingParameters.drawCredits = options.drawCredits;
+        }
+        if (options.drawPartNames !== undefined) {
+            this.drawingParameters.DrawPartNames = options.drawPartNames;
+        }
+        if (options.drawFingerings === false) {
+            EngravingRules.Rules.RenderFingerings = false;
         }
         if (options.defaultColorNoteHead) {
             this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
