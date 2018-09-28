@@ -727,8 +727,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(technicalInstruction.value);
                             (<any>stringNumber).radius = 0; // hack to remove the circle around the number
                             stringNumber.setPosition(modifierPosition);
-                            const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1;
-                            stringNumber.setOffsetY(offsetYSign * i * stringNumber.getWidth() * 2 / 3);
+                            const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
+                            const ordering: number = fingeringPosition === PlacementEnum.Above ? i :
+                                technicalInstructions.length - 1 - i; // reverse order for fingerings below
+                            stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
                             vexFlowVoiceEntry.vfStaveNote.addModifier(i, stringNumber);
                         }
                     }
