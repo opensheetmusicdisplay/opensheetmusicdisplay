@@ -31,6 +31,7 @@ import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import {ArpeggioType} from "../../VoiceData/Arpeggio";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -703,6 +704,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         fretFinger.setPosition(Vex.Flow.Modifier.Position.LEFT); // could be EngravingRule, though ABOVE doesn't work for chords
                         vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
                     }
+                }
+
+                // add Arpeggio
+                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
+                    let type: ArpeggioType = voiceEntry.parentVoiceEntry.Arpeggio.type;
+                    if (type === ArpeggioType.ARPEGGIO_DIRECTIONLESS) {
+                        type = ArpeggioType.ROLL_UP; // directionless not yet supported in Vexflow
+                    }
+                    vexFlowVoiceEntry.vfStaveNote.addStroke(0, new Vex.Flow.Stroke(type));
                 }
 
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
