@@ -128,8 +128,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
             autoResize: true,
             backend: backendSelect.value,
-            drawingParameters: "default", // try compact (instead of default)
             disableCursor: false,
+            drawingParameters: "default", // try compact (instead of default)
             drawPartNames: true, // try false
             // drawTitle: false,
             // drawSubtitle: false,

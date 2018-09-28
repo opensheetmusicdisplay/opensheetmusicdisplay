@@ -729,7 +729,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             stringNumber.setPosition(modifierPosition);
                             const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
                             const ordering: number = fingeringPosition === PlacementEnum.Above ? i :
-                                technicalInstructions.length - 1 - i; // reverse order for fingerings below
+                                technicalInstructions.length - 1 - i; // reverse order for fingerings below staff
                             stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
                             vexFlowVoiceEntry.vfStaveNote.addModifier(i, stringNumber);
                         }
