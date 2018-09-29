@@ -3,18 +3,16 @@ import { InstantaneousDynamicExpression, DynamicEnum } from "../../VoiceData/Exp
 import { GraphicalLabel } from "../GraphicalLabel";
 import { Label } from "../../Label";
 import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
-import { EngravingRules } from "../EngravingRules";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 import { StaffLine } from "../StaffLine";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 
 export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneousDynamicExpression {
-
     constructor(instantaneousDynamicExpression: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
         super(instantaneousDynamicExpression, staffLine, measure);
 
         this.mLabel = new GraphicalLabel(new Label(this.Expression),
-                                         EngravingRules.Rules.ContinuousDynamicTextHeight,
+                                         this.mRules.ContinuousDynamicTextHeight,
                                          TextAlignmentEnum.CenterTop,
                                          this.PositionAndShape);
 

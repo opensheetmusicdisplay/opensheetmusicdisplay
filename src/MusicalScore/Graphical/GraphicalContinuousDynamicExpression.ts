@@ -2,18 +2,18 @@ import { BoundingBox } from "./BoundingBox";
 import { GraphicalLine } from "./GraphicalLine";
 import { StaffLine } from "./StaffLine";
 import { GraphicalMeasure } from "./GraphicalMeasure";
-import { EngravingRules } from "./EngravingRules";
 import { ContDynamicEnum, ContinuousDynamicExpression } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import * as log from "loglevel";
 
 /**
  * This class prepares the graphical elements for a continuous expression. It calculates the wedges and
  * wrappings if they are split over system breaks.
  */
 export abstract class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpression {
-    /** Internal cache of read expression */
-    private mContinuousDynamic: ContinuousDynamicExpression;
     /** True if expression is split over system borders */
     private mIsSplittedPart: boolean;
     /** True if this expression should not be removed if re-rendered */
@@ -22,7 +22,6 @@ export abstract class GraphicalContinuousDynamicExpression extends AbstractGraph
     private mLines: GraphicalLine[] = [];
     private mStartMeasure: GraphicalMeasure;
     private mEndMeasure: GraphicalMeasure;
-    protected mRules: EngravingRules = EngravingRules.Rules;
 
     /**
      * Create a new instance of the GraphicalContinuousDynamicExpression
@@ -30,9 +29,8 @@ export abstract class GraphicalContinuousDynamicExpression extends AbstractGraph
      * @param staffLine The staffline where the exoression is attached
      */
     constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine) {
-        super(staffLine);
+        super(staffLine, continuousDynamic);
 
-        this.mContinuousDynamic = continuousDynamic;
         this.mIsSplittedPart = false;
         this.mNotToBeRemoved = false;
     }
@@ -45,6 +43,8 @@ export abstract class GraphicalContinuousDynamicExpression extends AbstractGraph
     /** The graphical measure where the parent continuous dynamic expression ends */
     public get EndMeasure(): GraphicalMeasure { return this.mEndMeasure; }
     public set EndMeasure(value: GraphicalMeasure) { this.mEndMeasure = value; }
+    /** The staff lin where the graphical dynamic expressions ends */
+    public get EndStaffLine(): StaffLine { return this.mEndMeasure ? this.mEndMeasure.ParentStaffLine : undefined; }
     /**  Is true if this continuous expression is a wedge, that reaches over a system border and needs to be split into two. */
     public get IsSplittedPart(): boolean { return this.mIsSplittedPart; }
     public set IsSplittedPart(value: boolean) { this.mIsSplittedPart = value; }
@@ -56,10 +56,40 @@ export abstract class GraphicalContinuousDynamicExpression extends AbstractGraph
     /** Holds the line objects that can be drawn via implementation */
     public get Lines(): GraphicalLine[] { return this.mLines; }
 
-    public get ContinuousDynamic(): ContinuousDynamicExpression { return this.mContinuousDynamic; }
+    public get ContinuousDynamic(): ContinuousDynamicExpression { return this.BaseExpression as ContinuousDynamicExpression; }
     //#endregion
 
     //#region Public methods
+
+    public updateSkyBottomLine(): void {
+        // update Sky-BottomLine
+        const skyBottomLineCalculator: SkyBottomLineCalculator = this.mParentStaffLine.SkyBottomLineCalculator;
+        const left: number = this.IsVerbal ? this.mLabel.PositionAndShape.RelativePosition.x + this.mLabel.PositionAndShape.BorderMarginLeft : 0;
+        const right: number = this.IsVerbal ? this.mLabel.PositionAndShape.RelativePosition.x + this.mLabel.PositionAndShape.BorderMarginRight : 0;
+        if (!this.IsVerbal && this.mLines.length < 2) {
+            log.warn("Not enough lines for SkyBottomLine calculation");
+        }
+        switch (this.Placement) {
+            case PlacementEnum.Above:
+                if (!this.IsVerbal) {
+                    skyBottomLineCalculator.updateSkyLineWithWedge(this.mLines[0].Start, this.mLines[0].End);
+                } else {
+                    const yValue: number = this.mLabel.PositionAndShape.BorderMarginTop + this.mLabel.PositionAndShape.RelativePosition.y;
+                    skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
+                }
+                break;
+            case PlacementEnum.Below:
+                if (!this.IsVerbal) {
+                    skyBottomLineCalculator.updateBottomLineWithWedge(this.mLines[1].Start, this.mLines[1].End);
+                } else {
+                    const yValue: number = this.mLabel.PositionAndShape.BorderMarginBottom + this.mLabel.PositionAndShape.RelativePosition.y;
+                    skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
+                }
+                break;
+            default:
+                log.error("Placement for GraphicalContinuousDynamicExpression is unknown");
+        }
+    }
 
     /**
      * Calculate crescendo lines for (full).

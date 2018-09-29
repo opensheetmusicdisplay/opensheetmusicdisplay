@@ -739,6 +739,8 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             // calculate all Instantaneous/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
+            // Calculate the alignment of close expressions
+            this.calculateExpressionAlignements();
             // place neighbouring DynamicExpressions at the same height
             this.optimizeStaffLineDynamicExpressionsPositions();
             // calculate all Mood and Unknown Expression
@@ -1032,8 +1034,13 @@ export abstract class MusicSheetCalculator {
                         continue;
                     }
 
-                    // const graphicalTempoExpr: GraphicalInstantaneousTempoExpression =
-                    // new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
+                    const graphicalTempoExpr: GraphicalInstantaneousTempoExpression = new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
+                    if (graphicalTempoExpr.ParentStaffLine === undefined) {
+                        log.warn("Adding staffline didn't work");
+                        // I am actually fooling the linter her and use the created object. This method needs refactoring,
+                        // all graphical expression creations should be in one place and ahve basic stuff like labels, lines, ...
+                        // in their constructor
+                    }
                     // in case of metronome mark:
                     if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
                         // use smaller font:
@@ -1665,6 +1672,17 @@ export abstract class MusicSheetCalculator {
             for (const musicSystem of graphicalMusicPage.MusicSystems) {
                 for (const staffLine of musicSystem.StaffLines) {
                     staffLine.SkyBottomLineCalculator.calculateLines();
+                }
+            }
+        }
+    }
+
+    private calculateExpressionAlignements(): void {
+        for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
+            for (const musicSystem of graphicalMusicPage.MusicSystems) {
+                for (const staffLine of musicSystem.StaffLines) {
+                    staffLine.AlignmentManager.alignExpressions();
+                    staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
                 }
             }
         }

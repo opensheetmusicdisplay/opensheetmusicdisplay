@@ -1,35 +1,35 @@
-import {MusicSheetCalculator} from "../MusicSheetCalculator";
-import {VexFlowGraphicalSymbolFactory} from "./VexFlowGraphicalSymbolFactory";
-import {GraphicalMeasure} from "../GraphicalMeasure";
-import {StaffLine} from "../StaffLine";
-import {VoiceEntry} from "../../VoiceData/VoiceEntry";
-import {GraphicalNote} from "../GraphicalNote";
-import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
-import {GraphicalTie} from "../GraphicalTie";
-import {Tie} from "../../VoiceData/Tie";
-import {SourceMeasure} from "../../VoiceData/SourceMeasure";
-import {MultiExpression} from "../../VoiceData/Expressions/MultiExpression";
-import {RepetitionInstruction} from "../../VoiceData/Instructions/RepetitionInstruction";
-import {Beam} from "../../VoiceData/Beam";
-import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
-import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
-import {Fraction} from "../../../Common/DataObjects/Fraction";
-import {LyricWord} from "../../VoiceData/Lyrics/LyricsWord";
-import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
-import {ArticulationEnum} from "../../VoiceData/VoiceEntry";
-import {Tuplet} from "../../VoiceData/Tuplet";
-import {VexFlowMeasure} from "./VexFlowMeasure";
-import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
+import { MusicSheetCalculator } from "../MusicSheetCalculator";
+import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
+import { GraphicalMeasure } from "../GraphicalMeasure";
+import { StaffLine } from "../StaffLine";
+import { VoiceEntry } from "../../VoiceData/VoiceEntry";
+import { GraphicalNote } from "../GraphicalNote";
+import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
+import { GraphicalTie } from "../GraphicalTie";
+import { Tie } from "../../VoiceData/Tie";
+import { SourceMeasure } from "../../VoiceData/SourceMeasure";
+import { MultiExpression } from "../../VoiceData/Expressions/MultiExpression";
+import { RepetitionInstruction } from "../../VoiceData/Instructions/RepetitionInstruction";
+import { Beam } from "../../VoiceData/Beam";
+import { ClefInstruction } from "../../VoiceData/Instructions/ClefInstruction";
+import { OctaveEnum, OctaveShift } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { Fraction } from "../../../Common/DataObjects/Fraction";
+import { LyricWord } from "../../VoiceData/Lyrics/LyricsWord";
+import { OrnamentContainer } from "../../VoiceData/OrnamentContainer";
+import { ArticulationEnum } from "../../VoiceData/VoiceEntry";
+import { Tuplet } from "../../VoiceData/Tuplet";
+import { VexFlowMeasure } from "./VexFlowMeasure";
+import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
 import Vex = require("vexflow");
 import * as log from "loglevel";
-import {unitInPixels} from "./VexFlowMusicSheetDrawer";
-import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
-import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
-import {GraphicalLyricEntry} from "../GraphicalLyricEntry";
-import {GraphicalLabel} from "../GraphicalLabel";
-import {LyricsEntry} from "../../VoiceData/Lyrics/LyricsEntry";
-import {GraphicalLyricWord} from "../GraphicalLyricWord";
-import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
+import { unitInPixels } from "./VexFlowMusicSheetDrawer";
+import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
+import { TechnicalInstruction } from "../../VoiceData/Instructions/TechnicalInstruction";
+import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
+import { GraphicalLabel } from "../GraphicalLabel";
+import { LyricsEntry } from "../../VoiceData/Lyrics/LyricsEntry";
+import { GraphicalLyricWord } from "../GraphicalLyricWord";
+import { VexFlowStaffEntry } from "./VexFlowStaffEntry";
 import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
 import { VexFlowInstantaneousDynamicExpression } from "./VexFlowInstantaneousDynamicExpression";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
@@ -41,13 +41,11 @@ import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { EngravingRules } from "../EngravingRules";
 import { InstantaneousDynamicExpression } from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
-import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneousDynamicExpression";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { Staff } from "../../VoiceData/Staff";
 import { TextAlignmentEnum, TextAlignment } from "../../../Common/Enums/TextAlignment";
 import { GraphicalSlur } from "../GraphicalSlur";
-import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression, ContDynamicEnum } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
@@ -73,17 +71,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-    protected formatMeasures(): void {
-      for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
-        const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
-        // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
-        firstMeasure.format();
-        for (const measure of verticalMeasureList) {
-          for (const staffEntry of measure.staffEntries) {
-            (<VexFlowStaffEntry>staffEntry).calculateXPosition();
-          }
+  protected formatMeasures(): void {
+    for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
+      const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
+      // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
+      firstMeasure.format();
+      for (const measure of verticalMeasureList) {
+        for (const staffEntry of measure.staffEntries) {
+          (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
       }
+    }
   }
 
   //protected clearSystemsAndMeasures(): void {
@@ -114,56 +112,56 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
 
     for (const measure of measures) {
-        const mvoices:  { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
-        const voices: Vex.Flow.Voice[] = [];
-        for (const voiceID in mvoices) {
-            if (mvoices.hasOwnProperty(voiceID)) {
-                voices.push(mvoices[voiceID]);
-                allVoices.push(mvoices[voiceID]);
-            }
+      const mvoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
+      const voices: Vex.Flow.Voice[] = [];
+      for (const voiceID in mvoices) {
+        if (mvoices.hasOwnProperty(voiceID)) {
+          voices.push(mvoices[voiceID]);
+          allVoices.push(mvoices[voiceID]);
         }
-        if (voices.length === 0) {
-            log.info("Found a measure with no voices. Continuing anyway.", mvoices);
-            continue;
-        }
-        // all voices that belong to one stave are collectively added to create a common context in VexFlow.
-        formatter.joinVoices(voices);
+      }
+      if (voices.length === 0) {
+        log.info("Found a measure with no voices. Continuing anyway.", mvoices);
+        continue;
+      }
+      // all voices that belong to one stave are collectively added to create a common context in VexFlow.
+      formatter.joinVoices(voices);
     }
 
     let minStaffEntriesWidth: number = 200;
     if (allVoices.length > 0) {
-        // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
-        // FIXME: a more relaxed formatting of voices
-        minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
-        // firstMeasure.formatVoices = (w: number) => {
-        //     formatter.format(allVoices, w);
-        // };
-        MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
-        for (const measure of measures) {
-          if (measure === measures[0]) {
-            const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
-            // prepare format function for voices, will be called later for formatting measure again
-            vexflowMeasure.formatVoices = (w: number) => {
-                    formatter.format(allVoices, w);
-              // formatter.format(allVoices, w, {
-              //   align_rests: false, // TODO
-              //   // align_rests = true causes a Vexflow Exception for Mozart - An Chloe
-              //   // align_rests = false still aligns rests with beams according to Vexflow, but doesn't seem to do anything
-              // });
-                };
-            // format now for minimum width, calculateMeasureWidthFromLyrics later
-            vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
-          } else {
-            (measure as VexFlowMeasure).formatVoices = undefined;
-            }
+      // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
+      // FIXME: a more relaxed formatting of voices
+      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+      // firstMeasure.formatVoices = (w: number) => {
+      //     formatter.format(allVoices, w);
+      // };
+      MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
+      for (const measure of measures) {
+        if (measure === measures[0]) {
+          const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
+          // prepare format function for voices, will be called later for formatting measure again
+          vexflowMeasure.formatVoices = (w: number) => {
+            formatter.format(allVoices, w);
+            // formatter.format(allVoices, w, {
+            //   align_rests: false, // TODO
+            //   // align_rests = true causes a Vexflow Exception for Mozart - An Chloe
+            //   // align_rests = false still aligns rests with beams according to Vexflow, but doesn't seem to do anything
+            // });
+          };
+          // format now for minimum width, calculateMeasureWidthFromLyrics later
+          vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
+        } else {
+          (measure as VexFlowMeasure).formatVoices = undefined;
         }
+      }
     }
 
     for (const graphicalMeasure of measures) {
       for (const staffEntry of graphicalMeasure.staffEntries) {
         // here the measure modifiers are not yet set, therefore the begin instruction width will be empty
         (<VexFlowStaffEntry>staffEntry).calculateXPosition();
-  }
+      }
     }
     // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this
     return minStaffEntriesWidth;
@@ -319,7 +317,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
 
   protected updateStaffLineBorders(staffLine: StaffLine): void {
-      staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
+    staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
   }
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -355,14 +353,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected calculateSystemYLayout(): void {
     for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
-            for (const musicSystem of graphicalMusicPage.MusicSystems) {
-                this.optimizeDistanceBetweenStaffLines(musicSystem);
-          }
-
-          // set y positions of systems using the previous system and a fixed distance.
-            this.calculateMusicSystemsRelativePositions(graphicalMusicPage);
-        }
+      for (const musicSystem of graphicalMusicPage.MusicSystems) {
+        this.optimizeDistanceBetweenStaffLines(musicSystem);
       }
+
+      // set y positions of systems using the previous system and a fixed distance.
+      this.calculateMusicSystemsRelativePositions(graphicalMusicPage);
+    }
+  }
 
   /**
    * Is called at the begin of the method for creating the vertically aligned staff measures belonging to one source measure.
@@ -384,11 +382,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return;
   }
 
-    /**
-     * Calculate the shape (Bezier curve) for this tie.
-     * @param tie
-     * @param tieIsAtSystemBreak
-     */
+  /**
+   * Calculate the shape (Bezier curve) for this tie.
+   * @param tie
+   * @param tieIsAtSystemBreak
+   */
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
     const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
@@ -442,110 +440,107 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[measureIndex];
     const staffLine: StaffLine = measures[staffIndex].ParentStaffLine;
 
-    if (multiExpression.InstantaneousDynamic) {
-        const instantaneousDynamic: InstantaneousDynamicExpression = multiExpression.InstantaneousDynamic;
+    const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+      absoluteTimestamp,
+      staffIndex,
+      staffLine,
+      staffLine.isPartOfMultiStaffInstrument());
 
-        const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-          absoluteTimestamp,
-          staffIndex,
-          staffLine,
-          staffLine.isPartOfMultiStaffInstrument());
-        if (Math.abs(startPosInStaffline.x) === 0) {
-          startPosInStaffline.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
-        }
-        const measure: GraphicalMeasure = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex];
-        const graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression = new VexFlowInstantaneousDynamicExpression(
-          instantaneousDynamic,
-          staffLine,
-          measure);
-        (measure as VexFlowMeasure).instantaneousDynamics.push(graphicalInstantaneousDynamic);
-        this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, staffLine, startPosInStaffline);
+    if (multiExpression.InstantaneousDynamic) {
+      const instantaneousDynamic: InstantaneousDynamicExpression = multiExpression.InstantaneousDynamic;
+
+      const instantDynamicStartPosition: PointF2D = startPosInStaffline;
+      if (Math.abs(startPosInStaffline.x) === 0) {
+        instantDynamicStartPosition.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
+      }
+      const measure: GraphicalMeasure = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex];
+      const graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression = new VexFlowInstantaneousDynamicExpression(
+        instantaneousDynamic,
+        staffLine,
+        measure);
+      (measure as VexFlowMeasure).instantaneousDynamics.push(graphicalInstantaneousDynamic);
+      this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, staffLine, instantDynamicStartPosition);
     }
     if (multiExpression.StartingContinuousDynamic) {
-        const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
-        const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(continuousDynamic, staffLine);
-        graphicalContinuousDynamic.StartMeasure = measures[staffIndex];
-        // If it is a wedge
-        const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-          absoluteTimestamp, staffIndex, staffLine, staffLine.isPartOfMultiStaffInstrument());
-        if (startPosInStaffline.x <= 0) {
-            startPosInStaffline.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
-        }
-        if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
-            // const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            //   absoluteTimestamp, staffIndex, staffLine, staffLine.isPartOfMultiStaffInstrument());
-            const endMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
-              continuousDynamic.EndMultiExpression.SourceMeasureParent, staffIndex);
-
-            if (endMeasure) {
-              graphicalContinuousDynamic.EndMeasure = endMeasure;
-              const endStaffLine: StaffLine = endMeasure.ParentStaffLine;
-              const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(continuousDynamic.EndMultiExpression.AbsoluteTimestamp);
-
-              const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-                  endAbsoluteTimestamp, staffIndex, endStaffLine, endStaffLine.isPartOfMultiStaffInstrument(), 0);
-
-              this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, startPosInStaffline, endStaffLine, endPosInStaffLine);
-            }
-        } else if (graphicalContinuousDynamic.IsVerbal) {
-          // const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-          //   absoluteTimestamp, staffIndex, staffLine, staffLine.isPartOfMultiStaffInstrument());
-          if (startPosInStaffline.x <= 0) {
-              startPosInStaffline.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
-          }
-          this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, startPosInStaffline);
-        }
+      const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
+      const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(continuousDynamic, staffLine);
+      graphicalContinuousDynamic.StartMeasure = measures[staffIndex];
+      const continuousDynamicStartPosition: PointF2D = startPosInStaffline;
+      // If it is a wedge
+      if (startPosInStaffline.x <= 0) {
+        continuousDynamicStartPosition.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
+      }
+      if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
+        this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, continuousDynamicStartPosition);
+      } else if (graphicalContinuousDynamic.IsVerbal) {
+        this.calculateGraphicalVerbalContinuousDynamic(graphicalContinuousDynamic, continuousDynamicStartPosition);
+      } else {
+        log.warn("This continous dynamic is not covered");
+      }
     }
   }
 
-  /// <summary>
-  /// This method calculates the RelativePosition of a single GraphicalContinuousDynamic.
-  /// </summary>
-  /// <param name="continuousDynamic"></param>
-  /// <param name="startStaffLine"></param>
-  /// <param name="endStaffLine"></param>
-  /// <param name="startPosInStaffline"></param>
-  /// <param name="endPosInStaffline"></param>
-  public calculateGraphicalContinuousDynamic(continuousDynamic: VexFlowContinuousDynamicExpression,
-                                             startPosInStaffline: PointF2D,
-                                             endStaffLine?: StaffLine,
-                                             endPosInStaffline: PointF2D = new PointF2D(0, 0)): void {
-    const staffLine: StaffLine = continuousDynamic.ParentStaffLine;
+  /**
+   * This method calculates the RelativePosition of a single verbal GraphicalContinuousDynamic.
+   * @param graphicalContinuousDynamic Graphical continous dynamic to be calculated
+   * @param startPosInStaffline Starting point in staff line
+   */
+  private calculateGraphicalVerbalContinuousDynamic(graphicalContinuousDynamic: VexFlowContinuousDynamicExpression,
+                                                    startPosInStaffline: PointF2D): void {
+    // if ContinuousDynamicExpression is given from words
+    const graphLabel: GraphicalLabel = graphicalContinuousDynamic.Label;
+    const left: number = startPosInStaffline.x + graphLabel.PositionAndShape.BorderMarginLeft;
+    const right: number = startPosInStaffline.x + graphLabel.PositionAndShape.BorderMarginRight;
+    // placement always below the currentStaffLine, with the exception of Voice Instrument (-> above)
+    const placement: PlacementEnum = graphicalContinuousDynamic.ContinuousDynamic.Placement;
+    const staffLine: StaffLine = graphicalContinuousDynamic.ParentStaffLine;
+    const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+
+    let drawingHeight: number;
+    if (placement === PlacementEnum.Below) {
+      drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);    // Bottom line
+      graphLabel.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - graphLabel.PositionAndShape.BorderMarginTop);
+    } else {
+      drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+      graphLabel.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - graphLabel.PositionAndShape.BorderMarginBottom);
+    }
+  }
+
+  /**
+   * This method calculates the RelativePosition of a single GraphicalContinuousDynamic.
+   * @param graphicalContinuousDynamic Graphical continous dynamic to be calculated
+   * @param startPosInStaffline Starting point in staff line
+   */
+  public calculateGraphicalContinuousDynamic(graphicalContinuousDynamic: VexFlowContinuousDynamicExpression, startPosInStaffline: PointF2D): void {
+    const staffIndex: number = graphicalContinuousDynamic.ParentStaffLine.ParentStaff.idInMusicSheet;
+    // TODO: Previously the staffIndex was passed down. BUT you can (and this function actually does this) get it from
+    // the musicSystem OR from the ParentStaffLine. Is this the same index?
+    // const staffIndex: number = musicSystem.StaffLines.indexOf(staffLine);
+
+    // We know we have an end measure because otherwise we won't be called
+    const endMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
+      graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.SourceMeasureParent, staffIndex);
+    if (!endMeasure) {
+      log.warn("Not working");
+      return;
+    }
+
+    graphicalContinuousDynamic.EndMeasure = endMeasure;
+    const endStaffLine: StaffLine = endMeasure.ParentStaffLine;
+    const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.AbsoluteTimestamp);
+
+    const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+      endAbsoluteTimestamp, staffIndex, endStaffLine, endStaffLine.isPartOfMultiStaffInstrument(), 0);
+
+    const staffLine: StaffLine = graphicalContinuousDynamic.ParentStaffLine;
+    //currentMusicSystem and currentStaffLine
+    const musicSystem: MusicSystem = staffLine.ParentMusicSystem;
+    const currentStaffLineIndex: number = musicSystem.StaffLines.indexOf(staffLine);
     const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
     // let expressionIndex: number;
 
     // placement always below the currentStaffLine, with the exception of Voice Instrument (-> above)
-    const placement: PlacementEnum = continuousDynamic.ContinuousDynamic.Placement;
-
-    // if ContinuousDynamicExpression is given from words
-    if (continuousDynamic.IsVerbal) {
-      const graphLabel: GraphicalLabel = continuousDynamic.Label;
-      const left: number = startPosInStaffline.x + graphLabel.PositionAndShape.BorderMarginLeft;
-      const right: number = startPosInStaffline.x + graphLabel.PositionAndShape.BorderMarginRight;
-
-      // FIXME: This will be done in the AlignmentManager
-      // // check if previous Expression is InstantaniousDynamic
-      // expressionIndex = staffLine.AbstractExpressions.indexOf(continuousDynamic);
-      // if (expressionIndex > 0)
-      // {
-      //   const formerExpression: AbstractGraphicalExpression = staffLine.AbstractExpressions[expressionIndex - 1];
-      //   // optimizeFormerDynamicXPositionForContDynamicLabel(placement, formerExpression, graphLabel, ref startPosInStaffline, ref left, ref right);
-      // }// End x-positioning overlap check
-      let drawingHeight: number;
-      if (placement === PlacementEnum.Below) {
-        drawingHeight = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);    // Bottom line
-        graphLabel.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - graphLabel.PositionAndShape.BorderMarginTop);
-        skyBottomLineCalculator.updateBottomLineInRange(left, right,
-                                                        graphLabel.PositionAndShape.BorderMarginBottom + graphLabel.PositionAndShape.RelativePosition.y);
-      } else {
-        drawingHeight = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
-        graphLabel.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, drawingHeight - graphLabel.PositionAndShape.BorderMarginBottom);
-        skyBottomLineCalculator.updateSkyLineInRange(left, right,
-                                                     graphLabel.PositionAndShape.BorderMarginTop + graphLabel.PositionAndShape.RelativePosition.y);
-      }
-      //TODO: Seriously? Return? And the rest of this huge function? This should be split!
-      return;
-    }
+    const placement: PlacementEnum = graphicalContinuousDynamic.ContinuousDynamic.Placement;
 
     // if ContinuousDynamicExpression is given from wedge
     let secondGraphicalContinuousDynamic: VexFlowContinuousDynamicExpression = undefined;
@@ -553,49 +548,32 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // check if Expression spreads over the same StaffLine or not
     const sameStaffLine: boolean = endStaffLine !== undefined && staffLine === endStaffLine;
 
-    // FIXME: This will be done in the AlignmentManager
-    // // check if previous Expression is InstantaniousDynamic
-    // expressionIndex = staffLine.AbstractExpressions.IndexOf(continuousDynamic);
-    // if (expressionIndex > 0)
-    // {
-    //   AbstractGraphicalExpression formerExpression = staffLine.AbstractExpressions[expressionIndex - 1];
-    //   optimizeFormerDynamicXPositionForContDynamicWedge(placement, formerExpression, startPosInStaffline, endPosInStaffline, staffLine, endStaffLine);
-    // }// End x-positioning overlap check
-
     // last length check
-    if (sameStaffLine && endPosInStaffline.x - startPosInStaffline.x < this.rules.WedgeMinLength) {
-      endPosInStaffline.x = startPosInStaffline.x + this.rules.WedgeMinLength;
+    if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength) {
+      endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
     }
 
-    let upperStartX: number = 0;
+    // Upper staff wedge always starts at the given position and the lower staff wedge always starts at the begin of measure
+    const upperStartX: number = startPosInStaffline.x;
+    const lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth + this.rules.WedgeHorizontalMargin;
     let upperEndX: number = 0;
-    let lowerStartX: number = 0;
     let lowerEndX: number = 0;
 
     if (!sameStaffLine) {
-      upperStartX = startPosInStaffline.x;
       upperEndX = staffLine.PositionAndShape.Size.width;
-      lowerStartX = endStaffLine.Measures[0].beginInstructionsWidth + this.rules.WedgeHorizontalMargin;
-      lowerEndX = endPosInStaffline.x;
+      lowerEndX = endPosInStaffLine.x;
 
       // must create a new Wedge
-      continuousDynamic.IsSplittedPart = true;
-      secondGraphicalContinuousDynamic = new VexFlowContinuousDynamicExpression(continuousDynamic.ContinuousDynamic, endStaffLine);
+      secondGraphicalContinuousDynamic = new VexFlowContinuousDynamicExpression(graphicalContinuousDynamic.ContinuousDynamic, endStaffLine);
       secondGraphicalContinuousDynamic.IsSplittedPart = true;
+      graphicalContinuousDynamic.IsSplittedPart = true;
     } else {
-      upperStartX = startPosInStaffline.x;
-      upperEndX = endPosInStaffline.x;
-      // continuousDynamic.EndStaffLine = endStaffLine;
-      continuousDynamic.EndMeasure = endStaffLine.Measures[0];
+      upperEndX = endPosInStaffLine.x;
     }
 
     // the Height of the Expression's placement
     let idealY: number = 0;
     let secondIdealY: number = 0;
-
-    //currentMusicSystem and currentStaffLine
-    const musicSystem: MusicSystem = staffLine.ParentMusicSystem;
-    const currentStaffLineIndex: number = musicSystem.StaffLines.indexOf(staffLine);
 
     if (placement === PlacementEnum.Below) {
       // can be a single Staff Instrument or an Instrument with 2 Staves
@@ -610,8 +588,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const nextStaffLine: StaffLine = musicSystem.StaffLines[nextStaffLineIndex];
 
         const distanceBetweenStaffLines: number = nextStaffLine.PositionAndShape.RelativePosition.y -
-                                    staffLine.PositionAndShape.RelativePosition.y -
-                                    this.rules.StaffHeight;
+          staffLine.PositionAndShape.RelativePosition.y -
+          this.rules.StaffHeight;
 
         // ideal Height is exactly between the two StaffLines
         idealY = this.rules.StaffHeight + distanceBetweenStaffLines / 2;
@@ -623,9 +601,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // must consider the upperWedge starting/ending tip for the comparison with the BottomLine
       idealY -= this.rules.WedgeOpeningLength / 2;
       if (!sameStaffLine) {
+        // Set the value for the splitted y position to the ideal position before we check and modify it with
+        // the skybottom calculator detection
         secondIdealY = idealY;
       }
-
       // must check BottomLine for possible collisions within the Length of the Expression
       // find the corresponding max value for the given Length
       let maxBottomLineValueForExpressionLength: number = skyBottomLineCalculator.getBottomLineMaxInRange(upperStartX, upperEndX);
@@ -656,16 +635,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const nextStaffLine: StaffLine = musicSystem.StaffLines[nextStaffLineIndex];
             const nextStaffLineMinSkyLineValue: number = nextStaffLine.SkyBottomLineCalculator.getSkyLineMinInRange(upperStartX, upperEndX);
             const distanceBetweenStaffLines: number = nextStaffLine.PositionAndShape.RelativePosition.y -
-                                                      staffLine.PositionAndShape.RelativePosition.y;
+              staffLine.PositionAndShape.RelativePosition.y;
             const relativeSkyLineHeight: number = distanceBetweenStaffLines + nextStaffLineMinSkyLineValue;
 
             if (relativeSkyLineHeight - this.rules.WedgeOpeningLength > this.rules.StaffHeight) {
-                idealY = relativeSkyLineHeight - this.rules.WedgeVerticalMargin;
+              idealY = relativeSkyLineHeight - this.rules.WedgeVerticalMargin;
             } else {
-                idealY = this.rules.StaffHeight + this.rules.WedgeOpeningLength;
+              idealY = this.rules.StaffHeight + this.rules.WedgeOpeningLength;
             }
 
-            continuousDynamic.NotToBeRemoved = true;
+            graphicalContinuousDynamic.NotToBeRemoved = true;
           }
         }
       }
@@ -679,14 +658,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
 
         secondIdealY += this.rules.WedgeOpeningLength / 2;
+        secondIdealY += this.rules.WedgeVerticalMargin;
       }
 
       if (!withinCrossedBeam) {
         idealY += this.rules.WedgeOpeningLength / 2;
         idealY += this.rules.WedgeVerticalMargin;
-      }
-      if (!sameStaffLine) {
-        secondIdealY += this.rules.WedgeVerticalMargin;
       }
 
     } else if (placement === PlacementEnum.Above) {
@@ -703,8 +680,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         const previousStaffLine: StaffLine = musicSystem.StaffLines[previousStaffLineIndex];
         const distanceBetweenStaffLines: number = staffLine.PositionAndShape.RelativePosition.y -
-                                                  previousStaffLine.PositionAndShape.RelativePosition.y -
-                                                  this.rules.StaffHeight;
+          previousStaffLine.PositionAndShape.RelativePosition.y -
+          this.rules.StaffHeight;
 
         // ideal Height is exactly between the two StaffLines
         idealY = -distanceBetweenStaffLines / 2;
@@ -746,7 +723,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             const formerStaffLine: StaffLine = musicSystem.StaffLines[formerStaffLineIndex];
             const formerStaffLineMaxBottomLineValue: number = formerStaffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(upperStartX, upperEndX);
             const distanceBetweenStaffLines: number = staffLine.PositionAndShape.RelativePosition.y -
-                                                      formerStaffLine.PositionAndShape.RelativePosition.y;
+              formerStaffLine.PositionAndShape.RelativePosition.y;
             const relativeSkyLineHeight: number = distanceBetweenStaffLines - formerStaffLineMaxBottomLineValue;
             idealY = (relativeSkyLineHeight - this.rules.StaffHeight) / 2 + this.rules.StaffHeight;
           }
@@ -777,97 +754,29 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // the idealY is calculated relative to the currentStaffLine
 
     // Crescendo (point to the left, opening to the right)
-    continuousDynamic.Lines.clear();
-    if (continuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+    graphicalContinuousDynamic.Lines.clear();
+    if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
       if (sameStaffLine) {
-        const lineStart: PointF2D = new PointF2D(upperStartX, idealY);
-        const upperLineEnd: PointF2D = new PointF2D(upperEndX, idealY - this.rules.WedgeOpeningLength / 2);
-        const lowerLineEnd: PointF2D = new PointF2D(upperEndX, idealY + this.rules.WedgeOpeningLength / 2);
-
-        continuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
-        continuousDynamic.calcPsi(staffLine.PositionAndShape);
-
-        // update Sky-BottomLine
-        if (placement === PlacementEnum.Below) {
-          skyBottomLineCalculator.updateBottomLineWithWedge(lineStart, lowerLineEnd);
-        } else if (placement === PlacementEnum.Above) {
-          skyBottomLineCalculator.updateSkyLineWithWedge(lineStart, upperLineEnd);
-        }
+        graphicalContinuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
+        graphicalContinuousDynamic.calcPsi(staffLine.PositionAndShape);
       } else {
-          // two different Wedges
-          const lineStart: PointF2D = new PointF2D(upperStartX, idealY);
-          let upperLineEnd: PointF2D = new PointF2D(upperEndX, idealY - this.rules.WedgeMeasureEndOpeningLength / 2);
-          let lowerLineEnd: PointF2D = new PointF2D(upperEndX, idealY + this.rules.WedgeMeasureEndOpeningLength / 2);
-
-          continuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
-          continuousDynamic.calcPsi(staffLine.PositionAndShape);
-
-          // update Sky-BottomLine
-          if (placement === PlacementEnum.Below) {
-            skyBottomLineCalculator.updateBottomLineWithWedge(lineStart, lowerLineEnd);
-          } else if (placement === PlacementEnum.Above) {
-            skyBottomLineCalculator.updateSkyLineWithWedge(lineStart, upperLineEnd);
-          }
-
-          const upperLineStart: PointF2D = new PointF2D(lowerStartX, secondIdealY - this.rules.WedgeMeasureBeginOpeningLength / 2);
-          const lowerLineStart: PointF2D = new PointF2D(lowerStartX, secondIdealY + this.rules.WedgeMeasureBeginOpeningLength / 2);
-          upperLineEnd = new PointF2D(lowerEndX, secondIdealY - this.rules.WedgeOpeningLength / 2);
-          lowerLineEnd = new PointF2D(lowerEndX, secondIdealY + this.rules.WedgeOpeningLength / 2);
-
-          secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
-          secondGraphicalContinuousDynamic.calcPsi(endStaffLine.PositionAndShape);
-
-          // update Sky-BottomLine
-          if (placement === PlacementEnum.Below) {
-            endStaffLine.SkyBottomLineCalculator.updateBottomLineWithWedge(lowerLineStart, lowerLineEnd);
-          } else if (placement === PlacementEnum.Above) {
-            endStaffLine.SkyBottomLineCalculator.updateSkyLineWithWedge(upperLineStart, upperLineEnd);
-          }
-      }
-    } else if (continuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
-      if (sameStaffLine) {
-        const upperLineStart: PointF2D = new PointF2D(upperStartX, idealY - this.rules.WedgeOpeningLength / 2);
-        const lowerLineStart: PointF2D = new PointF2D(upperStartX, idealY + this.rules.WedgeOpeningLength / 2);
-        const lineEnd: PointF2D = new PointF2D(upperEndX, idealY);
-
-        continuousDynamic.createDiminuendoLines(upperStartX, upperEndX, idealY);
-        continuousDynamic.calcPsi(staffLine.PositionAndShape);
-
-        // update Sky-BottomLine
-        if (placement === PlacementEnum.Below) {
-          skyBottomLineCalculator.updateBottomLineWithWedge(lowerLineStart, lineEnd);
-        } else if (placement === PlacementEnum.Above) {
-          skyBottomLineCalculator.updateSkyLineWithWedge(upperLineStart, lineEnd);
-        }
-      } else {
-        let upperLineStart: PointF2D = new PointF2D(upperStartX, idealY - this.rules.WedgeOpeningLength / 2);
-        let lowerLineStart: PointF2D = new PointF2D(upperStartX, idealY + this.rules.WedgeOpeningLength / 2);
-        let upperLineEnd: PointF2D = new PointF2D(upperEndX, idealY - this.rules.WedgeMeasureEndOpeningLength / 2);
-        const lowerLineEnd: PointF2D = new PointF2D(upperEndX, idealY + this.rules.WedgeMeasureEndOpeningLength / 2);
-
-        continuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY);
-        continuousDynamic.calcPsi(staffLine.PositionAndShape);
-
-        // update Sky-BottomLine
-        if (placement === PlacementEnum.Below) {
-          skyBottomLineCalculator.updateBottomLineWithWedge(lowerLineStart, upperLineEnd);
-        } else if (placement === PlacementEnum.Above) {
-          skyBottomLineCalculator.updateSkyLineWithWedge(upperLineStart, lowerLineEnd);
-        }
-
-        upperLineStart = new PointF2D(lowerStartX, secondIdealY - this.rules.WedgeMeasureBeginOpeningLength / 2);
-        lowerLineStart = new PointF2D(lowerStartX, secondIdealY + this.rules.WedgeMeasureBeginOpeningLength / 2);
-        upperLineEnd = new PointF2D(lowerEndX, secondIdealY - this.rules.WedgeOpeningLength / 2);
+        // two different Wedges
+        graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
+        graphicalContinuousDynamic.calcPsi(staffLine.PositionAndShape);
 
         secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
         secondGraphicalContinuousDynamic.calcPsi(endStaffLine.PositionAndShape);
+      }
+    } else if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+      if (sameStaffLine) {
+        graphicalContinuousDynamic.createDiminuendoLines(upperStartX, upperEndX, idealY);
+        graphicalContinuousDynamic.calcPsi(staffLine.PositionAndShape);
+      } else {
+        graphicalContinuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY);
+        graphicalContinuousDynamic.calcPsi(staffLine.PositionAndShape);
 
-        // update Sky-BottomLine
-        if (placement === PlacementEnum.Below) {
-          endStaffLine.SkyBottomLineCalculator.updateBottomLineWithWedge(lowerLineStart, upperLineEnd);
-        } else if (placement === PlacementEnum.Above) {
-          endStaffLine.SkyBottomLineCalculator.updateSkyLineWithWedge(upperLineStart, upperLineEnd);
-        }
+        secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
+        secondGraphicalContinuousDynamic.calcPsi(endStaffLine.PositionAndShape);
       }
     } //End Diminuendo
   }
@@ -875,96 +784,68 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   public calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression,
                                                           staffLine: StaffLine,
                                                           relative: PointF2D): void {
-    // // add to StaffLine and set PSI relations
-    // staffLine.PositionAndShape.ChildElements.push(graphicalInstantaneousDynamic.PositionAndShape);
-    // if (this.staffLinesWithGraphicalExpressions.indexOf(staffLine) === -1) {
-    //     this.staffLinesWithGraphicalExpressions.push(staffLine);
-    // }
-
     // get Margin Dimensions
     const left: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginLeft;
     const right: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginRight;
     const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
 
-    // get possible previous Dynamic
-    let previousExpression: GraphicalInstantaneousDynamicExpression = undefined;
-    const expressionIndex: number = staffLine.AbstractExpressions.indexOf(graphicalInstantaneousDynamic);
-    if (expressionIndex > 0) {
-        previousExpression = (staffLine.AbstractExpressions[expressionIndex - 1] as GraphicalInstantaneousDynamicExpression);
-    }
-
-    // is previous a ContinuousDynamic?
-    if (previousExpression && previousExpression instanceof GraphicalContinuousDynamicExpression) {
-        // GraphicalContinuousDynamicExpression formerGraphicalContinuousDynamic =
-        //     (GraphicalContinuousDynamicExpression)previousExpression;
-
-        // optimizeFormerContDynamicXPositionForInstDynamic(staffLine, skyBottomLineCalculator,
-        //                                                  graphicalInstantaneousDynamic,
-        //                                                  formerGraphicalContinuousDynamic, left, right);
-    } else if (previousExpression && previousExpression instanceof GraphicalInstantaneousDynamicExpression) {
-        //const formerGraphicalInstantaneousDynamic: GraphicalInstantaneousDynamicExpression = previousExpression;
-
-        // optimizeFormerInstDynamicXPositionForInstDynamic(formerGraphicalInstantaneousDynamic,
-        //                                                  graphicalInstantaneousDynamic, ref relative, ref left, ref right);
-    }// End x-positioning overlap check
-
     // calculate yPosition according to Placement
     if (graphicalInstantaneousDynamic.InstantaneousDynamic.Placement === PlacementEnum.Above) {
-        const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
-        let yPosition: number = 0;
+      const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
+      let yPosition: number = 0;
 
-        // if StaffLine part of multiStafff Instrument and not the first one, ideal yPosition middle of distance between Staves
-        if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
-            const formerStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) - 1];
-            const difference: number = staffLine.PositionAndShape.RelativePosition.y -
-                               formerStaffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
+      // if StaffLine part of multiStafff Instrument and not the first one, ideal yPosition middle of distance between Staves
+      if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
+        const formerStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) - 1];
+        const difference: number = staffLine.PositionAndShape.RelativePosition.y -
+          formerStaffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
 
-            // take always into account the size of the Dynamic
-            if (skyLineValue > -difference / 2) {
-                yPosition = -difference / 2;
-            } else {
-                yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
-            }
+        // take always into account the size of the Dynamic
+        if (skyLineValue > -difference / 2) {
+          yPosition = -difference / 2;
         } else {
-            yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
+          yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
         }
+      } else {
+        yPosition = skyLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
+      }
 
-        graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
-        skyBottomLineCalculator.updateSkyLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop);
+      graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
+      skyBottomLineCalculator.updateSkyLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop);
     } else if (graphicalInstantaneousDynamic.InstantaneousDynamic.Placement === PlacementEnum.Below) {
-        const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
-        let yPosition: number = 0;
+      const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
+      let yPosition: number = 0;
 
-        // if StaffLine part of multiStafff Instrument and not the last one, ideal yPosition middle of distance between Staves
-        const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
-        if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
-            const nextStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) + 1];
-            const difference: number = nextStaffLine.PositionAndShape.RelativePosition.y -
-                               staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
-            const border: number = graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
+      // if StaffLine part of multiStafff Instrument and not the last one, ideal yPosition middle of distance between Staves
+      const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
+      if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
+        const nextStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) + 1];
+        const difference: number = nextStaffLine.PositionAndShape.RelativePosition.y -
+          staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
+        const border: number = graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
 
-            // take always into account the size of the Dynamic
-            if (bottomLineValue + border < this.rules.StaffHeight + difference / 2) {
-                yPosition = this.rules.StaffHeight + difference / 2;
-            } else {
-                yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
-            }
+        // take always into account the size of the Dynamic
+        if (bottomLineValue + border < this.rules.StaffHeight + difference / 2) {
+          yPosition = this.rules.StaffHeight + difference / 2;
         } else {
-            yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
+          yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
         }
+      } else {
+        yPosition = bottomLineValue - graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop;
+      }
 
-        graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
-        skyBottomLineCalculator.updateBottomLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom);
+      graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
+      skyBottomLineCalculator.updateBottomLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom);
     }
-}
+  }
 
-    /**
-     * Calculate a single OctaveShift for a [[MultiExpression]].
-     * @param sourceMeasure
-     * @param multiExpression
-     * @param measureIndex
-     * @param staffIndex
-     */
+  /**
+   * Calculate a single OctaveShift for a [[MultiExpression]].
+   * @param sourceMeasure
+   * @param multiExpression
+   * @param measureIndex
+   * @param staffIndex
+   */
   protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     // calculate absolute Timestamp and startStaffLine (and EndStaffLine if needed)
     const octaveShift: OctaveShift = multiExpression.OctaveShiftStart;
@@ -976,9 +857,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     let endMeasure: GraphicalMeasure = undefined;
     if (octaveShift.ParentEndMultiExpression !== undefined) {
-        endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
-                                                                                           staffIndex);
-  }
+      endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
+                                                                                         staffIndex);
+    }
     let startMeasure: GraphicalMeasure = undefined;
     if (octaveShift.ParentEndMultiExpression !== undefined) {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
@@ -986,76 +867,76 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     if (endMeasure !== undefined) {
-        // calculate GraphicalOctaveShift and RelativePositions
-        const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
-        startStaffLine.OctaveShifts.push(graphicalOctaveShift);
+      // calculate GraphicalOctaveShift and RelativePositions
+      const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
+      startStaffLine.OctaveShifts.push(graphicalOctaveShift);
 
-        // calculate RelativePosition and Dashes
-        const startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
-        const endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      // calculate RelativePosition and Dashes
+      const startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      const endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
 
-        graphicalOctaveShift.setStartNote(startStaffEntry);
+      graphicalOctaveShift.setStartNote(startStaffEntry);
 
-        if (endMeasure.ParentStaffLine !== startMeasure.ParentStaffLine) {
-          graphicalOctaveShift.endsOnDifferentStaffLine = true;
-          const lastMeasure: GraphicalMeasure = startMeasure.ParentStaffLine.Measures[startMeasure.ParentStaffLine.Measures.length - 1];
-          const lastNote: GraphicalStaffEntry = lastMeasure.staffEntries[lastMeasure.staffEntries.length - 1];
-          graphicalOctaveShift.setEndNote(lastNote);
+      if (endMeasure.ParentStaffLine !== startMeasure.ParentStaffLine) {
+        graphicalOctaveShift.endsOnDifferentStaffLine = true;
+        const lastMeasure: GraphicalMeasure = startMeasure.ParentStaffLine.Measures[startMeasure.ParentStaffLine.Measures.length - 1];
+        const lastNote: GraphicalStaffEntry = lastMeasure.staffEntries[lastMeasure.staffEntries.length - 1];
+        graphicalOctaveShift.setEndNote(lastNote);
 
-          // Now finish the shift on the next line
-          const remainingOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, endMeasure.PositionAndShape);
-          endMeasure.ParentStaffLine.OctaveShifts.push(remainingOctaveShift);
-          const firstMeasure: GraphicalMeasure = endMeasure.ParentStaffLine.Measures[0];
-          const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
-          remainingOctaveShift.setStartNote(firstNote);
-          remainingOctaveShift.setEndNote(endStaffEntry);
-        } else {
-          graphicalOctaveShift.setEndNote(endStaffEntry);
-        }
+        // Now finish the shift on the next line
+        const remainingOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, endMeasure.PositionAndShape);
+        endMeasure.ParentStaffLine.OctaveShifts.push(remainingOctaveShift);
+        const firstMeasure: GraphicalMeasure = endMeasure.ParentStaffLine.Measures[0];
+        const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
+        remainingOctaveShift.setStartNote(firstNote);
+        remainingOctaveShift.setEndNote(endStaffEntry);
+      } else {
+        graphicalOctaveShift.setEndNote(endStaffEntry);
+      }
     } else {
       log.warn("End measure for octave shift is undefined! This should not happen!");
     }
   }
 
-    /**
-     * Calculate all the textual and symbolic [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
-     * @param repetitionInstruction
-     * @param measureIndex
-     */
+  /**
+   * Calculate all the textual and symbolic [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
+   * @param repetitionInstruction
+   * @param measureIndex
+   */
   protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
-      // find first visible StaffLine
-      let uppermostMeasure: VexFlowMeasure = undefined;
-      const measures: VexFlowMeasure[]  = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
-      for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
-        const graphicalMeasure: VexFlowMeasure = measures[idx];
-        if (graphicalMeasure.ParentStaffLine !== undefined && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
-            uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
-            break;
-        }
-      }
-      // ToDo: feature/Repetitions
-      // now create corresponding graphical symbol or Text in VexFlow:
-      // use top measure and staffline for positioning.
-      if (uppermostMeasure !== undefined) {
-        uppermostMeasure.addWordRepetition(repetitionInstruction);
+    // find first visible StaffLine
+    let uppermostMeasure: VexFlowMeasure = undefined;
+    const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
+    for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
+      const graphicalMeasure: VexFlowMeasure = measures[idx];
+      if (graphicalMeasure.ParentStaffLine !== undefined && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
+        uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
+        break;
       }
     }
+    // ToDo: feature/Repetitions
+    // now create corresponding graphical symbol or Text in VexFlow:
+    // use top measure and staffline for positioning.
+    if (uppermostMeasure !== undefined) {
+      uppermostMeasure.addWordRepetition(repetitionInstruction);
+    }
+  }
 
   protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     return;
   }
 
-    /**
-     * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.
-     * @param tiedGraphicalNote
-     * @param beams
-     * @param activeClef
-     * @param octaveShiftValue
-     * @param graphicalStaffEntry
-     * @param duration
-     * @param openTie
-     * @param isLastTieNote
-     */
+  /**
+   * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.
+   * @param tiedGraphicalNote
+   * @param beams
+   * @param activeClef
+   * @param octaveShiftValue
+   * @param graphicalStaffEntry
+   * @param duration
+   * @param openTie
+   * @param isLastTieNote
+   */
   protected handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
                                     octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
                                     openTie: Tie, isLastTieNote: boolean): void {
@@ -1073,45 +954,45 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricWords: LyricWord[]): void {
-      voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
-          const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
-                                                                                   graphicalStaffEntry,
-                                                                                   this.rules.LyricsHeight,
-                                                                                   this.rules.StaffHeight);
+    voiceEntry.LyricsEntries.forEach((key: number, lyricsEntry: LyricsEntry) => {
+      const graphicalLyricEntry: GraphicalLyricEntry = new GraphicalLyricEntry(lyricsEntry,
+                                                                               graphicalStaffEntry,
+                                                                               this.rules.LyricsHeight,
+                                                                               this.rules.StaffHeight);
 
-          graphicalStaffEntry.LyricsEntries.push(graphicalLyricEntry);
+      graphicalStaffEntry.LyricsEntries.push(graphicalLyricEntry);
 
-          // create corresponding GraphicalLabel
-          const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
-          graphicalLabel.setLabelPositionAndShapeBorders();
+      // create corresponding GraphicalLabel
+      const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
+      graphicalLabel.setLabelPositionAndShapeBorders();
 
-          if (lyricsEntry.Word !== undefined) {
-              const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);
-              let index: number = lyricWords.indexOf(lyricsEntry.Word);
-              if (index === -1) {
-                  lyricWords.push(lyricsEntry.Word);
-                  index = lyricWords.indexOf(lyricsEntry.Word);
-              }
+      if (lyricsEntry.Word !== undefined) {
+        const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);
+        let index: number = lyricWords.indexOf(lyricsEntry.Word);
+        if (index === -1) {
+          lyricWords.push(lyricsEntry.Word);
+          index = lyricWords.indexOf(lyricsEntry.Word);
+        }
 
-              if (this.graphicalLyricWords.length === 0 || index > this.graphicalLyricWords.length - 1) {
-                  const graphicalLyricWord: GraphicalLyricWord = new GraphicalLyricWord(lyricsEntry.Word);
+        if (this.graphicalLyricWords.length === 0 || index > this.graphicalLyricWords.length - 1) {
+          const graphicalLyricWord: GraphicalLyricWord = new GraphicalLyricWord(lyricsEntry.Word);
 
-                  graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
-                  graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
-                  this.graphicalLyricWords.push(graphicalLyricWord);
-              } else {
-                  const graphicalLyricWord: GraphicalLyricWord = this.graphicalLyricWords[index];
+          graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
+          graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
+          this.graphicalLyricWords.push(graphicalLyricWord);
+        } else {
+          const graphicalLyricWord: GraphicalLyricWord = this.graphicalLyricWords[index];
 
-                  graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
-                  graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
+          graphicalLyricEntry.ParentLyricWord = graphicalLyricWord;
+          graphicalLyricWord.GraphicalLyricsEntries[lyricsEntryIndex] = graphicalLyricEntry;
 
-                  if (graphicalLyricWord.isFilled()) {
-                      lyricWords.splice(index, 1);
-                      this.graphicalLyricWords.splice(this.graphicalLyricWords.indexOf(graphicalLyricWord), 1);
-                  }
-              }
+          if (graphicalLyricWord.isFilled()) {
+            lyricWords.splice(index, 1);
+            this.graphicalLyricWords.splice(this.graphicalLyricWords.indexOf(graphicalLyricWord), 1);
           }
-      });
+        }
+      }
+    });
   }
 
   protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
@@ -1162,9 +1043,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   public findIndexGraphicalSlurFromSlur(gSlurs: GraphicalSlur[], slur: Slur): number {
     for (let slurIndex: number = 0; slurIndex < gSlurs.length; slurIndex++) {
-        if (gSlurs[slurIndex].slur === slur) {
-            return slurIndex;
-        }
+      if (gSlurs[slurIndex].slur === slur) {
+        return slurIndex;
+      }
     }
     return -1;
   }
@@ -1197,175 +1078,175 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     */
 
     for (const gmPage of this.graphicalMusicSheet.MusicPages) {
-        for (const musicSystem  of gmPage.MusicSystems) {
-            for (const staffLine of musicSystem.StaffLines) {
-                // if a graphical slur reaches out of the last musicsystem, we have to create another graphical slur reaching into this musicsystem
-                // (one slur needs 2 graphical slurs)
-                const openGraphicalSlurs: GraphicalSlur[] = openSlursDict[staffLine.ParentStaff.idInMusicSheet];
-                for (let slurIndex: number = 0; slurIndex < openGraphicalSlurs.length; slurIndex++) {
-                  const oldGSlur: GraphicalSlur = openGraphicalSlurs[slurIndex];
-                  const newGSlur: GraphicalSlur = new GraphicalSlur(oldGSlur.slur); //Graphicalslur.createFromSlur(oldSlur);
-                  staffLine.addSlurToStaffline(newGSlur); // every VFSlur is added to the array in the VFStaffline!
-                  openGraphicalSlurs[slurIndex] = newGSlur;
-                }
+      for (const musicSystem of gmPage.MusicSystems) {
+        for (const staffLine of musicSystem.StaffLines) {
+          // if a graphical slur reaches out of the last musicsystem, we have to create another graphical slur reaching into this musicsystem
+          // (one slur needs 2 graphical slurs)
+          const openGraphicalSlurs: GraphicalSlur[] = openSlursDict[staffLine.ParentStaff.idInMusicSheet];
+          for (let slurIndex: number = 0; slurIndex < openGraphicalSlurs.length; slurIndex++) {
+            const oldGSlur: GraphicalSlur = openGraphicalSlurs[slurIndex];
+            const newGSlur: GraphicalSlur = new GraphicalSlur(oldGSlur.slur); //Graphicalslur.createFromSlur(oldSlur);
+            staffLine.addSlurToStaffline(newGSlur); // every VFSlur is added to the array in the VFStaffline!
+            openGraphicalSlurs[slurIndex] = newGSlur;
+          }
 
-                /* VexFlow Version - for later use
-                const vfOpenSlurs: VexFlowSlur[] = vfOpenSlursDict[staffLine.ParentStaff.idInMusicSheet];
-                const vfStaffLine: VexFlowStaffLine = <VexFlowStaffLine> staffLine;
-                for (let slurIndex: number = 0; slurIndex < vfOpenSlurs.length; slurIndex++) {
-                    const oldVFSlur: VexFlowSlur = vfOpenSlurs[slurIndex];
-                    const newVFSlur: VexFlowSlur = VexFlowSlur.createFromVexflowSlur(oldVFSlur);
-                    newVFSlur.vfStartNote = undefined;
-                    vfStaffLine.addVFSlurToVFStaffline(newVFSlur); // every VFSlur is added to the array in the VFStaffline!
-                    vfOpenSlurs[slurIndex] = newVFSlur;
-                }
-                */
+          /* VexFlow Version - for later use
+          const vfOpenSlurs: VexFlowSlur[] = vfOpenSlursDict[staffLine.ParentStaff.idInMusicSheet];
+          const vfStaffLine: VexFlowStaffLine = <VexFlowStaffLine> staffLine;
+          for (let slurIndex: number = 0; slurIndex < vfOpenSlurs.length; slurIndex++) {
+              const oldVFSlur: VexFlowSlur = vfOpenSlurs[slurIndex];
+              const newVFSlur: VexFlowSlur = VexFlowSlur.createFromVexflowSlur(oldVFSlur);
+              newVFSlur.vfStartNote = undefined;
+              vfStaffLine.addVFSlurToVFStaffline(newVFSlur); // every VFSlur is added to the array in the VFStaffline!
+              vfOpenSlurs[slurIndex] = newVFSlur;
+          }
+          */
 
-                // add reference of slur array to the VexFlowStaffline class
-                for (const graphicalMeasure of staffLine.Measures) {
-                    for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
-                        // for (var idx5: number = 0, len5 = graphicalStaffEntry.GraceStaffEntriesBefore.Count; idx5 < len5; ++idx5) {
-                        //     var graceStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.GraceStaffEntriesBefore[idx5];
-                        //     if (graceStaffEntry.Notes[0][0].SourceNote.NoteSlurs.Count > 0) {
-                        //         var graceNote: Note = graceStaffEntry.Notes[0][0].SourceNote;
-                        //         graceStaffEntry.RelInMeasureTimestamp = Fraction.createFromFraction(graphicalStaffEntry.RelInMeasureTimestamp);
-                        //         for (var idx6: number = 0, len6 = graceNote.NoteSlurs.Count; idx6 < len6; ++idx6) {
-                        //             var graceNoteSlur: Slur = graceNote.NoteSlurs[idx6];
-                        //             if (graceNoteSlur.StartNote == graceNote) {
-                        //                 var vfSlur: VexFlowSlur = new VexFlowSlur(graceNoteSlur);
-                        //                 vfSlur.GraceStart = true;
-                        //                 staffLine.GraphicalSlurs.Add(vfSlur);
-                        //                 openGraphicalSlurs[i].Add(vfSlur);
-                        //                 for (var j: number = graphicalStaffEntry.GraceStaffEntriesBefore.IndexOf(graceStaffEntry);
-                        //                     j < graphicalStaffEntry.GraceStaffEntriesBefore.Count; j++)
-                        //                        vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesBefore[j]);
-                        //             }
-                        //             if (graceNote == graceNoteSlur.EndNote) {
-                        //                 var vfSlur: VexFlowSlur = findGraphicalSlurFromSlur(openGraphicalSlurs[i], graceNoteSlur);
-                        //                 if (vfSlur != null) {
-                        //                     vfSlur.GraceEnd = true;
-                        //                     openGraphicalSlurs[i].Remove(vfSlur);
-                        //                     for (var j: number = 0; j <= graphicalStaffEntry.GraceStaffEntriesBefore.IndexOf(graceStaffEntry); j++)
-                        //                         vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesBefore[j]);
-                        //                 }
-                        //             }
-                        //         }
-                        //     }
-                        // }
-                        // loop over "normal" notes (= no gracenotes)
-                        for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
-                            for (const graphicalNote of graphicalVoiceEntry.notes) {
-                                for (const slur of graphicalNote.sourceNote.NoteSlurs) {
-                                    // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
-                                    if (slur.EndNote === undefined || slur.StartNote === undefined) {
-                                      continue;
-                                    }
-                                    // add new VexFlowSlur to List
-                                    if (slur.StartNote === graphicalNote.sourceNote) {
-                                        if (graphicalNote.sourceNote.NoteTie !== undefined) {
-                                            if (graphicalNote.parentVoiceEntry.parentStaffEntry.getAbsoluteTimestamp() !==
-                                            graphicalNote.sourceNote.NoteTie.StartNote.getAbsoluteTimestamp()) {
-                                                break;
-                                            }
-                                        }
-
-                                        // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
-                                        const gSlur: GraphicalSlur = new GraphicalSlur(slur);
-                                        openGraphicalSlurs.push(gSlur);
-                                        staffLine.addSlurToStaffline(gSlur);
-
-                                        /* VexFlow Version - for later use
-                                        const vfSlur: VexFlowSlur = new VexFlowSlur(slur);
-                                        vfOpenSlurs.push(vfSlur); //add open... adding / removing is JUST DONE in the open... array
-                                        vfSlur.vfStartNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
-                                        vfStaffLine.addVFSlurToVFStaffline(vfSlur); // every VFSlur is added to the array in the VFStaffline!
-                                        */
-                                    }
-                                    if (slur.EndNote === graphicalNote.sourceNote) {
-                                        // Remove the Graphical Slur from the staffline if the note is the Endnote of a slur
-                                        const index: number = this.findIndexGraphicalSlurFromSlur(openGraphicalSlurs, slur);
-                                        if (index >= 0) {
-                                            // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
-                                            const gSlur: GraphicalSlur = openGraphicalSlurs[index];
-                                            if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
-                                              gSlur.staffEntries.push(graphicalStaffEntry);
-                                            }
-
-                                            openGraphicalSlurs.splice(index, 1);
-                                        }
-
-                                        /* VexFlow Version - for later use
-                                        const vfIndex: number = this.findIndexVFSlurFromSlur(vfOpenSlurs, slur);
-                                        if (vfIndex !== undefined) {
-                                            // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
-                                            const vfSlur: VexFlowSlur = vfOpenSlurs[vfIndex];
-                                            vfSlur.vfEndNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
-                                            vfSlur.createVexFlowCurve();
-                                            vfOpenSlurs.splice(vfIndex, 1);
-                                        }
-                                        */
-                                    }
-                                }
-                            }
+          // add reference of slur array to the VexFlowStaffline class
+          for (const graphicalMeasure of staffLine.Measures) {
+            for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
+              // for (var idx5: number = 0, len5 = graphicalStaffEntry.GraceStaffEntriesBefore.Count; idx5 < len5; ++idx5) {
+              //     var graceStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.GraceStaffEntriesBefore[idx5];
+              //     if (graceStaffEntry.Notes[0][0].SourceNote.NoteSlurs.Count > 0) {
+              //         var graceNote: Note = graceStaffEntry.Notes[0][0].SourceNote;
+              //         graceStaffEntry.RelInMeasureTimestamp = Fraction.createFromFraction(graphicalStaffEntry.RelInMeasureTimestamp);
+              //         for (var idx6: number = 0, len6 = graceNote.NoteSlurs.Count; idx6 < len6; ++idx6) {
+              //             var graceNoteSlur: Slur = graceNote.NoteSlurs[idx6];
+              //             if (graceNoteSlur.StartNote == graceNote) {
+              //                 var vfSlur: VexFlowSlur = new VexFlowSlur(graceNoteSlur);
+              //                 vfSlur.GraceStart = true;
+              //                 staffLine.GraphicalSlurs.Add(vfSlur);
+              //                 openGraphicalSlurs[i].Add(vfSlur);
+              //                 for (var j: number = graphicalStaffEntry.GraceStaffEntriesBefore.IndexOf(graceStaffEntry);
+              //                     j < graphicalStaffEntry.GraceStaffEntriesBefore.Count; j++)
+              //                        vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesBefore[j]);
+              //             }
+              //             if (graceNote == graceNoteSlur.EndNote) {
+              //                 var vfSlur: VexFlowSlur = findGraphicalSlurFromSlur(openGraphicalSlurs[i], graceNoteSlur);
+              //                 if (vfSlur != null) {
+              //                     vfSlur.GraceEnd = true;
+              //                     openGraphicalSlurs[i].Remove(vfSlur);
+              //                     for (var j: number = 0; j <= graphicalStaffEntry.GraceStaffEntriesBefore.IndexOf(graceStaffEntry); j++)
+              //                         vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesBefore[j]);
+              //                 }
+              //             }
+              //         }
+              //     }
+              // }
+              // loop over "normal" notes (= no gracenotes)
+              for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
+                for (const graphicalNote of graphicalVoiceEntry.notes) {
+                  for (const slur of graphicalNote.sourceNote.NoteSlurs) {
+                    // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
+                    if (slur.EndNote === undefined || slur.StartNote === undefined) {
+                      continue;
+                    }
+                    // add new VexFlowSlur to List
+                    if (slur.StartNote === graphicalNote.sourceNote) {
+                      if (graphicalNote.sourceNote.NoteTie !== undefined) {
+                        if (graphicalNote.parentVoiceEntry.parentStaffEntry.getAbsoluteTimestamp() !==
+                          graphicalNote.sourceNote.NoteTie.StartNote.getAbsoluteTimestamp()) {
+                          break;
                         }
-                        // for (var idx5: number = 0, len5 = graphicalStaffEntry.GraceStaffEntriesAfter.Count; idx5 < len5; ++idx5) {
-                        //     var graceStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.GraceStaffEntriesAfter[idx5];
-                        //     if (graceStaffEntry.Notes[0][0].SourceNote.NoteSlurs.Count > 0) {
-                        //         var graceNote: Note = graceStaffEntry.Notes[0][0].SourceNote;
-                        //         graceStaffEntry.RelInMeasureTimestamp = Fraction.createFromFraction(graphicalStaffEntry.RelInMeasureTimestamp);
-                        //         for (var idx6: number = 0, len6 = graceNote.NoteSlurs.Count; idx6 < len6; ++idx6) {
-                        //             var graceNoteSlur: Slur = graceNote.NoteSlurs[idx6];
-                        //             if (graceNoteSlur.StartNote == graceNote) {
-                        //                 var vfSlur: VexFlowSlur = new VexFlowSlur(graceNoteSlur);
-                        //                 vfSlur.GraceStart = true;
-                        //                 staffLine.GraphicalSlurs.Add(vfSlur);
-                        //                 openGraphicalSlurs[i].Add(vfSlur);
-                        //                 for (var j: number = graphicalStaffEntry.GraceStaffEntriesAfter.IndexOf(graceStaffEntry);
-                        //                      j < graphicalStaffEntry.GraceStaffEntriesAfter.Count; j++)
-                        //                        vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesAfter[j]);
-                        //             }
-                        //             if (graceNote == graceNoteSlur.EndNote) {
-                        //                 var vfSlur: VexFlowSlur = findGraphicalSlurFromSlur(openGraphicalSlurs[i], graceNoteSlur);
-                        //                 if (vfSlur != null) {
-                        //                     vfSlur.GraceEnd = true;
-                        //                     openGraphicalSlurs[i].Remove(vfSlur);
-                        //                     vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry);
-                        //                     for (var j: number = 0; j <= graphicalStaffEntry.GraceStaffEntriesAfter.IndexOf(graceStaffEntry); j++)
-                        //                         vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesAfter[j]);
-                        //                 }
-                        //             }
-                        //         }
-                        //     }
-                        // }
+                      }
 
-                        //add the present Staffentry to all open slurs that don't contain this Staffentry already
-                        for (const gSlur of openGraphicalSlurs) {
-                          if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
-                            gSlur.staffEntries.push(graphicalStaffEntry);
-                          }
+                      // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
+                      const gSlur: GraphicalSlur = new GraphicalSlur(slur);
+                      openGraphicalSlurs.push(gSlur);
+                      staffLine.addSlurToStaffline(gSlur);
+
+                      /* VexFlow Version - for later use
+                      const vfSlur: VexFlowSlur = new VexFlowSlur(slur);
+                      vfOpenSlurs.push(vfSlur); //add open... adding / removing is JUST DONE in the open... array
+                      vfSlur.vfStartNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
+                      vfStaffLine.addVFSlurToVFStaffline(vfSlur); // every VFSlur is added to the array in the VFStaffline!
+                      */
+                    }
+                    if (slur.EndNote === graphicalNote.sourceNote) {
+                      // Remove the Graphical Slur from the staffline if the note is the Endnote of a slur
+                      const index: number = this.findIndexGraphicalSlurFromSlur(openGraphicalSlurs, slur);
+                      if (index >= 0) {
+                        // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
+                        const gSlur: GraphicalSlur = openGraphicalSlurs[index];
+                        if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                          gSlur.staffEntries.push(graphicalStaffEntry);
                         }
-                    } // loop over StaffEntries
-                } // loop over Measures
-            } // loop over StaffLines
 
-                // Attach vfSlur array to the vfStaffline to be drawn
-                //vfStaffLine.SlursInVFStaffLine = vfSlurs;
-        } // loop over MusicSystems
+                        openGraphicalSlurs.splice(index, 1);
+                      }
+
+                      /* VexFlow Version - for later use
+                      const vfIndex: number = this.findIndexVFSlurFromSlur(vfOpenSlurs, slur);
+                      if (vfIndex !== undefined) {
+                          // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
+                          const vfSlur: VexFlowSlur = vfOpenSlurs[vfIndex];
+                          vfSlur.vfEndNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
+                          vfSlur.createVexFlowCurve();
+                          vfOpenSlurs.splice(vfIndex, 1);
+                      }
+                      */
+                    }
+                  }
+                }
+              }
+              // for (var idx5: number = 0, len5 = graphicalStaffEntry.GraceStaffEntriesAfter.Count; idx5 < len5; ++idx5) {
+              //     var graceStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.GraceStaffEntriesAfter[idx5];
+              //     if (graceStaffEntry.Notes[0][0].SourceNote.NoteSlurs.Count > 0) {
+              //         var graceNote: Note = graceStaffEntry.Notes[0][0].SourceNote;
+              //         graceStaffEntry.RelInMeasureTimestamp = Fraction.createFromFraction(graphicalStaffEntry.RelInMeasureTimestamp);
+              //         for (var idx6: number = 0, len6 = graceNote.NoteSlurs.Count; idx6 < len6; ++idx6) {
+              //             var graceNoteSlur: Slur = graceNote.NoteSlurs[idx6];
+              //             if (graceNoteSlur.StartNote == graceNote) {
+              //                 var vfSlur: VexFlowSlur = new VexFlowSlur(graceNoteSlur);
+              //                 vfSlur.GraceStart = true;
+              //                 staffLine.GraphicalSlurs.Add(vfSlur);
+              //                 openGraphicalSlurs[i].Add(vfSlur);
+              //                 for (var j: number = graphicalStaffEntry.GraceStaffEntriesAfter.IndexOf(graceStaffEntry);
+              //                      j < graphicalStaffEntry.GraceStaffEntriesAfter.Count; j++)
+              //                        vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesAfter[j]);
+              //             }
+              //             if (graceNote == graceNoteSlur.EndNote) {
+              //                 var vfSlur: VexFlowSlur = findGraphicalSlurFromSlur(openGraphicalSlurs[i], graceNoteSlur);
+              //                 if (vfSlur != null) {
+              //                     vfSlur.GraceEnd = true;
+              //                     openGraphicalSlurs[i].Remove(vfSlur);
+              //                     vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry);
+              //                     for (var j: number = 0; j <= graphicalStaffEntry.GraceStaffEntriesAfter.IndexOf(graceStaffEntry); j++)
+              //                         vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesAfter[j]);
+              //                 }
+              //             }
+              //         }
+              //     }
+              // }
+
+              //add the present Staffentry to all open slurs that don't contain this Staffentry already
+              for (const gSlur of openGraphicalSlurs) {
+                if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                  gSlur.staffEntries.push(graphicalStaffEntry);
+                }
+              }
+            } // loop over StaffEntries
+          } // loop over Measures
+        } // loop over StaffLines
+
+        // Attach vfSlur array to the vfStaffline to be drawn
+        //vfStaffLine.SlursInVFStaffLine = vfSlurs;
+      } // loop over MusicSystems
     } // loop over MusicPages
 
     // order slurs that were saved to the Staffline
     for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
-        for (const musicSystem of graphicalMusicPage.MusicSystems) {
-            for (const staffLine of musicSystem.StaffLines) {
-                for (const gSlur of staffLine.GraphicalSlurs) {
-                    // crossed slurs will be handled later:
-                    if (gSlur.slur.isCrossed()) {
-                        continue;
-                    }
-                    gSlur.calculateCurve(this.rules);
-                }
+      for (const musicSystem of graphicalMusicPage.MusicSystems) {
+        for (const staffLine of musicSystem.StaffLines) {
+          for (const gSlur of staffLine.GraphicalSlurs) {
+            // crossed slurs will be handled later:
+            if (gSlur.slur.isCrossed()) {
+              continue;
             }
+            gSlur.calculateCurve(this.rules);
+          }
         }
+      }
     }
   }
 }

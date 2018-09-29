@@ -7,8 +7,7 @@ import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 /**
- * This class extends the GraphicalContinuousDynamicExpression and implements a drawing method
- * that renders the expressions to the canvas.
+ * This class extends the GraphicalContinuousDynamicExpression and creates all necessary methods for drawing
  */
 export class VexFlowContinuousDynamicExpression extends GraphicalContinuousDynamicExpression {
     constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine, textHeight?: number) {
@@ -17,7 +16,8 @@ export class VexFlowContinuousDynamicExpression extends GraphicalContinuousDynam
             this.mLabel = new GraphicalLabel(new Label(continuousDynamic.Label),
                                              textHeight ? textHeight : this.mRules.ContinuousDynamicTextHeight,
                                              TextAlignmentEnum.LeftCenter,
-                                             staffLine.PositionAndShape);
+                                             this.PositionAndShape);
+
             this.mLabel.Label.fontStyle = FontStyles.Italic;
             this.mLabel.setLabelPositionAndShapeBorders();
             this.PositionAndShape.calculateBoundingBox();

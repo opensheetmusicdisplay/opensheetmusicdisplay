@@ -157,7 +157,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the SkyLine for a given Wedge.
-     * @param  to update the SkyLine for
      * @param start Start point of the wedge
      * @param end End point of the wedge
      */
@@ -194,7 +193,6 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the BottomLine for a given Wedge.
-     * @param  to update the bottomline for
      * @param start Start point of the wedge
      * @param end End point of the wedge
      */

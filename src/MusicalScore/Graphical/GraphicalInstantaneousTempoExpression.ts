@@ -8,7 +8,7 @@ export class GraphicalInstantaneousTempoExpression extends AbstractGraphicalExpr
     protected mTempoExpresssion: AbstractTempoExpression;
 
     constructor(tempoExpresssion: AbstractTempoExpression, label: GraphicalLabel) {
-        super((label.PositionAndShape.Parent.DataObject as StaffLine));
+        super((label.PositionAndShape.Parent.DataObject as StaffLine), tempoExpresssion);
         this.mTempoExpresssion = tempoExpresssion;
         this.mLabel = label;
     }
@@ -19,5 +19,9 @@ export class GraphicalInstantaneousTempoExpression extends AbstractGraphicalExpr
 
     public get GraphicalLabel(): GraphicalLabel {
         return this.mLabel;
+    }
+
+    public updateSkyBottomLine(): void {
+        // Not implemented
     }
 }

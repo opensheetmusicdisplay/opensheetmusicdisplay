@@ -1,17 +1,16 @@
-import {PlacementEnum} from "./AbstractExpression";
+import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
 import {MultiTempoExpression} from "./MultiTempoExpression";
 
-export abstract class AbstractTempoExpression {
+export abstract class AbstractTempoExpression extends AbstractExpression {
 
     constructor(label: string, placement: PlacementEnum, staffNumber: number, parentMultiTempoExpression: MultiTempoExpression) {
+        super(placement);
         this.label = label;
-        this.placement = placement;
         this.staffNumber = staffNumber;
         this.parentMultiTempoExpression = parentMultiTempoExpression;
     }
 
     protected label: string;
-    protected placement: PlacementEnum;
     protected staffNumber: number;
     protected parentMultiTempoExpression: MultiTempoExpression;
 

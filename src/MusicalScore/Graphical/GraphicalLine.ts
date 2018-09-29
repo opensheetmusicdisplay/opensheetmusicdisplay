@@ -3,6 +3,11 @@ import {PointF2D} from "../../Common/DataObjects/PointF2D";
 
 export class GraphicalLine {
     constructor(start: PointF2D, end: PointF2D, width: number = 0, styleEnum: OutlineAndFillStyleEnum = OutlineAndFillStyleEnum.BaseWritingColor) {
+        if (start.x > end.x) {
+            const tmp: PointF2D = start;
+            start = end;
+            end = tmp;
+        }
         this.start = start;
         this.end = end;
         this.width = width;

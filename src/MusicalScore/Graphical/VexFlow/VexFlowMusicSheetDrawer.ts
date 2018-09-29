@@ -315,12 +315,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawContinuousDynamic(graphicalExpression: VexFlowContinuousDynamicExpression): void {
-        for (const line of graphicalExpression.Lines) {
-            const start: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.Start.x,
-                                                 graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);
-            const end: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.End.x,
-                                               graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
-            this.drawLine(start, end, "black", line.Width);
+        if (graphicalExpression.IsVerbal) {
+            this.drawLabel(graphicalExpression.Label, <number>GraphicalLayers.Notes);
+        } else {
+            for (const line of graphicalExpression.Lines) {
+                const start: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.Start.x,
+                                                     graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);
+                const end: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.End.x,
+                                                   graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
+                this.drawLine(start, end, "black", line.Width);
+            }
         }
     }
 

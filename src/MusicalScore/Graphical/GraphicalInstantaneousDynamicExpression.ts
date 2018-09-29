@@ -9,8 +9,12 @@ export abstract class GraphicalInstantaneousDynamicExpression extends AbstractGr
     protected mMeasure: GraphicalMeasure;
 
     constructor(instantaneousDynamic: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
-        super(staffLine);
+        super(staffLine, instantaneousDynamic);
         this.mInstantaneousDynamicExpression = instantaneousDynamic;
         this.mMeasure = measure;
+    }
+
+    public updateSkyBottomLine(): void {
+        // Not implemented
     }
 }

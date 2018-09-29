@@ -7,7 +7,7 @@
   <identification>
     <encoding>
       <software>MuseScore 2.3.2</software>
-      <encoding-date>2018-09-16</encoding-date>
+      <encoding-date>2018-09-27</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -63,7 +63,7 @@
       <print>
         <system-layout>
           <system-margins>
-            <left-margin>-0.00</left-margin>
+            <left-margin>0.00</left-margin>
             <right-margin>0.00</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
@@ -94,6 +94,11 @@
       <direction placement="above">
         <direction-type>
           <words default-y="40.00" relative-x="-59.61" relative-y="12.55" font-weight="bold">Adagio</words>
+          </direction-type>
+        </direction>
+      <direction placement="above">
+        <direction-type>
+          <words default-y="40.00">Notenzeilentext</words>
           </direction-type>
         </direction>
       <direction placement="above">
@@ -393,13 +398,13 @@
       <print new-system="yes">
         <system-layout>
           <system-margins>
-            <left-margin>-0.00</left-margin>
-            <right-margin>0.00</right-margin>
+            <left-margin>0.00</left-margin>
+            <right-margin>-0.00</right-margin>
             </system-margins>
           <system-distance>150.00</system-distance>
           </system-layout>
         </print>
-      <note default-x="49.08" default-y="-50.00">
+      <note default-x="49.07" default-y="-50.00">
         <pitch>
           <step>C</step>
           <octave>6</octave>
@@ -439,7 +444,7 @@
         </direction>
       <direction placement="below">
         <direction-type>
-          <wedge type="crescendo" number="1" default-y="-93.82" relative-x="40.79"/>
+          <wedge type="crescendo" number="1" default-y="-93.82" relative-x="25.10"/>
           </direction-type>
         </direction>
       <note default-x="205.86" default-y="-45.00">
@@ -455,11 +460,6 @@
       <direction placement="above">
         <direction-type>
           <octave-shift type="stop" size="15" number="1"/>
-          </direction-type>
-        </direction>
-      <direction placement="below">
-        <direction-type>
-          <wedge type="stop" number="1" relative-x="138.05"/>
           </direction-type>
         </direction>
       </measure>
@@ -532,6 +532,11 @@
         </note>
       <direction placement="below">
         <direction-type>
+          <wedge type="stop" number="1" relative-x="-9.70"/>
+          </direction-type>
+        </direction>
+      <direction placement="below">
+        <direction-type>
           <dynamics default-x="6.58" default-y="-80.00" relative-x="3.14" relative-y="-20.67">
             <ff/>
             </dynamics>
@@ -579,11 +584,6 @@
             </dynamics>
           </direction-type>
         </direction>
-      <direction placement="below">
-        <direction-type>
-          <wedge type="crescendo" number="1" default-y="-80.00"/>
-          </direction-type>
-        </direction>
       <note default-x="12.00" default-y="-20.00">
         <pitch>
           <step>B</step>
@@ -593,11 +593,6 @@
         <voice>1</voice>
         <type>whole</type>
         </note>
-      <direction placement="below">
-        <direction-type>
-          <wedge type="stop" number="1"/>
-          </direction-type>
-        </direction>
       </measure>
     <measure number="9" width="171.37">
       <direction placement="above">
@@ -619,6 +614,11 @@
       <barline location="left">
         <ending number="1" type="start" default-y="30.00"/>
         </barline>
+      <direction placement="below">
+        <direction-type>
+          <words default-y="40.00" relative-x="1.57" relative-y="-111.38">crescendo</words>
+          </direction-type>
+        </direction>
       <note default-x="12.00" default-y="-30.00">
         <pitch>
           <step>G</step>

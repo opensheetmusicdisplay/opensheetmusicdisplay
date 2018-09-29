@@ -7,10 +7,9 @@ import * as log from "loglevel";
 
 export class InstantaneousDynamicExpression extends AbstractExpression {
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number) {
-        super();
+        super(placement);
         this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
         this.soundDynamic = soundDynamics;
-        this.placement = placement;
         this.staffNumber = staffNumber;
     }
     public static dynamicToRelativeVolumeDict: { [_: string]: number; } = {
@@ -49,7 +48,6 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     private multiExpression: MultiExpression;
     private dynamicEnum: DynamicEnum;
     private soundDynamic: number;
-    private placement: PlacementEnum;
     private staffNumber: number;
     private length: number;
 
