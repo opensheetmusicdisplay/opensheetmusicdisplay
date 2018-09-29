@@ -758,25 +758,25 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
       if (sameStaffLine) {
         graphicalContinuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
-        graphicalContinuousDynamic.calcPsi(staffLine.PositionAndShape);
+        graphicalContinuousDynamic.calcPsi();
       } else {
         // two different Wedges
         graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
-        graphicalContinuousDynamic.calcPsi(staffLine.PositionAndShape);
+        graphicalContinuousDynamic.calcPsi();
 
         secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
-        secondGraphicalContinuousDynamic.calcPsi(endStaffLine.PositionAndShape);
+        secondGraphicalContinuousDynamic.calcPsi();
       }
     } else if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
       if (sameStaffLine) {
         graphicalContinuousDynamic.createDiminuendoLines(upperStartX, upperEndX, idealY);
-        graphicalContinuousDynamic.calcPsi(staffLine.PositionAndShape);
+        graphicalContinuousDynamic.calcPsi();
       } else {
         graphicalContinuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY);
-        graphicalContinuousDynamic.calcPsi(staffLine.PositionAndShape);
+        graphicalContinuousDynamic.calcPsi();
 
         secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
-        secondGraphicalContinuousDynamic.calcPsi(endStaffLine.PositionAndShape);
+        secondGraphicalContinuousDynamic.calcPsi();
       }
     } //End Diminuendo
   }

@@ -238,9 +238,8 @@ export abstract class GraphicalContinuousDynamicExpression extends AbstractGraph
 
     /**
      * Calculate the BoundingBox (as a box around the Wedge).
-     * @param parent Parent of the wedge
      */
-    public calcPsi(parent: BoundingBox): void {
+    public calcPsi(): void {
         let height: number = 0;
 
         if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {

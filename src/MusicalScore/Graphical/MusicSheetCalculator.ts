@@ -1677,6 +1677,9 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    /**
+     * Re-adjust the x positioning of expressions. Update the skyline afterwards
+     */
     private calculateExpressionAlignements(): void {
         for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
             for (const musicSystem of graphicalMusicPage.MusicSystems) {
