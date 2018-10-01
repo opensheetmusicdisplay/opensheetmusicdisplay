@@ -299,11 +299,14 @@ export class ExpressionReader {
             if (dynamicsNode.hasAttributes && dynamicsNode.attribute("default-x") !== undefined) {
                 this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
             }
-            const name: string = dynamicsNode.elements()[0].name;
-            if (name !== undefined) {
+            let expressionText: string = dynamicsNode.elements()[0].name;
+            if (expressionText === "other-dynamics") {
+                expressionText = dynamicsNode.elements()[0].value;
+            }
+            if (expressionText !== undefined) {
                 let dynamicEnum: DynamicEnum;
                 try {
-                    dynamicEnum = DynamicEnum[name];
+                    dynamicEnum = DynamicEnum[expressionText];
                 } catch (err) {
                     const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DynamicError", "Error while reading dynamic.");
                     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
@@ -319,7 +322,7 @@ export class ExpressionReader {
                         this.openContinuousDynamicExpression.StartMultiExpression !== this.getMultiExpression) {
                         this.closeOpenContinuousDynamic();
                     }
-                    const instantaneousDynamicExpression: InstantaneousDynamicExpression = new InstantaneousDynamicExpression(name,
+                    const instantaneousDynamicExpression: InstantaneousDynamicExpression = new InstantaneousDynamicExpression(expressionText,
                                                                                                                               this.soundDynamic,
                                                                                                                               this.placement,
                                                                                                                               this.staffNumber);
@@ -327,7 +330,7 @@ export class ExpressionReader {
                     this.initialize();
                     if (this.activeInstantaneousDynamic !== undefined) {
                         this.activeInstantaneousDynamic.DynEnum = instantaneousDynamicExpression.DynEnum;
-                    } else { this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(name, 0, PlacementEnum.NotYetDefined, 1); }
+                    } else { this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(expressionText, 0, PlacementEnum.NotYetDefined, 1); }
                 }
             }
         }

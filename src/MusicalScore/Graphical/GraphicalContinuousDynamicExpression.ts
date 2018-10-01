@@ -1,4 +1,3 @@
-import { BoundingBox } from "./BoundingBox";
 import { GraphicalLine } from "./GraphicalLine";
 import { StaffLine } from "./StaffLine";
 import { GraphicalMeasure } from "./GraphicalMeasure";
@@ -264,14 +263,59 @@ export abstract class GraphicalContinuousDynamicExpression extends AbstractGraph
     }
 
     /**
-     * Clear Lines and remove BoundingBox from Parent.
+     * Clear Lines
      */
     public cleanUp(): void {
         this.Lines.clear();
-        // if (this.PositionAndShape) {
-        //     this.PositionAndShape.Parent.remove(this.PositionAndShape);
-        // }
     }
+
+    /**
+     * Shift wedge in y position
+     * @param shift Number to shift
+     */
+    public shiftYPosition(shift: number): void {
+        if (this.IsVerbal) {
+            this.PositionAndShape.RelativePosition.y += shift;
+            this.PositionAndShape.calculateBoundingBox();
+        } else {
+            // Typescript creates references of the points are equal.
+            // TODO: Store type (dim, cresc) in class to make it easier here
+            if (this.mLines[0].Start === this.Lines[1].Start) {
+                this.mLines[0].Start.y += shift;
+                this.mLines[0].End.y += shift;
+                this.mLines[1].End.y += shift;
+            } else {
+                this.mLines[0].Start.y += shift;
+                this.mLines[1].Start.y += shift;
+                this.mLines[0].End.y += shift;
+            }
+        }
+    }
+
+    /**
+     * Squeezes the wedge by the given amount.
+     * @param value Squeeze amount. Positive values squeeze from the left, negative from the right
+     */
+    public squeeze(value: number): void {
+        // Typescript creates references of the points are equal.
+        // TODO: Store type (dim, cresc) in class to make it easier here
+        if (this.mLines[0].Start === this.Lines[1].Start) {
+            if (value > 0) {
+                this.mLines[0].Start.x += value;
+            } else {
+                this.mLines[0].End.x += value;
+                this.mLines[1].End.x += value;
+            }
+        } else {
+            if (value < 0) {
+                this.mLines[0].Start.x += value;
+                this.mLines[1].Start.x += value;
+            } else {
+                this.mLines[0].End.x += value;
+            }
+        }
+    }
+
     //#endregion
 
     //#region Private methods

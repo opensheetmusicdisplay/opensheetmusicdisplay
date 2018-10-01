@@ -739,12 +739,10 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             // calculate all Instantaneous/Continuous Dynamics Expressions
             this.calculateDynamicExpressions();
-            // Calculate the alignment of close expressions
-            this.calculateExpressionAlignements();
-            // place neighbouring DynamicExpressions at the same height
-            this.optimizeStaffLineDynamicExpressionsPositions();
             // calculate all Mood and Unknown Expression
             this.calculateMoodAndUnknownExpressions();
+            // Calculate the alignment of close expressions
+            this.calculateExpressionAlignements();
             // calculate all OctaveShifts
             this.calculateOctaveShifts();
             // calcualte RepetitionInstructions (Dal Segno, Coda, etc)
@@ -831,13 +829,6 @@ export abstract class MusicSheetCalculator {
 
     protected calculateComments(): void {
         //log.debug("calculateComments not implemented");
-        return;
-    }
-
-    /**
-     * Iterate through all the [[StaffLine]]s in order to check for possible optimizations in the placement of the [[GraphicalExpression]]s.
-     */
-    protected optimizeStaffLineDynamicExpressionsPositions(): void {
         return;
     }
 

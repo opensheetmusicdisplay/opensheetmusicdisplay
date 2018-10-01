@@ -788,11 +788,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const left: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginLeft;
     const right: number = relative.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginRight;
     const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+    let yPosition: number = 0;
 
     // calculate yPosition according to Placement
     if (graphicalInstantaneousDynamic.InstantaneousDynamic.Placement === PlacementEnum.Above) {
       const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
-      let yPosition: number = 0;
 
       // if StaffLine part of multiStafff Instrument and not the first one, ideal yPosition middle of distance between Staves
       if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
@@ -811,17 +811,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
 
       graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
-      skyBottomLineCalculator.updateSkyLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginTop);
     } else if (graphicalInstantaneousDynamic.InstantaneousDynamic.Placement === PlacementEnum.Below) {
       const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
-      let yPosition: number = 0;
-
       // if StaffLine part of multiStafff Instrument and not the last one, ideal yPosition middle of distance between Staves
       const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
       if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
         const nextStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) + 1];
         const difference: number = nextStaffLine.PositionAndShape.RelativePosition.y -
-          staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
+        staffLine.PositionAndShape.RelativePosition.y - this.rules.StaffHeight;
         const border: number = graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom;
 
         // take always into account the size of the Dynamic
@@ -835,8 +832,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       }
 
       graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(relative.x, yPosition);
-      skyBottomLineCalculator.updateBottomLineInRange(left, right, yPosition + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginBottom);
     }
+    graphicalInstantaneousDynamic.updateSkyBottomLine();
   }
 
   /**
