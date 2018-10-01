@@ -219,6 +219,12 @@ declare namespace Vex {
             public getPosition(): number;
 
             public setPosition(position: number): Modifier;
+
+            public setIndex(index: number): void;
+        }
+
+        export class FretHandFinger extends Modifier {
+            constructor(finger: string);
         }
 
         export class NoteSubGroup extends Modifier {
@@ -226,17 +232,6 @@ declare namespace Vex {
         }
 
         export class StaveModifier extends Modifier {
-            // public static get Position() {
-            //     return {
-            //         LEFT: 1,
-            //         RIGHT: 2,
-            //         ABOVE: 3,
-            //         BELOW: 4,
-            //         BEGIN: 5,
-            //         END: 6,
-            //     };
-            // }
-
             public getPosition(): number;
 
         }

@@ -15,6 +15,7 @@ import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
 import {IOSMDOptions, OSMDOptions} from "./OSMDOptions";
+import {EngravingRules} from "../MusicalScore/Graphical/EngravingRules";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -326,29 +327,53 @@ export class OpenSheetMusicDisplay {
     private setDrawingParameters(options: IOSMDOptions): void {
         this.drawingParameters = new DrawingParameters();
         if (options.drawingParameters) {
-            this.drawingParameters.DrawingParametersEnum = DrawingParametersEnum[options.drawingParameters];
+            this.drawingParameters.DrawingParametersEnum =
+                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
         }
         // individual drawing parameters options
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
         }
+        // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.
+        // note that every option can be undefined, which doesn't mean the option should be set to false.
         if (options.drawHiddenNotes) {
             this.drawingParameters.drawHiddenNotes = true;
         }
         if (options.drawTitle !== undefined) {
-            this.drawingParameters.drawTitle = options.drawTitle;
+            this.drawingParameters.DrawTitle = options.drawTitle;
+            // TODO these settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
+            // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
+            // see tuplets settings below for the immediate approach
         }
-        if (options.drawPartName !== undefined) {
-            this.drawingParameters.drawPartName = options.drawPartName;
+        if (options.drawSubtitle !== undefined) {
+            this.drawingParameters.DrawSubtitle = options.drawSubtitle;
+        }
+        if (options.drawLyricist !== undefined) {
+            this.drawingParameters.DrawLyricist = options.drawLyricist;
         }
         if (options.drawCredits !== undefined) {
             this.drawingParameters.drawCredits = options.drawCredits;
+        }
+        if (options.drawPartNames !== undefined) {
+            this.drawingParameters.DrawPartNames = options.drawPartNames;
+        }
+        if (options.drawFingerings === false) {
+            EngravingRules.Rules.RenderFingerings = false;
         }
         if (options.defaultColorNoteHead) {
             this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
         }
         if (options.defaultColorStem) {
             this.drawingParameters.defaultColorStem = options.defaultColorStem;
+        }
+        if (options.tupletsRatioed) {
+            EngravingRules.Rules.TupletsRatioed = true;
+        }
+        if (options.tupletsBracketed) {
+            EngravingRules.Rules.TupletsBracketed = true;
+        }
+        if (options.tripletsBracketed) {
+            EngravingRules.Rules.TripletsBracketed = true;
         }
     }
 

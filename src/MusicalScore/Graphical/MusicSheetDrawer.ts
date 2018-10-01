@@ -39,7 +39,7 @@ import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynam
  * This class also includes the resizing and positioning of the symbols due to user interaction like zooming or panning.
  */
 export abstract class MusicSheetDrawer {
-    public drawingParameters: DrawingParameters = new DrawingParameters();
+    public drawingParameters: DrawingParameters;
     public splitScreenLineColor: number;
     public midiPlaybackAvailable: boolean;
     public drawableBoundingBoxElement: string = process.env.DRAW_BOUNDING_BOX_ELEMENT;

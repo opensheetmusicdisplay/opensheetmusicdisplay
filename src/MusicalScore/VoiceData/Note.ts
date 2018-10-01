@@ -45,6 +45,8 @@ export class Note {
     private slurs: Slur[] = [];
     private playbackInstrumentId: string = undefined;
     private noteHead: NoteHead = undefined;
+    /** States whether the note should be displayed. False if xmlNode.attribute("print-object").value = "no". */
+    private printObject: boolean = true;
 
 
     public get ParentVoiceEntry(): VoiceEntry {
@@ -103,6 +105,13 @@ export class Note {
     }
     public get NoteHead(): NoteHead {
         return this.noteHead;
+    }
+    public get PrintObject(): boolean {
+        return this.printObject;
+    }
+
+    public set PrintObject(value: boolean) {
+        this.printObject = value;
     }
 
     public isRest(): boolean {

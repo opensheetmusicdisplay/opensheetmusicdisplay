@@ -132,8 +132,13 @@ export class InstrumentReader {
       const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
       for (const xmlNode of xmlMeasureListArr) {
         if (xmlNode.name === "note") {
-          if (xmlNode.hasAttributes && xmlNode.attribute("print-object") && xmlNode.attribute("print-spacing")) {
-            continue;
+          let printObject: boolean = true;
+          if (xmlNode.hasAttributes && xmlNode.attribute("print-object") &&
+              xmlNode.attribute("print-object").value === "no") {
+              printObject = false; // note will not be rendered, but still parsed for Playback etc.
+              // if (xmlNode.attribute("print-spacing")) {
+              //   if (xmlNode.attribute("print-spacing").value === "yes" {
+              //     // TODO give spacing for invisible notes even when not displayed. might be hard with Vexflow formatting
           }
           let noteStaff: number = 1;
           if (this.instrument.Staves.length > 1) {
@@ -259,7 +264,7 @@ export class InstrumentReader {
             xmlNode, noteDuration, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
-            this.maxTieNoteFraction, isChord, guitarPro
+            this.maxTieNoteFraction, isChord, guitarPro, printObject
           );
 
           const notationsNode: IXmlElement = xmlNode.element("notations");
@@ -713,18 +718,27 @@ export class InstrumentReader {
       this.abstractInstructions.push([1, keyInstruction]);
     }
     if (node.element("time") !== undefined) {
-      let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
       const timeNode: IXmlElement = node.element("time");
+      let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
+      let timePrintObject: boolean = true;
       if (timeNode !== undefined && timeNode.hasAttributes) {
-        const firstAttr: IXmlAttribute = timeNode.firstAttribute;
-        if (firstAttr.name === "symbol") {
-          if (firstAttr.value === "common") {
+        const symbolAttribute: IXmlAttribute = timeNode.attribute("symbol");
+        if (symbolAttribute) {
+          if (symbolAttribute.value === "common") {
             symbolEnum = RhythmSymbolEnum.COMMON;
-          } else if (firstAttr.value === "cut") {
+          } else if (symbolAttribute.value === "cut") {
             symbolEnum = RhythmSymbolEnum.CUT;
           }
         }
+
+        const printObjectAttribute: IXmlAttribute = timeNode.attribute("print-object");
+        if (printObjectAttribute) {
+          if (printObjectAttribute.value === "no") {
+            timePrintObject = false;
+          }
+        }
       }
+
       let num: number = 0;
       let denom: number = 0;
       const senzaMisura: boolean = (timeNode !== undefined && timeNode.element("senza-misura") !== undefined);
@@ -778,9 +792,11 @@ export class InstrumentReader {
           log.debug("InstrumentReader.addAbstractInstruction", errorMsg, ex);
         }
 
-        this.abstractInstructions.push([1, new RhythmInstruction(
+        const newRhythmInstruction: RhythmInstruction = new RhythmInstruction(
           new Fraction(num, denom, 0, false), symbolEnum
-        )]);
+        );
+        newRhythmInstruction.PrintObject = timePrintObject;
+        this.abstractInstructions.push([1, newRhythmInstruction]);
       } else {
         this.abstractInstructions.push([1, new RhythmInstruction(new Fraction(4, 4, 0, false), RhythmSymbolEnum.NONE)]);
       }

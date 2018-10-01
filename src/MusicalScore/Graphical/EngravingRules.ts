@@ -13,9 +13,11 @@ export class EngravingRules {
     private sheetMinimumDistanceBetweenTitleAndSubtitle: number;
     private sheetComposerHeight: number;
     private sheetAuthorHeight: number;
+    private compactMode: boolean;
     private pagePlacementEnum: PagePlacementEnum;
     private pageHeight: number;
     private pageTopMargin: number;
+    private pageTopMarginNarrow: number;
     private pageBottomMargin: number;
     private pageLeftMargin: number;
     private pageRightMargin: number;
@@ -79,6 +81,18 @@ export class EngravingRules {
     private fingeringLabelFontHeight: number;
     private measureNumberLabelHeight: number;
     private measureNumberLabelOffset: number;
+    /** Whether tuplets should display ratio (3:2 instead of 3 for triplet). Default false. */
+    private tupletsRatioed: boolean;
+    /** Whether all tuplets should be bracketed (e.g. |--5--| instead of 5). Default false.
+     * If false, only tuplets given as bracketed in XML (bracket="yes") will be bracketed.
+     * (If not given in XML, bracketing is implementation-dependent according to standard)
+     */
+    private tupletsBracketed: boolean;
+    /** Whether all triplets should be bracketed. Overrides tupletsBracketed for triplets.
+     * If false, only triplets given as bracketed in XML (bracket="yes") will be bracketed.
+     * (Bracketing all triplets can be cluttering)
+     */
+    private tripletsBracketed: boolean;
     private tupletNumberLabelHeight: number;
     private tupletNumberYOffset: number;
     private labelMarginBorderFactor: number;
@@ -146,6 +160,12 @@ export class EngravingRules {
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
+    private renderComposer: boolean;
+    private renderTitle: boolean;
+    private renderSubtitle: boolean;
+    private renderLyricist: boolean;
+    private renderInstrumentNames: boolean;
+    private renderFingerings: boolean;
 
     constructor() {
         // global variables
@@ -159,9 +179,11 @@ export class EngravingRules {
         this.sheetAuthorHeight = 2.0;
 
         // Staff sizing Variables
+        this.compactMode = false;
         this.pagePlacementEnum = PagePlacementEnum.Down;
         this.pageHeight = 100001.0;
         this.pageTopMargin = 5.0;
+        this.pageTopMarginNarrow = 0.0; // for compact mode
         this.pageBottomMargin = 5.0;
         this.pageLeftMargin = 5.0;
         this.pageRightMargin = 5.0;
@@ -242,15 +264,18 @@ export class EngravingRules {
         this.chordSymbolTextHeight = 2.0;
         this.fingeringLabelFontHeight = 1.7;
 
-        // MeasureNumber- and TupletNumberLabel variables
+        // Tuplets, MeasureNumber and TupletNumber Labels
         this.measureNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.measureNumberLabelOffset = 2;
+        this.tupletsRatioed = false;
+        this.tupletsBracketed = false;
+        this.tripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
         this.tupletNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.tupletNumberYOffset = 0.5;
         this.labelMarginBorderFactor = 0.1;
         this.tupletVerticalLineLength = 0.5;
 
-        // MeasureNumber- and TupletNumberLabel variables
+        // Slur and Tie variables
         this.bezierCurveStepSize = 1000;
         this.calculateCurveParametersArrays();
         this.tieGhostObjectWidth = 0.75;
@@ -267,7 +292,7 @@ export class EngravingRules {
         this.slurTangentMaxAngle = 80.0;
         this.slursStartingAtSameStaffEntryYOffset = 0.8;
 
-        // MeasureNumber- and TupletNumberLabel variables
+        // Repetitions
         this.repetitionEndingLabelHeight = 2.0;
         this.repetitionEndingLabelXOffset = 0.5;
         this.repetitionEndingLabelYOffset = 0.3;
@@ -318,6 +343,14 @@ export class EngravingRules {
         this.subMeasureXSpacingThreshold = 35;
         this.measureDynamicsMaxScalingFactor = 2.5;
         this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
+
+        // Render options (whether to render specific or invisible elements)
+        this.renderComposer = true;
+        this.renderTitle = true;
+        this.renderSubtitle = true;
+        this.renderLyricist = true;
+        this.renderInstrumentNames = true;
+        this.renderFingerings = true;
 
         this.populateDictionaries();
         try {
@@ -374,6 +407,12 @@ export class EngravingRules {
     public set PagePlacement(value: PagePlacementEnum) {
         this.pagePlacementEnum = value;
     }
+    public get CompactMode(): boolean {
+        return this.compactMode;
+    }
+    public set CompactMode(value: boolean) {
+        this.compactMode = value;
+    }
     public get PageHeight(): number {
         return this.pageHeight;
     }
@@ -385,6 +424,12 @@ export class EngravingRules {
     }
     public set PageTopMargin(value: number) {
         this.pageTopMargin = value;
+    }
+    public get PageTopMarginNarrow(): number {
+        return this.pageTopMarginNarrow;
+    }
+    public set PageTopMarginNarrow(value: number) {
+        this.pageTopMarginNarrow = value;
     }
     public get PageBottomMargin(): number {
         return this.pageBottomMargin;
@@ -763,6 +808,24 @@ export class EngravingRules {
     }
     public set MeasureNumberLabelOffset(value: number) {
         this.measureNumberLabelOffset = value;
+    }
+    public get TupletsRatioed(): boolean {
+        return this.tupletsRatioed;
+    }
+    public set TupletsRatioed(value: boolean) {
+        this.tupletsRatioed = value;
+    }
+    public get TupletsBracketed(): boolean {
+        return this.tupletsBracketed;
+    }
+    public set TupletsBracketed(value: boolean) {
+        this.tupletsBracketed = value;
+    }
+    public get TripletsBracketed(): boolean {
+        return this.tripletsBracketed;
+    }
+    public set TripletsBracketed(value: boolean) {
+        this.tripletsBracketed = value;
     }
     public get TupletNumberLabelHeight(): number {
         return this.tupletNumberLabelHeight;
@@ -1159,6 +1222,42 @@ export class EngravingRules {
     }
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
+    }
+    public get RenderComposer(): boolean {
+        return this.renderComposer;
+    }
+    public set RenderComposer(value: boolean) {
+        this.renderComposer = value;
+    }
+    public get RenderTitle(): boolean {
+        return this.renderTitle;
+    }
+    public set RenderTitle(value: boolean) {
+        this.renderTitle = value;
+    }
+    public get RenderSubtitle(): boolean {
+        return this.renderSubtitle;
+    }
+    public set RenderSubtitle(value: boolean) {
+        this.renderSubtitle = value;
+    }
+    public get RenderLyricist(): boolean {
+        return this.renderLyricist;
+    }
+    public set RenderLyricist(value: boolean) {
+        this.renderLyricist = value;
+    }
+    public get RenderInstrumentNames(): boolean {
+        return this.renderInstrumentNames;
+    }
+    public set RenderInstrumentNames(value: boolean) {
+        this.renderInstrumentNames = value;
+    }
+    public get RenderFingerings(): boolean {
+        return this.renderFingerings;
+    }
+    public set RenderFingerings(value: boolean) {
+        this.renderFingerings = value;
     }
 
     /**

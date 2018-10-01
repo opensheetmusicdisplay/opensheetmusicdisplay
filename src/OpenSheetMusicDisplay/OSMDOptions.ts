@@ -12,7 +12,7 @@ export interface IOSMDOptions {
     backend?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
-    /** Parameters like drawing a Leadsheet or (Thumbnail) Preview, disabling Cursor. */
+    /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
     /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
     drawHiddenNotes?: boolean;
@@ -20,12 +20,29 @@ export interface IOSMDOptions {
     defaultColorNoteHead?: string;
     /** Default color for a note stem. Default black. Not yet supported. */ // TODO
     defaultColorStem?: string;
-    /** Whether to draw the title of the piece. Not yet supported. */ // TODO
+    /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
     drawTitle?: boolean;
+    /** Whether to draw the subtitle of the piece. If true, enables drawing Title as well. */
+    drawSubtitle?: boolean;
     /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. Not yet supported. */ // TODO
     drawCredits?: boolean;
-    /** Whether to draw part (instrument) names. Not yet supported. */ // TODO
-    drawPartName?: boolean;
+    /** Whether to draw the lyricist's name, if given. */
+    drawLyricist?: boolean;
+    /** Whether to draw part (instrument) names. */
+    drawPartNames?: boolean;
+    /** Whether to draw fingerings (only left to the note for now). Default true. */
+    drawFingerings?: boolean;
+    /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
+    tupletsRatioed?: boolean;
+    /** Whether all tuplets should be bracketed (e.g. |--5--| instead of 5). Default false.
+     * If false, only tuplets given as bracketed in XML (bracket="yes") will be bracketed.
+     */
+    tupletsBracketed?: boolean;
+    /** Whether all triplets should be bracketed. Overrides tupletsBracketed for triplets.
+     * If false, only triplets given as bracketed in XML (bracket="yes") will be bracketed.
+     * (Bracketing all triplets can be cluttering)
+     */
+    tripletsBracketed?: boolean;
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */
@@ -37,7 +54,7 @@ export class OSMDOptions {
         return {
             autoResize: true,
             backend: "svg",
-            drawingParameters: DrawingParametersEnum.Default,
+            drawingParameters: DrawingParametersEnum.default,
         };
     }
 }
