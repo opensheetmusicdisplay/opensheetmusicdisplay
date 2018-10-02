@@ -8,7 +8,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     // folder of the sample files
     var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     samples = {
-        "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
         "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
         "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
         "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
@@ -34,6 +33,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
         "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
         "Anonymous - Saltarello": "Saltarello.mxl",
+        "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
         "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
         "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
         "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",

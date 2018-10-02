@@ -2,13 +2,15 @@ import { VoiceEntry } from "./VoiceEntry";
 import { Note } from "./Note";
 
 /** Type and direction of an Arpeggio.
- * The values should correspond to Vex.Flow.Strokes.Type values
+ * The values should correspond to Vex.Flow.Strokes.Type values.
+ * Somehow they don't correspond to Vexflow code, but they were confirmed to work, for whatever reason.
+ * For now, we only support one Arpeggio per VoiceEntry.
  */
 export enum ArpeggioType {
     BRUSH_DOWN = 2,
     BRUSH_UP = 1,
-    ROLL_DOWN = 4, // Arpeggiato with downwards arrow
-    ROLL_UP = 3, // Arpeggiated with upwards arrow
+    ROLL_DOWN = 4, // Arpeggio with downwards arrow
+    ROLL_UP = 3, // Arpeggio with upwards arrow
     RASQUEDO_DOWN = 5, // this is UP, can't find a value for DOWN that works in Vexflow right now
     RASQUEDO_UP = 5,
     ARPEGGIO_DIRECTIONLESS = 6 // currently not supported in Vexflow

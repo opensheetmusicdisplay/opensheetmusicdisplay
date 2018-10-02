@@ -44,6 +44,7 @@ export class VoiceEntry {
     private articulations: ArticulationEnum[] = [];
     private technicalInstructions: TechnicalInstruction[] = [];
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
+    /** The Arpeggio consisting of this VoiceEntry's notes. Undefined if no arpeggio exists. */
     private arpeggio: Arpeggio;
     private ornamentContainer: OrnamentContainer;
     private stemDirection: StemDirectionType = StemDirectionType.Undefined;

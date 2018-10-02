@@ -48,6 +48,7 @@ export class Note {
     private noteHead: NoteHead = undefined;
     /** States whether the note should be displayed. False if xmlNode.attribute("print-object").value = "no". */
     private printObject: boolean = true;
+    /** The Arpeggio this note is part of. */
     private arpeggio: Arpeggio;
 
 

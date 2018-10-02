@@ -144,7 +144,9 @@ export class VoiceGenerator {
         const arpeggioNode: IXmlElement = notationNode.element("arpeggiate");
         if (arpeggioNode !== undefined && !this.currentVoiceEntry.IsGrace) {
           let currentArpeggio: Arpeggio;
-          if (this.currentVoiceEntry.Arpeggio === undefined) {
+          if (this.currentVoiceEntry.Arpeggio !== undefined) { // add note to existing Arpeggio
+            currentArpeggio = this.currentVoiceEntry.Arpeggio;
+          } else { // create new Arpeggio
             let arpeggioType: ArpeggioType;
             const directionAttr: Attr = arpeggioNode.attribute("direction");
             if (directionAttr !== null) {
@@ -162,8 +164,6 @@ export class VoiceGenerator {
 
             currentArpeggio = new Arpeggio(this.currentVoiceEntry, arpeggioType);
             this.currentVoiceEntry.Arpeggio = currentArpeggio;
-          } else {
-            currentArpeggio = this.currentVoiceEntry.Arpeggio;
           }
           currentArpeggio.addNote(this.currentNote);
         }
