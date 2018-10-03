@@ -722,7 +722,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for ( const vfStaffEntry of this.staffEntries ) {
             for ( const gVoiceEntry of vfStaffEntry.graphicalVoiceEntries) {
                 for ( const gnote of gVoiceEntry.notes) {
-                    const vfStemDir: any = (gnote as VexFlowGraphicalNote).vfnote[0].getStemDirection();
+                    const vfnote: [StaveNote, number] = (gnote as VexFlowGraphicalNote).vfnote;
+                    if (vfnote === undefined || vfnote[0] === undefined) {
+                        continue;
+                    }
+
+                    const vfStemDir: number = vfnote[0].getStemDirection();
                     switch (vfStemDir) {
                         case (Vex.Flow.Stem.UP):
                             gVoiceEntry.parentVoiceEntry.StemDirection = StemDirectionType.Up;
