@@ -26,7 +26,7 @@ See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wi
 Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
 
 Brought to you by [PhonicScore](https://phonicscore.com/) and [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors)<br>
-˞(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [PhonicScore for Android](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))
+(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [PhonicScore for Android](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))
 
 
 <!--# <a name="license"></a>License
