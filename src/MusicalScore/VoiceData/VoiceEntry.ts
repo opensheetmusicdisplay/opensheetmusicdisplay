@@ -45,6 +45,7 @@ export class VoiceEntry {
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
     private arpeggiosNotesIndices: number[] = [];
     private ornamentContainer: OrnamentContainer;
+    private wantedStemDirection: StemDirectionType = StemDirectionType.Undefined;
     private stemDirection: StemDirectionType = StemDirectionType.Undefined;
 
     public get ParentSourceStaffEntry(): SourceStaffEntry {
@@ -102,11 +103,20 @@ export class VoiceEntry {
         this.ornamentContainer = value;
     }
 
-    public get StemDirection(): StemDirectionType {
-        return this.stemDirection;
+    // WantedStemDirection provides the stem direction to VexFlow in case of more than 1 voice
+    // for optimal graphical appearance
+    public set WantedStemDirection(value: StemDirectionType) {
+        this.wantedStemDirection = value;
     }
+    public get WantedStemDirection(): StemDirectionType {
+        return this.wantedStemDirection;
+    }
+    // StemDirection holds the actual value of the stem
     public set StemDirection(value: StemDirectionType) {
         this.stemDirection = value;
+    }
+    public get StemDirection(): StemDirectionType {
+        return this.stemDirection;
     }
 
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {

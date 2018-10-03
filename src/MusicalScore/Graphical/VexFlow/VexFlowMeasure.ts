@@ -31,6 +31,7 @@ import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -551,7 +552,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let autoStemBeam: boolean = true;
                     for (const gve of voiceEntries) {
                         if (gve.parentVoiceEntry.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
-                            autoStemBeam = gve.parentVoiceEntry.StemDirection === StemDirectionType.Undefined;
+                            autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
                         }
                     }
 
@@ -710,6 +711,30 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         this.createArticulations();
         this.createOrnaments();
+        this.setStemDirectionFromVexFlow();
+    }
+
+    /**
+     * Copy the stem directions chosen by VexFlow to the StemDirection variable of the graphical notes
+     */
+    private setStemDirectionFromVexFlow(): void {
+        //if StemDirection was not set then read out what VexFlow has chosen
+        for ( const vfStaffEntry of this.staffEntries ) {
+            for ( const gVoiceEntry of vfStaffEntry.graphicalVoiceEntries) {
+                for ( const gnote of gVoiceEntry.notes) {
+                    const vfStemDir: any = (gnote as VexFlowGraphicalNote).vfnote[0].getStemDirection();
+                    switch (vfStemDir) {
+                        case (Vex.Flow.Stem.UP):
+                            gVoiceEntry.parentVoiceEntry.StemDirection = StemDirectionType.Up;
+                            break;
+                        case (Vex.Flow.Stem.DOWN):
+                            gVoiceEntry.parentVoiceEntry.StemDirection = StemDirectionType.Down;
+                            break;
+                        default:
+                    }
+                }
+            }
+        }
     }
 
     /**

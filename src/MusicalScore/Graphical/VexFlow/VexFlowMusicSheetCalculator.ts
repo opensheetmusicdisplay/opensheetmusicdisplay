@@ -949,7 +949,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
         for (const musicSystem of graphicalMusicPage.MusicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
-                for (const gSlur of staffLine.GraphicalSlurs) {
+                // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+                const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
+                for (const gSlur of sortedGSlurs) {
                     // crossed slurs will be handled later:
                     if (gSlur.slur.isCrossed()) {
                         continue;

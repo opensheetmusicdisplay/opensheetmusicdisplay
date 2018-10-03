@@ -2285,23 +2285,23 @@ export abstract class MusicSheetCalculator {
             // in case of StaffEntryLink don't check mainVoice / linkedVoice
             if (voiceEntry === voiceEntry.ParentSourceStaffEntry.VoiceEntries[0]) {
                 // set stem up:
-                voiceEntry.StemDirection = StemDirectionType.Up;
+                voiceEntry.WantedStemDirection = StemDirectionType.Up;
                 return;
             } else {
                 // set stem down:
-                voiceEntry.StemDirection = StemDirectionType.Down;
+                voiceEntry.WantedStemDirection = StemDirectionType.Down;
                 return;
             }
         } else {
             if (voiceEntry.ParentVoice instanceof LinkedVoice) {
                 // Linked voice: set stem down:
-                voiceEntry.StemDirection = StemDirectionType.Down;
+                voiceEntry.WantedStemDirection = StemDirectionType.Down;
             } else {
                 // if this voiceEntry belongs to the mainVoice:
                 // check first that there are also more voices present:
                 if (voiceEntry.ParentSourceStaffEntry.VoiceEntries.length > 1) {
                     // as this voiceEntry belongs to the mainVoice: stem Up
-                    voiceEntry.StemDirection = StemDirectionType.Up;
+                    voiceEntry.WantedStemDirection = StemDirectionType.Up;
                 }
             }
         }
@@ -2309,7 +2309,7 @@ export abstract class MusicSheetCalculator {
         // ToDo: shift code to end of measure to only check once for all beams
         // check for a beam:
         // if this voice entry currently has no desired direction yet:
-        if (voiceEntry.StemDirection === StemDirectionType.Undefined &&
+        if (voiceEntry.WantedStemDirection === StemDirectionType.Undefined &&
             voiceEntry.Notes.length > 0) {
             const beam: Beam = voiceEntry.Notes[0].NoteBeam;
             if (beam !== undefined) {
@@ -2317,9 +2317,9 @@ export abstract class MusicSheetCalculator {
                 for (const note of beam.Notes) {
                     if (note.ParentVoiceEntry === voiceEntry) {
                         continue;
-                    } else if (note.ParentVoiceEntry.StemDirection !== StemDirectionType.Undefined) {
+                    } else if (note.ParentVoiceEntry.WantedStemDirection !== StemDirectionType.Undefined) {
                         // set the stem direction
-                        voiceEntry.StemDirection = note.ParentVoiceEntry.StemDirection;
+                        voiceEntry.WantedStemDirection = note.ParentVoiceEntry.WantedStemDirection;
                         break;
                     }
                 }
