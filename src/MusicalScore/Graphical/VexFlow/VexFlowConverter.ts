@@ -271,7 +271,7 @@ export class VexFlowConverter {
         vfnote.x_shift = xShift;
 
         if (gve.parentVoiceEntry !== undefined) {
-            const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.StemDirection;
+            const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
                     vfnote.setStemDirection(Vex.Flow.Stem.UP);
@@ -280,7 +280,6 @@ export class VexFlowConverter {
                     vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
                     break;
                 default:
-                    break;
             }
         }
 

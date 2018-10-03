@@ -39,11 +39,11 @@ export class GraphicalSlur extends GraphicalCurve {
         const yTimestampSpan: Fraction = Fraction.minus(y.staffEntries[y.staffEntries.length - 1].getAbsoluteTimestamp(),
                                                         y.staffEntries[0].getAbsoluteTimestamp());
 
-        if (xTimestampSpan > yTimestampSpan) {
+        if (xTimestampSpan.RealValue > yTimestampSpan.RealValue) {
             return 1;
         }
 
-        if (yTimestampSpan > xTimestampSpan) {
+        if (yTimestampSpan.RealValue > xTimestampSpan.RealValue) {
             return -1;
         }
 
