@@ -486,6 +486,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param beam
      */
     public handleBeam(graphicalNote: GraphicalNote, beam: Beam): void {
+        if (graphicalNote.parentVoiceEntry.parentVoiceEntry.IsGrace) {
+            return; // grace note beams are handled by Vexflow.GraceNoteGroup
+        }
         const voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
         let beams: [Beam, VexFlowVoiceEntry[]][] = this.beams[voiceID];
         if (beams === undefined) {
@@ -644,8 +647,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (graceGVoiceEntriesBefore.length > 0) {
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
-                        if (graceGVoiceEntriesBefore[i].notes[0].sourceNote.PrintObject) {
-                            graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
+                        const gveGrace: VexFlowVoiceEntry = <VexFlowVoiceEntry>graceGVoiceEntriesBefore[i];
+                        if (gveGrace.notes[0].sourceNote.PrintObject) {
+                            const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
+                            gveGrace.vfStaveNote = vfStaveNote;
+                            graceNotes.push(vfStaveNote);
                         }
                     }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
@@ -752,9 +758,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow articulation:
             const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             for (const gve of graphicalVoiceEntries) {
-                if (gve.parentVoiceEntry.IsGrace) {
-                    continue;
-                }
                 const vfStaveNote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
                 VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0].sourceNote.ParentVoiceEntry.Articulations);
             }

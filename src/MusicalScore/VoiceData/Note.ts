@@ -47,6 +47,8 @@ export class Note {
     private noteHead: NoteHead = undefined;
     /** States whether the note should be displayed. False if xmlNode.attribute("print-object").value = "no". */
     private printObject: boolean = true;
+    /** States whether this is a cue note (Stichnote) (smaller size). */
+    private isCueNote: boolean;
 
 
     public get ParentVoiceEntry(): VoiceEntry {
@@ -109,9 +111,14 @@ export class Note {
     public get PrintObject(): boolean {
         return this.printObject;
     }
-
     public set PrintObject(value: boolean) {
         this.printObject = value;
+    }
+    public get IsCueNote(): boolean {
+        return this.isCueNote;
+    }
+    public set IsCueNote(value: boolean) {
+        this.isCueNote = value;
     }
 
     public isRest(): boolean {

@@ -262,10 +262,16 @@ export class VexFlowConverter {
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
 
-        if (!gve.parentVoiceEntry.IsGrace) {
-            vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
-        } else {
+        if (gve.notes[0].sourceNote.IsCueNote) {
+            (<any>vfnoteStruct).glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
+            (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
+        }
+
+        // if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) { // needs Vexflow PR
+        if (gve.parentVoiceEntry.IsGrace) {
             vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
+        } else {
+            vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
         vfnote.x_shift = xShift;
@@ -306,6 +312,9 @@ export class VexFlowConverter {
     }
 
     public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
+        if (vfnote === undefined) {
+            return; // needed because grace notes after main note currently not implemented. maybe safer in any case
+        }
         // Articulations:
         let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
 
