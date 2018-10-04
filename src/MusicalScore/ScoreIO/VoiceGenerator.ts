@@ -423,7 +423,6 @@ export class VoiceGenerator {
    * Handle the currentVoiceBeam.
    * @param node
    * @param note
-   * @param grace
    */
   private createBeam(node: IXmlElement, note: Note): void {
     try {

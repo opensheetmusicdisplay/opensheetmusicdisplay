@@ -1628,6 +1628,12 @@ export abstract class MusicSheetCalculator {
                 openOctaveShifts[staffIndex] = undefined;
             }
         }
+        // check wantedStemDirections of beam notes at end of measure (e.g. for beam with grace notes)
+        for (const staffEntry of measure.staffEntries) {
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                this.setBeamNotesWantedStemDirections(voiceEntry.parentVoiceEntry);
+            }
+        }
         // if there are no staffEntries in this measure, create a rest for the whole measure:
         if (measure.staffEntries.length === 0) {
             const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(
@@ -2305,10 +2311,11 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+        // setBeamNotesWantedStemDirections() will be called at end of measure (createGraphicalMeasure)
+    }
 
-        // ToDo: shift code to end of measure to only check once for all beams
-        // check for a beam:
-        // if this voice entry currently has no desired direction yet:
+    /** Sets a voiceEntry's stem direction to one already set in other notes in its beam, if it has one. */
+    private setBeamNotesWantedStemDirections(voiceEntry: VoiceEntry): void {
         if (voiceEntry.WantedStemDirection === StemDirectionType.Undefined &&
             voiceEntry.Notes.length > 0) {
             const beam: Beam = voiceEntry.Notes[0].NoteBeam;
