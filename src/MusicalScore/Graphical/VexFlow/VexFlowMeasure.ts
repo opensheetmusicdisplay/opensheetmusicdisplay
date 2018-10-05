@@ -486,9 +486,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param beam
      */
     public handleBeam(graphicalNote: GraphicalNote, beam: Beam): void {
-        if (graphicalNote.parentVoiceEntry.parentVoiceEntry.IsGrace) {
-            return; // grace note beams are handled by Vexflow.GraceNoteGroup
-        }
         const voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
         let beams: [Beam, VexFlowVoiceEntry[]][] = this.beams[voiceID];
         if (beams === undefined) {
@@ -559,14 +556,23 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
 
+                    let isGraceBeam: boolean = false;
                     for (const entry of voiceEntries) {
                         const note: Vex.Flow.StaveNote = ((<VexFlowVoiceEntry>entry).vfStaveNote as StaveNote);
                         if (note !== undefined) {
                           notes.push(note);
                         }
+                        if (entry.parentVoiceEntry.IsGrace) {
+                            isGraceBeam = true;
+                        }
                     }
                     if (notes.length > 1) {
                         const vfBeam: Vex.Flow.Beam = new Vex.Flow.Beam(notes, autoStemBeam);
+                        if (isGraceBeam) {
+                            // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
+                            (<any>vfBeam).render_options.beam_width = 3;
+                            (<any>vfBeam).render_options.partial_beam_length = 4;
+                        }
                         vfbeams.push(vfBeam);
                         // just a test for coloring the notes:
                         // for (let note of notes) {
@@ -655,7 +661,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
-                    (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes());
+                    // (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes()); // beams in handleBeam now
+                    (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup);
                     graceGVoiceEntriesBefore = [];
                 }
             }
