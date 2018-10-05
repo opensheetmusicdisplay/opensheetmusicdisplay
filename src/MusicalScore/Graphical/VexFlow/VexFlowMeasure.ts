@@ -632,10 +632,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     public graphicalMeasureCreatedCalculations(): void {
+        let graceSlur: boolean;
+        let graceGVoiceEntriesBefore: GraphicalVoiceEntry[];
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+            graceSlur = false;
+            graceGVoiceEntriesBefore = [];
             // create vex flow Stave Notes:
-            let graceSlur: boolean = false;
-            let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.parentVoiceEntry.IsGrace) {
                     graceGVoiceEntriesBefore.push(gve);
@@ -667,6 +669,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
             }
         }
+        // remaining grace notes at end of measure, turned into stand-alone grace notes:
+        if (graceGVoiceEntriesBefore.length > 0) {
+            for (const graceGve of graceGVoiceEntriesBefore) {
+                (graceGve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(graceGve);
+                graceGve.parentVoiceEntry.GraceAfterMainNote = true;
+            }
+        }
 
         this.finalizeBeams();
         this.finalizeTuplets();
@@ -690,7 +699,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
                 if (voiceEntry.parentVoiceEntry) {
-                    if (voiceEntry.parentVoiceEntry.IsGrace) {
+                    if (voiceEntry.parentVoiceEntry.IsGrace && !voiceEntry.parentVoiceEntry.GraceAfterMainNote) {
                         continue;
                     }
                 }

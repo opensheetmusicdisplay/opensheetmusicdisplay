@@ -29,6 +29,7 @@ export class VoiceEntry {
         this.parentVoice = parentVoice;
         this.parentSourceStaffEntry = parentSourceStaffEntry;
         this.isGrace = isGrace;
+        this.graceAfterMainNote = false;
         this.graceNoteSlash = graceNoteSlash;
         this.graceSlur = graceSlur;
     }
@@ -38,6 +39,8 @@ export class VoiceEntry {
     private timestamp: Fraction;
     private notes: Note[] = [];
     private isGrace: boolean;
+    /** States whether the grace notes come after a main note (at end of measure). */
+    private graceAfterMainNote: boolean;
     private graceNoteSlash: boolean;
     private graceSlur: boolean; // TODO grace slur system could be refined to be non-binary
     private articulations: ArticulationEnum[] = [];
@@ -68,6 +71,12 @@ export class VoiceEntry {
     }
     public set IsGrace(value: boolean) {
         this.isGrace = value;
+    }
+    public get GraceAfterMainNote(): boolean {
+        return this.graceAfterMainNote;
+    }
+    public set GraceAfterMainNote(value: boolean) {
+        this.graceAfterMainNote = value;
     }
     public get GraceNoteSlash(): boolean {
         return this.graceNoteSlash;
