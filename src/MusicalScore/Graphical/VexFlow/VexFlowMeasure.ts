@@ -829,7 +829,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     break;
                 case PlacementEnum.NotYetDefined: // automatic fingering placement, could be more complex/customizable
                     const sourceStaff: Staff = voiceEntry.parentStaffEntry.sourceStaffEntry.ParentStaff;
-                    if (voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
+                    if (voiceEntry.notes.length > 1 || voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
                         modifierPosition = Vex.Flow.Modifier.Position.LEFT;
                     } else if (sourceStaff.idInMusicSheet === 0) {
                         modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
