@@ -31,6 +31,7 @@ import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {ArpeggioType} from "../../VoiceData/Arpeggio";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 
@@ -720,13 +721,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                 // add fingering
                 if (voiceEntry.parentVoiceEntry && EngravingRules.Rules.RenderFingerings) {
-                    const technicalInstructions: TechnicalInstruction[] = voiceEntry.parentVoiceEntry.TechnicalInstructions;
-                    for (let i: number = 0; i < technicalInstructions.length; i++) {
-                        const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
-                        const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
-                        fretFinger.setPosition(Vex.Flow.Modifier.Position.LEFT); // could be EngravingRule, see branch feature/fingeringsAboveEtc
-                        vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
-                    }
+                    this.createFingerings(voiceEntry);
                 }
 
                 // add Arpeggio
@@ -804,6 +799,69 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                 }
             }
+        }
+    }
+
+    private createFingerings(voiceEntry: GraphicalVoiceEntry): void {
+        const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
+        const technicalInstructions: TechnicalInstruction[] = voiceEntry.parentVoiceEntry.TechnicalInstructions;
+        const fingeringsCount: number = technicalInstructions.length;
+        for (let i: number = 0; i < technicalInstructions.length; i++) {
+            const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
+            let fingeringPosition: PlacementEnum = EngravingRules.Rules.FingeringPosition;
+            if (technicalInstruction.placement !== PlacementEnum.NotYetDefined) {
+                fingeringPosition = technicalInstruction.placement;
+            }
+            let modifierPosition: any; // Vex.Flow.Modifier.Position
+            switch (fingeringPosition) {
+                default:
+                case PlacementEnum.Left:
+                    modifierPosition = Vex.Flow.Modifier.Position.LEFT;
+                    break;
+                case PlacementEnum.Right:
+                    modifierPosition = Vex.Flow.Modifier.Position.RIGHT;
+                    break;
+                case PlacementEnum.Above:
+                    modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    break;
+                case PlacementEnum.Below:
+                    modifierPosition = Vex.Flow.Modifier.Position.BELOW;
+                    break;
+                case PlacementEnum.NotYetDefined: // automatic fingering placement, could be more complex/customizable
+                    const sourceStaff: Staff = voiceEntry.parentStaffEntry.sourceStaffEntry.ParentStaff;
+                    if (voiceEntry.notes.length > 1 || voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
+                        modifierPosition = Vex.Flow.Modifier.Position.LEFT;
+                    } else if (sourceStaff.idInMusicSheet === 0) {
+                        modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
+                        fingeringPosition = PlacementEnum.Above;
+                    } else {
+                        modifierPosition = Vex.Flow.Modifier.Position.BELOW;
+                        fingeringPosition = PlacementEnum.Below;
+                    }
+            }
+
+            const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
+            fretFinger.setPosition(modifierPosition);
+            if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
+                const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
+                const ordering: number = fingeringPosition === PlacementEnum.Above ? i :
+                    technicalInstructions.length - 1 - i; // reverse order for fingerings below staff
+                if (EngravingRules.Rules.FingeringInsideStafflines && fingeringsCount > 1) { // y-shift for single fingering is ok
+                    // experimental, bounding boxes wrong for fretFinger above/below, better would be creating Labels
+                    // set y-shift. vexflow fretfinger simply places directly above/below note
+                    const perFingeringShift: number = fretFinger.getWidth() / 2;
+                    const shiftCount: number = fingeringsCount * 2.5;
+                    (<any>fretFinger).setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
+                } else if (!EngravingRules.Rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
+                    const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(technicalInstruction.value);
+                    (<any>stringNumber).radius = 0; // hack to remove the circle around the number
+                    stringNumber.setPosition(modifierPosition);
+                    stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
+                    vexFlowVoiceEntry.vfStaveNote.addModifier(i, stringNumber);
+                    continue;
+                }
+            }
+            vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
         }
     }
 

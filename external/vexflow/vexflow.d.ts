@@ -231,6 +231,11 @@ declare namespace Vex {
             constructor(finger: string);
         }
 
+        export class StringNumber extends Modifier {
+            constructor(string: string);
+            setOffsetY(value: number);
+        }
+        
         export class Stroke extends Modifier {
             constructor(type: number);
             public static Type: any; // unreliable values, use Arpeggio.ArpeggioType instead
