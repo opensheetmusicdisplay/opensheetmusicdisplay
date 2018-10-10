@@ -68,6 +68,7 @@ declare namespace Vex {
         }
 
         export class Note extends Tickable {
+            public addStroke(index: number, stroke: Stroke): void;
         }
 
         export class TextBracket {
@@ -228,6 +229,11 @@ declare namespace Vex {
 
         export class FretHandFinger extends Modifier {
             constructor(finger: string);
+        }
+
+        export class Stroke extends Modifier {
+            constructor(type: number);
+            public static Type: any; // unreliable values, use Arpeggio.ArpeggioType instead
         }
 
         export class NoteSubGroup extends Modifier {

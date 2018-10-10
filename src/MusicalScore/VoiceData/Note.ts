@@ -9,6 +9,7 @@ import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
 import {NoteHead} from "./NoteHead";
+import {Arpeggio} from "./Arpeggio";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -47,9 +48,10 @@ export class Note {
     private noteHead: NoteHead = undefined;
     /** States whether the note should be displayed. False if xmlNode.attribute("print-object").value = "no". */
     private printObject: boolean = true;
+    /** The Arpeggio this note is part of. */
+    private arpeggio: Arpeggio;
     /** States whether this is a cue note (Stichnote) (smaller size). */
     private isCueNote: boolean;
-
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
@@ -113,6 +115,12 @@ export class Note {
     }
     public set PrintObject(value: boolean) {
         this.printObject = value;
+    }
+    public get Arpeggio(): Arpeggio {
+        return this.arpeggio;
+    }
+    public set Arpeggio(value: Arpeggio) {
+        this.arpeggio = value;
     }
     public get IsCueNote(): boolean {
         return this.isCueNote;

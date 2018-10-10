@@ -26,6 +26,7 @@ import { CollectionUtil } from "../../Util/CollectionUtil";
 import { ArticulationReader } from "./MusicSymbolModules/ArticulationReader";
 import { SlurReader } from "./MusicSymbolModules/SlurReader";
 import { NoteHead } from "../VoiceData/NoteHead";
+import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
 
 export class VoiceGenerator {
   constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
@@ -140,8 +141,31 @@ export class VoiceGenerator {
           hasTupletCommand = true;
         }
         // check for Arpeggios
-        if (notationNode.element("arpeggiate") !== undefined && !this.currentVoiceEntry.IsGrace) {
-          this.currentVoiceEntry.ArpeggiosNotesIndices.push(this.currentVoiceEntry.Notes.indexOf(this.currentNote));
+        const arpeggioNode: IXmlElement = notationNode.element("arpeggiate");
+        if (arpeggioNode !== undefined && !this.currentVoiceEntry.IsGrace) {
+          let currentArpeggio: Arpeggio;
+          if (this.currentVoiceEntry.Arpeggio !== undefined) { // add note to existing Arpeggio
+            currentArpeggio = this.currentVoiceEntry.Arpeggio;
+          } else { // create new Arpeggio
+            let arpeggioType: ArpeggioType;
+            const directionAttr: Attr = arpeggioNode.attribute("direction");
+            if (directionAttr !== null) {
+              switch (directionAttr.value) {
+                case "up":
+                  arpeggioType = ArpeggioType.ROLL_UP;
+                  break;
+                case "down":
+                  arpeggioType = ArpeggioType.ROLL_DOWN;
+                  break;
+                default:
+                  arpeggioType = ArpeggioType.ARPEGGIO_DIRECTIONLESS;
+              }
+            }
+
+            currentArpeggio = new Arpeggio(this.currentVoiceEntry, arpeggioType);
+            this.currentVoiceEntry.Arpeggio = currentArpeggio;
+          }
+          currentArpeggio.addNote(this.currentNote);
         }
         // check for Ties - must be the last check
         const tiedNodeList: IXmlElement[] = notationNode.elements("tied");

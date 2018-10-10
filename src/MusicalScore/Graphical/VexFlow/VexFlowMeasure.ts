@@ -31,7 +31,8 @@ import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
-import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
+import {ArpeggioType} from "../../VoiceData/Arpeggio";
+import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -723,9 +724,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (let i: number = 0; i < technicalInstructions.length; i++) {
                         const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
                         const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
-                        fretFinger.setPosition(Vex.Flow.Modifier.Position.LEFT); // could be EngravingRule, though ABOVE doesn't work for chords
+                        fretFinger.setPosition(Vex.Flow.Modifier.Position.LEFT); // could be EngravingRule, see branch feature/fingeringsAboveEtc
                         vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
                     }
+                }
+
+                // add Arpeggio
+                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
+                    const type: ArpeggioType = voiceEntry.parentVoiceEntry.Arpeggio.type;
+                    vexFlowVoiceEntry.vfStaveNote.addStroke(0, new Vex.Flow.Stroke(type));
                 }
 
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);

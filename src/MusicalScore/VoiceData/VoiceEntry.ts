@@ -10,6 +10,7 @@ import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {OrnamentEnum} from "./OrnamentContainer";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import {Arpeggio} from "./Arpeggio";
 
 /**
  * A [[VoiceEntry]] contains the notes in a voice at a timestamp.
@@ -46,7 +47,8 @@ export class VoiceEntry {
     private articulations: ArticulationEnum[] = [];
     private technicalInstructions: TechnicalInstruction[] = [];
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
-    private arpeggiosNotesIndices: number[] = [];
+    /** The Arpeggio consisting of this VoiceEntry's notes. Undefined if no arpeggio exists. */
+    private arpeggio: Arpeggio;
     private ornamentContainer: OrnamentContainer;
     private wantedStemDirection: StemDirectionType = StemDirectionType.Undefined;
     private stemDirection: StemDirectionType = StemDirectionType.Undefined;
@@ -99,11 +101,11 @@ export class VoiceEntry {
     public get LyricsEntries(): Dictionary<number, LyricsEntry> {
         return this.lyricsEntries;
     }
-    public get ArpeggiosNotesIndices(): number[] {
-        return this.arpeggiosNotesIndices;
+    public get Arpeggio(): Arpeggio {
+        return this.arpeggio;
     }
-    public set ArpeggiosNotesIndices(value: number[]) {
-        this.arpeggiosNotesIndices = value;
+    public set Arpeggio(value: Arpeggio) {
+        this.arpeggio = value;
     }
     public get OrnamentContainer(): OrnamentContainer {
         return this.ornamentContainer;
