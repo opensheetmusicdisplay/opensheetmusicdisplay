@@ -3085,17 +3085,7 @@
         <bar-style>light-heavy</bar-style>
         </barline>
       </measure>
-    <measure number="38" width="112.42">
-      <note>
-        <rest/>
-        <duration>16</duration>
-        <voice>1</voice>
-        </note>
-      <barline location="right">
-        <bar-style>light-heavy</bar-style>
-        </barline>
-      </measure>
-      <measure number="39" width="310.04">
+      <measure number="38" width="310.04">
       <attributes>
         <divisions>1</divisions>
 	</attributes>
@@ -3113,7 +3103,7 @@
           </lyric>
         </note>
       </measure>
-    <measure number="40" width="263.63">
+    <measure number="39" width="263.63">
       <note default-x="37.83" default-y="-40.00">
         <pitch>
           <step>E</step>
@@ -3205,7 +3195,7 @@
           </notations>
         </note>
       </measure>
-    <measure number="41" width="226.96">
+    <measure number="40" width="226.96">
       <note default-x="31.27" default-y="-40.00">
         <pitch>
           <step>E</step>
@@ -3258,7 +3248,7 @@
         <type>half</type>
         </note>
       </measure>
-    <measure number="42" width="309.98">
+    <measure number="41" width="309.98">
       <note default-x="8.11" default-y="-5.00">
         <grace/>
         <pitch>
