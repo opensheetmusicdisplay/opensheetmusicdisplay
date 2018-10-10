@@ -34,6 +34,8 @@ export interface IOSMDOptions {
     drawFingerings?: boolean;
     /** Where to draw fingerings (left, right, above, below). Default left. */
     fingeringPosition?: string;
+    /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
+    fingeringInsideStafflines?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
     tupletsRatioed?: boolean;
     /** Whether all tuplets should be bracketed (e.g. |--5--| instead of 5). Default false.

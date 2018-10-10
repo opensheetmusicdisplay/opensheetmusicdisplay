@@ -364,6 +364,9 @@ export class OpenSheetMusicDisplay {
         if (options.fingeringPosition !== undefined) {
             EngravingRules.Rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
         }
+        if (options.fingeringInsideStafflines !== undefined) {
+            EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
+        }
         if (options.defaultColorNoteHead) {
             this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
         }

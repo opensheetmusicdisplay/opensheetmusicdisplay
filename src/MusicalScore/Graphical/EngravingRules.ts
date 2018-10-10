@@ -168,6 +168,7 @@ export class EngravingRules {
     private renderInstrumentNames: boolean;
     private renderFingerings: boolean;
     private fingeringPosition: PlacementEnum;
+    private fingeringInsideStafflines: boolean;
 
     constructor() {
         // global variables
@@ -354,6 +355,7 @@ export class EngravingRules {
         this.renderInstrumentNames = true;
         this.renderFingerings = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
+        this.fingeringInsideStafflines = false;
 
         this.populateDictionaries();
         try {
@@ -1267,6 +1269,12 @@ export class EngravingRules {
     }
     public set FingeringPosition(value: PlacementEnum) {
         this.fingeringPosition = value;
+    }
+    public get FingeringInsideStafflines(): boolean {
+        return this.fingeringInsideStafflines;
+    }
+    public set FingeringInsideStafflines(value: boolean) {
+        this.fingeringInsideStafflines = value;
     }
 
     /**
