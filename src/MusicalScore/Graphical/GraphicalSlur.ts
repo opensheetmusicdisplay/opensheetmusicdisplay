@@ -11,6 +11,8 @@ import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
+import { Fraction } from "../../Common/DataObjects/Fraction";
+import { StemDirectionType } from "../VoiceData/VoiceEntry";
 
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
@@ -25,6 +27,28 @@ export class GraphicalSlur extends GraphicalCurve {
     public placement: PlacementEnum;
     public graceStart: boolean;
     public graceEnd: boolean;
+
+    /**
+     * Compares the timespan of two Graphical Slurs
+     * @param x
+     * @param y
+     */
+    public static Compare (x: GraphicalSlur, y: GraphicalSlur ): number {
+        const xTimestampSpan: Fraction = Fraction.minus(x.staffEntries[x.staffEntries.length - 1].getAbsoluteTimestamp(),
+                                                        x.staffEntries[0].getAbsoluteTimestamp());
+        const yTimestampSpan: Fraction = Fraction.minus(y.staffEntries[y.staffEntries.length - 1].getAbsoluteTimestamp(),
+                                                        y.staffEntries[0].getAbsoluteTimestamp());
+
+        if (xTimestampSpan.RealValue > yTimestampSpan.RealValue) {
+            return 1;
+        }
+
+        if (yTimestampSpan.RealValue > xTimestampSpan.RealValue) {
+            return -1;
+        }
+
+        return 0;
+    }
 
     /**
      *
@@ -396,6 +420,14 @@ export class GraphicalSlur extends GraphicalCurve {
                 startY = slurStartVE.PositionAndShape.RelativePosition.y + slurStartVE.PositionAndShape.BorderBottom;
             }
 
+            // If the stem points towards the starting point of the slur, shift the slur by a small amount to start (approximately) at the x-position
+            // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
+            if ( slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Down && this.placement === PlacementEnum.Below ) {
+                startX -= 0.5;
+            }
+            if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
+                startX += 0.5;
+            }
             // if (first.NoteStem !== undefined && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
             //     startX += first.NoteStem.PositionAndShape.RelativePosition.x;
             //     startY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, startX);
@@ -427,6 +459,14 @@ export class GraphicalSlur extends GraphicalCurve {
                 endY = slurEndVE.PositionAndShape.RelativePosition.y + slurEndVE.PositionAndShape.BorderBottom;
             }
 
+            // If the stem points towards the endpoint of the slur, shift the slur by a small amount to start (approximately) at the x-position
+            // of the notehead. Note: an exact calculation using the position of the note is too complicate for the payoff
+            if ( slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Down && this.placement === PlacementEnum.Below ) {
+                endX -= 0.5;
+            }
+            if (slurEndVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
+                endX += 0.5;
+            }
             // const first: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[0];
             // if (first.NoteStem !== undefined && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
             //     endX += first.NoteStem.PositionAndShape.RelativePosition.x;

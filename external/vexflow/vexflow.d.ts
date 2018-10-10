@@ -4,6 +4,7 @@ declare namespace Vex {
 
     export module Flow {
         const RESOLUTION: any;
+        const DEFAULT_NOTATION_FONT_SCALE: number;
 
         export class Formatter {
             constructor();
@@ -67,6 +68,7 @@ declare namespace Vex {
         }
 
         export class Note extends Tickable {
+            public addStroke(index: number, stroke: Stroke): void;
         }
 
         export class TextBracket {
@@ -127,6 +129,8 @@ declare namespace Vex {
         }
 
         export class GraceNote extends StaveNote {
+            static SCALE: number;
+            static LEDGER_LINE_OFFSET: number;
             constructor(note_struct: any);
         }
 
@@ -230,6 +234,11 @@ declare namespace Vex {
         export class StringNumber extends Modifier {
             constructor(string: string);
             setOffsetY(value: number);
+        }
+        
+        export class Stroke extends Modifier {
+            constructor(type: number);
+            public static Type: any; // unreliable values, use Arpeggio.ArpeggioType instead
         }
 
         export class NoteSubGroup extends Modifier {
