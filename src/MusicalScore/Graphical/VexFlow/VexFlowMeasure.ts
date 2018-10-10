@@ -701,17 +701,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (let i: number = 0; i < technicalInstructions.length; i++) {
                         const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
                         const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
-                        fretFinger.setPosition(Vex.Flow.Modifier.Position.LEFT); // could be EngravingRule, though ABOVE doesn't work for chords
+                        fretFinger.setPosition(Vex.Flow.Modifier.Position.LEFT); // could be EngravingRule, see branch feature/fingeringsAboveEtc
                         vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
                     }
                 }
 
                 // add Arpeggio
                 if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
-                    let type: ArpeggioType = voiceEntry.parentVoiceEntry.Arpeggio.type;
-                    if (type === ArpeggioType.ARPEGGIO_DIRECTIONLESS) {
-                        type = ArpeggioType.ROLL_UP; // directionless not yet supported in Vexflow
-                    }
+                    const type: ArpeggioType = voiceEntry.parentVoiceEntry.Arpeggio.type;
                     vexFlowVoiceEntry.vfStaveNote.addStroke(0, new Vex.Flow.Stroke(type));
                 }
 

@@ -54,7 +54,7 @@
     "loglevel": "^1.5.0",
     "shortid": "^2.2.6",
     "typescript-collections": "^1.1.2",
-    "vexflow": "^1.2.85"
+    "vexflow": "^1.2.87"
   },
   "devDependencies": {
     "@types/chai": "^4.0.3",
