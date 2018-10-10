@@ -30,6 +30,7 @@ export class VoiceEntry {
         this.parentVoice = parentVoice;
         this.parentSourceStaffEntry = parentSourceStaffEntry;
         this.isGrace = isGrace;
+        this.graceAfterMainNote = false;
         this.graceNoteSlash = graceNoteSlash;
         this.graceSlur = graceSlur;
     }
@@ -39,6 +40,8 @@ export class VoiceEntry {
     private timestamp: Fraction;
     private notes: Note[] = [];
     private isGrace: boolean;
+    /** States whether the grace notes come after a main note (at end of measure). */
+    private graceAfterMainNote: boolean;
     private graceNoteSlash: boolean;
     private graceSlur: boolean; // TODO grace slur system could be refined to be non-binary
     private articulations: ArticulationEnum[] = [];
@@ -47,6 +50,7 @@ export class VoiceEntry {
     /** The Arpeggio consisting of this VoiceEntry's notes. Undefined if no arpeggio exists. */
     private arpeggio: Arpeggio;
     private ornamentContainer: OrnamentContainer;
+    private wantedStemDirection: StemDirectionType = StemDirectionType.Undefined;
     private stemDirection: StemDirectionType = StemDirectionType.Undefined;
 
     public get ParentSourceStaffEntry(): SourceStaffEntry {
@@ -69,6 +73,12 @@ export class VoiceEntry {
     }
     public set IsGrace(value: boolean) {
         this.isGrace = value;
+    }
+    public get GraceAfterMainNote(): boolean {
+        return this.graceAfterMainNote;
+    }
+    public set GraceAfterMainNote(value: boolean) {
+        this.graceAfterMainNote = value;
     }
     public get GraceNoteSlash(): boolean {
         return this.graceNoteSlash;
@@ -104,11 +114,20 @@ export class VoiceEntry {
         this.ornamentContainer = value;
     }
 
-    public get StemDirection(): StemDirectionType {
-        return this.stemDirection;
+    // WantedStemDirection provides the stem direction to VexFlow in case of more than 1 voice
+    // for optimal graphical appearance
+    public set WantedStemDirection(value: StemDirectionType) {
+        this.wantedStemDirection = value;
     }
+    public get WantedStemDirection(): StemDirectionType {
+        return this.wantedStemDirection;
+    }
+    // StemDirection holds the actual value of the stem
     public set StemDirection(value: StemDirectionType) {
         this.stemDirection = value;
+    }
+    public get StemDirection(): StemDirectionType {
+        return this.stemDirection;
     }
 
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {

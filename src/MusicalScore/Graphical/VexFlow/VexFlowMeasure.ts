@@ -32,6 +32,7 @@ import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {ArpeggioType} from "../../VoiceData/Arpeggio";
+import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -552,18 +553,27 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let autoStemBeam: boolean = true;
                     for (const gve of voiceEntries) {
                         if (gve.parentVoiceEntry.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
-                            autoStemBeam = gve.parentVoiceEntry.StemDirection === StemDirectionType.Undefined;
+                            autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
                         }
                     }
 
+                    let isGraceBeam: boolean = false;
                     for (const entry of voiceEntries) {
                         const note: Vex.Flow.StaveNote = ((<VexFlowVoiceEntry>entry).vfStaveNote as StaveNote);
                         if (note !== undefined) {
                           notes.push(note);
                         }
+                        if (entry.parentVoiceEntry.IsGrace) {
+                            isGraceBeam = true;
+                        }
                     }
                     if (notes.length > 1) {
                         const vfBeam: Vex.Flow.Beam = new Vex.Flow.Beam(notes, autoStemBeam);
+                        if (isGraceBeam) {
+                            // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
+                            (<any>vfBeam).render_options.beam_width = 3;
+                            (<any>vfBeam).render_options.partial_beam_length = 4;
+                        }
                         vfbeams.push(vfBeam);
                         // just a test for coloring the notes:
                         // for (let note of notes) {
@@ -623,10 +633,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     public graphicalMeasureCreatedCalculations(): void {
+        let graceSlur: boolean;
+        let graceGVoiceEntriesBefore: GraphicalVoiceEntry[];
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+            graceSlur = false;
+            graceGVoiceEntriesBefore = [];
             // create vex flow Stave Notes:
-            let graceSlur: boolean = false;
-            let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.parentVoiceEntry.IsGrace) {
                     graceGVoiceEntriesBefore.push(gve);
@@ -644,14 +656,25 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (graceGVoiceEntriesBefore.length > 0) {
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
-                        if (graceGVoiceEntriesBefore[i].notes[0].sourceNote.PrintObject) {
-                            graceNotes.push(VexFlowConverter.StaveNote(graceGVoiceEntriesBefore[i]));
+                        const gveGrace: VexFlowVoiceEntry = <VexFlowVoiceEntry>graceGVoiceEntriesBefore[i];
+                        if (gveGrace.notes[0].sourceNote.PrintObject) {
+                            const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
+                            gveGrace.vfStaveNote = vfStaveNote;
+                            graceNotes.push(vfStaveNote);
                         }
                     }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
-                    (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes());
+                    // (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes()); // beams in handleBeam now
+                    (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup);
                     graceGVoiceEntriesBefore = [];
                 }
+            }
+        }
+        // remaining grace notes at end of measure, turned into stand-alone grace notes:
+        if (graceGVoiceEntriesBefore.length > 0) {
+            for (const graceGve of graceGVoiceEntriesBefore) {
+                (graceGve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(graceGve);
+                graceGve.parentVoiceEntry.GraceAfterMainNote = true;
             }
         }
 
@@ -677,7 +700,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
                 if (voiceEntry.parentVoiceEntry) {
-                    if (voiceEntry.parentVoiceEntry.IsGrace) {
+                    if (voiceEntry.parentVoiceEntry.IsGrace && !voiceEntry.parentVoiceEntry.GraceAfterMainNote) {
                         continue;
                     }
                 }
@@ -717,6 +740,35 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         this.createArticulations();
         this.createOrnaments();
+        this.setStemDirectionFromVexFlow();
+    }
+
+    /**
+     * Copy the stem directions chosen by VexFlow to the StemDirection variable of the graphical notes
+     */
+    private setStemDirectionFromVexFlow(): void {
+        //if StemDirection was not set then read out what VexFlow has chosen
+        for ( const vfStaffEntry of this.staffEntries ) {
+            for ( const gVoiceEntry of vfStaffEntry.graphicalVoiceEntries) {
+                for ( const gnote of gVoiceEntry.notes) {
+                    const vfnote: [StaveNote, number] = (gnote as VexFlowGraphicalNote).vfnote;
+                    if (vfnote === undefined || vfnote[0] === undefined) {
+                        continue;
+                    }
+
+                    const vfStemDir: number = vfnote[0].getStemDirection();
+                    switch (vfStemDir) {
+                        case (Vex.Flow.Stem.UP):
+                            gVoiceEntry.parentVoiceEntry.StemDirection = StemDirectionType.Up;
+                            break;
+                        case (Vex.Flow.Stem.DOWN):
+                            gVoiceEntry.parentVoiceEntry.StemDirection = StemDirectionType.Down;
+                            break;
+                        default:
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -729,9 +781,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow articulation:
             const graphicalVoiceEntries: GraphicalVoiceEntry[] = graphicalStaffEntry.graphicalVoiceEntries;
             for (const gve of graphicalVoiceEntries) {
-                if (gve.parentVoiceEntry.IsGrace) {
-                    continue;
-                }
                 const vfStaveNote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
                 VexFlowConverter.generateArticulations(vfStaveNote, gve.notes[0].sourceNote.ParentVoiceEntry.Articulations);
             }

@@ -4,6 +4,7 @@ declare namespace Vex {
 
     export module Flow {
         const RESOLUTION: any;
+        const DEFAULT_NOTATION_FONT_SCALE: number;
 
         export class Formatter {
             constructor();
@@ -128,6 +129,8 @@ declare namespace Vex {
         }
 
         export class GraceNote extends StaveNote {
+            static SCALE: number;
+            static LEDGER_LINE_OFFSET: number;
             constructor(note_struct: any);
         }
 

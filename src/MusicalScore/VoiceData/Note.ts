@@ -50,7 +50,8 @@ export class Note {
     private printObject: boolean = true;
     /** The Arpeggio this note is part of. */
     private arpeggio: Arpeggio;
-
+    /** States whether this is a cue note (Stichnote) (smaller size). */
+    private isCueNote: boolean;
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
@@ -120,6 +121,12 @@ export class Note {
     }
     public set Arpeggio(value: Arpeggio) {
         this.arpeggio = value;
+    }
+    public get IsCueNote(): boolean {
+        return this.isCueNote;
+    }
+    public set IsCueNote(value: boolean) {
+        this.isCueNote = value;
     }
 
     public isRest(): boolean {

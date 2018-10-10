@@ -106,14 +106,14 @@ export class VoiceGenerator {
   public read(noteNode: IXmlElement, noteDuration: Fraction, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
-              printObject: boolean = true): Note {
+              printObject: boolean = true, isCueNote: boolean = false): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
     //log.debug("read called:", restNote);
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteDuration, printObject)
-        : this.addSingleNote(noteNode, noteDuration, chord, guitarPro, printObject);
+        ? this.addRestNote(noteDuration, printObject, isCueNote)
+        : this.addSingleNote(noteNode, noteDuration, chord, guitarPro, printObject, isCueNote);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
       if (this.lyricsReader !== undefined && lyricElements !== undefined) {
@@ -321,7 +321,7 @@ export class VoiceGenerator {
    * @returns {Note}
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, chord: boolean, guitarPro: boolean,
-                        printObject: boolean = true): Note {
+                        printObject: boolean = true, isCueNote: boolean = false): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
@@ -415,10 +415,11 @@ export class VoiceGenerator {
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     note.PrintObject = printObject;
+    note.IsCueNote = isCueNote;
     note.PlaybackInstrumentId = playbackInstrumentId;
     if (noteHeadShapeXml !== undefined && noteHeadShapeXml !== "normal") {
       note.NoteHead = new NoteHead(note, noteHeadShapeXml, noteHeadFilledXml);
-    } // if normal, leave note head undefined to save performance
+    } // if normal, leave note head undefined to save processing/runtime
     this.currentVoiceEntry.Notes.push(note);
     if (node.elements("beam") && !chord) {
       this.createBeam(node, note);
@@ -432,10 +433,11 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(noteDuration: Fraction, printObject: boolean = true): Note {
+  private addRestNote(noteDuration: Fraction, printObject: boolean = true, isCueNote: boolean = false): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
     restNote.PrintObject = printObject;
+    restNote.IsCueNote = isCueNote;
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeam !== undefined) {
       this.openBeam.ExtendedNoteList.push(restNote);
@@ -447,7 +449,6 @@ export class VoiceGenerator {
    * Handle the currentVoiceBeam.
    * @param node
    * @param note
-   * @param grace
    */
   private createBeam(node: IXmlElement, note: Note): void {
     try {
