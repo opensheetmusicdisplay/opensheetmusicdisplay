@@ -267,8 +267,7 @@ export class VexFlowConverter {
             (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
         }
 
-        // if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) { // needs Vexflow PR
-        if (gve.parentVoiceEntry.IsGrace) {
+        if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) {
             vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
         } else {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
