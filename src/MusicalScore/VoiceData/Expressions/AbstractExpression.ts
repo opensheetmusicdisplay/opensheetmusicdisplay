@@ -18,11 +18,13 @@ export class AbstractExpression {
                 return PlacementEnum.Above;
             case "below":
                 return PlacementEnum.Below;
-            default:
             case "left":
                 return PlacementEnum.Left;
             case "right":
                 return PlacementEnum.Right;
+            case "auto":
+            default:
+                return PlacementEnum.NotYetDefined;
         }
     }
 }

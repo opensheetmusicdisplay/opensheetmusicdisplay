@@ -697,43 +697,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                 // add fingering
                 if (voiceEntry.parentVoiceEntry && EngravingRules.Rules.RenderFingerings) {
-                    const technicalInstructions: TechnicalInstruction[] = voiceEntry.parentVoiceEntry.TechnicalInstructions;
-                    for (let i: number = 0; i < technicalInstructions.length; i++) {
-                        const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
-                        const fingeringPosition: PlacementEnum = EngravingRules.Rules.FingeringPosition;
-                        let modifierPosition: any; // Vex.Flow.Modifier.Position
-                        switch (fingeringPosition) {
-                            default:
-                            case PlacementEnum.Left:
-                                modifierPosition = Vex.Flow.Modifier.Position.LEFT;
-                                break;
-                            case PlacementEnum.Right:
-                                modifierPosition = Vex.Flow.Modifier.Position.RIGHT;
-                                break;
-                            case PlacementEnum.Above:
-                                modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
-                                break;
-                            case PlacementEnum.Below:
-                                modifierPosition = Vex.Flow.Modifier.Position.BELOW;
-                        }
-
-                        // for left and right use FretHandFinger
-                        if (fingeringPosition === PlacementEnum.Left || fingeringPosition === PlacementEnum.Right) {
-                            const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
-                            fretFinger.setPosition(modifierPosition);
-                            vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
-                        // for above and below use StringNumber
-                        } else if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
-                            const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(technicalInstruction.value);
-                            (<any>stringNumber).radius = 0; // hack to remove the circle around the number
-                            stringNumber.setPosition(modifierPosition);
-                            const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
-                            const ordering: number = fingeringPosition === PlacementEnum.Above ? i :
-                                technicalInstructions.length - 1 - i; // reverse order for fingerings below staff
-                            stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
-                            vexFlowVoiceEntry.vfStaveNote.addModifier(i, stringNumber);
-                        }
-                    }
+                    this.createFingerings(voiceEntry);
                 }
 
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
@@ -779,6 +743,59 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                 }
             }
+        }
+    }
+
+    private createFingerings(voiceEntry: GraphicalVoiceEntry): void {
+        const technicalInstructions: TechnicalInstruction[] = voiceEntry.parentVoiceEntry.TechnicalInstructions;
+        for (let i: number = 0; i < technicalInstructions.length; i++) {
+            const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
+            let fingeringPosition: PlacementEnum = EngravingRules.Rules.FingeringPosition;
+            if (technicalInstruction.placement !== PlacementEnum.NotYetDefined) {
+                fingeringPosition = technicalInstruction.placement;
+            }
+            let modifierPosition: any; // Vex.Flow.Modifier.Position
+            const fingeringsCount: number = technicalInstructions.length;
+            switch (fingeringPosition) {
+                default:
+                case PlacementEnum.Left:
+                    modifierPosition = Vex.Flow.Modifier.Position.LEFT;
+                    break;
+                case PlacementEnum.Right:
+                    modifierPosition = Vex.Flow.Modifier.Position.RIGHT;
+                    break;
+                case PlacementEnum.Above:
+                    modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    break;
+                case PlacementEnum.Below:
+                    modifierPosition = Vex.Flow.Modifier.Position.BELOW;
+                    break;
+                case PlacementEnum.NotYetDefined: // automatic fingering placement, could be more complex/customizable
+                    const sourceStaff: Staff = voiceEntry.parentStaffEntry.sourceStaffEntry.ParentStaff;
+                    if (voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
+                        modifierPosition = Vex.Flow.Modifier.Position.LEFT;
+                    } else if (sourceStaff.idInMusicSheet === 0) {
+                        modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    } else {
+                        modifierPosition = Vex.Flow.Modifier.Position.BELOW;
+                    }
+            }
+
+            const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
+            fretFinger.setPosition(modifierPosition);
+            if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below
+                && fingeringsCount > 1) { // y-shift for single fingering is ok
+                // experimental, bounding boxes wrong for fretFinger above/below, better would be creating Labels
+                // set y-shift. vexflow fretfinger simply places directly above/below note
+                const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
+                const ordering: number = fingeringPosition === PlacementEnum.Above ? i :
+                    technicalInstructions.length - 1 - i; // reverse order for fingerings below staff
+                const perFingeringShift: number = fretFinger.getWidth() / 2;
+                const shiftCount: number = fingeringsCount * 2.5;
+                (<any>fretFinger).setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
+            }
+            const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
+            vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
         }
     }
 
