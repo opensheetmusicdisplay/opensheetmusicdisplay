@@ -315,7 +315,7 @@ export class OpenSheetMusicDisplay {
         }
 
         const updateExistingBackend: boolean = this.backend !== undefined;
-        if (options.backend !== undefined || updateExistingBackend) {
+        if (options.backend !== undefined || this.backend === undefined) {
             if (updateExistingBackend) {
                 // TODO doesn't work yet, still need to create a new OSMD object
 
@@ -324,10 +324,10 @@ export class OpenSheetMusicDisplay {
                 // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
                 // musicSheetCalculator.clearRecreatedObjects();
             }
-            if (options.backend.toLowerCase() === "canvas") {
-                this.backend = new CanvasVexFlowBackend();
-            } else {
+            if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
                 this.backend = new SvgVexFlowBackend();
+            } else {
+                this.backend = new CanvasVexFlowBackend();
             }
             this.backend.initialize(this.container);
             this.canvas = this.backend.getCanvas();
