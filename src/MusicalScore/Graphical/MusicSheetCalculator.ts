@@ -1122,21 +1122,11 @@ export abstract class MusicSheetCalculator {
                                openTuplets: Tuplet[], openBeams: Beam[],
                                octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
-        let voiceEntryHasPrintableNotes: boolean = false;
-        for (const note of voiceEntry.Notes) {
-            if (note.PrintObject) {
-                voiceEntryHasPrintableNotes = true;
-                break;
-            }
-        }
-        if (!voiceEntryHasPrintableNotes) {
-            return; // do not create a GraphicalVoiceEntry without graphical notes in it, will cause problems
-        }
         this.calculateStemDirectionFromVoices(voiceEntry);
         const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             const note: Note = voiceEntry.Notes[idx];
-            if (note === undefined || !note.PrintObject) {
+            if (note === undefined) {
                 continue;
             }
             if (sourceStaffEntry !== undefined && sourceStaffEntry.Link !== undefined && linkedNotes !== undefined && linkedNotes.indexOf(note) > -1) {
@@ -1155,10 +1145,10 @@ export abstract class MusicSheetCalculator {
             graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(gve, graphicalNote);
             graphicalNote.PositionAndShape.calculateBoundingBox();
             if (!this.leadSheet) {
-                if (note.NoteBeam !== undefined) {
+                if (note.NoteBeam !== undefined && note.PrintObject) {
                     this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
                 }
-                if (note.NoteTuplet !== undefined) {
+                if (note.NoteTuplet !== undefined && note.PrintObject) {
                     this.handleTuplet(graphicalNote, note.NoteTuplet, openTuplets);
                 }
             }
@@ -1451,6 +1441,9 @@ export abstract class MusicSheetCalculator {
             endGse = this.graphicalMusicSheet.GetGraphicalFromSourceStaffEntry(tie.Notes[i].ParentStaffEntry);
             endNote = endGse.findEndTieGraphicalNoteFromNote(tie.Notes[i]);
             if (startNote !== undefined && endNote !== undefined && endGse !== undefined) {
+                if (!startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
+                    continue;
+                }
                 const graphicalTie: GraphicalTie = this.createGraphicalTie(tie, startGse, endGse, startNote, endNote);
                 startGse.GraphicalTies.push(graphicalTie);
                 if (this.staffEntriesWithGraphicalTies.indexOf(startGse) >= 0) {

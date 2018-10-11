@@ -390,14 +390,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     let vfStartNote: Vex.Flow.StaveNote = undefined;
     let startNoteIndexInTie: number = 0;
-    if (startNote !== undefined) {
+    if (startNote !== undefined && startNote.vfnote !== undefined && startNote.vfnote.length >= 2) {
       vfStartNote = startNote.vfnote[0];
       startNoteIndexInTie = startNote.vfnote[1];
     }
 
     let vfEndNote: Vex.Flow.StaveNote = undefined;
     let endNoteIndexInTie: number = 0;
-    if (endNote !== undefined) {
+    if (endNote !== undefined && endNote.vfnote !== undefined && endNote.vfnote.length >= 2) {
       vfEndNote = endNote.vfnote[0];
       endNoteIndexInTie = endNote.vfnote[1];
     }

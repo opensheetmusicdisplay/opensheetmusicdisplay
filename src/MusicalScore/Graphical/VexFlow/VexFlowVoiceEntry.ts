@@ -12,6 +12,9 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
     public applyBordersFromVexflow(): void {
         const staveNote: any = (this.vfStaveNote as any);
+        if (!staveNote.getNoteHeadBeginX) {
+            return;
+        }
         const boundingBox: any = staveNote.getBoundingBox();
         const modifierWidth: number = staveNote.getNoteHeadBeginX() - boundingBox.x;
 

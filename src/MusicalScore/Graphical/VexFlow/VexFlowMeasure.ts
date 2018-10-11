@@ -434,7 +434,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             // check if this voice has just been found the first time:
             if (latestVoiceTimestamp === undefined) {
-
                 // if this voice is new, check for a gap from measure start to the start of the current voice entry:
                 const gapFromMeasureStart: Fraction = Fraction.minus(gNotesStartTimestamp, this.parentSourceMeasure.AbsoluteTimestamp);
                 if (gapFromMeasureStart.RealValue > 0) {
@@ -651,6 +650,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (gve.notes[0].sourceNote.PrintObject) {
                     (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
                 } else {
+                    // don't render note. add ghost note, otherwise Vexflow can have issues with layouting when voices not complete.
+                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNote(gve.notes[0].sourceNote.Length);
                     graceGVoiceEntriesBefore = []; // if note is not rendered, its grace notes might need to be removed
                     continue;
                 }
@@ -665,7 +666,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
-                    // (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup.beamNotes()); // beams in handleBeam now
                     (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup);
                     graceGVoiceEntriesBefore = [];
                 }
@@ -707,6 +707,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
 
                 const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
+                if (voiceEntry.notes.length === 0 || !voiceEntry.notes[0] || !voiceEntry.notes[0].sourceNote.PrintObject) {
+                    // GhostNote, don't add modifiers like in-measure clefs
+                    this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
+                    continue;
+                }
 
                 // check for in-measure clefs:
                 // only add clefs in main voice (to not add them twice)

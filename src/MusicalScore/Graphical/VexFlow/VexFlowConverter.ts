@@ -182,7 +182,6 @@ export class VexFlowConverter {
     }
 
     public static GhostNote(frac: Fraction): Vex.Flow.GhostNote {
-        // const frac: Fraction = notes[0].graphicalNoteLength;
         return new Vex.Flow.GhostNote({
             duration: VexFlowConverter.duration(frac, false),
         });
