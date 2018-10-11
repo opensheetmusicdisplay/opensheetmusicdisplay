@@ -122,7 +122,7 @@ export class VexFlowConverter {
     /** returns the Vexflow code for a note head. Some are still unsupported, see Vexflow/tables.js */
     public static NoteHeadCode(noteHead: NoteHead): string {
         const codeStart: string = "/";
-        const codeFilled: string = noteHead.Filled ? "2" : "1";
+        const codeFilled: string = noteHead.Filled ? "2" : "1"; // filled/unfilled notehead code in most vexflow glyphs
         switch (noteHead.Shape) {
             case NoteHeadShape.NORMAL:
                 return "";
@@ -133,7 +133,11 @@ export class VexFlowConverter {
             case NoteHeadShape.X:
                 return codeStart + "X" + codeFilled;
             case NoteHeadShape.CIRCLEX:
-                return codeStart + "X3"; // circleX is "X3" in Vexflow for some reason
+                return codeStart + "X3";
+            case NoteHeadShape.RECTANGLE:
+                return codeStart + "R" + codeFilled;
+            case NoteHeadShape.SQUARE:
+                return codeStart + "S" + codeFilled;
             case NoteHeadShape.SLASH:
                 return ""; // slash is specified at end of duration string in Vexflow
             default:
