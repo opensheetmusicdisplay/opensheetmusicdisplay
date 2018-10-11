@@ -194,10 +194,18 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         backendSelect.addEventListener("change", function(e) {
             var value = e.target.value;
-            // clears the canvas element
-            canvas.innerHTML = "";
-            openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, value);
-            openSheetMusicDisplay.setLogLevel('info');
+            var createNewOsmd = true;
+
+            if (createNewOsmd) {
+                // clears the canvas element
+                canvas.innerHTML = "";
+                openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {backend: value});
+                openSheetMusicDisplay.setLogLevel('info');
+            } else {
+                // alternative, doesn't work yet, see setOptions():
+                openSheetMusicDisplay.setOptions({backend: value});
+            }
+
             selectSampleOnChange();
 
         });

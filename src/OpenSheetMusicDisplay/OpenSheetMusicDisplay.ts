@@ -47,25 +47,7 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
-        if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
-            this.backend = new SvgVexFlowBackend();
-        } else {
-            this.backend = new CanvasVexFlowBackend();
-        }
-
-        this.setDrawingParameters(options);
-
-        this.backend.initialize(this.container);
-        this.canvas = this.backend.getCanvas();
-        this.innerElement = this.backend.getInnerElement();
-        this.enableOrDisableCursor(this.drawingParameters.drawCursors);
-
-        // Create the drawer
-        this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
-
-        if (options.autoResize) {
-            this.autoResize();
-        }
+        this.setOptions(options);
     }
 
     public cursor: Cursor;
@@ -145,7 +127,7 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
         }
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
-        if (this.drawingParameters.drawCursors) {
+        if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
         log.info(`Loaded sheet ${this.sheet.TitleString} successfully.`);
@@ -180,7 +162,7 @@ export class OpenSheetMusicDisplay {
         this.drawer.scale(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
-        if (this.drawingParameters.drawCursors) {
+        if (this.drawingParameters.drawCursors && this.cursor) {
             // Update the cursor position
             this.cursor.update();
         }
@@ -220,7 +202,7 @@ export class OpenSheetMusicDisplay {
      * FIXME: Probably unnecessary
      */
     private reset(): void {
-        if (this.drawingParameters.drawCursors) {
+        if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.hide();
         }
         this.sheet = undefined;
@@ -325,15 +307,40 @@ export class OpenSheetMusicDisplay {
     }
 
     //#region GETTER / SETTER
-    private setDrawingParameters(options: IOSMDOptions): void {
+    public setOptions(options: IOSMDOptions): void {
         this.drawingParameters = new DrawingParameters();
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum =
                 (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
         }
+
+        const updateExistingBackend: boolean = this.backend !== undefined;
+        if (options.backend !== undefined || updateExistingBackend) {
+            if (updateExistingBackend) {
+                // TODO doesn't work yet, still need to create a new OSMD object
+
+                this.drawer.clear();
+
+                // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
+                // musicSheetCalculator.clearRecreatedObjects();
+            }
+            if (options.backend.toLowerCase() === "canvas") {
+                this.backend = new CanvasVexFlowBackend();
+            } else {
+                this.backend = new SvgVexFlowBackend();
+            }
+            this.backend.initialize(this.container);
+            this.canvas = this.backend.getCanvas();
+            this.innerElement = this.backend.getInnerElement();
+            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
+            // Create the drawer
+            this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
+        }
+
         // individual drawing parameters options
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
+            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
         }
         // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.
         // note that every option can be undefined, which doesn't mean the option should be set to false.
@@ -381,6 +388,17 @@ export class OpenSheetMusicDisplay {
         }
         if (options.tripletsBracketed) {
             EngravingRules.Rules.TripletsBracketed = true;
+        }
+        if (options.autoResize) {
+            this.autoResize();
+        } else if (options.autoResize === false) { // not undefined
+            this.handleResize(
+                () => {
+                    // empty
+                },
+                () => {
+                    // empty
+            });
         }
     }
 
