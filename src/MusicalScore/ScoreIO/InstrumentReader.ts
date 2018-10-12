@@ -21,8 +21,9 @@ import * as log from "loglevel";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
 import {ExpressionReader} from "./MusicSymbolModules/ExpressionReader";
-import { RepetitionInstructionReader } from "./MusicSymbolModules/RepetitionInstructionReader";
-import { SlurReader } from "./MusicSymbolModules/SlurReader";
+import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
+import {SlurReader} from "./MusicSymbolModules/SlurReader";
+import {StemDirectionType} from "../VoiceData/VoiceEntry";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -223,6 +224,28 @@ export class InstrumentReader {
             }
           }
 
+          // check stem element
+          let stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
+          const stemNode: IXmlElement = xmlNode.element("stem");
+          if (stemNode !== undefined) {
+            switch (stemNode.value) {
+              case "down":
+                stemDirectionXml = StemDirectionType.Down;
+                break;
+              case "up":
+                stemDirectionXml = StemDirectionType.Up;
+                break;
+              case "double":
+                stemDirectionXml = StemDirectionType.Double;
+                break;
+              case "none":
+                stemDirectionXml = StemDirectionType.None;
+                break;
+              default:
+                stemDirectionXml = StemDirectionType.Undefined;
+            }
+          }
+
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
             musicTimestamp = previousFraction.clone();
@@ -276,7 +299,7 @@ export class InstrumentReader {
             xmlNode, noteDuration, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
-            this.maxTieNoteFraction, isChord, guitarPro, printObject, isCueNote
+            this.maxTieNoteFraction, isChord, guitarPro, printObject, isCueNote, stemDirectionXml
           );
 
           const notationsNode: IXmlElement = xmlNode.element("notations");

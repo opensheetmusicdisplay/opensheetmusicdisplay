@@ -51,6 +51,8 @@ export class VoiceEntry {
     private arpeggio: Arpeggio;
     private ornamentContainer: OrnamentContainer;
     private wantedStemDirection: StemDirectionType = StemDirectionType.Undefined;
+    /** Stem direction specified in the xml stem element. */
+    private wantedStemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
     private stemDirection: StemDirectionType = StemDirectionType.Undefined;
 
     public get ParentSourceStaffEntry(): SourceStaffEntry {
@@ -121,6 +123,12 @@ export class VoiceEntry {
     }
     public get WantedStemDirection(): StemDirectionType {
         return this.wantedStemDirection;
+    }
+    public set WantedStemDirectionXml(value: StemDirectionType) {
+        this.wantedStemDirectionXml = value;
+    }
+    public get WantedStemDirectionXml(): StemDirectionType {
+        return this.wantedStemDirectionXml;
     }
     // StemDirection holds the actual value of the stem
     public set StemDirection(value: StemDirectionType) {
@@ -383,5 +391,6 @@ export enum StemDirectionType {
     Undefined = -1,
     Up = 0,
     Down = 1,
-    None = 2
+    None = 2,
+    Double = 3
 }

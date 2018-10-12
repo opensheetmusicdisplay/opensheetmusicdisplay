@@ -60,6 +60,7 @@ export class EngravingRules {
     private stemMaxLength: number;
     private beamSlopeMaxAngle: number;
     private stemMinAllowedDistanceBetweenNoteHeadAndBeamLine: number;
+    private setWantedStemDirectionByXml: boolean;
     private graceNoteScalingFactor: number;
     private graceNoteXOffset: number;
     private wedgeOpeningLength: number;
@@ -241,6 +242,7 @@ export class EngravingRules {
         this.stemMaxLength = 4.5;
         this.beamSlopeMaxAngle = 10.0;
         this.stemMinAllowedDistanceBetweenNoteHeadAndBeamLine = 1.0;
+        this.setWantedStemDirectionByXml = true;
 
         // GraceNote Variables
         this.graceNoteScalingFactor = 0.6;
@@ -691,6 +693,12 @@ export class EngravingRules {
     }
     public set StemMinAllowedDistanceBetweenNoteHeadAndBeamLine(value: number) {
         this.stemMinAllowedDistanceBetweenNoteHeadAndBeamLine = value;
+    }
+    public get SetWantedStemDirectionByXml(): boolean {
+        return this.setWantedStemDirectionByXml;
+    }
+    public set SetWantedStemDirectionByXml(value: boolean) {
+        this.setWantedStemDirectionByXml = value;
     }
     public get GraceNoteScalingFactor(): number {
         return this.graceNoteScalingFactor;

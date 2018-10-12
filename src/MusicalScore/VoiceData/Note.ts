@@ -1,4 +1,4 @@
-import {VoiceEntry} from "./VoiceEntry";
+import {VoiceEntry, StemDirectionType} from "./VoiceEntry";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 import {Fraction} from "../../Common/DataObjects/Fraction";
 import {Pitch} from "../../Common/DataObjects/Pitch";
@@ -52,6 +52,8 @@ export class Note {
     private arpeggio: Arpeggio;
     /** States whether this is a cue note (Stichnote) (smaller size). */
     private isCueNote: boolean;
+    /** The stem direction asked for in XML. Not necessarily final or wanted stem direction. */
+    private stemDirectionXml: StemDirectionType;
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
@@ -127,6 +129,12 @@ export class Note {
     }
     public set IsCueNote(value: boolean) {
         this.isCueNote = value;
+    }
+    public get StemDirectionXml(): StemDirectionType {
+        return this.stemDirectionXml;
+    }
+    public set StemDirectionXml(value: StemDirectionType) {
+        this.stemDirectionXml = value;
     }
 
     public isRest(): boolean {

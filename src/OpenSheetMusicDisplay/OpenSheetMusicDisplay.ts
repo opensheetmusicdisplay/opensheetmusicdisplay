@@ -374,6 +374,9 @@ export class OpenSheetMusicDisplay {
         if (options.fingeringInsideStafflines !== undefined) {
             EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
         }
+        if (options.setWantedStemDirectionByXml !== undefined) {
+            EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
+        }
         if (options.defaultColorNoteHead) {
             this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
         }

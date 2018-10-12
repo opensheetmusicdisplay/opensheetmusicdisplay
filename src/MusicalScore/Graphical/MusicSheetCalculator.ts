@@ -1486,7 +1486,13 @@ export abstract class MusicSheetCalculator {
                                openTuplets: Tuplet[], openBeams: Beam[],
                                octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
-        this.calculateStemDirectionFromVoices(voiceEntry);
+        if (voiceEntry.WantedStemDirectionXml !== StemDirectionType.Undefined &&
+            EngravingRules.Rules.SetWantedStemDirectionByXml &&
+            voiceEntry.WantedStemDirectionXml !== undefined) {
+                voiceEntry.WantedStemDirection = voiceEntry.WantedStemDirectionXml;
+        } else {
+            this.calculateStemDirectionFromVoices(voiceEntry);
+        }
         const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
         gve.octaveShiftValue = octaveShiftValue;
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
