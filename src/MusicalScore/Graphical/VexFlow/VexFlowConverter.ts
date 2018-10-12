@@ -23,6 +23,7 @@ import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContain
 import { NoteHead, NoteHeadShape } from "../../VoiceData/NoteHead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
+import { OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -108,9 +109,9 @@ export class VexFlowConverter {
      */
     public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
+        const acc: string = VexFlowConverter.accidental(pitch.Accidental);
         // The octave seems to need a shift of three FIXME?
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
-        const acc: string = VexFlowConverter.accidental(pitch.Accidental);
         const noteHead: NoteHead = note.sourceNote.NoteHead;
         let noteHeadCode: string = "";
         if (noteHead !== undefined) {
@@ -197,6 +198,9 @@ export class VexFlowConverter {
      * @returns {Vex.Flow.StaveNote}
      */
     public static StaveNote(gve: GraphicalVoiceEntry): Vex.Flow.StaveNote {
+        if (gve.octaveShiftValue !== undefined && gve.octaveShiftValue !== OctaveEnum.NONE) {
+            gve.sort(); // gves with accidentals in octave shift brackets can be unsorted
+        }
         // VexFlow needs the notes ordered vertically in the other direction:
         const notes: GraphicalNote[] = gve.notes.reverse();
         const baseNote: GraphicalNote = notes[0];

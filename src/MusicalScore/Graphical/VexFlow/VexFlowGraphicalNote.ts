@@ -34,8 +34,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     private clef: ClefInstruction;
 
     /**
-     * Update the pitch of this note. Necessary in order to display correctly
-     * accidentals, this is called by VexFlowGraphicalSymbolFactory.addGraphicalAccidental.
+     * Update the pitch of this note. Necessary in order to display accidentals correctly.
+     * This is called by VexFlowGraphicalSymbolFactory.addGraphicalAccidental.
      * @param pitch
      */
     public setPitch(pitch: Pitch): void {
@@ -46,7 +46,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                 this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
             }
         } else {
-            this.vfpitch = VexFlowConverter.pitch(this, pitch);
+            // revert octave shift, as the placement of the note is independent of octave brackets
+            const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
+            this.vfpitch = VexFlowConverter.pitch(this, drawPitch);
         }
     }
 

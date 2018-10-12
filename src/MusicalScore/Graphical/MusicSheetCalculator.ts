@@ -1205,7 +1205,7 @@ export abstract class MusicSheetCalculator {
         if (graphicalInstantaneousDynamic.Placement === PlacementEnum.Above) {
             const skyLineValue: number = skyBottomLineCalculator.getSkyLineMinInRange(left, right);
 
-            // if StaffLine part of multiStafff Instrument and not the first one, ideal yPosition middle of distance between Staves
+            // if StaffLine part of multiStaff Instrument and not the first one, ideal yPosition middle of distance between Staves
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== staffLine.ParentStaff.ParentInstrument.Staves[0]) {
                 const formerStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) - 1];
                 const difference: number = staffLine.PositionAndShape.RelativePosition.y -
@@ -1224,7 +1224,7 @@ export abstract class MusicSheetCalculator {
             graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, yPosition);
         } else if (graphicalInstantaneousDynamic.Placement === PlacementEnum.Below) {
             const bottomLineValue: number = skyBottomLineCalculator.getBottomLineMaxInRange(left, right);
-            // if StaffLine part of multiStafff Instrument and not the last one, ideal yPosition middle of distance between Staves
+            // if StaffLine part of multiStaff Instrument and not the last one, ideal yPosition middle of distance between Staves
             const lastStaff: Staff = staffLine.ParentStaff.ParentInstrument.Staves[staffLine.ParentStaff.ParentInstrument.Staves.length - 1];
             if (staffLine.isPartOfMultiStaffInstrument() && staffLine.ParentStaff !== lastStaff) {
                 const nextStaffLine: StaffLine = staffLine.ParentMusicSystem.StaffLines[staffLine.ParentMusicSystem.StaffLines.indexOf(staffLine) + 1];
@@ -1488,6 +1488,7 @@ export abstract class MusicSheetCalculator {
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
         this.calculateStemDirectionFromVoices(voiceEntry);
         const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
+        gve.octaveShiftValue = octaveShiftValue;
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             const note: Note = voiceEntry.Notes[idx];
             if (note === undefined) {
