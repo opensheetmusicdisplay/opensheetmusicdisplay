@@ -214,6 +214,16 @@ export class BoundingBox {
         return this.dataObject;
     }
 
+
+    /**
+     * Get the center of a bounding box
+     * @param boundingBox Bounding box to check
+     */
+    public get Center(): PointF2D {
+        return new PointF2D(this.RelativePosition.x + (this.BorderMarginRight + this.BorderMarginLeft),
+                            this.RelativePosition.y + (this.BorderMarginBottom + this.BorderMarginTop));
+    }
+
     public setAbsolutePositionFromParent(): void {
         if (this.parent !== undefined) {
             this.absolutePosition.x = this.parent.AbsolutePosition.x + this.relativePosition.x;

@@ -26,7 +26,6 @@ import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {Voice} from "../../VoiceData/Voice";
-import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
 import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
@@ -52,8 +51,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public vfTies: Vex.Flow.StaveTie[] = [];
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: Vex.Flow.Repetition[] = [];
-    /** Instant dynamics */
-    public instantaneousDynamics: VexFlowInstantaneousDynamicExpression[] = [];
     /** The VexFlow Stave (= one measure in a staffline) */
     private stave: Vex.Flow.Stave;
     /** VexFlow StaveConnectors (vertical lines) */
@@ -93,7 +90,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.connectors = [];
         // Clean up instructions
         this.resetLayout();
-        this.instantaneousDynamics = [];
     }
 
     /**

@@ -2,10 +2,9 @@ import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
 import {TextAlignmentEnum} from "../../../Common/Enums/TextAlignment";
 
 export class UnknownExpression extends AbstractExpression {
-    constructor(label: string, placementEnum: PlacementEnum, textAlignment: TextAlignmentEnum, staffNumber: number) {
-        super();
+    constructor(label: string, placement: PlacementEnum, textAlignment: TextAlignmentEnum, staffNumber: number) {
+        super(placement);
         this.label = label;
-        this.placement = placementEnum;
         this.staffNumber = staffNumber;
         if (textAlignment === undefined) {
             textAlignment = TextAlignmentEnum.LeftBottom;
@@ -13,7 +12,6 @@ export class UnknownExpression extends AbstractExpression {
         this.textAlignment = textAlignment;
     }
     private label: string;
-    private placement: PlacementEnum;
     private textAlignment: TextAlignmentEnum;
     private staffNumber: number;
 

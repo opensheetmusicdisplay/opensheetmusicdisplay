@@ -24,6 +24,7 @@ import {Instrument} from "../Instrument";
 import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
+import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -429,17 +430,23 @@ export abstract class MusicSheetDrawer {
     //         drawLineAsVerticalRectangle(ending.Right, absolutePosition, <number>GraphicalLayers.Notes);
     //     this.drawLabel(ending.Label, <number>GraphicalLayers.Notes);
     // }
+
+    /**
+     * Draws an instantaneous dynamic expression (p, pp, f, ff, ...) to the canvas
+     * @param instantaneousDynamic GraphicalInstantaneousDynamicExpression to be drawn
+     */
     protected drawInstantaneousDynamic(instantaneousDynamic: GraphicalInstantaneousDynamicExpression): void {
-        // expression.ExpressionSymbols.forEach(function (expressionSymbol) {
-        //     let position: PointF2D = expressionSymbol.PositionAndShape.AbsolutePosition;
-        //     let symbol: MusicSymbol = expressionSymbol.GetSymbol;
-        //     drawSymbol(symbol, MusicSymbolDrawingStyle.Normal, position);
-        // });
+        throw new Error("not implemented");
     }
-    // protected drawContinuousDynamic(expression: GraphicalContinuousDynamicExpression,
-    //     absolute: PointF2D): void {
-    //     throw new Error("not implemented");
-    // }
+
+    /**
+     * Draws a continuous dynamic expression (wedges) to the canvas
+     * @param expression GraphicalContinuousDynamicExpression to be drawn
+     */
+    protected drawContinuousDynamic(expression: GraphicalContinuousDynamicExpression): void {
+        throw new Error("not implemented");
+    }
+
     protected drawSymbol(symbol: MusicSymbol, symbolStyle: MusicSymbolDrawingStyle, position: PointF2D,
                          scalingFactor: number = 1, layer: number = <number>GraphicalLayers.Notes): void {
         //empty

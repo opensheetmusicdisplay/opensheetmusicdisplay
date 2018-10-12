@@ -2,7 +2,11 @@ import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 declare global {
     interface Array<T> {
+        /** Returns the last element from an array */
         last(): T;
+        /** Deletes all elements from an array */
+        clear(): void;
+        /** Returns true if the element is found in the array */
         contains(elem: T): boolean;
     }
 }
@@ -10,6 +14,12 @@ declare global {
 if (!Array.prototype.last) {
     Array.prototype.last = function<T>(): T {
         return this[this.length - 1];
+    };
+}
+
+if (!Array.prototype.clear) {
+    Array.prototype.clear = function<T>(): void {
+        this.length = 0;
     };
 }
 

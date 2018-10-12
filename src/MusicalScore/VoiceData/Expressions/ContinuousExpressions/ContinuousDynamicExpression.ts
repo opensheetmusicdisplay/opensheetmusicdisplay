@@ -4,10 +4,9 @@ import {Fraction} from "../../../../Common/DataObjects/Fraction";
 
 export class ContinuousDynamicExpression extends AbstractExpression {
     constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number, label: string = "") {
-        super();
+        super(placement);
         this.dynamicType = dynamicType;
         this.label = label;
-        this.placement = placement;
         this.staffNumber = staffNumber;
         this.startVolume = -1;
         this.endVolume = -1;
@@ -24,7 +23,6 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     private endMultiExpression: MultiExpression;
     private startVolume: number;
     private endVolume: number;
-    private placement: PlacementEnum;
     private staffNumber: number;
     private label: string;
 

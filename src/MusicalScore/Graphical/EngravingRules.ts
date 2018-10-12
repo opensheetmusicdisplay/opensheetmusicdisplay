@@ -167,6 +167,8 @@ export class EngravingRules {
     private renderLyricist: boolean;
     private renderInstrumentNames: boolean;
     private renderFingerings: boolean;
+    private dynamicExpressionMaxDistance: number;
+    private dynamicExpressionSpacer: number;
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
 
@@ -319,6 +321,8 @@ export class EngravingRules {
         this.moodTextHeight = 2.3;
         this.unknownTextHeight = 2.0;
         this.continuousTempoTextHeight = 2.3;
+        this.dynamicExpressionMaxDistance = 2;
+        this.dynamicExpressionSpacer = 0.5;
 
         // Line Widths
         this.staffLineWidth = 0.12;
@@ -1072,6 +1076,21 @@ export class EngravingRules {
     public set ContinuousTempoTextHeight(value: number) {
         this.continuousTempoTextHeight = value;
     }
+    /** Distance of expressions inside a group */
+    public get DynamicExpressionMaxDistance(): number {
+        return this.dynamicExpressionMaxDistance;
+    }
+    public set DynamicExpressionMaxDistance(value: number) {
+        this.dynamicExpressionMaxDistance = value;
+    }
+    /** Space between expressions in a group */
+    public get DynamicExpressionSpacer(): number {
+        return this.dynamicExpressionSpacer;
+    }
+    public set DynamicExpressionSpacer(value: number) {
+        this.dynamicExpressionSpacer = value;
+    }
+
     public get UnknownTextHeight(): number {
         return this.unknownTextHeight;
     }
