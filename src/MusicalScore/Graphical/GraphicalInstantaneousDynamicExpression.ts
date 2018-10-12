@@ -6,9 +6,8 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import * as log from "loglevel";
 
-export abstract class GraphicalInstantaneousDynamicExpression extends AbstractGraphicalExpression {
+export class GraphicalInstantaneousDynamicExpression extends AbstractGraphicalExpression {
     protected mInstantaneousDynamicExpression: InstantaneousDynamicExpression;
-    protected mParentStaffLine: StaffLine;
     protected mMeasure: GraphicalMeasure;
 
     constructor(instantaneousDynamic: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
@@ -18,7 +17,7 @@ export abstract class GraphicalInstantaneousDynamicExpression extends AbstractGr
     }
 
     public updateSkyBottomLine(): void {
-        const skyBottomLineCalculator: SkyBottomLineCalculator = this.mParentStaffLine.SkyBottomLineCalculator;
+        const skyBottomLineCalculator: SkyBottomLineCalculator = this.parentStaffLine.SkyBottomLineCalculator;
         const left: number = this.PositionAndShape.RelativePosition.x + this.PositionAndShape.BorderMarginLeft;
         const right: number = this.PositionAndShape.RelativePosition.x + this.PositionAndShape.BorderMarginRight;
         let yValue: number = 0;

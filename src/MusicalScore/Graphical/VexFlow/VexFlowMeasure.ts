@@ -49,8 +49,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public vfTies: Vex.Flow.StaveTie[] = [];
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
     public vfRepetitionWords: Vex.Flow.Repetition[] = [];
-    /** Instant dynamics */
-    public instantaneousDynamics: VexFlowInstantaneousDynamicExpression[] = [];
     /** The VexFlow Stave (= one measure in a staffline) */
     private stave: Vex.Flow.Stave;
     /** VexFlow StaveConnectors (vertical lines) */
@@ -90,7 +88,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.connectors = [];
         // Clean up instructions
         this.resetLayout();
-        this.instantaneousDynamics = [];
     }
 
     /**

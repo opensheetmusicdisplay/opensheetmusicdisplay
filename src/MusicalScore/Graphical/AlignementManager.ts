@@ -1,89 +1,70 @@
-import { GraphicalObject } from "./GraphicalObject";
 import { StaffLine } from "./StaffLine";
 import { BoundingBox } from "./BoundingBox";
-import { VexFlowInstantaneousDynamicExpression } from "./VexFlow/VexFlowInstantaneousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlow/VexFlowContinuousDynamicExpression";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
+import { EngravingRules } from "./EngravingRules";
 
-export class AlignmentManager extends GraphicalObject {
+export class AlignmentManager {
+    private parentStaffline: StaffLine;
+    private rules: EngravingRules = EngravingRules.Rules;
 
     constructor(staffline: StaffLine) {
-        super();
-        this.PositionAndShape = new BoundingBox(this, staffline.PositionAndShape);
-        this.PositionAndShape.BorderLeft = staffline.PositionAndShape.BorderLeft;
-        this.PositionAndShape.BorderRight = 20;
-        this.PositionAndShape.BorderTop = 0;
-        this.PositionAndShape.BorderBottom = 10;
+        this.parentStaffline = staffline;
     }
 
-    public alignExpressions(): void {
-        const staffLine: StaffLine = (this.PositionAndShape.Parent.DataObject as StaffLine);
+    public alignDynamicExpressions(): void {
         // Find close expressions along the staffline. Group them into tuples
         const groups: AbstractGraphicalExpression[][] = [];
-        const tmpList: AbstractGraphicalExpression[] = [];
-        for (let aeIdx: number = 0; aeIdx < staffLine.AbstractExpressions.length - 1; aeIdx++) {
-            const currentExpression: AbstractGraphicalExpression = staffLine.AbstractExpressions[aeIdx];
-            const nextExpression: AbstractGraphicalExpression = staffLine.AbstractExpressions[aeIdx + 1];
+        let tmpList: AbstractGraphicalExpression[] = new Array<AbstractGraphicalExpression>();
+        for (let aeIdx: number = 0; aeIdx < this.parentStaffline.AbstractExpressions.length - 1; aeIdx++) {
+            const currentExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx];
+            const nextExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx + 1];
             if (currentExpression.Placement === nextExpression.Placement) {
                 const dist: PointF2D = this.getDistance(currentExpression.PositionAndShape, nextExpression.PositionAndShape);
-                if (dist.x < 2) {
+                if (dist.x < this.rules.DynamicExpressionMaxDistance) {
                     // Prevent last found expression to be added twice. e.g. p<f as three close expressions
                     if (tmpList.indexOf(currentExpression) === -1) {
                         tmpList.push(currentExpression);
                     }
                     tmpList.push(nextExpression);
                 } else {
-                    groups.push(tmpList.slice(0));
-                    tmpList.clear();
+                    groups.push(tmpList);
+                    tmpList = new Array<AbstractGraphicalExpression>();
                 }
             }
         }
         // If expressions are colliding at end, we need to add them too
-        groups.push(tmpList.slice(0));
-        tmpList.clear();
+        groups.push(tmpList);
 
         for (const aes of groups) {
             if (aes.length > 0) {
                 // Get the median y position and shift all group members to that position
-                const centerY: number[] = aes.map(expr => this.getCenter(expr.PositionAndShape).y);
-                const yIdeal: number = Math.max(...centerY); //centerY.reduce((a, b) => a + b, 0) / centerY.length;
+                const centerYs: number[] = aes.map(expr => expr.PositionAndShape.Center.y);
+                const yIdeal: number = Math.max(...centerYs);
                 for (let exprIdx: number = 0; exprIdx < aes.length; exprIdx++) {
                     const expr: AbstractGraphicalExpression = aes[exprIdx];
-                    const centerOffset: number = centerY[exprIdx] - yIdeal;
+                    const centerOffset: number = centerYs[exprIdx] - yIdeal;
                     // FIXME: Expressions should not behave differently.
                     if (expr instanceof VexFlowContinuousDynamicExpression) {
                         (expr as VexFlowContinuousDynamicExpression).shiftYPosition(-centerOffset);
                     } else {
-                        expr.PositionAndShape.RelativePosition.y -= centerOffset;
+                        // TODO: The 0.8 are because the letters are a bit to far done
+                        expr.PositionAndShape.RelativePosition.y -= centerOffset * 0.8;
                     }
                     expr.PositionAndShape.calculateBoundingBox();
                     // Squeeze wedges
-                    if (exprIdx < aes.length - 1) {
+                    if (exprIdx < aes.length - 1 && exprIdx > 0 && (expr as VexFlowContinuousDynamicExpression).squeeze) {
                         const nextExpression: AbstractGraphicalExpression = aes[exprIdx + 1];
-                        const overlap: PointF2D = this.getOverlap(expr.PositionAndShape, nextExpression.PositionAndShape);
-                        if (expr instanceof VexFlowInstantaneousDynamicExpression &&
-                            nextExpression instanceof VexFlowContinuousDynamicExpression) {
-                            (nextExpression as VexFlowContinuousDynamicExpression).squeeze(overlap.x + 0.2);
-                            (nextExpression as VexFlowContinuousDynamicExpression).calcPsi();
-                        } else if (expr instanceof VexFlowContinuousDynamicExpression &&
-                                   nextExpression instanceof VexFlowInstantaneousDynamicExpression) {
-                            (expr as VexFlowContinuousDynamicExpression).squeeze(-(overlap.x + 0.2));
-                            (expr as VexFlowContinuousDynamicExpression).calcPsi();
-                        }
+                        const prevExpression: AbstractGraphicalExpression = aes[exprIdx - 1];
+                        const overlapRight: PointF2D = this.getOverlap(expr.PositionAndShape, nextExpression.PositionAndShape);
+                        const overlapLeft: PointF2D = this.getOverlap(prevExpression.PositionAndShape, expr.PositionAndShape);
+                        (expr as VexFlowContinuousDynamicExpression).squeeze(-(overlapRight.x + this.rules.DynamicExpressionSpacer));
+                        (expr as VexFlowContinuousDynamicExpression).squeeze(overlapLeft.x + this.rules.DynamicExpressionSpacer);
                     }
                 }
             }
         }
-    }
-
-    /**
-     * Get the center of a bounding box
-     * @param boundingBox Bounding box to check
-     */
-    private getCenter(boundingBox: BoundingBox): PointF2D {
-        return new PointF2D(boundingBox.RelativePosition.x + (boundingBox.BorderMarginRight + boundingBox.BorderMarginLeft),
-                            boundingBox.RelativePosition.y + (boundingBox.BorderMarginBottom + boundingBox.BorderMarginTop));
     }
 
     /**

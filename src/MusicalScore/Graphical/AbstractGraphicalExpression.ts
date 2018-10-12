@@ -6,29 +6,29 @@ import { AbstractExpression, PlacementEnum } from "../VoiceData/Expressions/Abst
 import { EngravingRules } from "./EngravingRules";
 
 export abstract class AbstractGraphicalExpression extends GraphicalObject {
-    protected mLabel: GraphicalLabel;
-    protected mParentStaffLine: StaffLine;
+    protected label: GraphicalLabel;
+    protected parentStaffLine: StaffLine;
     /** Internal cache of read expression */
-    protected mExpression: AbstractExpression;
+    protected expression: AbstractExpression;
     /** EngravingRules for positioning */
-    protected mRules: EngravingRules = EngravingRules.Rules;
+    protected rules: EngravingRules = EngravingRules.Rules;
 
     constructor(parentStaffline: StaffLine, expression: AbstractExpression) {
         super();
-        this.mExpression = expression;
+        this.expression = expression;
         this.boundingBox = new BoundingBox(this, parentStaffline.PositionAndShape);
-        this.mParentStaffLine = parentStaffline;
-        this.mParentStaffLine.AbstractExpressions.push(this);
+        this.parentStaffLine = parentStaffline;
+        this.parentStaffLine.AbstractExpressions.push(this);
     }
 
     /** Graphical label of the expression if available */
-    get Label(): GraphicalLabel { return this.mLabel; }
+    get Label(): GraphicalLabel { return this.label; }
     /** Staffline where the expression is attached to */
-    public get ParentStaffLine(): StaffLine { return this.mParentStaffLine; }
-    public get BaseExpression(): AbstractExpression { return this.mExpression; }
-    public get Placement(): PlacementEnum { return this.mExpression.Placement; }
+    public get ParentStaffLine(): StaffLine { return this.parentStaffLine; }
+    public get SourceExpression(): AbstractExpression { return this.expression; }
+    public get Placement(): PlacementEnum { return this.expression.Placement; }
 
-    //#region Static methods
+    //#region abstract methods
     public abstract updateSkyBottomLine(): void;
     //#endregion
 }

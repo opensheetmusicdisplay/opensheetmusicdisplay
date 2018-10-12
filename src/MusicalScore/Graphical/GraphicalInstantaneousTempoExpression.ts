@@ -5,20 +5,14 @@ import { GraphicalLabel } from "./GraphicalLabel";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 
 export class GraphicalInstantaneousTempoExpression extends AbstractGraphicalExpression {
-    protected mTempoExpresssion: AbstractTempoExpression;
 
     constructor(tempoExpresssion: AbstractTempoExpression, label: GraphicalLabel) {
         super((label.PositionAndShape.Parent.DataObject as StaffLine), tempoExpresssion);
-        this.mTempoExpresssion = tempoExpresssion;
-        this.mLabel = label;
-    }
-
-    public get InstantaneousTempoExpression(): AbstractTempoExpression {
-        return this.mTempoExpresssion;
+        this.label = label;
     }
 
     public get GraphicalLabel(): GraphicalLabel {
-        return this.mLabel;
+        return this.label;
     }
 
     public updateSkyBottomLine(): void {

@@ -11,13 +11,13 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
     constructor(instantaneousDynamicExpression: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
         super(instantaneousDynamicExpression, staffLine, measure);
 
-        this.mLabel = new GraphicalLabel(new Label(this.Expression),
-                                         this.mRules.ContinuousDynamicTextHeight,
-                                         TextAlignmentEnum.CenterCenter,
-                                         this.PositionAndShape);
+        this.label = new GraphicalLabel(new Label(this.Expression),
+                                        this.rules.ContinuousDynamicTextHeight,
+                                        TextAlignmentEnum.CenterCenter,
+                                        this.PositionAndShape);
 
-        this.mLabel.Label.fontStyle = FontStyles.BoldItalic;
-        this.mLabel.setLabelPositionAndShapeBorders();
+        this.label.Label.fontStyle = FontStyles.BoldItalic;
+        this.label.setLabelPositionAndShapeBorders();
         this.PositionAndShape.calculateBoundingBox();
     }
 
