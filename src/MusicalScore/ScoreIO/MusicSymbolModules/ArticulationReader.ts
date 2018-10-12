@@ -125,6 +125,26 @@ export class ArticulationReader {
       const currentTechnicalInstruction: TechnicalInstruction = new TechnicalInstruction();
       currentTechnicalInstruction.type = TechnicalInstructionType.Fingering;
       currentTechnicalInstruction.value = nodeFingering.value;
+      currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
+      const placement: Attr = nodeFingering.attribute("placement");
+      if (placement !== undefined && placement !== null) {
+        switch (placement.value) {
+          case "above":
+            currentTechnicalInstruction.placement = PlacementEnum.Above;
+            break;
+          case "below":
+            currentTechnicalInstruction.placement = PlacementEnum.Below;
+            break;
+          case "left": // not valid in MusicXML 3.1
+            currentTechnicalInstruction.placement = PlacementEnum.Left;
+            break;
+          case "right": // not valid in MusicXML 3.1
+            currentTechnicalInstruction.placement = PlacementEnum.Right;
+            break;
+          default:
+            currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
+        }
+      }
       currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
     }
   }

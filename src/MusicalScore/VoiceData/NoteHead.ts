@@ -60,9 +60,13 @@ export class NoteHead {
      * Necessary because "circle-x" is not a valid enum member name.
      */
     public static ShapeTypeXmlToShape(shapeTypeXml: string): NoteHeadShape {
-        switch (shapeTypeXml) {
+        switch (shapeTypeXml.toLowerCase()) {
             case "normal":
                 return NoteHeadShape.NORMAL;
+            case "x":
+                return NoteHeadShape.X;
+            case "slash":
+                return NoteHeadShape.SLASH;
             case "diamond":
                 return NoteHeadShape.DIAMOND;
             case "square":
@@ -72,10 +76,8 @@ export class NoteHead {
             case "do":
             case "triangle":
                 return NoteHeadShape.TRIANGLE;
-            case "x":
-                return NoteHeadShape.X;
-            case "slash":
-                return NoteHeadShape.SLASH;
+            case "rectangle":
+                return NoteHeadShape.RECTANGLE;
             case "circle-x":
                 return NoteHeadShape.CIRCLEX;
             default:
@@ -90,9 +92,11 @@ export enum NoteHeadShape {
     CIRCLEX,
     DIAMOND,
     NORMAL,
+    RECTANGLE,
     SLASH,
     SQUARE,
     TRIANGLE,
     X,
     // TODO: Add the rest from https://usermanuals.musicxml.com/MusicXML/Content/ST-MusicXML-notehead-value.htm
+    // currently all Vexflow supported shapes present
 }

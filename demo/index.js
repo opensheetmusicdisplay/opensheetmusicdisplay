@@ -129,14 +129,16 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
             autoResize: true,
             backend: backendSelect.value,
-            drawingParameters: "default", // try compact (instead of default)
             disableCursor: false,
+            drawingParameters: "default", // try compact (instead of default)
             drawPartNames: true, // try false
             // drawTitle: false,
             // drawSubtitle: false,
             drawFingerings: true,
+            fingeringPosition: "auto", // left is default. try right. experimental: auto, above, below.
+            // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
 
-            // tupletsBracketed: true,
+            // tupletsBracketed: true, // creates brackets for all tuplets except triplets, even when not set by xml
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
@@ -193,10 +195,18 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         backendSelect.addEventListener("change", function(e) {
             var value = e.target.value;
-            // clears the canvas element
-            canvas.innerHTML = "";
-            openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, false, value);
-            openSheetMusicDisplay.setLogLevel('info');
+            var createNewOsmd = true;
+
+            if (createNewOsmd) {
+                // clears the canvas element
+                canvas.innerHTML = "";
+                openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {backend: value});
+                openSheetMusicDisplay.setLogLevel('info');
+            } else {
+                // alternative, doesn't work yet, see setOptions():
+                openSheetMusicDisplay.setOptions({backend: value});
+            }
+
             selectSampleOnChange();
 
         });

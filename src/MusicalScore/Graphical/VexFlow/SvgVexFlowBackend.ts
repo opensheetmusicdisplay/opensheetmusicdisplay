@@ -31,10 +31,10 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
 
     public clear(): void {
-        const { svg } = this.ctx;
-        if (!svg) {
+        if (!this.ctx) {
             return;
         }
+        const { svg } = this.ctx;
         // removes all children from the SVG element,
         // effectively clearing the SVG viewport
         while (svg.lastChild) {

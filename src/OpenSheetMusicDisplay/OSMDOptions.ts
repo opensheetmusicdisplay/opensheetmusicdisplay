@@ -14,12 +14,6 @@ export interface IOSMDOptions {
     disableCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
-    /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
-    drawHiddenNotes?: boolean;
-    /** Default color for a note head (without stem). Default black. Not yet supported. */ // TODO
-    defaultColorNoteHead?: string;
-    /** Default color for a note stem. Default black. Not yet supported. */ // TODO
-    defaultColorStem?: string;
     /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
     drawTitle?: boolean;
     /** Whether to draw the subtitle of the piece. If true, enables drawing Title as well. */
@@ -32,6 +26,12 @@ export interface IOSMDOptions {
     drawPartNames?: boolean;
     /** Whether to draw fingerings (only left to the note for now). Default true. */
     drawFingerings?: boolean;
+    /** Where to draw fingerings (left, right, above, below, auto).
+     * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
+     */
+    fingeringPosition?: string;
+    /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
+    fingeringInsideStafflines?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
     tupletsRatioed?: boolean;
     /** Whether all tuplets should be bracketed (e.g. |--5--| instead of 5). Default false.
@@ -43,6 +43,12 @@ export interface IOSMDOptions {
      * (Bracketing all triplets can be cluttering)
      */
     tripletsBracketed?: boolean;
+    /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
+    drawHiddenNotes?: boolean;
+    /** Default color for a note head (without stem). Default black. Not yet supported. */ // TODO
+    defaultColorNoteHead?: string;
+    /** Default color for a note stem. Default black. Not yet supported. */ // TODO
+    defaultColorStem?: string;
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */

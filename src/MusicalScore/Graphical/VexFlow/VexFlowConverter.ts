@@ -122,7 +122,7 @@ export class VexFlowConverter {
     /** returns the Vexflow code for a note head. Some are still unsupported, see Vexflow/tables.js */
     public static NoteHeadCode(noteHead: NoteHead): string {
         const codeStart: string = "/";
-        const codeFilled: string = noteHead.Filled ? "2" : "1";
+        const codeFilled: string = noteHead.Filled ? "2" : "1"; // filled/unfilled notehead code in most vexflow glyphs
         switch (noteHead.Shape) {
             case NoteHeadShape.NORMAL:
                 return "";
@@ -133,7 +133,11 @@ export class VexFlowConverter {
             case NoteHeadShape.X:
                 return codeStart + "X" + codeFilled;
             case NoteHeadShape.CIRCLEX:
-                return codeStart + "X3"; // circleX is "X3" in Vexflow for some reason
+                return codeStart + "X3";
+            case NoteHeadShape.RECTANGLE:
+                return codeStart + "R" + codeFilled;
+            case NoteHeadShape.SQUARE:
+                return codeStart + "S" + codeFilled;
             case NoteHeadShape.SLASH:
                 return ""; // slash is specified at end of duration string in Vexflow
             default:
@@ -182,7 +186,6 @@ export class VexFlowConverter {
     }
 
     public static GhostNote(frac: Fraction): Vex.Flow.GhostNote {
-        // const frac: Fraction = notes[0].graphicalNoteLength;
         return new Vex.Flow.GhostNote({
             duration: VexFlowConverter.duration(frac, false),
         });
@@ -262,16 +265,21 @@ export class VexFlowConverter {
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
 
-        if (!gve.parentVoiceEntry.IsGrace) {
-            vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
-        } else {
+        if (gve.notes[0].sourceNote.IsCueNote) {
+            (<any>vfnoteStruct).glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
+            (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
+        }
+
+        if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) {
             vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
+        } else {
+            vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
         vfnote.x_shift = xShift;
 
         if (gve.parentVoiceEntry !== undefined) {
-            const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.StemDirection;
+            const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
                     vfnote.setStemDirection(Vex.Flow.Stem.UP);
@@ -280,23 +288,23 @@ export class VexFlowConverter {
                     vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
                     break;
                 default:
-                    break;
             }
         }
 
+        // add accidentals
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
-                if (accidentals[i] === "++") {
+                if (accidentals[i] === "++") { // triple sharp
                     vfnote.addAccidental(i, new Vex.Flow.Accidental("##"));
                     vfnote.addAccidental(i, new Vex.Flow.Accidental("#"));
                     continue;
-                } else if (accidentals[i] === "bbs") {
+                } else if (accidentals[i] === "bbs") { // triple flat
                     vfnote.addAccidental(i, new Vex.Flow.Accidental("bb"));
                     vfnote.addAccidental(i, new Vex.Flow.Accidental("b"));
                     continue;
                 }
-                vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i]));
+                vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i])); // normal accidental
             }
         }
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
@@ -306,6 +314,9 @@ export class VexFlowConverter {
     }
 
     public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
+        if (vfnote === undefined) {
+            return; // needed because grace notes after main note currently not implemented. maybe safer in any case
+        }
         // Articulations:
         let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
 

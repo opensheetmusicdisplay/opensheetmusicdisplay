@@ -1486,21 +1486,11 @@ export abstract class MusicSheetCalculator {
                                openTuplets: Tuplet[], openBeams: Beam[],
                                octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
-        let voiceEntryHasPrintableNotes: boolean = false;
-        for (const note of voiceEntry.Notes) {
-            if (note.PrintObject) {
-                voiceEntryHasPrintableNotes = true;
-                break;
-            }
-        }
-        if (!voiceEntryHasPrintableNotes) {
-            return; // do not create a GraphicalVoiceEntry without graphical notes in it, will cause problems
-        }
         this.calculateStemDirectionFromVoices(voiceEntry);
         const gve: GraphicalVoiceEntry = graphicalStaffEntry.findOrCreateGraphicalVoiceEntry(voiceEntry);
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             const note: Note = voiceEntry.Notes[idx];
-            if (note === undefined || !note.PrintObject) {
+            if (note === undefined) {
                 continue;
             }
             if (sourceStaffEntry !== undefined && sourceStaffEntry.Link !== undefined && linkedNotes !== undefined && linkedNotes.indexOf(note) > -1) {
@@ -1519,10 +1509,10 @@ export abstract class MusicSheetCalculator {
             graphicalStaffEntry.addGraphicalNoteToListAtCorrectYPosition(gve, graphicalNote);
             graphicalNote.PositionAndShape.calculateBoundingBox();
             if (!this.leadSheet) {
-                if (note.NoteBeam !== undefined) {
+                if (note.NoteBeam !== undefined && note.PrintObject) {
                     this.handleBeam(graphicalNote, note.NoteBeam, openBeams);
                 }
-                if (note.NoteTuplet !== undefined) {
+                if (note.NoteTuplet !== undefined && note.PrintObject) {
                     this.handleTuplet(graphicalNote, note.NoteTuplet, openTuplets);
                 }
             }
@@ -1815,6 +1805,9 @@ export abstract class MusicSheetCalculator {
             endGse = this.graphicalMusicSheet.GetGraphicalFromSourceStaffEntry(tie.Notes[i].ParentStaffEntry);
             endNote = endGse.findEndTieGraphicalNoteFromNote(tie.Notes[i]);
             if (startNote !== undefined && endNote !== undefined && endGse !== undefined) {
+                if (!startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
+                    continue;
+                }
                 const graphicalTie: GraphicalTie = this.createGraphicalTie(tie, startGse, endGse, startNote, endNote);
                 startGse.GraphicalTies.push(graphicalTie);
                 if (this.staffEntriesWithGraphicalTies.indexOf(startGse) >= 0) {
@@ -1990,6 +1983,12 @@ export abstract class MusicSheetCalculator {
             if (multiExpression.OctaveShiftEnd !== undefined && openOctaveShifts[staffIndex] !== undefined &&
                 multiExpression.OctaveShiftEnd === openOctaveShifts[staffIndex].getOpenOctaveShift) {
                 openOctaveShifts[staffIndex] = undefined;
+            }
+        }
+        // check wantedStemDirections of beam notes at end of measure (e.g. for beam with grace notes)
+        for (const staffEntry of measure.staffEntries) {
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+                this.setBeamNotesWantedStemDirections(voiceEntry.parentVoiceEntry);
             }
         }
         // if there are no staffEntries in this measure, create a rest for the whole measure:
@@ -2663,31 +2662,32 @@ export abstract class MusicSheetCalculator {
             // in case of StaffEntryLink don't check mainVoice / linkedVoice
             if (voiceEntry === voiceEntry.ParentSourceStaffEntry.VoiceEntries[0]) {
                 // set stem up:
-                voiceEntry.StemDirection = StemDirectionType.Up;
+                voiceEntry.WantedStemDirection = StemDirectionType.Up;
                 return;
             } else {
                 // set stem down:
-                voiceEntry.StemDirection = StemDirectionType.Down;
+                voiceEntry.WantedStemDirection = StemDirectionType.Down;
                 return;
             }
         } else {
             if (voiceEntry.ParentVoice instanceof LinkedVoice) {
                 // Linked voice: set stem down:
-                voiceEntry.StemDirection = StemDirectionType.Down;
+                voiceEntry.WantedStemDirection = StemDirectionType.Down;
             } else {
                 // if this voiceEntry belongs to the mainVoice:
                 // check first that there are also more voices present:
                 if (voiceEntry.ParentSourceStaffEntry.VoiceEntries.length > 1) {
                     // as this voiceEntry belongs to the mainVoice: stem Up
-                    voiceEntry.StemDirection = StemDirectionType.Up;
+                    voiceEntry.WantedStemDirection = StemDirectionType.Up;
                 }
             }
         }
+        // setBeamNotesWantedStemDirections() will be called at end of measure (createGraphicalMeasure)
+    }
 
-        // ToDo: shift code to end of measure to only check once for all beams
-        // check for a beam:
-        // if this voice entry currently has no desired direction yet:
-        if (voiceEntry.StemDirection === StemDirectionType.Undefined &&
+    /** Sets a voiceEntry's stem direction to one already set in other notes in its beam, if it has one. */
+    private setBeamNotesWantedStemDirections(voiceEntry: VoiceEntry): void {
+        if (voiceEntry.WantedStemDirection === StemDirectionType.Undefined &&
             voiceEntry.Notes.length > 0) {
             const beam: Beam = voiceEntry.Notes[0].NoteBeam;
             if (beam !== undefined) {
@@ -2695,9 +2695,9 @@ export abstract class MusicSheetCalculator {
                 for (const note of beam.Notes) {
                     if (note.ParentVoiceEntry === voiceEntry) {
                         continue;
-                    } else if (note.ParentVoiceEntry.StemDirection !== StemDirectionType.Undefined) {
+                    } else if (note.ParentVoiceEntry.WantedStemDirection !== StemDirectionType.Undefined) {
                         // set the stem direction
-                        voiceEntry.StemDirection = note.ParentVoiceEntry.StemDirection;
+                        voiceEntry.WantedStemDirection = note.ParentVoiceEntry.WantedStemDirection;
                         break;
                     }
                 }

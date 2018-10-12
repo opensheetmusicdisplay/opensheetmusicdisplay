@@ -39,20 +39,12 @@ import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 // import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 */
 import { EngravingRules } from "../EngravingRules";
-import { InstantaneousDynamicExpression } from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
-import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
-import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
-import { Staff } from "../../VoiceData/Staff";
 import { TextAlignmentEnum, TextAlignment } from "../../../Common/Enums/TextAlignment";
 import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
-import { ContinuousDynamicExpression, ContDynamicEnum } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
+import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
-import { MusicSystem } from "../MusicSystem";
-import { VerticalGraphicalStaffEntryContainer } from "../VerticalGraphicalStaffEntryContainer";
-import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
-import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneousDynamicExpression";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -395,14 +387,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     let vfStartNote: Vex.Flow.StaveNote = undefined;
     let startNoteIndexInTie: number = 0;
-    if (startNote !== undefined) {
+    if (startNote !== undefined && startNote.vfnote !== undefined && startNote.vfnote.length >= 2) {
       vfStartNote = startNote.vfnote[0];
       startNoteIndexInTie = startNote.vfnote[1];
     }
 
     let vfEndNote: Vex.Flow.StaveNote = undefined;
     let endNoteIndexInTie: number = 0;
-    if (endNote !== undefined) {
+    if (endNote !== undefined && endNote.vfnote !== undefined && endNote.vfnote.length >= 2) {
       vfEndNote = endNote.vfnote[0];
       endNoteIndexInTie = endNote.vfnote[1];
     }
@@ -875,17 +867,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // order slurs that were saved to the Staffline
     for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
-      for (const musicSystem of graphicalMusicPage.MusicSystems) {
-        for (const staffLine of musicSystem.StaffLines) {
-          for (const gSlur of staffLine.GraphicalSlurs) {
-            // crossed slurs will be handled later:
-            if (gSlur.slur.isCrossed()) {
-              continue;
+        for (const musicSystem of graphicalMusicPage.MusicSystems) {
+          for (const staffLine of musicSystem.StaffLines) {
+            // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+            const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
+            for (const gSlur of sortedGSlurs) {
+                // crossed slurs will be handled later:
+                if (gSlur.slur.isCrossed()) {
+                    continue;
+                }
+                gSlur.calculateCurve(this.rules);
             }
-            gSlur.calculateCurve(this.rules);
           }
         }
       }
-    }
   }
 }

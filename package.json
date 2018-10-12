@@ -54,7 +54,7 @@
     "loglevel": "^1.5.0",
     "shortid": "^2.2.6",
     "typescript-collections": "^1.1.2",
-    "vexflow": "^1.2.85"
+    "vexflow": "^1.2.87"
   },
   "devDependencies": {
     "@types/chai": "^4.0.3",
@@ -71,7 +71,7 @@
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
-    "file-loader": "^1.1.8",
+    "file-loader": "^2.0.0",
     "html-webpack-plugin": "^3.2.0",
     "http-server": "^0.11.0",
     "jquery": "^3.2.1",
