@@ -68,7 +68,7 @@ export class AlignmentManager {
     }
 
     /**
-     * Get distance between to bounding boxes
+     * Get distance between two bounding boxes
      * @param a First bounding box
      * @param b Second bounding box
      */

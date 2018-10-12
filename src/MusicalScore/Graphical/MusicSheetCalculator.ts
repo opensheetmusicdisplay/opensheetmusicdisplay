@@ -1163,7 +1163,9 @@ export abstract class MusicSheetCalculator {
         graphicalContinuousDynamic.Lines.clear();
         if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
             if (sameStaffLine) {
-                graphicalContinuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
+                graphicalContinuousDynamic.createCrescendoLines(
+                    upperStartX + this.rules.WedgeHorizontalMargin,
+                    upperEndX - this.rules.WedgeHorizontalMargin, idealY);
                 graphicalContinuousDynamic.calcPsi();
             } else {
                 // two different Wedges

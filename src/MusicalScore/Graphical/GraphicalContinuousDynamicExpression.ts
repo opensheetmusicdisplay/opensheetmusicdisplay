@@ -290,13 +290,6 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                 this.lines[0].End.x += value;
                 this.lines[1].End.x += value;
             }
-        } else {
-            if (value < 0) {
-                this.lines[0].Start.x += value;
-            } else {
-                this.lines[0].End.x += value;
-                this.lines[1].End.x += value;
-            }
         }
         this.calcPsi();
     }
