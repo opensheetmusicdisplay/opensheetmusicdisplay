@@ -233,7 +233,7 @@ export class OpenSheetMusicDisplay {
                 //    document.documentElement.offsetWidth
                 //);
                 //self.container.style.width = width + "px";
-                if (this.graphic !== undefined) {
+                if (self.graphic !== undefined) {
                     self.render();
                 }
             }
@@ -246,9 +246,6 @@ export class OpenSheetMusicDisplay {
      * @param endCallback is the function called when resizing (kind-of) ends
      */
     private handleResize(startCallback: () => void, endCallback: () => void): void {
-        if (this.graphic === undefined) {
-            return;
-        }
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;
