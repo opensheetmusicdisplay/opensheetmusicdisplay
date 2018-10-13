@@ -135,15 +135,15 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      * @param wedgeOpeningLength length of the opening
      * @param wedgeLineWidth line width of the wedge
      */
-    public createSecondHalfCresendoLines(startX: number, endX: number, y: number,
-                                         wedgeMeasureBeginOpeningLength: number = this.rules.WedgeMeasureBeginOpeningLength,
-                                         wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
-                                         wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
+    public createSecondHalfCrescendoLines(startX: number, endX: number, y: number,
+                                          wedgeMeasureBeginOpeningLength: number = this.rules.WedgeMeasureBeginOpeningLength,
+                                          wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
+                                          wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
         const upperLineStart: PointF2D = new PointF2D(startX, y - wedgeMeasureBeginOpeningLength / 2);
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeMeasureBeginOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeOpeningLength / 2);
-        this.addDoubleLines(upperLineStart, lowerLineStart, upperLineEnd, lowerLineEnd, wedgeLineWidth);
+        this.addDoubleLines(upperLineStart, upperLineEnd, lowerLineStart, lowerLineEnd, wedgeLineWidth);
     }
 
     /**
@@ -157,7 +157,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         this.lines.clear();
 
         if (isSecondHalfSplit) {
-            this.createSecondHalfCresendoLines(startX, endX, y);
+            this.createSecondHalfCrescendoLines(startX, endX, y);
         } else if (this.isSplittedPart) {
             this.createFirstHalfCrescendoLines(startX, endX, y);
         } else {
@@ -198,7 +198,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeMeasureEndOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeMeasureEndOpeningLength / 2);
-        this.addDoubleLines(upperLineStart, lowerLineStart, upperLineEnd, lowerLineEnd, wedgeLineWidth);
+        this.addDoubleLines(upperLineStart, upperLineEnd, lowerLineStart, lowerLineEnd, wedgeLineWidth);
     }
 
     /**
@@ -280,7 +280,12 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     }
 
     public squeeze(value: number): void {
+        // Verbal expressions are not squeezable and squeezing below the width is also not possible
         if (this.IsVerbal) {
+            return;
+        }
+        const width: number = Math.abs(this.lines[0].End.x - this.lines[0].Start.x);
+        if (width < Math.abs(value)) {
             return;
         }
         if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {

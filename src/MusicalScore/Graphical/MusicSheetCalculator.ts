@@ -959,7 +959,7 @@ export abstract class MusicSheetCalculator {
 
         // Upper staff wedge always starts at the given position and the lower staff wedge always starts at the begin of measure
         const upperStartX: number = startPosInStaffline.x;
-        const lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth + this.rules.WedgeHorizontalMargin;
+        const lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
         let upperEndX: number = 0;
         let lowerEndX: number = 0;
 
@@ -1170,7 +1170,7 @@ export abstract class MusicSheetCalculator {
                 graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
                 graphicalContinuousDynamic.calcPsi();
 
-                secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
+                secondGraphicalContinuousDynamic.createSecondHalfCrescendoLines(lowerStartX, lowerEndX, secondIdealY);
                 secondGraphicalContinuousDynamic.calcPsi();
             }
         } else if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
@@ -1181,7 +1181,7 @@ export abstract class MusicSheetCalculator {
                 graphicalContinuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY);
                 graphicalContinuousDynamic.calcPsi();
 
-                secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
+                secondGraphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, secondIdealY);
                 secondGraphicalContinuousDynamic.calcPsi();
             }
         } //End Diminuendo

@@ -12,7 +12,7 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
-import { AlignmentManager } from "./AlignementManager";
+import { AlignmentManager } from "./AlignmentManager";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 
 /**
