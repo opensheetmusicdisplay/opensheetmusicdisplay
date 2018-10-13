@@ -135,10 +135,10 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      * @param wedgeOpeningLength length of the opening
      * @param wedgeLineWidth line width of the wedge
      */
-    public createSecondHalfCresendoLines(startX: number, endX: number, y: number,
-                                         wedgeMeasureBeginOpeningLength: number = this.rules.WedgeMeasureBeginOpeningLength,
-                                         wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
-                                         wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
+    public createSecondHalfCrescendoLines(startX: number, endX: number, y: number,
+                                          wedgeMeasureBeginOpeningLength: number = this.rules.WedgeMeasureBeginOpeningLength,
+                                          wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
+                                          wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
         const upperLineStart: PointF2D = new PointF2D(startX, y - wedgeMeasureBeginOpeningLength / 2);
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeMeasureBeginOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeOpeningLength / 2);
@@ -157,7 +157,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         this.lines.clear();
 
         if (isSecondHalfSplit) {
-            this.createSecondHalfCresendoLines(startX, endX, y);
+            this.createSecondHalfCrescendoLines(startX, endX, y);
         } else if (this.isSplittedPart) {
             this.createFirstHalfCrescendoLines(startX, endX, y);
         } else {
