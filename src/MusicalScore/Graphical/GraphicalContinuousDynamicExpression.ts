@@ -198,7 +198,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeMeasureEndOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeMeasureEndOpeningLength / 2);
-        this.addDoubleLines(upperLineStart, lowerLineStart, upperLineEnd, lowerLineEnd, wedgeLineWidth);
+        this.addDoubleLines(upperLineStart, upperLineEnd, lowerLineStart, lowerLineEnd, wedgeLineWidth);
     }
 
     /**
