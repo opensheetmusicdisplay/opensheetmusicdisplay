@@ -54,13 +54,17 @@ export class AlignmentManager {
                     }
                     expr.PositionAndShape.calculateBoundingBox();
                     // Squeeze wedges
-                    if (exprIdx < aes.length - 1 && exprIdx > 0 && (expr as VexFlowContinuousDynamicExpression).squeeze) {
-                        const nextExpression: AbstractGraphicalExpression = aes[exprIdx + 1];
-                        const prevExpression: AbstractGraphicalExpression = aes[exprIdx - 1];
-                        const overlapRight: PointF2D = this.getOverlap(expr.PositionAndShape, nextExpression.PositionAndShape);
-                        const overlapLeft: PointF2D = this.getOverlap(prevExpression.PositionAndShape, expr.PositionAndShape);
-                        (expr as VexFlowContinuousDynamicExpression).squeeze(-(overlapRight.x + this.rules.DynamicExpressionSpacer));
-                        (expr as VexFlowContinuousDynamicExpression).squeeze(overlapLeft.x + this.rules.DynamicExpressionSpacer);
+                    if ((expr as VexFlowContinuousDynamicExpression).squeeze) {
+                        const nextExpression: AbstractGraphicalExpression = exprIdx < aes.length - 1 ? aes[exprIdx + 1] : undefined;
+                        const prevExpression: AbstractGraphicalExpression = exprIdx > 0 ? aes[exprIdx - 1] : undefined;
+                        if (nextExpression) {
+                            const overlapRight: PointF2D = this.getOverlap(expr.PositionAndShape, nextExpression.PositionAndShape);
+                            (expr as VexFlowContinuousDynamicExpression).squeeze(-(overlapRight.x + this.rules.DynamicExpressionSpacer));
+                        }
+                        if (prevExpression) {
+                            const overlapLeft: PointF2D = this.getOverlap(prevExpression.PositionAndShape, expr.PositionAndShape);
+                            (expr as VexFlowContinuousDynamicExpression).squeeze(overlapLeft.x + this.rules.DynamicExpressionSpacer);
+                        }
                     }
                 }
             }

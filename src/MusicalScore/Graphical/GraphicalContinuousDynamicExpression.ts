@@ -143,7 +143,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeMeasureBeginOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeOpeningLength / 2);
-        this.addDoubleLines(upperLineStart, lowerLineStart, upperLineEnd, lowerLineEnd, wedgeLineWidth);
+        this.addDoubleLines(upperLineStart, upperLineEnd, lowerLineStart, lowerLineEnd, wedgeLineWidth);
     }
 
     /**
@@ -280,7 +280,9 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     }
 
     public squeeze(value: number): void {
-        if (this.IsVerbal) {
+        // Verbal expressions are not squeezable and squeezing below the width is also not possible
+        const width: number = Math.abs(this.lines[0].End.x - this.lines[0].Start.x);
+        if (this.IsVerbal || width < Math.abs(value)) {
             return;
         }
         if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
