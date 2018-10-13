@@ -1170,7 +1170,7 @@ export abstract class MusicSheetCalculator {
                 graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
                 graphicalContinuousDynamic.calcPsi();
 
-                secondGraphicalContinuousDynamic.createSecondHalfCresendoLines(lowerStartX, lowerEndX, secondIdealY);
+                secondGraphicalContinuousDynamic.createSecondHalfCrescendoLines(lowerStartX, lowerEndX, secondIdealY);
                 secondGraphicalContinuousDynamic.calcPsi();
             }
         } else if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
