@@ -281,8 +281,11 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
 
     public squeeze(value: number): void {
         // Verbal expressions are not squeezable and squeezing below the width is also not possible
+        if (this.IsVerbal) {
+            return;
+        }
         const width: number = Math.abs(this.lines[0].End.x - this.lines[0].Start.x);
-        if (this.IsVerbal || width < Math.abs(value)) {
+        if (width < Math.abs(value)) {
             return;
         }
         if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
