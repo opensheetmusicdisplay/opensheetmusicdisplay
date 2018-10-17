@@ -416,6 +416,7 @@ export class OpenSheetMusicDisplay {
             this.autoResizeEnabled = true;
         } else if (options.autoResize === false) { // not undefined
             this.autoResizeEnabled = false;
+            // we could remove the window EventListener here, but not necessary.
         }
     }
 
