@@ -78,7 +78,7 @@
     </div>
     <div class="column">
         <h3 class="ui header">Show bounding box for:</h3>
-        <select class="ui selection dropdown" id="selectBounding">
+        <select class="ui selection dropdown" id="selectBounding" style="width: 80%">
             <option value="none">None</option>
             <option value="all">All</option>
             <option value="VexFlowMeasure">Measures</option>
@@ -111,8 +111,14 @@
     </div>
     <div class="column">
         <h3 class="ui header">Debug controls:</h3>
-        <div class="ui vertical buttons">
-            <div class="ui button" id="debug-re-render-btn">Re-render</div>
+        <div>
+            <div class="ui vertical buttons">
+                <div class="ui button" id="debug-re-render-btn" style="width: 100%">Re-render</div>
+                
+            </div>
+            <div class="ui vertical buttons">
+                <div class="ui button" id="debug-clear-btn" style="width: 100%">Clear</div>
+            </div>
         </div>
     </div>
 </div>

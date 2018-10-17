@@ -47,6 +47,9 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
+        if (options.autoResize === undefined) {
+            options.autoResize = true;
+        }
         this.setOptions(options);
     }
 
@@ -61,6 +64,8 @@ export class OpenSheetMusicDisplay {
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
     private drawingParameters: DrawingParameters;
+    private autoResizeEnabled: boolean;
+    private resizeHandlerAttached: boolean;
 
     /**
      * Load a MusicXML file
@@ -168,6 +173,12 @@ export class OpenSheetMusicDisplay {
         }
     }
 
+    /** Clears what OSMD has drawn on its canvas. */
+    public clear(): void {
+        this.drawer.clear();
+        this.reset(); // without this, resize will draw loaded sheet again
+    }
+
     /**
      * Sets the logging level for this OSMD instance. By default, this is set to `warn`.
      *
@@ -233,7 +244,7 @@ export class OpenSheetMusicDisplay {
                 //    document.documentElement.offsetWidth
                 //);
                 //self.container.style.width = width + "px";
-                if (self.graphic !== undefined) {
+                if (self.IsReadyToRender()) {
                     self.render();
                 }
             }
@@ -249,6 +260,19 @@ export class OpenSheetMusicDisplay {
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;
+        const self: OpenSheetMusicDisplay = this;
+
+        function resizeStart(): void {
+            if (!self.AutoResizeEnabled) {
+                return;
+            }
+            rtime = (new Date()).getTime();
+            if (!timeout) {
+                startCallback();
+                rtime = (new Date()).getTime();
+                timeout = window.setTimeout(resizeEnd, delta);
+            }
+        }
 
         function resizeEnd(): void {
             timeout = undefined;
@@ -260,21 +284,13 @@ export class OpenSheetMusicDisplay {
             }
         }
 
-        function resizeStart(): void {
-            rtime = (new Date()).getTime();
-            if (!timeout) {
-                startCallback();
-                rtime = (new Date()).getTime();
-                timeout = window.setTimeout(resizeEnd, delta);
-            }
-        }
-
         if ((<any>window).attachEvent) {
             // Support IE<9
             (<any>window).attachEvent("onresize", resizeStart);
         } else {
             window.addEventListener("resize", resizeStart);
         }
+        this.resizeHandlerAttached = true;
 
         window.setTimeout(startCallback, 0);
         window.setTimeout(endCallback, 1);
@@ -304,6 +320,10 @@ export class OpenSheetMusicDisplay {
     }
 
     //#region GETTER / SETTER
+    /** Set OSMD rendering options using an IOSMDOptions object.
+     *  Can be called during runtime. Also called by constructor.
+     *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
+     */
     public setOptions(options: IOSMDOptions): void {
         this.drawingParameters = new DrawingParameters();
         if (options.drawingParameters) {
@@ -390,16 +410,18 @@ export class OpenSheetMusicDisplay {
             EngravingRules.Rules.TripletsBracketed = true;
         }
         if (options.autoResize) {
-            this.autoResize();
+            if (!this.resizeHandlerAttached) {
+                this.autoResize();
+            }
+            this.autoResizeEnabled = true;
         } else if (options.autoResize === false) { // not undefined
-            this.handleResize(
-                () => {
-                    // empty
-                },
-                () => {
-                    // empty
-            });
+            this.autoResizeEnabled = false;
         }
+    }
+
+    /** States whether the render() function can be safely called. */
+    public IsReadyToRender(): boolean {
+        return this.graphic !== undefined;
     }
 
     public set DrawSkyLine(value: boolean) {
@@ -432,5 +454,10 @@ export class OpenSheetMusicDisplay {
     public get DrawBoundingBox(): string {
         return this.drawer.drawableBoundingBoxElement;
     }
+
+    public get AutoResizeEnabled(): boolean {
+        return this.autoResizeEnabled;
+    }
+
     //#endregion
 }
