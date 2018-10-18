@@ -237,6 +237,9 @@ export class OpenSheetMusicDisplay {
                 }
             }
         }
+        if (options.coloringEnabled !== undefined) {
+            EngravingRules.Rules.ColoringEnabled = options.coloringEnabled;
+        }
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
             this.enableOrDisableCursor(this.drawingParameters.drawCursors);

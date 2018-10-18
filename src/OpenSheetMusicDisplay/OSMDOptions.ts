@@ -12,6 +12,8 @@ export interface IOSMDOptions {
     autoStem?: boolean;
     /** Render Backend, will be SVG if given undefined, SVG or svg, otherwise Canvas. */
     backend?: string;
+    /** Whether to enable coloring noteheads and stems by their XML color attribute. */
+    coloringEnabled?: boolean;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */

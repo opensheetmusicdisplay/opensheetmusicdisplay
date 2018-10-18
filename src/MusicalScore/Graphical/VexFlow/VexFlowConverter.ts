@@ -216,17 +216,23 @@ export class VexFlowConverter {
         let alignCenter: boolean = false;
         let xShift: number = 0;
         let slashNoteHead: boolean = false;
+        const noteheadStyles: any = [];
+        const stemColor: string = gve.parentVoiceEntry.StemColorXml;
+        const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
             }
-            if (note.sourceNote.NoteHead) {
-                if (note.sourceNote.NoteHead.Shape === NoteHeadShape.SLASH) {
-                    slashNoteHead = true;
-                    // if we have slash heads and other heads in the voice entry, this will create the same head for all.
-                    // same problem with numDots. The slash case should be extremely rare though.
+
+            if (EngravingRules.Rules.ColoringEnabled) {
+                const noteheadColor: string = note.sourceNote.NoteheadColorXml;
+                if (noteheadColor) {
+                    noteheadStyles.push({fillStyle: noteheadColor, strokeStyle: noteheadColor});
+                } else {
+                    noteheadStyles.push(undefined);
                 }
             }
+
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 keys = ["b/4"];
@@ -245,6 +251,15 @@ export class VexFlowConverter {
                 duration += "r";
                 break;
             }
+
+            if (note.sourceNote.NoteHead) {
+                if (note.sourceNote.NoteHead.Shape === NoteHeadShape.SLASH) {
+                    slashNoteHead = true;
+                    // if we have slash heads and other heads in the voice entry, this will create the same head for all.
+                    // same problem with numDots. The slash case should be extremely rare though.
+                }
+            }
+
             const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             keys.push(pitch[0]);
             accidentals.push(pitch[1]);
@@ -262,15 +277,19 @@ export class VexFlowConverter {
         }
 
         let vfnote: Vex.Flow.StaveNote;
+
         const vfnoteStruct: Object = {
             align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
             duration: duration,
             keys: keys,
+            noteheadStyles: noteheadStyles,
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
-
+        if (stemColor && EngravingRules.Rules.ColoringEnabled) {
+            (<any>vfnoteStruct).stemStyle = stemStyle;
+        }
         if (gve.notes[0].sourceNote.IsCueNote) {
             (<any>vfnoteStruct).glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
             (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
@@ -282,8 +301,29 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
+        if (EngravingRules.Rules.ColoringEnabled) {
+            // TODO temporary fix until Vexflow PR is through (should be set by vfnotestruct.stem/noteheadStyles)
+            if (stemColor) {
+                vfnote.setStemStyle(stemStyle);
+            }
+            if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
+                vfnote.setFlagStyle(stemStyle);
+            }
+            for (let i: number = 0; i < noteheadStyles.length; i++) {
+                const style: string = noteheadStyles[i];
+                if (style) {
+                    vfnote.note_heads[i].setStyle(style);
+                }
+            }
+        }
+
         vfnote.x_shift = xShift;
 
+        if (gve.parentVoiceEntry.IsGrace && gve.notes[0].sourceNote.NoteBeam) {
+            // Vexflow seems to have issues with wanted stem direction for beamed grace notes,
+            // when the stem is connected to a beamed main note (e.g. Haydn Concertante bar 57)
+            gve.parentVoiceEntry.WantedStemDirection = gve.notes[0].sourceNote.NoteBeam.Notes[0].ParentVoiceEntry.WantedStemDirection;
+        }
         if (gve.parentVoiceEntry !== undefined) {
             const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
             switch (wantedStemDirection) {
@@ -320,8 +360,8 @@ export class VexFlowConverter {
     }
 
     public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
-        if (vfnote === undefined) {
-            return; // needed because grace notes after main note currently not implemented. maybe safer in any case
+        if (vfnote === undefined || vfnote.getAttribute("type") === "GhostNote") {
+            return;
         }
         // Articulations:
         let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
