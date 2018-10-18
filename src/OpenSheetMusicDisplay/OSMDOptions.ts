@@ -2,8 +2,10 @@ import { DrawingParametersEnum } from "../MusicalScore/Graphical/DrawingParamete
 
 /** Possible options for the OpenSheetMusicDisplay constructor, none are mandatory. */
 export interface IOSMDOptions {
-    /** Not yet supported. Will always beam automatically. */ // TODO
+    /** Whether to automatically create beams for notes that don't have beams set in XML. */
     autoBeam?: boolean;
+    /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
+    autoBeamOptions?: AutoBeamOptions;
     /** Automatically resize score with canvas size. Default is true. */
     autoResize?: boolean;
     /** Not yet supported. Will always place stems automatically. */ // TODO
@@ -65,4 +67,18 @@ export class OSMDOptions {
             drawingParameters: DrawingParametersEnum.default,
         };
     }
+}
+
+export interface AutoBeamOptions {
+    /** Whether to extend beams over rests. Default false. */
+    beam_rests?: boolean;
+    /** Whether to extend beams only over rests that are in the middle of a potential beam. Default false. */
+    beam_middle_rests_only?: boolean;
+    /** Whether to maintain stem direction of autoBeamed notes. Discouraged, reduces beams. Default false. */
+    maintain_stem_directions?: boolean;
+    /** Groups of notes (fractions) to beam within a measure.
+     * List of fractions, each fraction being [nominator, denominator].
+     * E.g. [[3,4],[1,4]] will beam the first 3 quarters of a measure, then the last quarter.
+     */
+    groups?: [number[]];
 }

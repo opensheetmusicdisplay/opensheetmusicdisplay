@@ -33,6 +33,7 @@ import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstru
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {ArpeggioType} from "../../VoiceData/Arpeggio";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
+import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -57,6 +58,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
     private connectors: Vex.Flow.StaveConnector[] = [];
     /** Intermediate object to construct beams */
     private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][]; } = {};
+    /** Beams created by (optional) autoBeam function. */
+    private autoVfBeams: Vex.Flow.Beam[];
+    /** Beams of tuplet notes created by (optional) autoBeam function. */
+    private autoTupletVfBeams: Vex.Flow.Beam[];
     /** VexFlow Beams */
     private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
     /** Intermediate object to construct tuplets */
@@ -342,6 +347,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
             }
         }
+        // Draw auto-generated beams from Beam.generateBeams()
+        if (this.autoVfBeams) {
+            for (const beam of this.autoVfBeams) {
+                beam.setContext(ctx).draw();
+            }
+        }
+        if (this.autoTupletVfBeams) {
+            for (const beam of this.autoTupletVfBeams) {
+                beam.setContext(ctx).draw();
+            }
+        }
 
         // Draw tuplets
         for (const voiceID in this.vftuplets) {
@@ -535,6 +551,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // created them brand new. Is this needed? And more importantly,
         // should the old beams be removed manually by the notes?
         this.vfbeams = {};
+        const beamedNotes: StaveNote[] = []; // already beamed notes, will be ignored by this.autoBeamNotes()
         for (const voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
                 let vfbeams: Vex.Flow.Beam[] = this.vfbeams[voiceID];
@@ -558,6 +575,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         const note: Vex.Flow.StaveNote = ((<VexFlowVoiceEntry>entry).vfStaveNote as StaveNote);
                         if (note !== undefined) {
                           notes.push(note);
+                          beamedNotes.push(note);
                         }
                         if (entry.parentVoiceEntry.IsGrace) {
                             isGraceBeam = true;
@@ -581,6 +599,87 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
             }
         }
+        if (EngravingRules.Rules.AutoBeamNotes) {
+            this.autoBeamNotes(beamedNotes); // try to autobeam notes except those that are already beamed (beamedNotes).
+        }
+    }
+
+    /** Autobeams notes except beamedNotes, using Vexflow's Beam.generateBeams().
+     *  Takes options from EngravingRules.Rules.AutoBeamOptions.
+     * @param beamedNotes notes that will not be autobeamed (because they are already beamed)
+     */
+    private autoBeamNotes(beamedNotes: StemmableNote[]): void {
+        const notesToAutoBeam: StemmableNote[] = [];
+        let consecutiveBeamableNotes: StemmableNote[] = [];
+        let currentTuplet: Tuplet;
+        let tupletNotesToAutoBeam: StaveNote[] = [];
+        this.autoTupletVfBeams = [];
+        for (const staffEntry of this.staffEntries) {
+            for (const gve of staffEntry.graphicalVoiceEntries) {
+                const vfStaveNote: StaveNote = <StaveNote> (gve as VexFlowVoiceEntry).vfStaveNote;
+                if (gve.parentVoiceEntry.IsGrace || // don't beam grace notes
+                    gve.notes[0].graphicalNoteLength.CompareTo(new Fraction(1, 4)) >= 0 || // don't beam quarter or longer notes
+                    beamedNotes.contains(vfStaveNote)) { // don't beam already beamed notes
+                    if (consecutiveBeamableNotes.length >= 2) { // don't beam notes surrounded by quarter notes etc.
+                        for (const note of consecutiveBeamableNotes) {
+                            notesToAutoBeam.push(note);
+                        }
+                    }
+                    consecutiveBeamableNotes = [];
+                    continue;
+                }
+
+                // create beams for tuplets separately
+                const noteTuplet: Tuplet = gve.notes[0].sourceNote.NoteTuplet;
+                if (noteTuplet) {
+                    if (currentTuplet === undefined) {
+                        currentTuplet = noteTuplet;
+                        tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
+                    } else {
+                        if (currentTuplet === noteTuplet) {
+                            tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
+                        } else { // new tuplet, finish old one
+                            if (tupletNotesToAutoBeam.length > 1) {
+                                this.autoTupletVfBeams.push(new Vex.Flow.Beam(tupletNotesToAutoBeam, true));
+                            }
+                            tupletNotesToAutoBeam = [];
+                            currentTuplet = noteTuplet;
+                            tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
+                        }
+                    }
+                    continue;
+                } else {
+                    currentTuplet = undefined;
+                }
+
+                consecutiveBeamableNotes.push((gve as VexFlowVoiceEntry).vfStaveNote);
+            }
+        }
+        if (tupletNotesToAutoBeam.length >= 2) {
+            this.autoTupletVfBeams.push(new Vex.Flow.Beam(tupletNotesToAutoBeam, true));
+        }
+        if (consecutiveBeamableNotes.length >= 2) {
+            for (const note of consecutiveBeamableNotes) {
+                notesToAutoBeam.push(note);
+            }
+        }
+
+        // create options for generateBeams
+        const autoBeamOptions: AutoBeamOptions = EngravingRules.Rules.AutoBeamOptions;
+        const generateBeamOptions: any = {
+            beam_middle_only: autoBeamOptions.beam_middle_rests_only,
+            beam_rests: autoBeamOptions.beam_rests,
+            maintain_stem_directions: autoBeamOptions.maintain_stem_directions,
+        };
+        if (autoBeamOptions.groups && autoBeamOptions.groups.length) {
+            const groups: Vex.Flow.Fraction[] = [];
+            for (const fraction of autoBeamOptions.groups) {
+                groups.push(new Vex.Flow.Fraction(fraction[0], fraction[1]));
+            }
+            generateBeamOptions.groups = groups;
+        }
+
+        this.autoVfBeams = Vex.Flow.Beam.generateBeams(notesToAutoBeam, generateBeamOptions);
     }
 
     /**

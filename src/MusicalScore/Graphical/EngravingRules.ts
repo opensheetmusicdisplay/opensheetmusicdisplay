@@ -3,6 +3,7 @@ import { PagePlacementEnum } from "./GraphicalMusicPage";
 import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { AutoBeamOptions } from "../../OpenSheetMusicDisplay/OSMDOptions";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -39,6 +40,10 @@ export class EngravingRules {
     private betweenStaffDistance: number;
     private staffHeight: number;
     private betweenStaffLinesDistance: number;
+    /** Whether to automatically beam notes that don't already have beams in XML. */
+    private autoBeamNotes: boolean;
+    /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
+    private autoBeamOptions: AutoBeamOptions;
     private beamWidth: number;
     private beamSpaceWidth: number;
     private beamForwardLength: number;
@@ -218,6 +223,14 @@ export class EngravingRules {
         this.instrumentLabelTextHeight = 2;
         this.minimumAllowedDistanceBetweenSystems = 3.0;
         this.lastSystemMaxScalingFactor = 1.4;
+
+        // autoBeam options
+        this.autoBeamNotes = false;
+        this.autoBeamOptions = {
+            beam_middle_rests_only: false,
+            beam_rests: false,
+            maintain_stem_directions: false
+        };
 
         // Beam Sizing Variables
         this.beamWidth = EngravingRules.unit / 2.0;
@@ -557,6 +570,18 @@ export class EngravingRules {
     }
     public set BetweenStaffLinesDistance(value: number) {
         this.betweenStaffLinesDistance = value;
+    }
+    public get AutoBeamNotes(): boolean {
+        return this.autoBeamNotes;
+    }
+    public set AutoBeamNotes(value: boolean) {
+        this.autoBeamNotes = value;
+    }
+    public get AutoBeamOptions(): AutoBeamOptions {
+        return this.autoBeamOptions;
+    }
+    public set AutoBeamOptions(value: AutoBeamOptions) {
+        this.autoBeamOptions = value;
     }
     public get BeamWidth(): number {
         return this.beamWidth;

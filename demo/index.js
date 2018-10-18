@@ -22,13 +22,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "Mozart, W.A.- Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
         "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
         "OSMD Function Test - All": "OSMD_function_test_all.xml",
-        "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
-        "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+        "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
         "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
+        "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
         "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
         "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
+        "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
         "OSMD Function Test - NoteHeadShapes": "OSMD_function_test_noteHeadShapes.musicxml",
-        "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
+        "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
         "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
         "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
         "Anonymous - Saltarello": "Saltarello.mxl",
@@ -151,6 +152,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             fingeringPosition: "auto", // left is default. try right. experimental: auto, above, below.
             // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
             setWantedStemDirectionByXml: true, // try false, which was previously the default behavior
+
+            autoBeam: false, // try true, OSMD Function Test AutoBeam sample
+            autoBeamOptions: {
+                beam_rests: false,
+                beam_middle_rests_only: false,
+                //groups: [[3,4], [1,1]],
+                maintain_stem_directions: false
+            },
 
             // tupletsBracketed: true, // creates brackets for all tuplets except triplets, even when not set by xml
             // tripletsBracketed: true,

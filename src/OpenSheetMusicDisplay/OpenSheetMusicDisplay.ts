@@ -14,7 +14,7 @@ import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
-import {IOSMDOptions, OSMDOptions} from "./OSMDOptions";
+import {IOSMDOptions, OSMDOptions, AutoBeamOptions} from "./OSMDOptions";
 import {EngravingRules} from "../MusicalScore/Graphical/EngravingRules";
 import {AbstractExpression} from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 
@@ -219,6 +219,23 @@ export class OpenSheetMusicDisplay {
         }
 
         // individual drawing parameters options
+        if (options.autoBeam !== undefined) {
+            EngravingRules.Rules.AutoBeamNotes = options.autoBeam;
+        }
+        const autoBeamOptions: AutoBeamOptions = options.autoBeamOptions;
+        if (autoBeamOptions) {
+            if (autoBeamOptions.maintain_stem_directions === undefined) {
+                autoBeamOptions.maintain_stem_directions = false;
+            }
+            EngravingRules.Rules.AutoBeamOptions = autoBeamOptions;
+            if (autoBeamOptions.groups && autoBeamOptions.groups.length) {
+                for (const fraction of autoBeamOptions.groups) {
+                    if (fraction.length !== 2) {
+                        throw new Error("Each fraction in autoBeamOptions.groups must be of length 2, e.g. [3,4] for beaming three fourths");
+                    }
+                }
+            }
+        }
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
             this.enableOrDisableCursor(this.drawingParameters.drawCursors);
@@ -459,6 +476,5 @@ export class OpenSheetMusicDisplay {
     public set AutoResizeEnabled(value: boolean) {
         this.autoResizeEnabled = value;
     }
-
     //#endregion
 }

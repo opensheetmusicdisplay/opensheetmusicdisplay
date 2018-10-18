@@ -319,8 +319,12 @@ declare namespace Vex {
             constructor(notes: StaveNote[], auto_stem: boolean);
 
             public setContext(ctx: RenderContext): Beam;
-
             public draw(): void;
+            public static generateBeams(notes: Vex.Flow.StemmableNote[], optionsObject?: any): Beam[];
+        }
+
+        export class Fraction { // Vex.Flow.Fraction, used for generateBeams
+            constructor(nominator: number, denominator: number);
         }
 
         export class Tuplet {
