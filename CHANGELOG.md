@@ -1,3 +1,33 @@
+<a name="0.6.0"></a>
+# [0.6.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.5.1...0.6.0) (2018-10-18)
+
+
+### Bug Fixes
+
+* **accidentalOctaveShift:** place notes with octave brackets correctly ([#424](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/424)) ([43f13d5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/43f13d5))
+* **ChordSymbolReader:** replace old <AccidentalEnum> conversions. fixes chord symbol reading (e.g. Ab). ([b8d41de](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b8d41de)), closes [#418](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/418)
+* **ChordSymbols:** add y spacing so stems don't collide ([78cd2ed](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/78cd2ed))
+* **cue notes:** add as VF.GraceNote instead of VF.StaveNote ([8d1371f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8d1371f))
+* **grace notes:** can be at end of measure, after main note ([37f145d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/37f145d))
+* **grace notes:** grace note beams handled like other beams now, can have any grace note beams ([94cc6b5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/94cc6b5))
+* **invisible notes:** invisible rests formatting partly fixed by adding ghost notes ([3b0e19d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3b0e19d))
+* **resize:** handling, set autoResize at runtime, add osmd.clear(), demo null checks ([#428](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/428)) ([cf2111e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cf2111e)), closes [#403](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/403) [#387](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/387)
+* **stemDirection:** fix beam with grace note in middle bug ([#413](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/413)) ([a71496c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a71496c))
+* **tests:** fix null pointer in setStemDirection (Haydn test fail) ([ad89d96](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ad89d96))
+* **VexFlowUpdate:** update to 1.2.87, fixes npm audit vulnerabilities
+
+### Features
+
+* **Expressions/Dynamics:** Add Crescendo wedges, texts, spacing ,etc. ([#410](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/410))
+* **Arpeggios:** Display arpeggios ([#411](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/411)) ([90ae82f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/90ae82f))
+* **autoBeam:** add option to automatically beam notes ([09170a2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/09170a2))
+* **cue notes: add cue notes as smaller notes. fix(gracenotes):** grace notes can have articulations ([0094f1f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0094f1f)), closes [#349](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/349)
+* **fingering:** add fingerings to right, above, below, auto ([#406](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/406)) ([0e50f89](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0e50f89)), closes [#350](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/350)
+* **fingering:** draw fingering using Vexflow, can be disabled by option ([628562b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/628562b))
+* **NoteHeadShapes:** add square, rectangle note head ([b6a15ef](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b6a15ef)), closes [#404](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/404)
+* **options:** Options now settable during runtime: public setOptions() ([76bd9bf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/76bd9bf)), closes [#407](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/407)
+* **stemDirection:** use xml stem direction. (optionally) ([6373d58](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6373d58)), closes [#415](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/415)
+
 <a name="0.5.1"></a>
 ## [0.5.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.5.0...0.5.1) (2018-09-26)
 
