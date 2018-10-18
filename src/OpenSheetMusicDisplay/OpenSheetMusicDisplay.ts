@@ -146,23 +146,24 @@ export class OpenSheetMusicDisplay {
         if (!this.graphic) {
             throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
+        this.drawer.clear(); // clear canvas before setting width
+
+        // Set page width
         const width: number = this.container.offsetWidth;
+        this.sheet.pageWidth = width / this.zoom / 10.0;
         // Before introducing the following optimization (maybe irrelevant), tests
         // have to be modified to ensure that width is > 0 when executed
         //if (isNaN(width) || width === 0) {
         //    return;
         //}
 
-        // Set page width
-        this.sheet.pageWidth = width / this.zoom / 10.0;
         // Calculate again
         this.graphic.reCalculate();
+        const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
         if (this.drawingParameters.drawCursors) {
             this.graphic.Cursors.length = 0;
         }
         // Update Sheet Page
-        const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
-        this.drawer.clear();
         this.drawer.resize(width, height);
         this.drawer.scale(this.zoom);
         // Finally, draw
@@ -341,8 +342,6 @@ export class OpenSheetMusicDisplay {
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;
-        // this.canvas.width = 0;
-        // this.canvas.height = 0;
     }
 
     /**
