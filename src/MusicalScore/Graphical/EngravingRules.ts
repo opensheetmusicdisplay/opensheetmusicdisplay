@@ -86,7 +86,7 @@ export class EngravingRules {
     private betweenDotsDistance: number;
     private ornamentAccidentalScalingFactor: number;
     private chordSymbolTextHeight: number;
-    //private chordSymbolYOffset: number;
+    private chordSymbolYOffset: number;
     private fingeringLabelFontHeight: number;
     private measureNumberLabelHeight: number;
     private measureNumberLabelOffset: number;
@@ -290,6 +290,7 @@ export class EngravingRules {
         this.betweenDotsDistance = 0.8;
         this.ornamentAccidentalScalingFactor = 0.65;
         this.chordSymbolTextHeight = 2.0;
+        this.chordSymbolYOffset = 2.0;
         this.fingeringLabelFontHeight = 1.7;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
@@ -840,6 +841,12 @@ export class EngravingRules {
     }
     public set ChordSymbolTextHeight(value: number) {
         this.chordSymbolTextHeight = value;
+    }
+    public get ChordSymbolYOffset(): number {
+        return this.chordSymbolYOffset;
+    }
+    public set ChordSymbolYOffset(value: number) {
+        this.chordSymbolYOffset = value;
     }
     public get FingeringLabelFontHeight(): number {
         return this.fingeringLabelFontHeight;

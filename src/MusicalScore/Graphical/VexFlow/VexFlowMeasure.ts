@@ -604,9 +604,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
-    /** Autobeams notes except beamedNotes, using Vexflow's Beam.generateBeams().
+    /** Automatically creates beams for notes except beamedNotes, using Vexflow's Beam.generateBeams().
      *  Takes options from EngravingRules.Rules.AutoBeamOptions.
-     * @param beamedNotes notes that will not be autobeamed (because they are already beamed)
+     * @param beamedNotes notes that will not be autobeamed (usually because they are already beamed)
      */
     private autoBeamNotes(beamedNotes: StemmableNote[]): void {
         const notesToAutoBeam: StemmableNote[] = [];
@@ -634,19 +634,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (noteTuplet) {
                     if (currentTuplet === undefined) {
                         currentTuplet = noteTuplet;
-                        tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
                     } else {
-                        if (currentTuplet === noteTuplet) {
-                            tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
-                        } else { // new tuplet, finish old one
+                        if (currentTuplet !== noteTuplet) { // new tuplet, finish old one
                             if (tupletNotesToAutoBeam.length > 1) {
                                 this.autoTupletVfBeams.push(new Vex.Flow.Beam(tupletNotesToAutoBeam, true));
                             }
                             tupletNotesToAutoBeam = [];
                             currentTuplet = noteTuplet;
-                            tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
                         }
                     }
+                    tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
                     continue;
                 } else {
                     currentTuplet = undefined;
