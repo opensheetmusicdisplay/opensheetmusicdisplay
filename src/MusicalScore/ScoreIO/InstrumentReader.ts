@@ -21,8 +21,9 @@ import * as log from "loglevel";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {ChordSymbolReader} from "./MusicSymbolModules/ChordSymbolReader";
 import {ExpressionReader} from "./MusicSymbolModules/ExpressionReader";
-import { RepetitionInstructionReader } from "./MusicSymbolModules/RepetitionInstructionReader";
-import { SlurReader } from "./MusicSymbolModules/SlurReader";
+import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
+import {SlurReader} from "./MusicSymbolModules/SlurReader";
+import {StemDirectionType} from "../VoiceData/VoiceEntry";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -211,6 +212,40 @@ export class InstrumentReader {
             }
           }
 
+          // check for cue note
+          let isCueNote: boolean = false;
+          const typeNode: IXmlElement = xmlNode.element("type");
+          if (typeNode !== undefined) {
+            const sizeAttr: Attr = typeNode.attribute("size");
+            if (sizeAttr !== undefined && sizeAttr !== null) {
+              if (sizeAttr.value === "cue") {
+                isCueNote = true;
+              }
+            }
+          }
+
+          // check stem element
+          let stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
+          const stemNode: IXmlElement = xmlNode.element("stem");
+          if (stemNode !== undefined) {
+            switch (stemNode.value) {
+              case "down":
+                stemDirectionXml = StemDirectionType.Down;
+                break;
+              case "up":
+                stemDirectionXml = StemDirectionType.Up;
+                break;
+              case "double":
+                stemDirectionXml = StemDirectionType.Double;
+                break;
+              case "none":
+                stemDirectionXml = StemDirectionType.None;
+                break;
+              default:
+                stemDirectionXml = StemDirectionType.Undefined;
+            }
+          }
+
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
             musicTimestamp = previousFraction.clone();
@@ -264,7 +299,7 @@ export class InstrumentReader {
             xmlNode, noteDuration, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
-            this.maxTieNoteFraction, isChord, guitarPro, printObject
+            this.maxTieNoteFraction, isChord, guitarPro, printObject, isCueNote, stemDirectionXml
           );
 
           const notationsNode: IXmlElement = xmlNode.element("notations");
@@ -568,12 +603,10 @@ export class InstrumentReader {
    * @returns {Fraction}
    */
   private getNoteDurationFromTypeNode(xmlNode: IXmlElement): Fraction {
-    if (xmlNode.element("type") !== undefined) {
-      const typeNode: IXmlElement = xmlNode.element("type");
-      if (typeNode !== undefined) {
-        const type: string = typeNode.value;
-        return this.currentVoiceGenerator.getNoteDurationFromType(type);
-      }
+    const typeNode: IXmlElement = xmlNode.element("type");
+    if (typeNode !== undefined) {
+      const type: string = typeNode.value;
+      return this.currentVoiceGenerator.getNoteDurationFromType(type);
     }
     return new Fraction(0, 4 * this.divisions);
   }
@@ -1037,65 +1070,63 @@ export class InstrumentReader {
       for (let idx: number = 0, len: number = xmlMeasureListArr.length; idx < len; ++idx) {
         const xmlNode: IXmlElement = xmlMeasureListArr[idx];
         if (xmlNode.name === "note" && xmlNode.element("time-modification") === undefined) {
-          if (xmlNode.element("duration") !== undefined && xmlNode.element("type") !== undefined) {
-            const durationNode: IXmlElement = xmlNode.element("duration");
-            const typeNode: IXmlElement = xmlNode.element("type");
-            if (durationNode !== undefined && typeNode !== undefined) {
-              const type: string = typeNode.value;
-              let noteDuration: number = 0;
-              try {
-                noteDuration = parseInt(durationNode.value, 10);
-              } catch (ex) {
-                log.debug("InstrumentReader.readDivisionsFromNotes", ex);
-                continue;
-              }
+          const durationNode: IXmlElement = xmlNode.element("duration");
+          const typeNode: IXmlElement = xmlNode.element("type");
+          if (durationNode !== undefined && typeNode !== undefined) {
+            const type: string = typeNode.value;
+            let noteDuration: number = 0;
+            try {
+              noteDuration = parseInt(durationNode.value, 10);
+            } catch (ex) {
+              log.debug("InstrumentReader.readDivisionsFromNotes", ex);
+              continue;
+            }
 
-              switch (type) {
-                case "1024th":
-                  divisionsFromNote = (noteDuration / 4) * 1024;
-                  break;
-                case "512th":
-                  divisionsFromNote = (noteDuration / 4) * 512;
-                  break;
-                case "256th":
-                  divisionsFromNote = (noteDuration / 4) * 256;
-                  break;
-                case "128th":
-                  divisionsFromNote = (noteDuration / 4) * 128;
-                  break;
-                case "64th":
-                  divisionsFromNote = (noteDuration / 4) * 64;
-                  break;
-                case "32nd":
-                  divisionsFromNote = (noteDuration / 4) * 32;
-                  break;
-                case "16th":
-                  divisionsFromNote = (noteDuration / 4) * 16;
-                  break;
-                case "eighth":
-                  divisionsFromNote = (noteDuration / 4) * 8;
-                  break;
-                case "quarter":
-                  divisionsFromNote = (noteDuration / 4) * 4;
-                  break;
-                case "half":
-                  divisionsFromNote = (noteDuration / 4) * 2;
-                  break;
-                case "whole":
-                  divisionsFromNote = (noteDuration / 4);
-                  break;
-                case "breve":
-                  divisionsFromNote = (noteDuration / 4) / 2;
-                  break;
-                case "long":
-                  divisionsFromNote = (noteDuration / 4) / 4;
-                  break;
-                case "maxima":
-                  divisionsFromNote = (noteDuration / 4) / 8;
-                  break;
-                default:
-                  break;
-              }
+            switch (type) {
+              case "1024th":
+                divisionsFromNote = (noteDuration / 4) * 1024;
+                break;
+              case "512th":
+                divisionsFromNote = (noteDuration / 4) * 512;
+                break;
+              case "256th":
+                divisionsFromNote = (noteDuration / 4) * 256;
+                break;
+              case "128th":
+                divisionsFromNote = (noteDuration / 4) * 128;
+                break;
+              case "64th":
+                divisionsFromNote = (noteDuration / 4) * 64;
+                break;
+              case "32nd":
+                divisionsFromNote = (noteDuration / 4) * 32;
+                break;
+              case "16th":
+                divisionsFromNote = (noteDuration / 4) * 16;
+                break;
+              case "eighth":
+                divisionsFromNote = (noteDuration / 4) * 8;
+                break;
+              case "quarter":
+                divisionsFromNote = (noteDuration / 4) * 4;
+                break;
+              case "half":
+                divisionsFromNote = (noteDuration / 4) * 2;
+                break;
+              case "whole":
+                divisionsFromNote = (noteDuration / 4);
+                break;
+              case "breve":
+                divisionsFromNote = (noteDuration / 4) / 2;
+                break;
+              case "long":
+                divisionsFromNote = (noteDuration / 4) / 4;
+                break;
+              case "maxima":
+                divisionsFromNote = (noteDuration / 4) / 8;
+                break;
+              default:
+                break;
             }
           }
         }

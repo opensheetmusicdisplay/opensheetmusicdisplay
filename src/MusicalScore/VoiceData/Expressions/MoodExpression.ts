@@ -2,9 +2,8 @@ import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
 
 export class MoodExpression extends AbstractExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number) {
-        super();
+        super(placement);
         this.label = label;
-        this.placement = placement;
         this.staffNumber = staffNumber;
         this.setMoodType();
     }
@@ -47,7 +46,6 @@ export class MoodExpression extends AbstractExpression {
     private moodType: MoodEnum;
     private label: string;
     private staffNumber: number;
-    private placement: PlacementEnum;
 
     public static isInputStringMood(inputString: string): boolean {
         if (inputString === undefined) {

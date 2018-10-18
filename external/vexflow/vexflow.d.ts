@@ -4,6 +4,7 @@ declare namespace Vex {
 
     export module Flow {
         const RESOLUTION: any;
+        const DEFAULT_NOTATION_FONT_SCALE: number;
 
         export class Formatter {
             constructor();
@@ -67,6 +68,7 @@ declare namespace Vex {
         }
 
         export class Note extends Tickable {
+            public addStroke(index: number, stroke: Stroke): void;
         }
 
         export class TextBracket {
@@ -127,6 +129,8 @@ declare namespace Vex {
         }
 
         export class GraceNote extends StaveNote {
+            static SCALE: number;
+            static LEDGER_LINE_OFFSET: number;
             constructor(note_struct: any);
         }
 
@@ -219,6 +223,22 @@ declare namespace Vex {
             public getPosition(): number;
 
             public setPosition(position: number): Modifier;
+
+            public setIndex(index: number): void;
+        }
+
+        export class FretHandFinger extends Modifier {
+            constructor(finger: string);
+        }
+
+        export class StringNumber extends Modifier {
+            constructor(string: string);
+            setOffsetY(value: number);
+        }
+        
+        export class Stroke extends Modifier {
+            constructor(type: number);
+            public static Type: any; // unreliable values, use Arpeggio.ArpeggioType instead
         }
 
         export class NoteSubGroup extends Modifier {
@@ -226,17 +246,6 @@ declare namespace Vex {
         }
 
         export class StaveModifier extends Modifier {
-            // public static get Position() {
-            //     return {
-            //         LEFT: 1,
-            //         RIGHT: 2,
-            //         ABOVE: 3,
-            //         BELOW: 4,
-            //         BEGIN: 5,
-            //         END: 6,
-            //     };
-            // }
-
             public getPosition(): number;
 
         }
@@ -310,8 +319,12 @@ declare namespace Vex {
             constructor(notes: StaveNote[], auto_stem: boolean);
 
             public setContext(ctx: RenderContext): Beam;
-
             public draw(): void;
+            public static generateBeams(notes: Vex.Flow.StemmableNote[], optionsObject?: any): Beam[];
+        }
+
+        export class Fraction { // Vex.Flow.Fraction, used for generateBeams
+            constructor(nominator: number, denominator: number);
         }
 
         export class Tuplet {

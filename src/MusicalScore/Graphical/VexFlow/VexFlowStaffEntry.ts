@@ -29,7 +29,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
                 gve.vfStaveNote.setStave(stave);
-                if (!gve.vfStaveNote.preFormatted) {
+                if (!gve.vfStaveNote.preFormatted || gve.vfStaveNote.getBoundingBox() === null) {
                     continue;
                 }
                 gve.applyBordersFromVexflow();

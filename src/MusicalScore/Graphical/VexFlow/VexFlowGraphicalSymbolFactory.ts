@@ -162,6 +162,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                                           EngravingRules.Rules.ChordSymbolTextHeight,
                                           transposeHalftones);
       const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
+      graphicalLabel.PositionAndShape.RelativePosition.y -= EngravingRules.Rules.ChordSymbolYOffset;
       graphicalLabel.setLabelPositionAndShapeBorders();
       graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
       graphicalStaffEntry.graphicalChordContainer = graphicalChordSymbolContainer;

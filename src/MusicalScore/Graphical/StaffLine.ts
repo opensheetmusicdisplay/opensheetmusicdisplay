@@ -12,6 +12,8 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
+import { AlignmentManager } from "./AlignmentManager";
+import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -24,9 +26,10 @@ export abstract class StaffLine extends GraphicalObject {
     protected parentStaff: Staff;
     protected octaveShifts: GraphicalOctaveShift[] = [];
     protected skyBottomLine: SkyBottomLineCalculator;
+    protected alignmentManager: AlignmentManager;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
-    protected abstractExpressions: GraphicalObject[] = [];
+    protected abstractExpressions: AbstractGraphicalExpression[] = [];
 
     // For displaying Slurs
     protected graphicalSlurs: GraphicalSlur[] = [];
@@ -37,6 +40,7 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
         this.skyBottomLine = new SkyBottomLineCalculator(this);
+        this.alignmentManager = new AlignmentManager(this);
     }
 
     public get Measures(): GraphicalMeasure[] {
@@ -64,11 +68,11 @@ export abstract class StaffLine extends GraphicalObject {
         return this.lyricLines;
     }
 
-    public get AbstractExpressions(): GraphicalObject[] {
+    public get AbstractExpressions(): AbstractGraphicalExpression[] {
         return this.abstractExpressions;
     }
 
-    public set AbstractExpressions(value: GraphicalObject[]) {
+    public set AbstractExpressions(value: AbstractGraphicalExpression[]) {
         this.abstractExpressions = value;
     }
 
@@ -98,6 +102,10 @@ export abstract class StaffLine extends GraphicalObject {
 
     public set ParentStaff(value: Staff) {
         this.parentStaff = value;
+    }
+
+    public get AlignmentManager(): AlignmentManager {
+        return this.alignmentManager;
     }
 
     public get SkyBottomLineCalculator(): SkyBottomLineCalculator {

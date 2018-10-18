@@ -7,10 +7,9 @@ import * as log from "loglevel";
 
 export class InstantaneousDynamicExpression extends AbstractExpression {
     constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number) {
-        super();
+        super(placement);
         this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
         this.soundDynamic = soundDynamics;
-        this.placement = placement;
         this.staffNumber = staffNumber;
     }
     public static dynamicToRelativeVolumeDict: { [_: string]: number; } = {
@@ -33,6 +32,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         "rf": 0.5,
         "rfz": 0.5,
         "sf": 0.5,
+        "sff": 0.5,
         "sffz": 0.5,
         "sfp": 0.5,
         "sfpp": 0.5,
@@ -43,13 +43,12 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
     private static listInstantaneousDynamics: string[] =  [
         "pppppp", "ppppp", "pppp", "ppp", "pp", "p",
         "ffffff", "fffff", "ffff", "fff", "ff", "f",
-        "mf", "mp", "sf", "sp", "spp", "fp", "rf", "rfz", "sfz", "sffz", "fz",
+        "mf", "mp", "sf", "sff", "sp", "spp", "fp", "rf", "rfz", "sfz", "sffz", "fz",
     ];
 
     private multiExpression: MultiExpression;
     private dynamicEnum: DynamicEnum;
     private soundDynamic: number;
-    private placement: PlacementEnum;
     private staffNumber: number;
     private length: number;
 
@@ -165,13 +164,14 @@ export enum DynamicEnum {
     fffff = 12,
     ffffff = 13,
     sf = 14,
-    sfp = 15,
-    sfpp = 16,
-    fp = 17,
-    rf = 18,
-    rfz = 19,
-    sfz = 20,
-    sffz = 21,
-    fz = 22,
-    other = 23
+    sff = 15,
+    sfp = 16,
+    sfpp = 17,
+    fp = 18,
+    rf = 19,
+    rfz = 20,
+    sfz = 21,
+    sffz = 22,
+    fz = 23,
+    other = 24
 }

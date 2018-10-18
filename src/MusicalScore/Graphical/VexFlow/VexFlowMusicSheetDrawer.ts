@@ -1,29 +1,31 @@
 import Vex = require("vexflow");
-import {MusicSheetDrawer} from "../MusicSheetDrawer";
-import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
-import {VexFlowMeasure} from "./VexFlowMeasure";
-import {PointF2D} from "../../../Common/DataObjects/PointF2D";
-import {GraphicalLabel} from "../GraphicalLabel";
-import {VexFlowTextMeasurer} from "./VexFlowTextMeasurer";
-import {MusicSystem} from "../MusicSystem";
-import {GraphicalObject} from "../GraphicalObject";
-import {GraphicalLayers} from "../DrawingEnums";
-import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
-import {VexFlowBackend} from "./VexFlowBackend";
-import {VexFlowOctaveShift} from "./VexFlowOctaveShift";
-import {VexFlowInstantaneousDynamicExpression} from "./VexFlowInstantaneousDynamicExpression";
+import { MusicSheetDrawer } from "../MusicSheetDrawer";
+import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
+import { VexFlowMeasure } from "./VexFlowMeasure";
+import { PointF2D } from "../../../Common/DataObjects/PointF2D";
+import { GraphicalLabel } from "../GraphicalLabel";
+import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
+import { MusicSystem } from "../MusicSystem";
+import { GraphicalObject } from "../GraphicalObject";
+import { GraphicalLayers } from "../DrawingEnums";
+import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
+import { VexFlowBackend } from "./VexFlowBackend";
+import { VexFlowOctaveShift } from "./VexFlowOctaveShift";
+import { VexFlowInstantaneousDynamicExpression } from "./VexFlowInstantaneousDynamicExpression";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
-import {StaffLine} from "../StaffLine";
-import {EngravingRules} from "../EngravingRules";
+import { StaffLine } from "../StaffLine";
+import { EngravingRules } from "../EngravingRules";
 import { GraphicalSlur } from "../GraphicalSlur";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
-import {GraphicalInstantaneousTempoExpression} from "../GraphicalInstantaneousTempoExpression";
-import {GraphicalInstantaneousDynamicExpression} from "../GraphicalInstantaneousDynamicExpression";
+import { GraphicalInstantaneousTempoExpression } from "../GraphicalInstantaneousTempoExpression";
+import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneousDynamicExpression";
 import log = require("loglevel");
-import {DrawingParameters} from "../DrawingParameters";
+import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
+import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
+import { DrawingParameters } from "../DrawingParameters";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -80,7 +82,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     protected drawStaffLine(staffLine: StaffLine): void {
         super.drawStaffLine(staffLine);
-        const  absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
+        const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
         this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
     }
 
@@ -139,8 +141,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
             this.drawStaffEntry(staffEntry);
-                    }
-                }
+        }
+    }
 
     // private drawPixel(coord: PointF2D): void {
     //     coord = this.applyScreenTransformation(coord);
@@ -155,20 +157,20 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
         this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
-            }
+    }
 
     protected drawSkyLine(staffline: StaffLine): void {
         const startPosition: PointF2D = staffline.PositionAndShape.AbsolutePosition;
         const width: number = staffline.PositionAndShape.Size.width;
         this.drawSampledLine(staffline.SkyLine, startPosition, width);
-        }
+    }
 
     protected drawBottomLine(staffline: StaffLine): void {
         const startPosition: PointF2D = new PointF2D(staffline.PositionAndShape.AbsolutePosition.x,
                                                      staffline.PositionAndShape.AbsolutePosition.y);
         const width: number = staffline.PositionAndShape.Size.width;
         this.drawSampledLine(staffline.BottomLine, startPosition, width, "#0000FFFF");
-        }
+    }
 
     /**
      * Draw a line with a width and start point in a chosen color (used for skyline/bottom line debugging) from
@@ -186,7 +188,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             if (line[i] !== currentValue) {
                 indices.push(i);
                 currentValue = line[i];
-    }
+            }
         }
 
         const absolute: PointF2D = startPosition;
@@ -283,25 +285,25 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             // Draw InstantaniousDynamics
             if (abstractGraphicalExpression instanceof GraphicalInstantaneousDynamicExpression) {
                 this.drawInstantaneousDynamic((abstractGraphicalExpression as VexFlowInstantaneousDynamicExpression));
-            // Draw InstantaniousTempo
+                // Draw InstantaniousTempo
             } else if (abstractGraphicalExpression instanceof GraphicalInstantaneousTempoExpression) {
                 this.drawLabel((abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
-            // // Draw ContinuousDynamics
-            // } else if (abstractGraphicalExpression instanceof GraphicalContinuousDynamicExpression) {
-            // //     drawContinuousDynamic((GraphicalContinuousDynamicExpression)abstractGraphicalExpression, absolutePos);
-            // // Draw ContinuousTempo
-            // } else if (abstractGraphicalExpression instanceof GraphicalContinuousTempoExpression) {
-            //     this.drawLabel((abstractGraphicalExpression as GraphicalContinuousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
-            // // Draw Mood
-            // } else if (abstractGraphicalExpression instanceof GraphicalMoodExpression) {
-            //     GraphicalMoodExpression; graphicalMood = (GraphicalMoodExpression); abstractGraphicalExpression;
-            //     drawLabel(graphicalMood.GetGraphicalLabel, (int)GraphicalLayers.Notes);
-            // // Draw Unknown
-            // } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
-            //     GraphicalUnknownExpression; graphicalUnknown =
-            //         (GraphicalUnknownExpression); abstractGraphicalExpression;
-            //     drawLabel(graphicalUnknown.GetGraphicalLabel, (int)GraphicalLayers.Notes);
-            // }
+                // Draw ContinuousDynamics
+            } else if (abstractGraphicalExpression instanceof GraphicalContinuousDynamicExpression) {
+                this.drawContinuousDynamic((abstractGraphicalExpression as VexFlowContinuousDynamicExpression));
+                // Draw ContinuousTempo
+                // } else if (abstractGraphicalExpression instanceof GraphicalContinuousTempoExpression) {
+                //     this.drawLabel((abstractGraphicalExpression as GraphicalContinuousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
+                // // Draw Mood
+                // } else if (abstractGraphicalExpression instanceof GraphicalMoodExpression) {
+                //     GraphicalMoodExpression; graphicalMood = (GraphicalMoodExpression); abstractGraphicalExpression;
+                //     drawLabel(graphicalMood.GetGraphicalLabel, (int)GraphicalLayers.Notes);
+                // // Draw Unknown
+                // } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
+                //     GraphicalUnknownExpression; graphicalUnknown =
+                //         (GraphicalUnknownExpression); abstractGraphicalExpression;
+                //     drawLabel(graphicalUnknown.GetGraphicalLabel, (int)GraphicalLayers.Notes);
+                // }
             } else {
                 log.warn("Unkown type of expression!");
             }
@@ -310,6 +312,20 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     protected drawInstantaneousDynamic(instantaneousDynamic: GraphicalInstantaneousDynamicExpression): void {
         this.drawLabel((instantaneousDynamic as VexFlowInstantaneousDynamicExpression).Label, <number>GraphicalLayers.Notes);
+    }
+
+    protected drawContinuousDynamic(graphicalExpression: VexFlowContinuousDynamicExpression): void {
+        if (graphicalExpression.IsVerbal) {
+            this.drawLabel(graphicalExpression.Label, <number>GraphicalLayers.Notes);
+        } else {
+            for (const line of graphicalExpression.Lines) {
+                const start: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.Start.x,
+                                                     graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.Start.y);
+                const end: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.End.x,
+                                                   graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.y + line.End.y);
+                this.drawLine(start, end, "black", line.Width);
+            }
+        }
     }
 
     /**
@@ -337,7 +353,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param alpha alpha value between 0 and 1
      */
     protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, alpha: number): void {
-       this.backend.renderRectangle(rectangle, styleId, alpha);
+        this.backend.renderRectangle(rectangle, styleId, alpha);
     }
 
     /**

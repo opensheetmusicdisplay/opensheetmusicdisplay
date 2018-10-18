@@ -1,13 +1,17 @@
-import {PagePlacementEnum} from "./GraphicalMusicPage";
+import { PagePlacementEnum } from "./GraphicalMusicPage";
 //import {MusicSymbol} from "./MusicSymbol";
 import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { AutoBeamOptions } from "../../OpenSheetMusicDisplay/OSMDOptions";
 
 export class EngravingRules {
     private static rules: EngravingRules;
+    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
     private static unit: number = 1.0;
     private samplingUnit: number;
     private staccatoShorteningFactor: number;
+    /** Height (size) of the sheet title. */
     private sheetTitleHeight: number;
     private sheetSubtitleHeight: number;
     private sheetMinimumDistanceBetweenTitleAndSubtitle: number;
@@ -36,6 +40,10 @@ export class EngravingRules {
     private betweenStaffDistance: number;
     private staffHeight: number;
     private betweenStaffLinesDistance: number;
+    /** Whether to automatically beam notes that don't already have beams in XML. */
+    private autoBeamNotes: boolean;
+    /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
+    private autoBeamOptions: AutoBeamOptions;
     private beamWidth: number;
     private beamSpaceWidth: number;
     private beamForwardLength: number;
@@ -59,6 +67,7 @@ export class EngravingRules {
     private stemMaxLength: number;
     private beamSlopeMaxAngle: number;
     private stemMinAllowedDistanceBetweenNoteHeadAndBeamLine: number;
+    private setWantedStemDirectionByXml: boolean;
     private graceNoteScalingFactor: number;
     private graceNoteXOffset: number;
     private wedgeOpeningLength: number;
@@ -77,7 +86,7 @@ export class EngravingRules {
     private betweenDotsDistance: number;
     private ornamentAccidentalScalingFactor: number;
     private chordSymbolTextHeight: number;
-    //private chordSymbolYOffset: number;
+    private chordSymbolYOffset: number;
     private fingeringLabelFontHeight: number;
     private measureNumberLabelHeight: number;
     private measureNumberLabelOffset: number;
@@ -102,6 +111,10 @@ export class EngravingRules {
     private repetitionEndingLabelYOffset: number;
     private repetitionEndingLineYLowerOffset: number;
     private repetitionEndingLineYUpperOffset: number;
+    /** Default alignment of lyrics.
+     * Left alignments will extend text to the right of the bounding box,
+     * which facilitates spacing by extending measure width.
+     */
     private lyricsAlignmentStandard: TextAlignmentEnum;
     private lyricsHeight: number;
     private lyricsYOffsetToStaffHeight: number;
@@ -160,11 +173,18 @@ export class EngravingRules {
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
+    /** Whether to render a label for the composer of the piece at the top of the sheet. */
     private renderComposer: boolean;
     private renderTitle: boolean;
     private renderSubtitle: boolean;
     private renderLyricist: boolean;
     private renderInstrumentNames: boolean;
+    private renderFingerings: boolean;
+    private dynamicExpressionMaxDistance: number;
+    private dynamicExpressionSpacer: number;
+    /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
+    private fingeringPosition: PlacementEnum;
+    private fingeringInsideStafflines: boolean;
 
     constructor() {
         // global variables
@@ -204,6 +224,14 @@ export class EngravingRules {
         this.minimumAllowedDistanceBetweenSystems = 3.0;
         this.lastSystemMaxScalingFactor = 1.4;
 
+        // autoBeam options
+        this.autoBeamNotes = false;
+        this.autoBeamOptions = {
+            beam_middle_rests_only: false,
+            beam_rests: false,
+            maintain_stem_directions: false
+        };
+
         // Beam Sizing Variables
         this.beamWidth = EngravingRules.unit / 2.0;
         this.beamSpaceWidth = EngravingRules.unit / 3.0;
@@ -235,6 +263,7 @@ export class EngravingRules {
         this.stemMaxLength = 4.5;
         this.beamSlopeMaxAngle = 10.0;
         this.stemMinAllowedDistanceBetweenNoteHeadAndBeamLine = 1.0;
+        this.setWantedStemDirectionByXml = true;
 
         // GraceNote Variables
         this.graceNoteScalingFactor = 0.6;
@@ -261,6 +290,7 @@ export class EngravingRules {
         this.betweenDotsDistance = 0.8;
         this.ornamentAccidentalScalingFactor = 0.65;
         this.chordSymbolTextHeight = 2.0;
+        this.chordSymbolYOffset = 2.0;
         this.fingeringLabelFontHeight = 1.7;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
@@ -315,6 +345,8 @@ export class EngravingRules {
         this.moodTextHeight = 2.3;
         this.unknownTextHeight = 2.0;
         this.continuousTempoTextHeight = 2.3;
+        this.dynamicExpressionMaxDistance = 2;
+        this.dynamicExpressionSpacer = 0.5;
 
         // Line Widths
         this.staffLineWidth = 0.12;
@@ -349,6 +381,9 @@ export class EngravingRules {
         this.renderSubtitle = true;
         this.renderLyricist = true;
         this.renderInstrumentNames = true;
+        this.renderFingerings = true;
+        this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
+        this.fingeringInsideStafflines = false;
 
         this.populateDictionaries();
         try {
@@ -537,6 +572,18 @@ export class EngravingRules {
     public set BetweenStaffLinesDistance(value: number) {
         this.betweenStaffLinesDistance = value;
     }
+    public get AutoBeamNotes(): boolean {
+        return this.autoBeamNotes;
+    }
+    public set AutoBeamNotes(value: boolean) {
+        this.autoBeamNotes = value;
+    }
+    public get AutoBeamOptions(): AutoBeamOptions {
+        return this.autoBeamOptions;
+    }
+    public set AutoBeamOptions(value: AutoBeamOptions) {
+        this.autoBeamOptions = value;
+    }
     public get BeamWidth(): number {
         return this.beamWidth;
     }
@@ -681,6 +728,12 @@ export class EngravingRules {
     public set StemMinAllowedDistanceBetweenNoteHeadAndBeamLine(value: number) {
         this.stemMinAllowedDistanceBetweenNoteHeadAndBeamLine = value;
     }
+    public get SetWantedStemDirectionByXml(): boolean {
+        return this.setWantedStemDirectionByXml;
+    }
+    public set SetWantedStemDirectionByXml(value: boolean) {
+        this.setWantedStemDirectionByXml = value;
+    }
     public get GraceNoteScalingFactor(): number {
         return this.graceNoteScalingFactor;
     }
@@ -788,6 +841,12 @@ export class EngravingRules {
     }
     public set ChordSymbolTextHeight(value: number) {
         this.chordSymbolTextHeight = value;
+    }
+    public get ChordSymbolYOffset(): number {
+        return this.chordSymbolYOffset;
+    }
+    public set ChordSymbolYOffset(value: number) {
+        this.chordSymbolYOffset = value;
     }
     public get FingeringLabelFontHeight(): number {
         return this.fingeringLabelFontHeight;
@@ -1065,6 +1124,21 @@ export class EngravingRules {
     public set ContinuousTempoTextHeight(value: number) {
         this.continuousTempoTextHeight = value;
     }
+    /** Distance of expressions inside a group */
+    public get DynamicExpressionMaxDistance(): number {
+        return this.dynamicExpressionMaxDistance;
+    }
+    public set DynamicExpressionMaxDistance(value: number) {
+        this.dynamicExpressionMaxDistance = value;
+    }
+    /** Space between expressions in a group */
+    public get DynamicExpressionSpacer(): number {
+        return this.dynamicExpressionSpacer;
+    }
+    public set DynamicExpressionSpacer(value: number) {
+        this.dynamicExpressionSpacer = value;
+    }
+
     public get UnknownTextHeight(): number {
         return this.unknownTextHeight;
     }
@@ -1250,6 +1324,24 @@ export class EngravingRules {
     }
     public set RenderInstrumentNames(value: boolean) {
         this.renderInstrumentNames = value;
+    }
+    public get RenderFingerings(): boolean {
+        return this.renderFingerings;
+    }
+    public set RenderFingerings(value: boolean) {
+        this.renderFingerings = value;
+    }
+    public get FingeringPosition(): PlacementEnum {
+        return this.fingeringPosition;
+    }
+    public set FingeringPosition(value: PlacementEnum) {
+        this.fingeringPosition = value;
+    }
+    public get FingeringInsideStafflines(): boolean {
+        return this.fingeringInsideStafflines;
+    }
+    public set FingeringInsideStafflines(value: boolean) {
+        this.fingeringInsideStafflines = value;
     }
 
     /**

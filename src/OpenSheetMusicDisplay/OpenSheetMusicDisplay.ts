@@ -14,8 +14,9 @@ import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
 import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
-import {IOSMDOptions, OSMDOptions} from "./OSMDOptions";
+import {IOSMDOptions, OSMDOptions, AutoBeamOptions} from "./OSMDOptions";
 import {EngravingRules} from "../MusicalScore/Graphical/EngravingRules";
+import {AbstractExpression} from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -46,25 +47,10 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
-        if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
-            this.backend = new SvgVexFlowBackend();
-        } else {
-            this.backend = new CanvasVexFlowBackend();
+        if (options.autoResize === undefined) {
+            options.autoResize = true;
         }
-
-        this.setDrawingParameters(options);
-
-        this.backend.initialize(this.container);
-        this.canvas = this.backend.getCanvas();
-        this.innerElement = this.backend.getInnerElement();
-        this.enableOrDisableCursor(this.drawingParameters.drawCursors);
-
-        // Create the drawer
-        this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
-
-        if (options.autoResize) {
-            this.autoResize();
-        }
+        this.setOptions(options);
     }
 
     public cursor: Cursor;
@@ -78,6 +64,8 @@ export class OpenSheetMusicDisplay {
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
     private drawingParameters: DrawingParameters;
+    private autoResizeEnabled: boolean;
+    private resizeHandlerAttached: boolean;
 
     /**
      * Load a MusicXML file
@@ -144,7 +132,7 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
         }
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
-        if (this.drawingParameters.drawCursors) {
+        if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
         log.info(`Loaded sheet ${this.sheet.TitleString} successfully.`);
@@ -158,30 +146,159 @@ export class OpenSheetMusicDisplay {
         if (!this.graphic) {
             throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
+        this.drawer.clear(); // clear canvas before setting width
+
+        // Set page width
         const width: number = this.container.offsetWidth;
+        this.sheet.pageWidth = width / this.zoom / 10.0;
         // Before introducing the following optimization (maybe irrelevant), tests
         // have to be modified to ensure that width is > 0 when executed
         //if (isNaN(width) || width === 0) {
         //    return;
         //}
 
-        // Set page width
-        this.sheet.pageWidth = width / this.zoom / 10.0;
         // Calculate again
         this.graphic.reCalculate();
+        const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
         if (this.drawingParameters.drawCursors) {
             this.graphic.Cursors.length = 0;
         }
         // Update Sheet Page
-        const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
-        this.drawer.clear();
         this.drawer.resize(width, height);
         this.drawer.scale(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
-        if (this.drawingParameters.drawCursors) {
+        if (this.drawingParameters.drawCursors && this.cursor) {
             // Update the cursor position
             this.cursor.update();
+        }
+    }
+
+    /** States whether the render() function can be safely called. */
+    public IsReadyToRender(): boolean {
+        return this.graphic !== undefined;
+    }
+
+    /** Clears what OSMD has drawn on its canvas. */
+    public clear(): void {
+        this.drawer.clear();
+        this.reset(); // without this, resize will draw loaded sheet again
+    }
+
+    /** Set OSMD rendering options using an IOSMDOptions object.
+     *  Can be called during runtime. Also called by constructor.
+     *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
+     */
+    public setOptions(options: IOSMDOptions): void {
+        this.drawingParameters = new DrawingParameters();
+        if (options.drawingParameters) {
+            this.drawingParameters.DrawingParametersEnum =
+                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
+        }
+
+        const updateExistingBackend: boolean = this.backend !== undefined;
+        if (options.backend !== undefined || this.backend === undefined) {
+            if (updateExistingBackend) {
+                // TODO doesn't work yet, still need to create a new OSMD object
+
+                this.drawer.clear();
+
+                // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
+                // musicSheetCalculator.clearRecreatedObjects();
+            }
+            if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
+                this.backend = new SvgVexFlowBackend();
+            } else {
+                this.backend = new CanvasVexFlowBackend();
+            }
+            this.backend.initialize(this.container);
+            this.canvas = this.backend.getCanvas();
+            this.innerElement = this.backend.getInnerElement();
+            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
+            // Create the drawer
+            this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
+        }
+
+        // individual drawing parameters options
+        if (options.autoBeam !== undefined) {
+            EngravingRules.Rules.AutoBeamNotes = options.autoBeam;
+        }
+        const autoBeamOptions: AutoBeamOptions = options.autoBeamOptions;
+        if (autoBeamOptions) {
+            if (autoBeamOptions.maintain_stem_directions === undefined) {
+                autoBeamOptions.maintain_stem_directions = false;
+            }
+            EngravingRules.Rules.AutoBeamOptions = autoBeamOptions;
+            if (autoBeamOptions.groups && autoBeamOptions.groups.length) {
+                for (const fraction of autoBeamOptions.groups) {
+                    if (fraction.length !== 2) {
+                        throw new Error("Each fraction in autoBeamOptions.groups must be of length 2, e.g. [3,4] for beaming three fourths");
+                    }
+                }
+            }
+        }
+        if (options.disableCursor) {
+            this.drawingParameters.drawCursors = false;
+            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
+        }
+        // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.
+        // note that every option can be undefined, which doesn't mean the option should be set to false.
+        if (options.drawHiddenNotes) {
+            this.drawingParameters.drawHiddenNotes = true;
+        }
+        if (options.drawTitle !== undefined) {
+            this.drawingParameters.DrawTitle = options.drawTitle;
+            // TODO these settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
+            // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
+            // see settings below that don't call drawingParameters for the immediate approach
+        }
+        if (options.drawSubtitle !== undefined) {
+            this.drawingParameters.DrawSubtitle = options.drawSubtitle;
+        }
+        if (options.drawLyricist !== undefined) {
+            this.drawingParameters.DrawLyricist = options.drawLyricist;
+        }
+        if (options.drawCredits !== undefined) {
+            this.drawingParameters.drawCredits = options.drawCredits;
+        }
+        if (options.drawPartNames !== undefined) {
+            this.drawingParameters.DrawPartNames = options.drawPartNames;
+        }
+        if (options.drawFingerings === false) {
+            EngravingRules.Rules.RenderFingerings = false;
+        }
+        if (options.fingeringPosition !== undefined) {
+            EngravingRules.Rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
+        }
+        if (options.fingeringInsideStafflines !== undefined) {
+            EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
+        }
+        if (options.setWantedStemDirectionByXml !== undefined) {
+            EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
+        }
+        if (options.defaultColorNoteHead) {
+            this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
+        }
+        if (options.defaultColorStem) {
+            this.drawingParameters.defaultColorStem = options.defaultColorStem;
+        }
+        if (options.tupletsRatioed) {
+            EngravingRules.Rules.TupletsRatioed = true;
+        }
+        if (options.tupletsBracketed) {
+            EngravingRules.Rules.TupletsBracketed = true;
+        }
+        if (options.tripletsBracketed) {
+            EngravingRules.Rules.TripletsBracketed = true;
+        }
+        if (options.autoResize) {
+            if (!this.resizeHandlerAttached) {
+                this.autoResize();
+            }
+            this.autoResizeEnabled = true;
+        } else if (options.autoResize === false) { // not undefined
+            this.autoResizeEnabled = false;
+            // we could remove the window EventListener here, but not necessary.
         }
     }
 
@@ -219,14 +336,12 @@ export class OpenSheetMusicDisplay {
      * FIXME: Probably unnecessary
      */
     private reset(): void {
-        if (this.drawingParameters.drawCursors) {
+        if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.hide();
         }
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;
-        // this.canvas.width = 0;
-        // this.canvas.height = 0;
     }
 
     /**
@@ -250,7 +365,7 @@ export class OpenSheetMusicDisplay {
                 //    document.documentElement.offsetWidth
                 //);
                 //self.container.style.width = width + "px";
-                if (this.graphic !== undefined) {
+                if (self.IsReadyToRender()) {
                     self.render();
                 }
             }
@@ -263,12 +378,22 @@ export class OpenSheetMusicDisplay {
      * @param endCallback is the function called when resizing (kind-of) ends
      */
     private handleResize(startCallback: () => void, endCallback: () => void): void {
-        if (this.graphic === undefined) {
-            return;
-        }
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;
+        const self: OpenSheetMusicDisplay = this;
+
+        function resizeStart(): void {
+            if (!self.AutoResizeEnabled) {
+                return;
+            }
+            rtime = (new Date()).getTime();
+            if (!timeout) {
+                startCallback();
+                rtime = (new Date()).getTime();
+                timeout = window.setTimeout(resizeEnd, delta);
+            }
+        }
 
         function resizeEnd(): void {
             timeout = undefined;
@@ -280,21 +405,13 @@ export class OpenSheetMusicDisplay {
             }
         }
 
-        function resizeStart(): void {
-            rtime = (new Date()).getTime();
-            if (!timeout) {
-                startCallback();
-                rtime = (new Date()).getTime();
-                timeout = window.setTimeout(resizeEnd, delta);
-            }
-        }
-
         if ((<any>window).attachEvent) {
             // Support IE<9
             (<any>window).attachEvent("onresize", resizeStart);
         } else {
             window.addEventListener("resize", resizeStart);
         }
+        this.resizeHandlerAttached = true;
 
         window.setTimeout(startCallback, 0);
         window.setTimeout(endCallback, 1);
@@ -324,61 +441,12 @@ export class OpenSheetMusicDisplay {
     }
 
     //#region GETTER / SETTER
-    private setDrawingParameters(options: IOSMDOptions): void {
-        this.drawingParameters = new DrawingParameters();
-        if (options.drawingParameters) {
-            this.drawingParameters.DrawingParametersEnum =
-                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
-        }
-        // individual drawing parameters options
-        if (options.disableCursor) {
-            this.drawingParameters.drawCursors = false;
-        }
-        if (options.drawHiddenNotes) {
-            this.drawingParameters.drawHiddenNotes = true;
-        }
-        if (options.drawTitle !== undefined) {
-            this.drawingParameters.DrawTitle = options.drawTitle;
-            // TODO these settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
-            // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
-            // see tuplets settings below for the immediate approach
-        }
-        if (options.drawSubtitle !== undefined) {
-            this.drawingParameters.DrawSubtitle = options.drawSubtitle;
-        }
-        if (options.drawPartNames !== undefined) {
-            this.drawingParameters.DrawPartNames = options.drawPartNames;
-        }
-        if (options.drawLyricist !== undefined) {
-            this.drawingParameters.DrawLyricist = options.drawLyricist;
-        }
-        if (options.drawCredits !== undefined) {
-            this.drawingParameters.drawCredits = options.drawCredits;
-        }
-        if (options.defaultColorNoteHead) {
-            this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
-        }
-        if (options.defaultColorStem) {
-            this.drawingParameters.defaultColorStem = options.defaultColorStem;
-        }
-        if (options.tupletsRatioed) {
-            EngravingRules.Rules.TupletsRatioed = true;
-        }
-        if (options.tupletsBracketed) {
-            EngravingRules.Rules.TupletsBracketed = true;
-        }
-        if (options.tripletsBracketed) {
-            EngravingRules.Rules.TripletsBracketed = true;
-        }
-    }
-
     public set DrawSkyLine(value: boolean) {
         if (this.drawer) {
             this.drawer.skyLineVisible = value;
             this.render();
         }
     }
-
     public get DrawSkyLine(): boolean {
         return this.drawer.skyLineVisible;
     }
@@ -389,7 +457,6 @@ export class OpenSheetMusicDisplay {
             this.render();
         }
     }
-
     public get DrawBottomLine(): boolean {
         return this.drawer.bottomLineVisible;
     }
@@ -398,9 +465,15 @@ export class OpenSheetMusicDisplay {
         this.drawer.drawableBoundingBoxElement = value;
         this.render();
     }
-
     public get DrawBoundingBox(): string {
         return this.drawer.drawableBoundingBoxElement;
+    }
+
+    public get AutoResizeEnabled(): boolean {
+        return this.autoResizeEnabled;
+    }
+    public set AutoResizeEnabled(value: boolean) {
+        this.autoResizeEnabled = value;
     }
     //#endregion
 }

@@ -1,4 +1,5 @@
 <img alt="OSMD logo" src="https://osmd.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg" width="200"/>
+<!--img alt="Brought to you by PhonicScore" src="https://phonicscore.com/neu/wp-content/uploads/2018/06/phonicscore_brown.svg"/-->
 
 # OpenSheetMusicDisplay
 
@@ -23,6 +24,9 @@ Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT 
 See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki) for information about the source code and how to use OSMD.
 
 Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
+
+Brought to you by [PhonicScore](https://phonicscore.com/) and [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors)<br>
+(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [PhonicScore for Android](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))
 
 
 <!--# <a name="license"></a>License
