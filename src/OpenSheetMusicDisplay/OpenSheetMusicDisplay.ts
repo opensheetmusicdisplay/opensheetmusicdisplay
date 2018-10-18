@@ -47,6 +47,9 @@ export class OpenSheetMusicDisplay {
             throw new Error("Please pass a valid div container to OpenSheetMusicDisplay");
         }
 
+        if (options.autoResize === undefined) {
+            options.autoResize = true;
+        }
         this.setOptions(options);
     }
 
@@ -61,6 +64,8 @@ export class OpenSheetMusicDisplay {
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
     private drawingParameters: DrawingParameters;
+    private autoResizeEnabled: boolean;
+    private resizeHandlerAttached: boolean;
 
     /**
      * Load a MusicXML file
@@ -168,6 +173,117 @@ export class OpenSheetMusicDisplay {
         }
     }
 
+    /** States whether the render() function can be safely called. */
+    public IsReadyToRender(): boolean {
+        return this.graphic !== undefined;
+    }
+
+    /** Clears what OSMD has drawn on its canvas. */
+    public clear(): void {
+        this.drawer.clear();
+        this.reset(); // without this, resize will draw loaded sheet again
+    }
+
+    /** Set OSMD rendering options using an IOSMDOptions object.
+     *  Can be called during runtime. Also called by constructor.
+     *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
+     */
+    public setOptions(options: IOSMDOptions): void {
+        this.drawingParameters = new DrawingParameters();
+        if (options.drawingParameters) {
+            this.drawingParameters.DrawingParametersEnum =
+                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
+        }
+
+        const updateExistingBackend: boolean = this.backend !== undefined;
+        if (options.backend !== undefined || this.backend === undefined) {
+            if (updateExistingBackend) {
+                // TODO doesn't work yet, still need to create a new OSMD object
+
+                this.drawer.clear();
+
+                // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
+                // musicSheetCalculator.clearRecreatedObjects();
+            }
+            if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
+                this.backend = new SvgVexFlowBackend();
+            } else {
+                this.backend = new CanvasVexFlowBackend();
+            }
+            this.backend.initialize(this.container);
+            this.canvas = this.backend.getCanvas();
+            this.innerElement = this.backend.getInnerElement();
+            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
+            // Create the drawer
+            this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
+        }
+
+        // individual drawing parameters options
+        if (options.disableCursor) {
+            this.drawingParameters.drawCursors = false;
+            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
+        }
+        // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.
+        // note that every option can be undefined, which doesn't mean the option should be set to false.
+        if (options.drawHiddenNotes) {
+            this.drawingParameters.drawHiddenNotes = true;
+        }
+        if (options.drawTitle !== undefined) {
+            this.drawingParameters.DrawTitle = options.drawTitle;
+            // TODO these settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
+            // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
+            // see settings below that don't call drawingParameters for the immediate approach
+        }
+        if (options.drawSubtitle !== undefined) {
+            this.drawingParameters.DrawSubtitle = options.drawSubtitle;
+        }
+        if (options.drawLyricist !== undefined) {
+            this.drawingParameters.DrawLyricist = options.drawLyricist;
+        }
+        if (options.drawCredits !== undefined) {
+            this.drawingParameters.drawCredits = options.drawCredits;
+        }
+        if (options.drawPartNames !== undefined) {
+            this.drawingParameters.DrawPartNames = options.drawPartNames;
+        }
+        if (options.drawFingerings === false) {
+            EngravingRules.Rules.RenderFingerings = false;
+        }
+        if (options.fingeringPosition !== undefined) {
+            EngravingRules.Rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
+        }
+        if (options.fingeringInsideStafflines !== undefined) {
+            EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
+        }
+        if (options.setWantedStemDirectionByXml !== undefined) {
+            EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
+        }
+        if (options.defaultColorNoteHead) {
+            this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
+        }
+        if (options.defaultColorStem) {
+            this.drawingParameters.defaultColorStem = options.defaultColorStem;
+        }
+        if (options.tupletsRatioed) {
+            EngravingRules.Rules.TupletsRatioed = true;
+        }
+        if (options.tupletsBracketed) {
+            EngravingRules.Rules.TupletsBracketed = true;
+        }
+        if (options.tripletsBracketed) {
+            EngravingRules.Rules.TripletsBracketed = true;
+        }
+        if (options.autoResize) {
+            if (!this.resizeHandlerAttached) {
+                this.autoResize();
+            }
+            this.autoResizeEnabled = true;
+        } else if (options.autoResize === false) { // not undefined
+            this.autoResizeEnabled = false;
+            // we could remove the window EventListener here, but not necessary.
+        }
+    }
+
     /**
      * Sets the logging level for this OSMD instance. By default, this is set to `warn`.
      *
@@ -233,7 +349,7 @@ export class OpenSheetMusicDisplay {
                 //    document.documentElement.offsetWidth
                 //);
                 //self.container.style.width = width + "px";
-                if (self.graphic !== undefined) {
+                if (self.IsReadyToRender()) {
                     self.render();
                 }
             }
@@ -249,6 +365,19 @@ export class OpenSheetMusicDisplay {
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;
+        const self: OpenSheetMusicDisplay = this;
+
+        function resizeStart(): void {
+            if (!self.AutoResizeEnabled) {
+                return;
+            }
+            rtime = (new Date()).getTime();
+            if (!timeout) {
+                startCallback();
+                rtime = (new Date()).getTime();
+                timeout = window.setTimeout(resizeEnd, delta);
+            }
+        }
 
         function resizeEnd(): void {
             timeout = undefined;
@@ -260,21 +389,13 @@ export class OpenSheetMusicDisplay {
             }
         }
 
-        function resizeStart(): void {
-            rtime = (new Date()).getTime();
-            if (!timeout) {
-                startCallback();
-                rtime = (new Date()).getTime();
-                timeout = window.setTimeout(resizeEnd, delta);
-            }
-        }
-
         if ((<any>window).attachEvent) {
             // Support IE<9
             (<any>window).attachEvent("onresize", resizeStart);
         } else {
             window.addEventListener("resize", resizeStart);
         }
+        this.resizeHandlerAttached = true;
 
         window.setTimeout(startCallback, 0);
         window.setTimeout(endCallback, 1);
@@ -304,111 +425,12 @@ export class OpenSheetMusicDisplay {
     }
 
     //#region GETTER / SETTER
-    public setOptions(options: IOSMDOptions): void {
-        this.drawingParameters = new DrawingParameters();
-        if (options.drawingParameters) {
-            this.drawingParameters.DrawingParametersEnum =
-                (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
-        }
-
-        const updateExistingBackend: boolean = this.backend !== undefined;
-        if (options.backend !== undefined || this.backend === undefined) {
-            if (updateExistingBackend) {
-                // TODO doesn't work yet, still need to create a new OSMD object
-
-                this.drawer.clear();
-
-                // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
-                // musicSheetCalculator.clearRecreatedObjects();
-            }
-            if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
-                this.backend = new SvgVexFlowBackend();
-            } else {
-                this.backend = new CanvasVexFlowBackend();
-            }
-            this.backend.initialize(this.container);
-            this.canvas = this.backend.getCanvas();
-            this.innerElement = this.backend.getInnerElement();
-            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
-            // Create the drawer
-            this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
-        }
-
-        // individual drawing parameters options
-        if (options.disableCursor) {
-            this.drawingParameters.drawCursors = false;
-            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
-        }
-        // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.
-        // note that every option can be undefined, which doesn't mean the option should be set to false.
-        if (options.drawHiddenNotes) {
-            this.drawingParameters.drawHiddenNotes = true;
-        }
-        if (options.drawTitle !== undefined) {
-            this.drawingParameters.DrawTitle = options.drawTitle;
-            // TODO these settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
-            // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
-            // see tuplets settings below for the immediate approach
-        }
-        if (options.drawSubtitle !== undefined) {
-            this.drawingParameters.DrawSubtitle = options.drawSubtitle;
-        }
-        if (options.drawLyricist !== undefined) {
-            this.drawingParameters.DrawLyricist = options.drawLyricist;
-        }
-        if (options.drawCredits !== undefined) {
-            this.drawingParameters.drawCredits = options.drawCredits;
-        }
-        if (options.drawPartNames !== undefined) {
-            this.drawingParameters.DrawPartNames = options.drawPartNames;
-        }
-        if (options.drawFingerings === false) {
-            EngravingRules.Rules.RenderFingerings = false;
-        }
-        if (options.fingeringPosition !== undefined) {
-            EngravingRules.Rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
-        }
-        if (options.fingeringInsideStafflines !== undefined) {
-            EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
-        }
-        if (options.setWantedStemDirectionByXml !== undefined) {
-            EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
-        }
-        if (options.defaultColorNoteHead) {
-            this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
-        }
-        if (options.defaultColorStem) {
-            this.drawingParameters.defaultColorStem = options.defaultColorStem;
-        }
-        if (options.tupletsRatioed) {
-            EngravingRules.Rules.TupletsRatioed = true;
-        }
-        if (options.tupletsBracketed) {
-            EngravingRules.Rules.TupletsBracketed = true;
-        }
-        if (options.tripletsBracketed) {
-            EngravingRules.Rules.TripletsBracketed = true;
-        }
-        if (options.autoResize) {
-            this.autoResize();
-        } else if (options.autoResize === false) { // not undefined
-            this.handleResize(
-                () => {
-                    // empty
-                },
-                () => {
-                    // empty
-            });
-        }
-    }
-
     public set DrawSkyLine(value: boolean) {
         if (this.drawer) {
             this.drawer.skyLineVisible = value;
             this.render();
         }
     }
-
     public get DrawSkyLine(): boolean {
         return this.drawer.skyLineVisible;
     }
@@ -419,7 +441,6 @@ export class OpenSheetMusicDisplay {
             this.render();
         }
     }
-
     public get DrawBottomLine(): boolean {
         return this.drawer.bottomLineVisible;
     }
@@ -428,9 +449,16 @@ export class OpenSheetMusicDisplay {
         this.drawer.drawableBoundingBoxElement = value;
         this.render();
     }
-
     public get DrawBoundingBox(): string {
         return this.drawer.drawableBoundingBoxElement;
     }
+
+    public get AutoResizeEnabled(): boolean {
+        return this.autoResizeEnabled;
+    }
+    public set AutoResizeEnabled(value: boolean) {
+        this.autoResizeEnabled = value;
+    }
+
     //#endregion
 }

@@ -4,8 +4,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 (function () {
     "use strict";
     var openSheetMusicDisplay;
-    var sampleLoaded = false;
-    // folder of the sample files
     var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
     samples = {
         "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
@@ -59,7 +57,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     showCursorBtn,
     hideCursorBtn,
     backendSelect,
-    debugReRenderBtn;
+    debugReRenderBtn,
+    debugClearBtn;
 
     // Initialization code
     function init() {
@@ -82,7 +81,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         backendSelect = document.getElementById("backend-select");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
-
+        debugClearBtn = document.getElementById("debug-clear-btn");
 
         // Hide error
         error();
@@ -97,7 +96,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             selectSample.appendChild(option);
         }
         selectSample.onchange = selectSampleOnChange;
-        selectBounding.onchange = selectBoundingOnChange;
+        if (selectBounding) {
+            selectBounding.onchange = selectBoundingOnChange;
+        }
 
         // Pre-select default music piece
 
@@ -113,16 +114,28 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             scale();
         };
 
-        skylineDebug.onclick = function() {
-            openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+        if (skylineDebug) {
+            skylineDebug.onclick = function() {
+                openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+            }
         }
 
-        bottomlineDebug.onclick = function() {
-            openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+        if (bottomlineDebug) {
+            bottomlineDebug.onclick = function() {
+                openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+            }
         }
 
-        debugReRenderBtn.onclick = function() {
-            rerender();
+        if (debugReRenderBtn) {
+            debugReRenderBtn.onclick = function() {
+                rerender();
+            }
+        }
+
+        if (debugClearBtn) {
+            debugClearBtn.onclick = function() {
+                openSheetMusicDisplay.clear();
+            }
         }
 
         // Create OSMD object and canvas
@@ -145,31 +158,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         });
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);
-
-        // Set resize event handler
-        new Resize(
-            function(){
-                if (!sampleLoaded) {
-                    return;
-                }
-
-                disable();
-                },
-            function(){
-                if (!sampleLoaded) {
-                    return;
-                }
-
-                var width = document.body.clientWidth;
-                canvas.width = width;
-                try {
-                    openSheetMusicDisplay.render();
-                } catch (e) {
-                    errorLoadingOrRenderingSheet(e, "rendering");
-                }
-                enable();
-            }
-        );
 
         window.addEventListener("keydown", function(e) {
             var event = window.event ? window.event : e;
@@ -211,33 +199,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             selectSampleOnChange();
 
         });
-    }
-
-    function Resize(startCallback, endCallback) {
-      var rtime;
-      var timeout = false;
-      var delta = 200;
-
-      function resizeEnd() {
-        timeout = window.clearTimeout(timeout);
-        if (new Date() - rtime < delta) {
-          timeout = setTimeout(resizeEnd, delta);
-        } else {
-          endCallback();
-        }
-      }
-
-      window.addEventListener("resize", function () {
-        rtime = new Date();
-        if (!timeout) {
-          startCallback();
-          rtime = new Date();
-          timeout = window.setTimeout(resizeEnd, delta);
-        }
-      });
-
-      window.setTimeout(startCallback, 0);
-      window.setTimeout(endCallback, 1);
     }
 
     function selectBoundingOnChange(evt) {
@@ -283,7 +244,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function onLoadingEnd(isCustom) {
-        sampleLoaded = true;
         // Remove option from select
         if (!isCustom && custom.parentElement === selectSample) {
             selectSample.removeChild(custom);
@@ -308,7 +268,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     function rerender() {
         disable();
         window.setTimeout(function(){
-            openSheetMusicDisplay.render();
+            if (openSheetMusicDisplay.IsReadyToRender()) {
+                openSheetMusicDisplay.render();
+            } else {
+                selectSampleOnChange(); // reload sample e.g. after osmd.clear()
+            }
             enable();
         }, 0);
     }

@@ -12,6 +12,10 @@ select {
   width: 320px;
 }
 
+#selectBounding {
+  width: 80%;
+}
+
 .bignum {
   width: 1em;
   text-align: center;

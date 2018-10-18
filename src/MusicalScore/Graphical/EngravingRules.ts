@@ -6,9 +6,11 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 
 export class EngravingRules {
     private static rules: EngravingRules;
+    /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
     private static unit: number = 1.0;
     private samplingUnit: number;
     private staccatoShorteningFactor: number;
+    /** Height (size) of the sheet title. */
     private sheetTitleHeight: number;
     private sheetSubtitleHeight: number;
     private sheetMinimumDistanceBetweenTitleAndSubtitle: number;
@@ -104,6 +106,10 @@ export class EngravingRules {
     private repetitionEndingLabelYOffset: number;
     private repetitionEndingLineYLowerOffset: number;
     private repetitionEndingLineYUpperOffset: number;
+    /** Default alignment of lyrics.
+     * Left alignments will extend text to the right of the bounding box,
+     * which facilitates spacing by extending measure width.
+     */
     private lyricsAlignmentStandard: TextAlignmentEnum;
     private lyricsHeight: number;
     private lyricsYOffsetToStaffHeight: number;
@@ -162,6 +168,7 @@ export class EngravingRules {
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
+    /** Whether to render a label for the composer of the piece at the top of the sheet. */
     private renderComposer: boolean;
     private renderTitle: boolean;
     private renderSubtitle: boolean;
@@ -170,6 +177,7 @@ export class EngravingRules {
     private renderFingerings: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
+    /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
 
