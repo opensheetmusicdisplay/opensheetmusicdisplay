@@ -284,6 +284,11 @@ export class VexFlowConverter {
 
         vfnote.x_shift = xShift;
 
+        if (gve.parentVoiceEntry.IsGrace && gve.notes[0].sourceNote.NoteBeam) {
+            // Vexflow seems to have issues with wanted stem direction for beamed grace notes,
+            // when the stem is connected to a beamed main note (e.g. Haydn Concertante bar 57)
+            gve.parentVoiceEntry.WantedStemDirection = gve.notes[0].sourceNote.NoteBeam.Notes[0].ParentVoiceEntry.WantedStemDirection;
+        }
         if (gve.parentVoiceEntry !== undefined) {
             const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
             switch (wantedStemDirection) {
