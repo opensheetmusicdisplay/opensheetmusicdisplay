@@ -1,7 +1,8 @@
-import {GraphicalStaffEntry} from "../GraphicalStaffEntry";
-import {VexFlowMeasure} from "./VexFlowMeasure";
-import {SourceStaffEntry} from "../../VoiceData/SourceStaffEntry";
-import {unitInPixels} from "./VexFlowMusicSheetDrawer";
+import Vex = require("vexflow");
+import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
+import { VexFlowMeasure } from "./VexFlowMeasure";
+import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
+import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
 import { EngravingRules } from "../EngravingRules";
