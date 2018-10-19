@@ -314,6 +314,10 @@ declare namespace Vex {
             setUpperAccidental(acc: string): void;
             setLowerAccidental(acc: string): void;
         }
+
+        export class Tremolo extends Modifier {
+            constructor(numberOfSlashes: number);
+        }
         
         export class Beam {
             constructor(notes: StaveNote[], auto_stem: boolean);

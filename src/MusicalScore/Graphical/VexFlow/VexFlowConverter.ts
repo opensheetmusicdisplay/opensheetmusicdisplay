@@ -325,8 +325,8 @@ export class VexFlowConverter {
     }
 
     public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
-        if (vfnote === undefined) {
-            return; // needed because grace notes after main note currently not implemented. maybe safer in any case
+        if (vfnote === undefined || vfnote.getAttribute("type") === "GhostNote") {
+            return;
         }
         // Articulations:
         let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;

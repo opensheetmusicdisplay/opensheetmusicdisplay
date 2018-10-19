@@ -214,6 +214,11 @@ export class InstrumentReader {
 
           // check for cue note
           let isCueNote: boolean = false;
+          const cueNode: IXmlElement = xmlNode.element("cue");
+          if (cueNode !== undefined) {
+            isCueNote = true;
+          }
+          // alternative: check for <type size="cue">
           const typeNode: IXmlElement = xmlNode.element("type");
           if (typeNode !== undefined) {
             const sizeAttr: Attr = typeNode.attribute("size");
