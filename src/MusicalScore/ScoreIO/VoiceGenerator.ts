@@ -113,7 +113,7 @@ export class VoiceGenerator {
     //log.debug("read called:", restNote);
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteDuration, printObject, isCueNote)
+        ? this.addRestNote(noteDuration, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, chord, guitarPro,
                              printObject, isCueNote, stemDirectionXml, stemColorXml, noteheadColorXml);
       // read lyrics
@@ -442,11 +442,12 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(noteDuration: Fraction, printObject: boolean = true, isCueNote: boolean = false): Note {
+  private addRestNote(noteDuration: Fraction, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
     restNote.PrintObject = printObject;
     restNote.IsCueNote = isCueNote;
+    restNote.NoteheadColorXml = noteheadColorXml;
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeam !== undefined) {
       this.openBeam.ExtendedNoteList.push(restNote);

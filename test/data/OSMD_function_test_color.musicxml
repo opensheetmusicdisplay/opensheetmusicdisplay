@@ -111,7 +111,7 @@
           <words default-y="60.00" font-weight="bold" font-size="16">No. 1</words>
           </direction-type>
         </direction>
-      <note>
+      <note color="#0000BB">
         <rest/>
         <duration>2</duration>
         <voice>1</voice>

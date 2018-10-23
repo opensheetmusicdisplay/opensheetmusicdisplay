@@ -223,6 +223,16 @@ export class VexFlowConverter {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
             }
+
+            if (EngravingRules.Rules.ColoringEnabled) {
+                const noteheadColor: string = note.sourceNote.NoteheadColorXml;
+                if (noteheadColor) {
+                    noteheadStyles.push({fillStyle: noteheadColor, strokeStyle: noteheadColor});
+                } else {
+                    noteheadStyles.push(undefined);
+                }
+            }
+
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 keys = ["b/4"];
@@ -247,15 +257,6 @@ export class VexFlowConverter {
                     slashNoteHead = true;
                     // if we have slash heads and other heads in the voice entry, this will create the same head for all.
                     // same problem with numDots. The slash case should be extremely rare though.
-                }
-            }
-
-            if (EngravingRules.Rules.ColoringEnabled) {
-                const noteheadColor: string = note.sourceNote.NoteheadColorXml;
-                if (noteheadColor) {
-                    noteheadStyles.push({fillStyle: noteheadColor, strokeStyle: noteheadColor});
-                } else {
-                    noteheadStyles.push(undefined);
                 }
             }
 

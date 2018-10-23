@@ -275,6 +275,23 @@ export class InstrumentReader {
             }
           }
 
+          let noteColorXml: string;
+          const noteColorAttr: Attr = xmlNode.attribute("color");
+          if (noteColorAttr) {
+            const noteColorValue: string = noteColorAttr.value;
+            if (noteColorValue.length === 7) { // #RGB hexa
+              noteColorXml = noteColorValue;
+            } else if (noteColorValue.length === 9) { // #ARGB hexa, first part alpha channel
+              noteColorXml = noteColorValue.substr(2);
+            }
+            if (noteheadColorXml === undefined) {
+              noteheadColorXml = noteColorXml;
+            }
+            if (stemColorXml === undefined) {
+              stemColorXml = noteColorXml;
+            }
+          }
+
           let musicTimestamp: Fraction = currentFraction.clone();
           if (isChord) {
             musicTimestamp = previousFraction.clone();
