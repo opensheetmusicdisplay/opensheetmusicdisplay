@@ -126,10 +126,13 @@ declare namespace Vex {
             public addModifier(index: number, modifier: Modifier): StaveNote;
 
             public setStyle(style: any): void;
-
             public setStemStyle(style: any): void;
+            public setFlagStyle(style: any): void;
 
-            public note_heads: any; // NoteHead[]; // temp solution until noteheadStyles PR is through
+            // temp solution until noteheadStyles PR is through
+            public note_heads: any; // NoteHead[]; 
+            public flag: Element;
+            public beam: Beam;
         }
 
         export class GraceNote extends StaveNote {
@@ -329,6 +332,7 @@ declare namespace Vex {
             public setContext(ctx: RenderContext): Beam;
             public draw(): void;
             public static generateBeams(notes: Vex.Flow.StemmableNote[], optionsObject?: any): Beam[];
+            public setStyle(style: any): void;
         }
 
         export class Fraction { // Vex.Flow.Fraction, used for generateBeams

@@ -24,6 +24,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "OSMD Function Test - All": "OSMD_function_test_all.xml",
         "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
         "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
+        "OSMD Function Test - Color": "OSMD_function_test_color.musicxml",
         "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
         "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
         "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",

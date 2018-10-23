@@ -305,6 +305,9 @@ export class VexFlowConverter {
             if (stemColor) {
                 vfnote.setStemStyle(stemStyle);
             }
+            if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
+                vfnote.setFlagStyle(stemStyle);
+            }
             for (let i: number = 0; i < noteheadStyles.length; i++) {
                 const style: string = noteheadStyles[i];
                 if (style) {

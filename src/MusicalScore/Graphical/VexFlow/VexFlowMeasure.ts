@@ -573,6 +573,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
 
                     let isGraceBeam: boolean = false;
+                    let beamColor: string;
+                    const stemColorsXml: string[] = [];
                     for (const entry of voiceEntries) {
                         const note: Vex.Flow.StaveNote = ((<VexFlowVoiceEntry>entry).vfStaveNote as StaveNote);
                         if (note !== undefined) {
@@ -582,6 +584,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         if (entry.parentVoiceEntry.IsGrace) {
                             isGraceBeam = true;
                         }
+                        if (entry.parentVoiceEntry.StemColorXml && EngravingRules.Rules.ColoringEnabled) {
+                            stemColorsXml.push(entry.parentVoiceEntry.StemColorXml);
+                        }
                     }
                     if (notes.length > 1) {
                         const vfBeam: Vex.Flow.Beam = new Vex.Flow.Beam(notes, autoStemBeam);
@@ -589,6 +594,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
                             (<any>vfBeam).render_options.beam_width = 3;
                             (<any>vfBeam).render_options.partial_beam_length = 4;
+                        }
+                        if (stemColorsXml.length >= 2 && EngravingRules.Rules.ColorBeams) {
+                            beamColor = stemColorsXml[0];
+                            for (const stemColor of stemColorsXml) {
+                                if (stemColor !== beamColor) {
+                                    beamColor = undefined;
+                                    break;
+                                }
+                            }
+                            vfBeam.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
                         }
                         vfbeams.push(vfBeam);
                     } else {
