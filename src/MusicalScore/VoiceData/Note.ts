@@ -54,6 +54,10 @@ export class Note {
     private isCueNote: boolean;
     /** The stem direction asked for in XML. Not necessarily final or wanted stem direction. */
     private stemDirectionXml: StemDirectionType;
+    /** Color of the stem given in the XML Stem tag. RGB Hexadecimal, like #00FF00. */
+    private stemColorXml: string;
+    /** Color of the note given in the XML Notehead tag. RGB Hexadecimal, like #00FF00. */
+    private noteheadColorXml: string;
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
@@ -135,6 +139,18 @@ export class Note {
     }
     public set StemDirectionXml(value: StemDirectionType) {
         this.stemDirectionXml = value;
+    }
+    public get StemColorXml(): string {
+        return this.stemColorXml;
+    }
+    public set StemColorXml(value: string) {
+        this.stemColorXml = value;
+    }
+    public get NoteheadColorXml(): string {
+        return this.noteheadColorXml;
+    }
+    public set NoteheadColorXml(value: string) {
+        this.noteheadColorXml = value;
     }
 
     public isRest(): boolean {

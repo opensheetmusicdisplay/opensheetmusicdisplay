@@ -106,14 +106,16 @@ export class VoiceGenerator {
   public read(noteNode: IXmlElement, noteDuration: Fraction, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
-              printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType): Note {
+              printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType,
+              stemColorXml: string, noteheadColorXml: string): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
     //log.debug("read called:", restNote);
     try {
       this.currentNote = restNote
         ? this.addRestNote(noteDuration, printObject, isCueNote)
-        : this.addSingleNote(noteNode, noteDuration, chord, guitarPro, printObject, isCueNote, stemDirectionXml);
+        : this.addSingleNote(noteNode, noteDuration, chord, guitarPro,
+                             printObject, isCueNote, stemDirectionXml, stemColorXml, noteheadColorXml);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
       if (this.lyricsReader !== undefined && lyricElements !== undefined) {
@@ -321,7 +323,8 @@ export class VoiceGenerator {
    * @returns {Note}
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, chord: boolean, guitarPro: boolean,
-                        printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType): Note {
+                        printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType,
+                        stemColorXml: string, noteheadColorXml: string): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
@@ -416,13 +419,15 @@ export class VoiceGenerator {
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     note.PrintObject = printObject;
     note.IsCueNote = isCueNote;
-    note.StemDirectionXml = stemDirectionXml;
+    note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
+    note.NoteheadColorXml = noteheadColorXml;
     note.PlaybackInstrumentId = playbackInstrumentId;
     if (noteHeadShapeXml !== undefined && noteHeadShapeXml !== "normal") {
       note.NoteHead = new NoteHead(note, noteHeadShapeXml, noteHeadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
     this.currentVoiceEntry.Notes.push(note);
-    this.currentVoiceEntry.WantedStemDirectionXml = stemDirectionXml;
+    this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
+    this.currentVoiceEntry.StemColorXml = stemColorXml;
     if (node.elements("beam") && !chord) {
       this.createBeam(node, note);
     }

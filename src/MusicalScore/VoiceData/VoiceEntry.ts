@@ -52,8 +52,9 @@ export class VoiceEntry {
     private ornamentContainer: OrnamentContainer;
     private wantedStemDirection: StemDirectionType = StemDirectionType.Undefined;
     /** Stem direction specified in the xml stem element. */
-    private wantedStemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
+    private stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
     private stemDirection: StemDirectionType = StemDirectionType.Undefined;
+    private stemColorXml: string;
 
     public get ParentSourceStaffEntry(): SourceStaffEntry {
         return this.parentSourceStaffEntry;
@@ -124,11 +125,11 @@ export class VoiceEntry {
     public get WantedStemDirection(): StemDirectionType {
         return this.wantedStemDirection;
     }
-    public set WantedStemDirectionXml(value: StemDirectionType) {
-        this.wantedStemDirectionXml = value;
+    public set StemDirectionXml(value: StemDirectionType) {
+        this.stemDirectionXml = value;
     }
-    public get WantedStemDirectionXml(): StemDirectionType {
-        return this.wantedStemDirectionXml;
+    public get StemDirectionXml(): StemDirectionType {
+        return this.stemDirectionXml;
     }
     // StemDirection holds the actual value of the stem
     public set StemDirection(value: StemDirectionType) {
@@ -136,6 +137,12 @@ export class VoiceEntry {
     }
     public get StemDirection(): StemDirectionType {
         return this.stemDirection;
+    }
+    public get StemColorXml(): string {
+        return this.stemColorXml;
+    }
+    public set StemColorXml(value: string) {
+        this.stemColorXml = value;
     }
 
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {

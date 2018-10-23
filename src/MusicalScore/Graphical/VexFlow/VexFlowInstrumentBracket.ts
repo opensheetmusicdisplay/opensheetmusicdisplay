@@ -1,6 +1,6 @@
 import Vex = require("vexflow");
-import {GraphicalObject} from "../GraphicalObject";
-import {VexFlowStaffLine} from "./VexFlowStaffLine";
+import { GraphicalObject } from "../GraphicalObject";
+import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { BoundingBox } from "../BoundingBox";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
