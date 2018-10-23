@@ -216,16 +216,12 @@ export class VexFlowConverter {
         let alignCenter: boolean = false;
         let xShift: number = 0;
         let slashNoteHead: boolean = false;
+        const noteheadStyles: any = [];
+        const stemColor: string = gve.parentVoiceEntry.StemColorXml;
+        const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
-            }
-            if (note.sourceNote.NoteHead) {
-                if (note.sourceNote.NoteHead.Shape === NoteHeadShape.SLASH) {
-                    slashNoteHead = true;
-                    // if we have slash heads and other heads in the voice entry, this will create the same head for all.
-                    // same problem with numDots. The slash case should be extremely rare though.
-                }
             }
             // if it is a rest:
             if (note.sourceNote.isRest()) {
@@ -245,6 +241,22 @@ export class VexFlowConverter {
                 duration += "r";
                 break;
             }
+
+            if (note.sourceNote.NoteHead) {
+                if (note.sourceNote.NoteHead.Shape === NoteHeadShape.SLASH) {
+                    slashNoteHead = true;
+                    // if we have slash heads and other heads in the voice entry, this will create the same head for all.
+                    // same problem with numDots. The slash case should be extremely rare though.
+                }
+            }
+
+            const noteheadColor: string = note.sourceNote.NoteheadColorXml;
+            if (noteheadColor) {
+                noteheadStyles.push({fillStyle: noteheadColor, strokeStyle: noteheadColor});
+            } else {
+                noteheadStyles.push(undefined);
+            }
+
             const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
             keys.push(pitch[0]);
             accidentals.push(pitch[1]);
@@ -262,15 +274,19 @@ export class VexFlowConverter {
         }
 
         let vfnote: Vex.Flow.StaveNote;
+
         const vfnoteStruct: Object = {
             align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
             duration: duration,
             keys: keys,
+            noteheadStyles: noteheadStyles,
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
-
+        if (stemColor) {
+            (<any>vfnoteStruct).stemStyle = stemStyle;
+        }
         if (gve.notes[0].sourceNote.IsCueNote) {
             (<any>vfnoteStruct).glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
             (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
@@ -282,12 +298,19 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        vfnote.x_shift = xShift;
-
-        const noteheadColor: string = gve.notes[0].sourceNote.NoteheadColorXml;
-        if (noteheadColor !== undefined) {
-            vfnote.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor});
+        if (stemColor) {
+            vfnote.setStemStyle(stemStyle);
         }
+
+        // TODO temporary fix until Vexflow PR is through (should be set by vfnotestruct.noteheadStyles)
+        for (let i: number = 0; i < noteheadStyles.length; i++) {
+            const style: string = noteheadStyles[i];
+            if (style) {
+                vfnote.note_heads[i].setStyle(style);
+            }
+        }
+
+        vfnote.x_shift = xShift;
 
         if (gve.parentVoiceEntry.IsGrace && gve.notes[0].sourceNote.NoteBeam) {
             // Vexflow seems to have issues with wanted stem direction for beamed grace notes,

@@ -427,7 +427,9 @@ export class VoiceGenerator {
     } // if normal, leave note head undefined to save processing/runtime
     this.currentVoiceEntry.Notes.push(note);
     this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
-    this.currentVoiceEntry.StemColorXml = stemColorXml;
+    if (stemColorXml) {
+      this.currentVoiceEntry.StemColorXml = stemColorXml;
+    }
     if (node.elements("beam") && !chord) {
       this.createBeam(node, note);
     }
