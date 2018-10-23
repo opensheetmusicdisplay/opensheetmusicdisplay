@@ -173,6 +173,8 @@ export class EngravingRules {
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
+
+    private coloringEnabled: boolean;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
     private renderComposer: boolean;
     private renderTitle: boolean;
@@ -376,6 +378,7 @@ export class EngravingRules {
         this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
 
         // Render options (whether to render specific or invisible elements)
+        this.coloringEnabled = true;
         this.renderComposer = true;
         this.renderTitle = true;
         this.renderSubtitle = true;
@@ -1294,6 +1297,12 @@ export class EngravingRules {
     }
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
+    }
+    public get ColoringEnabled(): boolean {
+        return this.coloringEnabled;
+    }
+    public set ColoringEnabled(value: boolean) {
+        this.coloringEnabled = value;
     }
     public get RenderComposer(): boolean {
         return this.renderComposer;

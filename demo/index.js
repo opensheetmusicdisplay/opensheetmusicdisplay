@@ -143,6 +143,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
             autoResize: true,
             backend: backendSelect.value,
+            coloringEnabled: true,
             disableCursor: false,
             drawingParameters: "default", // try compact (instead of default)
             drawPartNames: true, // try false

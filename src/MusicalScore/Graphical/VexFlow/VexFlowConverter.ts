@@ -250,11 +250,13 @@ export class VexFlowConverter {
                 }
             }
 
-            const noteheadColor: string = note.sourceNote.NoteheadColorXml;
-            if (noteheadColor) {
-                noteheadStyles.push({fillStyle: noteheadColor, strokeStyle: noteheadColor});
-            } else {
-                noteheadStyles.push(undefined);
+            if (EngravingRules.Rules.ColoringEnabled) {
+                const noteheadColor: string = note.sourceNote.NoteheadColorXml;
+                if (noteheadColor) {
+                    noteheadStyles.push({fillStyle: noteheadColor, strokeStyle: noteheadColor});
+                } else {
+                    noteheadStyles.push(undefined);
+                }
             }
 
             const pitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
@@ -284,7 +286,7 @@ export class VexFlowConverter {
             noteheadStyles: noteheadStyles,
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
-        if (stemColor) {
+        if (stemColor && EngravingRules.Rules.ColoringEnabled) {
             (<any>vfnoteStruct).stemStyle = stemStyle;
         }
         if (gve.notes[0].sourceNote.IsCueNote) {
@@ -298,15 +300,16 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        if (stemColor) {
-            vfnote.setStemStyle(stemStyle);
-        }
-
-        // TODO temporary fix until Vexflow PR is through (should be set by vfnotestruct.noteheadStyles)
-        for (let i: number = 0; i < noteheadStyles.length; i++) {
-            const style: string = noteheadStyles[i];
-            if (style) {
-                vfnote.note_heads[i].setStyle(style);
+        if (EngravingRules.Rules.ColoringEnabled) {
+            // TODO temporary fix until Vexflow PR is through (should be set by vfnotestruct.stem/noteheadStyles)
+            if (stemColor) {
+                vfnote.setStemStyle(stemStyle);
+            }
+            for (let i: number = 0; i < noteheadStyles.length; i++) {
+                const style: string = noteheadStyles[i];
+                if (style) {
+                    vfnote.note_heads[i].setStyle(style);
+                }
             }
         }
 
