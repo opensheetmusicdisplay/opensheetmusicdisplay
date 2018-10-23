@@ -231,6 +231,7 @@ export class InstrumentReader {
 
           // check stem element
           let stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
+          let stemColorXml: string;
           const stemNode: IXmlElement = xmlNode.element("stem");
           if (stemNode !== undefined) {
             switch (stemNode.value) {
@@ -248,6 +249,29 @@ export class InstrumentReader {
                 break;
               default:
                 stemDirectionXml = StemDirectionType.Undefined;
+            }
+
+            const stemColorAttr: Attr = stemNode.attribute("color");
+            if (stemColorAttr) { // can be null, maybe also undefined
+              const stemColorValue: string = stemColorAttr.value;
+              if (stemColorValue.length === 7) { // #RGB hexa
+                stemColorXml = stemColorValue;
+              } else if (stemColorValue.length === 9) { // #ARGB hexa, first part alpha channel
+                stemColorXml = stemColorValue.substr(2);
+              }
+            }
+          }
+
+          // check notehead/color
+          let noteheadColorXml: string;
+          const noteheadNode: IXmlElement = xmlNode.element("notehead");
+          if (noteheadNode) {
+            const colorAttr: Attr = noteheadNode.attribute("color");
+            const colorValue: string = colorAttr.value;
+            if (colorValue.length === 7) { // #RGB hexa
+              noteheadColorXml = colorValue;
+            } else if (colorValue.length === 9) { // #ARGB hexa, first part alpha channel
+              noteheadColorXml = colorValue.substr(2);
             }
           }
 
@@ -304,7 +328,8 @@ export class InstrumentReader {
             xmlNode, noteDuration, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
-            this.maxTieNoteFraction, isChord, guitarPro, printObject, isCueNote, stemDirectionXml
+            this.maxTieNoteFraction, isChord, guitarPro,
+            printObject, isCueNote, stemDirectionXml, stemColorXml, noteheadColorXml
           );
 
           const notationsNode: IXmlElement = xmlNode.element("notations");

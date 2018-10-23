@@ -465,7 +465,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       } else if (graphicalContinuousDynamic.IsVerbal) {
         this.calculateGraphicalVerbalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
       } else {
-        log.warn("This continous dynamic is not covered");
+        log.warn("This continuous dynamic is not covered");
       }
     }
   }

@@ -1486,10 +1486,10 @@ export abstract class MusicSheetCalculator {
                                openTuplets: Tuplet[], openBeams: Beam[],
                                octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
-        if (voiceEntry.WantedStemDirectionXml !== StemDirectionType.Undefined &&
+        if (voiceEntry.StemDirectionXml !== StemDirectionType.Undefined &&
             EngravingRules.Rules.SetWantedStemDirectionByXml &&
-            voiceEntry.WantedStemDirectionXml !== undefined) {
-                voiceEntry.WantedStemDirection = voiceEntry.WantedStemDirectionXml;
+            voiceEntry.StemDirectionXml !== undefined) {
+                voiceEntry.WantedStemDirection = voiceEntry.StemDirectionXml;
         } else {
             this.calculateStemDirectionFromVoices(voiceEntry);
         }

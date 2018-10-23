@@ -121,11 +121,15 @@ declare namespace Vex {
 
             public addAnnotation(index: number, annotation: Annotation): StaveNote;
 
+            public addDotToAll(): void;
+
             public addModifier(index: number, modifier: Modifier): StaveNote;
 
             public setStyle(style: any): void;
 
-            public addDotToAll(): void;
+            public setStemStyle(style: any): void;
+
+            public note_heads: any; // NoteHead[]; // temp solution until noteheadStyles PR is through
         }
 
         export class GraceNote extends StaveNote {

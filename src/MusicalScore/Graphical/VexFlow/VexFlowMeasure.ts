@@ -334,7 +334,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // Draw all voices
         for (const voiceID in this.vfVoices) {
             if (this.vfVoices.hasOwnProperty(voiceID)) {
+                ctx.save();
                 this.vfVoices[voiceID].draw(ctx, this.stave);
+                ctx.restore();
                 // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
                 // this.vfVoices[voiceID].tickables.forEach(t => t.getBoundingBox().draw(ctx));
             }
@@ -589,10 +591,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             (<any>vfBeam).render_options.partial_beam_length = 4;
                         }
                         vfbeams.push(vfBeam);
-                        // just a test for coloring the notes:
-                        // for (let note of notes) {
-                        //     (<Vex.Flow.StaveNote> note).setStyle({fillStyle: "green", strokeStyle: "green"});
-                        // }
                     } else {
                         log.debug("Warning! Beam with no notes!");
                     }
