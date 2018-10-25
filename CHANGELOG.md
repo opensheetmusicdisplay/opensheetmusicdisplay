@@ -1,3 +1,18 @@
+<a name="0.6.1"></a>
+## [0.6.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.0...0.6.1) (2018-10-25)
+
+### Bug Fixes
+
+* **cue notes:** parse cue element ([9443163](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9443163))
+* **grace notes:** fix stem direction for beamed grace note connected to beamed main note ([28fc01e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/28fc01e))
+
+
+### Features
+
+* **color:** color Notehead/Stem, flags, beams. parsed by XML ([#436](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/436)) ([4126133](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4126133))
+add options to enable or disable coloring ([f78524e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f78524e))
+**demo:** add function test color ([abfd252](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/abfd252))
+
 <a name="0.6.0"></a>
 # [0.6.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.5.1...0.6.0) (2018-10-18)
 
