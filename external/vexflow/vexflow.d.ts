@@ -121,11 +121,18 @@ declare namespace Vex {
 
             public addAnnotation(index: number, annotation: Annotation): StaveNote;
 
+            public addDotToAll(): void;
+
             public addModifier(index: number, modifier: Modifier): StaveNote;
 
             public setStyle(style: any): void;
+            public setStemStyle(style: any): void;
+            public setFlagStyle(style: any): void;
 
-            public addDotToAll(): void;
+            // temp solution until noteheadStyles PR is through
+            public note_heads: any; // NoteHead[]; 
+            public flag: Element;
+            public beam: Beam;
         }
 
         export class GraceNote extends StaveNote {
@@ -314,6 +321,10 @@ declare namespace Vex {
             setUpperAccidental(acc: string): void;
             setLowerAccidental(acc: string): void;
         }
+
+        export class Tremolo extends Modifier {
+            constructor(numberOfSlashes: number);
+        }
         
         export class Beam {
             constructor(notes: StaveNote[], auto_stem: boolean);
@@ -321,6 +332,7 @@ declare namespace Vex {
             public setContext(ctx: RenderContext): Beam;
             public draw(): void;
             public static generateBeams(notes: Vex.Flow.StemmableNote[], optionsObject?: any): Beam[];
+            public setStyle(style: any): void;
         }
 
         export class Fraction { // Vex.Flow.Fraction, used for generateBeams
