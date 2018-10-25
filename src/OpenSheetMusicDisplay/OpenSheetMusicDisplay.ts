@@ -279,11 +279,14 @@ export class OpenSheetMusicDisplay {
         if (options.setWantedStemDirectionByXml !== undefined) {
             EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
         }
-        if (options.defaultColorNoteHead) {
-            this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
+        if (options.defaultColorNotehead) {
+            EngravingRules.Rules.DefaultColorNotehead = options.defaultColorNotehead;
+        }
+        if (options.defaultColorRest) {
+            EngravingRules.Rules.DefaultColorRest = options.defaultColorRest;
         }
         if (options.defaultColorStem) {
-            this.drawingParameters.defaultColorStem = options.defaultColorStem;
+            EngravingRules.Rules.DefaultColorStem = options.defaultColorStem;
         }
         if (options.tupletsRatioed) {
             EngravingRules.Rules.TupletsRatioed = true;

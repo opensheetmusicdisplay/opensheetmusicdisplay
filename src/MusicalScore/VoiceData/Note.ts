@@ -56,8 +56,10 @@ export class Note {
     private stemDirectionXml: StemDirectionType;
     /** Color of the stem given in the XML Stem tag. RGB Hexadecimal, like #00FF00. */
     private stemColorXml: string;
-    /** Color of the note given in the XML Notehead tag. RGB Hexadecimal, like #00FF00. */
+    /** Color of the notehead given in the XML Notehead tag. RGB Hexadecimal, like #00FF00. */
     private noteheadColorXml: string;
+    /** Color of the notehead currently set. RGB Hexadecimal, like #00FF00. */
+    private noteheadColor: string;
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
@@ -151,6 +153,12 @@ export class Note {
     }
     public set NoteheadColorXml(value: string) {
         this.noteheadColorXml = value;
+    }
+    public get NoteheadColor(): string {
+        return this.noteheadColor;
+    }
+    public set NoteheadColor(value: string) {
+        this.noteheadColor = value;
     }
 
     public isRest(): boolean {

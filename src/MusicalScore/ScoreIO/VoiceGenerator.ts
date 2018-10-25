@@ -401,8 +401,7 @@ export class VoiceGenerator {
           if (noteElement.firstAttribute !== undefined) {
             playbackInstrumentId = noteElement.firstAttribute.value;
           }
-        }
-        if (noteElement.name === "notehead") {
+        } else if (noteElement.name === "notehead") {
           noteHeadShapeXml = noteElement.value;
           if (noteElement.attribute("filled") !== null) {
             noteHeadFilledXml = noteElement.attribute("filled").value === "yes";

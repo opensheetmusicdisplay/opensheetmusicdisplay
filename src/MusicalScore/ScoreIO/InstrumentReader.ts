@@ -267,17 +267,19 @@ export class InstrumentReader {
           const noteheadNode: IXmlElement = xmlNode.element("notehead");
           if (noteheadNode) {
             const colorAttr: Attr = noteheadNode.attribute("color");
-            const colorValue: string = colorAttr.value;
-            if (colorValue.length === 7) { // #RGB hexa
-              noteheadColorXml = colorValue;
-            } else if (colorValue.length === 9) { // #ARGB hexa, first part alpha channel
-              noteheadColorXml = colorValue.substr(2);
+            if (colorAttr) {
+              const colorValue: string = colorAttr.value;
+              if (colorValue.length === 7) { // #RGB hexa
+                noteheadColorXml = colorValue;
+              } else if (colorValue.length === 9) { // #ARGB hexa, first part alpha channel
+                noteheadColorXml = colorValue.substr(2);
+              }
             }
           }
 
           let noteColorXml: string;
           const noteColorAttr: Attr = xmlNode.attribute("color");
-          if (noteColorAttr) {
+          if (noteColorAttr) { // can be undefined
             const noteColorValue: string = noteColorAttr.value;
             if (noteColorValue.length === 7) { // #RGB hexa
               noteColorXml = noteColorValue;
