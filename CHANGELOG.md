@@ -1,3 +1,15 @@
+<a name="0.6.2"></a>
+## [0.6.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.1...0.6.2) (2018-10-25)
+
+### Bug Fixes
+
+* **noteheadshape:** add color attribute null check ([3d8da1e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3d8da1e))
+
+
+### Features
+
+* **color:** enable defaultColor options for notehead, stem, rest, ([3323664](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3323664)), closes [#438](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/438), ([f1b33ab](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f1b33ab))
+
 <a name="0.6.1"></a>
 ## [0.6.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.0...0.6.1) (2018-10-25)
 
