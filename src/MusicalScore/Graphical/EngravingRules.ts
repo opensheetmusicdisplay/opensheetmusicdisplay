@@ -178,6 +178,7 @@ export class EngravingRules {
     private colorFlags: boolean;
     private colorBeams: boolean;
     private defaultColorNotehead: string;
+    private defaultColorRest: string;
     private defaultColorStem: string;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
     private renderComposer: boolean;
@@ -386,6 +387,7 @@ export class EngravingRules {
         this.colorBeams = true;
         this.colorFlags = true;
         this.defaultColorNotehead = undefined;
+        this.defaultColorRest = undefined;
         this.defaultColorStem = undefined;
         this.renderComposer = true;
         this.renderTitle = true;
@@ -1329,6 +1331,12 @@ export class EngravingRules {
     }
     public set DefaultColorNotehead(value: string) {
         this.defaultColorNotehead = value;
+    }
+    public get DefaultColorRest(): string {
+        return this.defaultColorRest;
+    }
+    public set DefaultColorRest(value: string) {
+        this.defaultColorRest = value;
     }
     public get DefaultColorStem(): string {
         return this.defaultColorStem;

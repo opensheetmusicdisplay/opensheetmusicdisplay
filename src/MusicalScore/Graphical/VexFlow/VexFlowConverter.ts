@@ -225,8 +225,13 @@ export class VexFlowConverter {
             if (EngravingRules.Rules.ColoringEnabled) {
                 let noteheadColor: string = note.sourceNote.NoteheadColorXml;
                 const defaultColorNotehead: string = EngravingRules.Rules.DefaultColorNotehead;
-                if (!noteheadColor && defaultColorNotehead) {
-                    noteheadColor = defaultColorNotehead;
+                const defaultColorRest: string = EngravingRules.Rules.DefaultColorRest;
+                if (!noteheadColor) {
+                    if (!note.sourceNote.isRest() && defaultColorNotehead) {
+                        noteheadColor = defaultColorNotehead;
+                    } else if (note.sourceNote.isRest() && defaultColorRest) {
+                        noteheadColor = defaultColorRest;
+                    }
                 }
                 if (noteheadColor) {
                     noteheadStyles.push({ fillStyle: noteheadColor, strokeStyle: noteheadColor });

@@ -15,9 +15,11 @@ export interface IOSMDOptions {
     /** Whether to enable coloring noteheads and stems by their XML color attribute. */
     coloringEnabled?: boolean;
     /** Default color for a note head (without stem). Default black (undefined). */
-    defaultColorNoteHead?: string;
+    defaultColorNotehead?: string;
     /** Default color for a note stem. Default black (undefined). */
     defaultColorStem?: string;
+    /** Default color for rests. Default black (undefined). */
+    defaultColorRest?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */

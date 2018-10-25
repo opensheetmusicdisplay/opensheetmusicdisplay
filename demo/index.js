@@ -156,7 +156,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
             // coloring options
             coloringEnabled: true,
-            // defaultColorNoteHead: "#CC0055", // try setting a default color. default is black (undefined)
+            // defaultColorNotehead: "#CC0055", // try setting a default color. default is black (undefined)
             // defaultColorStem: "#BB0099",
 
             autoBeam: false, // try true, OSMD Function Test AutoBeam sample
