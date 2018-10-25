@@ -280,10 +280,10 @@ export class OpenSheetMusicDisplay {
             EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
         }
         if (options.defaultColorNoteHead) {
-            this.drawingParameters.defaultColorNoteHead = options.defaultColorNoteHead;
+            EngravingRules.Rules.DefaultColorNotehead = options.defaultColorNoteHead;
         }
         if (options.defaultColorStem) {
-            this.drawingParameters.defaultColorStem = options.defaultColorStem;
+            EngravingRules.Rules.DefaultColorStem = options.defaultColorStem;
         }
         if (options.tupletsRatioed) {
             EngravingRules.Rules.TupletsRatioed = true;

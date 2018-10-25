@@ -144,7 +144,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
             autoResize: true,
             backend: backendSelect.value,
-            coloringEnabled: true,
             disableCursor: false,
             drawingParameters: "default", // try compact (instead of default)
             drawPartNames: true, // try false
@@ -154,6 +153,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             fingeringPosition: "auto", // left is default. try right. experimental: auto, above, below.
             // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
             setWantedStemDirectionByXml: true, // try false, which was previously the default behavior
+
+            // coloring options
+            coloringEnabled: true,
+            // defaultColorNoteHead: "#CC0055", // try setting a default color. default is black (undefined)
+            // defaultColorStem: "#BB0099",
 
             autoBeam: false, // try true, OSMD Function Test AutoBeam sample
             autoBeamOptions: {

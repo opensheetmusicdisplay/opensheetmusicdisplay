@@ -217,17 +217,20 @@ export class VexFlowConverter {
         let xShift: number = 0;
         let slashNoteHead: boolean = false;
         const noteheadStyles: any = [];
-        const stemColor: string = gve.parentVoiceEntry.StemColorXml;
-        const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
             }
 
             if (EngravingRules.Rules.ColoringEnabled) {
-                const noteheadColor: string = note.sourceNote.NoteheadColorXml;
+                let noteheadColor: string = note.sourceNote.NoteheadColorXml;
+                const defaultColorNotehead: string = EngravingRules.Rules.DefaultColorNotehead;
+                if (!noteheadColor && defaultColorNotehead) {
+                    noteheadColor = defaultColorNotehead;
+                }
                 if (noteheadColor) {
-                    noteheadStyles.push({fillStyle: noteheadColor, strokeStyle: noteheadColor});
+                    noteheadStyles.push({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
+                    note.sourceNote.NoteheadColor = noteheadColor;
                 } else {
                     noteheadStyles.push(undefined);
                 }
@@ -287,9 +290,7 @@ export class VexFlowConverter {
             noteheadStyles: noteheadStyles,
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
-        if (stemColor && EngravingRules.Rules.ColoringEnabled) {
-            (<any>vfnoteStruct).stemStyle = stemStyle;
-        }
+
         if (gve.notes[0].sourceNote.IsCueNote) {
             (<any>vfnoteStruct).glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
             (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
@@ -301,17 +302,27 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        if (EngravingRules.Rules.ColoringEnabled) {
-            // TODO temporary fix until Vexflow PR is through (should be set by vfnotestruct.stem/noteheadStyles)
+        if (EngravingRules.Rules.ColoringEnabled) { // this method requires a Vexflow PR
+            const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
+            let stemColor: string = gve.parentVoiceEntry.StemColorXml;
+            if (!stemColor && defaultColorStem) {
+                stemColor = defaultColorStem;
+            }
+            const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
+
             if (stemColor) {
+                gve.parentVoiceEntry.StemColor = stemColor;
                 vfnote.setStemStyle(stemStyle);
+                if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
+                    vfnote.setFlagStyle(stemStyle);
+                }
             }
-            if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
-                vfnote.setFlagStyle(stemStyle);
-            }
+
+            // color noteheads (again)
+            // TODO temporary fix until Vexflow PR is through (should be set by vfnotestruct.noteheadStyles)
             for (let i: number = 0; i < noteheadStyles.length; i++) {
                 const style: string = noteheadStyles[i];
-                if (style) {
+                if (style !== undefined) {
                     vfnote.note_heads[i].setStyle(style);
                 }
             }

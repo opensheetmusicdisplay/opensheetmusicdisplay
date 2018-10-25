@@ -14,6 +14,10 @@ export interface IOSMDOptions {
     backend?: string;
     /** Whether to enable coloring noteheads and stems by their XML color attribute. */
     coloringEnabled?: boolean;
+    /** Default color for a note head (without stem). Default black (undefined). */
+    defaultColorNoteHead?: string;
+    /** Default color for a note stem. Default black (undefined). */
+    defaultColorStem?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
@@ -51,10 +55,6 @@ export interface IOSMDOptions {
     tripletsBracketed?: boolean;
     /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
     drawHiddenNotes?: boolean;
-    /** Default color for a note head (without stem). Default black. Not yet supported. */ // TODO
-    defaultColorNoteHead?: string;
-    /** Default color for a note stem. Default black. Not yet supported. */ // TODO
-    defaultColorStem?: string;
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */

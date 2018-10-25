@@ -574,7 +574,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                     let isGraceBeam: boolean = false;
                     let beamColor: string;
-                    const stemColorsXml: string[] = [];
+                    const stemColors: string[] = [];
                     for (const entry of voiceEntries) {
                         const note: Vex.Flow.StaveNote = ((<VexFlowVoiceEntry>entry).vfStaveNote as StaveNote);
                         if (note !== undefined) {
@@ -584,8 +584,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         if (entry.parentVoiceEntry.IsGrace) {
                             isGraceBeam = true;
                         }
-                        if (entry.parentVoiceEntry.StemColorXml && EngravingRules.Rules.ColoringEnabled) {
-                            stemColorsXml.push(entry.parentVoiceEntry.StemColorXml);
+                        if (entry.parentVoiceEntry.StemColor && EngravingRules.Rules.ColoringEnabled) {
+                            stemColors.push(entry.parentVoiceEntry.StemColor);
                         }
                     }
                     if (notes.length > 1) {
@@ -595,9 +595,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             (<any>vfBeam).render_options.beam_width = 3;
                             (<any>vfBeam).render_options.partial_beam_length = 4;
                         }
-                        if (stemColorsXml.length >= 2 && EngravingRules.Rules.ColorBeams) {
-                            beamColor = stemColorsXml[0];
-                            for (const stemColor of stemColorsXml) {
+                        if (stemColors.length >= 2 && EngravingRules.Rules.ColorBeams) {
+                            beamColor = stemColors[0];
+                            for (const stemColor of stemColors) {
                                 if (stemColor !== beamColor) {
                                     beamColor = undefined;
                                     break;

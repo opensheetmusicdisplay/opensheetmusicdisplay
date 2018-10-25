@@ -54,7 +54,10 @@ export class VoiceEntry {
     /** Stem direction specified in the xml stem element. */
     private stemDirectionXml: StemDirectionType = StemDirectionType.Undefined;
     private stemDirection: StemDirectionType = StemDirectionType.Undefined;
+    /** Color of the stem given in XML. RGB Hexadecimal, like #00FF00. */
     private stemColorXml: string;
+    /** Color of the stem currently set. RGB Hexadecimal, like #00FF00. */
+    private stemColor: string;
 
     public get ParentSourceStaffEntry(): SourceStaffEntry {
         return this.parentSourceStaffEntry;
@@ -143,6 +146,12 @@ export class VoiceEntry {
     }
     public set StemColorXml(value: string) {
         this.stemColorXml = value;
+    }
+    public get StemColor(): string {
+        return this.stemColor;
+    }
+    public set StemColor(value: string) {
+        this.stemColor = value;
     }
 
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {
