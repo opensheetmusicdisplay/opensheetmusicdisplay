@@ -253,12 +253,7 @@ export class InstrumentReader {
 
             const stemColorAttr: Attr = stemNode.attribute("color");
             if (stemColorAttr) { // can be null, maybe also undefined
-              const stemColorValue: string = stemColorAttr.value;
-              if (stemColorValue.length === 7) { // #RGB hexa
-                stemColorXml = stemColorValue;
-              } else if (stemColorValue.length === 9) { // #ARGB hexa, first part alpha channel
-                stemColorXml = stemColorValue.substr(2);
-              }
+              stemColorXml = this.parseXmlColor(stemColorAttr.value);
             }
           }
 
@@ -268,24 +263,14 @@ export class InstrumentReader {
           if (noteheadNode) {
             const colorAttr: Attr = noteheadNode.attribute("color");
             if (colorAttr) {
-              const colorValue: string = colorAttr.value;
-              if (colorValue.length === 7) { // #RGB hexa
-                noteheadColorXml = colorValue;
-              } else if (colorValue.length === 9) { // #ARGB hexa, first part alpha channel
-                noteheadColorXml = colorValue.substr(2);
-              }
+              noteheadColorXml = this.parseXmlColor(colorAttr.value);
             }
           }
 
           let noteColorXml: string;
           const noteColorAttr: Attr = xmlNode.attribute("color");
           if (noteColorAttr) { // can be undefined
-            const noteColorValue: string = noteColorAttr.value;
-            if (noteColorValue.length === 7) { // #RGB hexa
-              noteColorXml = noteColorValue;
-            } else if (noteColorValue.length === 9) { // #ARGB hexa, first part alpha channel
-              noteColorXml = noteColorValue.substr(2);
-            }
+            noteColorXml = this.parseXmlColor(noteColorAttr.value);
             if (noteheadColorXml === undefined) {
               noteheadColorXml = noteColorXml;
             }
@@ -498,6 +483,23 @@ export class InstrumentReader {
     this.previousMeasure = this.currentMeasure;
     this.currentXmlMeasureIndex += 1;
     return true;
+  }
+
+  /** Parse a color in XML format. Can be #ARGB or #RGB format, colors as byte hex values.
+   *  @return color in Vexflow format #[A]RGB or undefined for invalid xmlColorString
+   */
+  public parseXmlColor(xmlColorString: string): string {
+    if (!xmlColorString) {
+      return undefined;
+    }
+
+    if (xmlColorString.length === 7) { // #RGB
+      return xmlColorString;
+    } else if (xmlColorString.length === 9) { // #ARGB
+      return "#" + xmlColorString.substr(3); // cut away alpha channel
+    } else {
+      return undefined; // invalid xml color
+    }
   }
 
   public doCalculationsAfterDurationHasBeenSet(): void {
