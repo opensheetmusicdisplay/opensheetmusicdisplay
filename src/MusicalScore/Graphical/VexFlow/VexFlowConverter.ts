@@ -20,7 +20,7 @@ import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry"
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
-import { NoteHead, NoteHeadShape } from "../../VoiceData/NoteHead";
+import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 
@@ -111,19 +111,19 @@ export class VexFlowConverter {
         const acc: string = VexFlowConverter.accidental(pitch.Accidental);
         // The octave seems to need a shift of three FIXME?
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
-        const noteHead: NoteHead = note.sourceNote.NoteHead;
-        let noteHeadCode: string = "";
-        if (noteHead !== undefined) {
-            noteHeadCode = this.NoteHeadCode(noteHead);
+        const notehead: Notehead = note.sourceNote.NoteHead;
+        let noteheadCode: string = "";
+        if (notehead !== undefined) {
+            noteheadCode = this.NoteHeadCode(notehead);
         }
-        return [fund + "n/" + octave + noteHeadCode, acc, note.Clef()];
+        return [fund + "n/" + octave + noteheadCode, acc, note.Clef()];
     }
 
     /** returns the Vexflow code for a note head. Some are still unsupported, see Vexflow/tables.js */
-    public static NoteHeadCode(noteHead: NoteHead): string {
+    public static NoteHeadCode(notehead: Notehead): string {
         const codeStart: string = "/";
-        const codeFilled: string = noteHead.Filled ? "2" : "1"; // filled/unfilled notehead code in most vexflow glyphs
-        switch (noteHead.Shape) {
+        const codeFilled: string = notehead.Filled ? "2" : "1"; // filled/unfilled notehead code in most vexflow glyphs
+        switch (notehead.Shape) {
             case NoteHeadShape.NORMAL:
                 return "";
             case NoteHeadShape.DIAMOND:

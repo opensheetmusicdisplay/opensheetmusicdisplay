@@ -25,7 +25,7 @@ import { IXmlAttribute } from "../../Common/FileIO/Xml";
 import { CollectionUtil } from "../../Util/CollectionUtil";
 import { ArticulationReader } from "./MusicSymbolModules/ArticulationReader";
 import { SlurReader } from "./MusicSymbolModules/SlurReader";
-import { NoteHead } from "../VoiceData/NoteHead";
+import { Notehead } from "../VoiceData/Notehead";
 import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
 
 export class VoiceGenerator {
@@ -331,8 +331,8 @@ export class VoiceGenerator {
     let noteStep: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
     let playbackInstrumentId: string = undefined;
-    let noteHeadShapeXml: string = undefined;
-    let noteHeadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
+    let noteheadShapeXml: string = undefined;
+    let noteheadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
 
     const xmlnodeElementsArr: IXmlElement[] = node.elements();
     for (let idx: number = 0, len: number = xmlnodeElementsArr.length; idx < len; ++idx) {
@@ -342,8 +342,8 @@ export class VoiceGenerator {
           const noteElementsArr: IXmlElement[] = noteElement.elements();
           for (let idx2: number = 0, len2: number = noteElementsArr.length; idx2 < len2; ++idx2) {
             const pitchElement: IXmlElement = noteElementsArr[idx2];
-            noteHeadShapeXml = undefined; // reinitialize for each pitch
-            noteHeadFilledXml = undefined;
+            noteheadShapeXml = undefined; // reinitialize for each pitch
+            noteheadFilledXml = undefined;
             try {
               if (pitchElement.name === "step") {
                 noteStep = NoteEnum[pitchElement.value];
@@ -402,9 +402,9 @@ export class VoiceGenerator {
             playbackInstrumentId = noteElement.firstAttribute.value;
           }
         } else if (noteElement.name === "notehead") {
-          noteHeadShapeXml = noteElement.value;
+          noteheadShapeXml = noteElement.value;
           if (noteElement.attribute("filled") !== null) {
-            noteHeadFilledXml = noteElement.attribute("filled").value === "yes";
+            noteheadFilledXml = noteElement.attribute("filled").value === "yes";
           }
         }
       } catch (ex) {
@@ -421,8 +421,8 @@ export class VoiceGenerator {
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
     note.NoteheadColorXml = noteheadColorXml;
     note.PlaybackInstrumentId = playbackInstrumentId;
-    if (noteHeadShapeXml !== undefined && noteHeadShapeXml !== "normal") {
-      note.NoteHead = new NoteHead(note, noteHeadShapeXml, noteHeadFilledXml);
+    if (noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") {
+      note.NoteHead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
     this.currentVoiceEntry.Notes.push(note);
     this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
