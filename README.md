@@ -30,8 +30,8 @@ and [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheet
 
 If you have technical questions, you can browse through our [Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue) or open a new one.
 
-To contact us directly, you can use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/).
-
+To contact us directly, you can use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/),
+or join the chat on [Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
 
 <!--# <a name="license"></a>License
 The MIT License (MIT)
