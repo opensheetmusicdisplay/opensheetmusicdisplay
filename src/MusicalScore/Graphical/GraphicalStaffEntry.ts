@@ -277,7 +277,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public addGraphicalNoteToListAtCorrectYPosition(gve: GraphicalVoiceEntry, graphicalNote: GraphicalNote): void {
         const graphicalNotes: GraphicalNote[] = gve.notes;
         if (graphicalNotes.length === 0 ||
-            graphicalNote.PositionAndShape.RelativePosition.y < CollectionUtil.last(graphicalNotes).PositionAndShape.RelativePosition.Y) {
+            graphicalNote.PositionAndShape.RelativePosition.y < CollectionUtil.last(graphicalNotes).PositionAndShape.RelativePosition.y) {
             graphicalNotes.push(graphicalNote);
         } else {
             for (let i: number = graphicalNotes.length - 1; i >= 0; i--) {
