@@ -7,7 +7,7 @@ import {Pitch} from "../../Common/DataObjects/Pitch";
 import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
-import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
+import {GraphicalVoiceEntry} from "./GraphicalVoiceEntry";
 
 /**
  * The graphical counterpart of a [[Note]]

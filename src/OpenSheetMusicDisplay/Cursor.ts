@@ -23,7 +23,7 @@ export class Cursor {
   private container: HTMLElement;
   private openSheetMusicDisplay: OpenSheetMusicDisplay;
   private manager: MusicPartManager;
-  private iterator: MusicPartManagerIterator;
+  protected iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
   private hidden: boolean = true;
   private cursorElement: HTMLImageElement;

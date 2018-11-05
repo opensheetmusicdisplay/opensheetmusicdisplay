@@ -292,7 +292,7 @@ export class VexFlowConverter {
             clef: vfClefType,
             duration: duration,
             keys: keys,
-            noteheadStyles: noteheadStyles,
+            noteheadStyles: noteheadStyles, // this coloring direction requires a Vexflow PR
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
 
@@ -307,7 +307,7 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        if (EngravingRules.Rules.ColoringEnabled) { // this method requires a Vexflow PR
+        if (EngravingRules.Rules.ColoringEnabled) {
             const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
             let stemColor: string = gve.parentVoiceEntry.StemColorXml;
             if (!stemColor && defaultColorStem) {

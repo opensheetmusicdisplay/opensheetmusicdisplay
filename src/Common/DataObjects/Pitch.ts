@@ -298,8 +298,8 @@ export class Pitch {
     }
 
     public ToString(): string {
-        return "Note: " + this.fundamentalNote + ", octave: " + this.octave.toString() + ", alter: " +
-            this.accidental;
+        return "Key: " + Pitch.getNoteEnumString(this.fundamentalNote) + ", Note: " + this.fundamentalNote +
+        ", octave: " + this.octave.toString() + ", alter: " + this.accidental;
     }
 
     public OperatorEquals(p2: Pitch): boolean {

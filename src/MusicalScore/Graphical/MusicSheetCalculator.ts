@@ -173,7 +173,7 @@ export abstract class MusicSheetCalculator {
     public calculate(): void {
         this.clearSystemsAndMeasures();
 
-        // delete graphicalObjects that will be recalculated and create the GraphicalObjects that strech over a single StaffEntry new.
+        // delete graphicalObjects (currently: ties) that will be recalculated, newly create GraphicalObjects streching over a single StaffEntry
         this.clearRecreatedObjects();
 
         this.createGraphicalTies();
@@ -676,8 +676,18 @@ export abstract class MusicSheetCalculator {
             const visiblegraphicalMeasures: GraphicalMeasure[] = [];
             for (let idx2: number = 0, len2: number = graphicalMeasures.length; idx2 < len2; ++idx2) {
                 const graphicalMeasure: GraphicalMeasure = allMeasures[idx][idx2];
+
                 if (graphicalMeasure.isVisible()) {
                     visiblegraphicalMeasures.push(graphicalMeasure);
+
+                    if (EngravingRules.Rules.ColoringEnabled) {
+                        // re-color notes (TODO: could be improved by Vexflow PR, see VexFlowConverter)
+                        for (const staffEntry of graphicalMeasure.staffEntries) {
+                            for (const gve of staffEntry.graphicalVoiceEntries) {
+                                gve.reColor();
+                            }
+                        }
+                    }
                 }
             }
             visibleMeasureList.push(visiblegraphicalMeasures);
@@ -689,6 +699,7 @@ export abstract class MusicSheetCalculator {
         for (let idx: number = 0, len: number = visibleMeasureList.length; idx < len; ++idx) {
             const gmlist: GraphicalMeasure[] = visibleMeasureList[idx];
             numberOfStaffLines = Math.max(gmlist.length, numberOfStaffLines);
+
             break;
         }
         if (numberOfStaffLines === 0) {
