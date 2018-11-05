@@ -108,7 +108,7 @@ export class VexFlowConverter {
      */
     public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        const acc: string = VexFlowConverter.accidental(pitch.Accidental);
+        const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
         // The octave seems to need a shift of three FIXME?
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
         const notehead: Notehead = note.sourceNote.NoteHead;
@@ -143,46 +143,6 @@ export class VexFlowConverter {
             default:
                 return "";
         }
-    }
-
-    /**
-     * Converts AccidentalEnum to a string which represents an accidental in VexFlow
-     * @param accidental
-     * @returns {string}
-     */
-    public static accidental(accidental: AccidentalEnum): string {
-        let acc: string;
-        switch (accidental) {
-            case AccidentalEnum.NATURAL:
-                acc = "n";
-                break;
-            case AccidentalEnum.FLAT:
-                acc = "b";
-                break;
-            case AccidentalEnum.SHARP:
-                acc = "#";
-                break;
-            case AccidentalEnum.DOUBLESHARP:
-                acc = "##";
-                break;
-            case AccidentalEnum.TRIPLESHARP:
-                acc = "++";
-                break;
-            case AccidentalEnum.DOUBLEFLAT:
-                acc = "bb";
-                break;
-            case AccidentalEnum.TRIPLEFLAT:
-                acc = "bbs"; // there is no "bbb" in VexFlow yet, unfortunately.
-                break;
-            case AccidentalEnum.QUARTERTONESHARP:
-                acc = "+";
-                break;
-            case AccidentalEnum.QUARTERTONEFLAT:
-                acc = "d";
-                break;
-            default:
-        }
-        return acc;
     }
 
     public static GhostNote(frac: Fraction): Vex.Flow.GhostNote {
@@ -467,10 +427,10 @@ export class VexFlowConverter {
         }
         if (vfOrna !== undefined) {
             if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
-                vfOrna.setLowerAccidental(this.accidental(oContainer.AccidentalBelow));
+                vfOrna.setLowerAccidental(Pitch.accidentalVexflow(oContainer.AccidentalBelow));
             }
             if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
-                vfOrna.setUpperAccidental(this.accidental(oContainer.AccidentalAbove));
+                vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
             vfOrna.setPosition(vfPosition);
             vfnote.addModifier(0, vfOrna);

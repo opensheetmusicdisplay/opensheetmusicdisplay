@@ -40,7 +40,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      */
     public setPitch(pitch: Pitch): void {
         if (this.vfnote) {
-            const acc: string = VexFlowConverter.accidental(pitch.Accidental);
+            const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
             if (acc) {
                 alert(acc);
                 this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
