@@ -481,5 +481,18 @@ export class OpenSheetMusicDisplay {
     public set AutoResizeEnabled(value: boolean) {
         this.autoResizeEnabled = value;
     }
+
+    public get Sheet(): MusicSheet {
+        return this.sheet;
+    }
+    public get Drawer(): VexFlowMusicSheetDrawer {
+        return this.drawer;
+    }
+    public get GraphicSheet(): GraphicalMusicSheet {
+        return this.graphic;
+    }
+    public get DrawingParameters(): DrawingParameters {
+        return this.drawingParameters;
+    }
     //#endregion
 }
