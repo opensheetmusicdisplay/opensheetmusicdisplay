@@ -216,29 +216,9 @@ export class VexFlowConverter {
         let alignCenter: boolean = false;
         let xShift: number = 0;
         let slashNoteHead: boolean = false;
-        const noteheadStyles: any = [];
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
-            }
-
-            if (EngravingRules.Rules.ColoringEnabled) {
-                let noteheadColor: string = note.sourceNote.NoteheadColorXml;
-                const defaultColorNotehead: string = EngravingRules.Rules.DefaultColorNotehead;
-                const defaultColorRest: string = EngravingRules.Rules.DefaultColorRest;
-                if (!noteheadColor) {
-                    if (!note.sourceNote.isRest() && defaultColorNotehead) {
-                        noteheadColor = defaultColorNotehead;
-                    } else if (note.sourceNote.isRest() && defaultColorRest) {
-                        noteheadColor = defaultColorRest;
-                    }
-                }
-                if (noteheadColor) {
-                    noteheadStyles.push({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
-                    note.sourceNote.NoteheadColor = noteheadColor;
-                } else {
-                    noteheadStyles.push(undefined);
-                }
             }
 
             // if it is a rest:
@@ -292,7 +272,6 @@ export class VexFlowConverter {
             clef: vfClefType,
             duration: duration,
             keys: keys,
-            noteheadStyles: noteheadStyles, // this coloring direction requires a Vexflow PR
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
 
@@ -320,15 +299,6 @@ export class VexFlowConverter {
                 vfnote.setStemStyle(stemStyle);
                 if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
                     vfnote.setFlagStyle(stemStyle);
-                }
-            }
-
-            // color noteheads (again)
-            // TODO temporary fix until Vexflow PR is through (should be set by vfnotestruct.noteheadStyles)
-            for (let i: number = 0; i < noteheadStyles.length; i++) {
-                const style: string = noteheadStyles[i];
-                if (style !== undefined) {
-                    vfnote.note_heads[i].setStyle(style);
                 }
             }
         }

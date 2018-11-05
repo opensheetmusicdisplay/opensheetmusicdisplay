@@ -5,6 +5,7 @@ import { GraphicalNote } from "./GraphicalNote";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { OctaveEnum } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { VexFlowVoiceEntry } from "./VexFlow/VexFlowVoiceEntry";
+import { EngravingRules } from "./EngravingRules";
 
 /**
  * The graphical counterpart of a [[VoiceEntry]].
@@ -34,22 +35,65 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         });
     }
 
-    /** Re-color notes by setting their Vexflow styles.
+    /** (Re-)color notes and stems by setting their Vexflow styles.
      * Could be made redundant by a Vexflow PR, but Vexflow needs more solid and permanent color methods/variables for that
      * See VexFlowConverter.StaveNote()
      */
-    public reColor(): void {
+    public color(): void {
+        const defaultColorNotehead: string = EngravingRules.Rules.DefaultColorNotehead;
+        const defaultColorRest: string = EngravingRules.Rules.DefaultColorRest;
+        const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
+
+        const vfStaveNote: any = (<VexFlowVoiceEntry>(this as any)).vfStaveNote;
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: GraphicalNote = this.notes[i];
-            if (note.sourceNote.NoteheadColor) {
-                const vfStaveNote: any = (<VexFlowVoiceEntry>(this as any)).vfStaveNote;
-                if (!vfStaveNote) {
-                    return;
+
+            let noteheadColor: string = note.sourceNote.NoteheadColorXml;
+
+            // DEBUG runtime coloring test
+            /*const testColor: string = "#FF0000";
+            if (i === 2 && Math.random() < 0.1 && note.sourceNote.NoteheadColor !== testColor) {
+                const measureNumber: number = note.parentVoiceEntry.parentStaffEntry.parentMeasure.MeasureNumber;
+                noteheadColor = testColor;
+                console.log("color changed to " + noteheadColor + " of this note:\n" + note.sourceNote.Pitch.ToString() +
+                    ", in measure #" + measureNumber);
+            }*/
+
+            if (!noteheadColor) {
+                if (!note.sourceNote.isRest() && defaultColorNotehead) {
+                    noteheadColor = defaultColorNotehead;
+                } else if (note.sourceNote.isRest() && defaultColorRest) {
+                    noteheadColor = defaultColorRest;
                 }
+            }
+            if (noteheadColor) {
+                note.sourceNote.NoteheadColor = noteheadColor;
+            } else {
+                continue;
+            }
+
+            if (vfStaveNote) {
                 if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
-                    const noteheadColor: string = note.sourceNote.NoteheadColor;
-                    vfStaveNote.note_heads[i].setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
+                    const notehead: any = vfStaveNote.note_heads[i];
+                    if (notehead) {
+                        vfStaveNote.note_heads[i].setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
+                    }
                 }
+            }
+        }
+
+        // color stems
+        let stemColor: string = this.parentVoiceEntry.StemColorXml;
+        if (!stemColor && defaultColorStem) {
+            stemColor = defaultColorStem;
+        }
+        const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
+
+        if (stemColor && vfStaveNote.setStemStyle) {
+            this.parentVoiceEntry.StemColor = stemColor;
+            vfStaveNote.setStemStyle(stemStyle);
+            if (vfStaveNote.flag && vfStaveNote.setFlagStyle && EngravingRules.Rules.ColorFlags) {
+                vfStaveNote.setFlagStyle(stemStyle);
             }
         }
     }

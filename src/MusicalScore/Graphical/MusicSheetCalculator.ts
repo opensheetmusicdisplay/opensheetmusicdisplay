@@ -681,10 +681,10 @@ export abstract class MusicSheetCalculator {
                     visiblegraphicalMeasures.push(graphicalMeasure);
 
                     if (EngravingRules.Rules.ColoringEnabled) {
-                        // re-color notes (TODO: could be improved by Vexflow PR, see VexFlowConverter)
+                        // (re-)color notes
                         for (const staffEntry of graphicalMeasure.staffEntries) {
                             for (const gve of staffEntry.graphicalVoiceEntries) {
-                                gve.reColor();
+                                gve.color();
                             }
                         }
                     }
