@@ -159,4 +159,12 @@ export class Cursor {
     // Set the actual image
     this.cursorElement.src = c.toDataURL("image/png");
   }
+
+  public get Iterator(): MusicPartManagerIterator {
+    return this.iterator;
+  }
+
+  public get Hidden(): boolean {
+    return this.hidden;
+  }
 }
