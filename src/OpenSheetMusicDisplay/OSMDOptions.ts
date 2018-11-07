@@ -8,8 +8,6 @@ export interface IOSMDOptions {
     autoBeamOptions?: AutoBeamOptions;
     /** Automatically resize score with canvas size. Default is true. */
     autoResize?: boolean;
-    /** Not yet supported. Will always place stems automatically. */ // TODO
-    autoStem?: boolean;
     /** Render Backend, will be SVG if given undefined, SVG or svg, otherwise Canvas. */
     backend?: string;
     /** Whether to enable coloring noteheads and stems by their XML color attribute. */

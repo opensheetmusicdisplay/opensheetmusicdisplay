@@ -373,6 +373,26 @@ declare namespace Vex {
             public lineWidth: number;
         }
 
+        /** Apparently, this interface is needed for a typescript build including OSMD
+         * see https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/448#issuecomment-436407775
+         */
+        export interface RenderContext {
+            scale(x: number, y: number): RenderContext;
+            fillRect(x: number, y: number, width: number, height: number): RenderContext
+            fillText(text: string, x: number, y: number): RenderContext;
+            setFont(family: string, size: number, weight: string): RenderContext;
+            beginPath(): RenderContext;
+            moveTo(x, y): RenderContext;
+            lineTo(x, y): RenderContext;
+            bezierCurveTo(cp1_x: number, cp1_y: number, cp2_x: number, cp2_y: number, end_x: number, end_y: number): RenderContext;
+            closePath(): RenderContext;
+            stroke(): RenderContext;
+            fill(): RenderContext;
+            save(): RenderContext;
+            restore(): RenderContext;
+            lineWidth: number;
+        }
+
         export class CanvasContext extends RenderContext {
             public vexFlowCanvasContext: CanvasRenderingContext2D;
         }
