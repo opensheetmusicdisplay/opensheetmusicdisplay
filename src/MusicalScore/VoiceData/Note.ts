@@ -8,7 +8,7 @@ import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
-import {NoteHead} from "./NoteHead";
+import {Notehead} from "./Notehead";
 import {Arpeggio} from "./Arpeggio";
 
 /**
@@ -45,7 +45,7 @@ export class Note {
     private tie: Tie;
     private slurs: Slur[] = [];
     private playbackInstrumentId: string = undefined;
-    private noteHead: NoteHead = undefined;
+    private notehead: Notehead = undefined;
     /** States whether the note should be displayed. False if xmlNode.attribute("print-object").value = "no". */
     private printObject: boolean = true;
     /** The Arpeggio this note is part of. */
@@ -112,11 +112,11 @@ export class Note {
     public set PlaybackInstrumentId(value: string) {
         this.playbackInstrumentId = value;
     }
-    public set NoteHead(value: NoteHead) {
-        this.noteHead = value;
+    public set NoteHead(value: Notehead) {
+        this.notehead = value;
     }
-    public get NoteHead(): NoteHead {
-        return this.noteHead;
+    public get NoteHead(): Notehead {
+        return this.notehead;
     }
     public get PrintObject(): boolean {
         return this.printObject;

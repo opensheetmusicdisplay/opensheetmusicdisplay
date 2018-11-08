@@ -236,6 +236,47 @@ export class Pitch {
         }
     }
 
+    /**
+     * Converts AccidentalEnum to a string which represents an accidental in VexFlow
+     * Can also be useful in other cases, but has to match Vexflow accidental codes.
+     * @param accidental
+     * @returns {string} Vexflow Accidental code
+     */
+    public static accidentalVexflow(accidental: AccidentalEnum): string {
+        let acc: string;
+        switch (accidental) {
+            case AccidentalEnum.NATURAL:
+                acc = "n";
+                break;
+            case AccidentalEnum.FLAT:
+                acc = "b";
+                break;
+            case AccidentalEnum.SHARP:
+                acc = "#";
+                break;
+            case AccidentalEnum.DOUBLESHARP:
+                acc = "##";
+                break;
+            case AccidentalEnum.TRIPLESHARP:
+                acc = "++";
+                break;
+            case AccidentalEnum.DOUBLEFLAT:
+                acc = "bb";
+                break;
+            case AccidentalEnum.TRIPLEFLAT:
+                acc = "bbs"; // there is no "bbb" in VexFlow yet, unfortunately.
+                break;
+            case AccidentalEnum.QUARTERTONESHARP:
+                acc = "+";
+                break;
+            case AccidentalEnum.QUARTERTONEFLAT:
+                acc = "d";
+                break;
+            default:
+        }
+        return acc;
+    }
+
     public get AccidentalHalfTones(): number {
         return Pitch.HalfTonesFromAccidental(this.accidental);
     }
@@ -298,8 +339,12 @@ export class Pitch {
     }
 
     public ToString(): string {
-        return "Note: " + this.fundamentalNote + ", octave: " + this.octave.toString() + ", alter: " +
-            this.accidental;
+        let accidentalString: string = Pitch.accidentalVexflow(this.accidental);
+        if (!accidentalString) {
+            accidentalString = "";
+        }
+        return "Key: " + Pitch.getNoteEnumString(this.fundamentalNote) + accidentalString +
+        ", Note: " + this.fundamentalNote + ", octave: " + this.octave.toString();
     }
 
     public OperatorEquals(p2: Pitch): boolean {

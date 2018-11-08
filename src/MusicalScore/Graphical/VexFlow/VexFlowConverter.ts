@@ -20,7 +20,7 @@ import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry"
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
-import { NoteHead, NoteHeadShape } from "../../VoiceData/NoteHead";
+import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 
@@ -108,22 +108,22 @@ export class VexFlowConverter {
      */
     public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        const acc: string = VexFlowConverter.accidental(pitch.Accidental);
+        const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
         // The octave seems to need a shift of three FIXME?
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
-        const noteHead: NoteHead = note.sourceNote.NoteHead;
-        let noteHeadCode: string = "";
-        if (noteHead !== undefined) {
-            noteHeadCode = this.NoteHeadCode(noteHead);
+        const notehead: Notehead = note.sourceNote.NoteHead;
+        let noteheadCode: string = "";
+        if (notehead !== undefined) {
+            noteheadCode = this.NoteHeadCode(notehead);
         }
-        return [fund + "n/" + octave + noteHeadCode, acc, note.Clef()];
+        return [fund + "n/" + octave + noteheadCode, acc, note.Clef()];
     }
 
     /** returns the Vexflow code for a note head. Some are still unsupported, see Vexflow/tables.js */
-    public static NoteHeadCode(noteHead: NoteHead): string {
+    public static NoteHeadCode(notehead: Notehead): string {
         const codeStart: string = "/";
-        const codeFilled: string = noteHead.Filled ? "2" : "1"; // filled/unfilled notehead code in most vexflow glyphs
-        switch (noteHead.Shape) {
+        const codeFilled: string = notehead.Filled ? "2" : "1"; // filled/unfilled notehead code in most vexflow glyphs
+        switch (notehead.Shape) {
             case NoteHeadShape.NORMAL:
                 return "";
             case NoteHeadShape.DIAMOND:
@@ -143,46 +143,6 @@ export class VexFlowConverter {
             default:
                 return "";
         }
-    }
-
-    /**
-     * Converts AccidentalEnum to a string which represents an accidental in VexFlow
-     * @param accidental
-     * @returns {string}
-     */
-    public static accidental(accidental: AccidentalEnum): string {
-        let acc: string;
-        switch (accidental) {
-            case AccidentalEnum.NATURAL:
-                acc = "n";
-                break;
-            case AccidentalEnum.FLAT:
-                acc = "b";
-                break;
-            case AccidentalEnum.SHARP:
-                acc = "#";
-                break;
-            case AccidentalEnum.DOUBLESHARP:
-                acc = "##";
-                break;
-            case AccidentalEnum.TRIPLESHARP:
-                acc = "++";
-                break;
-            case AccidentalEnum.DOUBLEFLAT:
-                acc = "bb";
-                break;
-            case AccidentalEnum.TRIPLEFLAT:
-                acc = "bbs"; // there is no "bbb" in VexFlow yet, unfortunately.
-                break;
-            case AccidentalEnum.QUARTERTONESHARP:
-                acc = "+";
-                break;
-            case AccidentalEnum.QUARTERTONEFLAT:
-                acc = "d";
-                break;
-            default:
-        }
-        return acc;
     }
 
     public static GhostNote(frac: Fraction): Vex.Flow.GhostNote {
@@ -216,29 +176,9 @@ export class VexFlowConverter {
         let alignCenter: boolean = false;
         let xShift: number = 0;
         let slashNoteHead: boolean = false;
-        const noteheadStyles: any = [];
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
-            }
-
-            if (EngravingRules.Rules.ColoringEnabled) {
-                let noteheadColor: string = note.sourceNote.NoteheadColorXml;
-                const defaultColorNotehead: string = EngravingRules.Rules.DefaultColorNotehead;
-                const defaultColorRest: string = EngravingRules.Rules.DefaultColorRest;
-                if (!noteheadColor) {
-                    if (!note.sourceNote.isRest() && defaultColorNotehead) {
-                        noteheadColor = defaultColorNotehead;
-                    } else if (note.sourceNote.isRest() && defaultColorRest) {
-                        noteheadColor = defaultColorRest;
-                    }
-                }
-                if (noteheadColor) {
-                    noteheadStyles.push({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
-                    note.sourceNote.NoteheadColor = noteheadColor;
-                } else {
-                    noteheadStyles.push(undefined);
-                }
             }
 
             // if it is a rest:
@@ -292,7 +232,6 @@ export class VexFlowConverter {
             clef: vfClefType,
             duration: duration,
             keys: keys,
-            noteheadStyles: noteheadStyles,
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
 
@@ -307,7 +246,7 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        if (EngravingRules.Rules.ColoringEnabled) { // this method requires a Vexflow PR
+        if (EngravingRules.Rules.ColoringEnabled) {
             const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
             let stemColor: string = gve.parentVoiceEntry.StemColorXml;
             if (!stemColor && defaultColorStem) {
@@ -320,15 +259,6 @@ export class VexFlowConverter {
                 vfnote.setStemStyle(stemStyle);
                 if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
                     vfnote.setFlagStyle(stemStyle);
-                }
-            }
-
-            // color noteheads (again)
-            // TODO temporary fix until Vexflow PR is through (should be set by vfnotestruct.noteheadStyles)
-            for (let i: number = 0; i < noteheadStyles.length; i++) {
-                const style: string = noteheadStyles[i];
-                if (style !== undefined) {
-                    vfnote.note_heads[i].setStyle(style);
                 }
             }
         }
@@ -497,10 +427,10 @@ export class VexFlowConverter {
         }
         if (vfOrna !== undefined) {
             if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
-                vfOrna.setLowerAccidental(this.accidental(oContainer.AccidentalBelow));
+                vfOrna.setLowerAccidental(Pitch.accidentalVexflow(oContainer.AccidentalBelow));
             }
             if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
-                vfOrna.setUpperAccidental(this.accidental(oContainer.AccidentalAbove));
+                vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
             vfOrna.setPosition(vfPosition);
             vfnote.addModifier(0, vfOrna);

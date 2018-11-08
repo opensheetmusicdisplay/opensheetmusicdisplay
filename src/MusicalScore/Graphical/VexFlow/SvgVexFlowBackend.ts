@@ -50,9 +50,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         // TODO: implement this
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
-                      heightInPixel: number, screenPosition: PointF2D): void {
+                      heightInPixel: number, screenPosition: PointF2D, color: string = undefined): void {
         this.ctx.save();
 
+        if (color) {
+            this.ctx.attributes.fill = color;
+            this.ctx.attributes.stroke = color;
+        }
         this.ctx.setFont("Times New Roman", fontHeight, VexFlowConverter.fontStyle(fontStyle));
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
         this.ctx.attributes["font-size"] = `${fontHeight}px`;

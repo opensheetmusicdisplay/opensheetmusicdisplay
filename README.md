@@ -6,9 +6,8 @@
 [![Greenkeeper badge](https://badges.greenkeeper.io/opensheetmusicdisplay/opensheetmusicdisplay.svg)](https://greenkeeper.io/)
 [![Travis Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/r88lnffso55nq1ko?svg=true)](https://ci.appveyor.com/project/sebastianhaas/opensheetmusicdisplay/branch/master)
-[![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay.png)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay)
+[![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay/status.svg)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Code Climate](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay/badges/gpa.svg)](https://codeclimate.com/github/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 [opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/)
@@ -21,13 +20,19 @@ OpenSheetMusicDisplay brings the two together and offers an open source turnkey 
 
 Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT license](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/LICENSE).
 
-See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki) for information about the source code and how to use OSMD.
-
 Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
 
-Brought to you by [PhonicScore](https://phonicscore.com/) and [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors)<br>
-(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [PhonicScore for Android](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))
+See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki) for information about the source code and how to use OSMD.
 
+If you have further technical questions, you can browse through our [Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue) or open a new one.
+
+Brought to you by [PhonicScore](https://phonicscore.com/)
+(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [PhonicScore for Android](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))<br>
+and [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors)
+
+To contact us directly, you can use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/),
+or<br>
+[join the chat on Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
 
 <!--# <a name="license"></a>License
 The MIT License (MIT)

@@ -23,7 +23,7 @@ export class Cursor {
   private container: HTMLElement;
   private openSheetMusicDisplay: OpenSheetMusicDisplay;
   private manager: MusicPartManager;
-  private iterator: MusicPartManagerIterator;
+  protected iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
   private hidden: boolean = true;
   private cursorElement: HTMLImageElement;
@@ -158,5 +158,13 @@ export class Cursor {
     ctx.fillRect(0, 0, width, 1);
     // Set the actual image
     this.cursorElement.src = c.toDataURL("image/png");
+  }
+
+  public get Iterator(): MusicPartManagerIterator {
+    return this.iterator;
+  }
+
+  public get Hidden(): boolean {
+    return this.hidden;
   }
 }

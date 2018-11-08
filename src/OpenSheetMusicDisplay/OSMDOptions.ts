@@ -8,8 +8,6 @@ export interface IOSMDOptions {
     autoBeamOptions?: AutoBeamOptions;
     /** Automatically resize score with canvas size. Default is true. */
     autoResize?: boolean;
-    /** Not yet supported. Will always place stems automatically. */ // TODO
-    autoStem?: boolean;
     /** Render Backend, will be SVG if given undefined, SVG or svg, otherwise Canvas. */
     backend?: string;
     /** Whether to enable coloring noteheads and stems by their XML color attribute. */
@@ -20,6 +18,10 @@ export interface IOSMDOptions {
     defaultColorStem?: string;
     /** Default color for rests. Default black (undefined). */
     defaultColorRest?: string;
+    /** Default color for Labels like title or lyrics. Default black (undefined). */
+    defaultColorLabel?: string;
+    /** Default color for labels in the title. Overrides defaultColorLabel for title labels like composer. Default black (undefined). */
+    defaultColorTitle?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */

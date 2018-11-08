@@ -4,7 +4,7 @@ import * as log from "loglevel";
 /**
  * A note head with shape and fill information belonging to a [[Note]].
  */
-export class NoteHead {
+export class Notehead {
     /**
      * @param sourceNote
      * @param shapeTypeXml The shape type given from XML.
@@ -30,13 +30,13 @@ export class NoteHead {
      *                           If undefined, this.sourceNote should not be undefined.
      */
     public setShapeFromXml(shapeTypeXml: string, filledXmlAttribute: boolean = undefined): void {
-        this.shape = NoteHead.ShapeTypeXmlToShape(shapeTypeXml);
+        this.shape = Notehead.ShapeTypeXmlToShape(shapeTypeXml);
 
         let filled: boolean = filledXmlAttribute;
         if (filled === undefined) {
             if (this.sourceNote === undefined) {
                 // this should not happen. Either filledXmlAttribute or sourceNote should be defined.
-                log.warn("noteHead: sourceNote and filledXmlAttribute undefined.");
+                log.warn("notehead: sourceNote and filledXmlAttribute undefined.");
                 filled = true;
             } else {
                 filled = this.sourceNote.Length.Denominator > 2;
