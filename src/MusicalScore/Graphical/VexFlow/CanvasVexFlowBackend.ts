@@ -23,6 +23,10 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
         this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
+
+        /*if (EngravingRules.Rules.ColoringEnabled && EngravingRules.Rules.DefaultColorAll) {
+            this.canvasRenderingCtx.strokeStyle = EngravingRules.Rules.DefaultColorAll;
+        }*/
     }
 
     /**

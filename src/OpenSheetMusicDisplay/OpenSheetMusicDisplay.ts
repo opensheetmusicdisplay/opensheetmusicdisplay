@@ -279,6 +279,11 @@ export class OpenSheetMusicDisplay {
         if (options.setWantedStemDirectionByXml !== undefined) {
             EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
         }
+        if (options.defaultColorAll && EngravingRules.Rules.ColoringEnabled) {
+            EngravingRules.Rules.DefaultColorAll = options.defaultColorAll;
+            //(<any>this.backend.getContext()).attributes.strokeStyle = options.defaultColorAll;
+            (<any>this.backend).canvasRenderingCtx.strokeStyle = options.defaultColorAll; // doesn't do anything (Canvas backend only)
+        }
         if (options.defaultColorNotehead) {
             EngravingRules.Rules.DefaultColorNotehead = options.defaultColorNotehead;
         }

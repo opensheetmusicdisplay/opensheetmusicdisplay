@@ -177,6 +177,7 @@ export class EngravingRules {
     private coloringEnabled: boolean;
     private colorFlags: boolean;
     private colorBeams: boolean;
+    private defaultColorAll: string;
     private defaultColorNotehead: string;
     private defaultColorRest: string;
     private defaultColorStem: string;
@@ -388,7 +389,8 @@ export class EngravingRules {
         this.coloringEnabled = true;
         this.colorBeams = true;
         this.colorFlags = true;
-        this.defaultColorNotehead = undefined; // undefined colors mean black
+        this.defaultColorAll = undefined; // undefined colors mean black
+        this.defaultColorNotehead = undefined;
         this.defaultColorRest = undefined;
         this.defaultColorStem = undefined;
         this.defaultColorLabel = undefined;
@@ -1329,6 +1331,12 @@ export class EngravingRules {
     }
     public set ColorBeams(value: boolean) {
         this.colorBeams = value;
+    }
+    public get DefaultColorAll(): string {
+        return this.defaultColorAll;
+    }
+    public set DefaultColorAll(value: string) {
+        this.defaultColorAll = value;
     }
     public get DefaultColorNotehead(): string {
         return this.defaultColorNotehead;

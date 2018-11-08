@@ -12,6 +12,8 @@ export interface IOSMDOptions {
     backend?: string;
     /** Whether to enable coloring noteheads and stems by their XML color attribute. */
     coloringEnabled?: boolean;
+    /** Default color for everything. Default black (undefined). */
+    defaultColorAll?: string;
     /** Default color for a note head (without stem). Default black (undefined). */
     defaultColorNotehead?: string;
     /** Default color for a note stem. Default black (undefined). */
