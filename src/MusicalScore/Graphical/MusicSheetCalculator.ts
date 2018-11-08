@@ -1589,8 +1589,10 @@ export abstract class MusicSheetCalculator {
 
     protected calculateSheetLabelBoundingBoxes(): void {
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
+        const defaultColorTitle: string = EngravingRules.Rules.DefaultColorTitle; // can be undefined => black
         if (musicSheet.Title !== undefined && EngravingRules.Rules.RenderTitle) {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
+            title.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
         } else if (!EngravingRules.Rules.RenderTitle) {
@@ -1598,6 +1600,7 @@ export abstract class MusicSheetCalculator {
         }
         if (musicSheet.Subtitle !== undefined && EngravingRules.Rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = new GraphicalLabel(musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter);
+            subtitle.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
         } else if (!EngravingRules.Rules.RenderSubtitle) {
@@ -1605,6 +1608,7 @@ export abstract class MusicSheetCalculator {
         }
         if (musicSheet.Composer !== undefined && EngravingRules.Rules.RenderComposer) {
             const composer: GraphicalLabel = new GraphicalLabel(musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter);
+            composer.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
         } else if (!EngravingRules.Rules.RenderComposer) {
@@ -1612,6 +1616,7 @@ export abstract class MusicSheetCalculator {
         }
         if (musicSheet.Lyricist !== undefined && EngravingRules.Rules.RenderLyricist) {
             const lyricist: GraphicalLabel = new GraphicalLabel(musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter);
+            lyricist.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();
         } else if (!EngravingRules.Rules.RenderLyricist) {

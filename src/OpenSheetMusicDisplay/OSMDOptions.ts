@@ -18,6 +18,10 @@ export interface IOSMDOptions {
     defaultColorStem?: string;
     /** Default color for rests. Default black (undefined). */
     defaultColorRest?: string;
+    /** Default color for Labels like title or lyrics. Default black (undefined). */
+    defaultColorLabel?: string;
+    /** Default color for labels in the title. Overrides defaultColorLabel for title labels like composer. Default black (undefined). */
+    defaultColorTitle?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */

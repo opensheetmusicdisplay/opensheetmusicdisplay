@@ -180,6 +180,8 @@ export class EngravingRules {
     private defaultColorNotehead: string;
     private defaultColorRest: string;
     private defaultColorStem: string;
+    private defaultColorLabel: string;
+    private defaultColorTitle: string;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
     private renderComposer: boolean;
     private renderTitle: boolean;
@@ -386,9 +388,11 @@ export class EngravingRules {
         this.coloringEnabled = true;
         this.colorBeams = true;
         this.colorFlags = true;
-        this.defaultColorNotehead = undefined;
+        this.defaultColorNotehead = undefined; // undefined colors mean black
         this.defaultColorRest = undefined;
         this.defaultColorStem = undefined;
+        this.defaultColorLabel = undefined;
+        this.defaultColorTitle = undefined;
         this.renderComposer = true;
         this.renderTitle = true;
         this.renderSubtitle = true;
@@ -1343,6 +1347,18 @@ export class EngravingRules {
     }
     public set DefaultColorStem(value: string) {
         this.defaultColorStem = value;
+    }
+    public get DefaultColorLabel(): string {
+        return this.defaultColorLabel;
+    }
+    public set DefaultColorLabel(value: string) {
+        this.defaultColorLabel = value;
+    }
+    public get DefaultColorTitle(): string {
+        return this.defaultColorTitle;
+    }
+    public set DefaultColorTitle(value: string) {
+        this.defaultColorTitle = value;
     }
     public get RenderComposer(): boolean {
         return this.renderComposer;

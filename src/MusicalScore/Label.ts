@@ -17,6 +17,7 @@ export class Label {
 
     public text: string;
     public color: OSMDColor;
+    public colorDefault: string; // TODO this is Vexflow format, convert to OSMDColor. for now convenient for default colors.
     public font: Fonts;
     public fontStyle: FontStyles;
     public fontHeight: number;
