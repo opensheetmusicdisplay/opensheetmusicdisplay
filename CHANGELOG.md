@@ -1,3 +1,18 @@
+<a name="0.6.3"></a>
+## [0.6.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.2...0.6.3) (2018-11-08)
+
+
+### Bug Fixes
+
+* **color:** correctly parse XML color with alpha channel. ([0c28816](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0c28816))
+* **color:** notes are re-colored during render() ([3e3d9b3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3e3d9b3)), closes [#440](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/440) [#448](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/448)
+* **color:** set default colors during render(). ([298632f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/298632f)), closes [#440](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/440)
+
+### Features
+
+* **color:** can set defaultColorLabel, defaultColorTitle ([91a6b1f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/91a6b1f)), closes [#440](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/440)
+* **osmd:** Grant public access to osmd and cursor member elements ([#452)](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/452))
+
 <a name="0.6.2"></a>
 ## [0.6.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.1...0.6.2) (2018-10-25)
 
