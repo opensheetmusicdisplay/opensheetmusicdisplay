@@ -537,7 +537,7 @@
         <notehead color="#AA5500">normal</notehead>
         <staff>1</staff>
         </note>
-      <note>
+      <note color="#AAAAAA">
         <rest/>
         <duration>2</duration>
         <voice>1</voice>
@@ -602,7 +602,7 @@
           </direction-type>
         <staff>2</staff>
         </direction>
-      <note>
+      <note color="#CCCCCC">
         <rest/>
         <duration>2</duration>
         <voice>5</voice>
@@ -611,7 +611,7 @@
         </note>
       </measure>
     <measure number="3" width="349.44">
-      <note>
+      <note color="#FF00FF">
         <rest/>
         <duration>2</duration>
         <voice>1</voice>
@@ -666,7 +666,7 @@
         <stem>up</stem>
         <staff>1</staff>
         </note>
-      <note>
+      <note color="#FF00FF">
         <rest/>
         <duration>1</duration>
         <voice>1</voice>

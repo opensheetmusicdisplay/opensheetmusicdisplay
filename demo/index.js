@@ -29,7 +29,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
         "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
         "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
-        "OSMD Function Test - NoteHeadShapes": "OSMD_function_test_noteHeadShapes.musicxml",
+        "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
         "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
         "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
         "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",

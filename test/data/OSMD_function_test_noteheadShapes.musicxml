@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>OSMD Function Test - Note Head Shapes</work-title>
+    <work-title>OSMD Function Test - Notehead Shapes</work-title>
     </work>
   <identification>
     <encoding>
@@ -639,29 +639,7 @@
         <stem>up</stem>
         </note>
       </measure>
-    <measure number="19" width="134.20">
-      <note default-x="26.11" default-y="-30.00">
-        <pitch>
-          <step>G</step>
-          <octave>4</octave>
-          </pitch>
-        <duration>8</duration>
-        <voice>1</voice>
-        <type>half</type>
-        <stem>up</stem>
-        <lyric number="1" default-x="6.22" default-y="-80.00">
-          <syllabic>single</syllabic>
-          <text>none</text>
-          </lyric>
-        </note>
-      <note>
-        <rest/>
-        <duration>8</duration>
-        <voice>1</voice>
-        <type>half</type>
-        </note>
-      </measure>
-    <measure number="20" width="111.45">
+    <measure number="19" width="111.45">
       <note default-x="14.97" default-y="-30.00">
         <pitch>
           <step>G</step>

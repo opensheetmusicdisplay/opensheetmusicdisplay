@@ -288,6 +288,12 @@ export class OpenSheetMusicDisplay {
         if (options.defaultColorStem) {
             EngravingRules.Rules.DefaultColorStem = options.defaultColorStem;
         }
+        if (options.defaultColorLabel) {
+            EngravingRules.Rules.DefaultColorLabel = options.defaultColorLabel;
+        }
+        if (options.defaultColorTitle) {
+            EngravingRules.Rules.DefaultColorTitle = options.defaultColorTitle;
+        }
         if (options.tupletsRatioed) {
             EngravingRules.Rules.TupletsRatioed = true;
         }
@@ -480,6 +486,19 @@ export class OpenSheetMusicDisplay {
     }
     public set AutoResizeEnabled(value: boolean) {
         this.autoResizeEnabled = value;
+    }
+
+    public get Sheet(): MusicSheet {
+        return this.sheet;
+    }
+    public get Drawer(): VexFlowMusicSheetDrawer {
+        return this.drawer;
+    }
+    public get GraphicSheet(): GraphicalMusicSheet {
+        return this.graphic;
+    }
+    public get DrawingParameters(): DrawingParameters {
+        return this.drawingParameters;
     }
     //#endregion
 }

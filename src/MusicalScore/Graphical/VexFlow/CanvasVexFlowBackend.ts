@@ -55,14 +55,18 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvasRenderingCtx.translate(x, y);
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
-                      heightInPixel: number, screenPosition: PointF2D): void  {
+                      heightInPixel: number, screenPosition: PointF2D, color: string = undefined): void  {
         const old: string = this.canvasRenderingCtx.font;
+        this.canvasRenderingCtx.save();
         this.canvasRenderingCtx.font = VexFlowConverter.font(
             fontHeight,
             fontStyle,
             font
         );
+        this.canvasRenderingCtx.fillStyle = color;
+        this.canvasRenderingCtx.strokeStyle = color;
         this.canvasRenderingCtx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
+        this.canvasRenderingCtx.restore();
         this.canvasRenderingCtx.font = old;
     }
     public renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number = 1): void {
