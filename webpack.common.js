@@ -4,7 +4,7 @@ var webpack = require('webpack')
 
 module.exports = {
     entry: {
-        'opensheetmusicdisplay': './src/index.ts', // Main library
+        'opensheetmusicdisplay': './src/index.ts', // Main index (OpenSheetMusicDisplay and other classes)
         'demo': './demo/index.js' // Demo index
     },
     output: {
