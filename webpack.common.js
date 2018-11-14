@@ -4,7 +4,7 @@ var webpack = require('webpack')
 
 module.exports = {
     entry: {
-        'opensheetmusicdisplay': './src/OpenSheetMusicDisplay/OpenSheetMusicDisplay.ts', // Main library
+        'opensheetmusicdisplay': './src/index.ts', // Main index (OpenSheetMusicDisplay and other classes)
         'demo': './demo/index.js' // Demo index
     },
     output: {
@@ -23,6 +23,7 @@ module.exports = {
             {
                 test: /\.ts$/,
                 loader: 'ts-loader',
+                // loader: 'awesome-typescript-loader',
                 exclude: /(node_modules|bower_components)/
             }
         ]

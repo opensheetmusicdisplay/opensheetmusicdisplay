@@ -34,6 +34,13 @@ To contact us directly, you can use the [Contact form on opensheetmusicdisplay.o
 or<br>
 [join the chat on Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
 
+If you'd like to support OSMD and our ongoing work, you can donate via PayPal:<br>
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FPHCYVV2HH8VU)<br>
+Any support is highly appreciated.
+
+
+
+
 <!--# <a name="license"></a>License
 The MIT License (MIT)
 
