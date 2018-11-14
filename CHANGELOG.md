@@ -1,3 +1,12 @@
+<a name="0.6.4"></a>
+## [0.6.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.3...0.6.4) (2018-11-14)
+
+### Features
+
+* **export:** export all classes for TS import ([#458](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/458)) ([3364b52](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3364b52))
+
+
+
 <a name="0.6.3"></a>
 ## [0.6.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.2...0.6.3) (2018-11-08)
 
