@@ -294,6 +294,9 @@ export class OpenSheetMusicDisplay {
         if (options.defaultColorTitle) {
             EngravingRules.Rules.DefaultColorTitle = options.defaultColorTitle;
         }
+        if (options.drawUpToMeasureNumber) {
+            EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber;
+        }
         if (options.tupletsRatioed) {
             EngravingRules.Rules.TupletsRatioed = true;
         }
