@@ -192,4 +192,25 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             done
         ).catch(done);
     });
+
+    describe("show and hide instruments", () => {
+        let osmd: OpenSheetMusicDisplay;
+        beforeEach(() => {
+            const div: HTMLElement = TestUtils.getDivElement(document);
+            osmd = TestUtils.createOpenSheetMusicDisplay(div);
+            const score: Document =
+                TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
+            return osmd.load(score)
+            .then(() => {
+                osmd.render();
+            });
+        });
+
+        it("should move cursor after instrument is hidden", () => {
+            osmd.Sheet.Instruments[0].Visible = false;
+            osmd.render();
+            osmd.cursor.show();
+            osmd.cursor.next();
+        });
+    });
 });
