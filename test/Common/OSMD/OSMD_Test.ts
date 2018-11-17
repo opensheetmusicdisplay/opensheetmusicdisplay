@@ -193,7 +193,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         ).catch(done);
     });
 
-    describe("show and hide instruments", () => {
+    describe("cursor with hidden instrument", () => {
         let osmd: OpenSheetMusicDisplay;
         beforeEach(() => {
             const div: HTMLElement = TestUtils.getDivElement(document);
@@ -207,10 +207,12 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         });
 
         it("should move cursor after instrument is hidden", () => {
-            osmd.Sheet.Instruments[0].Visible = false;
+            osmd.Sheet.Instruments[1].Visible = false;
             osmd.render();
             osmd.cursor.show();
-            osmd.cursor.next();
+            for (let i: number = 0; i < 100; i++) {
+                osmd.cursor.next();
+            }
         });
     });
 });

@@ -64,7 +64,11 @@ export class Cursor {
     let x: number = 0, y: number = 0, height: number = 0;
 
     // get all staff entries inside the current voice entry
-    const gseArr: VexFlowStaffEntry[] = iterator.CurrentVoiceEntries.map(ve => this.getStaffEntriesFromVoiceEntry(ve));
+    const gseArr: VexFlowStaffEntry[] = iterator.CurrentVisibleVoiceEntries().map(ve => this.getStaffEntriesFromVoiceEntry(ve));
+    if (!gseArr.length) {
+      // there are currently no visible voices that have notes because some instruments/voices are hidden
+      return;
+    }
     // sort them by x position and take the leftmost entry
     const gse: VexFlowStaffEntry =
           gseArr.sort((a, b) => a.PositionAndShape.AbsolutePosition.x <= b.PositionAndShape.AbsolutePosition.x ? -1 : 1 )[0];
