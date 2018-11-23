@@ -45,6 +45,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
+import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -468,6 +469,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         log.warn("This continuous dynamic is not covered");
       }
     }
+  }
+
+  protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
+    (this.graphicalMusicSheet.MeasureList[0][0] as VexFlowMeasure).getVFStave()
+      .setTempo({
+        bpm: metronomeExpression.TempoInBpm,
+        dots: metronomeExpression.dotted,
+        //duration: metronomeExpression.beatUnit
+        duration: "q"
+      },        -10);
   }
 
   /**

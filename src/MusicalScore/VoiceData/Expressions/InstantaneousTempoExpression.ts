@@ -7,9 +7,15 @@ import {MultiTempoExpression} from "./MultiTempoExpression";
 export class InstantaneousTempoExpression extends AbstractTempoExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number,
                 soundTempo: number, parentMultiTempoExpression: MultiTempoExpression, isMetronomeMark: boolean = false) {
+        /*if (isMetronomeMark) {
+            label = " = " + soundTempo;
+        }*/
         super(label, placement, staffNumber, parentMultiTempoExpression);
         this.setTempoAndTempoType(soundTempo);
     }
+
+    public dotted: boolean;
+    public beatUnit: string;
     private static listInstantaneousTempoLarghissimo: string[] = ["Larghissimo", "Sehr breit", "very, very slow"]; // }), TempoEnum.larghissimo);
     private static listInstantaneousTempoGrave: string[] = ["Grave", "Schwer", "slow and solemn"]; //  }), TempoEnum.grave);
     private static listInstantaneousTempoLento: string[] = ["Lento", "Lent", "Langsam", "slowly"]; //  }), TempoEnum.lento);
@@ -261,6 +267,11 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         return Fraction.plus(this.ParentMultiTempoExpression.SourceMeasureParent.AbsoluteTimestamp, this.ParentMultiTempoExpression.Timestamp).RealValue;
     }
     private setTempoAndTempoType(soundTempo: number): void {
+        if (!this.label) {
+            this.tempoInBpm = soundTempo;
+            this.tempoEnum = TempoEnum.metronomeMark;
+            return;
+        }
         if (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLarghissimo, this.label)) {
             if (soundTempo === 0) {
                 soundTempo = InstantaneousTempoExpression.getDefaultValueForTempoType(TempoEnum.larghissimo);
