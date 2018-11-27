@@ -847,7 +847,25 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateChordSymbols(): void {
-        return;
+        for (const musicPage of this.graphicalMusicSheet.MusicPages) {
+            for (const musicSystem of musicPage.MusicSystems) {
+                for (const staffLine of musicSystem.StaffLines) {
+                    const sbc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+                    for (const measure of staffLine.Measures) {
+                        for (const staffEntry of measure.staffEntries) {
+                            if (!staffEntry.graphicalChordContainer) {
+                                continue;
+                            }
+                            const sps: BoundingBox = staffEntry.PositionAndShape;
+                            const gps: BoundingBox = staffEntry.graphicalChordContainer.PositionAndShape;
+                            const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
+                            const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
+                            sbc.updateSkyLineInRange(start, end, sps.BorderMarginTop);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
