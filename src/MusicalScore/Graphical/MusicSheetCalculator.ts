@@ -1419,29 +1419,26 @@ export abstract class MusicSheetCalculator {
                                                                        textAlignment);
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
-                    let alreadyAdded: boolean = false;
+                    //already added?
                     for (const expr of staffLine.AbstractExpressions) {
                         if (expr instanceof GraphicalInstantaneousTempoExpression &&
                             (expr.SourceExpression as AbstractTempoExpression).Label === entry.Expression.Label) {
-                            alreadyAdded = true;
+                            //already added
+                            continue;
                         }
-                    }
-
-                    if (alreadyAdded) {
-                        continue;
                     }
 
                     const graphicalTempoExpr: GraphicalInstantaneousTempoExpression = new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
                     if (graphicalTempoExpr.ParentStaffLine === undefined) {
                         log.warn("Adding staffline didn't work");
-                        // I am actually fooling the linter her and use the created object. This method needs refactoring,
-                        // all graphical expression creations should be in one place and ahve basic stuff like labels, lines, ...
+                        // I am actually fooling the linter here and use the created object. This method needs refactoring,
+                        // all graphical expression creations should be in one place and have basic stuff like labels, lines, ...
                         // in their constructor
                     }
                     // in case of metronome mark:
                     if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
-                        // use smaller font:
-                        graphLabel.Label.fontHeight = 1.2;
+                        this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
+                        continue;
                     }
                 } else if (entry.Expression instanceof ContinuousTempoExpression) {
                     // FIXME: Not yet implemented
@@ -1461,6 +1458,10 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+    }
+
+    protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
+        throw new Error("abstract, not implemented");
     }
 
     protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
