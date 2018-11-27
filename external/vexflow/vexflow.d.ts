@@ -213,7 +213,13 @@ declare namespace Vex {
 
             public setVoltaType(type: number, number_t: number, y: number): void;
 
-            public setTempo(tempo: Object, y: number): void;
+            public setTempo(tempo: Object, y: number): Stave;
+
+            public setShiftX(x: number): Stave;
+        }
+
+        export class StaveTempo extends StaveModifier { // needs Vexflow PR to be exported/usable
+            constructor(tempo: Object, x: number, shift_y: number);
         }
 
         export class Volta extends StaveModifier {

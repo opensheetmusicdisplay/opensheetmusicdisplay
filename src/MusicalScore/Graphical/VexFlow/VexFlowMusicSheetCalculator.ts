@@ -472,13 +472,24 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-    (this.graphicalMusicSheet.MeasureList[0][0] as VexFlowMeasure).getVFStave()
-      .setTempo({
-        bpm: metronomeExpression.TempoInBpm,
-        dots: metronomeExpression.dotted,
-        //duration: metronomeExpression.beatUnit
-        duration: "q"
-      },        -10);
+    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[0][0] as VexFlowMeasure).getVFStave();
+    //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
+    vfStave.setTempo(
+      {
+          bpm: metronomeExpression.TempoInBpm,
+          dots: metronomeExpression.dotted,
+          //duration: metronomeExpression.beatUnit
+          duration: "q"
+      },
+      EngravingRules.Rules.MetronomeMarkYShift * unitInPixels);
+       // -50, -30), 0); //needs Vexflow PR
+       //.setShiftX(-50);
+
+    (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
+      EngravingRules.Rules.MetronomeMarkXShift * unitInPixels
+    );
+    // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
+    this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine[0] -= 4.5 - EngravingRules.Rules.MetronomeMarkYShift;
   }
 
   /**
