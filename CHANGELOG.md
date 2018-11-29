@@ -1,3 +1,15 @@
+<a name="0.6.5"></a>
+## [0.6.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.4...0.6.5) (2018-11-29)
+
+
+### Features
+
+* **ChordSymbols:** Chord symbols update their bounding box in the skyline. ([#467](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/467)) ([70ffe0b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/70ffe0b)), closes [#464](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/464)
+* **options:** add drawUpToMeasureNumber option ([f319541](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f319541)), closes [#409](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/409)
+* **tempo:** Add Graphical metronome mark ([#468](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/468)) ([6ff4fcb](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6ff4fcb))
+
+
+
 <a name="0.6.4"></a>
 ## [0.6.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.3...0.6.4) (2018-11-14)
 
