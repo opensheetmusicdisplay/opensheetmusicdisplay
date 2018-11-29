@@ -7,3 +7,5 @@ export * from "./Label";
 export * from "./MusicSheet";
 export * from "./SubInstrument";
 export * from "./VoiceData";
+export * from "./MusicSource";
+export * from "./ScoreIO";

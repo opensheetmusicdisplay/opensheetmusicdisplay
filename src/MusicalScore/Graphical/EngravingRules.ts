@@ -168,6 +168,8 @@ export class EngravingRules {
     private subMeasureXSpacingThreshold: number;
     private measureDynamicsMaxScalingFactor: number;
     private wholeRestXShiftVexflow: number;
+    private metronomeMarkXShift: number;
+    private metronomeMarkYShift: number;
     private maxInstructionsConstValue: number;
     private noteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
@@ -182,6 +184,7 @@ export class EngravingRules {
     private defaultColorStem: string;
     private defaultColorLabel: string;
     private defaultColorTitle: string;
+    private maxMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
     private renderComposer: boolean;
     private renderTitle: boolean;
@@ -383,6 +386,8 @@ export class EngravingRules {
         this.subMeasureXSpacingThreshold = 35;
         this.measureDynamicsMaxScalingFactor = 2.5;
         this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
+        this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
+        this.metronomeMarkYShift = -0.5;
 
         // Render options (whether to render specific or invisible elements)
         this.coloringEnabled = true;
@@ -393,6 +398,7 @@ export class EngravingRules {
         this.defaultColorStem = undefined;
         this.defaultColorLabel = undefined;
         this.defaultColorTitle = undefined;
+        this.maxMeasureToDrawIndex = Number.MAX_VALUE;
         this.renderComposer = true;
         this.renderTitle = true;
         this.renderSubtitle = true;
@@ -1288,6 +1294,18 @@ export class EngravingRules {
     public set WholeRestXShiftVexflow(value: number) {
         this.wholeRestXShiftVexflow = value;
     }
+    public get MetronomeMarkXShift(): number {
+        return this.metronomeMarkXShift;
+    }
+    public set MetronomeMarkXShift(value: number) {
+        this.metronomeMarkXShift = value;
+    }
+    public get MetronomeMarkYShift(): number {
+        return this.metronomeMarkYShift;
+    }
+    public set MetronomeMarkYShift(value: number) {
+        this.metronomeMarkYShift = value;
+    }
     public get MaxInstructionsConstValue(): number {
         return this.maxInstructionsConstValue;
     }
@@ -1359,6 +1377,12 @@ export class EngravingRules {
     }
     public set DefaultColorTitle(value: string) {
         this.defaultColorTitle = value;
+    }
+    public get MaxMeasureToDrawIndex(): number {
+        return this.maxMeasureToDrawIndex;
+    }
+    public set MaxMeasureToDrawIndex(value: number) {
+        this.maxMeasureToDrawIndex = value;
     }
     public get RenderComposer(): boolean {
         return this.renderComposer;

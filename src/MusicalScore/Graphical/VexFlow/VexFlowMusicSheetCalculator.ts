@@ -45,6 +45,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
+import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -468,6 +469,29 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         log.warn("This continuous dynamic is not covered");
       }
     }
+  }
+
+  protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
+    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[0][0] as VexFlowMeasure).getVFStave();
+    //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
+    vfStave.setTempo(
+      {
+          bpm: metronomeExpression.TempoInBpm,
+          dots: metronomeExpression.dotted,
+          //duration: metronomeExpression.beatUnit
+          duration: "q"
+      },
+      EngravingRules.Rules.MetronomeMarkYShift * unitInPixels);
+       // -50, -30), 0); //needs Vexflow PR
+       //.setShiftX(-50);
+
+    (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
+      EngravingRules.Rules.MetronomeMarkXShift * unitInPixels
+    );
+    // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
+    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
+    skyline[0] = Math.min(skyline[0], -4.5 + EngravingRules.Rules.MetronomeMarkYShift);
+    // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
   }
 
   /**

@@ -157,28 +157,27 @@ export class ExpressionReader {
         let dirContentNode: IXmlElement = dirNode.element("metronome");
         if (dirContentNode !== undefined) {
             const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
-            const hasDot: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
+            const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
             const bpm: IXmlElement = dirContentNode.element("per-minute");
+            // TODO check print-object = false -> don't render invisible metronome mark
             if (beatUnit !== undefined && bpm !== undefined) {
                 const useCurrentFractionForPositioning: boolean = (dirContentNode.hasAttributes && dirContentNode.attribute("default-x") !== undefined);
                 if (useCurrentFractionForPositioning) {
                     this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
                 }
-                let text: string = beatUnit.value + " = " + bpm.value;
-                if (hasDot) {
-                    text = "dotted " + text;
-                }
                 const bpmNumber: number = parseInt(bpm.value, 10);
                 this.createNewTempoExpressionIfNeeded(currentMeasure);
                 const instantaneousTempoExpression: InstantaneousTempoExpression =
-                    new InstantaneousTempoExpression(text,
+                    new InstantaneousTempoExpression(undefined,
                                                      this.placement,
                                                      this.staffNumber,
                                                      bpmNumber,
                                                      this.currentMultiTempoExpression,
                                                      true);
+                instantaneousTempoExpression.dotted = dotted;
+                instantaneousTempoExpression.beatUnit = beatUnit.value;
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
-                this.currentMultiTempoExpression.CombinedExpressionsText = text;
+                this.currentMultiTempoExpression.CombinedExpressionsText = "test";
             }
             return;
         }

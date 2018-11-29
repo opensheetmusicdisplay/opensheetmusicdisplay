@@ -153,6 +153,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             fingeringPosition: "auto", // left is default. try right. experimental: auto, above, below.
             // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
             setWantedStemDirectionByXml: true, // try false, which was previously the default behavior
+            // drawUpToMeasureNumber: 3, // draws only up to measure 3, meaning it draws measure 1 to 3 of the piece.
 
             // coloring options
             coloringEnabled: true,

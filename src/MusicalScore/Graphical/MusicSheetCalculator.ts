@@ -671,7 +671,7 @@ export abstract class MusicSheetCalculator {
 
         // visible 2D-MeasureList
         const visibleMeasureList: GraphicalMeasure[][] = [];
-        for (let idx: number = 0, len: number = allMeasures.length; idx < len; ++idx) {
+        for (let idx: number = 0, len: number = allMeasures.length; idx < len && idx < EngravingRules.Rules.MaxMeasureToDrawIndex; ++idx) {
             const graphicalMeasures: GraphicalMeasure[] = allMeasures[idx];
             const visiblegraphicalMeasures: GraphicalMeasure[] = [];
             for (let idx2: number = 0, len2: number = graphicalMeasures.length; idx2 < len2; ++idx2) {
@@ -847,7 +847,25 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateChordSymbols(): void {
-        return;
+        for (const musicPage of this.graphicalMusicSheet.MusicPages) {
+            for (const musicSystem of musicPage.MusicSystems) {
+                for (const staffLine of musicSystem.StaffLines) {
+                    const sbc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+                    for (const measure of staffLine.Measures) {
+                        for (const staffEntry of measure.staffEntries) {
+                            if (!staffEntry.graphicalChordContainer) {
+                                continue;
+                            }
+                            const sps: BoundingBox = staffEntry.PositionAndShape;
+                            const gps: BoundingBox = staffEntry.graphicalChordContainer.PositionAndShape;
+                            const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
+                            const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
+                            sbc.updateSkyLineInRange(start, end, sps.BorderMarginTop);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -1401,29 +1419,26 @@ export abstract class MusicSheetCalculator {
                                                                        textAlignment);
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
-                    let alreadyAdded: boolean = false;
+                    //already added?
                     for (const expr of staffLine.AbstractExpressions) {
                         if (expr instanceof GraphicalInstantaneousTempoExpression &&
                             (expr.SourceExpression as AbstractTempoExpression).Label === entry.Expression.Label) {
-                            alreadyAdded = true;
+                            //already added
+                            continue;
                         }
-                    }
-
-                    if (alreadyAdded) {
-                        continue;
                     }
 
                     const graphicalTempoExpr: GraphicalInstantaneousTempoExpression = new GraphicalInstantaneousTempoExpression(entry.Expression, graphLabel);
                     if (graphicalTempoExpr.ParentStaffLine === undefined) {
                         log.warn("Adding staffline didn't work");
-                        // I am actually fooling the linter her and use the created object. This method needs refactoring,
-                        // all graphical expression creations should be in one place and ahve basic stuff like labels, lines, ...
+                        // I am actually fooling the linter here and use the created object. This method needs refactoring,
+                        // all graphical expression creations should be in one place and have basic stuff like labels, lines, ...
                         // in their constructor
                     }
                     // in case of metronome mark:
                     if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
-                        // use smaller font:
-                        graphLabel.Label.fontHeight = 1.2;
+                        this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
+                        continue;
                     }
                 } else if (entry.Expression instanceof ContinuousTempoExpression) {
                     // FIXME: Not yet implemented
@@ -1443,6 +1458,10 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+    }
+
+    protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
+        throw new Error("abstract, not implemented");
     }
 
     protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -2380,7 +2399,9 @@ export abstract class MusicSheetCalculator {
             this.calculateDashes(startStaffLine, startX, endX, y);
 
             // calculate Dashes for the second StaffLine (only if endStaffEntry isn't the first StaffEntry of the StaffLine)
-            if (!(endStaffentry === endStaffentry.parentMeasure.staffEntries[0] &&
+            if (nextStaffLine &&
+                endStaffentry.parentMeasure.ParentStaffLine &&
+                !(endStaffentry === endStaffentry.parentMeasure.staffEntries[0] &&
                 endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = nextStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
                 const secondEndX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
@@ -2568,7 +2589,8 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateDynamicExpressions(): void {
-        for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length, EngravingRules.Rules.MaxMeasureToDrawIndex);
+        for (let i: number = 0; i < maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
@@ -2648,7 +2670,8 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateTempoExpressions(): void {
-        for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
+        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length, EngravingRules.Rules.MaxMeasureToDrawIndex);
+        for (let i: number = 0; i < maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.TempoExpressions.length; j++) {
                 this.calculateTempoExpressionsForMultiTempoExpression(sourceMeasure, sourceMeasure.TempoExpressions[j], i);

@@ -734,7 +734,8 @@ export class MusicSystemBuilder {
      */
     private nextMeasureBeginsLineRepetition(): boolean {
         const nextMeasureIndex: number = this.measureListIndex + 1;
-        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length) {
+        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length
+            || !this.measureList[nextMeasureIndex]) {
             return false;
         }
         for (let idx: number = 0, len: number = this.measureList[nextMeasureIndex].length; idx < len; ++idx) {
