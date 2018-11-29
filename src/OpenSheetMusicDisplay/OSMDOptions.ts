@@ -44,6 +44,8 @@ export interface IOSMDOptions {
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
     fingeringInsideStafflines?: boolean;
+    /** Only draw measure 1 to n, where n is the number you specify. */
+    drawUpToMeasureNumber?: number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */

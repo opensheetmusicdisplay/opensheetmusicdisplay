@@ -228,7 +228,7 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the SkyLine for a given range with a given value
-     * @param  to update the SkyLine for
+     * //param  to update the SkyLine for
      * @param start Start index of the range
      * @param end End index of the range
      * @param value ??
