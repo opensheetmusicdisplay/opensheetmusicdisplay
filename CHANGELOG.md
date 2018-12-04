@@ -1,3 +1,14 @@
+<a name="0.6.6"></a>
+## [0.6.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.5...0.6.6) (2018-12-04)
+
+### Package
+* **devDependencies**: Remove browserify and tsify dependencies. Fixes unnecessary npm audit warnings.
+
+### Bug Fixes
+
+* **color:** use color instead of colorXml for coloring notehead, stem. ([590e281](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/590e281)),
+**export missing TS classes** - closes [#462](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/462)
+
 <a name="0.6.5"></a>
 ## [0.6.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.4...0.6.5) (2018-11-29)
 
