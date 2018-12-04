@@ -111,7 +111,7 @@ export class VexFlowConverter {
         const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
         // The octave seems to need a shift of three FIXME?
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
-        const notehead: Notehead = note.sourceNote.NoteHead;
+        const notehead: Notehead = note.sourceNote.Notehead;
         let noteheadCode: string = "";
         if (notehead !== undefined) {
             noteheadCode = this.NoteHeadCode(notehead);
@@ -200,8 +200,8 @@ export class VexFlowConverter {
                 break;
             }
 
-            if (note.sourceNote.NoteHead) {
-                if (note.sourceNote.NoteHead.Shape === NoteHeadShape.SLASH) {
+            if (note.sourceNote.Notehead) {
+                if (note.sourceNote.Notehead.Shape === NoteHeadShape.SLASH) {
                     slashNoteHead = true;
                     // if we have slash heads and other heads in the voice entry, this will create the same head for all.
                     // same problem with numDots. The slash case should be extremely rare though.
@@ -248,7 +248,7 @@ export class VexFlowConverter {
 
         if (EngravingRules.Rules.ColoringEnabled) {
             const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
-            let stemColor: string = gve.parentVoiceEntry.StemColorXml;
+            let stemColor: string = gve.parentVoiceEntry.StemColor;
             if (!stemColor && defaultColorStem) {
                 stemColor = defaultColorStem;
             }
