@@ -419,15 +419,18 @@ export class VoiceGenerator {
     note.PrintObject = printObject;
     note.IsCueNote = isCueNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
-    note.NoteheadColorXml = noteheadColorXml;
-    note.PlaybackInstrumentId = playbackInstrumentId;
     if (noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") {
-      note.NoteHead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
+      note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
+    note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
+    note.NoteheadColor = noteheadColorXml; // color currently used
+    note.PlaybackInstrumentId = playbackInstrumentId;
     this.currentVoiceEntry.Notes.push(note);
     this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
     if (stemColorXml) {
       this.currentVoiceEntry.StemColorXml = stemColorXml;
+      this.currentVoiceEntry.StemColor = stemColorXml;
+      note.StemColorXml = stemColorXml;
     }
     if (node.elements("beam") && !chord) {
       this.createBeam(node, note);
@@ -447,6 +450,7 @@ export class VoiceGenerator {
     restNote.PrintObject = printObject;
     restNote.IsCueNote = isCueNote;
     restNote.NoteheadColorXml = noteheadColorXml;
+    restNote.NoteheadColor = noteheadColorXml;
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeam !== undefined) {
       this.openBeam.ExtendedNoteList.push(restNote);

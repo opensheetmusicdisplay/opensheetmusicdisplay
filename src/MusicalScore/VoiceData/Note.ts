@@ -54,11 +54,22 @@ export class Note {
     private isCueNote: boolean;
     /** The stem direction asked for in XML. Not necessarily final or wanted stem direction. */
     private stemDirectionXml: StemDirectionType;
-    /** Color of the stem given in the XML Stem tag. RGB Hexadecimal, like #00FF00. */
+    /** Color of the stem given in the XML Stem tag. RGB Hexadecimal, like #00FF00.
+     * This is not used for rendering, which takes VoiceEntry.StemColor.
+     * It is merely given in the note's stem element in XML and stored here for reference.
+     * So, to read or change the stem color of a note, modify note.ParentVoiceEntry.StemColor.
+     */
     private stemColorXml: string;
-    /** Color of the notehead given in the XML Notehead tag. RGB Hexadecimal, like #00FF00. */
+    /** Color of the notehead given in the XML Notehead tag. RGB Hexadecimal, like #00FF00.
+     * This should not be changed, instead noteheadColor is used and modifiable for Rendering.
+     * Needs to be stored here and not in Note.Notehead,
+     * because Note.Notehead is undefined for normal Noteheads to save space and time.
+     */
     private noteheadColorXml: string;
-    /** Color of the notehead currently set. RGB Hexadecimal, like #00FF00. */
+    /** Color of the notehead currently set. RGB Hexadecimal, like #00FF00.
+     * Needs to be stored here and not in Note.Notehead,
+     * because Note.Notehead is undefined for normal Noteheads to save space and time.
+     */
     private noteheadColor: string;
 
     public get ParentVoiceEntry(): VoiceEntry {
@@ -88,6 +99,12 @@ export class Note {
     public set NoteBeam(value: Beam) {
         this.beam = value;
     }
+    public set Notehead(value: Notehead) {
+        this.notehead = value;
+    }
+    public get Notehead(): Notehead {
+        return this.notehead;
+    }
     public get NoteTuplet(): Tuplet {
         return this.tuplet;
     }
@@ -111,12 +128,6 @@ export class Note {
     }
     public set PlaybackInstrumentId(value: string) {
         this.playbackInstrumentId = value;
-    }
-    public set NoteHead(value: Notehead) {
-        this.notehead = value;
-    }
-    public get NoteHead(): Notehead {
-        return this.notehead;
     }
     public get PrintObject(): boolean {
         return this.printObject;

@@ -22,6 +22,7 @@ export class Notehead {
     private filled: boolean;
     /** the [[Note]] this NoteHead belongs to. */
     private sourceNote: Note;
+    // note that color is stored in the sourceNote, because note.Notehead is undefined for normal noteheads.
 
     /** Sets the note head's shape from XML parameters.
      * @param shapeTypeXml The XML shape.

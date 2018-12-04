@@ -48,7 +48,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: GraphicalNote = this.notes[i];
 
-            let noteheadColor: string = note.sourceNote.NoteheadColorXml;
+            let noteheadColor: string = note.sourceNote.NoteheadColor;
 
             // DEBUG runtime coloring test
             /*const testColor: string = "#FF0000";
@@ -83,7 +83,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         }
 
         // color stems
-        let stemColor: string = this.parentVoiceEntry.StemColorXml;
+        let stemColor: string = this.parentVoiceEntry.StemColor;
         if (!stemColor && defaultColorStem) {
             stemColor = defaultColorStem;
         }
