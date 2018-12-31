@@ -9,3 +9,4 @@ export * from "./SubInstrument";
 export * from "./VoiceData";
 export * from "./MusicSource";
 export * from "./ScoreIO";
+export * from "./Graphical";
