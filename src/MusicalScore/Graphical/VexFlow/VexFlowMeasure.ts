@@ -561,6 +561,18 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     vfbeams = this.vfbeams[voiceID] = [];
                 }
                 for (const beam of this.beams[voiceID]) {
+                    let beamHasQuarterNoteOrLonger: boolean = false;
+                    for (const note of beam[0].Notes) {
+                        if (note.Length.RealValue >= new Fraction(1, 4).RealValue) {
+                            beamHasQuarterNoteOrLonger = true;
+                            break;
+                        }
+                    }
+                    if (beamHasQuarterNoteOrLonger) {
+                        log.debug("Beam between note >= quarter, likely tremolo, currently unsupported. continuing.");
+                        continue;
+                    }
+
                     const notes: Vex.Flow.StaveNote[] = [];
                     const psBeam: Beam = beam[0];
                     const voiceEntries: VexFlowVoiceEntry[] = beam[1];
