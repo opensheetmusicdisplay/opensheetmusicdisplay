@@ -24,7 +24,7 @@ import {AbstractExpression} from "../MusicalScore/VoiceData/Expressions/Abstract
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.6.6-dev"; // getter: this.Version
+    private version: string = "0.6.7-release"; // getter: this.Version
 
     /**
      * Creates and attaches an OpenSheetMusicDisplay object to an HTML element container.<br>

@@ -1,3 +1,15 @@
+## [0.6.7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.6...0.6.7) (2019-01-16)
+
+
+### Bug Fixes
+
+* **beams:** ignore beams between notes => quarter (tremolo) causing error ([2eb2a92](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2eb2a92)), closes [#472](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/472)
+
+### Various
+* added osmd.Version getter to check OSMD version
+* exported more classes for TS import (/Graphical/*) (#454)
+* Packages updated (webpack-dev-server, etc.)
+
 <a name="0.6.6"></a>
 ## [0.6.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.5...0.6.6) (2018-12-04)
 
