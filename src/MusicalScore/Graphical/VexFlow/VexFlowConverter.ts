@@ -176,6 +176,7 @@ export class VexFlowConverter {
         let alignCenter: boolean = false;
         let xShift: number = 0;
         let slashNoteHead: boolean = false;
+        let isRest: boolean = false;
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
@@ -183,6 +184,7 @@ export class VexFlowConverter {
 
             // if it is a rest:
             if (note.sourceNote.isRest()) {
+                isRest = true;
                 keys = ["b/4"];
                 // if it is a full measure rest:
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
@@ -196,7 +198,6 @@ export class VexFlowConverter {
                     xShift = EngravingRules.Rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
                     // affects VexFlowStaffEntry.calculateXPosition()
                 }
-                duration += "r";
                 break;
             }
 
@@ -222,6 +223,10 @@ export class VexFlowConverter {
         }
         if (slashNoteHead) {
             duration += "s"; // we have to specify a slash note head like this in Vexflow
+        }
+        if (isRest) {
+            // "r" has to be put after the "d"s for rest notes.
+            duration += "r";
         }
 
         let vfnote: Vex.Flow.StaveNote;
