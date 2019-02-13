@@ -734,7 +734,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                                                           {
                                                             bracketed: bracketed,
                                                             notes_occupied: notesOccupied,
-                                                            num_notes: tupletStaveNotes.length, //, location: -1, ratioed: true
+                                                            num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
                                                             ratioed: EngravingRules.Rules.TupletsRatioed,
                                                           }));
                     } else {
