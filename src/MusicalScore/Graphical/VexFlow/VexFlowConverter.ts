@@ -23,6 +23,7 @@ import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContain
 import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
+import { Note } from "../..";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -171,6 +172,9 @@ export class VexFlowConverter {
         const frac: Fraction = baseNote.graphicalNoteLength;
         const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
+        if (baseNote.sourceNote.TypeLength !== undefined && baseNote.sourceNote.TypeLength !== frac) {
+            duration = VexFlowConverter.duration(baseNote.sourceNote.TypeLength, isTuplet);
+        }
         let vfClefType: string = undefined;
         let numDots: number = baseNote.numberOfDots;
         let alignCenter: boolean = false;
@@ -240,7 +244,8 @@ export class VexFlowConverter {
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
 
-        if (gve.notes[0].sourceNote.IsCueNote) {
+        const firstNote: Note = gve.notes[0].sourceNote;
+        if (firstNote.IsCueNote) {
             (<any>vfnoteStruct).glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
             (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
         }
@@ -249,6 +254,16 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
         } else {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
+        }
+
+        console.log("length: " + firstNote.Length.RealValue);
+        if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
+            /*for (const noteHead in vfnote.note_heads) {
+                (<any>noteHead).glyph_code = 'v81';
+            }*/
+            console.log("here");
+            (<any>vfnote).glyph.code = "v81";
+            //(<any>vfnote).glyph.reset(); // TODO not a function
         }
 
         if (EngravingRules.Rules.ColoringEnabled) {

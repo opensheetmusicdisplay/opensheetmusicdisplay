@@ -563,7 +563,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 for (const beam of this.beams[voiceID]) {
                     let beamHasQuarterNoteOrLonger: boolean = false;
                     for (const note of beam[0].Notes) {
-                        if (note.Length.RealValue >= new Fraction(1, 4).RealValue) {
+                        if (note.Length.RealValue >= new Fraction(1, 4).RealValue
+                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eigth)
+                            && (note.TypeLength === undefined || note.TypeLength.RealValue > 0.125)) {
                             beamHasQuarterNoteOrLonger = true;
                             break;
                         }

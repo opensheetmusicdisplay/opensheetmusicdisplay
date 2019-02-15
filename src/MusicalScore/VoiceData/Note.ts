@@ -36,6 +36,8 @@ export class Note {
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;
+    /** The length/duration given in the <type> tag. different from length for tuplets/tremolos. */
+    private typeLength: Fraction;
     /**
      * The untransposed (!!!) source data.
      */
@@ -89,6 +91,12 @@ export class Note {
     }
     public set Length(value: Fraction) {
         this.length = value;
+    }
+    public get TypeLength(): Fraction {
+        return this.typeLength;
+    }
+    public set TypeLength(value: Fraction) {
+        this.typeLength = value;
     }
     public get Pitch(): Pitch {
         return this.pitch;

@@ -103,7 +103,7 @@ export class VoiceGenerator {
    * @param printObject whether the note should be rendered (true) or invisible (false)
    * @returns {Note}
    */
-  public read(noteNode: IXmlElement, noteDuration: Fraction, restNote: boolean,
+  public read(noteNode: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
               printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType,
@@ -114,7 +114,7 @@ export class VoiceGenerator {
     try {
       this.currentNote = restNote
         ? this.addRestNote(noteDuration, printObject, isCueNote, noteheadColorXml)
-        : this.addSingleNote(noteNode, noteDuration, chord, guitarPro,
+        : this.addSingleNote(noteNode, noteDuration, typeDuration, chord, guitarPro,
                              printObject, isCueNote, stemDirectionXml, stemColorXml, noteheadColorXml);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
@@ -322,7 +322,7 @@ export class VoiceGenerator {
    * @param guitarPro
    * @returns {Note}
    */
-  private addSingleNote(node: IXmlElement, noteDuration: Fraction, chord: boolean, guitarPro: boolean,
+  private addSingleNote(node: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, chord: boolean, guitarPro: boolean,
                         printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType,
                         stemColorXml: string, noteheadColorXml: string): Note {
     //log.debug("addSingleNote called");
@@ -416,10 +416,11 @@ export class VoiceGenerator {
     const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
+    note.TypeLength = typeDuration;
     note.PrintObject = printObject;
     note.IsCueNote = isCueNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
-    if (noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") {
+    if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
     note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
