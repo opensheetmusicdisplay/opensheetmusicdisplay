@@ -49,10 +49,8 @@
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
     "es6-promise": "^4.2.5",
-    "increase-memory-limit": "^1.0.6",
     "jszip": "^3.0.0",
     "loglevel": "^1.5.0",
-    "shortid": "^2.2.14",
     "typescript-collections": "^1.1.2",
     "vexflow": "^1.2.87"
   },
@@ -72,6 +70,7 @@
     "eslint-plugin-standard": "^4.0.0",
     "html-webpack-plugin": "^3.2.0",
     "http-server": "^0.11.0",
+    "increase-memory-limit": "^1.0.6",
     "jquery": "^3.2.1",
     "karma": "^4.0.0",
     "karma-base64-to-js-preprocessor": "^0.0.1",
