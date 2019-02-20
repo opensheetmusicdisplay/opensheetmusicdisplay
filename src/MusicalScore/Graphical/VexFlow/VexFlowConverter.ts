@@ -256,14 +256,12 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        console.log("length: " + firstNote.Length.RealValue);
+        // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration):
         if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
-            /*for (const noteHead in vfnote.note_heads) {
-                (<any>noteHead).glyph_code = 'v81';
-            }*/
-            console.log("here");
-            (<any>vfnote).glyph.code = "v81";
-            //(<any>vfnote).glyph.reset(); // TODO not a function
+            const keyProps: Object[] = vfnote.getKeyProps();
+            for (let i: number = 0; i < keyProps.length; i++) {
+                (<any>keyProps[i]).code = "v81";
+            }
         }
 
         if (EngravingRules.Rules.ColoringEnabled) {

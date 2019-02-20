@@ -71,6 +71,11 @@ declare namespace Vex {
             public addStroke(index: number, stroke: Stroke): void;
         }
 
+        class NoteHead extends Note {
+            constructor(head_options: Object);
+            static CATEGORY(): string;
+        }
+
         export class TextBracket {
             constructor(note_struct: any);
             
@@ -128,6 +133,8 @@ declare namespace Vex {
             public setStyle(style: any): void;
             public setStemStyle(style: any): void;
             public setFlagStyle(style: any): void;
+
+            public getKeyProps(): Object[];
 
             // temp solution until noteheadStyles PR is through
             public note_heads: any; // NoteHead[]; 
