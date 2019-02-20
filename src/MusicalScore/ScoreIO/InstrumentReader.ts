@@ -164,6 +164,7 @@ export class InstrumentReader {
           }
           let noteDivisions: number = 0;
           let noteDuration: Fraction = new Fraction(0, 1);
+          let normalNotes: number = 2;
           let typeDuration: Fraction = undefined;
           let isTuplet: boolean = false;
           if (xmlNode.element("duration") !== undefined) {
@@ -177,6 +178,12 @@ export class InstrumentReader {
               }
               if (xmlNode.element("time-modification") !== undefined) {
                 noteDuration = this.getNoteDurationForTuplet(xmlNode);
+                const time: IXmlElement = xmlNode.element("time-modification");
+                if (time !== undefined) {
+                  if (time.element("normal-notes") !== undefined) {
+                    normalNotes = parseInt(time.element("normal-notes").value, 10);
+                  }
+                }
                 isTuplet = true;
               }
             } else {
@@ -332,7 +339,7 @@ export class InstrumentReader {
             noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
           this.currentVoiceGenerator.read(
-            xmlNode, noteDuration, typeDuration, restNote,
+            xmlNode, noteDuration, typeDuration, normalNotes, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,

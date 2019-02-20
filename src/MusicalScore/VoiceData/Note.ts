@@ -38,6 +38,8 @@ export class Note {
     private length: Fraction;
     /** The length/duration given in the <type> tag. different from length for tuplets/tremolos. */
     private typeLength: Fraction;
+    /** The amount of notes the tuplet of this note (if there is one) replaces. */
+    private normalNotes: number;
     /**
      * The untransposed (!!!) source data.
      */
@@ -97,6 +99,12 @@ export class Note {
     }
     public set TypeLength(value: Fraction) {
         this.typeLength = value;
+    }
+    public get NormalNotes(): number {
+        return this.normalNotes;
+    }
+    public set NormalNotes(value: number) {
+        this.normalNotes = value;
     }
     public get Pitch(): Pitch {
         return this.pitch;

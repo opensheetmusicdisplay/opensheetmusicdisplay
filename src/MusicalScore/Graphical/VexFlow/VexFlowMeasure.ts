@@ -727,8 +727,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       tupletStaveNotes.push(((tupletVoiceEntry).vfStaveNote as StaveNote));
                     }
                     if (tupletStaveNotes.length > 1) {
-                      const notesOccupied: number = 2;
                       const tuplet: Tuplet = tupletBuilder[0];
+                      const notesOccupied: number = tuplet.Notes[0][0].NormalNotes;
                       const bracketed: boolean = tuplet.Bracket ||
                         (tuplet.TupletLabelNumber === 3 && EngravingRules.Rules.TripletsBracketed) ||
                         (tuplet.TupletLabelNumber !== 3 && EngravingRules.Rules.TupletsBracketed);
