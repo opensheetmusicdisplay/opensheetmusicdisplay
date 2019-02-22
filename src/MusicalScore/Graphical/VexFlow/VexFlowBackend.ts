@@ -28,7 +28,7 @@ export abstract class VexFlowBackend {
     return this.renderer;
   }
 
-  public abstract getContext(): Vex.Flow.RenderContext;
+  public abstract getContext(): Vex.IRenderContext;
 
   // public abstract setWidth(width: number): void;
   // public abstract setHeight(height: number): void;

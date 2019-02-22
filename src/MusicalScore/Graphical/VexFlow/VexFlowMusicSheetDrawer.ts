@@ -271,9 +271,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawOctaveShifts(staffLine: StaffLine): void {
         for (const graphicalOctaveShift of staffLine.OctaveShifts) {
             if (graphicalOctaveShift) {
-                const ctx: Vex.Flow.RenderContext = this.backend.getContext();
+                const ctx: Vex.IRenderContext = this.backend.getContext();
                 const textBracket: Vex.Flow.TextBracket = (graphicalOctaveShift as VexFlowOctaveShift).getTextBracket();
                 textBracket.setContext(ctx);
+                const headroom: number = staffLine.SkyBottomLineCalculator
+                                                  .getSkyLineMinInRange(textBracket.start.getX() / 10, textBracket.stop.getX() / 10);
+                textBracket.start.getStave().options.space_above_staff_ln = Math.floor(headroom) - 2;
                 textBracket.draw();
             }
         }

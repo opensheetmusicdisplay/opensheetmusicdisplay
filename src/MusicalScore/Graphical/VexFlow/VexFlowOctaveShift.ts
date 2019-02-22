@@ -16,7 +16,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     /** Defines the note where the octave shift ends */
     private endNote: Vex.Flow.StemmableNote;
     /** Top or bottom of the staffline */
-    private position: string;
+    private position: Vex.Flow.TextBracket.Positions;
     /** Supscript is a smaller text after the regular text (e.g. va after 8) */
     private supscript: string;
     /** Main text element */
@@ -31,22 +31,22 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         super(octaveShift, parent);
         switch (octaveShift.Type) {
             case OctaveEnum.VA8:
-                this.position = "top";
+                this.position = Vex.Flow.TextBracket.Positions.TOP;
                 this.supscript = "va";
                 this.text = "8";
                 break;
-                case OctaveEnum.MA15:
-                this.position = "top";
+            case OctaveEnum.MA15:
+                this.position = Vex.Flow.TextBracket.Positions.TOP;
                 this.supscript = "ma";
                 this.text = "15";
                 break;
-                case OctaveEnum.VB8:
-                this.position = "bottom";
+            case OctaveEnum.VB8:
+                this.position = Vex.Flow.TextBracket.Positions.BOTTOM;
                 this.supscript = "vb";
                 this.text = "8";
                 break;
-                case OctaveEnum.MB15:
-                this.position = "bottom";
+            case OctaveEnum.MB15:
+                this.position = Vex.Flow.TextBracket.Positions.BOTTOM;
                 this.supscript = "mb";
                 this.text = "15";
                 break;

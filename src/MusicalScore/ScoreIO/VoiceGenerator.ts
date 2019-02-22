@@ -26,7 +26,7 @@ import { CollectionUtil } from "../../Util/CollectionUtil";
 import { ArticulationReader } from "./MusicSymbolModules/ArticulationReader";
 import { SlurReader } from "./MusicSymbolModules/SlurReader";
 import { Notehead } from "../VoiceData/Notehead";
-import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
+import { Arpeggio } from "../VoiceData/Arpeggio";
 
 export class VoiceGenerator {
   constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
@@ -149,18 +149,18 @@ export class VoiceGenerator {
           if (this.currentVoiceEntry.Arpeggio !== undefined) { // add note to existing Arpeggio
             currentArpeggio = this.currentVoiceEntry.Arpeggio;
           } else { // create new Arpeggio
-            let arpeggioType: ArpeggioType;
+            let arpeggioType: Vex.Flow.Stroke.Type;
             const directionAttr: Attr = arpeggioNode.attribute("direction");
             if (directionAttr !== null) {
               switch (directionAttr.value) {
                 case "up":
-                  arpeggioType = ArpeggioType.ROLL_UP;
+                  arpeggioType = Vex.Flow.Stroke.Type.ROLL_UP;
                   break;
                 case "down":
-                  arpeggioType = ArpeggioType.ROLL_DOWN;
+                  arpeggioType = Vex.Flow.Stroke.Type.ROLL_DOWN;
                   break;
                 default:
-                  arpeggioType = ArpeggioType.ARPEGGIO_DIRECTIONLESS;
+                  arpeggioType = Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
               }
             }
 
