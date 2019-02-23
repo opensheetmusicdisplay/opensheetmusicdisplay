@@ -59,6 +59,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         opensheetmusicdisplay.load(xml).then(
             (_: {}) => {
                 opensheetmusicdisplay.render();
+                done();
             },
             done
         );
