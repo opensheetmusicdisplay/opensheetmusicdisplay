@@ -177,6 +177,12 @@ export class OpenSheetMusicDisplay {
         }
     }
 
+    public export(): void {
+        if (this.backend instanceof SvgVexFlowBackend) {
+            (this.backend as SvgVexFlowBackend).export();
+        }
+    }
+
     /** States whether the render() function can be safely called. */
     public IsReadyToRender(): boolean {
         return this.graphic !== undefined;

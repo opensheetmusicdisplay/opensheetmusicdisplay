@@ -115,4 +115,39 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.closePath();
         this.ctx.fill();
     }
+
+    public export(): void {
+        // See: https://stackoverflow.com/questions/38477972/javascript-save-svg-element-to-file-on-disk
+
+        // first create a clone of our svg node so we don't mess the original one
+        const clone: SVGElement = (this.ctx.svg.cloneNode(true) as SVGElement);
+
+        // create a doctype that is SVG
+        const svgDocType: DocumentType = document.implementation.createDocumentType(
+            "svg",
+            "-//W3C//DTD SVG 1.1//EN",
+            "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"
+        );
+        // Create a new svg document
+        const svgDoc: Document = document.implementation.createDocument("http://www.w3.org/2000/svg", "svg", svgDocType);
+        // replace the documentElement with our clone
+        svgDoc.replaceChild(clone, svgDoc.documentElement);
+
+        // get the data
+        const svgData: string = (new XMLSerializer()).serializeToString(svgDoc);
+
+        // now you've got your svg data, the following will depend on how you want to download it
+        // e.g yo could make a Blob of it for FileSaver.js
+        /*
+        var blob = new Blob([svgData.replace(/></g, '>\n\r<')]);
+        saveAs(blob, 'myAwesomeSVG.svg');
+        */
+        // here I'll just make a simple a with download attribute
+
+        const a: HTMLAnchorElement = document.createElement("a");
+        a.href = "data:image/svg+xml; charset=utf8, " + encodeURIComponent(svgData.replace(/></g, ">\n\r<"));
+        a.download = "opensheetmusicdisplay_download.svg";
+        a.innerHTML = window.location.href + "/download";
+        document.body.appendChild(a);
+      }
 }
