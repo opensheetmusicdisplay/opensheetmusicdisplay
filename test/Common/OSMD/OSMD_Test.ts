@@ -1,6 +1,6 @@
 import chai = require("chai");
-import {OpenSheetMusicDisplay} from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
-import {TestUtils} from "../../Util/TestUtils";
+import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
+import { TestUtils } from "../../Util/TestUtils";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -59,7 +59,6 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         opensheetmusicdisplay.load(xml).then(
             (_: {}) => {
                 opensheetmusicdisplay.render();
-                done();
             },
             done
         );
@@ -75,6 +74,20 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                 done();
             },
             done
+        );
+    });
+
+    it("Timeout from server", (done: MochaDone) => {
+        const score: string = "https://httpstat.us/408";
+        const div: HTMLElement = TestUtils.getDivElement(document);
+        const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+        opensheetmusicdisplay.load(score).then(
+            (_: {}) => {
+                done(new Error("Unexpected response from server"));
+            },
+            (exc: Error) => {
+                done();
+            }
         );
     });
 
@@ -201,9 +214,9 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             const score: Document =
                 TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
             return osmd.load(score)
-            .then(() => {
-                osmd.render();
-            });
+                .then(() => {
+                    osmd.render();
+                });
         });
 
         it("should move cursor after instrument is hidden", () => {
