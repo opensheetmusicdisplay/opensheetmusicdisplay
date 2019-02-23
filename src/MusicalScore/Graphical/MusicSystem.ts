@@ -19,6 +19,7 @@ import {GraphicalMarkedArea} from "./GraphicalMarkedArea";
 import {SystemLine} from "./SystemLine";
 import {SystemLinePosition} from "./SystemLinePosition";
 import {Staff} from "../VoiceData/Staff";
+import { Label } from "../Label";
 
 /**
  * A MusicSystem contains the [[StaffLine]]s for all instruments, until a line break
@@ -274,12 +275,18 @@ export abstract class MusicSystem extends GraphicalObject {
      * @param labelMarginBorderFactor
      */
     public createMusicSystemLabel(instrumentLabelTextHeight: number, systemLabelsRightMargin: number, labelMarginBorderFactor: number): void {
-        if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
+        if (this.parent === this.parent.Parent.MusicPages[0]) {
             const instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.getVisibleInstruments();
             for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
                 const instrument: Instrument = instruments[idx];
+                let instrNameLabel: Label;
+                if (this !== this.parent.MusicSystems[0]) {
+                    instrNameLabel = new Label(instrument.NameLabel.text[0] + ".", instrument.NameLabel.textAlignment, instrument.NameLabel.font);
+                } else {
+                    instrNameLabel = instrument.NameLabel;
+                }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
-                    instrument.NameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.boundingBox
+                    instrNameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.boundingBox
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 this.labels.setValue(graphicalLabel, instrument);
@@ -305,7 +312,7 @@ export abstract class MusicSystem extends GraphicalObject {
      * Set the Y-Positions for the MusicSystem's Labels.
      */
     public setMusicSystemLabelsYPosition(): void {
-        if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
+        if (this.parent === this.parent.Parent.MusicPages[0]) {
             this.labels.forEach((key: GraphicalLabel, value: Instrument): void => {
                 let ypositionSum: number = 0;
                 let staffCounter: number = 0;
