@@ -65,13 +65,7 @@ export class MusicSystemBuilder {
         // the first System - create also its Labels
         this.currentSystemParams.currentSystem = this.initMusicSystem();
         this.layoutSystemStaves();
-        if (EngravingRules.Rules.RenderInstrumentNames) {
-            this.currentSystemParams.currentSystem.createMusicSystemLabel(
-                this.rules.InstrumentLabelTextHeight,
-                this.rules.SystemLabelsRightMargin,
-                this.rules.LabelMarginBorderFactor
-            );
-        }
+        this.addSystemLabels();
         this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.RelativePosition.y;
 
         let numberOfMeasures: number = 0;
@@ -191,6 +185,7 @@ export class MusicSystemBuilder {
         if (this.measureListIndex < this.measureList.length) {
             this.currentSystemParams.currentSystem = this.initMusicSystem();
             this.layoutSystemStaves();
+            this.addSystemLabels();
         }
     }
 
@@ -232,6 +227,16 @@ export class MusicSystemBuilder {
         this.currentSystemParams.currentSystemFixWidth += currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth;
         this.currentSystemParams.currentSystemVarWidth += currentVarWidth;
         this.currentSystemParams.systemMeasureIndex++;
+    }
+
+    private addSystemLabels(): void {
+        if (EngravingRules.Rules.RenderPartNames) {
+            this.currentSystemParams.currentSystem.createMusicSystemLabel(
+                this.rules.InstrumentLabelTextHeight,
+                this.rules.SystemLabelsRightMargin,
+                this.rules.LabelMarginBorderFactor
+            );
+        }
     }
 
     /**

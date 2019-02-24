@@ -193,7 +193,9 @@ export class OpenSheetMusicDisplay {
      *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
      */
     public setOptions(options: IOSMDOptions): void {
-        this.drawingParameters = new DrawingParameters();
+        if (!this.drawingParameters) {
+            this.drawingParameters = new DrawingParameters();
+        }
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum =
                 (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
@@ -268,7 +270,10 @@ export class OpenSheetMusicDisplay {
             this.drawingParameters.drawCredits = options.drawCredits;
         }
         if (options.drawPartNames !== undefined) {
-            this.drawingParameters.DrawPartNames = options.drawPartNames;
+            this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
+        }
+        if (options.drawPartAbbreviations !== undefined) {
+            EngravingRules.Rules.RenderPartAbbreviations = options.drawPartAbbreviations;
         }
         if (options.drawFingerings === false) {
             EngravingRules.Rules.RenderFingerings = false;

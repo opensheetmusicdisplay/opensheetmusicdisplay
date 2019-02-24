@@ -36,7 +36,9 @@ export interface IOSMDOptions {
     drawLyricist?: boolean;
     /** Whether to draw part (instrument) names. */
     drawPartNames?: boolean;
-    /** Whether to draw fingerings (only left to the note for now). Default true. */
+    /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
+    drawPartAbbreviations?: boolean;
+    /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
     /** Where to draw fingerings (left, right, above, below, auto).
      * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)

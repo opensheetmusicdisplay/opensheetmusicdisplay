@@ -190,7 +190,8 @@ export class EngravingRules {
     private renderTitle: boolean;
     private renderSubtitle: boolean;
     private renderLyricist: boolean;
-    private renderInstrumentNames: boolean;
+    private renderPartNames: boolean;
+    private renderPartAbbreviations: boolean;
     private renderFingerings: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
@@ -403,7 +404,8 @@ export class EngravingRules {
         this.renderTitle = true;
         this.renderSubtitle = true;
         this.renderLyricist = true;
-        this.renderInstrumentNames = true;
+        this.renderPartNames = true;
+        this.renderPartAbbreviations = true;
         this.renderFingerings = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
@@ -1408,11 +1410,17 @@ export class EngravingRules {
     public set RenderLyricist(value: boolean) {
         this.renderLyricist = value;
     }
-    public get RenderInstrumentNames(): boolean {
-        return this.renderInstrumentNames;
+    public get RenderPartNames(): boolean {
+        return this.renderPartNames;
     }
-    public set RenderInstrumentNames(value: boolean) {
-        this.renderInstrumentNames = value;
+    public set RenderPartNames(value: boolean) {
+        this.renderPartNames = value;
+    }
+    public get RenderPartAbbreviations(): boolean {
+        return this.renderPartAbbreviations;
+    }
+    public set RenderPartAbbreviations(value: boolean) {
+        this.renderPartAbbreviations = value;
     }
     public get RenderFingerings(): boolean {
         return this.renderFingerings;

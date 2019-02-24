@@ -175,7 +175,7 @@ export class DrawingParameters {
 
     public set DrawPartNames(value: boolean) {
         this.drawPartNames = value;
-        EngravingRules.Rules.RenderInstrumentNames = value;
+        EngravingRules.Rules.RenderPartNames = value;
     }
 
     public get FingeringPosition(): PlacementEnum {
