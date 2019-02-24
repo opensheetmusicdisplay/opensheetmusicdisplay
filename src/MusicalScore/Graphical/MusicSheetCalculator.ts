@@ -1591,7 +1591,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected maxInstrNameLabelLength(): number {
-        if (!EngravingRules.Rules.RenderInstrumentNames) {
+        if (!EngravingRules.Rules.RenderPartNames) {
             return 0;
         }
         let maxLabelLength: number = 0.0;

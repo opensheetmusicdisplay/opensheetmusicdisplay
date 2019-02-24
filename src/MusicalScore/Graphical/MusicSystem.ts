@@ -281,6 +281,9 @@ export abstract class MusicSystem extends GraphicalObject {
                 const instrument: Instrument = instruments[idx];
                 let instrNameLabel: Label;
                 if (this !== this.parent.MusicSystems[0]) {
+                    if (!EngravingRules.Rules.RenderPartAbbreviations || this.Parent.Parent.ParentMusicSheet.Instruments.length === 1) {
+                        return; // don't render part abbreviations if there's only one instrument/part (could be an option in the future)
+                    }
                     instrNameLabel = new Label(instrument.NameLabel.text[0] + ".", instrument.NameLabel.textAlignment, instrument.NameLabel.font);
                 } else {
                     instrNameLabel = instrument.NameLabel;

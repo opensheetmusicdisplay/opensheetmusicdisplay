@@ -268,7 +268,10 @@ export class OpenSheetMusicDisplay {
             this.drawingParameters.drawCredits = options.drawCredits;
         }
         if (options.drawPartNames !== undefined) {
-            this.drawingParameters.DrawPartNames = options.drawPartNames;
+            this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
+        }
+        if (options.drawPartAbbreviations !== undefined) {
+            EngravingRules.Rules.RenderPartAbbreviations = options.drawPartAbbreviations;
         }
         if (options.drawFingerings === false) {
             EngravingRules.Rules.RenderFingerings = false;
