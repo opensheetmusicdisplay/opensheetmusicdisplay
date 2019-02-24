@@ -110,7 +110,7 @@ export enum NoteState {
 
 export enum BoomwhackerColors {
     BoomwhackerC = "#E41345",
-    BoomwhackerD = "#777777",
+    BoomwhackerD = "#F89D15",
     BoomwhackerE = "#FFF224",
     BoomwhackerF = "#D5E15A",
     BoomwhackerG = "#009D96",
