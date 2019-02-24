@@ -240,6 +240,10 @@ export class OpenSheetMusicDisplay {
                 }
             }
         }
+
+        if (options.coloringMode !== undefined) {
+            EngravingRules.Rules.ColoringMode = options.coloringMode;
+        }
         if (options.coloringEnabled !== undefined) {
             EngravingRules.Rules.ColoringEnabled = options.coloringEnabled;
         }

@@ -31,6 +31,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
         "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
         "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+        "Alle meine Entchen (Auto coloring)": "Alle-meine-Entchen-XML.xml",
         "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
         "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
         "Anonymous - Saltarello": "Saltarello.mxl",
@@ -230,6 +231,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             str = sampleFolder + selectSample.value;
         }
         zoom = 1.0;
+        // Enable Boomwhacker coloring for this song
+        if (str.includes("Alle-meine-Entchen-XML.xml")) {
+            openSheetMusicDisplay.setOptions({coloringMode: 1});
+        } else {
+            openSheetMusicDisplay.setOptions({coloringMode: 0});
+        }
         openSheetMusicDisplay.load(str).then(
             function() {
                 // This gives you access to the osmd object in the console. Do not use in productive code

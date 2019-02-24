@@ -106,3 +106,14 @@ export enum NoteState {
     Debug2,
     Debug3
 }
+
+
+export enum BoomwhackerColors {
+    BoomwhackerC = "#E41345",
+    BoomwhackerD = "#777777",
+    BoomwhackerE = "#FFF224",
+    BoomwhackerF = "#D5E15A",
+    BoomwhackerG = "#009D96",
+    BoomwhackerA = "#5D4EA2",
+    BoomwhackerB = "#CF3596"
+}
