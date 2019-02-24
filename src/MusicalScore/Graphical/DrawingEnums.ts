@@ -107,13 +107,23 @@ export enum NoteState {
     Debug3
 }
 
+export enum AutoColorSet {
+    /* different (boomwhacker-like) color set*/
+    C = "#d82c6b",
+    D = "#F89D15",
+    E = "#FFE21A",
+    F = "#4dbd5c",
+    G = "#009D96",
+    A = "#43469d",
+    B = "#76429c",
+    Rest = "#000000"
 
-export enum BoomwhackerColors {
-    BoomwhackerC = "#E41345",
-    BoomwhackerD = "#F89D15",
-    BoomwhackerE = "#FFF224",
-    BoomwhackerF = "#D5E15A",
-    BoomwhackerG = "#009D96",
-    BoomwhackerA = "#5D4EA2",
-    BoomwhackerB = "#CF3596"
+    // color set from MuseScore Color notehead plugin version 1.1 by Werner Schweer and others
+    /*C = "#eeee00",
+    D = "#9b30ff",
+    E = "#ee9a00",
+    F = "#8b4513",
+    G = "#ff0000",
+    A = "#1e90ff",
+    B = "#00ff00"*/
 }

@@ -7,7 +7,6 @@ import { OctaveEnum } from "../VoiceData/Expressions/ContinuousExpressions/Octav
 import { VexFlowVoiceEntry } from "./VexFlow/VexFlowVoiceEntry";
 import { EngravingRules } from "./EngravingRules";
 import { ColoringModes } from "./DrawingParameters";
-import { BoomwhackerColors } from "./DrawingEnums";
 import { NoteEnum } from "../../Common/DataObjects/Pitch";
 
 /**
@@ -51,34 +50,16 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: GraphicalNote = this.notes[i];
 
-            let noteheadColor: string;
-            // Switch between XML colors and automatic Boomwhacker coloring
-            if (EngravingRules.Rules.ColoringMode === ColoringModes.Boomwhacker) {
-                if (!note.sourceNote.isRest()) {
-                    if (note.sourceNote.Pitch.FundamentalNote >= NoteEnum.C) {
-                        noteheadColor = BoomwhackerColors.BoomwhackerC;
-                    }
-                    if (note.sourceNote.Pitch.FundamentalNote >= NoteEnum.D) {
-                        noteheadColor = BoomwhackerColors.BoomwhackerD;
-                    }
-                    if (note.sourceNote.Pitch.FundamentalNote >= NoteEnum.E) {
-                        noteheadColor = BoomwhackerColors.BoomwhackerE;
-                    }
-                    if (note.sourceNote.Pitch.FundamentalNote >= NoteEnum.F) {
-                        noteheadColor = BoomwhackerColors.BoomwhackerF;
-                    }
-                    if (note.sourceNote.Pitch.FundamentalNote >= NoteEnum.G) {
-                        noteheadColor = BoomwhackerColors.BoomwhackerG;
-                    }
-                    if (note.sourceNote.Pitch.FundamentalNote >= NoteEnum.A) {
-                        noteheadColor = BoomwhackerColors.BoomwhackerA;
-                    }
-                    if (note.sourceNote.Pitch.FundamentalNote >= NoteEnum.B) {
-                        noteheadColor = BoomwhackerColors.BoomwhackerB;
-                    }
+            let noteheadColor: string = note.sourceNote.NoteheadColor;
+            // Switch between XML colors and automatic coloring
+            if (EngravingRules.Rules.ColoringMode === ColoringModes.AutoColoring ||
+                    EngravingRules.Rules.ColoringMode === ColoringModes.CustomColorSet) {
+                if (note.sourceNote.isRest()) {
+                    noteheadColor = EngravingRules.Rules.ColoringSetCurrent.getValue(-1);
+                } else {
+                    const fundamentalNote: NoteEnum = note.sourceNote.Pitch.FundamentalNote;
+                    noteheadColor = EngravingRules.Rules.ColoringSetCurrent.getValue(fundamentalNote);
                 }
-            } else {
-                noteheadColor = note.sourceNote.NoteheadColor;
             }
 
             // DEBUG runtime coloring test

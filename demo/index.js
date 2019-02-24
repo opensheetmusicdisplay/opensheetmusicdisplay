@@ -22,16 +22,16 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "Mozart, W.A.- Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
         "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
         "OSMD Function Test - All": "OSMD_function_test_all.xml",
-        "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
         "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
-        "OSMD Function Test - Color": "OSMD_function_test_color.musicxml",
+        "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
+        "OSMD Function Test - Auto-/Custom-Coloring": "OSMD_function_test_auto-custom-coloring-entchen.musicxml",
+        "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
         "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
         "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
         "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
         "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
         "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
         "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
-        "Alle meine Entchen (Auto coloring)": "Alle-meine-Entchen-XML.xml",
         "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
         "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
         "Anonymous - Saltarello": "Saltarello.mxl",
@@ -232,11 +232,17 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         }
         zoom = 1.0;
         // Enable Boomwhacker coloring for this song
-        if (str.includes("Alle-meine-Entchen-XML.xml")) {
-            openSheetMusicDisplay.setOptions({coloringMode: 1});
+        if (str.includes("coloring-entchen")) {
+            //openSheetMusicDisplay.setOptions({coloringMode: 1}); // Auto-Coloring with pre-defined colors
+            openSheetMusicDisplay.setOptions({
+                coloringMode: 2,
+                coloringSetCustom: ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"]
+                // last color value of coloringSetCustom is for rest notes
+            });
         } else {
             openSheetMusicDisplay.setOptions({coloringMode: 0});
         }
+        openSheetMusicDisplay.setOptions({autoBeam: str.includes("autobeam")});
         openSheetMusicDisplay.load(str).then(
             function() {
                 // This gives you access to the osmd object in the console. Do not use in productive code

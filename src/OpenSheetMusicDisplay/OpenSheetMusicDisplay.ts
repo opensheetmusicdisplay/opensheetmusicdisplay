@@ -13,10 +13,13 @@ import {MXLHelper} from "../Common/FileIO/Mxl";
 import {Promise} from "es6-promise";
 import {AJAX} from "./AJAX";
 import * as log from "loglevel";
-import {DrawingParametersEnum, DrawingParameters} from "../MusicalScore/Graphical/DrawingParameters";
+import {DrawingParametersEnum, DrawingParameters, ColoringModes} from "../MusicalScore/Graphical/DrawingParameters";
 import {IOSMDOptions, OSMDOptions, AutoBeamOptions} from "./OSMDOptions";
 import {EngravingRules} from "../MusicalScore/Graphical/EngravingRules";
 import {AbstractExpression} from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
+import {Dictionary} from "typescript-collections";
+import {NoteEnum} from "..";
+import {AutoColorSet} from "../MusicalScore";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -242,7 +245,7 @@ export class OpenSheetMusicDisplay {
         }
 
         if (options.coloringMode !== undefined) {
-            EngravingRules.Rules.ColoringMode = options.coloringMode;
+            this.setColoringMode(options);
         }
         if (options.coloringEnabled !== undefined) {
             EngravingRules.Rules.ColoringEnabled = options.coloringEnabled;
@@ -322,6 +325,44 @@ export class OpenSheetMusicDisplay {
             this.autoResizeEnabled = false;
             // we could remove the window EventListener here, but not necessary.
         }
+    }
+
+    public setColoringMode(options: IOSMDOptions): void {
+        if (options.coloringMode === ColoringModes.XML) {
+            EngravingRules.Rules.ColoringMode = ColoringModes.XML;
+            return;
+        }
+        const noteIndices: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B, -1];
+        let colorSetString: string[];
+        if (options.coloringMode === ColoringModes.CustomColorSet) {
+            if (!options.coloringSetCustom || options.coloringSetCustom.length !== 8) {
+                throw new Error( "Invalid amount of colors: With coloringModes.customColorSet, " +
+                    "you have to provide a coloringSetCustom parameter with 8 strings (C to B, rest note).");
+            }
+            // validate strings input
+            for (const colorString of options.coloringSetCustom) {
+                const regExp: RegExp = /^\#[0-9a-fA-F]{6}$/;
+                if (!regExp.test(colorString)) {
+                    throw new Error(
+                        "One of the color strings in options.coloringSetCustom was not a valid HTML Hex color:\n" + colorString);
+                }
+            }
+            colorSetString = options.coloringSetCustom;
+        } else if (options.coloringMode === ColoringModes.AutoColoring) {
+            colorSetString = [];
+            const keys: string[] = Object.keys(AutoColorSet);
+            for (let i: number = 0; i < keys.length; i++) {
+                colorSetString.push(AutoColorSet[keys[i]]);
+            }
+        } // for both cases:
+        const coloringSetCurrent: Dictionary<NoteEnum|number, string> = new Dictionary<NoteEnum|number, string>();
+        for (let i: number = 0; i < noteIndices.length; i++) {
+            coloringSetCurrent.setValue(noteIndices[i], colorSetString[i]);
+        }
+        coloringSetCurrent.setValue(-1, colorSetString[7]);
+        EngravingRules.Rules.ColoringSetCurrent = coloringSetCurrent;
+
+        EngravingRules.Rules.ColoringMode = options.coloringMode;
     }
 
     /**

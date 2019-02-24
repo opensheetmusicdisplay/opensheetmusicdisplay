@@ -5,6 +5,8 @@ import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AutoBeamOptions } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
+import { Dictionary } from "typescript-collections";
+import { NoteEnum } from "../..";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -181,6 +183,7 @@ export class EngravingRules {
     private coloringEnabled: boolean;
     private colorFlags: boolean;
     private colorBeams: boolean;
+    private coloringSetCustom: Dictionary<NoteEnum|number, string>;
     private defaultColorNotehead: string;
     private defaultColorRest: string;
     private defaultColorStem: string;
@@ -1356,6 +1359,12 @@ export class EngravingRules {
     }
     public set ColorBeams(value: boolean) {
         this.colorBeams = value;
+    }
+    public get ColoringSetCurrent(): Dictionary<NoteEnum|number, string> {
+        return this.coloringSetCustom;
+    }
+    public set ColoringSetCurrent(value: Dictionary<NoteEnum|number, string>) {
+        this.coloringSetCustom = value;
     }
     public get DefaultColorNotehead(): string {
         return this.defaultColorNotehead;

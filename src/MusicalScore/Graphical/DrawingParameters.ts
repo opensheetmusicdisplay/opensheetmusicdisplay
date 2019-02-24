@@ -3,7 +3,8 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 
 export enum ColoringModes {
     XML = 0,
-    Boomwhacker
+    AutoColoring = 1,
+    CustomColorSet = 2
 }
 
 export enum DrawingParametersEnum {
