@@ -1845,6 +1845,9 @@ export abstract class MusicSheetCalculator {
         for (let i: number = 1; i < tie.Notes.length; i++) {
             startNote = startGse.findEndTieGraphicalNoteFromNote(tie.Notes[i - 1]);
             endGse = this.graphicalMusicSheet.GetGraphicalFromSourceStaffEntry(tie.Notes[i].ParentStaffEntry);
+            if (!endGse) {
+                continue;
+            }
             endNote = endGse.findEndTieGraphicalNoteFromNote(tie.Notes[i]);
             if (startNote !== undefined && endNote !== undefined && endGse !== undefined) {
                 if (!startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
