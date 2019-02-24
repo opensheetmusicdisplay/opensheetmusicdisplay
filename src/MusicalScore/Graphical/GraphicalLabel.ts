@@ -1,9 +1,9 @@
-import {Label} from "../Label";
-import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
-import {Clickable} from "./Clickable";
-import {BoundingBox} from "./BoundingBox";
-import {EngravingRules} from "./EngravingRules";
-import {MusicSheetCalculator} from "./MusicSheetCalculator";
+import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import { Label } from "../Label";
+import { BoundingBox } from "./BoundingBox";
+import { Clickable } from "./Clickable";
+import { EngravingRules } from "./EngravingRules";
+import { MusicSheetCalculator } from "./MusicSheetCalculator";
 
 /**
  * The graphical counterpart of a Label
@@ -31,7 +31,7 @@ export class GraphicalLabel extends Clickable {
     }
 
     public toString(): string {
-        return this.label.text;
+        return `${this.label.text} (${this.boundingBox.RelativePosition.x},${this.boundingBox.RelativePosition.y})`;
     }
 
     /**

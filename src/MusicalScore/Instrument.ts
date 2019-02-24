@@ -250,4 +250,8 @@ export class Instrument extends InstrumentalGroup {
         }
     }
 
+    // necessary to be unique for MusicSystem.labels Dictionary
+    public toString(): string {
+        return `${this.Name} , id: ${this.id}, idstring: ${this.idString}`;
+    }
 }
