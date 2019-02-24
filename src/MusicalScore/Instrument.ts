@@ -29,6 +29,7 @@ export class Instrument extends InstrumentalGroup {
 
     private lyricVersesNumbers: number[] = [];
     private subInstruments: SubInstrument[] = [];
+    private partAbbreviation: string;
 
     public get Voices(): Voice[] {
         return this.voices;
@@ -103,6 +104,13 @@ export class Instrument extends InstrumentalGroup {
         }
         return undefined;
     }
+    public get PartAbbreviation(): string {
+        return this.partAbbreviation;
+    }
+    public set PartAbbreviation(value: string) {
+        this.partAbbreviation = value;
+    }
+
     public get Visible(): boolean {
         if (this.voices.length > 0) {
             return this.Voices[0].Visible;
