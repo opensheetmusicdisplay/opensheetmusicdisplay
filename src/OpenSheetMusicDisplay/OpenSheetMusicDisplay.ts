@@ -193,7 +193,9 @@ export class OpenSheetMusicDisplay {
      *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
      */
     public setOptions(options: IOSMDOptions): void {
-        this.drawingParameters = new DrawingParameters();
+        if (!this.drawingParameters) {
+            this.drawingParameters = new DrawingParameters();
+        }
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum =
                 (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
