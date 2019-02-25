@@ -4,6 +4,9 @@ import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AutoBeamOptions } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import { ColoringModes as ColoringMode } from "./DrawingParameters";
+import { Dictionary } from "typescript-collections";
+import { NoteEnum } from "../..";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -176,9 +179,11 @@ export class EngravingRules {
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
+    private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
     private colorFlags: boolean;
     private colorBeams: boolean;
+    private coloringSetCustom: Dictionary<NoteEnum|number, string>;
     private defaultColorNotehead: string;
     private defaultColorRest: string;
     private defaultColorStem: string;
@@ -391,6 +396,7 @@ export class EngravingRules {
         this.metronomeMarkYShift = -0.5;
 
         // Render options (whether to render specific or invisible elements)
+        this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
         this.colorBeams = true;
         this.colorFlags = true;
@@ -1332,6 +1338,12 @@ export class EngravingRules {
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
     }
+    public get ColoringMode(): ColoringMode {
+        return this.coloringMode;
+    }
+    public set ColoringMode(value: ColoringMode) {
+        this.coloringMode = value;
+    }
     public get ColoringEnabled(): boolean {
         return this.coloringEnabled;
     }
@@ -1349,6 +1361,12 @@ export class EngravingRules {
     }
     public set ColorBeams(value: boolean) {
         this.colorBeams = value;
+    }
+    public get ColoringSetCurrent(): Dictionary<NoteEnum|number, string> {
+        return this.coloringSetCustom;
+    }
+    public set ColoringSetCurrent(value: Dictionary<NoteEnum|number, string>) {
+        this.coloringSetCustom = value;
     }
     public get DefaultColorNotehead(): string {
         return this.defaultColorNotehead;

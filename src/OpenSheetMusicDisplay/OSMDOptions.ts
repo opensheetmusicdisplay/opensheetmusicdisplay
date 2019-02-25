@@ -1,4 +1,4 @@
-import { DrawingParametersEnum } from "../MusicalScore/Graphical/DrawingParameters";
+import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
 
 /** Possible options for the OpenSheetMusicDisplay constructor, none are mandatory. */
 export interface IOSMDOptions {
@@ -10,6 +10,12 @@ export interface IOSMDOptions {
     autoResize?: boolean;
     /** Render Backend, will be SVG if given undefined, SVG or svg, otherwise Canvas. */
     backend?: string;
+    /** Defines the mode that is used for coloring: XML, Boomwhacker. Default XML (0).
+     *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
+     */
+    coloringMode?: ColoringModes;
+    /** Set of 7 colors for automatic coloring of notes from C to B in HTML form (e.g. #00ff00).  */
+    coloringSetCustom?: string[];
     /** Whether to enable coloring noteheads and stems by their XML color attribute. */
     coloringEnabled?: boolean;
     /** Default color for a note head (without stem). Default black (undefined). */
