@@ -22,7 +22,6 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
-        this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
     }
 
     /**
@@ -36,7 +35,6 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         (this.canvas as any).height = height;
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
-        this.canvasRenderingCtx = this.ctx.vexFlowCanvasContext;
     }
 
     public getContext(): Vex.Flow.CanvasContext {
@@ -52,40 +50,40 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
 
     public translate(x: number, y: number): void {
-        this.canvasRenderingCtx.translate(x, y);
+        this.CanvasRenderingCtx.translate(x, y);
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                       heightInPixel: number, screenPosition: PointF2D, color: string = undefined): void  {
-        const old: string = this.canvasRenderingCtx.font;
-        this.canvasRenderingCtx.save();
-        this.canvasRenderingCtx.font = VexFlowConverter.font(
+        const old: string = this.CanvasRenderingCtx.font;
+        this.CanvasRenderingCtx.save();
+        this.CanvasRenderingCtx.font = VexFlowConverter.font(
             fontHeight,
             fontStyle,
             font
         );
-        this.canvasRenderingCtx.fillStyle = color;
-        this.canvasRenderingCtx.strokeStyle = color;
-        this.canvasRenderingCtx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
-        this.canvasRenderingCtx.restore();
-        this.canvasRenderingCtx.font = old;
+        this.CanvasRenderingCtx.fillStyle = color;
+        this.CanvasRenderingCtx.strokeStyle = color;
+        this.CanvasRenderingCtx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
+        this.CanvasRenderingCtx.restore();
+        this.CanvasRenderingCtx.font = old;
     }
     public renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number = 1): void {
-        const old: string | CanvasGradient | CanvasPattern = this.canvasRenderingCtx.fillStyle;
-        this.canvasRenderingCtx.fillStyle = VexFlowConverter.style(styleId);
-        this.canvasRenderingCtx.globalAlpha = alpha;
+        const old: string | CanvasGradient | CanvasPattern = this.CanvasRenderingCtx.fillStyle;
+        this.CanvasRenderingCtx.fillStyle = VexFlowConverter.style(styleId);
+        this.CanvasRenderingCtx.globalAlpha = alpha;
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-        this.canvasRenderingCtx.fillStyle = old;
-        this.canvasRenderingCtx.globalAlpha = 1;
+        this.CanvasRenderingCtx.fillStyle = old;
+        this.CanvasRenderingCtx.globalAlpha = 1;
     }
 
     public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number= 2): void {
-        const oldStyle: string | CanvasGradient | CanvasPattern = this.canvasRenderingCtx.strokeStyle;
-        this.canvasRenderingCtx.strokeStyle = color;
-        this.canvasRenderingCtx.beginPath();
-        this.canvasRenderingCtx.moveTo(start.x, start.y);
-        this.canvasRenderingCtx.lineTo(stop.x, stop.y);
-        this.canvasRenderingCtx.stroke();
-        this.canvasRenderingCtx.strokeStyle = oldStyle;
+        const oldStyle: string | CanvasGradient | CanvasPattern = this.CanvasRenderingCtx.strokeStyle;
+        this.CanvasRenderingCtx.strokeStyle = color;
+        this.CanvasRenderingCtx.beginPath();
+        this.CanvasRenderingCtx.moveTo(start.x, start.y);
+        this.CanvasRenderingCtx.lineTo(stop.x, stop.y);
+        this.CanvasRenderingCtx.stroke();
+        this.CanvasRenderingCtx.strokeStyle = oldStyle;
     }
 
     public renderCurve(points: PointF2D[]): void {
@@ -115,5 +113,11 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
 
     private ctx: Vex.Flow.CanvasContext;
-    private canvasRenderingCtx: CanvasRenderingContext2D;
+
+    public get CanvasRenderingCtx(): CanvasRenderingContext2D {
+        // This clusterfuck is only there to counter act my favorite vexflow line:
+        // ctx.vexFlowCanvasContext = ctx;
+        // No idea why they are saving the context but we wrap the types here
+        return <CanvasRenderingContext2D>(this.ctx as any).vexFlowCanvasContext;
+    }
 }
