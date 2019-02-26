@@ -118,6 +118,6 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         // This clusterfuck is only there to counter act my favorite vexflow line:
         // ctx.vexFlowCanvasContext = ctx;
         // No idea why they are saving the context but we wrap the types here
-        return <CanvasRenderingContext2D>(ctx as any).vexFlowCanvasContext;
+        return <CanvasRenderingContext2D>(this.ctx as any).vexFlowCanvasContext;
     }
 }
