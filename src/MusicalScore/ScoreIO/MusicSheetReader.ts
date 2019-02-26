@@ -719,6 +719,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         try {
                             if (partElement.name === "part-name") {
                                 instrument.Name = partElement.value;
+                            } else if (partElement.name === "part-abbreviation") {
+                                instrument.PartAbbreviation = partElement.value;
                             } else if (partElement.name === "score-instrument") {
                                 const subInstrument: SubInstrument = new SubInstrument(instrument);
                                 subInstrument.idString = partElement.firstAttribute.value;

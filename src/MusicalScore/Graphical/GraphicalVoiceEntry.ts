@@ -6,6 +6,8 @@ import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { OctaveEnum } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { VexFlowVoiceEntry } from "./VexFlow/VexFlowVoiceEntry";
 import { EngravingRules } from "./EngravingRules";
+import { ColoringModes } from "./DrawingParameters";
+import { NoteEnum } from "../../Common/DataObjects/Pitch";
 
 /**
  * The graphical counterpart of a [[VoiceEntry]].
@@ -49,6 +51,16 @@ export class GraphicalVoiceEntry extends GraphicalObject {
             const note: GraphicalNote = this.notes[i];
 
             let noteheadColor: string = note.sourceNote.NoteheadColor;
+            // Switch between XML colors and automatic coloring
+            if (EngravingRules.Rules.ColoringMode === ColoringModes.AutoColoring ||
+                    EngravingRules.Rules.ColoringMode === ColoringModes.CustomColorSet) {
+                if (note.sourceNote.isRest()) {
+                    noteheadColor = EngravingRules.Rules.ColoringSetCurrent.getValue(-1);
+                } else {
+                    const fundamentalNote: NoteEnum = note.sourceNote.Pitch.FundamentalNote;
+                    noteheadColor = EngravingRules.Rules.ColoringSetCurrent.getValue(fundamentalNote);
+                }
+            }
 
             // DEBUG runtime coloring test
             /*const testColor: string = "#FF0000";

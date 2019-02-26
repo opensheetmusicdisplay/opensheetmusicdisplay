@@ -106,3 +106,24 @@ export enum NoteState {
     Debug2,
     Debug3
 }
+
+export enum AutoColorSet {
+    /* different (boomwhacker-like) color set*/
+    C = "#d82c6b",
+    D = "#F89D15",
+    E = "#FFE21A",
+    F = "#4dbd5c",
+    G = "#009D96",
+    A = "#43469d",
+    B = "#76429c",
+    Rest = "#000000"
+
+    // color set from MuseScore Color notehead plugin version 1.1 by Werner Schweer and others
+    /*C = "#eeee00",
+    D = "#9b30ff",
+    E = "#ee9a00",
+    F = "#8b4513",
+    G = "#ff0000",
+    A = "#1e90ff",
+    B = "#00ff00"*/
+}
