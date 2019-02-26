@@ -29,9 +29,13 @@ export class AJAX {
                         resolve(xhttp.responseText);
                     } else {
                         //reject(new Error("AJAX error: '" + xhttp.statusText + "'"));
-                        reject(new Error("Could not retrieve requested URL"));
+                        reject(new Error("Could not retrieve requested URL " + xhttp.status));
                     }
                 }
+            };
+            xhttp.ontimeout = (e) => {
+                // For IE and node
+                reject(new Error("Server request Timeout"));
             };
             xhttp.overrideMimeType(mimeType);
             xhttp.open("GET", url, true);
