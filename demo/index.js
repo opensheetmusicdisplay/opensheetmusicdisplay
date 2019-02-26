@@ -231,8 +231,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             str = sampleFolder + selectSample.value;
         }
         zoom = 1.0;
-        // Enable Boomwhacker coloring for this song
-        if (str.includes("coloring-entchen")) {
+        // Enable Boomwhacker-like coloring for OSMD Function Test - Auto-Coloring (Boomwhacker-like, custom color set)
+        if (str.includes("auto-custom-coloring")) {
             //openSheetMusicDisplay.setOptions({coloringMode: 1}); // Auto-Coloring with pre-defined colors
             openSheetMusicDisplay.setOptions({
                 coloringMode: 2,
