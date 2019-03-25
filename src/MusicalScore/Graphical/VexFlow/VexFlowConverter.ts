@@ -23,6 +23,8 @@ import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContain
 import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
+import { Note } from "../..";
+import StaveNote = Vex.Flow.StaveNote;
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -171,6 +173,9 @@ export class VexFlowConverter {
         const frac: Fraction = baseNote.graphicalNoteLength;
         const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
+        if (baseNote.sourceNote.TypeLength !== undefined && baseNote.sourceNote.TypeLength !== frac) {
+            duration = VexFlowConverter.duration(baseNote.sourceNote.TypeLength, isTuplet);
+        }
         let vfClefType: string = undefined;
         let numDots: number = baseNote.numberOfDots;
         let alignCenter: boolean = false;
@@ -231,7 +236,7 @@ export class VexFlowConverter {
 
         let vfnote: Vex.Flow.StaveNote;
 
-        const vfnoteStruct: Object = {
+        const vfnoteStruct: any = {
             align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
@@ -240,9 +245,10 @@ export class VexFlowConverter {
             slash: gve.parentVoiceEntry.GraceNoteSlash,
         };
 
-        if (gve.notes[0].sourceNote.IsCueNote) {
-            (<any>vfnoteStruct).glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
-            (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
+        const firstNote: Note = gve.notes[0].sourceNote;
+        if (firstNote.IsCueNote) {
+            vfnoteStruct.glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
+            vfnoteStruct.stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
         }
 
         if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) {
@@ -303,7 +309,22 @@ export class VexFlowConverter {
                 }
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i])); // normal accidental
             }
+
+            // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
+            const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
+            if (tremoloStrokes > 0) {
+                vfnote.addModifier(i, new Vex.Flow.Tremolo(tremoloStrokes));
+            }
         }
+
+        // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration) (Hack)
+        if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
+            const keyProps: Object[] = vfnote.getKeyProps();
+            for (let i: number = 0; i < keyProps.length; i++) {
+                (<any>keyProps[i]).code = "v81";
+            }
+        }
+
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             vfnote.addDotToAll();
         }
@@ -377,7 +398,7 @@ export class VexFlowConverter {
             }
             if (vfArt !== undefined) {
                 vfArt.setPosition(vfArtPosition);
-                vfnote.addModifier(0, vfArt);
+                (vfnote as StaveNote).addModifier(0, vfArt);
             }
         }
     }
@@ -438,7 +459,7 @@ export class VexFlowConverter {
                 vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
             vfOrna.setPosition(vfPosition);
-            vfnote.addModifier(0, vfOrna);
+            (vfnote as StaveNote).addModifier(0, vfOrna);
         }
     }
 
@@ -690,28 +711,4 @@ export class VexFlowConverter {
     }
 }
 
-export enum VexFlowRepetitionType {
-    NONE = 1,         // no coda or segno
-    CODA_LEFT = 2,    // coda at beginning of stave
-    CODA_RIGHT = 3,   // coda at end of stave
-    SEGNO_LEFT = 4,   // segno at beginning of stave
-    SEGNO_RIGHT = 5,  // segno at end of stave
-    DC = 6,           // D.C. at end of stave
-    DC_AL_CODA = 7,   // D.C. al coda at end of stave
-    DC_AL_FINE = 8,   // D.C. al Fine end of stave
-    DS = 9,           // D.S. at end of stave
-    DS_AL_CODA = 10,  // D.S. al coda at end of stave
-    DS_AL_FINE = 11,  // D.S. al Fine at end of stave
-    FINE = 12,        // Fine at end of stave
-}
-
-export enum VexFlowBarlineType {
-    SINGLE = 1,
-    DOUBLE = 2,
-    END = 3,
-    REPEAT_BEGIN = 4,
-    REPEAT_END = 5,
-    REPEAT_BOTH = 6,
-    NONE = 7,
-}
 

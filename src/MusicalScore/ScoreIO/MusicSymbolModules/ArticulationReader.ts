@@ -211,5 +211,6 @@ export class ArticulationReader {
         currentVoiceEntry.OrnamentContainer = ornament;
       }
     }
-  }
+  } // /addOrnament
+
 }

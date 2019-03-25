@@ -34,7 +34,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                     continue;
                 }
                 gve.applyBordersFromVexflow();
-                this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().x / unitInPixels;
+                this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
                 const sourceNote: Note = gve.notes[0].sourceNote;
                 if (sourceNote.isRest() && sourceNote.Length.WholeValue === 1) { // whole rest
                     this.PositionAndShape.RelativePosition.x +=

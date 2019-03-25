@@ -12,7 +12,8 @@ export class Tuplet {
     }
 
     private tupletLabelNumber: number;
-    private notes: Note[][] = [];
+    /** Notes contained in the tuplet, per VoiceEntry (list of VoiceEntries, which has a list of notes). */
+    private notes: Note[][] = []; // TODO should probably be VoiceEntry[], not Note[][].
     private fractions: Fraction[] = [];
     /** Whether this tuplet has a bracket. (e.g. showing |--3--| or just 3 for a triplet) */
     private bracket: boolean;

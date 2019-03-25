@@ -11,13 +11,13 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
-import {BaseIdClass} from "../../Util/BaseIdClass";
+//import {BaseIdClass} from "../../Util/BaseIdClass"; // SourceMeasure originally extended BaseIdClass, but ids weren't used.
 
 /**
  * The Source Measure represents the source data of a unique measure, including all instruments with their staves.
  * There exists one source measure per XML measure or per paper sheet measure (e.g. the source measures are not doubled in repetitions)
  */
-export class SourceMeasure extends BaseIdClass {
+export class SourceMeasure {
 
     /**
      * The data entries and data lists will be filled with null values according to the total number of staves,
@@ -25,7 +25,6 @@ export class SourceMeasure extends BaseIdClass {
      * @param completeNumberOfStaves
      */
     constructor(completeNumberOfStaves: number) {
-        super();
         this.completeNumberOfStaves = completeNumberOfStaves;
         this.implicitMeasure = false;
         this.breakSystemAfter = false;

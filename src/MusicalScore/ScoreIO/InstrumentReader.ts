@@ -164,6 +164,8 @@ export class InstrumentReader {
           }
           let noteDivisions: number = 0;
           let noteDuration: Fraction = new Fraction(0, 1);
+          let normalNotes: number = 2;
+          let typeDuration: Fraction = undefined;
           let isTuplet: boolean = false;
           if (xmlNode.element("duration") !== undefined) {
             noteDivisions = parseInt(xmlNode.element("duration").value, 10);
@@ -171,9 +173,17 @@ export class InstrumentReader {
               noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
               if (noteDivisions === 0) {
                 noteDuration = this.getNoteDurationFromTypeNode(xmlNode);
+              } else {
+                typeDuration = this.getNoteDurationFromTypeNode(xmlNode);
               }
               if (xmlNode.element("time-modification") !== undefined) {
                 noteDuration = this.getNoteDurationForTuplet(xmlNode);
+                const time: IXmlElement = xmlNode.element("time-modification");
+                if (time !== undefined) {
+                  if (time.element("normal-notes") !== undefined) {
+                    normalNotes = parseInt(time.element("normal-notes").value, 10);
+                  }
+                }
                 isTuplet = true;
               }
             } else {
@@ -186,6 +196,8 @@ export class InstrumentReader {
 
           const restNote: boolean = xmlNode.element("rest") !== undefined;
           //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
+
+          const notationsNode: IXmlElement = xmlNode.element("notations"); // used for multiple checks further on
 
           const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let graceNoteSlash: boolean = false;
@@ -254,6 +266,25 @@ export class InstrumentReader {
             const stemColorAttr: Attr = stemNode.attribute("color");
             if (stemColorAttr) { // can be null, maybe also undefined
               stemColorXml = this.parseXmlColor(stemColorAttr.value);
+            }
+          }
+
+          // check Tremolo
+          let tremoloStrokes: number = 0;
+          if (notationsNode !== undefined) {
+            const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
+            if (ornamentsNode !== undefined) {
+              const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
+              if (tremoloNode !== undefined) {
+                const tremoloType: Attr = tremoloNode.attribute("type");
+                if (tremoloType && tremoloType.value === "single") {
+                  const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+                  if (tremoloStrokesGiven > 0) {
+                    tremoloStrokes = tremoloStrokesGiven;
+                  }
+                }
+                // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
+              }
             }
           }
 
@@ -329,14 +360,14 @@ export class InstrumentReader {
             noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
           this.currentVoiceGenerator.read(
-            xmlNode, noteDuration, restNote,
+            xmlNode, noteDuration, typeDuration, normalNotes, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
-            printObject, isCueNote, stemDirectionXml, stemColorXml, noteheadColorXml
+            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml
           );
 
-          const notationsNode: IXmlElement = xmlNode.element("notations");
+          // notationsNode created further up for multiple checks
           if (notationsNode !== undefined && notationsNode.element("dynamics") !== undefined) {
             const expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
             if (expressionReader !== undefined) {

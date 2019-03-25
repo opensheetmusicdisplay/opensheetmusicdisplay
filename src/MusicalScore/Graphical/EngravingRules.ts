@@ -4,6 +4,9 @@ import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AutoBeamOptions } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import { ColoringModes as ColoringMode } from "./DrawingParameters";
+import { Dictionary } from "typescript-collections";
+import { NoteEnum } from "../..";
 
 export class EngravingRules {
     private static rules: EngravingRules;
@@ -176,9 +179,11 @@ export class EngravingRules {
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
+    private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
     private colorFlags: boolean;
     private colorBeams: boolean;
+    private coloringSetCustom: Dictionary<NoteEnum|number, string>;
     private defaultColorNotehead: string;
     private defaultColorRest: string;
     private defaultColorStem: string;
@@ -190,7 +195,8 @@ export class EngravingRules {
     private renderTitle: boolean;
     private renderSubtitle: boolean;
     private renderLyricist: boolean;
-    private renderInstrumentNames: boolean;
+    private renderPartNames: boolean;
+    private renderPartAbbreviations: boolean;
     private renderFingerings: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
@@ -390,6 +396,7 @@ export class EngravingRules {
         this.metronomeMarkYShift = -0.5;
 
         // Render options (whether to render specific or invisible elements)
+        this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
         this.colorBeams = true;
         this.colorFlags = true;
@@ -403,7 +410,8 @@ export class EngravingRules {
         this.renderTitle = true;
         this.renderSubtitle = true;
         this.renderLyricist = true;
-        this.renderInstrumentNames = true;
+        this.renderPartNames = true;
+        this.renderPartAbbreviations = true;
         this.renderFingerings = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
@@ -1330,6 +1338,12 @@ export class EngravingRules {
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
     }
+    public get ColoringMode(): ColoringMode {
+        return this.coloringMode;
+    }
+    public set ColoringMode(value: ColoringMode) {
+        this.coloringMode = value;
+    }
     public get ColoringEnabled(): boolean {
         return this.coloringEnabled;
     }
@@ -1347,6 +1361,12 @@ export class EngravingRules {
     }
     public set ColorBeams(value: boolean) {
         this.colorBeams = value;
+    }
+    public get ColoringSetCurrent(): Dictionary<NoteEnum|number, string> {
+        return this.coloringSetCustom;
+    }
+    public set ColoringSetCurrent(value: Dictionary<NoteEnum|number, string>) {
+        this.coloringSetCustom = value;
     }
     public get DefaultColorNotehead(): string {
         return this.defaultColorNotehead;
@@ -1408,11 +1428,17 @@ export class EngravingRules {
     public set RenderLyricist(value: boolean) {
         this.renderLyricist = value;
     }
-    public get RenderInstrumentNames(): boolean {
-        return this.renderInstrumentNames;
+    public get RenderPartNames(): boolean {
+        return this.renderPartNames;
     }
-    public set RenderInstrumentNames(value: boolean) {
-        this.renderInstrumentNames = value;
+    public set RenderPartNames(value: boolean) {
+        this.renderPartNames = value;
+    }
+    public get RenderPartAbbreviations(): boolean {
+        return this.renderPartAbbreviations;
+    }
+    public set RenderPartAbbreviations(value: boolean) {
+        this.renderPartAbbreviations = value;
     }
     public get RenderFingerings(): boolean {
         return this.renderFingerings;

@@ -1,6 +1,12 @@
 import { EngravingRules } from "./EngravingRules";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 
+export enum ColoringModes {
+    XML = 0,
+    AutoColoring = 1,
+    CustomColorSet = 2
+}
+
 export enum DrawingParametersEnum {
     allon = "allon",
     compact = "compact",
@@ -10,6 +16,7 @@ export enum DrawingParametersEnum {
     thumbnail = "thumbnail",
 }
 
+/** Internal drawing/rendering parameters and broad modes like compact and thumbnail. Overlap with EngravingRules. */
 export class DrawingParameters {
     /** will set other settings if changed with set method */
     private drawingParametersEnum: DrawingParametersEnum;
@@ -28,6 +35,7 @@ export class DrawingParameters {
     public drawComposer: boolean = true;
     public drawCredits: boolean = true;
     public drawPartNames: boolean = true;
+    public coloringMode: ColoringModes;
     public fingeringPosition: PlacementEnum = PlacementEnum.Left;
     /** Draw notes set to be invisible (print-object="no" in XML). */
     public drawHiddenNotes: boolean = false;
@@ -103,11 +111,8 @@ export class DrawingParameters {
     public setForCompactMode(): void {
         this.setForDefault();
         EngravingRules.Rules.CompactMode = true;
-        this.DrawTitle = false;
-        this.DrawComposer = false;
-        this.DrawLyricist = false;
+        this.DrawCredits = false; // sets DrawComposer, DrawTitle, DrawLyricist to false
         // this.DrawPartNames = true; // unnecessary
-        this.drawCredits = false;
         this.drawHiddenNotes = false;
     }
 
@@ -124,6 +129,22 @@ export class DrawingParameters {
     }
 
     //#region GETTER / SETTER
+    public get DrawCredits(): boolean {
+        return this.drawCredits;
+    }
+
+    public set DrawCredits(value: boolean) {
+        this.drawCredits = value;
+        this.DrawComposer = value;
+        this.DrawTitle = value;
+        this.DrawSubtitle = value;
+        this.DrawLyricist = value;
+    }
+    // TODO these drawCredits settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
+    // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
+    // see settings below that don't call drawingParameters for the immediate approach.
+    // on the other hand, DrawingParameters has the added option of setting broad modes (e.g. compact), though they aren't that useful
+
     public get DrawTitle(): boolean {
         return this.drawTitle;
     }
@@ -175,7 +196,7 @@ export class DrawingParameters {
 
     public set DrawPartNames(value: boolean) {
         this.drawPartNames = value;
-        EngravingRules.Rules.RenderInstrumentNames = value;
+        EngravingRules.Rules.RenderPartNames = value;
     }
 
     public get FingeringPosition(): PlacementEnum {

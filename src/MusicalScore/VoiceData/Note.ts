@@ -36,6 +36,10 @@ export class Note {
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;
+    /** The length/duration given in the <type> tag. different from length for tuplets/tremolos. */
+    private typeLength: Fraction;
+    /** The amount of notes the tuplet of this note (if there is one) replaces. */
+    private normalNotes: number;
     /**
      * The untransposed (!!!) source data.
      */
@@ -54,6 +58,10 @@ export class Note {
     private isCueNote: boolean;
     /** The stem direction asked for in XML. Not necessarily final or wanted stem direction. */
     private stemDirectionXml: StemDirectionType;
+    /** The number of tremolo strokes this note has (16th tremolo = 2 strokes).
+     * Could be a Tremolo object in future when there is more data like tremolo between two notes.
+     */
+    private tremoloStrokes: number;
     /** Color of the stem given in the XML Stem tag. RGB Hexadecimal, like #00FF00.
      * This is not used for rendering, which takes VoiceEntry.StemColor.
      * It is merely given in the note's stem element in XML and stored here for reference.
@@ -89,6 +97,18 @@ export class Note {
     }
     public set Length(value: Fraction) {
         this.length = value;
+    }
+    public get TypeLength(): Fraction {
+        return this.typeLength;
+    }
+    public set TypeLength(value: Fraction) {
+        this.typeLength = value;
+    }
+    public get NormalNotes(): number {
+        return this.normalNotes;
+    }
+    public set NormalNotes(value: number) {
+        this.normalNotes = value;
     }
     public get Pitch(): Pitch {
         return this.pitch;
@@ -152,6 +172,12 @@ export class Note {
     }
     public set StemDirectionXml(value: StemDirectionType) {
         this.stemDirectionXml = value;
+    }
+    public get TremoloStrokes(): number {
+        return this.tremoloStrokes;
+    }
+    public set TremoloStrokes(value: number) {
+        this.tremoloStrokes = value;
     }
     public get StemColorXml(): string {
         return this.stemColorXml;

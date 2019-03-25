@@ -52,7 +52,7 @@ describe("XML interface", () => {
                 TestUtils.createOpenSheetMusicDisplay(div);
             openSheetMusicDisplay.load(score);
             done();
-        }).timeout(3000);
+        }).timeout(10000);
     }
 
     it("test IXmlElement", (done: MochaDone) => {

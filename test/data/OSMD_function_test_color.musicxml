@@ -2,10 +2,9 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>OSMD Function Test - Color</work-title>
+    <work-title>OSMD Function Test - Color (from XML)</work-title>
     </work>
   <identification>
-    <rights>Copyright © 2002 Recordare LLC</rights>
     <encoding>
       <software>MuseScore 2.3.2</software>
       <encoding-date>2018-10-23</encoding-date>

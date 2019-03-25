@@ -7,7 +7,7 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
-import {VexFlowConverter, VexFlowRepetitionType, VexFlowBarlineType} from "./VexFlowConverter";
+import {VexFlowConverter} from "./VexFlowConverter";
 import {VexFlowStaffEntry} from "./VexFlowStaffEntry";
 import {Beam} from "../../VoiceData/Beam";
 import {GraphicalNote} from "../GraphicalNote";
@@ -31,7 +31,6 @@ import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
-import {ArpeggioType} from "../../VoiceData/Arpeggio";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 
@@ -130,7 +129,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addClefAtBegin(clef: ClefInstruction): void {
         this.octaveOffset = clef.OctaveOffset;
         const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "default");
-        this.stave.addClef(vfclef.type, vfclef.size, vfclef.annotation, Vex.Flow.Modifier.Position.BEGIN);
+        this.stave.addClef(vfclef.type, vfclef.size, vfclef.annotation, Vex.Flow.StaveModifier.Position.BEGIN);
         this.updateInstructionWidth();
     }
 
@@ -159,7 +158,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const timeSig: Vex.Flow.TimeSignature = VexFlowConverter.TimeSignature(rhythm);
         this.stave.addModifier(
             timeSig,
-            Vex.Flow.Modifier.Position.BEGIN
+            Vex.Flow.StaveModifier.Position.BEGIN
         );
         this.updateInstructionWidth();
     }
@@ -180,7 +179,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             case SystemLinePosition.MeasureBegin:
                 switch (lineType) {
                     case SystemLinesEnum.BoldThinDots:
-                        this.stave.setBegBarType(VexFlowBarlineType.REPEAT_BEGIN);
+                        this.stave.setBegBarType(Vex.Flow.Barline.type.REPEAT_BEGIN);
                         break;
                     default:
                         break;
@@ -189,16 +188,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
             case SystemLinePosition.MeasureEnd:
                 switch (lineType) {
                     case SystemLinesEnum.DotsBoldBoldDots:
-                        this.stave.setEndBarType(VexFlowBarlineType.REPEAT_BOTH);
+                        this.stave.setEndBarType(Vex.Flow.Barline.type.REPEAT_BOTH);
                         break;
                     case SystemLinesEnum.DotsThinBold:
-                        this.stave.setEndBarType(VexFlowBarlineType.REPEAT_END);
+                        this.stave.setEndBarType(Vex.Flow.Barline.type.REPEAT_END);
                         break;
                     case SystemLinesEnum.DoubleThin:
-                        this.stave.setEndBarType(VexFlowBarlineType.DOUBLE);
+                        this.stave.setEndBarType(Vex.Flow.Barline.type.DOUBLE);
                         break;
                     case SystemLinesEnum.ThinBold:
-                        this.stave.setEndBarType(VexFlowBarlineType.END);
+                        this.stave.setEndBarType(Vex.Flow.Barline.type.END);
                         break;
                     default:
                         break;
@@ -227,42 +226,42 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
-        let instruction: VexFlowRepetitionType = undefined;
-        let position: any = Vex.Flow.Modifier.Position.END;
+        let instruction: Vex.Flow.Repetition.type = undefined;
+        let position: any = Vex.Flow.StaveModifier.Position.END;
         switch (repetitionInstruction.type) {
           case RepetitionInstructionEnum.Segno:
             // create Segno Symbol:
-            instruction = VexFlowRepetitionType.SEGNO_LEFT;
-            position = Vex.Flow.Modifier.Position.BEGIN;
+            instruction = Vex.Flow.Repetition.type.SEGNO_LEFT;
+            position = Vex.Flow.StaveModifier.Position.BEGIN;
             break;
           case RepetitionInstructionEnum.Coda:
             // create Coda Symbol:
-            instruction = VexFlowRepetitionType.CODA_LEFT;
-            position = Vex.Flow.Modifier.Position.BEGIN;
+            instruction = Vex.Flow.Repetition.type.CODA_LEFT;
+            position = Vex.Flow.StaveModifier.Position.BEGIN;
             break;
           case RepetitionInstructionEnum.DaCapo:
-            instruction = VexFlowRepetitionType.DC;
+            instruction = Vex.Flow.Repetition.type.DC;
             break;
           case RepetitionInstructionEnum.DalSegno:
-            instruction = VexFlowRepetitionType.DS;
+            instruction = Vex.Flow.Repetition.type.DS;
             break;
           case RepetitionInstructionEnum.Fine:
-            instruction = VexFlowRepetitionType.FINE;
+            instruction = Vex.Flow.Repetition.type.FINE;
             break;
           case RepetitionInstructionEnum.ToCoda:
             //instruction = "To Coda";
             break;
           case RepetitionInstructionEnum.DaCapoAlFine:
-            instruction = VexFlowRepetitionType.DC_AL_FINE;
+            instruction = Vex.Flow.Repetition.type.DC_AL_FINE;
             break;
           case RepetitionInstructionEnum.DaCapoAlCoda:
-            instruction = VexFlowRepetitionType.DC_AL_CODA;
+            instruction = Vex.Flow.Repetition.type.DC_AL_CODA;
             break;
           case RepetitionInstructionEnum.DalSegnoAlFine:
-            instruction = VexFlowRepetitionType.DS_AL_FINE;
+            instruction = Vex.Flow.Repetition.type.DS_AL_FINE;
             break;
           case RepetitionInstructionEnum.DalSegnoAlCoda:
-            instruction = VexFlowRepetitionType.DS_AL_CODA;
+            instruction = Vex.Flow.Repetition.type.DS_AL_CODA;
             break;
           default:
             break;
@@ -327,7 +326,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.Flow.RenderContext): void {
+    public draw(ctx: Vex.IRenderContext): void {
 
         // Draw stave lines
         this.stave.setContext(ctx).draw();
@@ -563,7 +562,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 for (const beam of this.beams[voiceID]) {
                     let beamHasQuarterNoteOrLonger: boolean = false;
                     for (const note of beam[0].Notes) {
-                        if (note.Length.RealValue >= new Fraction(1, 4).RealValue) {
+                        if (note.Length.RealValue >= new Fraction(1, 4).RealValue
+                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eigth)
+                            && (note.TypeLength === undefined || note.TypeLength.RealValue > 0.125)) {
                             beamHasQuarterNoteOrLonger = true;
                             break;
                         }
@@ -725,8 +726,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       tupletStaveNotes.push(((tupletVoiceEntry).vfStaveNote as StaveNote));
                     }
                     if (tupletStaveNotes.length > 1) {
-                      const notesOccupied: number = 2;
                       const tuplet: Tuplet = tupletBuilder[0];
+                      const notesOccupied: number = tuplet.Notes[0][0].NormalNotes;
                       const bracketed: boolean = tuplet.Bracket ||
                         (tuplet.TupletLabelNumber === 3 && EngravingRules.Rules.TripletsBracketed) ||
                         (tuplet.TupletLabelNumber !== 3 && EngravingRules.Rules.TupletsBracketed);
@@ -734,7 +735,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                                                           {
                                                             bracketed: bracketed,
                                                             notes_occupied: notesOccupied,
-                                                            num_notes: tupletStaveNotes.length, //, location: -1, ratioed: true
+                                                            num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
                                                             ratioed: EngravingRules.Rules.TupletsRatioed,
                                                           }));
                     } else {
@@ -783,7 +784,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
-                    (gve as VexFlowVoiceEntry).vfStaveNote.addModifier(0, graceNoteGroup);
+                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
                     graceGVoiceEntriesBefore = [];
                 }
             }
@@ -837,7 +838,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     if (vfse && vfse.vfClefBefore !== undefined) {
                         // add clef as NoteSubGroup so that we get modifier layouting
                         const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
-                        vexFlowVoiceEntry.vfStaveNote.addModifier(0, clefModifier);
+                        // The cast is necesary because...vexflow -> see types
+                        (vexFlowVoiceEntry.vfStaveNote as Vex.Flow.StaveNote).addModifier(0, clefModifier);
                     }
                 }
 
@@ -848,7 +850,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                 // add Arpeggio
                 if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
-                    const type: ArpeggioType = voiceEntry.parentVoiceEntry.Arpeggio.type;
+                    const type: Vex.Flow.Stroke.Type = voiceEntry.parentVoiceEntry.Arpeggio.type;
                     vexFlowVoiceEntry.vfStaveNote.addStroke(0, new Vex.Flow.Stroke(type));
                 }
 
@@ -934,30 +936,30 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (technicalInstruction.placement !== PlacementEnum.NotYetDefined) {
                 fingeringPosition = technicalInstruction.placement;
             }
-            let modifierPosition: any; // Vex.Flow.Modifier.Position
+            let modifierPosition: any; // Vex.Flow.Stavemodifier.Position
             switch (fingeringPosition) {
                 default:
                 case PlacementEnum.Left:
-                    modifierPosition = Vex.Flow.Modifier.Position.LEFT;
+                    modifierPosition = Vex.Flow.StaveModifier.Position.LEFT;
                     break;
                 case PlacementEnum.Right:
-                    modifierPosition = Vex.Flow.Modifier.Position.RIGHT;
+                    modifierPosition = Vex.Flow.StaveModifier.Position.RIGHT;
                     break;
                 case PlacementEnum.Above:
-                    modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    modifierPosition = Vex.Flow.StaveModifier.Position.ABOVE;
                     break;
                 case PlacementEnum.Below:
-                    modifierPosition = Vex.Flow.Modifier.Position.BELOW;
+                    modifierPosition = Vex.Flow.StaveModifier.Position.BELOW;
                     break;
                 case PlacementEnum.NotYetDefined: // automatic fingering placement, could be more complex/customizable
                     const sourceStaff: Staff = voiceEntry.parentStaffEntry.sourceStaffEntry.ParentStaff;
                     if (voiceEntry.notes.length > 1 || voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
-                        modifierPosition = Vex.Flow.Modifier.Position.LEFT;
+                        modifierPosition = Vex.Flow.StaveModifier.Position.LEFT;
                     } else if (sourceStaff.idInMusicSheet === 0) {
-                        modifierPosition = Vex.Flow.Modifier.Position.ABOVE;
+                        modifierPosition = Vex.Flow.StaveModifier.Position.ABOVE;
                         fingeringPosition = PlacementEnum.Above;
                     } else {
-                        modifierPosition = Vex.Flow.Modifier.Position.BELOW;
+                        modifierPosition = Vex.Flow.StaveModifier.Position.BELOW;
                         fingeringPosition = PlacementEnum.Below;
                     }
             }
@@ -979,11 +981,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     (<any>stringNumber).radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
-                    vexFlowVoiceEntry.vfStaveNote.addModifier(i, stringNumber);
+                    // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
+                    vexFlowVoiceEntry.vfStaveNote.addModifier((i as any), (stringNumber as any));
                     continue;
                 }
             }
-            vexFlowVoiceEntry.vfStaveNote.addModifier(i, fretFinger);
+            // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
+            vexFlowVoiceEntry.vfStaveNote.addModifier((i as any), (fretFinger as any));
         }
     }
 

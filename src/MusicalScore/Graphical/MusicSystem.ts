@@ -19,6 +19,7 @@ import {GraphicalMarkedArea} from "./GraphicalMarkedArea";
 import {SystemLine} from "./SystemLine";
 import {SystemLinePosition} from "./SystemLinePosition";
 import {Staff} from "../VoiceData/Staff";
+import { Label } from "../Label";
 
 /**
  * A MusicSystem contains the [[StaffLine]]s for all instruments, until a line break
@@ -29,7 +30,11 @@ export abstract class MusicSystem extends GraphicalObject {
     protected id: number;
     protected staffLines: StaffLine[] = [];
     protected graphicalMeasures: GraphicalMeasure[][] = [];
-    protected labels: Dictionary<GraphicalLabel, Instrument> = new Dictionary<GraphicalLabel, Instrument>();
+    /** Dictionary of (Instruments and) labels.
+     * note that the key needs to be unique, GraphicalLabel is not unique yet.
+     * That is why the labels are labels.values() and not labels.keys().
+     */
+    protected labels: Dictionary<Instrument, GraphicalLabel> = new Dictionary<Instrument, GraphicalLabel>();
     protected measureNumberLabels: GraphicalLabel[] = [];
     protected maxLabelLength: number;
     protected objectsToRedraw: [Object[], Object][] = [];
@@ -75,7 +80,7 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     public get Labels(): GraphicalLabel[] {
-        return this.labels.keys();
+        return this.labels.values();
     }
 
     public get ObjectsToRedraw(): [Object[], Object][] {
@@ -274,15 +279,30 @@ export abstract class MusicSystem extends GraphicalObject {
      * @param labelMarginBorderFactor
      */
     public createMusicSystemLabel(instrumentLabelTextHeight: number, systemLabelsRightMargin: number, labelMarginBorderFactor: number): void {
-        if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
+        if (this.parent === this.parent.Parent.MusicPages[0]) {
             const instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.getVisibleInstruments();
             for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
                 const instrument: Instrument = instruments[idx];
+                let instrNameLabel: Label;
+                if (this !== this.parent.MusicSystems[0]) {
+                    if (!EngravingRules.Rules.RenderPartAbbreviations
+                        // don't render part abbreviations if there's only one instrument/part (could be an option in the future)
+                        || this.Parent.Parent.ParentMusicSheet.Instruments.length === 1
+                        || !instrument.PartAbbreviation
+                        || instrument.PartAbbreviation === "") {
+                        return;
+                    }
+                    const labelText: string = instrument.PartAbbreviation;
+                    // const labelText: string = instrument.NameLabel.text[0] + ".";
+                    instrNameLabel = new Label(labelText, instrument.NameLabel.textAlignment, instrument.NameLabel.font);
+                } else {
+                    instrNameLabel = instrument.NameLabel;
+                }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
-                    instrument.NameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.boundingBox
+                    instrNameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.boundingBox
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
-                this.labels.setValue(graphicalLabel, instrument);
+                this.labels.setValue(instrument, graphicalLabel);
                 // X-Position will be 0 (Label starts at the same PointF_2D with MusicSystem)
                 // Y-Position will be calculated after the y-Spacing
                 // graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
@@ -290,7 +310,7 @@ export abstract class MusicSystem extends GraphicalObject {
 
             // calculate maxLabelLength (needed for X-Spacing)
             this.maxLabelLength = 0.0;
-            const labels: GraphicalLabel[] = this.labels.keys();
+            const labels: GraphicalLabel[] = this.labels.values();
             for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
                 const label: GraphicalLabel = labels[idx];
                 if (label.PositionAndShape.Size.width > this.maxLabelLength) {
@@ -305,15 +325,15 @@ export abstract class MusicSystem extends GraphicalObject {
      * Set the Y-Positions for the MusicSystem's Labels.
      */
     public setMusicSystemLabelsYPosition(): void {
-        if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
-            this.labels.forEach((key: GraphicalLabel, value: Instrument): void => {
+        if (this.parent === this.parent.Parent.MusicPages[0]) {
+            this.labels.forEach((key: Instrument, value: GraphicalLabel): void => {
                 let ypositionSum: number = 0;
                 let staffCounter: number = 0;
                 for (let i: number = 0; i < this.staffLines.length; i++) {
-                    if (this.staffLines[i].ParentStaff.ParentInstrument === value) {
+                    if (this.staffLines[i].ParentStaff.ParentInstrument === key) {
                         for (let j: number = i; j < this.staffLines.length; j++) {
                             const staffLine: StaffLine = this.staffLines[j];
-                            if (staffLine.ParentStaff.ParentInstrument !== value) {
+                            if (staffLine.ParentStaff.ParentInstrument !== key) {
                                 break;
                             }
                             ypositionSum += staffLine.PositionAndShape.RelativePosition.y;
@@ -323,7 +343,7 @@ export abstract class MusicSystem extends GraphicalObject {
                     }
                 }
                 if (staffCounter > 0) {
-                    key.PositionAndShape.RelativePosition = new PointF2D(0.0, ypositionSum / staffCounter + 2.0);
+                    value.PositionAndShape.RelativePosition = new PointF2D(0.0, ypositionSum / staffCounter + 2.0);
                 }
             });
         }
