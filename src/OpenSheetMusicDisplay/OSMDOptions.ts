@@ -17,7 +17,7 @@ export interface IOSMDOptions {
      *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
      */
     coloringMode?: ColoringModes;
-    /** Set of 7 colors for automatic coloring of notes from C to B in HTML form (e.g. #00ff00).  */
+    /** Set of 8 colors for automatic coloring of 7 notes from C to B + rest note in HTML form (e.g. "#00ff00" for green).  */
     coloringSetCustom?: string[];
     /** Whether to enable coloring noteheads and stems by their XML color attribute. */
     coloringEnabled?: boolean;
