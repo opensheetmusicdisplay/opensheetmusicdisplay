@@ -1,6 +1,9 @@
 import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
 
-/** Possible options for the OpenSheetMusicDisplay constructor, none are mandatory. */
+/** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
+ *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
+ *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
+ */
 export interface IOSMDOptions {
     /** Whether to automatically create beams for notes that don't have beams set in XML. */
     autoBeam?: boolean;
