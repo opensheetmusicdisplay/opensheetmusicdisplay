@@ -19,7 +19,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "Joplin, S. - The Entertainer": "ScottJoplin_The_Entertainer.xml",
         "Mozart, W.A. - An Chloe": "Mozart_AnChloe.xml",
         "Mozart, W.A. - Das Veilchen": "Mozart_DasVeilchen.xml",
-        "Mozart, W.A.- Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+        "Mozart, W.A. - Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+        "Mozart, W.A. - String Quartet in G, K. 387, 1st Mvmt Excerpt": "Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml",
         "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
         "OSMD Function Test - All": "OSMD_function_test_all.xml",
         "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
@@ -244,6 +245,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.setOptions({coloringMode: 0});
         }
         openSheetMusicDisplay.setOptions({autoBeam: str.includes("autobeam")});
+        openSheetMusicDisplay.setOptions({drawPartAbbreviations: !str.includes("Schubert_An_die_Musik")}); // TODO weird layout bug here. but shouldn't be in score anyways
         openSheetMusicDisplay.load(str).then(
             function() {
                 // This gives you access to the osmd object in the console. Do not use in productive code
