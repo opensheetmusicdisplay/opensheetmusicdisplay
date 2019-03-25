@@ -556,6 +556,9 @@ export class OpenSheetMusicDisplay {
     public get DrawingParameters(): DrawingParameters {
         return this.drawingParameters;
     }
+    public get EngravingRules(): EngravingRules { // custom getter, useful for engraving parameter setting in Demo
+        return EngravingRules.Rules;
+    }
     /** Returns the version of OSMD this object is built from (the version you are using). */
     public get Version(): string {
         return this.version;
