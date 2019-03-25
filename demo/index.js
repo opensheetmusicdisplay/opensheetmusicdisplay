@@ -35,7 +35,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
         "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
         "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
-        "Actor, L. - Prelude (Sample)": "ActorPreludeSample.xml",
+        "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
         "Anonymous - Saltarello": "Saltarello.mxl",
         "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
         "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
