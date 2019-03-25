@@ -197,6 +197,8 @@ export class InstrumentReader {
           const restNote: boolean = xmlNode.element("rest") !== undefined;
           //log.info("New note found!", noteDivisions, noteDuration.toString(), restNote);
 
+          const notationsNode: IXmlElement = xmlNode.element("notations"); // used for multiple checks further on
+
           const isGraceNote: boolean = xmlNode.element("grace") !== undefined || noteDivisions === 0 || isChord && lastNoteWasGrace;
           let graceNoteSlash: boolean = false;
           let graceSlur: boolean = false;
@@ -264,6 +266,25 @@ export class InstrumentReader {
             const stemColorAttr: Attr = stemNode.attribute("color");
             if (stemColorAttr) { // can be null, maybe also undefined
               stemColorXml = this.parseXmlColor(stemColorAttr.value);
+            }
+          }
+
+          // check Tremolo
+          let tremoloStrokes: number = 0;
+          if (notationsNode !== undefined) {
+            const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
+            if (ornamentsNode !== undefined) {
+              const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
+              if (tremoloNode !== undefined) {
+                const tremoloType: Attr = tremoloNode.attribute("type");
+                if (tremoloType && tremoloType.value === "single") {
+                  const tremoloStrokesGiven: number = parseInt(tremoloNode.value, 10);
+                  if (tremoloStrokesGiven > 0) {
+                    tremoloStrokes = tremoloStrokesGiven;
+                  }
+                }
+                // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
+              }
             }
           }
 
@@ -343,10 +364,10 @@ export class InstrumentReader {
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
-            printObject, isCueNote, stemDirectionXml, stemColorXml, noteheadColorXml
+            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml
           );
 
-          const notationsNode: IXmlElement = xmlNode.element("notations");
+          // notationsNode created further up for multiple checks
           if (notationsNode !== undefined && notationsNode.element("dynamics") !== undefined) {
             const expressionReader: ExpressionReader = this.expressionReaders[this.readExpressionStaffNumber(xmlNode) - 1];
             if (expressionReader !== undefined) {
