@@ -261,20 +261,20 @@ export class OpenSheetMusicDisplay {
         if (options.drawHiddenNotes) {
             this.drawingParameters.drawHiddenNotes = true;
         }
+        if (options.drawCredits !== undefined) {
+            this.drawingParameters.DrawCredits = options.drawCredits; // sets DrawComposer, DrawTitle, DrawSubtitle, DrawLyricist.
+        }
+        if (options.drawComposer !== undefined) {
+            this.drawingParameters.DrawComposer = options.drawComposer;
+        }
         if (options.drawTitle !== undefined) {
             this.drawingParameters.DrawTitle = options.drawTitle;
-            // TODO these settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
-            // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
-            // see settings below that don't call drawingParameters for the immediate approach
         }
         if (options.drawSubtitle !== undefined) {
             this.drawingParameters.DrawSubtitle = options.drawSubtitle;
         }
         if (options.drawLyricist !== undefined) {
             this.drawingParameters.DrawLyricist = options.drawLyricist;
-        }
-        if (options.drawCredits !== undefined) {
-            this.drawingParameters.drawCredits = options.drawCredits;
         }
         if (options.drawPartNames !== undefined) {
             this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules

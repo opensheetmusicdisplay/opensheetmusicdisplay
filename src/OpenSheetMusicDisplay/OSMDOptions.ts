@@ -13,7 +13,7 @@ export interface IOSMDOptions {
     autoResize?: boolean;
     /** Render Backend, will be SVG if given undefined, SVG or svg, otherwise Canvas. */
     backend?: string;
-    /** Defines the mode that is used for coloring: XML, Boomwhacker. Default XML (0).
+    /** Defines the mode that is used for coloring: XML (0), Boomwhacker(1), CustomColorSet (2). Default XML.
      *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
      */
     coloringMode?: ColoringModes;
@@ -35,13 +35,15 @@ export interface IOSMDOptions {
     disableCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
+    /** Whether to draw credits (title, subtitle, composer, lyricist) (in future: copyright etc., see <credit>). */
+    drawCredits?: boolean;
     /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
     drawTitle?: boolean;
     /** Whether to draw the subtitle of the piece. If true, enables drawing Title as well. */
     drawSubtitle?: boolean;
-    /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. Not yet supported. */ // TODO
-    drawCredits?: boolean;
-    /** Whether to draw the lyricist's name, if given. */
+    /** Whether to draw the composer name (top right of the score). */
+    drawComposer?: boolean;
+    /** Whether to draw the lyricist's name, if given (top left of the score). */
     drawLyricist?: boolean;
     /** Whether to draw part (instrument) names. */
     drawPartNames?: boolean;
