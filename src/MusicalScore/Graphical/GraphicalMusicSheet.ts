@@ -18,7 +18,7 @@ import {Instrument} from "../Instrument";
 import {BoundingBox} from "./BoundingBox";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import * as log from "loglevel";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
+//import Dictionary from "typescript-collections/dist/lib/Dictionary"; // unused for now
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
@@ -32,11 +32,8 @@ export class GraphicalMusicSheet {
         this.musicSheet = musicSheet;
         this.numberOfStaves = this.musicSheet.Staves.length;
         this.calculator = calculator;
-        this.sourceToGraphicalMeasureLinks = new Dictionary<SourceMeasure, GraphicalMeasure[]>();
         this.calculator.initialize(this);
     }
-
-    public sourceToGraphicalMeasureLinks: Dictionary<SourceMeasure, GraphicalMeasure[]>;
 
     private musicSheet: MusicSheet;
     //private fontInfo: FontInfo = FontInfo.Info;
@@ -868,12 +865,12 @@ export class GraphicalMusicSheet {
         return followedInstrumentCount;
     }
 
-    public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): GraphicalMeasure[] {
-        return this.sourceToGraphicalMeasureLinks.getValue(sourceMeasure);
-    }
+    /*public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): GraphicalMeasure[] {
+        return this.sourceToGraphicalMeasureLinks.getValue(sourceMeasure); // TODO gets wrong measure because sourceMeasure is not a valid key
+    }*/
 
     public GetGraphicalFromSourceStaffEntry(sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
-        const graphicalMeasure: GraphicalMeasure = this.GetGraphicalFromSourceMeasure(sourceStaffEntry.VerticalContainerParent.ParentMeasure)
+        const graphicalMeasure: GraphicalMeasure = sourceStaffEntry.VerticalContainerParent.ParentMeasure.VerticalMeasureList
             [sourceStaffEntry.ParentStaff.idInMusicSheet];
         return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);
     }

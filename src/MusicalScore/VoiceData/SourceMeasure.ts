@@ -11,6 +11,7 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
+import {GraphicalMeasure} from "../Graphical";
 //import {BaseIdClass} from "../../Util/BaseIdClass"; // SourceMeasure originally extended BaseIdClass, but ids weren't used.
 
 /**
@@ -18,7 +19,6 @@ import {Repetition} from "../MusicSource/Repetition";
  * There exists one source measure per XML measure or per paper sheet measure (e.g. the source measures are not doubled in repetitions)
  */
 export class SourceMeasure {
-
     /**
      * The data entries and data lists will be filled with null values according to the total number of staves,
      * so that existing objects can be referred to by staff index.
@@ -60,6 +60,8 @@ export class SourceMeasure {
     private lastInstructionsStaffEntries: SourceStaffEntry[];
     private firstRepetitionInstructions: RepetitionInstruction[] = [];
     private lastRepetitionInstructions: RepetitionInstruction[] = [];
+
+    private verticalMeasureList: GraphicalMeasure[]; // useful, see GraphicalMusicSheet.GetGraphicalFromSourceStaffEntry
 
     public get MeasureNumber(): number {
         return this.measureNumber;
@@ -150,6 +152,14 @@ export class SourceMeasure {
             return measures[this.measureListIndex - 1];
         }
         return undefined;
+    }
+
+    public get VerticalMeasureList(): GraphicalMeasure[] {
+        return this.verticalMeasureList;
+    }
+
+    public set VerticalMeasureList(value: GraphicalMeasure[]) {
+        this.verticalMeasureList = value;
     }
 
     /**
