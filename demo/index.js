@@ -315,9 +315,9 @@ import { VexFlowConverter } from '../src/';
                 gve.notes[0].sourceNote.Pitch = new Pitch(0, 4, 0);
                 //osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0].notes[0].sourceNote.Pitch = new Pitch(0, 4, 0);
                 gve.stavenote = VexFlowConverter.StaveNote(gve);
-                var gve = osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0];
+                gve = osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0];
+                gve.vfStaveNote.keys[0] = "CN";
                 console.log(gve.vfStaveNote);
-                gve.vfStaveNote.keyProps[0].key = "CN";
                 //gve.vfStaveNote.render();
                 openSheetMusicDisplay.render();
             } else {
