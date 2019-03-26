@@ -1,6 +1,9 @@
 import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
 
-/** Possible options for the OpenSheetMusicDisplay constructor, none are mandatory. */
+/** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
+ *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
+ *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
+ */
 export interface IOSMDOptions {
     /** Whether to automatically create beams for notes that don't have beams set in XML. */
     autoBeam?: boolean;
@@ -10,11 +13,11 @@ export interface IOSMDOptions {
     autoResize?: boolean;
     /** Render Backend, will be SVG if given undefined, SVG or svg, otherwise Canvas. */
     backend?: string;
-    /** Defines the mode that is used for coloring: XML, Boomwhacker. Default XML (0).
+    /** Defines the mode that is used for coloring: XML (0), Boomwhacker(1), CustomColorSet (2). Default XML.
      *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
      */
     coloringMode?: ColoringModes;
-    /** Set of 7 colors for automatic coloring of notes from C to B in HTML form (e.g. #00ff00).  */
+    /** Set of 8 colors for automatic coloring of 7 notes from C to B + rest note in HTML form (e.g. "#00ff00" for green).  */
     coloringSetCustom?: string[];
     /** Whether to enable coloring noteheads and stems by their XML color attribute. */
     coloringEnabled?: boolean;
@@ -32,13 +35,15 @@ export interface IOSMDOptions {
     disableCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
+    /** Whether to draw credits (title, subtitle, composer, lyricist) (in future: copyright etc., see <credit>). */
+    drawCredits?: boolean;
     /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
     drawTitle?: boolean;
     /** Whether to draw the subtitle of the piece. If true, enables drawing Title as well. */
     drawSubtitle?: boolean;
-    /** Whether to draw credits (title, composer, arranger, copyright etc., see <credit>. Not yet supported. */ // TODO
-    drawCredits?: boolean;
-    /** Whether to draw the lyricist's name, if given. */
+    /** Whether to draw the composer name (top right of the score). */
+    drawComposer?: boolean;
+    /** Whether to draw the lyricist's name, if given (top left of the score). */
     drawLyricist?: boolean;
     /** Whether to draw part (instrument) names. */
     drawPartNames?: boolean;

@@ -27,7 +27,7 @@ import {AutoColorSet} from "../MusicalScore";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.6.8-dev"; // getter: this.Version
+    private version: string = "0.7.0-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -261,20 +261,20 @@ export class OpenSheetMusicDisplay {
         if (options.drawHiddenNotes) {
             this.drawingParameters.drawHiddenNotes = true;
         }
+        if (options.drawCredits !== undefined) {
+            this.drawingParameters.DrawCredits = options.drawCredits; // sets DrawComposer, DrawTitle, DrawSubtitle, DrawLyricist.
+        }
+        if (options.drawComposer !== undefined) {
+            this.drawingParameters.DrawComposer = options.drawComposer;
+        }
         if (options.drawTitle !== undefined) {
             this.drawingParameters.DrawTitle = options.drawTitle;
-            // TODO these settings are duplicate in drawingParameters and EngravingRules. Maybe we only need them in EngravingRules.
-            // this sets the parameter in DrawingParameters, which in turn sets the parameter in EngravingRules.
-            // see settings below that don't call drawingParameters for the immediate approach
         }
         if (options.drawSubtitle !== undefined) {
             this.drawingParameters.DrawSubtitle = options.drawSubtitle;
         }
         if (options.drawLyricist !== undefined) {
             this.drawingParameters.DrawLyricist = options.drawLyricist;
-        }
-        if (options.drawCredits !== undefined) {
-            this.drawingParameters.drawCredits = options.drawCredits;
         }
         if (options.drawPartNames !== undefined) {
             this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
@@ -555,6 +555,9 @@ export class OpenSheetMusicDisplay {
     }
     public get DrawingParameters(): DrawingParameters {
         return this.drawingParameters;
+    }
+    public get EngravingRules(): EngravingRules { // custom getter, useful for engraving parameter setting in Demo
+        return EngravingRules.Rules;
     }
     /** Returns the version of OSMD this object is built from (the version you are using). */
     public get Version(): string {

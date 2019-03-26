@@ -257,14 +257,6 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration):
-        if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
-            const keyProps: Object[] = vfnote.getKeyProps();
-            for (let i: number = 0; i < keyProps.length; i++) {
-                (<any>keyProps[i]).code = "v81";
-            }
-        }
-
         if (EngravingRules.Rules.ColoringEnabled) {
             const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
             let stemColor: string = gve.parentVoiceEntry.StemColor;
@@ -317,7 +309,22 @@ export class VexFlowConverter {
                 }
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i])); // normal accidental
             }
+
+            // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
+            const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
+            if (tremoloStrokes > 0) {
+                vfnote.addModifier(i, new Vex.Flow.Tremolo(tremoloStrokes));
+            }
         }
+
+        // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration) (Hack)
+        if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
+            const keyProps: Object[] = vfnote.getKeyProps();
+            for (let i: number = 0; i < keyProps.length; i++) {
+                (<any>keyProps[i]).code = "v81";
+            }
+        }
+
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             vfnote.addDotToAll();
         }

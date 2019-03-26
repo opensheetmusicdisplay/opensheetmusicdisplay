@@ -1,11 +1,36 @@
-## [0.6.8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.6...0.6.8) (2019-02-08)
+<a name="0.7.0"></a>
+# [0.7.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.8...0.7.0) (2019-03-25)
 
 
 ### Bug Fixes
 
+* **Ajax Timeout:** Ajax timeout was not handled for IE and node ([2a66245](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2a66245)), closes [#479](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/479)
+* **Octava display error:** Fixed the octave shift bracket to be shown over the note line ([0e7f9f7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0e7f9f7)), closes [#490](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/490)
+* **options:** fix drawing parameters always being created in setOptions, causing some options to be reset with {} arguments ([419c39d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/419c39d))
+* **partAbbreviations:** don't draw part abbreviations for solo parts, add option to not draw abbreviations ([945d6a1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/945d6a1))
+* **partNames:** fix showing only one of multiple parts with same instrument name ([3bee67e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3bee67e))
+* **ties:** fix error in tie handling when no end note found ([3757db5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3757db5))
+* **tremolo:** enable half note tremolo between two different half notes. ([eefadf8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/eefadf8)), closes [#472](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/472)
+* **tuplet:** correct tuplet label for number of notes not equal to tuplet label ([bf5aaa1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/bf5aaa1)), closes [#485](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/485)
+* **tuplet:** fix duplet, quadruplet, tuplet layout ([596e794](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/596e794)), closes [#488](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/488)
+
+
+### Features
+
+* **Coloring:** Add automatic Boomwhacker coloring scheme ([#494](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/494)) ([adaecc4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/adaecc4)), closes [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486)
+* **Instrument label abbreviations:** Add instrument label abbreviations ([a67dc00](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a67dc00)), closes [#466](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/466)
+* **Types:** OSMD uses TS types from Definitely typed now, improved Vexflow compatibility in TS ([53f2c44](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/53f2c44))
+* **Options:** implement DrawCredits ([8c6df97](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8c6df97))
+* **Parts:** read and display XML part abbreviations (e.g. Vln for Violin) ([9fe031e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9fe031e))
+* **Tremolo:** display single note tremolos ([db1840c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/db1840c)), closes [#431](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/431)
+
+
+
+## [0.6.8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.6...0.6.8) (2019-02-08)
+
+### Bug Fixes
+
 * **alignment:** fix alignment of notes following dotted rest ([a7eb53d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a7eb53d)), closes [#484](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/484)
-
-
 
 ## [0.6.7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.6...0.6.7) (2019-01-16)
 

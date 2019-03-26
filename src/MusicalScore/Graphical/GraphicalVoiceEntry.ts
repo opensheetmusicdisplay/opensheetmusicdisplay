@@ -53,7 +53,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
             let noteheadColor: string = note.sourceNote.NoteheadColor;
             // Switch between XML colors and automatic coloring
             if (EngravingRules.Rules.ColoringMode === ColoringModes.AutoColoring ||
-                    EngravingRules.Rules.ColoringMode === ColoringModes.CustomColorSet) {
+                EngravingRules.Rules.ColoringMode === ColoringModes.CustomColorSet) {
                 if (note.sourceNote.isRest()) {
                     noteheadColor = EngravingRules.Rules.ColoringSetCurrent.getValue(-1);
                 } else {
