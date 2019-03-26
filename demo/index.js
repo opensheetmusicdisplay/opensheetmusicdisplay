@@ -1,4 +1,6 @@
 import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
+import { Pitch } from '../src/';
+import { VexFlowConverter } from '../src/';
 
 /*jslint browser:true */
 (function () {
@@ -247,6 +249,13 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             function() {
                 // This gives you access to the osmd object in the console. Do not use in productive code
                 window.osmd = openSheetMusicDisplay;
+                var gve = osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0];
+                console.log(gve.vfStaveNote);
+                gve.vfStaveNote.keyProps[0].key = "CN";
+                //gve.vfStaveNote.render();
+                gve.notes[0].sourceNote.Pitch = new Pitch(0, 4, 0);
+                //osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0].notes[0].sourceNote.Pitch = new Pitch(0, 4, 0);
+                gve.stavenote = VexFlowConverter.StaveNote(gve);
                 return openSheetMusicDisplay.render();
             },
             function(e) {
@@ -298,6 +307,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         disable();
         window.setTimeout(function(){
             if (openSheetMusicDisplay.IsReadyToRender()) {
+                osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0].notes[0].sourceNote.noteheadColor = "#FF0000";
+                var gve = osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0];
+                gve.notes[0].sourceNote.Pitch = new Pitch(0, 4, 0);
+                //osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0].notes[0].sourceNote.Pitch = new Pitch(0, 4, 0);
+                gve.stavenote = VexFlowConverter.StaveNote(gve);
+                var gve = osmd.graphic.measureList[0][0].staffEntries[1].graphicalVoiceEntries[0];
+                console.log(gve.vfStaveNote);
+                gve.vfStaveNote.keyProps[0].key = "CN";
+                //gve.vfStaveNote.render();
                 openSheetMusicDisplay.render();
             } else {
                 selectSampleOnChange(); // reload sample e.g. after osmd.clear()

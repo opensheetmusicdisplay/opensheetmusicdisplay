@@ -109,6 +109,9 @@ export class Note {
     public get Pitch(): Pitch {
         return this.pitch;
     }
+    public set Pitch(value: Pitch) {
+        this.pitch = value;
+    }
     public get NoteBeam(): Beam {
         return this.beam;
     }
