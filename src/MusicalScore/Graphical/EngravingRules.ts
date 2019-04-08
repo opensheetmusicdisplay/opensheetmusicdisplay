@@ -400,11 +400,11 @@ export class EngravingRules {
         this.coloringEnabled = true;
         this.colorBeams = true;
         this.colorFlags = true;
-        this.defaultColorNotehead = undefined; // undefined colors mean black
-        this.defaultColorRest = undefined;
-        this.defaultColorStem = undefined;
-        this.defaultColorLabel = undefined;
-        this.defaultColorTitle = undefined;
+        this.defaultColorNotehead = "#000000"; // black. undefined is only black if a note's color hasn't been changed before.
+        this.defaultColorRest = this.defaultColorNotehead;
+        this.defaultColorStem = this.defaultColorNotehead;
+        this.defaultColorLabel = this.defaultColorNotehead;
+        this.defaultColorTitle = this.defaultColorNotehead;
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
         this.renderComposer = true;
         this.renderTitle = true;

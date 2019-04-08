@@ -45,6 +45,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         const defaultColorNotehead: string = EngravingRules.Rules.DefaultColorNotehead;
         const defaultColorRest: string = EngravingRules.Rules.DefaultColorRest;
         const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
+        const transparentColor: string = "#00000000"; // transparent color in vexflow
 
         const vfStaveNote: any = (<VexFlowVoiceEntry>(this as any)).vfStaveNote;
         for (let i: number = 0; i < this.notes.length; i++) {
@@ -60,6 +61,11 @@ export class GraphicalVoiceEntry extends GraphicalObject {
                     const fundamentalNote: NoteEnum = note.sourceNote.Pitch.FundamentalNote;
                     noteheadColor = EngravingRules.Rules.ColoringSetCurrent.getValue(fundamentalNote);
                 }
+            }
+            if (!note.sourceNote.PrintObject) {
+                noteheadColor = transparentColor; // transparent
+            } else if (!noteheadColor) { // revert transparency after PrintObject was set to false, then true again
+                noteheadColor = EngravingRules.Rules.DefaultColorNotehead;
             }
 
             // DEBUG runtime coloring test
@@ -78,9 +84,9 @@ export class GraphicalVoiceEntry extends GraphicalObject {
                     noteheadColor = defaultColorRest;
                 }
             }
-            if (noteheadColor) {
+            if (noteheadColor && note.sourceNote.PrintObject) {
                 note.sourceNote.NoteheadColor = noteheadColor;
-            } else {
+            } else if (!noteheadColor) {
                 continue;
             }
 
@@ -99,10 +105,22 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         if (!stemColor && defaultColorStem) {
             stemColor = defaultColorStem;
         }
+        let stemTransparent: boolean = true;
+        for (const note of this.parentVoiceEntry.Notes) {
+            if (note.PrintObject) {
+                stemTransparent = false;
+                break;
+            }
+        }
+        if (stemTransparent) {
+            stemColor = transparentColor;
+        }
         const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
 
         if (stemColor && vfStaveNote.setStemStyle) {
-            this.parentVoiceEntry.StemColor = stemColor;
+            if (!stemTransparent) {
+                this.parentVoiceEntry.StemColor = stemColor;
+            }
             vfStaveNote.setStemStyle(stemStyle);
             if (vfStaveNote.flag && vfStaveNote.setFlagStyle && EngravingRules.Rules.ColorFlags) {
                 vfStaveNote.setFlagStyle(stemStyle);
