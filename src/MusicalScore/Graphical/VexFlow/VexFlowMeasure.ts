@@ -781,7 +781,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
                         const gveGrace: VexFlowVoiceEntry = <VexFlowVoiceEntry>graceGVoiceEntriesBefore[i];
-                        //if (gveGrace.notes[0].sourceNote.PrintObject) { // grace notes should still be rendered transparently instead of skipped
+                        //if (gveGrace.notes[0].sourceNote.PrintObject) {
+                        // grace notes should generally be rendered independently of main note instead of skipped if main note is invisible
+                        // could be an option to make grace notes transparent if main note is transparent. set grace notes' PrintObject to false then.
                         const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
                         gveGrace.vfStaveNote = vfStaveNote;
                         graceNotes.push(vfStaveNote);
