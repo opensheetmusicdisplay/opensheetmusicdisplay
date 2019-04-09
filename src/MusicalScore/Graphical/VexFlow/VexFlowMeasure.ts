@@ -781,11 +781,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
                         const gveGrace: VexFlowVoiceEntry = <VexFlowVoiceEntry>graceGVoiceEntriesBefore[i];
-                        if (gveGrace.notes[0].sourceNote.PrintObject || true) {
-                            const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
-                            gveGrace.vfStaveNote = vfStaveNote;
-                            graceNotes.push(vfStaveNote);
-                        }
+                        //if (gveGrace.notes[0].sourceNote.PrintObject) { // grace notes should still be rendered transparently instead of skipped
+                        const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
+                        gveGrace.vfStaveNote = vfStaveNote;
+                        graceNotes.push(vfStaveNote);
                     }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
                     ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
