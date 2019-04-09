@@ -759,6 +759,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow Stave Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.parentVoiceEntry.IsGrace) {
+                    // save grace notes for the next non-grace note
                     graceGVoiceEntriesBefore.push(gve);
                     if (!graceSlur) {
                         graceSlur = gve.parentVoiceEntry.GraceSlur;
@@ -778,6 +779,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     //continue;
                 }
                 if (graceGVoiceEntriesBefore.length > 0) {
+                    // add grace notes that came before this main note to a GraceNoteGroup in Vexflow, attached to the main note
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
                         const gveGrace: VexFlowVoiceEntry = <VexFlowVoiceEntry>graceGVoiceEntriesBefore[i];
