@@ -768,16 +768,20 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (gve.notes[0].sourceNote.PrintObject) {
                     (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
                 } else {
+                    // note can now also be added as StaveNote instead of GhostNote, because we set it to transparent
+                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
+
+                    // previous method: add as GhostNote instead of StaveNote. Can cause formatting issues if critical notes are missing in the measure
                     // don't render note. add ghost note, otherwise Vexflow can have issues with layouting when voices not complete.
-                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNote(gve.notes[0].sourceNote.Length);
-                    graceGVoiceEntriesBefore = []; // if note is not rendered, its grace notes might need to be removed
-                    continue;
+                    //(gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNote(gve.notes[0].sourceNote.Length);
+                    //graceGVoiceEntriesBefore = []; // if note is not rendered, its grace notes shouldn't be rendered, might need to be removed
+                    //continue;
                 }
                 if (graceGVoiceEntriesBefore.length > 0) {
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
                         const gveGrace: VexFlowVoiceEntry = <VexFlowVoiceEntry>graceGVoiceEntriesBefore[i];
-                        if (gveGrace.notes[0].sourceNote.PrintObject) {
+                        if (gveGrace.notes[0].sourceNote.PrintObject || true) {
                             const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
                             gveGrace.vfStaveNote = vfStaveNote;
                             graceNotes.push(vfStaveNote);

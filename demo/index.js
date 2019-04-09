@@ -31,6 +31,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
         "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
         "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
+        "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
         "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
         "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
         "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
