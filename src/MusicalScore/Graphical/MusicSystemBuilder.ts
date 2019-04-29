@@ -685,6 +685,31 @@ export class MusicSystemBuilder {
         if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
             return SystemLinesEnum.DoubleThin;
         }
+        const sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex][0].parentSourceMeasure;
+        if (sourceMeasure.endingBarStyle === "regular") {
+            return SystemLinesEnum.SingleThin;
+        } else if (sourceMeasure.endingBarStyle === "dotted") {
+            return SystemLinesEnum.Dotted;
+        } else if (sourceMeasure.endingBarStyle === "dashed") {
+            return SystemLinesEnum.Dashed;
+        } else if (sourceMeasure.endingBarStyle === "heavy") {
+            return SystemLinesEnum.Bold;
+        } else if (sourceMeasure.endingBarStyle === "light-light") {
+            return SystemLinesEnum.DoubleThin;
+        } else if (sourceMeasure.endingBarStyle === "light-heavy") {
+            return SystemLinesEnum.ThinBold;
+        } else if (sourceMeasure.endingBarStyle === "heavy-light") {
+            return SystemLinesEnum.BoldThin;
+        } else if (sourceMeasure.endingBarStyle === "heavy-heavy") {
+            return SystemLinesEnum.DoubleBold;
+        } else if (sourceMeasure.endingBarStyle === "tick") {
+            return SystemLinesEnum.Tick;
+        } else if (sourceMeasure.endingBarStyle === "short") {
+            return SystemLinesEnum.Short;
+        } else if (sourceMeasure.endingBarStyle === "none") {
+            return SystemLinesEnum.None;
+        }
+        // TODO: print an error message if the default fallback is used.
         return SystemLinesEnum.SingleThin;
     }
 

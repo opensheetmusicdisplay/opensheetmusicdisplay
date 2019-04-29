@@ -199,6 +199,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     case SystemLinesEnum.ThinBold:
                         this.stave.setEndBarType(Vex.Flow.Barline.type.END);
                         break;
+                    // TODO: Add support for additional Barline types when VexFlow supports them
                     default:
                         break;
                 }

@@ -473,6 +473,9 @@ export class InstrumentReader {
              this.currentMeasure.endsPiece = true;
            }
           }
+          if (xmlNode.element("bar-style") !== undefined) {
+            this.currentMeasure.endingBarStyle = xmlNode.element("bar-style").value;
+          }
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
         } else if (xmlNode.name === "harmony") {
