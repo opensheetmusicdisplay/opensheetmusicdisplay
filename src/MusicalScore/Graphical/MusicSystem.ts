@@ -297,6 +297,10 @@ export abstract class MusicSystem extends GraphicalObject {
                     instrNameLabel = new Label(labelText, instrument.NameLabel.textAlignment, instrument.NameLabel.font);
                 } else {
                     instrNameLabel = instrument.NameLabel;
+                    if (!EngravingRules.Rules.RenderPartNames) {
+                        instrNameLabel = new Label("", instrument.NameLabel.textAlignment, instrument.NameLabel.font);
+                        systemLabelsRightMargin = 0; // might affect lyricist/tempo placement. but without this there's still some extra x-spacing.
+                    }
                 }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
                     instrNameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.boundingBox

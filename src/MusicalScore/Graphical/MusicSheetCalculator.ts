@@ -1591,17 +1591,21 @@ export abstract class MusicSheetCalculator {
     }
 
     protected maxInstrNameLabelLength(): number {
-        if (!EngravingRules.Rules.RenderPartNames) {
-            return 0;
-        }
         let maxLabelLength: number = 0.0;
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
             if (instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
+                let renderedLabel: Label = instrument.NameLabel;
+                if (!EngravingRules.Rules.RenderPartNames) {
+                    renderedLabel = new Label("", renderedLabel.textAlignment, renderedLabel.font);
+                }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
-                    instrument.NameLabel, this.rules.InstrumentLabelTextHeight, TextAlignmentEnum.LeftCenter);
+                    renderedLabel, this.rules.InstrumentLabelTextHeight, TextAlignmentEnum.LeftCenter);
                 graphicalLabel.setLabelPositionAndShapeBorders();
                 maxLabelLength = Math.max(maxLabelLength, graphicalLabel.PositionAndShape.MarginSize.width);
             }
+        }
+        if (!EngravingRules.Rules.RenderPartNames) {
+            return 0;
         }
         return maxLabelLength;
     }

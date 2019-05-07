@@ -230,13 +230,11 @@ export class MusicSystemBuilder {
     }
 
     private addSystemLabels(): void {
-        if (EngravingRules.Rules.RenderPartNames) {
-            this.currentSystemParams.currentSystem.createMusicSystemLabel(
-                this.rules.InstrumentLabelTextHeight,
-                this.rules.SystemLabelsRightMargin,
-                this.rules.LabelMarginBorderFactor
-            );
-        }
+        this.currentSystemParams.currentSystem.createMusicSystemLabel(
+            this.rules.InstrumentLabelTextHeight,
+            this.rules.SystemLabelsRightMargin,
+            this.rules.LabelMarginBorderFactor
+        );
     }
 
     /**
