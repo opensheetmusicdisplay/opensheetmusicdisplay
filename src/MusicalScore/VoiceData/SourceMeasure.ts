@@ -29,6 +29,7 @@ export class SourceMeasure {
         this.implicitMeasure = false;
         this.breakSystemAfter = false;
         this.endsPiece = false;
+        this.endingBarStyle = "";
         this.firstInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.lastInstructionsStaffEntries = new Array(completeNumberOfStaves);
         for (let i: number = 0; i < completeNumberOfStaves; i++) {
@@ -45,6 +46,10 @@ export class SourceMeasure {
      * The measure number for showing on the music sheet. Typically starts with 1.
      */
     public endsPiece: boolean;
+    /**
+     * The style of the ending bar line.
+     */
+    public endingBarStyle: string;
 
     private measureNumber: number;
     private absoluteTimestamp: Fraction;
