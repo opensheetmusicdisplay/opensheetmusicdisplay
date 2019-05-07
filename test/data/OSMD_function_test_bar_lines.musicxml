@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>OSMD Function Test - Barlines</work-title>
+    <work-title>OSMD Function Test - Bar lines</work-title>
     </work>
   <identification>
     <encoding>
@@ -40,7 +40,7 @@
     <lyric-font font-family="FreeSerif" font-size="11"/>
     </defaults>
   <credit page="1">
-    <credit-words default-x="595.44" default-y="1608.9" justify="center" valign="top" font-size="24">Barlines Test</credit-words>
+    <credit-words default-x="595.44" default-y="1608.9" justify="center" valign="top" font-size="24">OSMD Function Test - Bar lines</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">

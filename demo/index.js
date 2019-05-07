@@ -26,7 +26,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
         "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
         "OSMD Function Test - Auto-/Custom-Coloring": "OSMD_function_test_auto-custom-coloring-entchen.musicxml",
-        "OSMD Function Test - Barlines": "OSMD_function_test_barlines.musicxml",
+        "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
         "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
         "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
         "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
