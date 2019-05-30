@@ -671,7 +671,8 @@ export abstract class MusicSheetCalculator {
 
         // visible 2D-MeasureList
         const visibleMeasureList: GraphicalMeasure[][] = [];
-        for (let idx: number = 0, len: number = allMeasures.length; idx < len && idx < EngravingRules.Rules.MaxMeasureToDrawIndex; ++idx) {
+        for (let idx: number = EngravingRules.Rules.MinMeasureToDrawIndex, len: number = allMeasures.length;
+            idx < len && idx < EngravingRules.Rules.MaxMeasureToDrawIndex; ++idx) {
             const graphicalMeasures: GraphicalMeasure[] = allMeasures[idx];
             const visiblegraphicalMeasures: GraphicalMeasure[] = [];
             for (let idx2: number = 0, len2: number = graphicalMeasures.length; idx2 < len2; ++idx2) {

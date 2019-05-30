@@ -190,6 +190,7 @@ export class EngravingRules {
     private defaultColorLabel: string;
     private defaultColorTitle: string;
     private maxMeasureToDrawIndex: number;
+    private minMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
     private renderComposer: boolean;
     private renderTitle: boolean;
@@ -406,6 +407,7 @@ export class EngravingRules {
         this.defaultColorLabel = this.defaultColorNotehead;
         this.defaultColorTitle = this.defaultColorNotehead;
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
+        this.minMeasureToDrawIndex = 0;
         this.renderComposer = true;
         this.renderTitle = true;
         this.renderSubtitle = true;
@@ -1403,6 +1405,12 @@ export class EngravingRules {
     }
     public set MaxMeasureToDrawIndex(value: number) {
         this.maxMeasureToDrawIndex = value;
+    }
+    public get MinMeasureToDrawIndex(): number {
+        return this.minMeasureToDrawIndex;
+    }
+    public set MinMeasureToDrawIndex(value: number) {
+        this.minMeasureToDrawIndex = value;
     }
     public get RenderComposer(): boolean {
         return this.renderComposer;
