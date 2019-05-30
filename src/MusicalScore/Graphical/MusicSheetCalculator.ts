@@ -668,6 +668,10 @@ export abstract class MusicSheetCalculator {
         if (allMeasures === undefined) {
             return;
         }
+        if (EngravingRules.Rules.MinMeasureToDrawIndex > allMeasures.length - 1) {
+            log.debug("minimum measure to draw index out of range. resetting min measure index to limit.");
+            EngravingRules.Rules.MinMeasureToDrawIndex = allMeasures.length - 1;
+        }
 
         // visible 2D-MeasureList
         const visibleMeasureList: GraphicalMeasure[][] = [];
@@ -1359,7 +1363,10 @@ export abstract class MusicSheetCalculator {
         let relative: PointF2D = new PointF2D();
 
         if (multiTempoExpression.ContinuousTempo || multiTempoExpression.InstantaneousTempo) {
-            // TempoExpressions always on the first visible System's StaffLine
+            // TempoExpressions always on the first visible System's StaffLine // TODO is it though?
+            if (EngravingRules.Rules.MinMeasureToDrawIndex > 0) {
+                return; // assuming that the tempo is always in measure 1 (idx 0), this causes issues when we don't draw measure 1
+            }
             let staffLine: StaffLine = measures[0].ParentStaffLine;
             let firstVisibleMeasureX: number = measures[0].PositionAndShape.RelativePosition.x;
             let verticalIndex: number = 0;
@@ -2601,7 +2608,7 @@ export abstract class MusicSheetCalculator {
 
     private calculateDynamicExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length, EngravingRules.Rules.MaxMeasureToDrawIndex);
-        const minIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+        const minIndex: number = Math.min(EngravingRules.Rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
         for (let i: number = minIndex; i < maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
@@ -2683,8 +2690,7 @@ export abstract class MusicSheetCalculator {
 
     private calculateTempoExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length, EngravingRules.Rules.MaxMeasureToDrawIndex);
-        const minIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
-        for (let i: number = minIndex; i < maxIndex; i++) {
+        for (let i: number = 0; i < maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.TempoExpressions.length; j++) {
                 this.calculateTempoExpressionsForMultiTempoExpression(sourceMeasure, sourceMeasure.TempoExpressions[j], i);

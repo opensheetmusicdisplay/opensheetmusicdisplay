@@ -429,6 +429,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
+    if (measureIndex < EngravingRules.Rules.MinMeasureToDrawIndex || measureIndex > EngravingRules.Rules.MaxMeasureToDrawIndex) {
+      return;
+      // we do already use the min/max in MusicSheetCalculator.calculateDynamicsExpressions,
+      // but this may be necessary for StaffLinkedExpressions, not tested.
+    }
 
     // calculate absolute Timestamp
     const absoluteTimestamp: Fraction = multiExpression.AbsoluteTimestamp;

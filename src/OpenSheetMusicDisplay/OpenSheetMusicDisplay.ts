@@ -313,7 +313,7 @@ export class OpenSheetMusicDisplay {
             EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber;
         }
         if (options.drawFromMeasureNumber) {
-            EngravingRules.Rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber;
+            EngravingRules.Rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
         }
         if (options.tupletsRatioed) {
             EngravingRules.Rules.TupletsRatioed = true;

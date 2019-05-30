@@ -154,6 +154,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             drawPartNames: true, // try false
             // drawTitle: false,
             // drawSubtitle: false,
+            //drawFromMeasureNumber: 4,
+            //drawUpToMeasureNumber: 8,
             drawFingerings: true,
             fingeringPosition: "auto", // left is default. try right. experimental: auto, above, below.
             // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
@@ -235,6 +237,23 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             str = sampleFolder + selectSample.value;
         }
         zoom = 1.0;
+
+        // for debugging: draw from a random range of measures
+        /*let minMeasureToDraw = Math.floor(Math.random() * 20);
+        let maxMeasureToDraw = Math.floor(Math.random() * 20);
+        if (minMeasureToDraw > maxMeasureToDraw) {
+            minMeasureToDraw = maxMeasureToDraw;
+            let a = minMeasureToDraw;
+            maxMeasureToDraw = a;
+        }
+        //minMeasureToDraw = 17; // set your custom indexes here. Drawing only one measure can be a special case
+        //maxMeasureToDraw = 17;
+        console.log("drawing measures in the range: [" + minMeasureToDraw + "," + maxMeasureToDraw + "]");
+        openSheetMusicDisplay.setOptions({
+            drawFromMeasureNumber: minMeasureToDraw,
+            drawUpToMeasureNumber: maxMeasureToDraw
+        });*/
+
         // Enable Boomwhacker-like coloring for OSMD Function Test - Auto-Coloring (Boomwhacker-like, custom color set)
         if (str.includes("auto-custom-coloring")) {
             //openSheetMusicDisplay.setOptions({coloringMode: 1}); // Auto-Coloring with pre-defined colors
