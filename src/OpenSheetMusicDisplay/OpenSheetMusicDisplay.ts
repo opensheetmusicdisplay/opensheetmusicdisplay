@@ -312,6 +312,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawUpToMeasureNumber) {
             EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber;
         }
+        if (options.drawFromMeasureNumber) {
+            EngravingRules.Rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber;
+        }
         if (options.tupletsRatioed) {
             EngravingRules.Rules.TupletsRatioed = true;
         }
