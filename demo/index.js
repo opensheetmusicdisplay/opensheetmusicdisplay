@@ -61,6 +61,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     custom,
     nextCursorBtn,
     resetCursorBtn,
+    followCursorCheckbox,
     showCursorBtn,
     hideCursorBtn,
     backendSelect,
@@ -84,6 +85,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         canvas = document.createElement("div");
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
+        followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         backendSelect = document.getElementById("backend-select");
@@ -192,6 +194,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         resetCursorBtn.addEventListener("click", function() {
             openSheetMusicDisplay.cursor.reset();
         });
+        if (followCursorCheckbox) {
+            followCursorCheckbox.onclick = function() {
+                openSheetMusicDisplay.followCursor = !openSheetMusicDisplay.followCursor;
+            }
+        }
         hideCursorBtn.addEventListener("click", function() {
             openSheetMusicDisplay.cursor.hide();
         });
