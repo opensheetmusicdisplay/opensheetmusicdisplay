@@ -2601,7 +2601,8 @@ export abstract class MusicSheetCalculator {
 
     private calculateDynamicExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length, EngravingRules.Rules.MaxMeasureToDrawIndex);
-        for (let i: number = 0; i < maxIndex; i++) {
+        const minIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+        for (let i: number = minIndex; i < maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
@@ -2682,7 +2683,8 @@ export abstract class MusicSheetCalculator {
 
     private calculateTempoExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length, EngravingRules.Rules.MaxMeasureToDrawIndex);
-        for (let i: number = 0; i < maxIndex; i++) {
+        const minIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+        for (let i: number = minIndex; i < maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.TempoExpressions.length; j++) {
                 this.calculateTempoExpressionsForMultiTempoExpression(sourceMeasure, sourceMeasure.TempoExpressions[j], i);

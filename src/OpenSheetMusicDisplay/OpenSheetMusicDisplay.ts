@@ -72,6 +72,7 @@ export class OpenSheetMusicDisplay {
     private drawingParameters: DrawingParameters;
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
+    private followCursor: boolean;
 
     /**
      * Load a MusicXML file
@@ -223,6 +224,7 @@ export class OpenSheetMusicDisplay {
             this.canvas = this.backend.getCanvas();
             this.innerElement = this.backend.getInnerElement();
             this.enableOrDisableCursor(this.drawingParameters.drawCursors);
+            this.followCursor = options.followCursor;
             // Create the drawer
             this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
         }
@@ -545,6 +547,14 @@ export class OpenSheetMusicDisplay {
     }
     public set AutoResizeEnabled(value: boolean) {
         this.autoResizeEnabled = value;
+    }
+
+    public set FollowCursor(value: boolean) {
+        this.followCursor = value;
+    }
+
+    public get FollowCursor(): boolean {
+        return this.followCursor;
     }
 
     public get Sheet(): MusicSheet {
