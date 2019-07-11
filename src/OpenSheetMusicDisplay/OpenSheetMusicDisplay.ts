@@ -20,6 +20,7 @@ import {AbstractExpression} from "../MusicalScore/VoiceData/Expressions/Abstract
 import {Dictionary} from "typescript-collections";
 import {NoteEnum} from "..";
 import {AutoColorSet} from "../MusicalScore";
+import {MusicSheetPlayer} from "../MusicalScore/Player";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -72,6 +73,7 @@ export class OpenSheetMusicDisplay {
     private drawingParameters: DrawingParameters;
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
+    private player: MusicSheetPlayer;
 
     /**
      * Load a MusicXML file
@@ -410,6 +412,9 @@ export class OpenSheetMusicDisplay {
         this.sheet = undefined;
         this.graphic = undefined;
         this.zoom = 1.0;
+        if (this.Player) {
+            this.stopPlayer();
+        }
     }
 
     /**
@@ -562,6 +567,36 @@ export class OpenSheetMusicDisplay {
     /** Returns the version of OSMD this object is built from (the version you are using). */
     public get Version(): string {
         return this.version;
+    }
+
+    /**
+     * set player
+     * @param {(arr: Array<any>) => void} playCallback
+     */
+    public createPlayer(playCallback: (arr: Array<any>) => void): void {
+        this.player = new MusicSheetPlayer(80, this.sheet, this.cursor, playCallback);
+    }
+    /**
+     * 播放器
+     * @returns {MusicSheetPlayer}
+     * @constructor
+     */
+    public get Player(): MusicSheetPlayer {
+        return this.player;
+    }
+
+    /**
+     * start play
+     */
+    public startPlayer(): void {
+        this.player.startPlay();
+    }
+
+    /**
+     * stop play
+     */
+    public stopPlayer(): void {
+        this.player.stopPlay();
     }
     //#endregion
 }

@@ -3,13 +3,21 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <title><%= htmlWebpackPlugin.options.title %></title>
     <meta name="description" content="A showcase for OpenSheetMusicDisplay.">
     <meta name="author" content="OpenSheetMusicDisplay contributors">
+    <!--midijs-->
+    <script src="js/base64binary.js" type="text/javascript"></script>
+    <script src="js/MIDI/AudioDetect.js" type="text/javascript"></script>
+    <script src="js/MIDI/LoadPlugin.js" type="text/javascript"></script>
+    <script src="js/MIDI/Plugin.js" type="text/javascript"></script>
+    <script src="js/MIDI/Player.js" type="text/javascript"></script>
+    <script src="js/MIDI/Loader.js" type="text/javascript"></script>
+    <script src="js/Window/DOMLoader.script.js" type="text/javascript"></script>
     <!-- Demo js file is included automatically by webpack druing build -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.min.js" type="text/javascript"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.min.js" type="text/javascript"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.css" media="all" rel="stylesheet"/>
     <link rel="icon" href="./favicon.ico?" type="image/x-icon"/>
 </head>
@@ -63,7 +71,7 @@
                 </div>
             </div>
         </div>
-    </div>         
+    </div>
     <div class="column">
         <h3 class="ui header">Zoom controls:</h3>
         <div class="ui buttons">
@@ -114,12 +122,24 @@
         <div>
             <div class="ui vertical buttons">
                 <div class="ui button" id="debug-re-render-btn">Re-render</div>
-                
+
             </div>
             <div class="ui vertical buttons">
-                <div class="ui button" id="debug-clear-btn"">Clear</div>
+                <div class="ui button" id="debug-clear-btn">Clear</div>
             </div>
         </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Player</h3>
+        <div>
+            <div class="ui vertical buttons">
+                <div class="ui button" id="play-btn">Play</div>
+
+            </div>
+            <div class="ui vertical buttons">
+                <div class="ui button" id="stop-btn">Stop</div>
+        </div>
+    </div>
     </div>
 </div>
 <table cellspacing="0" style="max-width:700px;">

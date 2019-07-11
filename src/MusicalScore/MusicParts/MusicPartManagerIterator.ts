@@ -565,5 +565,36 @@ export class MusicPartManagerIterator {
         return entries;
     }
 
+    /**
+     * caclculate timestemp at current cursor
+     * @param {Fraction} rhythmInstruction
+     * @returns {number}
+     */
+    public nextVoiceEntryTimeStemp(rhythmInstruction: Fraction): number {
+        if (this.currentVoiceEntryIndex + 1 >= 0 && this.currentVoiceEntryIndex + 1 < this.currentMeasure.VerticalSourceStaffEntryContainers.length) {
+            const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex + 1];
+            const timeStemp: Fraction = currentContainer.Timestamp;
+            const ret: Fraction = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, timeStemp);
+            return ret.RealValue;
+        } else {
+            if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex < this.manager.MusicSheet.SourceMeasures.length) {
+                const measure: SourceMeasure = this.manager.MusicSheet.SourceMeasures[this.currentMeasureIndex];
+                const ret: number = measure.AbsoluteTimestamp.RealValue + rhythmInstruction.RealValue;
+                return ret;
+            } else {
+                return undefined;
+            }
+        }
+    }
 
+    /**
+     * get bpm
+     * @returns {number}
+     */
+    public getCurrentMeasureBpm(): number {
+        if (this.CurrentMeasure.TempoExpressions === undefined || this.CurrentMeasure.TempoExpressions.length === 0) {
+            return 0;
+        }
+        return this.CurrentMeasure.TempoExpressions[this.CurrentMeasure.TempoExpressions.length - 1].InstantaneousTempo.TempoInBpm;
+    }
 }

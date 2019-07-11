@@ -64,8 +64,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     hideCursorBtn,
     backendSelect,
     debugReRenderBtn,
-    debugClearBtn;
-
+    debugClearBtn,
+    playBtn,
+    stopBtn;
+    //save note which is playing,and need close
+    var lastNoteArr = [];
     // Initialization code
     function init() {
         var name, option;
@@ -88,6 +91,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         backendSelect = document.getElementById("backend-select");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
         debugClearBtn = document.getElementById("debug-clear-btn");
+        playBtn = document.getElementById("play-btn");
+        stopBtn = document.getElementById("stop-btn");
 
         // Hide error
         error();
@@ -141,6 +146,20 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (debugClearBtn) {
             debugClearBtn.onclick = function() {
                 openSheetMusicDisplay.clear();
+            }
+        }
+        if (playBtn) {
+            playBtn.onclick = function () {
+                if (openSheetMusicDisplay.Player) {
+                    openSheetMusicDisplay.startPlayer();
+                }
+            }
+        }
+        if (stopBtn) {
+            stopBtn.onclick = function () {
+                if (openSheetMusicDisplay.Player) {
+                    openSheetMusicDisplay.stopPlayer();
+                }
             }
         }
 
@@ -219,6 +238,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             selectSampleOnChange();
 
         });
+
+        //load midi plugin
+        MIDI.loader = new widgets.Loader({
+            message: "Loading: Soundfont..."
+        });
+        MIDI.loadPlugin(function () {
+            MIDI.loader.stop();
+        });
     }
 
     function selectBoundingOnChange(evt) {
@@ -281,6 +308,23 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (!isCustom && custom.parentElement === selectSample) {
             selectSample.removeChild(custom);
         }
+        //show cursor
+        openSheetMusicDisplay.cursor.show();
+        //create player
+        openSheetMusicDisplay.createPlayer(function (noteValues, channel) {
+            console.log("noteValues" + noteValues);
+            console.log("channel" + channel);
+            MIDI.setVolume(0, 127);
+            for (let i = 0; i < lastNoteArr.length; i++) {
+                MIDI.noteOff(0, lastNoteArr[i], 0);
+            }
+            lastNoteArr.clear();
+            for (let x = 0; x < noteValues.length; x++) {
+                lastNoteArr.push(noteValues[x]);
+                MIDI.noteOn(0, noteValues[x], 127, 0);
+            }
+        });
+
         // Enable controls again
         enable();
     }
