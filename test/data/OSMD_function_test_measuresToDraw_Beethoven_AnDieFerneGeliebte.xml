@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="2.0">
   <work>
-    <work-number>Op. 98</work-number>
-    <work-title>An die ferne Geliebte (Page 1)</work-title>
+    <work-title>OSMD Function Test - Selecting measures to draw</work-title>
   </work>
+  <movement-title>(click clear and re-render to reload and randomize)</movement-title>
   <identification>
     <creator type="composer">Ludwig van Beethoven</creator>
     <creator type="lyricist">Aloys Jeitteles</creator>
