@@ -526,7 +526,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                                                                                            staffIndex);
     }
 
-    if (endMeasure !== undefined) {
+    // TODO octave shifts probably need a fix when we only draw measure 1 for example, then stafflines are undefined
+    if (endMeasure !== undefined && startStaffLine !== undefined && endMeasure.ParentStaffLine !== undefined) {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
       startStaffLine.OctaveShifts.push(graphicalOctaveShift);
@@ -554,7 +555,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         graphicalOctaveShift.setEndNote(endStaffEntry);
       }
     } else {
-      log.warn("End measure for octave shift is undefined! This should not happen!");
+      log.warn("End measure or staffLines for octave shift are undefined! This should not happen!");
     }
   }
 
