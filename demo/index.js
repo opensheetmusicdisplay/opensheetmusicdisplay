@@ -33,6 +33,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
         "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
         "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
+        "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
         "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
         "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
         "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
@@ -154,6 +155,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             drawPartNames: true, // try false
             // drawTitle: false,
             // drawSubtitle: false,
+            //drawFromMeasureNumber: 4,
+            //drawUpToMeasureNumber: 8,
             drawFingerings: true,
             fingeringPosition: "auto", // left is default. try right. experimental: auto, above, below.
             // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
@@ -235,6 +238,25 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             str = sampleFolder + selectSample.value;
         }
         zoom = 1.0;
+
+        if (str.includes("measuresToDraw")) {
+            // for debugging: draw from a random range of measures
+            let minMeasureToDraw = Math.ceil(Math.random() * 15); // measures start at 1 (measureIndex = measure number - 1 elsewhere)
+            let maxMeasureToDraw = Math.ceil(Math.random() * 15);
+            if (minMeasureToDraw > maxMeasureToDraw) {
+                minMeasureToDraw = maxMeasureToDraw;
+                let a = minMeasureToDraw;
+                maxMeasureToDraw = a;
+            }
+            //minMeasureToDraw = 1; // set your custom indexes here. Drawing only one measure can be a special case
+            //maxMeasureToDraw = 1;
+            console.log("drawing measures in the range: [" + minMeasureToDraw + "," + maxMeasureToDraw + "]");
+            openSheetMusicDisplay.setOptions({
+                drawFromMeasureNumber: minMeasureToDraw,
+                drawUpToMeasureNumber: maxMeasureToDraw
+            });
+        }
+
         // Enable Boomwhacker-like coloring for OSMD Function Test - Auto-Coloring (Boomwhacker-like, custom color set)
         if (str.includes("auto-custom-coloring")) {
             //openSheetMusicDisplay.setOptions({coloringMode: 1}); // Auto-Coloring with pre-defined colors
