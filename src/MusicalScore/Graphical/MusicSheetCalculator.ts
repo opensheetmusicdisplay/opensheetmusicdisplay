@@ -1365,7 +1365,7 @@ export abstract class MusicSheetCalculator {
         if (multiTempoExpression.ContinuousTempo || multiTempoExpression.InstantaneousTempo) {
             // TempoExpressions always on the first visible System's StaffLine // TODO is it though?
             if (EngravingRules.Rules.MinMeasureToDrawIndex > 0) {
-                return; // assuming that the tempo is always in measure 1 (idx 0), this causes issues when we don't draw measure 1
+                return; // assuming that the tempo is always in measure 1 (idx 0), adding the expression causes issues when we don't draw measure 1
             }
             let staffLine: StaffLine = measures[0].ParentStaffLine;
             let firstVisibleMeasureX: number = measures[0].PositionAndShape.RelativePosition.x;
