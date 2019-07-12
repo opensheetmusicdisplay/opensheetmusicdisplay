@@ -255,6 +255,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 drawFromMeasureNumber: minMeasureToDraw,
                 drawUpToMeasureNumber: maxMeasureToDraw
             });
+        } else { // reset for other samples
+            openSheetMusicDisplay.setOptions({
+                drawFromMeasureNumber: 0,
+                drawUpToMeasureNumber: Number.MAX_VALUE
+            });
         }
 
         // Enable Boomwhacker-like coloring for OSMD Function Test - Auto-Coloring (Boomwhacker-like, custom color set)
