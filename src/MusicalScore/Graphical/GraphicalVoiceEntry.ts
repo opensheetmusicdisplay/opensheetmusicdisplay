@@ -119,10 +119,10 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         }
 
         // color stems
-        let stemColor: string = this.parentVoiceEntry.StemColor;
-        const autoColoring: boolean = EngravingRules.Rules.ColoringMode !== ColoringModes.XML; // TODO: once custom color set gets stem color, respect it
-        if (!stemColor || autoColoring) {
-            if (EngravingRules.Rules.ColorStemsLikeNoteheads && noteheadColor) {
+        let stemColor: string = this.parentVoiceEntry.StemColor; // TODO: once coloringSetCustom gets stem color, respect it
+        if (!stemColor || EngravingRules.Rules.ColorStemsLikeNoteheads) {
+            // condition could be even more fine-grained by only recoloring if there was no custom StemColor set. will be more complex though
+            if (noteheadColor) {
                 stemColor = noteheadColor;
             } else if (defaultColorStem) {
                 stemColor = defaultColorStem;
