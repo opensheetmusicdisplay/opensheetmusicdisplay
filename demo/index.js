@@ -239,12 +239,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (str.includes("auto-custom-coloring")) {
             //openSheetMusicDisplay.setOptions({coloringMode: 1}); // Auto-Coloring with pre-defined colors
             openSheetMusicDisplay.setOptions({
-                coloringMode: 2,
-                coloringSetCustom: ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"]
+                coloringMode: 2, // custom coloring set. 0 would be XML, 1 autocoloring
+                coloringSetCustom: ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"],
                 // last color value of coloringSetCustom is for rest notes
+
+                colorStemsLikeNoteheads: true
             });
         } else {
-            openSheetMusicDisplay.setOptions({coloringMode: 0});
+            openSheetMusicDisplay.setOptions({coloringMode: 0, colorStemsLikeNoteheads: false});
         }
         openSheetMusicDisplay.setOptions({autoBeam: str.includes("autobeam")});
         openSheetMusicDisplay.setOptions({drawPartAbbreviations: !str.includes("Schubert_An_die_Musik")}); // TODO weird layout bug here. but shouldn't be in score anyways

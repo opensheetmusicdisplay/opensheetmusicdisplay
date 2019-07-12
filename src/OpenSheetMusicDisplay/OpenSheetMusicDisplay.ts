@@ -252,6 +252,9 @@ export class OpenSheetMusicDisplay {
         if (options.coloringEnabled !== undefined) {
             EngravingRules.Rules.ColoringEnabled = options.coloringEnabled;
         }
+        if (options.colorStemsLikeNoteheads !== undefined) {
+            EngravingRules.Rules.ColorStemsLikeNoteheads = options.colorStemsLikeNoteheads;
+        }
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
             this.enableOrDisableCursor(this.drawingParameters.drawCursors);

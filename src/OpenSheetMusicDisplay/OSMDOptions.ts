@@ -19,8 +19,10 @@ export interface IOSMDOptions {
     coloringMode?: ColoringModes;
     /** Set of 8 colors for automatic coloring of 7 notes from C to B + rest note in HTML form (e.g. "#00ff00" for green).  */
     coloringSetCustom?: string[];
-    /** Whether to enable coloring noteheads and stems by their XML color attribute. */
+    /** Whether to enable coloring noteheads and stems, depending on coloringMode. */
     coloringEnabled?: boolean;
+    /** Whether to color the stems of notes the same as their noteheads */
+    colorStemsLikeNoteheads?: boolean;
     /** Default color for a note head (without stem). Default black (undefined). */
     defaultColorNotehead?: string;
     /** Default color for a note stem. Default black (undefined). */
