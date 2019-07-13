@@ -104,7 +104,9 @@ export class Cursor {
       cursorElement.width = newWidth;
       this.updateStyle(newWidth);
     }
-
+    if (this.openSheetMusicDisplay.FollowCursor) {
+      this.cursorElement.scrollIntoView({behavior: "smooth", block: "center"});
+    }
     // Show cursor
     // // Old cursor: this.graphic.Cursors.push(cursor);
     this.cursorElement.style.display = "";
