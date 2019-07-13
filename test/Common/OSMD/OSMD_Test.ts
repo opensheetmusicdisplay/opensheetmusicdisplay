@@ -1,6 +1,7 @@
 import chai = require("chai");
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../Util/TestUtils";
+import { VoiceEntry, Instrument, Note } from "../../../src";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -229,4 +230,53 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             }
         });
     });
+    describe("cursor", () => {
+        let opensheetmusicdisplay: OpenSheetMusicDisplay;
+        beforeEach((done: MochaDone) => {
+            const div: HTMLElement = container1;
+            opensheetmusicdisplay = TestUtils.createOpenSheetMusicDisplay(div);
+            const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
+            opensheetmusicdisplay.load(score).then(
+                (_: {}) => {
+                    opensheetmusicdisplay.render();
+                    opensheetmusicdisplay.cursor.show();
+                    done();
+                },
+                done
+            ).catch(done);
+        });
+
+        describe("get AllVoicesUnderCursor", () => {
+            it("retrieves all voices under cursor", () => {
+                const voiceEntries: VoiceEntry[] = opensheetmusicdisplay.cursor.VoicesUnderCursor();
+                chai.expect(voiceEntries.length).to.equal(2);
+            });
+        });
+
+        describe("VoicesUnderCursor", () => {
+            it("retrieves voices for a specific instrument under cursor", () => {
+                const voiceEntries: VoiceEntry[] = opensheetmusicdisplay.cursor.VoicesUnderCursor();
+                chai.expect(voiceEntries.length).to.equal(2);
+            });
+            it("retrieves all voices under cursor when instrument not specified", () => {
+                const instrument: Instrument = opensheetmusicdisplay.Sheet.Instruments[1];
+                const voiceEntries: VoiceEntry[] = opensheetmusicdisplay.cursor.VoicesUnderCursor(instrument);
+                chai.expect(voiceEntries.length).to.equal(1);
+            });
+        });
+
+        describe("NotesUnderCursor", () => {
+            it("gets notes for a specific instrument under cursor", () => {
+                const instrument: Instrument = opensheetmusicdisplay.Sheet.Instruments[0];
+                const notes: Note[] = opensheetmusicdisplay.cursor.NotesUnderCursor(instrument);
+                chai.expect(notes.length).to.equal(1);
+            });
+
+            it("gets all notes under cursor when instrument unspecified", () => {
+                const notes: Note[] = opensheetmusicdisplay.cursor.NotesUnderCursor();
+                chai.expect(notes.length).to.equal(2);
+            });
+        });
+    });
+
 });

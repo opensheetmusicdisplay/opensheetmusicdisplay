@@ -5,6 +5,8 @@ import {VexFlowStaffEntry} from "../MusicalScore/Graphical/VexFlow/VexFlowStaffE
 import {MusicSystem} from "../MusicalScore/Graphical/MusicSystem";
 import {OpenSheetMusicDisplay} from "./OpenSheetMusicDisplay";
 import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet";
+import {Instrument} from "../MusicalScore/Instrument";
+import {Note} from "../MusicalScore/VoiceData/Note";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -167,5 +169,19 @@ export class Cursor {
 
   public get Hidden(): boolean {
     return this.hidden;
+  }
+
+  /** returns voices under the current Cursor position. Without instrument argument, all voices are returned. */
+  public VoicesUnderCursor(instrument?: Instrument): VoiceEntry[] {
+    return this.iterator.CurrentVisibleVoiceEntries(instrument);
+  }
+
+  public NotesUnderCursor(instrument?: Instrument): Note[] {
+    const voiceEntries: VoiceEntry[]  = this.VoicesUnderCursor(instrument);
+    const notes: Note[] = [];
+    voiceEntries.forEach(voiceEntry => {
+      notes.push.apply(notes, voiceEntry.Notes);
+    });
+    return notes;
   }
 }
