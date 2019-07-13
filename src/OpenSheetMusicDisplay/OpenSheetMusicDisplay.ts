@@ -72,6 +72,7 @@ export class OpenSheetMusicDisplay {
     private drawingParameters: DrawingParameters;
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
+    private followCursor: boolean;
 
     /**
      * Load a MusicXML file
@@ -293,6 +294,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.fingeringInsideStafflines !== undefined) {
             EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
+        }
+        if (options.followCursor !== undefined) {
+            this.FollowCursor = options.followCursor;
         }
         if (options.setWantedStemDirectionByXml !== undefined) {
             EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
@@ -548,6 +552,14 @@ export class OpenSheetMusicDisplay {
     }
     public set AutoResizeEnabled(value: boolean) {
         this.autoResizeEnabled = value;
+    }
+
+    public set FollowCursor(value: boolean) {
+        this.followCursor = value;
+    }
+
+    public get FollowCursor(): boolean {
+        return this.followCursor;
     }
 
     public get Sheet(): MusicSheet {

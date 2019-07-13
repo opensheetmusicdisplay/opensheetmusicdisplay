@@ -35,6 +35,8 @@ export interface IOSMDOptions {
     defaultColorTitle?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
+    /** Follow Cursor */
+    followCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
     /** Whether to draw credits (title, subtitle, composer, lyricist) (in future: copyright etc., see <credit>). */
