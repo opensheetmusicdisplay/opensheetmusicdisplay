@@ -143,6 +143,7 @@ export class ExpressionReader {
                 const match: string[] = tempoAttr.value.match(/\d+/);
                 this.soundTempo = match !== undefined ? parseInt(match[0], 10) : 100;
                 currentMeasure.TempoInBPM = this.soundTempo;
+                this.musicSheet.HasBPMInfo = true;
                 isTempoInstruction = true;
             }
             if (dynAttr) {
