@@ -505,6 +505,10 @@ export class InstrumentReader {
       }
         }
       }
+
+      if (currentMeasure.TempoInBPM === 0) {
+        this.currentMeasure.TempoInBPM = this.previousMeasure.TempoInBPM;
+      }
     } catch (e) {
       if (divisionsException) {
         throw new MusicSheetReadingException(e.Message);
