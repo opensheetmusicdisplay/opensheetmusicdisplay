@@ -224,7 +224,6 @@ export class OpenSheetMusicDisplay {
             this.canvas = this.backend.getCanvas();
             this.innerElement = this.backend.getInnerElement();
             this.enableOrDisableCursor(this.drawingParameters.drawCursors);
-            this.followCursor = options.followCursor;
             // Create the drawer
             this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
         }
@@ -253,6 +252,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.coloringEnabled !== undefined) {
             EngravingRules.Rules.ColoringEnabled = options.coloringEnabled;
+        }
+        if (options.colorStemsLikeNoteheads !== undefined) {
+            EngravingRules.Rules.ColorStemsLikeNoteheads = options.colorStemsLikeNoteheads;
         }
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
@@ -293,6 +295,9 @@ export class OpenSheetMusicDisplay {
         if (options.fingeringInsideStafflines !== undefined) {
             EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
         }
+        if (options.followCursor !== undefined) {
+            this.FollowCursor = options.followCursor;
+        }
         if (options.setWantedStemDirectionByXml !== undefined) {
             EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
         }
@@ -315,7 +320,7 @@ export class OpenSheetMusicDisplay {
             EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber;
         }
         if (options.drawFromMeasureNumber) {
-            EngravingRules.Rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber;
+            EngravingRules.Rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
         }
         if (options.tupletsRatioed) {
             EngravingRules.Rules.TupletsRatioed = true;

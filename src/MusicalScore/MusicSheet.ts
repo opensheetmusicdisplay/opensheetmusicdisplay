@@ -41,6 +41,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.pageWidth = 120;
         // create MusicPartManager
         this.MusicPartManager = new MusicPartManager(this);
+        this.hasBPMInfo = false;
     }
     public static defaultTitle: string = "[kein Titel]";
 
@@ -77,6 +78,11 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     // (*) private musicSheetParameterObject: MusicSheetParameterObject = undefined;
     private engravingRules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
+    /*
+     * The BPM info is present in the sheet, if it is set to false, means each measure's
+     * BPM was set to its value, 120
+     */
+    private hasBPMInfo: boolean;
 
     /**
      * Get the global index within the music sheet for this staff.
@@ -225,6 +231,15 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public set SelectionEnd(value: Fraction) {
         this.selectionEnd = value;
     }
+
+    public set HasBPMInfo(value: boolean) {
+        this.hasBPMInfo = value;
+    }
+
+    public get HasBPMInfo(): boolean {
+        return this.hasBPMInfo;
+    }
+
     // (*) public get MusicSheetParameterObject(): MusicSheetParameterObject {
     //    return this.musicSheetParameterObject;
     //}

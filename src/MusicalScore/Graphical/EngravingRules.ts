@@ -181,6 +181,7 @@ export class EngravingRules {
 
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
+    private colorStemsLikeNoteheads: boolean;
     private colorFlags: boolean;
     private colorBeams: boolean;
     private coloringSetCustom: Dictionary<NoteEnum|number, string>;
@@ -399,6 +400,7 @@ export class EngravingRules {
         // Render options (whether to render specific or invisible elements)
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
+        this.colorStemsLikeNoteheads = false;
         this.colorBeams = true;
         this.colorFlags = true;
         this.defaultColorNotehead = "#000000"; // black. undefined is only black if a note's color hasn't been changed before.
@@ -1351,6 +1353,12 @@ export class EngravingRules {
     }
     public set ColoringEnabled(value: boolean) {
         this.coloringEnabled = value;
+    }
+    public get ColorStemsLikeNoteheads(): boolean {
+        return this.colorStemsLikeNoteheads;
+    }
+    public set ColorStemsLikeNoteheads(value: boolean) {
+        this.colorStemsLikeNoteheads = value;
     }
     public get ColorFlags(): boolean {
         return this.colorFlags;

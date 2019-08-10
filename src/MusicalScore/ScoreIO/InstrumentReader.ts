@@ -502,8 +502,16 @@ export class InstrumentReader {
          const reader: ExpressionReader = this.expressionReaders[i];
          if (reader !== undefined) {
            reader.checkForOpenExpressions(this.currentMeasure, currentFraction);
-      }
+          }
         }
+      }
+
+      // if this is the first measure and no BPM info found, we set it to 120
+      // next measures will automatically inherit that value
+      if (!this.musicSheet.HasBPMInfo) {
+        this.currentMeasure.TempoInBPM = 120;
+      } else if (currentMeasure.TempoInBPM === 0) {
+        this.currentMeasure.TempoInBPM = this.previousMeasure.TempoInBPM;
       }
     } catch (e) {
       if (divisionsException) {
