@@ -183,7 +183,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
          afterSheetReadingModule.calculate(this.musicSheet);
         }
 
-        this.musicSheet.userStartTempoInBPM = this.musicSheet.SourceMeasures[0].TempoInBPM;
+        this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SourceMeasures[0].TempoInBPM;
+        this.musicSheet.userStartTempoInBPM = this.musicSheet.userStartTempoInBPM || this.musicSheet.DefaultStartTempoInBpm;
 
         return this.musicSheet;
     }
