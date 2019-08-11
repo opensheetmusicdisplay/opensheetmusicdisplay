@@ -176,6 +176,9 @@ export class ExpressionReader {
                                                      bpmNumber,
                                                      this.currentMultiTempoExpression,
                                                      true);
+                this.soundTempo = bpmNumber;
+                currentMeasure.TempoInBPM = this.soundTempo;
+                this.musicSheet.HasBPMInfo = true;
                 instantaneousTempoExpression.dotted = dotted;
                 instantaneousTempoExpression.beatUnit = beatUnit.value;
                 this.currentMultiTempoExpression.addExpression(instantaneousTempoExpression, "");
