@@ -80,7 +80,7 @@
     "karma-firefox-launcher": "^1.0.0",
     "karma-mocha": "^1.1.1",
     "karma-mocha-reporter": "^2.0.4",
-    "karma-webpack": "^4.0.0",
+    "karma-webpack": "^4.0.2",
     "karma-xml2js-preprocessor": "^0.0.3",
     "mocha": "^6.2.0",
     "npm-run-all": "^4.1.2",
