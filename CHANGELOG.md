@@ -1,3 +1,28 @@
+<a name="0.7.1"></a>
+## [0.7.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.0...0.7.1) (2019-08-19)
+
+
+### Bug Fixes
+
+* **drawFromMeasureNumber:** avoid octave shift null error. add function test selectMeasuresToDraw ([0479652](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0479652)), closes [#482](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/482)
+* **drawFromMeasureNumber:** start from correct index, fix issues with drawing specific range of measures ([01926d4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/01926d4)), closes [#528](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/528) [#482](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/482)
+* **part names:** drawPartNames = false does not leave left x-spacing in first line anymore ([595f8ab](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/595f8ab)), closes [#515](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/515)
+* **stemColor:** respect colorStemsLikeNoteheads option in XML color mode as well ([6548c57](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6548c57)), closes [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486)
+* **test:** fix Pitch_Test to not occasionally return a false error when pitch to compare is not rounded ([5963d06](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5963d06))
+* **Ties:** fix not displaying ties because measure to graphicalMeasure dictionary didn't work ([27d3645](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/27d3645)), closes [#503](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/503)
+
+
+### Features
+
+* **bar lines:** Add support for double and final bar lines ([#519](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/519)) ([e05b99a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e05b99a))
+* **color:** add colorStemsLikeNoteheads option, color beams like stems as well if matching ([b631879](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b631879)), closes [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486)
+* **tempo:** Save measures' BPM ([#558](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/558)) ([cf199ad](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cf199ad)), closes [#557](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/557)
+* **transparency:** add invisible notes as transparent StaveNotes instead of GhostNotes ([d0211a7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d0211a7))
+* **transparency:** allow transparency after re-render with Note.PrintObject = false ([52212d6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/52212d6)), closes [#509](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/509)
+* **demo:** add option to follow cursor, add function test for selecting (random) measures to render
+
+
+
 <a name="0.7.0"></a>
 # [0.7.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.8...0.7.0) (2019-03-25)
 
