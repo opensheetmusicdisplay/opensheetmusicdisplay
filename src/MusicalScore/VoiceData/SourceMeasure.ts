@@ -32,6 +32,7 @@ export class SourceMeasure {
         this.endingBarStyle = "";
         this.firstInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.lastInstructionsStaffEntries = new Array(completeNumberOfStaves);
+        this.TempoInBPM = 0;
         for (let i: number = 0; i < completeNumberOfStaves; i++) {
             this.graphicalMeasureErrors.push(false);
             this.staffLinkedExpressions.push([]);
@@ -65,7 +66,7 @@ export class SourceMeasure {
     private lastInstructionsStaffEntries: SourceStaffEntry[];
     private firstRepetitionInstructions: RepetitionInstruction[] = [];
     private lastRepetitionInstructions: RepetitionInstruction[] = [];
-
+    private tempoInBPM: number;
     private verticalMeasureList: GraphicalMeasure[]; // useful, see GraphicalMusicSheet.GetGraphicalFromSourceStaffEntry
 
     public get MeasureNumber(): number {
@@ -167,6 +168,13 @@ export class SourceMeasure {
         this.verticalMeasureList = value;
     }
 
+    public get TempoInBPM(): number {
+        return this.tempoInBPM;
+    }
+
+    public set TempoInBPM(value: number) {
+        this.tempoInBPM = value;
+    }
     /**
      * Check at the given timestamp if a VerticalContainer exists, if not creates a new, timestamp-ordered one,
      * and at the given index, if a [[SourceStaffEntry]] exists, and if not, creates a new one.
