@@ -11,6 +11,7 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
+import {GraphicalMeasure} from "../Graphical";
 //import {BaseIdClass} from "../../Util/BaseIdClass"; // SourceMeasure originally extended BaseIdClass, but ids weren't used.
 
 /**
@@ -18,7 +19,6 @@ import {Repetition} from "../MusicSource/Repetition";
  * There exists one source measure per XML measure or per paper sheet measure (e.g. the source measures are not doubled in repetitions)
  */
 export class SourceMeasure {
-
     /**
      * The data entries and data lists will be filled with null values according to the total number of staves,
      * so that existing objects can be referred to by staff index.
@@ -29,8 +29,10 @@ export class SourceMeasure {
         this.implicitMeasure = false;
         this.breakSystemAfter = false;
         this.endsPiece = false;
+        this.endingBarStyle = "";
         this.firstInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.lastInstructionsStaffEntries = new Array(completeNumberOfStaves);
+        this.TempoInBPM = 0;
         for (let i: number = 0; i < completeNumberOfStaves; i++) {
             this.graphicalMeasureErrors.push(false);
             this.staffLinkedExpressions.push([]);
@@ -45,6 +47,10 @@ export class SourceMeasure {
      * The measure number for showing on the music sheet. Typically starts with 1.
      */
     public endsPiece: boolean;
+    /**
+     * The style of the ending bar line.
+     */
+    public endingBarStyle: string;
 
     private measureNumber: number;
     private absoluteTimestamp: Fraction;
@@ -60,6 +66,8 @@ export class SourceMeasure {
     private lastInstructionsStaffEntries: SourceStaffEntry[];
     private firstRepetitionInstructions: RepetitionInstruction[] = [];
     private lastRepetitionInstructions: RepetitionInstruction[] = [];
+    private tempoInBPM: number;
+    private verticalMeasureList: GraphicalMeasure[]; // useful, see GraphicalMusicSheet.GetGraphicalFromSourceStaffEntry
 
     public get MeasureNumber(): number {
         return this.measureNumber;
@@ -152,6 +160,21 @@ export class SourceMeasure {
         return undefined;
     }
 
+    public get VerticalMeasureList(): GraphicalMeasure[] {
+        return this.verticalMeasureList;
+    }
+
+    public set VerticalMeasureList(value: GraphicalMeasure[]) {
+        this.verticalMeasureList = value;
+    }
+
+    public get TempoInBPM(): number {
+        return this.tempoInBPM;
+    }
+
+    public set TempoInBPM(value: number) {
+        this.tempoInBPM = value;
+    }
     /**
      * Check at the given timestamp if a VerticalContainer exists, if not creates a new, timestamp-ordered one,
      * and at the given index, if a [[SourceStaffEntry]] exists, and if not, creates a new one.

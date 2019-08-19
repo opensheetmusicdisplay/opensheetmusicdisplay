@@ -181,6 +181,7 @@ export class EngravingRules {
 
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
+    private colorStemsLikeNoteheads: boolean;
     private colorFlags: boolean;
     private colorBeams: boolean;
     private coloringSetCustom: Dictionary<NoteEnum|number, string>;
@@ -190,6 +191,7 @@ export class EngravingRules {
     private defaultColorLabel: string;
     private defaultColorTitle: string;
     private maxMeasureToDrawIndex: number;
+    private minMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
     private renderComposer: boolean;
     private renderTitle: boolean;
@@ -398,14 +400,16 @@ export class EngravingRules {
         // Render options (whether to render specific or invisible elements)
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
+        this.colorStemsLikeNoteheads = false;
         this.colorBeams = true;
         this.colorFlags = true;
-        this.defaultColorNotehead = undefined; // undefined colors mean black
-        this.defaultColorRest = undefined;
-        this.defaultColorStem = undefined;
-        this.defaultColorLabel = undefined;
-        this.defaultColorTitle = undefined;
+        this.defaultColorNotehead = "#000000"; // black. undefined is only black if a note's color hasn't been changed before.
+        this.defaultColorRest = this.defaultColorNotehead;
+        this.defaultColorStem = this.defaultColorNotehead;
+        this.defaultColorLabel = this.defaultColorNotehead;
+        this.defaultColorTitle = this.defaultColorNotehead;
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
+        this.minMeasureToDrawIndex = 0;
         this.renderComposer = true;
         this.renderTitle = true;
         this.renderSubtitle = true;
@@ -1350,6 +1354,12 @@ export class EngravingRules {
     public set ColoringEnabled(value: boolean) {
         this.coloringEnabled = value;
     }
+    public get ColorStemsLikeNoteheads(): boolean {
+        return this.colorStemsLikeNoteheads;
+    }
+    public set ColorStemsLikeNoteheads(value: boolean) {
+        this.colorStemsLikeNoteheads = value;
+    }
     public get ColorFlags(): boolean {
         return this.colorFlags;
     }
@@ -1403,6 +1413,12 @@ export class EngravingRules {
     }
     public set MaxMeasureToDrawIndex(value: number) {
         this.maxMeasureToDrawIndex = value;
+    }
+    public get MinMeasureToDrawIndex(): number {
+        return this.minMeasureToDrawIndex;
+    }
+    public set MinMeasureToDrawIndex(value: number) {
+        this.minMeasureToDrawIndex = value;
     }
     public get RenderComposer(): boolean {
         return this.renderComposer;

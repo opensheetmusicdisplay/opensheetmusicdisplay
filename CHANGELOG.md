@@ -17,7 +17,7 @@
 
 ### Features
 
-* **Coloring:** Add automatic Boomwhacker coloring scheme ([#494](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/494)) ([adaecc4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/adaecc4)), closes [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486) [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486) [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486)
+* **Coloring:** Add automatic Boomwhacker coloring scheme ([#494](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/494)) ([adaecc4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/adaecc4)), closes [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486)
 * **Instrument label abbreviations:** Add instrument label abbreviations ([a67dc00](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a67dc00)), closes [#466](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/466)
 * **Types:** OSMD uses TS types from Definitely typed now, improved Vexflow compatibility in TS ([53f2c44](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/53f2c44))
 * **Options:** implement DrawCredits ([8c6df97](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8c6df97))

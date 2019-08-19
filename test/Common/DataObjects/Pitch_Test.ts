@@ -52,11 +52,11 @@ describe("Pitch Unit Tests:", () => {
         const key5: number = Pitch.calcFractionalKey(pitch5.Frequency);
 
         it("pitch key should equal midi key", (done: MochaDone) => {
-            chai.expect(key1).to.equal(109);
-            chai.expect(key2).to.equal(59);
-            chai.expect(key3).to.equal(87);
-            chai.expect(key4).to.equal(30);
-            chai.expect(key5).to.equal(57);
+            chai.expect(Math.round(key1)).to.equal(109);
+            chai.expect(Math.round(key2)).to.equal(59);
+            chai.expect(Math.round(key3)).to.equal(87);
+            chai.expect(Math.round(key4)).to.equal(30);
+            chai.expect(Math.round(key5)).to.equal(57);
             done();
         });
     });

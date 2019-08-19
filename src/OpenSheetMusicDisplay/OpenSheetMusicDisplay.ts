@@ -27,7 +27,7 @@ import {AutoColorSet} from "../MusicalScore";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.7.0-release"; // getter: this.Version
+    private version: string = "0.7.0-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -72,6 +72,7 @@ export class OpenSheetMusicDisplay {
     private drawingParameters: DrawingParameters;
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
+    private followCursor: boolean;
 
     /**
      * Load a MusicXML file
@@ -252,6 +253,9 @@ export class OpenSheetMusicDisplay {
         if (options.coloringEnabled !== undefined) {
             EngravingRules.Rules.ColoringEnabled = options.coloringEnabled;
         }
+        if (options.colorStemsLikeNoteheads !== undefined) {
+            EngravingRules.Rules.ColorStemsLikeNoteheads = options.colorStemsLikeNoteheads;
+        }
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
             this.enableOrDisableCursor(this.drawingParameters.drawCursors);
@@ -291,6 +295,9 @@ export class OpenSheetMusicDisplay {
         if (options.fingeringInsideStafflines !== undefined) {
             EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
         }
+        if (options.followCursor !== undefined) {
+            this.FollowCursor = options.followCursor;
+        }
         if (options.setWantedStemDirectionByXml !== undefined) {
             EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
         }
@@ -311,6 +318,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.drawUpToMeasureNumber) {
             EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber;
+        }
+        if (options.drawFromMeasureNumber) {
+            EngravingRules.Rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
         }
         if (options.tupletsRatioed) {
             EngravingRules.Rules.TupletsRatioed = true;
@@ -542,6 +552,14 @@ export class OpenSheetMusicDisplay {
     }
     public set AutoResizeEnabled(value: boolean) {
         this.autoResizeEnabled = value;
+    }
+
+    public set FollowCursor(value: boolean) {
+        this.followCursor = value;
+    }
+
+    public get FollowCursor(): boolean {
+        return this.followCursor;
     }
 
     public get Sheet(): MusicSheet {

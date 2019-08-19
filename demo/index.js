@@ -26,11 +26,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
         "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
         "OSMD Function Test - Auto-/Custom-Coloring": "OSMD_function_test_auto-custom-coloring-entchen.musicxml",
+        "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
         "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
         "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
         "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
         "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
         "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
+        "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
+        "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
         "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
         "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
         "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
@@ -59,6 +62,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     custom,
     nextCursorBtn,
     resetCursorBtn,
+    followCursorCheckbox,
     showCursorBtn,
     hideCursorBtn,
     backendSelect,
@@ -82,6 +86,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         canvas = document.createElement("div");
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
+        followCursorCheckbox = document.getElementById("follow-cursor-checkbox");
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         backendSelect = document.getElementById("backend-select");
@@ -152,6 +157,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             drawPartNames: true, // try false
             // drawTitle: false,
             // drawSubtitle: false,
+            //drawFromMeasureNumber: 4,
+            //drawUpToMeasureNumber: 8,
             drawFingerings: true,
             fingeringPosition: "auto", // left is default. try right. experimental: auto, above, below.
             // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
@@ -190,6 +197,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         resetCursorBtn.addEventListener("click", function() {
             openSheetMusicDisplay.cursor.reset();
         });
+        if (followCursorCheckbox) {
+            followCursorCheckbox.onclick = function() {
+                openSheetMusicDisplay.FollowCursor = !openSheetMusicDisplay.FollowCursor;
+            }
+        }
         hideCursorBtn.addEventListener("click", function() {
             openSheetMusicDisplay.cursor.hide();
         });
@@ -233,16 +245,42 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             str = sampleFolder + selectSample.value;
         }
         zoom = 1.0;
+
+        if (str.includes("measuresToDraw")) {
+            // for debugging: draw from a random range of measures
+            let minMeasureToDraw = Math.ceil(Math.random() * 15); // measures start at 1 (measureIndex = measure number - 1 elsewhere)
+            let maxMeasureToDraw = Math.ceil(Math.random() * 15);
+            if (minMeasureToDraw > maxMeasureToDraw) {
+                minMeasureToDraw = maxMeasureToDraw;
+                let a = minMeasureToDraw;
+                maxMeasureToDraw = a;
+            }
+            //minMeasureToDraw = 1; // set your custom indexes here. Drawing only one measure can be a special case
+            //maxMeasureToDraw = 1;
+            console.log("drawing measures in the range: [" + minMeasureToDraw + "," + maxMeasureToDraw + "]");
+            openSheetMusicDisplay.setOptions({
+                drawFromMeasureNumber: minMeasureToDraw,
+                drawUpToMeasureNumber: maxMeasureToDraw
+            });
+        } else { // reset for other samples
+            openSheetMusicDisplay.setOptions({
+                drawFromMeasureNumber: 0,
+                drawUpToMeasureNumber: Number.MAX_VALUE
+            });
+        }
+
         // Enable Boomwhacker-like coloring for OSMD Function Test - Auto-Coloring (Boomwhacker-like, custom color set)
         if (str.includes("auto-custom-coloring")) {
             //openSheetMusicDisplay.setOptions({coloringMode: 1}); // Auto-Coloring with pre-defined colors
             openSheetMusicDisplay.setOptions({
-                coloringMode: 2,
-                coloringSetCustom: ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"]
+                coloringMode: 2, // custom coloring set. 0 would be XML, 1 autocoloring
+                coloringSetCustom: ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"],
                 // last color value of coloringSetCustom is for rest notes
+
+                colorStemsLikeNoteheads: true
             });
         } else {
-            openSheetMusicDisplay.setOptions({coloringMode: 0});
+            openSheetMusicDisplay.setOptions({coloringMode: 0, colorStemsLikeNoteheads: false});
         }
         openSheetMusicDisplay.setOptions({autoBeam: str.includes("autobeam")});
         openSheetMusicDisplay.setOptions({drawPartAbbreviations: !str.includes("Schubert_An_die_Musik")}); // TODO weird layout bug here. but shouldn't be in score anyways

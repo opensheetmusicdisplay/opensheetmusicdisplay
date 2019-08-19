@@ -17,10 +17,12 @@ export interface IOSMDOptions {
      *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
      */
     coloringMode?: ColoringModes;
-    /** Set of 7 colors for automatic coloring of notes from C to B in HTML form (e.g. #00ff00).  */
+    /** Set of 8 colors for automatic coloring of 7 notes from C to B + rest note in HTML form (e.g. "#00ff00" for green).  */
     coloringSetCustom?: string[];
-    /** Whether to enable coloring noteheads and stems by their XML color attribute. */
+    /** Whether to enable coloring noteheads and stems, depending on coloringMode. */
     coloringEnabled?: boolean;
+    /** Whether to color the stems of notes the same as their noteheads */
+    colorStemsLikeNoteheads?: boolean;
     /** Default color for a note head (without stem). Default black (undefined). */
     defaultColorNotehead?: string;
     /** Default color for a note stem. Default black (undefined). */
@@ -33,6 +35,8 @@ export interface IOSMDOptions {
     defaultColorTitle?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
+    /** Follow Cursor */
+    followCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
     /** Whether to draw credits (title, subtitle, composer, lyricist) (in future: copyright etc., see <credit>). */
@@ -57,8 +61,10 @@ export interface IOSMDOptions {
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
     fingeringInsideStafflines?: boolean;
-    /** Only draw measure 1 to n, where n is the number you specify. */
+    /** Only draw measure n to m, where m is the number you specify. */
     drawUpToMeasureNumber?: number;
+    /** Only draw measure n to m, where n is the number you specify. */
+    drawFromMeasureNumber?: number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */

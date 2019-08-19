@@ -199,6 +199,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     case SystemLinesEnum.ThinBold:
                         this.stave.setEndBarType(Vex.Flow.Barline.type.END);
                         break;
+                    case SystemLinesEnum.None:
+                        this.stave.setEndBarType(Vex.Flow.Barline.type.NONE);
+                        break;
+                    // TODO: Add support for additional Barline types when VexFlow supports them
                     default:
                         break;
                 }
@@ -759,6 +763,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // create vex flow Stave Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.parentVoiceEntry.IsGrace) {
+                    // save grace notes for the next non-grace note
                     graceGVoiceEntriesBefore.push(gve);
                     if (!graceSlur) {
                         graceSlur = gve.parentVoiceEntry.GraceSlur;
@@ -768,20 +773,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (gve.notes[0].sourceNote.PrintObject) {
                     (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
                 } else {
+                    // note can now also be added as StaveNote instead of GhostNote, because we set it to transparent
+                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
+
+                    // previous method: add as GhostNote instead of StaveNote. Can cause formatting issues if critical notes are missing in the measure
                     // don't render note. add ghost note, otherwise Vexflow can have issues with layouting when voices not complete.
-                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNote(gve.notes[0].sourceNote.Length);
-                    graceGVoiceEntriesBefore = []; // if note is not rendered, its grace notes might need to be removed
-                    continue;
+                    //(gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNote(gve.notes[0].sourceNote.Length);
+                    //graceGVoiceEntriesBefore = []; // if note is not rendered, its grace notes shouldn't be rendered, might need to be removed
+                    //continue;
                 }
                 if (graceGVoiceEntriesBefore.length > 0) {
+                    // add grace notes that came before this main note to a GraceNoteGroup in Vexflow, attached to the main note
                     const graceNotes: Vex.Flow.GraceNote[] = [];
                     for (let i: number = 0; i < graceGVoiceEntriesBefore.length; i++) {
                         const gveGrace: VexFlowVoiceEntry = <VexFlowVoiceEntry>graceGVoiceEntriesBefore[i];
-                        if (gveGrace.notes[0].sourceNote.PrintObject) {
-                            const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
-                            gveGrace.vfStaveNote = vfStaveNote;
-                            graceNotes.push(vfStaveNote);
-                        }
+                        //if (gveGrace.notes[0].sourceNote.PrintObject) {
+                        // grace notes should generally be rendered independently of main note instead of skipped if main note is invisible
+                        // could be an option to make grace notes transparent if main note is transparent. set grace notes' PrintObject to false then.
+                        const vfStaveNote: StaveNote = VexFlowConverter.StaveNote(gveGrace);
+                        gveGrace.vfStaveNote = vfStaveNote;
+                        graceNotes.push(vfStaveNote);
                     }
                     const graceNoteGroup: Vex.Flow.GraceNoteGroup = new Vex.Flow.GraceNoteGroup(graceNotes, graceSlur);
                     ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
