@@ -264,7 +264,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             });
         } else { // reset for other samples
             openSheetMusicDisplay.setOptions({
-                drawFromMeasureNumber: 0,
+                drawFromMeasureNumber: 1,
                 drawUpToMeasureNumber: Number.MAX_VALUE
             });
         }
