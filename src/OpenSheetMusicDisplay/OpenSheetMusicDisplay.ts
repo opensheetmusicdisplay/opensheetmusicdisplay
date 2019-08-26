@@ -27,7 +27,7 @@ import {AutoColorSet} from "../MusicalScore";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.7.1-dev"; // getter: this.Version
+    private version: string = "0.7.1b-release"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
