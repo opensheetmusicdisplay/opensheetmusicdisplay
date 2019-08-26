@@ -317,7 +317,7 @@ export class OpenSheetMusicDisplay {
             EngravingRules.Rules.DefaultColorTitle = options.defaultColorTitle;
         }
         if (options.drawUpToMeasureNumber) {
-            EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber;
+            EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber - 1;
         }
         if (options.drawFromMeasureNumber) {
             EngravingRules.Rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;

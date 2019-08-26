@@ -69,6 +69,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     debugReRenderBtn,
     debugClearBtn;
 
+    var minMeasureToDrawStashed = 1;
+    var maxMeasureToDrawStashed = Number.MAX_SAFE_INTEGER;
+    var measureToDrawRangeNeedsReset = false;
+
     // Initialization code
     function init() {
         var name, option;
@@ -247,6 +251,13 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         zoom = 1.0;
 
         if (str.includes("measuresToDraw")) {
+            // stash previously set range of measures to draw
+            if (!measureToDrawRangeNeedsReset) { // only stash once, when measuresToDraw called multiple times in a row
+                minMeasureToDrawStashed = openSheetMusicDisplay.EngravingRules.MinMeasureToDrawIndex + 1;
+                maxMeasureToDrawStashed = openSheetMusicDisplay.EngravingRules.MaxMeasureToDrawIndex + 1;
+            }
+            measureToDrawRangeNeedsReset = true;
+
             // for debugging: draw from a random range of measures
             let minMeasureToDraw = Math.ceil(Math.random() * 15); // measures start at 1 (measureIndex = measure number - 1 elsewhere)
             let maxMeasureToDraw = Math.ceil(Math.random() * 15);
@@ -262,11 +273,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 drawFromMeasureNumber: minMeasureToDraw,
                 drawUpToMeasureNumber: maxMeasureToDraw
             });
-        } else { // reset for other samples
+        } else if (measureToDrawRangeNeedsReset) { // reset for other samples
             openSheetMusicDisplay.setOptions({
-                drawFromMeasureNumber: 1,
-                drawUpToMeasureNumber: Number.MAX_VALUE
+                drawFromMeasureNumber: minMeasureToDrawStashed,
+                drawUpToMeasureNumber: maxMeasureToDrawStashed
             });
+            measureToDrawRangeNeedsReset = false;
         }
 
         // Enable Boomwhacker-like coloring for OSMD Function Test - Auto-Coloring (Boomwhacker-like, custom color set)
