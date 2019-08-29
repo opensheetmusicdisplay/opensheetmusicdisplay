@@ -90,9 +90,9 @@
     "tslint-loader": "^3.5.3",
     "typedoc": "^0.15.0",
     "typescript": "^2.6.1",
-    "webpack": "^4.39.2",
+    "webpack": "^4.39.3",
     "webpack-cli": "^3.3.2",
-    "webpack-dev-server": "^3.2.1",
+    "webpack-dev-server": "^3.8.0",
     "webpack-merge": "^4.1.2",
     "webpack-visualizer-plugin": "^0.1.11"
   },
