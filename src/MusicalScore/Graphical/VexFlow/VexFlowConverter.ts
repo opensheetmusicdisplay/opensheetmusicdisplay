@@ -652,7 +652,7 @@ export class VexFlowConverter {
     public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular, font: Fonts = Fonts.TimesNewRoman): string {
         let style: string = "normal";
         let weight: string = "normal";
-        const family: string = "'Times New Roman'";
+        const family: string = "'" + EngravingRules.Rules.DefaultFontFamily + "'"; // default "'Times New Roman'"
 
         switch (fontStyle) {
             case FontStyles.Bold:
@@ -672,7 +672,7 @@ export class VexFlowConverter {
                 break;
         }
 
-        switch (font) {
+        switch (font) { // currently not used
             case Fonts.Kokila:
                 // TODO Not Supported
                 break;

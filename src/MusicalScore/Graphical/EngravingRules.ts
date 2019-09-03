@@ -190,6 +190,7 @@ export class EngravingRules {
     private defaultColorStem: string;
     private defaultColorLabel: string;
     private defaultColorTitle: string;
+    private defaultFontFamily: string;
     private maxMeasureToDrawIndex: number;
     private minMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
@@ -408,6 +409,7 @@ export class EngravingRules {
         this.defaultColorStem = this.defaultColorNotehead;
         this.defaultColorLabel = this.defaultColorNotehead;
         this.defaultColorTitle = this.defaultColorNotehead;
+        this.defaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
         this.minMeasureToDrawIndex = 0;
         this.renderComposer = true;
@@ -1407,6 +1409,12 @@ export class EngravingRules {
     }
     public set DefaultColorTitle(value: string) {
         this.defaultColorTitle = value;
+    }
+    public get DefaultFontFamily(): string {
+        return this.defaultFontFamily;
+    }
+    public set DefaultFontFamily(value: string) {
+        this.defaultFontFamily = value;
     }
     public get MaxMeasureToDrawIndex(): number {
         return this.maxMeasureToDrawIndex;

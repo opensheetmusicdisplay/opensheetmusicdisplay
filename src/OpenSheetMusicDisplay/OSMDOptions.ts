@@ -33,6 +33,11 @@ export interface IOSMDOptions {
     defaultColorLabel?: string;
     /** Default color for labels in the title. Overrides defaultColorLabel for title labels like composer. Default black (undefined). */
     defaultColorTitle?: string;
+    /** Default font used for text and labels, e.g. title or lyrics. Default Times New Roman
+     * Note that OSMD originally always used Times New Roman, so things like layout and spacing may still be optimized for it.
+     * Valid options are CSS font families available in the browser used for rendering, e.g. Times New Roman, Helvetica.
+     */
+    defaultFontFamily?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
     /** Follow Cursor */

@@ -6,6 +6,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
+import { EngravingRules } from "..";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
@@ -57,7 +58,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             this.ctx.attributes.fill = color;
             this.ctx.attributes.stroke = color;
         }
-        this.ctx.setFont("Times New Roman", fontHeight, VexFlowConverter.fontStyle(fontStyle));
+        this.ctx.setFont(EngravingRules.Rules.DefaultFontFamily, fontHeight, VexFlowConverter.fontStyle(fontStyle));
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
         this.ctx.attributes["font-size"] = `${fontHeight}px`;
         this.ctx.state["font-size"] = `${fontHeight}px`;

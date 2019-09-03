@@ -316,6 +316,9 @@ export class OpenSheetMusicDisplay {
         if (options.defaultColorTitle) {
             EngravingRules.Rules.DefaultColorTitle = options.defaultColorTitle;
         }
+        if (options.defaultFontFamily) {
+            EngravingRules.Rules.DefaultFontFamily = options.defaultFontFamily; // default "Times New Roman", also used if font family not found
+        }
         if (options.drawUpToMeasureNumber) {
             EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber - 1;
         }
