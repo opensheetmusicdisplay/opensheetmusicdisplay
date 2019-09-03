@@ -49,4 +49,4 @@ export * from "./SystemLine";
 export * from "./SystemLinePosition";
 export * from "./SystemLinesEnum";
 export * from "./VerticalGraphicalStaffEntryContainer";
-export * from "./Vexflow";
+export * from "./VexFlow";
