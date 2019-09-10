@@ -200,6 +200,11 @@ export class OpenSheetMusicDisplay {
         if (!this.drawingParameters) {
             this.drawingParameters = new DrawingParameters();
         }
+        if (options === undefined || options === null) {
+            log.warn("warning: osmd.setOptions() called without an options parameter, has no effect."
+            + "\n" + "example usage: osmd.setOptions({drawCredits: false, drawPartNames: false})");
+            return;
+        }
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum =
                 (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
