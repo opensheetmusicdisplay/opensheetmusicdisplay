@@ -472,7 +472,7 @@ export class GraphicalMusicSheet {
         return false;
     }
 
-    public GetNearesNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
+    public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
         const initialSearchArea: number = 10;
         const foundNotes: GraphicalNote[] = [];
 
