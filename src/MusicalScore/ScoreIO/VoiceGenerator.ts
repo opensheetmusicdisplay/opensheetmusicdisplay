@@ -27,6 +27,7 @@ import { ArticulationReader } from "./MusicSymbolModules/ArticulationReader";
 import { SlurReader } from "./MusicSymbolModules/SlurReader";
 import { Notehead } from "../VoiceData/Notehead";
 import { Arpeggio } from "../VoiceData/Arpeggio";
+import { NoteType } from "../VoiceData/NoteType";
 
 export class VoiceGenerator {
   constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
@@ -103,7 +104,7 @@ export class VoiceGenerator {
    * @param printObject whether the note should be rendered (true) or invisible (false)
    * @returns {Note}
    */
-  public read(noteNode: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, normalNotes: number, restNote: boolean,
+  public read(noteNode: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, noteTypeXml: NoteType, normalNotes: number, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
               printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
@@ -113,8 +114,8 @@ export class VoiceGenerator {
     //log.debug("read called:", restNote);
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteDuration, printObject, isCueNote, noteheadColorXml)
-        : this.addSingleNote(noteNode, noteDuration, typeDuration, normalNotes, chord, guitarPro,
+        ? this.addRestNote(noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
+        : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, guitarPro,
                              printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
@@ -325,7 +326,8 @@ export class VoiceGenerator {
    * @param guitarPro
    * @returns {Note}
    */
-  private addSingleNote(node: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, normalNotes: number, chord: boolean, guitarPro: boolean,
+  private addSingleNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
+                        normalNotes: number, chord: boolean, guitarPro: boolean,
                         printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
                         stemColorXml: string, noteheadColorXml: string): Note {
     //log.debug("addSingleNote called");
@@ -420,6 +422,7 @@ export class VoiceGenerator {
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     const note: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     note.TypeLength = typeDuration;
+    note.NoteTypeXml = noteTypeXml;
     note.NormalNotes = normalNotes;
     note.PrintObject = printObject;
     note.IsCueNote = isCueNote;
@@ -450,9 +453,10 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(noteDuration: Fraction, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
+  private addRestNote(noteDuration: Fraction, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
+    restNote.NoteTypeXml = noteTypeXml;
     restNote.PrintObject = printObject;
     restNote.IsCueNote = isCueNote;
     restNote.NoteheadColorXml = noteheadColorXml;

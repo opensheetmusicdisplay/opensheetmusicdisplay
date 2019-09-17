@@ -24,6 +24,7 @@ import {ExpressionReader} from "./MusicSymbolModules/ExpressionReader";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
+import {NoteType, NoteTypeHandler} from "../VoiceData";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -232,6 +233,7 @@ export class InstrumentReader {
           }
           // alternative: check for <type size="cue">
           const typeNode: IXmlElement = xmlNode.element("type");
+          let noteTypeXml: NoteType = NoteType.UNDEFINED;
           if (typeNode !== undefined) {
             const sizeAttr: Attr = typeNode.attribute("size");
             if (sizeAttr !== undefined && sizeAttr !== null) {
@@ -239,6 +241,7 @@ export class InstrumentReader {
                 isCueNote = true;
               }
             }
+            noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
           }
 
           // check stem element
@@ -360,7 +363,7 @@ export class InstrumentReader {
             noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
           this.currentVoiceGenerator.read(
-            xmlNode, noteDuration, typeDuration, normalNotes, restNote,
+            xmlNode, noteDuration, typeDuration, noteTypeXml, normalNotes, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
