@@ -69,9 +69,17 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     debugReRenderBtn,
     debugClearBtn;
 
+    // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
+    // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
     var minMeasureToDrawStashed = 1;
     var maxMeasureToDrawStashed = Number.MAX_SAFE_INTEGER;
     var measureToDrawRangeNeedsReset = false;
+    var autobeamOptionNeedsReset = false;
+    var autobeamOptionStashedValue = false;
+    var autoCustomColoringOptionNeedsReset = false;
+    var autoCustomColoringOptionStashedValue = false;
+    var drawPartNamesOptionStashedValue = true;
+    var drawPartNamesOptionNeedsReset = false;
 
     // Initialization code
     function init() {
@@ -250,7 +258,29 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         }
         zoom = 1.0;
 
-        if (str.includes("measuresToDraw")) {
+        setSampleSpecificOptions(str, isCustom);
+        
+        openSheetMusicDisplay.load(str).then(
+            function() {
+                // This gives you access to the osmd object in the console. Do not use in productive code
+                window.osmd = openSheetMusicDisplay;
+                return openSheetMusicDisplay.render();
+            },
+            function(e) {
+                errorLoadingOrRenderingSheet(e, "rendering");
+            }
+        ).then(
+            function() {
+                return onLoadingEnd(isCustom);
+            }, function(e) {
+                errorLoadingOrRenderingSheet(e, "loading");
+                onLoadingEnd(isCustom);
+            }
+        );
+    }
+
+    function setSampleSpecificOptions(str, isCustom) {
+        if (!isCustom && str.includes("measuresToDraw")) { // set options for measuresToDraw sample
             // stash previously set range of measures to draw
             if (!measureToDrawRangeNeedsReset) { // only stash once, when measuresToDraw called multiple times in a row
                 minMeasureToDrawStashed = openSheetMusicDisplay.EngravingRules.MinMeasureToDrawIndex + 1;
@@ -282,7 +312,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         }
 
         // Enable Boomwhacker-like coloring for OSMD Function Test - Auto-Coloring (Boomwhacker-like, custom color set)
-        if (str.includes("auto-custom-coloring")) {
+        if (!isCustom && str.includes("auto-custom-coloring")) { // set options for auto coloring sample
+            autoCustomColoringOptionNeedsReset = true;
             //openSheetMusicDisplay.setOptions({coloringMode: 1}); // Auto-Coloring with pre-defined colors
             openSheetMusicDisplay.setOptions({
                 coloringMode: 2, // custom coloring set. 0 would be XML, 1 autocoloring
@@ -291,28 +322,29 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
                 colorStemsLikeNoteheads: true
             });
-        } else {
-            openSheetMusicDisplay.setOptions({coloringMode: 0, colorStemsLikeNoteheads: false});
+        } else if (autoCustomColoringOptionNeedsReset) {
+            openSheetMusicDisplay.setOptions({ // set default values. better would be to restore to stashed values, but unnecessarily complex for demo
+                coloringMode: 0,
+                colorStemsLikeNoteheads: false,
+                coloringSetCustom: null});
+            autoCustomColoringOptionNeedsReset = false;
         }
-        openSheetMusicDisplay.setOptions({autoBeam: str.includes("autobeam")});
-        openSheetMusicDisplay.setOptions({drawPartAbbreviations: !str.includes("Schubert_An_die_Musik")}); // TODO weird layout bug here. but shouldn't be in score anyways
-        openSheetMusicDisplay.load(str).then(
-            function() {
-                // This gives you access to the osmd object in the console. Do not use in productive code
-                window.osmd = openSheetMusicDisplay;
-                return openSheetMusicDisplay.render();
-            },
-            function(e) {
-                errorLoadingOrRenderingSheet(e, "rendering");
-            }
-        ).then(
-            function() {
-                return onLoadingEnd(isCustom);
-            }, function(e) {
-                errorLoadingOrRenderingSheet(e, "loading");
-                onLoadingEnd(isCustom);
-            }
-        );
+        if (!isCustom && str.includes("autobeam")) {
+            autobeamOptionStashedValue = openSheetMusicDisplay.EngravingRules.AutoBeamNotes; // stash previously set value, to restore later
+            autobeamOptionNeedsReset = true;
+            openSheetMusicDisplay.setOptions({autoBeam: true});
+        } else if (autobeamOptionNeedsReset) {
+            openSheetMusicDisplay.setOptions({autoBeam: autobeamOptionStashedValue});
+            autobeamOptionNeedsReset = false;
+        }
+        if (!isCustom && str.includes("Schubert_An_die_Musik")) { // TODO weird layout bug here with part names. but shouldn't be in score anyways
+            drawPartNamesOptionStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartNames;
+            openSheetMusicDisplay.setOptions({drawPartNames: false}); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
+            drawPartNamesOptionNeedsReset = true;
+        } else if (drawPartNamesOptionNeedsReset) {
+            openSheetMusicDisplay.setOptions({drawPartNames: drawPartNamesOptionStashedValue});
+            drawPartNamesOptionNeedsReset = false;
+        }
     }
 
     function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
