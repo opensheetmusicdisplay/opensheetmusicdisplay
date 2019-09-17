@@ -33,6 +33,7 @@ import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstru
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
+import {NoteType} from "../../VoiceData";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -648,20 +649,45 @@ export class VexFlowMeasure extends GraphicalMeasure {
             for (const gve of staffEntry.graphicalVoiceEntries) {
                 const vfStaveNote: StaveNote = <StaveNote> (gve as VexFlowVoiceEntry).vfStaveNote;
                 if (gve.parentVoiceEntry.IsGrace || // don't beam grace notes
-                    gve.notes[0].graphicalNoteLength.CompareTo(new Fraction(1, 4)) >= 0 || // don't beam quarter or longer notes
+                    gve.notes[0].graphicalNoteLength.CompareTo(new Fraction(1, 4)) === 1 || // don't beam quarter or longer notes
                     beamedNotes.contains(vfStaveNote)) { // don't beam already beamed notes
-                    if (consecutiveBeamableNotes.length >= 2) { // don't beam notes surrounded by quarter notes etc.
+                    if (consecutiveBeamableNotes.length >= 2) {
+                        // if we already have at least 2 notes to beam, beam them. don't beam notes surrounded by quarter notes etc.
                         for (const note of consecutiveBeamableNotes) {
-                            notesToAutoBeam.push(note);
+                            notesToAutoBeam.push(note); // "flush" already beamed notes
                         }
                     }
-                    consecutiveBeamableNotes = [];
+                    consecutiveBeamableNotes = []; // reset notes to beam
                     continue;
                 }
 
                 // create beams for tuplets separately
                 const noteTuplet: Tuplet = gve.notes[0].sourceNote.NoteTuplet;
                 if (noteTuplet) {
+                    // check if there are quarter notes or longer in the tuplet, then don't beam.
+                    // (TODO: check for consecutiveBeamableNotes inside tuplets like for non-tuplet notes above
+                    //   e.g quarter eigth eighth -> beam the two eigth notes)
+                    let tupletContainsUnbeamableNote: boolean = false;
+                    for (const notes of noteTuplet.Notes) {
+                        for (const note of notes) {
+                            //const stavenote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+                            //console.log("note " + note.ToString() + ", stavenote type: " + stavenote.getNoteType());
+                            if (note.NoteTypeXml >= NoteType.QUARTER || // quarter note or longer: don't beam
+                            // TODO: don't take Note (head) type from XML, but from current model,
+                            //   so that rendering can react dynamically to changes compared to the XML.
+                            //   however, taking the note length as fraction is tricky because of tuplets.
+                            //   a quarter in a triplet has length < quarter, but quarter note head, which Vexflow can't beam.
+                                note.ParentVoiceEntry.IsGrace ||
+                                note.isRest() && !EngravingRules.Rules.AutoBeamOptions.beam_rests) {
+                                tupletContainsUnbeamableNote = true;
+                                break;
+                            }
+                        }
+                        if (tupletContainsUnbeamableNote) {
+                            break;
+                        }
+                    }
+
                     if (currentTuplet === undefined) {
                         currentTuplet = noteTuplet;
                     } else {
@@ -673,7 +699,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             currentTuplet = noteTuplet;
                         }
                     }
-                    tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
+                    if (!tupletContainsUnbeamableNote) {
+                        tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
+                    }
                     continue;
                 } else {
                     currentTuplet = undefined;
