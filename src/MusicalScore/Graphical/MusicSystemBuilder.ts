@@ -75,7 +75,7 @@ export class MusicSystemBuilder {
             }
         }
 
-        // go through measures and add to system until system gets too long -> finish system and start next system.
+        // go through measures and add to system until system gets too long -> finish system and start next system [line break, new system].
         while (this.measureListIndex < numberOfMeasures) {
             const graphicalMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex];
             for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
