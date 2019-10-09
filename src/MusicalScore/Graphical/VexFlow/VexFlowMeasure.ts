@@ -667,7 +667,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const haveTwoOrMoreNotesToBeamAlready: boolean = consecutiveBeamableNotes.length >= 2;
                 const unbeamableNote: boolean =
                     gve.parentVoiceEntry.IsGrace || // don't beam grace notes
-                    gNote.graphicalNoteLength.CompareTo(new Fraction(1, 4)) === 1 || // don't beam quarter or longer notes
+                    gNote.sourceNote.Length.CompareTo(new Fraction(1, 4)) === 1 || // don't beam quarter or longer notes
                     beamedNotes.contains(vfStaveNote);
                 if (unbeamableNote || isOnBeat) { // end beam
                     if (haveTwoOrMoreNotesToBeamAlready) {
