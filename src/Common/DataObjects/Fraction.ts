@@ -302,7 +302,7 @@ export class Fraction {
     }
   }
 
-  private static FloatInaccuracyTolerance: number = 0.0001; // inaccuracy allowed when comparing Fraction.RealValues, because of floating point inaccuracy
+  public static FloatInaccuracyTolerance: number = 0.0001; // inaccuracy allowed when comparing Fraction.RealValues, because of floating point inaccuracy
 
   public isOnBeat(timeSignature: Fraction): boolean { // use sourceMeasure.ActiveTimeSignature as timeSignature
       const beatDistance: number = this.distanceFromBeat(timeSignature);

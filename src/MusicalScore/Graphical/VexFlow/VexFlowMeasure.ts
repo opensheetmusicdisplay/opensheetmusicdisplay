@@ -665,9 +665,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const gNote: GraphicalNote = gve.notes[0]; // TODO check for all notes within the graphical voice entry
                 const isOnBeat: boolean = staffEntry.relInMeasureTimestamp.isOnBeat(timeSignature);
                 const haveTwoOrMoreNotesToBeamAlready: boolean = consecutiveBeamableNotes.length >= 2;
+                //const noteIsQuarterOrLonger: boolean = gNote.sourceNote.Length.CompareTo(new Fraction(1, 4)) >= 0; // trusting Fraction class, no float check
+                const noteIsQuarterOrLonger: boolean = gNote.sourceNote.Length.RealValue - new Fraction(1, 4).RealValue > (-Fraction.FloatInaccuracyTolerance);
                 const unbeamableNote: boolean =
                     gve.parentVoiceEntry.IsGrace || // don't beam grace notes
-                    gNote.sourceNote.Length.CompareTo(new Fraction(1, 4)) === 1 || // don't beam quarter or longer notes
+                    noteIsQuarterOrLonger || // don't beam quarter or longer notes
                     beamedNotes.contains(vfStaveNote);
                 if (unbeamableNote || isOnBeat) { // end beam
                     if (haveTwoOrMoreNotesToBeamAlready) {
