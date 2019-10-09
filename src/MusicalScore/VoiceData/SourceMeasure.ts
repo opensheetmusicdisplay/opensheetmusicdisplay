@@ -56,6 +56,7 @@ export class SourceMeasure {
     private absoluteTimestamp: Fraction;
     private completeNumberOfStaves: number;
     private duration: Fraction;
+    private activeTimeSignature: Fraction;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
@@ -90,11 +91,19 @@ export class SourceMeasure {
     }
 
     public get Duration(): Fraction {
-        return this.duration;
+        return this.duration; // can be 1/1 in a 4/4 measure
     }
 
     public set Duration(value: Fraction) {
         this.duration = value;
+    }
+
+    public get ActiveTimeSignature(): Fraction {
+        return this.activeTimeSignature;
+    }
+
+    public set ActiveTimeSignature(value: Fraction) {
+        this.activeTimeSignature = value;
     }
 
     public get ImplicitMeasure(): boolean {
