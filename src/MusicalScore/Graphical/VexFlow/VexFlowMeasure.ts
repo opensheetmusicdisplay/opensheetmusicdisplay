@@ -679,11 +679,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         notesToAutoBeam = []; // reset notesToAutoBeam, otherwise the next beam includes the previous beam's notes too
                     }
                     consecutiveBeamableNotes = []; // reset notes to beam
-                    if (!unbeamableNote) { // beamable note, probably new beat, take into next beam
-                        consecutiveBeamableNotes.push(vfStaveNote); // start new beam on beat
-                    }
 
-                    continue;
+                    if (unbeamableNote) {
+                        continue;
+                    }
+                    // else, note will be pushed to consecutiveBeamableNotes after tuplet check, also for note on new beat
                 }
 
                 // create beams for tuplets separately
@@ -732,7 +732,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     currentTuplet = undefined;
                 }
 
-                consecutiveBeamableNotes.push(vfStaveNote);
+                consecutiveBeamableNotes.push(vfStaveNote); // also happens on new beat
             }
         }
         if (tupletNotesToAutoBeam.length >= 2) {
