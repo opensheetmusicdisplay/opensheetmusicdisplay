@@ -700,14 +700,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     if (!tupletContainsUnbeamableNote) {
-                        tupletNotesToAutoBeam.push(<StaveNote>(gve as VexFlowVoiceEntry).vfStaveNote);
+                        tupletNotesToAutoBeam.push(vfStaveNote);
                     }
                     continue;
                 } else {
                     currentTuplet = undefined;
                 }
 
-                consecutiveBeamableNotes.push((gve as VexFlowVoiceEntry).vfStaveNote);
+                consecutiveBeamableNotes.push(vfStaveNote);
             }
         }
         if (tupletNotesToAutoBeam.length >= 2) {
