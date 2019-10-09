@@ -647,8 +647,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.autoTupletVfBeams = [];
         const separateAutoBeams: StemmableNote[][] = []; // a set of separate beams, each having a set of notes (StemmableNote[]).
         this.autoVfBeams = []; // final Vex.Flow.Beams will be pushed/collected into this
-        // let timeSignature: Fraction = this.parentSourceMeasure.Duration; // doesn't always give full signature, sometimes 1/1 in a 4/4 signature
-        const timeSignature: Fraction = this.parentSourceMeasure.ActiveTimeSignature;
+        let timeSignature: Fraction = this.parentSourceMeasure.ActiveTimeSignature;
+        if (timeSignature === undefined) { // this doesn't happen in OSMD, but maybe in a SourceGenerator
+            timeSignature = this.parentSourceMeasure.Duration; // suboptimal, can be 1/1 in a 4/4 time signature
+        }
         /*if (this.parentSourceMeasure.FirstInstructionsStaffEntries[0]) {
             for (const instruction of this.parentSourceMeasure.FirstInstructionsStaffEntries[0].Instructions) {
                 if (instruction instanceof RhythmInstruction) { // there is not always a RhythmInstruction, but this could be useful some time.
