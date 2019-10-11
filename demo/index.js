@@ -48,7 +48,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     },
 
     zoom = 1.0,
-    // HTML Elements in the page
+    divControls,
+    zoomControls,
+    header,
     err,
     error_tr,
     canvas,
@@ -81,10 +83,44 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var drawPartNamesOptionStashedValue = true;
     var drawPartNamesOptionNeedsReset = false;
 
+    var showControls = true;
+    var showZoomControl = true;
+    var showHeader = true;
     // Initialization code
     function init() {
         var name, option;
 
+        // Handle window parameter
+        var paramEmbedded = findGetParameter('embedded');
+        var paramControls = findGetParameter('showControls');
+        var paramZoomControl = findGetParameter('showZoomControl');
+        var paramShowHeader = findGetParameter('showHeader');
+        var paramZoom = findGetParameter('zoom');
+        var paramOverflow = findGetParameter('overflow');
+        var paramOpenUrl = findGetParameter('openUrl');
+
+        if (paramEmbedded !== undefined) {
+            showControls = (paramControls === '1');
+            showZoomControl = (paramZoomControl === '1');
+            showHeader = (paramShowHeader === '1');
+        }
+
+        if (paramZoom !== undefined) {
+            if (paramZoom > 0.1 && paramZoom < 5.0) {
+                zoom = paramZoom;
+                console.log('Set zoom to ' + zoom);
+            }
+        }
+
+        if (paramOverflow !== undefined && typeof paramOverflow === 'string') {
+            if (paramOverflow === 'hidden' || paramOverflow === 'auto' || paramOverflow === 'scroll' || paramOverflow === 'visible') {
+                document.body.style.overflow = paramOverflow;
+            }
+        }
+
+        divControls = document.getElementById('divControls');
+        zoomControls = document.getElementById('zoomControls');
+        header = document.getElementById('header');
         err = document.getElementById("error-td");
         error_tr = document.getElementById("error-tr");
         zoomDiv = document.getElementById("zoom-str");
@@ -105,8 +141,29 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
         debugClearBtn = document.getElementById("debug-clear-btn");
 
+        if (!showControls) {
+            divControls.style.display = 'none';
+        }
+        if (!showHeader) {
+            header.style.display = 'none';
+        }
         // Hide error
         error();
+
+        if (!showControls && showZoomControl) {
+            const zoomControlsButtons = document.getElementById('zoomControlsButtons');
+            const zoomControlsString = document.getElementById('zoom-str');
+            const optionalControls = document.getElementById('optionalControls');
+            optionalControls.appendChild(zoomControlsButtons);
+            optionalControls.appendChild(zoomControlsString);
+            optionalControls.style.position = 'absolute';
+            optionalControls.style.zIndex = '10';
+            optionalControls.style.right = '10px';
+            optionalControls.style.padding = '10px';
+
+            zoomControlsString.style.display = 'inline';
+            zoomControlsString.style.padding = '10px';
+        }
 
         // Create select
         for (name in samples) {
@@ -244,6 +301,22 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         });
     }
 
+    function findGetParameter (parameterName) {
+        let result = undefined;
+        let tmp = [];
+        location.search
+            .substr(1)
+            .split('&')
+            .forEach(function (item) {
+                tmp = item.split('=');
+                if (tmp[0] === parameterName) {
+                    result = decodeURIComponent(tmp[1]);
+                    console.log('Found param:' + parameterName + ' = ' + result);
+                }
+            });
+        return result;
+    }
+
     function selectBoundingOnChange(evt) {
         var value = evt.target.value;
         openSheetMusicDisplay.DrawBoundingBox = value;
@@ -256,14 +329,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (!isCustom) {
             str = sampleFolder + selectSample.value;
         }
-        zoom = 1.0;
+        // zoom = 1.0;
 
         setSampleSpecificOptions(str, isCustom);
-        
+
         openSheetMusicDisplay.load(str).then(
             function() {
                 // This gives you access to the osmd object in the console. Do not use in productive code
                 window.osmd = openSheetMusicDisplay;
+                openSheetMusicDisplay.zoom = zoom;
                 return openSheetMusicDisplay.render();
             },
             function(e) {
