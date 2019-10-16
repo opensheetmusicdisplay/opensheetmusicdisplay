@@ -1804,27 +1804,30 @@ export abstract class MusicSheetCalculator {
             subtitle.PositionAndShape.RelativePosition = relative;
             page.Labels.push(subtitle);
         }
-        if (this.graphicalMusicSheet.Composer !== undefined) {
-            const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
-            composer.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
-            //composer.PositionAndShape.Parent = page.PositionAndShape;
+        const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
+        if (composer !== undefined) {
+            composer.PositionAndShape.Parent = firstStaffLine.PositionAndShape; // if using firstStaffLine...width. harder to y-align with lyrics
+            //composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
             composer.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
             //relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
             //relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
             relative.x = firstStaffLine.PositionAndShape.Size.width;
-            relative.y = - this.rules.SystemComposerDistance - this.rules.MeasureNumberLabelHeight;
-            // TODO only add measure label height if rendering labels, adjust lyrics too to be y-aligned with composer
+            relative.y = - this.rules.MeasureNumberLabelHeight - this.rules.SystemComposerDistance;
+            // TODO only add measure label height if rendering labels and composer measure has label
+            // TODO y-align with lyricist? which is harder if they have different bbox parents (page and firstStaffLine).
+            // when the pageWidth gets fixed, we could use page as parent again.
             composer.PositionAndShape.RelativePosition = relative;
             page.Labels.push(composer);
         }
-        if (this.graphicalMusicSheet.Lyricist !== undefined) {
-            const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
+        const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
+        if (lyricist !== undefined) {
             lyricist.PositionAndShape.Parent = page.PositionAndShape;
             lyricist.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
             relative.x = this.rules.PageLeftMargin;
             relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
+            //relative.y = Math.max(relative.y, composer.PositionAndShape.RelativePosition.y);
             lyricist.PositionAndShape.RelativePosition = relative;
             page.Labels.push(lyricist);
         }
