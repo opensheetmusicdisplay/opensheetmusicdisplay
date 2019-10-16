@@ -1789,7 +1789,8 @@ export abstract class MusicSheetCalculator {
             title.PositionAndShape.Parent = page.PositionAndShape;
             //title.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
             const relative: PointF2D = new PointF2D();
-            relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2;
+            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
+            //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
             title.PositionAndShape.RelativePosition = relative;
             page.Labels.push(title);
@@ -1799,21 +1800,25 @@ export abstract class MusicSheetCalculator {
             //subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
             const relative: PointF2D = new PointF2D();
-            relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2;
+            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
+            //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
             subtitle.PositionAndShape.RelativePosition = relative;
             page.Labels.push(subtitle);
         }
         const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
         if (composer !== undefined) {
-            composer.PositionAndShape.Parent = firstStaffLine.PositionAndShape; // if using firstStaffLine...width. harder to y-align with lyrics
-            //composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
+            composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
+            //composer.PositionAndShape.Parent = firstStaffLine.PositionAndShape; if using firstStaffLine...width.
+            //      y-collision problems, harder to y-align with lyrics
             composer.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
-            //relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
-            //relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
-            relative.x = firstStaffLine.PositionAndShape.Size.width;
-            relative.y = - this.rules.MeasureNumberLabelHeight - this.rules.SystemComposerDistance;
+            const firstStaffLineEndX: number = firstStaffLine.PositionAndShape.AbsolutePosition.x + firstStaffLine.PositionAndShape.Size.width;
+            relative.x = Math.max(this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin, firstStaffLineEndX);
+            //relative.x = firstStaffLine.PositionAndShape.Size.width;
+            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
+            //relative.y = - this.rules.SystemComposerDistance;
+            //relative.y = -firstStaffLine.PositionAndShape.Size.height;
             // TODO only add measure label height if rendering labels and composer measure has label
             // TODO y-align with lyricist? which is harder if they have different bbox parents (page and firstStaffLine).
             // when the pageWidth gets fixed, we could use page as parent again.
