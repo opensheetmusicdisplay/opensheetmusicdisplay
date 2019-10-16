@@ -834,6 +834,7 @@ export abstract class MusicSheetCalculator {
 
             // calculate TopBottom Borders for all elements recursively
             graphicalMusicPage.PositionAndShape.calculateTopBottomBorders(); // necessary for composer label (page labels) for high notes in first system
+            // TODO how much performance does this cost? can we reduce the amount of calculations, e.g. only checking top?
 
             // calculate all Labels's Positions for the first Page
             if (graphicalMusicPage === this.graphicalMusicSheet.MusicPages[0]) {
