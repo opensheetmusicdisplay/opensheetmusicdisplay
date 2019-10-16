@@ -831,13 +831,17 @@ export abstract class MusicSheetCalculator {
                     staffLine.addActivitySymbolClickArea();
                 }
             }
+
+            // calculate TopBottom Borders for all elements recursively
+            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders(); // necessary for composer label (page labels) for high notes in first system
+
             // calculate all Labels's Positions for the first Page
             if (graphicalMusicPage === this.graphicalMusicSheet.MusicPages[0]) {
                 this.calculatePageLabels(graphicalMusicPage);
             }
 
             // calculate TopBottom Borders for all elements recursively
-            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders();
+            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders(); // this is where top bottom borders were originally calculated (only once)
         }
     }
 
