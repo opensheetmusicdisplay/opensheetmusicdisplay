@@ -191,6 +191,7 @@ export class VexFlowConverter {
             if (note.sourceNote.isRest()) {
                 isRest = true;
                 keys = ["b/4"];
+                // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
                 // if it is a full measure rest:
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
                     keys = ["d/5"];

@@ -2275,18 +2275,21 @@ export abstract class MusicSheetCalculator {
     private calculateRestNotePlacementWithCollisionDetectionFromGraphicalNote(graphicalStaffEntry: GraphicalStaffEntry): void {
         let restNote: GraphicalNote;
         let graphicalNotes: GraphicalNote[];
-        if (graphicalStaffEntry.graphicalVoiceEntries[0].notes[0].sourceNote.Pitch === undefined) {
+        if (graphicalStaffEntry.graphicalVoiceEntries[0].notes[0].sourceNote.isRest()) {
             restNote = graphicalStaffEntry.graphicalVoiceEntries[0].notes[0];
             graphicalNotes = graphicalStaffEntry.graphicalVoiceEntries[1].notes;
         } else {
             graphicalNotes = graphicalStaffEntry.graphicalVoiceEntries[0].notes;
             restNote = graphicalStaffEntry.graphicalVoiceEntries[1].notes[0];
         }
+        //restNote.parallelVoiceEntryNotes = graphicalNotes; // TODO maybe save potentially colliding notes, check them in VexFlowConverter.StaveNote
         let collision: boolean = false;
         graphicalStaffEntry.PositionAndShape.calculateAbsolutePositionsRecursiveWithoutTopelement();
         for (let idx: number = 0, len: number = graphicalNotes.length; idx < len; ++idx) {
             const graphicalNote: GraphicalNote = graphicalNotes[idx];
             if (restNote.PositionAndShape.marginCollisionDetection(graphicalNote.PositionAndShape)) {
+                // TODO bounding box of graphical note isn't set correctly yet.
+                // we could do manual collision checking here
                 collision = true;
                 break;
             }
