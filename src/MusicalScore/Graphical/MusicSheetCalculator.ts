@@ -1788,7 +1788,7 @@ export abstract class MusicSheetCalculator {
             const firstMusicSystem: MusicSystem = page.MusicSystems[0];
             firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
         }
-        const firstStaffLine: StaffLine = this.graphicalMusicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
+        //const firstStaffLine: StaffLine = this.graphicalMusicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
         if (this.graphicalMusicSheet.Title !== undefined) {
             const title: GraphicalLabel = this.graphicalMusicSheet.Title;
             title.PositionAndShape.Parent = page.PositionAndShape;
@@ -1818,8 +1818,11 @@ export abstract class MusicSheetCalculator {
             //      y-collision problems, harder to y-align with lyrics
             composer.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
-            const firstStaffLineEndX: number = firstStaffLine.PositionAndShape.AbsolutePosition.x + firstStaffLine.PositionAndShape.Size.width;
-            relative.x = Math.max(this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin, firstStaffLineEndX);
+            //const firstStaffLineEndX: number = this.rules.PageLeftMargin + this.rules.SystemLeftMargin + this.rules.left
+            //    firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width;
+            //relative.x = Math.min(this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin,
+            //  firstStaffLineEndX); // awkward with 2-bar score
+            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
             //relative.x = firstStaffLine.PositionAndShape.Size.width;
             relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
             //relative.y = - this.rules.SystemComposerDistance;
