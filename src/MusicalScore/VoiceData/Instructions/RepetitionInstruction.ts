@@ -45,7 +45,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
                 parentRepetition: Repetition = undefined, endingIndices: number[] = undefined) {
         this.measureIndex = measureIndex;
         if (endingIndices !== undefined) {
-            this.endingIndices = endingIndices.slice();
+            this.endingIndices = endingIndices.slice(); // slice=arrayCopy
         }
         this.type = type;
         this.alignment = alignment;

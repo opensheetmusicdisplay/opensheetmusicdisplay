@@ -114,7 +114,7 @@ export class SkyBottomLineCalculator {
             tmpCanvas.clear();
         }
         // Subsampling:
-        // The pixel width is bigger then the measure size in units. So we split the array into
+        // The pixel width is bigger than the measure size in units. So we split the array into
         // chunks with the size of MeasurePixelWidth/measureUnitWidth and reduce the value to its
         // average
         const arrayChunkSize: number = this.mSkyLine.length / arrayLength;
@@ -122,9 +122,15 @@ export class SkyBottomLineCalculator {
         const subSampledSkyLine: number[] = [];
         const subSampledBottomLine: number[] = [];
         for (let chunkIndex: number = 0; chunkIndex < this.mSkyLine.length; chunkIndex += arrayChunkSize) {
-            let chunk: number[] = this.mSkyLine.slice(chunkIndex, chunkIndex + arrayChunkSize);
+            let chunk: number[] = this.mSkyLine.slice(chunkIndex, chunkIndex + arrayChunkSize); // slice does not include end index
+            // TODO chunkIndex + arrayChunkSize is sometimes bigger than this.mSkyLine.length -> out of bounds
+            // TODO chunkIndex + arrayChunkSize is often a non-rounded float as well. is that ok to use with slice?
+            /*const diff: number = this.mSkyLine.length - (chunkIndex + arrayChunkSize);
+            if (diff < 0) { // out of bounds
+                console.log("length - slice end index: " + diff);
+            }*/
             subSampledSkyLine.push(Math.min(...chunk));
-            chunk = this.mBottomLine.slice(chunkIndex, chunkIndex + arrayChunkSize);
+            chunk = this.mBottomLine.slice(chunkIndex, chunkIndex + arrayChunkSize); // slice does not include end index
             subSampledBottomLine.push(Math.max(...chunk));
         }
 

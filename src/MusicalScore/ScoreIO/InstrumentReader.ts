@@ -675,7 +675,7 @@ export class InstrumentReader {
    * @returns {boolean}
    */
   private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    const childs: IXmlElement[] = parentNode.elements().slice();
+    const childs: IXmlElement[] = parentNode.elements().slice(); // slice=arrayCopy
     let attributesNodeIndex: number = 0;
     for (let i: number = 0; i < childs.length; i++) {
       if (childs[i] === attributesNode) {
