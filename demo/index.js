@@ -48,6 +48,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     },
 
     zoom = 1.0,
+    // HTML Elements in the page
     divControls,
     zoomControls,
     header,
@@ -92,19 +93,18 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         // Handle window parameter
         var paramEmbedded = findGetParameter('embedded');
-        var paramControls = findGetParameter('showControls');
-        var paramZoomControl = findGetParameter('showZoomControl');
+        var paramShowControls = findGetParameter('showControls');
+        var paramShowZoomControl = findGetParameter('showZoomControl');
         var paramShowHeader = findGetParameter('showHeader');
         var paramZoom = findGetParameter('zoom');
         var paramOverflow = findGetParameter('overflow');
         var paramOpenUrl = findGetParameter('openUrl');
 
         if (paramEmbedded !== undefined) {
-            showControls = (paramControls === '1');
-            showZoomControl = (paramZoomControl === '1');
+            showControls = (paramShowControls === '1');
+            showZoomControl = (paramShowZoomControl === '1');
             showHeader = (paramShowHeader === '1');
         }
-
         if (paramZoom !== undefined) {
             if (paramZoom > 0.1 && paramZoom < 5.0) {
                 zoom = paramZoom;
@@ -194,25 +194,25 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         };
 
         if (skylineDebug) {
-            skylineDebug.onclick = function() {
+            skylineDebug.onclick = function () {
                 openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
             }
         }
 
         if (bottomlineDebug) {
-            bottomlineDebug.onclick = function() {
+            bottomlineDebug.onclick = function () {
                 openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
             }
         }
 
         if (debugReRenderBtn) {
-            debugReRenderBtn.onclick = function() {
+            debugReRenderBtn.onclick = function () {
                 rerender();
             }
         }
 
         if (debugClearBtn) {
-            debugClearBtn.onclick = function() {
+            debugClearBtn.onclick = function () {
                 openSheetMusicDisplay.clear();
             }
         }
@@ -254,27 +254,27 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         openSheetMusicDisplay.setLogLevel('info');
         document.body.appendChild(canvas);
 
-        window.addEventListener("keydown", function(e) {
+        window.addEventListener("keydown", function (e) {
             var event = window.event ? window.event : e;
             if (event.keyCode === 39) {
                 openSheetMusicDisplay.cursor.next();
             }
         });
-        nextCursorBtn.addEventListener("click", function() {
+        nextCursorBtn.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.next();
         });
-        resetCursorBtn.addEventListener("click", function() {
+        resetCursorBtn.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.reset();
         });
         if (followCursorCheckbox) {
-            followCursorCheckbox.onclick = function() {
+            followCursorCheckbox.onclick = function () {
                 openSheetMusicDisplay.FollowCursor = !openSheetMusicDisplay.FollowCursor;
             }
         }
-        hideCursorBtn.addEventListener("click", function() {
+        hideCursorBtn.addEventListener("click", function () {
             openSheetMusicDisplay.cursor.hide();
         });
-        showCursorBtn.addEventListener("click", function() {
+        showCursorBtn.addEventListener("click", function () {
             if (openSheetMusicDisplay.cursor) {
                 openSheetMusicDisplay.cursor.show();
             } else {
@@ -282,18 +282,18 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             }
         });
 
-        backendSelect.addEventListener("change", function(e) {
+        backendSelect.addEventListener("change", function (e) {
             var value = e.target.value;
             var createNewOsmd = true;
 
             if (createNewOsmd) {
                 // clears the canvas element
                 canvas.innerHTML = "";
-                openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {backend: value});
+                openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value });
                 openSheetMusicDisplay.setLogLevel('info');
             } else {
                 // alternative, doesn't work yet, see setOptions():
-                openSheetMusicDisplay.setOptions({backend: value});
+                openSheetMusicDisplay.setOptions({ backend: value });
             }
 
             selectSampleOnChange();
@@ -301,7 +301,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         });
     }
 
-    function findGetParameter (parameterName) {
+    function findGetParameter(parameterName) {
         let result = undefined;
         let tmp = [];
         location.search
@@ -334,19 +334,19 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         setSampleSpecificOptions(str, isCustom);
 
         openSheetMusicDisplay.load(str).then(
-            function() {
+            function () {
                 // This gives you access to the osmd object in the console. Do not use in productive code
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
                 return openSheetMusicDisplay.render();
             },
-            function(e) {
+            function (e) {
                 errorLoadingOrRenderingSheet(e, "rendering");
             }
         ).then(
-            function() {
+            function () {
                 return onLoadingEnd(isCustom);
-            }, function(e) {
+            }, function (e) {
                 errorLoadingOrRenderingSheet(e, "loading");
                 onLoadingEnd(isCustom);
             }
@@ -400,23 +400,24 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.setOptions({ // set default values. better would be to restore to stashed values, but unnecessarily complex for demo
                 coloringMode: 0,
                 colorStemsLikeNoteheads: false,
-                coloringSetCustom: null});
+                coloringSetCustom: null
+            });
             autoCustomColoringOptionNeedsReset = false;
         }
         if (!isCustom && str.includes("autobeam")) {
             autobeamOptionStashedValue = openSheetMusicDisplay.EngravingRules.AutoBeamNotes; // stash previously set value, to restore later
             autobeamOptionNeedsReset = true;
-            openSheetMusicDisplay.setOptions({autoBeam: true});
+            openSheetMusicDisplay.setOptions({ autoBeam: true });
         } else if (autobeamOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({autoBeam: autobeamOptionStashedValue});
+            openSheetMusicDisplay.setOptions({ autoBeam: autobeamOptionStashedValue });
             autobeamOptionNeedsReset = false;
         }
         if (!isCustom && str.includes("Schubert_An_die_Musik")) { // TODO weird layout bug here with part names. but shouldn't be in score anyways
             drawPartNamesOptionStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartNames;
-            openSheetMusicDisplay.setOptions({drawPartNames: false}); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
+            openSheetMusicDisplay.setOptions({ drawPartNames: false }); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
             drawPartNamesOptionNeedsReset = true;
         } else if (drawPartNamesOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({drawPartNames: drawPartNamesOptionStashedValue});
+            openSheetMusicDisplay.setOptions({ drawPartNames: drawPartNamesOptionStashedValue });
             drawPartNamesOptionNeedsReset = false;
         }
     }
@@ -446,7 +447,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
     function scale() {
         disable();
-        window.setTimeout(function(){
+        window.setTimeout(function () {
             openSheetMusicDisplay.zoom = zoom;
             openSheetMusicDisplay.render();
             enable();
@@ -455,7 +456,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
     function rerender() {
         disable();
-        window.setTimeout(function(){
+        window.setTimeout(function () {
             if (openSheetMusicDisplay.IsReadyToRender()) {
                 openSheetMusicDisplay.render();
             } else {
@@ -488,21 +489,21 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     // Register events: load, drag&drop
-    window.addEventListener("load", function() {
+    window.addEventListener("load", function () {
         init();
         selectSampleOnChange();
     });
-    window.addEventListener("dragenter", function(event) {
+    window.addEventListener("dragenter", function (event) {
         event.preventDefault();
         disable();
     });
-    window.addEventListener("dragover", function(event) {
+    window.addEventListener("dragover", function (event) {
         event.preventDefault();
     });
-    window.addEventListener("dragleave", function(event) {
+    window.addEventListener("dragleave", function (event) {
         enable();
     });
-    window.addEventListener("drop", function(event) {
+    window.addEventListener("drop", function (event) {
         event.preventDefault();
         if (!event.dataTransfer || !event.dataTransfer.files || event.dataTransfer.files.length === 0) {
             return;
@@ -519,7 +520,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (filename.toLowerCase().indexOf(".xml") > 0
             || filename.toLowerCase().indexOf(".musicxml") > 0) {
             reader.readAsText(event.dataTransfer.files[0]);
-        } else if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".mxl") > 0){
+        } else if (event.dataTransfer.files[0].name.toLowerCase().indexOf(".mxl") > 0) {
             reader.readAsBinaryString(event.dataTransfer.files[0]);
         }
         else {
