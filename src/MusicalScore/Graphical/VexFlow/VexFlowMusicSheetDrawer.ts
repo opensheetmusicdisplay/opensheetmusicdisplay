@@ -278,9 +278,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 const stopX: number = staffLine.PositionAndShape.AbsolutePosition.x + textBracket.stop.getX() / 10;
                 if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
                     const headroom: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX);
+                    if (headroom === Infinity) { // will cause Vexflow error
+                        return;
+                    }
                     textBracket.start.getStave().options.space_above_staff_ln = headroom;
                 } else {
                     const footroom: number = staffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
+                    if (footroom === Infinity) { // will cause Vexflow error
+                        return;
+                    }
                     textBracket.start.getStave().options.space_below_staff_ln = footroom;
                 }
                 textBracket.draw();

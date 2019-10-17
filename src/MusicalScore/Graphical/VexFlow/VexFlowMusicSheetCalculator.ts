@@ -513,41 +513,87 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const startTimeStamp: Fraction = octaveShift.ParentStartMultiExpression.Timestamp;
     const endTimeStamp: Fraction = octaveShift.ParentEndMultiExpression.Timestamp;
 
-    const startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
+    const minMeasureToDrawIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+    const maxMeasureToDrawIndex: number = EngravingRules.Rules.MaxMeasureToDrawIndex;
+
+    let startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
+    if (startStaffLine === undefined) { // fix for rendering range set. all of these can probably done cleaner.
+      startStaffLine = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex].ParentStaffLine;
+    }
 
     let endMeasure: GraphicalMeasure = undefined;
     if (octaveShift.ParentEndMultiExpression !== undefined) {
       endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
                                                                                          staffIndex);
+    } else {
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // get last rendered measure
+    }
+    if (endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) { // octaveshift ends in measure not rendered
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
     let startMeasure: GraphicalMeasure = undefined;
     if (octaveShift.ParentEndMultiExpression !== undefined) {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
                                                                                            staffIndex);
+    } else {
+      startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
+    }
+    if (startMeasure.MeasureNumber < minMeasureToDrawIndex + 1) { // octaveshift starts before range of measures selected to render
+      startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
     }
 
-    // TODO octave shifts probably need a fix when we only draw measure 1 for example, then stafflines are undefined
-    if (endMeasure !== undefined && startStaffLine !== undefined && endMeasure.ParentStaffLine !== undefined) {
+    if (startMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
+        startMeasure.MeasureNumber > maxMeasureToDrawIndex + 1 ||
+        endMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
+        endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) {
+      // octave shift completely out of drawing range, don't draw anything
+      return;
+    }
+
+    let endStaffLine: StaffLine = endMeasure.ParentStaffLine;
+    if (endStaffLine === undefined) {
+      endStaffLine = startStaffLine;
+    }
+
+    if (endMeasure !== undefined && startStaffLine !== undefined && endStaffLine !== undefined) {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
+      if (graphicalOctaveShift.getStartNote() === undefined) { // fix for rendering range set
+        graphicalOctaveShift.setStartNote(startMeasure.staffEntries[0]);
+      }
+      if (graphicalOctaveShift.getStartNote() === undefined) { // fix for rendering range set
+        graphicalOctaveShift.setEndNote(endMeasure.staffEntries.last());
+      }
       startStaffLine.OctaveShifts.push(graphicalOctaveShift);
 
       // calculate RelativePosition and Dashes
-      const startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
-      const endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      if (startStaffEntry === undefined) { // fix for rendering range set
+        startStaffEntry = startMeasure.staffEntries[0];
+      }
+      let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      if (endStaffEntry === undefined) { // fix for rendering range set
+        endStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
+      }
 
       graphicalOctaveShift.setStartNote(startStaffEntry);
 
-      if (endMeasure.ParentStaffLine !== startMeasure.ParentStaffLine) {
+      if (endStaffLine !== startStaffLine) {
         graphicalOctaveShift.endsOnDifferentStaffLine = true;
-        const lastMeasure: GraphicalMeasure = startMeasure.ParentStaffLine.Measures[startMeasure.ParentStaffLine.Measures.length - 1];
+        let lastMeasure: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
+        if (lastMeasure === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+          lastMeasure = endMeasure;
+        }
         const lastNote: GraphicalStaffEntry = lastMeasure.staffEntries[lastMeasure.staffEntries.length - 1];
         graphicalOctaveShift.setEndNote(lastNote);
 
         // Now finish the shift on the next line
         const remainingOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, endMeasure.PositionAndShape);
-        endMeasure.ParentStaffLine.OctaveShifts.push(remainingOctaveShift);
-        const firstMeasure: GraphicalMeasure = endMeasure.ParentStaffLine.Measures[0];
+        endStaffLine.OctaveShifts.push(remainingOctaveShift);
+        let firstMeasure: GraphicalMeasure = endStaffLine.Measures[0];
+        if (firstMeasure === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+          firstMeasure = startMeasure;
+        }
         const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
         remainingOctaveShift.setStartNote(firstNote);
         remainingOctaveShift.setEndNote(endStaffEntry);
