@@ -1,25 +1,25 @@
-import {IXmlElement} from "./../Common/FileIO/Xml";
-import {VexFlowMusicSheetCalculator} from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
-import {VexFlowBackend} from "./../MusicalScore/Graphical/VexFlow/VexFlowBackend";
-import {MusicSheetReader} from "./../MusicalScore/ScoreIO/MusicSheetReader";
-import {GraphicalMusicSheet} from "./../MusicalScore/Graphical/GraphicalMusicSheet";
-import {MusicSheetCalculator} from "./../MusicalScore/Graphical/MusicSheetCalculator";
-import {VexFlowMusicSheetDrawer} from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
-import {SvgVexFlowBackend} from "./../MusicalScore/Graphical/VexFlow/SvgVexFlowBackend";
-import {CanvasVexFlowBackend} from "./../MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
-import {MusicSheet} from "./../MusicalScore/MusicSheet";
-import {Cursor} from "./Cursor";
-import {MXLHelper} from "../Common/FileIO/Mxl";
-import {Promise} from "es6-promise";
-import {AJAX} from "./AJAX";
+import { IXmlElement } from "./../Common/FileIO/Xml";
+import { VexFlowMusicSheetCalculator } from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
+import { VexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/VexFlowBackend";
+import { MusicSheetReader } from "./../MusicalScore/ScoreIO/MusicSheetReader";
+import { GraphicalMusicSheet } from "./../MusicalScore/Graphical/GraphicalMusicSheet";
+import { MusicSheetCalculator } from "./../MusicalScore/Graphical/MusicSheetCalculator";
+import { VexFlowMusicSheetDrawer } from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
+import { SvgVexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/SvgVexFlowBackend";
+import { CanvasVexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
+import { MusicSheet } from "./../MusicalScore/MusicSheet";
+import { Cursor } from "./Cursor";
+import { MXLHelper } from "../Common/FileIO/Mxl";
+import { Promise } from "es6-promise";
+import { AJAX } from "./AJAX";
 import * as log from "loglevel";
-import {DrawingParametersEnum, DrawingParameters, ColoringModes} from "../MusicalScore/Graphical/DrawingParameters";
-import {IOSMDOptions, OSMDOptions, AutoBeamOptions} from "./OSMDOptions";
-import {EngravingRules} from "../MusicalScore/Graphical/EngravingRules";
-import {AbstractExpression} from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
-import {Dictionary} from "typescript-collections";
-import {NoteEnum} from "..";
-import {AutoColorSet} from "../MusicalScore";
+import { DrawingParametersEnum, DrawingParameters, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
+import { IOSMDOptions, OSMDOptions, AutoBeamOptions } from "./OSMDOptions";
+import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
+import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
+import { Dictionary } from "typescript-collections";
+import { NoteEnum } from "..";
+import { AutoColorSet } from "../MusicalScore";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -39,7 +39,7 @@ export class OpenSheetMusicDisplay {
      * @param options An object for rendering options like the backend (svg/canvas) or autoResize.<br>
      *                For defaults see the OSMDOptionsStandard method in the [[OSMDOptions]] class.
      */
-    constructor(container: string|HTMLElement,
+    constructor(container: string | HTMLElement,
                 options: IOSMDOptions = OSMDOptions.OSMDOptionsStandard()) {
         // Store container element
         if (typeof container === "string") {
@@ -78,13 +78,15 @@ export class OpenSheetMusicDisplay {
      * Load a MusicXML file
      * @param content is either the url of a file, or the root node of a MusicXML document, or the string content of a .xml/.mxl file
      */
-    public load(content: string|Document): Promise<{}> {
+    public load(content: string | Document): Promise<{}> {
         // Warning! This function is asynchronous! No error handling is done here.
         this.reset();
         if (typeof content === "string") {
+
             const str: string = <string>content;
             const self: OpenSheetMusicDisplay = this;
             if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
+                console.log("This is a zip file, unpack it first: " + str);
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
                     (x: string) => {
@@ -98,39 +100,48 @@ export class OpenSheetMusicDisplay {
             }
             // Javascript loads strings as utf-16, which is wonderful BS if you want to parse UTF-8 :S
             if (str.substr(0, 3) === "\uf7ef\uf7bb\uf7bf") {
+                console.log("UTF with BOM detected, truncate first three bytes and pass along: " + str);
                 // UTF with BOM detected, truncate first three bytes and pass along
                 return self.load(str.substr(3));
             }
             if (str.substr(0, 5) === "<?xml") {
+                console.log("Finally parsing XML content: " + str.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(str, "application/xml");
             } else if (str.length < 2083) {
+                console.log("Retrieve the file at the given URL: " + str);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
                 return AJAX.ajax(str).then(
                     (s: string) => { return self.load(s); },
                     (exc: Error) => { throw exc; }
                 );
+            } else {
+                console.error("Missing else branch?");
             }
         }
 
         if (!content || !(<any>content).nodeName) {
             return Promise.reject(new Error("OpenSheetMusicDisplay: The document which was provided is invalid"));
         }
-        const children: NodeList = (<Document>content).childNodes;
-        let elem: Element;
-        for (let i: number = 0, length: number = children.length; i < length; i += 1) {
-            const node: Node = children[i];
+        const xmlDocument: Document = (<Document>content);
+        const xmlDocumentNodes: NodeList = xmlDocument.childNodes;
+        console.log("OpenSheetMusicDisplay.load Document:" + xmlDocument.URL);
+
+        let scorePartwiseElement: Element;
+        for (let i: number = 0, length: number = xmlDocumentNodes.length; i < length; i += 1) {
+            const node: Node = xmlDocumentNodes[i];
             if (node.nodeType === Node.ELEMENT_NODE && node.nodeName.toLowerCase() === "score-partwise") {
-                elem = <Element>node;
+                scorePartwiseElement = <Element>node;
                 break;
             }
         }
-        if (!elem) {
+        if (!scorePartwiseElement) {
+            console.error("Could not parse MusicXML");
             return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
-        const score: IXmlElement = new IXmlElement(elem);
+        const score: IXmlElement = new IXmlElement(scorePartwiseElement);
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         const reader: MusicSheetReader = new MusicSheetReader();
         this.sheet = reader.createMusicSheet(score, "Untitled Score");
@@ -202,7 +213,7 @@ export class OpenSheetMusicDisplay {
         }
         if (options === undefined || options === null) {
             log.warn("warning: osmd.setOptions() called without an options parameter, has no effect."
-            + "\n" + "example usage: osmd.setOptions({drawCredits: false, drawPartNames: false})");
+                + "\n" + "example usage: osmd.setOptions({drawCredits: false, drawPartNames: false})");
             return;
         }
         if (options.drawingParameters) {
@@ -365,7 +376,7 @@ export class OpenSheetMusicDisplay {
         let colorSetString: string[];
         if (options.coloringMode === ColoringModes.CustomColorSet) {
             if (!options.coloringSetCustom || options.coloringSetCustom.length !== 8) {
-                throw new Error( "Invalid amount of colors: With coloringModes.customColorSet, " +
+                throw new Error("Invalid amount of colors: With coloringModes.customColorSet, " +
                     "you have to provide a coloringSetCustom parameter with 8 strings (C to B, rest note).");
             }
             // validate strings input
@@ -384,7 +395,7 @@ export class OpenSheetMusicDisplay {
                 colorSetString.push(AutoColorSet[keys[i]]);
             }
         } // for both cases:
-        const coloringSetCurrent: Dictionary<NoteEnum|number, string> = new Dictionary<NoteEnum|number, string>();
+        const coloringSetCurrent: Dictionary<NoteEnum | number, string> = new Dictionary<NoteEnum | number, string>();
         for (let i: number = 0; i < noteIndices.length; i++) {
             coloringSetCurrent.setValue(noteIndices[i], colorSetString[i]);
         }
