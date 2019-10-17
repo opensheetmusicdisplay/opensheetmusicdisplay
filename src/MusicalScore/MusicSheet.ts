@@ -43,13 +43,13 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.MusicPartManager = new MusicPartManager(this);
         this.hasBPMInfo = false;
     }
-    public static defaultTitle: string = "[kein Titel]";
+    public static defaultTitle: string = "[no title given]";
 
     public userStartTempoInBPM: number;
     public pageWidth: number;
     public rules: EngravingRules;
 
-    private idString: string = "kjgdfuilhsdaöoihfsvjh";
+    private idString: string = "random idString, not initialized";
     private sourceMeasures: SourceMeasure[] = [];
     private repetitions: Repetition[] = [];
     private dynListStaves: DynamicsContainer[][] = [];
