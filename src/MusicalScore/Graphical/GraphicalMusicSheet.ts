@@ -418,14 +418,14 @@ export class GraphicalMusicSheet {
     }
 
     /**
-     * Get a List with the indeces of all the visible GraphicalMeasures and calculates their
+     * Get a List with the indices of all the visible GraphicalMeasures and calculates their
      * corresponding indices in the first SourceMeasure, taking into account Instruments with multiple Staves.
      * @param visibleMeasures
      * @returns {number[]}
      */
-    public getVisibleStavesIndecesFromSourceMeasure(visibleMeasures: GraphicalMeasure[]): number[] {
+    public getVisibleStavesIndicesFromSourceMeasure(visibleMeasures: GraphicalMeasure[]): number[] {
         const visibleInstruments: Instrument[] = [];
-        const visibleStavesIndeces: number[] = [];
+        const visibleStavesIndices: number[] = [];
         for (let idx: number = 0, len: number = visibleMeasures.length; idx < len; ++idx) {
             const graphicalMeasure: GraphicalMeasure = visibleMeasures[idx];
             const instrument: Instrument = graphicalMeasure.ParentStaff.ParentInstrument;
@@ -437,10 +437,10 @@ export class GraphicalMusicSheet {
             const instrument: Instrument = visibleInstruments[idx];
             const index: number = this.musicSheet.getGlobalStaffIndexOfFirstStaff(instrument);
             for (let j: number = 0; j < instrument.Staves.length; j++) {
-                visibleStavesIndeces.push(index + j);
+                visibleStavesIndices.push(index + j);
             }
         }
-        return visibleStavesIndeces;
+        return visibleStavesIndices;
     }
 
     /**
