@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <title><%= htmlWebpackPlugin.options.title %></title>
     <meta name="description" content="A showcase for OpenSheetMusicDisplay.">
     <meta name="author" content="OpenSheetMusicDisplay contributors">
@@ -14,12 +14,11 @@
     <link rel="icon" href="./favicon.ico?" type="image/x-icon"/>
 </head>
 <body>
-<br>
-<h1 class="ui centered header">
+<h1 class="ui centered header" id="header">
     <img src="./favicon.ico?" class="ui image">
     <%= htmlWebpackPlugin.options.title %>
 </h1>
-<div class="ui four column grid container">
+<div class="ui four column grid container" id="divControls">
     <div class="column">
         <h3 class="ui header">Select a sample:</h3>
         <select class="ui selection dropdown" id="selectSample" style="width:320px; height:38%"></select>
@@ -69,10 +68,10 @@
                 </div>
             </div>
         </div>
-    </div>         
-    <div class="column">
+    </div>
+    <div class="column" id="zoomControls">
         <h3 class="ui header">Zoom controls:</h3>
-        <div class="ui buttons">
+        <div class="ui buttons" id="zoomControlsButtons">
             <div class="ui button" id="zoom-in-btn">
                 <i class="search plus icon"></i>
             </div>
@@ -120,14 +119,15 @@
         <div>
             <div class="ui vertical buttons">
                 <div class="ui button" id="debug-re-render-btn">Re-render</div>
-                
+
             </div>
             <div class="ui vertical buttons">
-                <div class="ui button" id="debug-clear-btn"">Clear</div>
+                <div class="ui button" id="debug-clear-btn">Clear</div>
             </div>
         </div>
     </div>
 </div>
+<div id="optionalControls"></div>
 <table cellspacing="0" style="max-width:700px;">
     <tr id="error-tr">
         <td></td>
