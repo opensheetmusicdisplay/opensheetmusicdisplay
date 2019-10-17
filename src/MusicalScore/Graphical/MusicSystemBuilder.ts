@@ -370,7 +370,7 @@ export class MusicSystemBuilder {
     private initializeActiveInstructions(measureList: GraphicalMeasure[]): void {
         const firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
         if (firstSourceMeasure !== undefined) {
-            this.visibleStaffIndices = this.graphicalMusicSheet.getVisibleStavesIndecesFromSourceMeasure(measureList);
+            this.visibleStaffIndices = this.graphicalMusicSheet.getVisibleStavesIndicesFromSourceMeasure(measureList);
             for (let i: number = 0, len: number = this.visibleStaffIndices.length; i < len; i++) {
                 const staffIndex: number = this.visibleStaffIndices[i];
                 const graphicalMeasure: GraphicalMeasure = this.graphicalMusicSheet
