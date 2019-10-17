@@ -1996,6 +1996,7 @@ export abstract class MusicSheetCalculator {
                 openOctaveShifts[staffIndex] = new OctaveShiftParams(
                     openOctaveShift, multiExpression.AbsoluteTimestamp,
                     openOctaveShift.ParentEndMultiExpression.AbsoluteTimestamp
+                    // TODO check if octaveshift end exists, otherwise set to last measure end. only necessary if xml was cut manually and is incomplete
                 );
             }
         }
