@@ -476,8 +476,13 @@ export class InstrumentReader {
              this.currentMeasure.endsPiece = true;
            }
           }
-          if (xmlNode.element("bar-style") !== undefined) {
-            this.currentMeasure.endingBarStyle = xmlNode.element("bar-style").value;
+          const barStyleElement: IXmlElement = xmlNode.element("bar-style");
+          if (barStyleElement !== undefined) {
+            const location: Attr = barStyleElement.attribute("location");
+            if (location !== undefined && location.value === "right") {
+              this.currentMeasure.endingBarStyle = xmlNode.element("bar-style").value;
+            }
+            // TODO do we need to process bars with left location too?
           }
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
