@@ -23,7 +23,7 @@ import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
-import { EngravingRules } from ".";
+import {EngravingRules} from "./EngravingRules";
 
 /**
  * The graphical counterpart of a [[MusicSheet]]
