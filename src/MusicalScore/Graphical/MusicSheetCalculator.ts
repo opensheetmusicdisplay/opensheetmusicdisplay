@@ -736,12 +736,15 @@ export abstract class MusicSheetCalculator {
         this.calculateSkyBottomLines();
         // calculate TupletsNumbers
         this.calculateTupletNumbers();
+
         // calculate MeasureNumbers
-        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                this.calculateMeasureNumberPlacement(musicSystem);
+        if (EngravingRules.Rules.RenderMeasureNumbers) {
+            for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
+                const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+                for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+                    const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                    this.calculateMeasureNumberPlacement(musicSystem);
+                }
             }
         }
         // calculate Slurs

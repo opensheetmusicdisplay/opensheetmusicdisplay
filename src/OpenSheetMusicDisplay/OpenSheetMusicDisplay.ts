@@ -294,6 +294,12 @@ export class OpenSheetMusicDisplay {
         if (options.drawFingerings === false) {
             EngravingRules.Rules.RenderFingerings = false;
         }
+        if (options.drawMeasureNumbers !== undefined) {
+            EngravingRules.Rules.RenderMeasureNumbers = options.drawMeasureNumbers;
+        }
+        if (options.measureNumberInterval !== undefined) {
+            EngravingRules.Rules.MeasureNumberLabelOffset = options.measureNumberInterval;
+        }
         if (options.fingeringPosition !== undefined) {
             EngravingRules.Rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
         }

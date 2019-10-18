@@ -236,6 +236,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             setWantedStemDirectionByXml: true, // try false, which was previously the default behavior
             // drawUpToMeasureNumber: 3, // draws only up to measure 3, meaning it draws measure 1 to 3 of the piece.
 
+            //drawMeasureNumbers: false, // disable drawing measure numbers
+            //measureNumberInterval: 4, // draw measure numbers only every 4 bars (and at the beginning of a new system)
+
             // coloring options
             coloringEnabled: true,
             // defaultColorNotehead: "#CC0055", // try setting a default color. default is black (undefined)
