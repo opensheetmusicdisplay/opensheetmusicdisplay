@@ -83,10 +83,25 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // Will be changed when repetitions will be implemented
         //this.beginInstructionsWidth = 20 / UnitInPixels;
         //this.endInstructionsWidth = 20 / UnitInPixels;
+
+        // TODO save beginning and end bar type, set these again after new stave.
+
         this.stave = new Vex.Flow.Stave(0, 0, 0, {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
         });
+        // constructor sets beginning and end bar type to standard
+
+        this.stave.setBegBarType(Vex.Flow.Barline.type.NONE); // technically not correct, but we'd need to set the next measure's beginning bar type
+        if (this.parentSourceMeasure && this.parentSourceMeasure.endingBarStyle === "none") {
+            // fix for vexflow ignoring ending barline style after new stave, apparently
+            this.stave.setEndBarType(Vex.Flow.Barline.type.NONE);
+        }
+        // the correct bar types seem to be set later
+
+        //if (nextMeasureIndex >= EngravingRules.Rules.MinMeasureToDrawIndex && nextMeasureIndex <= EngravingRules.Rules.MaxMeasureToDrawIndex) {
+        //this.stave.setBegBarType(Vex.Flow.Barline.type.NONE);
+
         this.updateInstructionWidth();
     }
 
@@ -183,6 +198,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         this.stave.setBegBarType(Vex.Flow.Barline.type.REPEAT_BEGIN);
                         break;
                     default:
+                        //this.stave.setBegBarType(Vex.Flow.Barline.type.NONE); // not necessary, it seems
                         break;
                 }
                 break;
