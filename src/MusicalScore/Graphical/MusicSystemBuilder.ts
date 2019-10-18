@@ -677,9 +677,12 @@ export class MusicSystemBuilder {
         if (this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsThinBold;
         }
-        if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
+        // always end piece with final barline: not a good idea. user should be able to override final barline.
+        // also, selecting range of measures to draw would always end with final barline, even if extract is from the middle of the piece
+        // this was probably done before we parsed the barline type from XML.
+        /*if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
             return SystemLinesEnum.ThinBold;
-        }
+        }*/
         if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
             return SystemLinesEnum.DoubleThin;
         }
@@ -795,7 +798,8 @@ export class MusicSystemBuilder {
      */
     private nextMeasureBeginsWordRepetition(): boolean {
         const nextMeasureIndex: number = this.measureListIndex + 1;
-        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length) {
+        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length ||
+            nextMeasureIndex > this.measureList.length - 1) {
             return false;
         }
         for (let idx: number = 0, len: number = this.measureList[nextMeasureIndex].length; idx < len; ++idx) {
