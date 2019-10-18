@@ -20733,6 +20733,7 @@
         <type>eighth</type>
       </note>
       <barline location="right">
+        <bar-style>light-heavy</bar-style>
         <ending type="stop" number="2"/>
       </barline>
     </measure>

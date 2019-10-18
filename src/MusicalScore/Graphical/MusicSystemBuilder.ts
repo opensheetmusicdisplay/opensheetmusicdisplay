@@ -671,10 +671,17 @@ export class MusicSystemBuilder {
     }
 
     private getMeasureEndLine(): SystemLinesEnum {
+        let sourceMeasure: SourceMeasure = undefined;
+        try {
+            sourceMeasure = this.measureList[this.measureListIndex][0].parentSourceMeasure;
+        } finally {
+            // do nothing
+        }
+
         if (this.nextMeasureBeginsLineRepetition() && this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsBoldBoldDots;
         }
-        if (this.thisMeasureEndsLineRepetition()) {
+        if (this.thisMeasureEndsLineRepetition() && (sourceMeasure && !sourceMeasure.endsPiece)) { // TODO right place to check endsPiece?
             return SystemLinesEnum.DotsThinBold;
         }
         // always end piece with final barline: not a good idea. user should be able to override final barline.
@@ -686,7 +693,9 @@ export class MusicSystemBuilder {
         if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
             return SystemLinesEnum.DoubleThin;
         }
-        const sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex][0].parentSourceMeasure;
+        if (!sourceMeasure) {
+            return SystemLinesEnum.SingleThin;
+        }
         if (sourceMeasure.endingBarStyle === "regular") {
             return SystemLinesEnum.SingleThin;
         } else if (sourceMeasure.endingBarStyle === "dotted") {
