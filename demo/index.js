@@ -82,6 +82,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var autoCustomColoringOptionNeedsReset = false;
     var autoCustomColoringOptionStashedValue = false;
     var drawPartNamesOptionStashedValue = true;
+    var drawPartAbbreviationsStashedValue = true;
     var drawPartNamesOptionNeedsReset = false;
 
     var showControls = true;
@@ -415,10 +416,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         }
         if (!isCustom && str.includes("Schubert_An_die_Musik")) { // TODO weird layout bug here with part names. but shouldn't be in score anyways
             drawPartNamesOptionStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartNames;
-            openSheetMusicDisplay.setOptions({ drawPartNames: false }); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
+            drawPartAbbreviationsStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartAbbreviations;
+            openSheetMusicDisplay.setOptions({ drawPartNames: false, drawPartAbbreviations: false }); // TODO sets osmd.drawingParameters.DrawPartNames! also check EngravingRules.RenderPartAbbreviations, was false
             drawPartNamesOptionNeedsReset = true;
         } else if (drawPartNamesOptionNeedsReset) {
-            openSheetMusicDisplay.setOptions({ drawPartNames: drawPartNamesOptionStashedValue });
+            openSheetMusicDisplay.setOptions({ drawPartNames: drawPartNamesOptionStashedValue, drawPartAbbreviations: drawPartAbbreviationsStashedValue });
             drawPartNamesOptionNeedsReset = false;
         }
     }
