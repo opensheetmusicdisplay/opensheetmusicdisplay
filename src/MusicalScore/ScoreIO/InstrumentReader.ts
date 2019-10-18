@@ -25,6 +25,7 @@ import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstru
 import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
 import {NoteType, NoteTypeHandler} from "../VoiceData";
+import {SystemLinesEnumHelper} from "../Graphical";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -478,7 +479,9 @@ export class InstrumentReader {
           }
           const location: IXmlAttribute = xmlNode.attribute("location");
           if (location && location.value === "right") {
-              this.currentMeasure.endingBarStyle = xmlNode.element("bar-style").value;
+            const stringValue: string = xmlNode.element("bar-style").value;
+            this.currentMeasure.endingBarStyleXml = stringValue;
+            this.currentMeasure.endingBarStyleEnum = SystemLinesEnumHelper.xmlBarlineStyleToSystemLinesEnum(stringValue);
           }
           // TODO do we need to process bars with left location too?
         } else if (xmlNode.name === "sound") {

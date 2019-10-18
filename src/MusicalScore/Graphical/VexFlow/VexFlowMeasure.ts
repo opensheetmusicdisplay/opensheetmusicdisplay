@@ -93,7 +93,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // constructor sets beginning and end bar type to standard
 
         this.stave.setBegBarType(Vex.Flow.Barline.type.NONE); // technically not correct, but we'd need to set the next measure's beginning bar type
-        if (this.parentSourceMeasure && this.parentSourceMeasure.endingBarStyle === "none") {
+        if (this.parentSourceMeasure && this.parentSourceMeasure.endingBarStyleEnum === SystemLinesEnum.None) {
             // fix for vexflow ignoring ending barline style after new stave, apparently
             this.stave.setEndBarType(Vex.Flow.Barline.type.NONE);
         }

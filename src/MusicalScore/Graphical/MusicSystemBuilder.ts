@@ -681,7 +681,7 @@ export class MusicSystemBuilder {
         if (this.nextMeasureBeginsLineRepetition() && this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsBoldBoldDots;
         }
-        if (this.thisMeasureEndsLineRepetition() && (sourceMeasure && !sourceMeasure.endsPiece)) { // TODO right place to check endsPiece?
+        if (this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsThinBold;
         }
         // always end piece with final barline: not a good idea. user should be able to override final barline.
@@ -696,28 +696,8 @@ export class MusicSystemBuilder {
         if (!sourceMeasure) {
             return SystemLinesEnum.SingleThin;
         }
-        if (sourceMeasure.endingBarStyle === "regular") {
-            return SystemLinesEnum.SingleThin;
-        } else if (sourceMeasure.endingBarStyle === "dotted") {
-            return SystemLinesEnum.Dotted;
-        } else if (sourceMeasure.endingBarStyle === "dashed") {
-            return SystemLinesEnum.Dashed;
-        } else if (sourceMeasure.endingBarStyle === "heavy") {
-            return SystemLinesEnum.Bold;
-        } else if (sourceMeasure.endingBarStyle === "light-light") {
-            return SystemLinesEnum.DoubleThin;
-        } else if (sourceMeasure.endingBarStyle === "light-heavy") {
-            return SystemLinesEnum.ThinBold;
-        } else if (sourceMeasure.endingBarStyle === "heavy-light") {
-            return SystemLinesEnum.BoldThin;
-        } else if (sourceMeasure.endingBarStyle === "heavy-heavy") {
-            return SystemLinesEnum.DoubleBold;
-        } else if (sourceMeasure.endingBarStyle === "tick") {
-            return SystemLinesEnum.Tick;
-        } else if (sourceMeasure.endingBarStyle === "short") {
-            return SystemLinesEnum.Short;
-        } else if (sourceMeasure.endingBarStyle === "none") {
-            return SystemLinesEnum.None;
+        if (sourceMeasure.endingBarStyleEnum !== undefined) {
+            return sourceMeasure.endingBarStyleEnum;
         }
         // TODO: print an error message if the default fallback is used.
         return SystemLinesEnum.SingleThin;
