@@ -40,7 +40,7 @@ export interface IOSMDOptions {
     defaultFontFamily?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
-    /** Follow Cursor */
+    /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */
     followCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
