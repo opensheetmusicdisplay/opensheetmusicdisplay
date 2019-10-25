@@ -23,7 +23,12 @@ export interface IOSMDOptions {
     coloringEnabled?: boolean;
     /** Whether to color the stems of notes the same as their noteheads */
     colorStemsLikeNoteheads?: boolean;
-    /** Default color for a note head (without stem). Default black (undefined). */
+    /** Default color for a note head (without stem). Default black (undefined).
+     * Only considered before loading a sample, not before render.
+     * To change the color after loading a sample and before render, use note(.sourceNote).NoteheadColor.
+     * the format is either Vexflow format, either "#rrggbb" or "#rrggbbtt" where <tt> is transparency. All hex values.
+     * E.g., a half-transparent red would be "#FF000080", invisible would be "#00000000" or "#12345600".
+     */
     defaultColorNotehead?: string;
     /** Default color for a note stem. Default black (undefined). */
     defaultColorStem?: string;
