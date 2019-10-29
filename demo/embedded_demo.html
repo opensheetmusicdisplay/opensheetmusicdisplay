@@ -43,7 +43,7 @@
                     <td><b>embedded</b></td>
                     <td></td>
                     <td></td>
-                    <td>Activates the embedded mode: controls are hidden (unless other parameters specified) 
+                    <td>Activates the embedded mode: controls are hidden (unless other parameters specified)
                     </td>
                 </tr>
                 <tr>
@@ -56,7 +56,8 @@
                     <td>showZoomControl</td>
                     <td>"0" and "1"</td>
                     <td>"0" = OFF</td>
-                    <td>If showControls == 0 and showZoomControl == 1, a small zoomControl widget will be displayed to save space.</td>
+                    <td>If showControls == 0 and showZoomControl == 1, a small zoomControl widget will be displayed to safe space
+                    </td>
                 </tr>
                 <tr>
                     <td>showHeader</td>
@@ -74,7 +75,31 @@
                     <td>overflow</td>
                     <td>"hidden" , "auto", "scroll", "visible"</td>
                     <td>"auto"</td>
-                    <td>If given, this attribute will refresh the state of the css attribute overflow to control the scrollbar.</td>
+                    <td>If given, this attribute will refresh the state of the css attribute overflow to control the
+                        scrollbar.
+                    </td>
+                </tr>
+                <tr>
+                    <td>openUrl</td>
+                    <td>valid URL pointing to a valid musicxml file</td>
+                    <td>"auto"</td>
+                    <td>If given, this attribute open the given musicxml file and display it.
+                        <p>
+                            <h5>Important:</h5>
+                            For now, the resources must be hosted on the same server, otherwise it will be blocked by
+                            <a href="https://de.wikipedia.org/wiki/Cross-Origin_Resource_Sharing">CORS policy</a>.
+                        </p>
+                        <p>
+                            <h5>Examples:</h5>
+                            <a
+                                href="http://localhost:8000/?embedded&openUrl=http://localhost:8000/BrookeWestSample.musicxml">
+                                http://localhost:8000/?embedded&openUrl=http://localhost:8000/BrookeWestSample.musicxml</a>
+                                <br>
+                            <a
+                                href="http://localhost:8000/?embedded&openUrl=https://wpmedia.musicxml.com/wp-content/uploads/2017/12/MahlFaGe4Sample.mxl">http://localhost:8000/?embedded&openUrl=https://wpmedia.musicxml.com/wp-content/uploads/2017/12/MahlFaGe4Sample.mxl</a>
+
+                        </p>
+                    </td>
                 </tr>
             </table>
     </div>

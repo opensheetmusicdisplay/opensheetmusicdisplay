@@ -5,72 +5,72 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     "use strict";
     var openSheetMusicDisplay;
     var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
-    samples = {
-        "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
-        "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
-        "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
-        "Clementi, M. - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
-        "Clementi, M. - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
-        "Bach, J.S. - Praeludium in C-Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
-        "Bach, J.S. - Air": "JohannSebastianBach_Air.xml",
-        "Gounod, C. - Méditation": "CharlesGounod_Meditation.xml",
-        "Haydn, J. - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
-        "Joplin, S. - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
-        "Joplin, S. - The Entertainer": "ScottJoplin_The_Entertainer.xml",
-        "Mozart, W.A. - An Chloe": "Mozart_AnChloe.xml",
-        "Mozart, W.A. - Das Veilchen": "Mozart_DasVeilchen.xml",
-        "Mozart, W.A. - Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
-        "Mozart, W.A. - String Quartet in G, K. 387, 1st Mvmt Excerpt": "Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml",
-        "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
-        "OSMD Function Test - All": "OSMD_function_test_all.xml",
-        "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
-        "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
-        "OSMD Function Test - Auto-/Custom-Coloring": "OSMD_function_test_auto-custom-coloring-entchen.musicxml",
-        "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
-        "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
-        "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
-        "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
-        "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
-        "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
-        "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
-        "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
-        "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
-        "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
-        "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
-        "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
-        "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
-        "Anonymous - Saltarello": "Saltarello.mxl",
-        "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
-        "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
-        "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
-        "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
-        "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
-    },
+        samples = {
+            "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
+            "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
+            "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
+            "Clementi, M. - Sonatina Op.36 No.3 Pt.1": "MuzioClementi_SonatinaOpus36No3_Part1.xml",
+            "Clementi, M. - Sonatina Op.36 No.3 Pt.2": "MuzioClementi_SonatinaOpus36No3_Part2.xml",
+            "Bach, J.S. - Praeludium in C-Dur BWV846 1": "JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml",
+            "Bach, J.S. - Air": "JohannSebastianBach_Air.xml",
+            "Gounod, C. - Méditation": "CharlesGounod_Meditation.xml",
+            "Haydn, J. - Concertante Cello": "JosephHaydn_ConcertanteCello.xml",
+            "Joplin, S. - Elite Syncopations": "ScottJoplin_EliteSyncopations.xml",
+            "Joplin, S. - The Entertainer": "ScottJoplin_The_Entertainer.xml",
+            "Mozart, W.A. - An Chloe": "Mozart_AnChloe.xml",
+            "Mozart, W.A. - Das Veilchen": "Mozart_DasVeilchen.xml",
+            "Mozart, W.A. - Clarinet Quintet (Excerpt)": "Mozart_Clarinet_Quintet_Excerpt.mxl",
+            "Mozart, W.A. - String Quartet in G, K. 387, 1st Mvmt Excerpt": "Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml",
+            "Mozart/Holzer - Land der Berge (national anthem of Austria)": "Land_der_Berge.musicxml",
+            "OSMD Function Test - All": "OSMD_function_test_all.xml",
+            "OSMD Function Test - Accidentals": "OSMD_function_test_accidentals.musicxml",
+            "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
+            "OSMD Function Test - Auto-/Custom-Coloring": "OSMD_function_test_auto-custom-coloring-entchen.musicxml",
+            "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
+            "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
+            "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
+            "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
+            "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
+            "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
+            "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
+            "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
+            "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
+            "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+            "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
+            "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
+            "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
+            "Anonymous - Saltarello": "Saltarello.mxl",
+            "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
+            "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
+            "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
+            "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
+            "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
+        },
 
-    zoom = 1.0,
-    // HTML Elements in the page
-    divControls,
-    zoomControls,
-    header,
-    err,
-    error_tr,
-    canvas,
-    selectSample,
-    selectBounding,
-    skylineDebug,
-    bottomlineDebug,
-    zoomIn,
-    zoomOut,
-    zoomDiv,
-    custom,
-    nextCursorBtn,
-    resetCursorBtn,
-    followCursorCheckbox,
-    showCursorBtn,
-    hideCursorBtn,
-    backendSelect,
-    debugReRenderBtn,
-    debugClearBtn;
+        zoom = 1.0,
+        // HTML Elements in the page
+        divControls,
+        zoomControls,
+        header,
+        err,
+        error_tr,
+        canvas,
+        selectSample,
+        selectBounding,
+        skylineDebug,
+        bottomlineDebug,
+        zoomIn,
+        zoomOut,
+        zoomDiv,
+        custom,
+        nextCursorBtn,
+        resetCursorBtn,
+        followCursorCheckbox,
+        showCursorBtn,
+        hideCursorBtn,
+        backendSelect,
+        debugReRenderBtn,
+        debugClearBtn;
 
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -256,7 +256,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
-        openSheetMusicDisplay.setLogLevel('info');
+        openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to see more detailed control flow information in console
         document.body.appendChild(canvas);
 
         window.addEventListener("keydown", function (e) {
@@ -295,15 +295,27 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 // clears the canvas element
                 canvas.innerHTML = "";
                 openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value });
-                openSheetMusicDisplay.setLogLevel('info');
+                openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
             } else {
                 // alternative, doesn't work yet, see setOptions():
                 openSheetMusicDisplay.setOptions({ backend: value });
             }
-
-            selectSampleOnChange();
+            console.log("[OSMD] selectSampleOnChange addEventListener change");
+            // selectSampleOnChange();
 
         });
+
+        if (paramOpenUrl !== undefined) {
+            if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
+                console.log("[OSMD] selectSampleOnChange with " + paramOpenUrl);
+            }
+            selectSampleOnChange(paramOpenUrl);
+        } else {
+            if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
+                console.log("[OSMD] selectSampleOnChange without param");
+            }
+            selectSampleOnChange();
+        }
     }
 
     function findGetParameter(parameterName) {
@@ -466,6 +478,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             if (openSheetMusicDisplay.IsReadyToRender()) {
                 openSheetMusicDisplay.render();
             } else {
+                console.log("[OSMD demo] Looses context!"); // TODO not sure that this message is reasonable, renders fine anyways. maybe vexflow context lost?
                 selectSampleOnChange(); // reload sample e.g. after osmd.clear()
             }
             enable();
@@ -497,7 +510,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     // Register events: load, drag&drop
     window.addEventListener("load", function () {
         init();
-        selectSampleOnChange();
     });
     window.addEventListener("dragenter", function (event) {
         event.preventDefault();

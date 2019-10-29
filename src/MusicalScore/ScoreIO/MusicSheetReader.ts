@@ -63,7 +63,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         try {
             return this._createMusicSheet(root, path);
         } catch (e) {
-            log.info("MusicSheetReader.CreateMusicSheet", e);
+            log.error("MusicSheetReader.CreateMusicSheet", e);
             return undefined;
         }
     }
