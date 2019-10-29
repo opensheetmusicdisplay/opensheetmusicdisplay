@@ -122,25 +122,28 @@ export class SkyBottomLineCalculator {
         const subSampledSkyLine: number[] = [];
         const subSampledBottomLine: number[] = [];
         for (let chunkIndex: number = 0; chunkIndex < this.mSkyLine.length; chunkIndex += arrayChunkSize) {
-            let chunk: number[] = this.mSkyLine.slice(chunkIndex, chunkIndex + arrayChunkSize); // slice does not include end index
+            if (subSampledSkyLine.length === arrayLength) {
+                break; // TODO find out why skyline.length becomes arrayLength + 1. see log.debug below
+            }
+
+            const endIndex: number = Math.min(this.mSkyLine.length, chunkIndex + arrayChunkSize);
+            let chunk: number[] = this.mSkyLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
             // TODO chunkIndex + arrayChunkSize is sometimes bigger than this.mSkyLine.length -> out of bounds
             // TODO chunkIndex + arrayChunkSize is often a non-rounded float as well. is that ok to use with slice?
             /*const diff: number = this.mSkyLine.length - (chunkIndex + arrayChunkSize);
             if (diff < 0) { // out of bounds
                 console.log("length - slice end index: " + diff);
             }*/
+
             subSampledSkyLine.push(Math.min(...chunk));
-            chunk = this.mBottomLine.slice(chunkIndex, chunkIndex + arrayChunkSize); // slice does not include end index
+            chunk = this.mBottomLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
             subSampledBottomLine.push(Math.max(...chunk));
         }
 
         this.mSkyLine = subSampledSkyLine;
         this.mBottomLine = subSampledBottomLine;
-        if (this.mSkyLine.length !== arrayLength) {
+        if (this.mSkyLine.length !== arrayLength) { // bottomline will always be same length as well
             log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
-        }
-        if (this.mBottomLine.length !== arrayLength) {
-            log.debug(`BottomLine calculation was not correct (${this.mBottomLine.length} instead of ${arrayLength})`);
         }
         // Remap the values from 0 to +/- height in units
         this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
