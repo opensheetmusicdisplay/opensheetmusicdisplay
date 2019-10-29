@@ -18,7 +18,7 @@
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
     "build:webpack-sourcemap": "webpack --progress --colors --config webpack.sourcemap.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
-    "fix-memory-limit": "export NODE_OPTIONS=--max_old_space_size=4096"
+    "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
   "pre-commit": [
     "lint"

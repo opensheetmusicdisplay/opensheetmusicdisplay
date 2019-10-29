@@ -13,7 +13,7 @@ install:
   - node --version
   - npm --version
   #- npm run fix-memory-limit # deprecated by new node option, see below
-  - export NODE_OPTIONS=--max_old_space_size=4096
+  - cross-env NODE_OPTIONS=--max_old_space_size=4096
 build_script:
   - npm run lint
   - npm run build
