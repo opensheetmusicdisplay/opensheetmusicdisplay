@@ -86,7 +86,7 @@ export class OpenSheetMusicDisplay {
             const str: string = <string>content;
             const self: OpenSheetMusicDisplay = this;
             if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
-                console.log("This is a zip file, unpack it first: " + str);
+                log.debug("[OSMD] This is a zip file, unpack it first: " + str);
                 // This is a zip file, unpack it first
                 return MXLHelper.MXLtoXMLstring(str).then(
                     (x: string) => {
@@ -100,17 +100,17 @@ export class OpenSheetMusicDisplay {
             }
             // Javascript loads strings as utf-16, which is wonderful BS if you want to parse UTF-8 :S
             if (str.substr(0, 3) === "\uf7ef\uf7bb\uf7bf") {
-                console.log("UTF with BOM detected, truncate first three bytes and pass along: " + str);
+                log.debug("[OSMD] UTF with BOM detected, truncate first three bytes and pass along: " + str);
                 // UTF with BOM detected, truncate first three bytes and pass along
                 return self.load(str.substr(3));
             }
             if (str.substr(0, 5) === "<?xml") {
-                console.log("Finally parsing XML content: " + str.length);
+                log.debug("[OSMD] Finally parsing XML content, length: " + str.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(str, "application/xml");
             } else if (str.length < 2083) {
-                console.log("Retrieve the file at the given URL: " + str);
+                log.debug("[OSMD] Retrieve the file at the given URL: " + str);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
                 return AJAX.ajax(str).then(
@@ -127,7 +127,7 @@ export class OpenSheetMusicDisplay {
         }
         const xmlDocument: Document = (<Document>content);
         const xmlDocumentNodes: NodeList = xmlDocument.childNodes;
-        console.log("OpenSheetMusicDisplay.load Document:" + xmlDocument.URL);
+        log.debug("[OSMD] load(), Document url: " + xmlDocument.URL);
 
         let scorePartwiseElement: Element;
         for (let i: number = 0, length: number = xmlDocumentNodes.length; i < length; i += 1) {
@@ -138,7 +138,7 @@ export class OpenSheetMusicDisplay {
             }
         }
         if (!scorePartwiseElement) {
-            console.error("Could not parse MusicXML");
+            console.error("Could not parse MusicXML, no valid partwise element found");
             return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
         const score: IXmlElement = new IXmlElement(scorePartwiseElement);
@@ -153,7 +153,7 @@ export class OpenSheetMusicDisplay {
         if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
-        log.info(`Loaded sheet ${this.sheet.TitleString} successfully.`);
+        log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
         return Promise.resolve({});
     }
 
@@ -432,6 +432,10 @@ export class OpenSheetMusicDisplay {
                 log.setLevel(log.levels.WARN);
                 break;
         }
+    }
+
+    public getLogLevel(): number {
+        return log.getLevel();
     }
 
     /**

@@ -256,7 +256,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             // tripletsBracketed: true,
             // tupletsRatioed: true, // unconventional; renders ratios for tuplets (3:2 instead of 3 for triplets)
         });
-        openSheetMusicDisplay.setLogLevel('info');
+        openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to see more detailed control flow information in console
         document.body.appendChild(canvas);
 
         window.addEventListener("keydown", function (e) {
@@ -295,21 +295,25 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 // clears the canvas element
                 canvas.innerHTML = "";
                 openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, { backend: value });
-                openSheetMusicDisplay.setLogLevel('info');
+                openSheetMusicDisplay.setLogLevel('info'); // set this to 'debug' if you want to get more detailed control flow information
             } else {
                 // alternative, doesn't work yet, see setOptions():
                 openSheetMusicDisplay.setOptions({ backend: value });
             }
-            console.log("selectSampleOnChange addEventListener change");
+            console.log("[OSMD] selectSampleOnChange addEventListener change");
             // selectSampleOnChange();
 
         });
 
         if (paramOpenUrl !== undefined) {
-            console.log("selectSampleOnChange with "+paramOpenUrl);
+            if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
+                console.log("[OSMD] selectSampleOnChange with " + paramOpenUrl);
+            }
             selectSampleOnChange(paramOpenUrl);
         } else {
-            console.log("selectSampleOnChange without param");
+            if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
+                console.log("[OSMD] selectSampleOnChange without param");
+            }
             selectSampleOnChange();
         }
     }
@@ -474,7 +478,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             if (openSheetMusicDisplay.IsReadyToRender()) {
                 openSheetMusicDisplay.render();
             } else {
-                console.err("Looses context!");
+                console.log("[OSMD demo] Looses context!"); // TODO not sure that this message is reasonable, renders fine anyways. maybe vexflow context lost?
                 selectSampleOnChange(); // reload sample e.g. after osmd.clear()
             }
             enable();

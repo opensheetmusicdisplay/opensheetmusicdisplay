@@ -471,7 +471,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // if this voice is new, check for a gap from measure start to the start of the current voice entry:
                 const gapFromMeasureStart: Fraction = Fraction.minus(gNotesStartTimestamp, this.parentSourceMeasure.AbsoluteTimestamp);
                 if (gapFromMeasureStart.RealValue > 0) {
-                    log.debug("Ghost Found at start");
+                    log.trace(`Ghost Found at start (measure ${this.MeasureNumber})`); // happens too often for valid measures to be logged to debug
                     const vfghost: Vex.Flow.GhostNote = VexFlowConverter.GhostNote(gapFromMeasureStart);
                     const ghostGve: VexFlowVoiceEntry = new VexFlowVoiceEntry(undefined, undefined);
                     ghostGve.vfStaveNote = vfghost;
@@ -483,7 +483,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const inBetweenLength: Fraction = Fraction.minus(gNotesStartTimestamp, latestVoiceTimestamp);
 
                 if (inBetweenLength.RealValue > 0) {
-                    log.debug("Ghost Found in between");
+                    log.trace(`Ghost Found in between (measure ${this.MeasureNumber})`); // happens too often for valid measures to be logged to debug
                     const vfghost: Vex.Flow.GhostNote = VexFlowConverter.GhostNote(inBetweenLength);
                     const ghostGve: VexFlowVoiceEntry = new VexFlowVoiceEntry(undefined, undefined);
                     ghostGve.vfStaveNote = vfghost;
@@ -496,8 +496,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             // finally set the latest timestamp of this voice to the end timestamp of the longest note in the current voiceEntry:
             latestVoiceTimestamp = gNotesEndTimestamp;
-
-
         }
 
         const measureEndTimestamp: Fraction = Fraction.plus(this.parentSourceMeasure.AbsoluteTimestamp, this.parentSourceMeasure.Duration);
@@ -506,7 +504,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // fill the gap with a rest ghost note
             // starting from lastFraction
             // with length restLength:
-            log.debug("Ghost Found at end");
+            log.trace(`Ghost Found at end (measure ${this.MeasureNumber})`); // happens too often for valid measures to be logged to debug
             const vfghost: Vex.Flow.GhostNote = VexFlowConverter.GhostNote(restLength);
             const ghostGve: VexFlowVoiceEntry = new VexFlowVoiceEntry(undefined, undefined);
             ghostGve.vfStaveNote = vfghost;
