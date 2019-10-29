@@ -57,7 +57,6 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.3",
-    "@types/loglevel": "^1.4.29",
     "@types/mocha": "^5.2.6",
     "@types/node": "^12.7.2",
     "chai": "^4.1.0",
