@@ -1,15 +1,15 @@
-import {VoiceEntry, StemDirectionType} from "./VoiceEntry";
-import {SourceStaffEntry} from "./SourceStaffEntry";
-import {Fraction} from "../../Common/DataObjects/Fraction";
-import {Pitch} from "../../Common/DataObjects/Pitch";
-import {Beam} from "./Beam";
-import {Tuplet} from "./Tuplet";
-import {Tie} from "./Tie";
-import {Staff} from "./Staff";
-import {Slur} from "./Expressions/ContinuousExpressions/Slur";
-import {NoteState} from "../Graphical/DrawingEnums";
-import {Notehead} from "./Notehead";
-import {Arpeggio} from "./Arpeggio";
+import { VoiceEntry, StemDirectionType } from "./VoiceEntry";
+import { SourceStaffEntry } from "./SourceStaffEntry";
+import { Fraction } from "../../Common/DataObjects/Fraction";
+import { Pitch } from "../../Common/DataObjects/Pitch";
+import { Beam } from "./Beam";
+import { Tuplet } from "./Tuplet";
+import { Tie } from "./Tie";
+import { Staff } from "./Staff";
+import { Slur } from "./Expressions/ContinuousExpressions/Slur";
+import { NoteState } from "../Graphical/DrawingEnums";
+import { Notehead } from "./Notehead";
+import { Arpeggio } from "./Arpeggio";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -24,7 +24,7 @@ export class Note {
         if (pitch !== undefined) {
             this.halfTone = pitch.getHalfTone();
         } else {
-          this.halfTone = 0;
+            this.halfTone = 0;
         }
     }
 
@@ -202,11 +202,19 @@ export class Note {
         return this.Pitch === undefined;
     }
 
+    public isWholeRest(): boolean {
+        if (this.length.Denominator === 1 && this.isRest()) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
     public ToString(): string {
         if (this.pitch !== undefined) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
         } else {
-          return "rest note, length: " + this.length.toString();
+            return "rest note, length: " + this.length.toString();
         }
     }
     public getAbsoluteTimestamp(): Fraction {
@@ -219,11 +227,11 @@ export class Note {
         for (let idx: number = 0, len: number = this.slurs.length; idx < len; ++idx) {
             const noteSlur: Slur = this.slurs[idx];
             if (
-              noteSlur.StartNote !== undefined &&
-              noteSlur.EndNote !== undefined &&
-              slur.StartNote !== undefined &&
-              slur.StartNote === noteSlur.StartNote &&
-              noteSlur.EndNote === this
+                noteSlur.StartNote !== undefined &&
+                noteSlur.EndNote !== undefined &&
+                slur.StartNote !== undefined &&
+                slur.StartNote === noteSlur.StartNote &&
+                noteSlur.EndNote === this
             ) { return true; }
         }
         return false;

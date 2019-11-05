@@ -36,7 +36,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 gve.applyBordersFromVexflow();
                 this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
                 const sourceNote: Note = gve.notes[0].sourceNote;
-                if (sourceNote.isRest() && sourceNote.Length.WholeValue === 1) { // whole rest
+                if (sourceNote.isWholeRest()) { // whole rest
                     this.PositionAndShape.RelativePosition.x +=
                         EngravingRules.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
                     gve.PositionAndShape.BorderLeft = -0.7;

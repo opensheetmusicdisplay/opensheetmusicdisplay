@@ -176,15 +176,15 @@ export class EngravingRules {
     private maxInstructionsConstValue: number;
     private noteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
-    private durationDistanceDict: {[_: number]: number; } = {};
-    private durationScalingDistanceDict: {[_: number]: number; } = {};
+    private durationDistanceDict: { [_: number]: number; } = {};
+    private durationScalingDistanceDict: { [_: number]: number; } = {};
 
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
     private colorStemsLikeNoteheads: boolean;
     private colorFlags: boolean;
     private colorBeams: boolean;
-    private coloringSetCustom: Dictionary<NoteEnum|number, string>;
+    private coloringSetCustom: Dictionary<NoteEnum | number, string>;
     private defaultColorNotehead: string;
     private defaultColorRest: string;
     private defaultColorStem: string;
@@ -393,7 +393,7 @@ export class EngravingRules {
         this.minNoteDistance = 2.0;
         this.subMeasureXSpacingThreshold = 35;
         this.measureDynamicsMaxScalingFactor = 2.5;
-        this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
+        this.wholeRestXShiftVexflow = 0; // VexFlow draws rest notes too far to the right
         this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.metronomeMarkYShift = -0.5;
 
@@ -1336,10 +1336,10 @@ export class EngravingRules {
     public set NoteDistancesScalingFactors(value: number[]) {
         this.noteDistancesScalingFactors = value;
     }
-    public get DurationDistanceDict(): {[_: number]: number; } {
+    public get DurationDistanceDict(): { [_: number]: number; } {
         return this.durationDistanceDict;
     }
-    public get DurationScalingDistanceDict(): {[_: number]: number; } {
+    public get DurationScalingDistanceDict(): { [_: number]: number; } {
         return this.durationScalingDistanceDict;
     }
     public get ColoringMode(): ColoringMode {
@@ -1372,10 +1372,10 @@ export class EngravingRules {
     public set ColorBeams(value: boolean) {
         this.colorBeams = value;
     }
-    public get ColoringSetCurrent(): Dictionary<NoteEnum|number, string> {
+    public get ColoringSetCurrent(): Dictionary<NoteEnum | number, string> {
         return this.coloringSetCustom;
     }
-    public set ColoringSetCurrent(value: Dictionary<NoteEnum|number, string>) {
+    public set ColoringSetCurrent(value: Dictionary<NoteEnum | number, string>) {
         this.coloringSetCustom = value;
     }
     public get DefaultColorNotehead(): string {
@@ -1514,7 +1514,7 @@ export class EngravingRules {
                     this.durationScalingDistanceDict[2.0] = this.noteDistancesScalingFactors[i];
                     break;
                 default:
-                    // FIXME
+                // FIXME
             }
         }
     }
