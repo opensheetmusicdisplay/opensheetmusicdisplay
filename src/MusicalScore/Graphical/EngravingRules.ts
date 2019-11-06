@@ -190,6 +190,7 @@ export class EngravingRules {
     private defaultColorStem: string;
     private defaultColorLabel: string;
     private defaultColorTitle: string;
+    private defaultFontFamily: string;
     private maxMeasureToDrawIndex: number;
     private minMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
@@ -200,6 +201,7 @@ export class EngravingRules {
     private renderPartNames: boolean;
     private renderPartAbbreviations: boolean;
     private renderFingerings: boolean;
+    private renderMeasureNumbers: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
@@ -408,6 +410,7 @@ export class EngravingRules {
         this.defaultColorStem = this.defaultColorNotehead;
         this.defaultColorLabel = this.defaultColorNotehead;
         this.defaultColorTitle = this.defaultColorNotehead;
+        this.defaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
         this.minMeasureToDrawIndex = 0;
         this.renderComposer = true;
@@ -417,6 +420,7 @@ export class EngravingRules {
         this.renderPartNames = true;
         this.renderPartAbbreviations = true;
         this.renderFingerings = true;
+        this.renderMeasureNumbers = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
 
@@ -1408,6 +1412,12 @@ export class EngravingRules {
     public set DefaultColorTitle(value: string) {
         this.defaultColorTitle = value;
     }
+    public get DefaultFontFamily(): string {
+        return this.defaultFontFamily;
+    }
+    public set DefaultFontFamily(value: string) {
+        this.defaultFontFamily = value;
+    }
     public get MaxMeasureToDrawIndex(): number {
         return this.maxMeasureToDrawIndex;
     }
@@ -1461,6 +1471,12 @@ export class EngravingRules {
     }
     public set RenderFingerings(value: boolean) {
         this.renderFingerings = value;
+    }
+    public get RenderMeasureNumbers(): boolean {
+        return this.renderMeasureNumbers;
+    }
+    public set RenderMeasureNumbers(value: boolean) {
+        this.renderMeasureNumbers = value;
     }
     public get FingeringPosition(): PlacementEnum {
         return this.fingeringPosition;

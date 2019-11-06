@@ -75,7 +75,7 @@ export class MusicSystemBuilder {
             }
         }
 
-        // go through measures and add to system until system gets too long -> finish system and start next system.
+        // go through measures and add to system until system gets too long -> finish system and start next system [line break, new system].
         while (this.measureListIndex < numberOfMeasures) {
             const graphicalMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex];
             for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
@@ -370,7 +370,7 @@ export class MusicSystemBuilder {
     private initializeActiveInstructions(measureList: GraphicalMeasure[]): void {
         const firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
         if (firstSourceMeasure !== undefined) {
-            this.visibleStaffIndices = this.graphicalMusicSheet.getVisibleStavesIndecesFromSourceMeasure(measureList);
+            this.visibleStaffIndices = this.graphicalMusicSheet.getVisibleStavesIndicesFromSourceMeasure(measureList);
             for (let i: number = 0, len: number = this.visibleStaffIndices.length; i < len; i++) {
                 const staffIndex: number = this.visibleStaffIndices[i];
                 const graphicalMeasure: GraphicalMeasure = this.graphicalMusicSheet
@@ -671,41 +671,33 @@ export class MusicSystemBuilder {
     }
 
     private getMeasureEndLine(): SystemLinesEnum {
+        let sourceMeasure: SourceMeasure = undefined;
+        try {
+            sourceMeasure = this.measureList[this.measureListIndex][0].parentSourceMeasure;
+        } finally {
+            // do nothing
+        }
+
         if (this.nextMeasureBeginsLineRepetition() && this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsBoldBoldDots;
         }
         if (this.thisMeasureEndsLineRepetition()) {
             return SystemLinesEnum.DotsThinBold;
         }
-        if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
+        // always end piece with final barline: not a good idea. user should be able to override final barline.
+        // also, selecting range of measures to draw would always end with final barline, even if extract is from the middle of the piece
+        // this was probably done before we parsed the barline type from XML.
+        /*if (this.measureListIndex === this.measureList.length - 1 || this.measureList[this.measureListIndex][0].parentSourceMeasure.endsPiece) {
             return SystemLinesEnum.ThinBold;
-        }
+        }*/
         if (this.nextMeasureHasKeyInstructionChange() || this.thisMeasureEndsWordRepetition() || this.nextMeasureBeginsWordRepetition()) {
             return SystemLinesEnum.DoubleThin;
         }
-        const sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex][0].parentSourceMeasure;
-        if (sourceMeasure.endingBarStyle === "regular") {
+        if (!sourceMeasure) {
             return SystemLinesEnum.SingleThin;
-        } else if (sourceMeasure.endingBarStyle === "dotted") {
-            return SystemLinesEnum.Dotted;
-        } else if (sourceMeasure.endingBarStyle === "dashed") {
-            return SystemLinesEnum.Dashed;
-        } else if (sourceMeasure.endingBarStyle === "heavy") {
-            return SystemLinesEnum.Bold;
-        } else if (sourceMeasure.endingBarStyle === "light-light") {
-            return SystemLinesEnum.DoubleThin;
-        } else if (sourceMeasure.endingBarStyle === "light-heavy") {
-            return SystemLinesEnum.ThinBold;
-        } else if (sourceMeasure.endingBarStyle === "heavy-light") {
-            return SystemLinesEnum.BoldThin;
-        } else if (sourceMeasure.endingBarStyle === "heavy-heavy") {
-            return SystemLinesEnum.DoubleBold;
-        } else if (sourceMeasure.endingBarStyle === "tick") {
-            return SystemLinesEnum.Tick;
-        } else if (sourceMeasure.endingBarStyle === "short") {
-            return SystemLinesEnum.Short;
-        } else if (sourceMeasure.endingBarStyle === "none") {
-            return SystemLinesEnum.None;
+        }
+        if (sourceMeasure.endingBarStyleEnum !== undefined) {
+            return sourceMeasure.endingBarStyleEnum;
         }
         // TODO: print an error message if the default fallback is used.
         return SystemLinesEnum.SingleThin;
@@ -795,7 +787,8 @@ export class MusicSystemBuilder {
      */
     private nextMeasureBeginsWordRepetition(): boolean {
         const nextMeasureIndex: number = this.measureListIndex + 1;
-        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length) {
+        if (nextMeasureIndex >= this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length ||
+            nextMeasureIndex > this.measureList.length - 1) {
             return false;
         }
         for (let idx: number = 0, len: number = this.measureList[nextMeasureIndex].length; idx < len; ++idx) {

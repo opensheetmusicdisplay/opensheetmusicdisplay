@@ -65,11 +65,16 @@ export class LyricsReader {
                                 }
                             }
                             let currentLyricVerseNumber: number = 1;
+                            let errorNumberParse1: boolean = false;
                             if (lyricNode.attributes() !== undefined && lyricNode.attribute("number") !== undefined) {
                                 try {
-                                    currentLyricVerseNumber = parseInt(lyricNode.attribute("number").value, 10);
+                                    currentLyricVerseNumber = parseInt(lyricNode.attribute("number").value, 10); // usually doesn't throw error, but returns NaN
                                 } catch (err) {
-                                    try {
+                                    errorNumberParse1 = true;
+                                }
+                                errorNumberParse1 = errorNumberParse1 || isNaN(currentLyricVerseNumber);
+                                if (errorNumberParse1) {
+                                    try { // Sibelius format: "part1verse1"
                                         const result: string[] = lyricNode.attribute("number").value.toLowerCase().split("verse");
                                         if (result.length > 1) {
                                             currentLyricVerseNumber = parseInt(result[1], 10);

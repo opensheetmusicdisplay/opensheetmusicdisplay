@@ -191,6 +191,7 @@ export class VexFlowConverter {
             if (note.sourceNote.isRest()) {
                 isRest = true;
                 keys = ["b/4"];
+                // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
                 // if it is a full measure rest:
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
                     keys = ["d/5"];
@@ -652,7 +653,7 @@ export class VexFlowConverter {
     public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular, font: Fonts = Fonts.TimesNewRoman): string {
         let style: string = "normal";
         let weight: string = "normal";
-        const family: string = "'Times New Roman'";
+        const family: string = "'" + EngravingRules.Rules.DefaultFontFamily + "'"; // default "'Times New Roman'"
 
         switch (fontStyle) {
             case FontStyles.Bold:
@@ -672,7 +673,7 @@ export class VexFlowConverter {
                 break;
         }
 
-        switch (font) {
+        switch (font) { // currently not used
             case Fonts.Kokila:
                 // TODO Not Supported
                 break;

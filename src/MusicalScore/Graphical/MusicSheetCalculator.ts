@@ -676,7 +676,7 @@ export abstract class MusicSheetCalculator {
         // visible 2D-MeasureList
         const visibleMeasureList: GraphicalMeasure[][] = [];
         for (let idx: number = EngravingRules.Rules.MinMeasureToDrawIndex, len: number = allMeasures.length;
-            idx < len && idx < EngravingRules.Rules.MaxMeasureToDrawIndex; ++idx) {
+            idx < len && idx <= EngravingRules.Rules.MaxMeasureToDrawIndex; ++idx) {
             const graphicalMeasures: GraphicalMeasure[] = allMeasures[idx];
             const visiblegraphicalMeasures: GraphicalMeasure[] = [];
             for (let idx2: number = 0, len2: number = graphicalMeasures.length; idx2 < len2; ++idx2) {
@@ -736,12 +736,15 @@ export abstract class MusicSheetCalculator {
         this.calculateSkyBottomLines();
         // calculate TupletsNumbers
         this.calculateTupletNumbers();
+
         // calculate MeasureNumbers
-        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                this.calculateMeasureNumberPlacement(musicSystem);
+        if (EngravingRules.Rules.RenderMeasureNumbers) {
+            for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
+                const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
+                for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
+                    const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
+                    this.calculateMeasureNumberPlacement(musicSystem);
+                }
             }
         }
         // calculate Slurs
@@ -831,13 +834,18 @@ export abstract class MusicSheetCalculator {
                     staffLine.addActivitySymbolClickArea();
                 }
             }
+
+            // calculate TopBottom Borders for all elements recursively
+            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders(); // necessary for composer label (page labels) for high notes in first system
+            // TODO how much performance does this cost? can we reduce the amount of calculations, e.g. only checking top?
+
             // calculate all Labels's Positions for the first Page
             if (graphicalMusicPage === this.graphicalMusicSheet.MusicPages[0]) {
                 this.calculatePageLabels(graphicalMusicPage);
             }
 
             // calculate TopBottom Borders for all elements recursively
-            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders();
+            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders(); // this is where top bottom borders were originally calculated (only once)
         }
     }
 
@@ -1783,41 +1791,59 @@ export abstract class MusicSheetCalculator {
             const firstMusicSystem: MusicSystem = page.MusicSystems[0];
             firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
         }
+        //const firstStaffLine: StaffLine = this.graphicalMusicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
         if (this.graphicalMusicSheet.Title !== undefined) {
             const title: GraphicalLabel = this.graphicalMusicSheet.Title;
             title.PositionAndShape.Parent = page.PositionAndShape;
+            //title.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
             const relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
+            //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
             title.PositionAndShape.RelativePosition = relative;
             page.Labels.push(title);
         }
         if (this.graphicalMusicSheet.Subtitle !== undefined) {
             const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
+            //subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
             subtitle.PositionAndShape.Parent = page.PositionAndShape;
             const relative: PointF2D = new PointF2D();
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
+            //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
             relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
             subtitle.PositionAndShape.RelativePosition = relative;
             page.Labels.push(subtitle);
         }
-        if (this.graphicalMusicSheet.Composer !== undefined) {
-            const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
-            composer.PositionAndShape.Parent = page.PositionAndShape;
+        const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
+        if (composer !== undefined) {
+            composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
+            //composer.PositionAndShape.Parent = firstStaffLine.PositionAndShape; if using firstStaffLine...width.
+            //      y-collision problems, harder to y-align with lyrics
             composer.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
+            //const firstStaffLineEndX: number = this.rules.PageLeftMargin + this.rules.SystemLeftMargin + this.rules.left
+            //    firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width;
+            //relative.x = Math.min(this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin,
+            //  firstStaffLineEndX); // awkward with 2-bar score
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
+            //relative.x = firstStaffLine.PositionAndShape.Size.width;
             relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
+            //relative.y = - this.rules.SystemComposerDistance;
+            //relative.y = -firstStaffLine.PositionAndShape.Size.height;
+            // TODO only add measure label height if rendering labels and composer measure has label
+            // TODO y-align with lyricist? which is harder if they have different bbox parents (page and firstStaffLine).
+            // when the pageWidth gets fixed, we could use page as parent again.
             composer.PositionAndShape.RelativePosition = relative;
             page.Labels.push(composer);
         }
-        if (this.graphicalMusicSheet.Lyricist !== undefined) {
-            const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
+        const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
+        if (lyricist !== undefined) {
             lyricist.PositionAndShape.Parent = page.PositionAndShape;
             lyricist.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
             relative.x = this.rules.PageLeftMargin;
             relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
+            //relative.y = Math.max(relative.y, composer.PositionAndShape.RelativePosition.y);
             lyricist.PositionAndShape.RelativePosition = relative;
             page.Labels.push(lyricist);
         }
@@ -1973,6 +1999,7 @@ export abstract class MusicSheetCalculator {
                 openOctaveShifts[staffIndex] = new OctaveShiftParams(
                     openOctaveShift, multiExpression.AbsoluteTimestamp,
                     openOctaveShift.ParentEndMultiExpression.AbsoluteTimestamp
+                    // TODO check if octaveshift end exists, otherwise set to last measure end. only necessary if xml was cut manually and is incomplete
                 );
             }
         }
@@ -2252,18 +2279,21 @@ export abstract class MusicSheetCalculator {
     private calculateRestNotePlacementWithCollisionDetectionFromGraphicalNote(graphicalStaffEntry: GraphicalStaffEntry): void {
         let restNote: GraphicalNote;
         let graphicalNotes: GraphicalNote[];
-        if (graphicalStaffEntry.graphicalVoiceEntries[0].notes[0].sourceNote.Pitch === undefined) {
+        if (graphicalStaffEntry.graphicalVoiceEntries[0].notes[0].sourceNote.isRest()) {
             restNote = graphicalStaffEntry.graphicalVoiceEntries[0].notes[0];
             graphicalNotes = graphicalStaffEntry.graphicalVoiceEntries[1].notes;
         } else {
             graphicalNotes = graphicalStaffEntry.graphicalVoiceEntries[0].notes;
             restNote = graphicalStaffEntry.graphicalVoiceEntries[1].notes[0];
         }
+        //restNote.parallelVoiceEntryNotes = graphicalNotes; // TODO maybe save potentially colliding notes, check them in VexFlowConverter.StaveNote
         let collision: boolean = false;
         graphicalStaffEntry.PositionAndShape.calculateAbsolutePositionsRecursiveWithoutTopelement();
         for (let idx: number = 0, len: number = graphicalNotes.length; idx < len; ++idx) {
             const graphicalNote: GraphicalNote = graphicalNotes[idx];
             if (restNote.PositionAndShape.marginCollisionDetection(graphicalNote.PositionAndShape)) {
+                // TODO bounding box of graphical note isn't set correctly yet.
+                // we could do manual collision checking here
                 collision = true;
                 break;
             }
@@ -2607,9 +2637,9 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateDynamicExpressions(): void {
-        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length, EngravingRules.Rules.MaxMeasureToDrawIndex);
+        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, EngravingRules.Rules.MaxMeasureToDrawIndex);
         const minIndex: number = Math.min(EngravingRules.Rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
-        for (let i: number = minIndex; i < maxIndex; i++) {
+        for (let i: number = minIndex; i <= maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
                 if (this.graphicalMusicSheet.MeasureList[i][j].ParentStaff.ParentInstrument.Visible) {
@@ -2689,9 +2719,9 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateTempoExpressions(): void {
-        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length, EngravingRules.Rules.MaxMeasureToDrawIndex);
+        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, EngravingRules.Rules.MaxMeasureToDrawIndex);
         const minIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
-        for (let i: number = minIndex; i < maxIndex; i++) {
+        for (let i: number = minIndex; i <= maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.TempoExpressions.length; j++) {
                 this.calculateTempoExpressionsForMultiTempoExpression(sourceMeasure, sourceMeasure.TempoExpressions[j], i);

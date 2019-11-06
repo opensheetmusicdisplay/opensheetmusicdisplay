@@ -6,6 +6,7 @@ export * from "./ChordSymbolContainer";
 export * from "./LinkedVoice";
 export * from "./Note";
 export * from "./Notehead";
+export * from "./NoteType";
 export * from "./OrnamentContainer";
 export * from "./SourceMeasure";
 export * from "./SourceStaffEntry";

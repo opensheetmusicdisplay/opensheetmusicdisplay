@@ -114,7 +114,7 @@ export class SkyBottomLineCalculator {
             tmpCanvas.clear();
         }
         // Subsampling:
-        // The pixel width is bigger then the measure size in units. So we split the array into
+        // The pixel width is bigger than the measure size in units. So we split the array into
         // chunks with the size of MeasurePixelWidth/measureUnitWidth and reduce the value to its
         // average
         const arrayChunkSize: number = this.mSkyLine.length / arrayLength;
@@ -122,19 +122,28 @@ export class SkyBottomLineCalculator {
         const subSampledSkyLine: number[] = [];
         const subSampledBottomLine: number[] = [];
         for (let chunkIndex: number = 0; chunkIndex < this.mSkyLine.length; chunkIndex += arrayChunkSize) {
-            let chunk: number[] = this.mSkyLine.slice(chunkIndex, chunkIndex + arrayChunkSize);
+            if (subSampledSkyLine.length === arrayLength) {
+                break; // TODO find out why skyline.length becomes arrayLength + 1. see log.debug below
+            }
+
+            const endIndex: number = Math.min(this.mSkyLine.length, chunkIndex + arrayChunkSize);
+            let chunk: number[] = this.mSkyLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
+            // TODO chunkIndex + arrayChunkSize is sometimes bigger than this.mSkyLine.length -> out of bounds
+            // TODO chunkIndex + arrayChunkSize is often a non-rounded float as well. is that ok to use with slice?
+            /*const diff: number = this.mSkyLine.length - (chunkIndex + arrayChunkSize);
+            if (diff < 0) { // out of bounds
+                console.log("length - slice end index: " + diff);
+            }*/
+
             subSampledSkyLine.push(Math.min(...chunk));
-            chunk = this.mBottomLine.slice(chunkIndex, chunkIndex + arrayChunkSize);
+            chunk = this.mBottomLine.slice(chunkIndex, endIndex + 1); // slice does not include end index
             subSampledBottomLine.push(Math.max(...chunk));
         }
 
         this.mSkyLine = subSampledSkyLine;
         this.mBottomLine = subSampledBottomLine;
-        if (this.mSkyLine.length !== arrayLength) {
+        if (this.mSkyLine.length !== arrayLength) { // bottomline will always be same length as well
             log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
-        }
-        if (this.mBottomLine.length !== arrayLength) {
-            log.debug(`BottomLine calculation was not correct (${this.mBottomLine.length} instead of ${arrayLength})`);
         }
         // Remap the values from 0 to +/- height in units
         this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
@@ -241,7 +250,7 @@ export class SkyBottomLineCalculator {
      * This method updates the BottomLine for a given range with a given value
      * @param  to update the BottomLine for
      * @param start Start index of the range
-     * @param end End index of the range
+     * @param end End index of the range (excluding)
      * @param value ??
      */
     public updateBottomLineInRange(startIndex: number, endIndex: number, value: number): void {
@@ -252,7 +261,7 @@ export class SkyBottomLineCalculator {
      * Resets a SkyLine in a range to its original value
      * @param  to reset the SkyLine in
      * @param startIndex Start index of the range
-     * @param endIndex End index of the range
+     * @param endIndex End index of the range (excluding)
      */
     public resetSkyLineInRange(startIndex: number, endIndex: number): void {
         this.updateInRange(this.SkyLine, startIndex, endIndex);
@@ -339,7 +348,7 @@ export class SkyBottomLineCalculator {
      * This method finds the SkyLine's minimum value within a given range.
      * @param staffLine Staffline to apply to
      * @param startIndex Starting index
-     * @param endIndex End index
+     * @param endIndex End index (including)
      */
     public getSkyLineMinInRange(startIndex: number, endIndex: number): number {
         return this.getMinInRange(this.SkyLine, startIndex, endIndex);
@@ -362,7 +371,7 @@ export class SkyBottomLineCalculator {
      * This method finds the BottomLine's maximum value within a given range.
      * @param staffLine Staffline to find the max value in
      * @param startIndex Start index of the range
-     * @param endIndex End index of the range
+     * @param endIndex End index of the range (excluding)
      */
     public getBottomLineMaxInRange(startIndex: number, endIndex: number): number {
         return this.getMaxInRange(this.BottomLine, startIndex, endIndex);
@@ -413,7 +422,7 @@ export class SkyBottomLineCalculator {
      * Update an array with the value given inside a range. NOTE: will only be updated if value > oldValue
      * @param array Array to fill in the new value
      * @param startIndex start index to begin with (default: 0)
-     * @param endIndex end index of array (default: array length)
+     * @param endIndex end index of array (excluding, default: array length)
      * @param value value to fill in (default: 0)
      */
     private updateInRange(array: number[], startIndex: number = 0, endIndex: number = array.length, value: number = 0): void {
@@ -441,7 +450,7 @@ export class SkyBottomLineCalculator {
      * Sets the value given to the range inside the array. NOTE: will always update the value
      * @param array Array to fill in the new value
      * @param startIndex start index to begin with (default: 0)
-     * @param endIndex end index of array (default: array length)
+     * @param endIndex end index of array (excluding, default: array length)
      * @param value value to fill in (default: 0)
      */
     private setInRange(array: number[], startIndex: number = 0, endIndex: number = array.length, value: number = 0): void {
@@ -468,7 +477,7 @@ export class SkyBottomLineCalculator {
      * Get all values of the selected line inside the given range
      * @param skyBottomArray Skyline or bottom line
      * @param startIndex start index
-     * @param endIndex end index
+     * @param endIndex end index (including)
      */
     private getMinInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
@@ -493,7 +502,7 @@ export class SkyBottomLineCalculator {
         }
 
         if (startIndex >= 0 && endIndex <= skyBottomArray.length) {
-            return Math.min(...skyBottomArray.slice(startIndex, endIndex));
+            return Math.min(...skyBottomArray.slice(startIndex, endIndex + 1)); // slice does not include end (index)
         }
     }
 
@@ -501,7 +510,7 @@ export class SkyBottomLineCalculator {
      * Get the maximum value inside the given indices
      * @param skyBottomArray Skyline or bottom line
      * @param startIndex start index
-     * @param endIndex end index
+     * @param endIndex end index (including)
      */
     private getMaxInRange(skyBottomArray: number[], startIndex: number, endIndex: number): number {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
@@ -526,7 +535,7 @@ export class SkyBottomLineCalculator {
         }
 
         if (startIndex >= 0 && endIndex <= skyBottomArray.length) {
-            return Math.max(...skyBottomArray.slice(startIndex, endIndex));
+            return Math.max(...skyBottomArray.slice(startIndex, endIndex + 1)); // slice does not include end (index)
         }
     }
     // FIXME: What does this do here?

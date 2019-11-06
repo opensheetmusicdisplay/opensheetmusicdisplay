@@ -23,7 +23,12 @@ export interface IOSMDOptions {
     coloringEnabled?: boolean;
     /** Whether to color the stems of notes the same as their noteheads */
     colorStemsLikeNoteheads?: boolean;
-    /** Default color for a note head (without stem). Default black (undefined). */
+    /** Default color for a note head (without stem). Default black (undefined).
+     * Only considered before loading a sample, not before render.
+     * To change the color after loading a sample and before render, use note(.sourceNote).NoteheadColor.
+     * The format is Vexflow format, either "#rrggbb" or "#rrggbbtt" where <tt> is transparency. All hex values.
+     * E.g., a half-transparent red would be "#FF000080", invisible would be "#00000000" or "#12345600".
+     */
     defaultColorNotehead?: string;
     /** Default color for a note stem. Default black (undefined). */
     defaultColorStem?: string;
@@ -33,9 +38,14 @@ export interface IOSMDOptions {
     defaultColorLabel?: string;
     /** Default color for labels in the title. Overrides defaultColorLabel for title labels like composer. Default black (undefined). */
     defaultColorTitle?: string;
+    /** Default font used for text and labels, e.g. title or lyrics. Default Times New Roman
+     * Note that OSMD originally always used Times New Roman, so things like layout and spacing may still be optimized for it.
+     * Valid options are CSS font families available in the browser used for rendering, e.g. Times New Roman, Helvetica.
+     */
+    defaultFontFamily?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
-    /** Follow Cursor */
+    /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */
     followCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
@@ -55,6 +65,11 @@ export interface IOSMDOptions {
     drawPartAbbreviations?: boolean;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
+    /** Whether to draw measure numbers (labels) (default true).
+     * Draws a measure number label at first measure, system start measure, and every [measureNumberInterval] measures.
+     * See the [measureNumberInterval] option, default is 2.
+     */
+    drawMeasureNumbers?: boolean;
     /** Where to draw fingerings (left, right, above, below, auto).
      * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
      */
@@ -65,6 +80,8 @@ export interface IOSMDOptions {
     drawUpToMeasureNumber?: number;
     /** Only draw measure n to m, where n is the number you specify. */
     drawFromMeasureNumber?: number;
+    /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
+    measureNumberInterval?: number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */

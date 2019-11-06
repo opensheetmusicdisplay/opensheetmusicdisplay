@@ -63,7 +63,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         try {
             return this._createMusicSheet(root, path);
         } catch (e) {
-            log.info("MusicSheetReader.CreateMusicSheet", e);
+            log.error("MusicSheetReader.CreateMusicSheet", e);
             return undefined;
         }
     }
@@ -182,6 +182,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
          const afterSheetReadingModule: IAfterSheetReadingModule = this.afterSheetReadingModules[idx];
          afterSheetReadingModule.calculate(this.musicSheet);
         }
+
+        this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SourceMeasures[0].TempoInBPM;
+        this.musicSheet.userStartTempoInBPM = this.musicSheet.userStartTempoInBPM || this.musicSheet.DefaultStartTempoInBpm;
 
         return this.musicSheet;
     }
@@ -363,7 +366,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (!this.currentMeasure.ImplicitMeasure) {
             sourceMeasureCounter++;
         }
-        this.currentMeasure.Duration = maxInstrumentDuration;
+        this.currentMeasure.Duration = maxInstrumentDuration; // can be 1/1 in a 4/4 time signature
+        this.currentMeasure.ActiveTimeSignature = activeRhythm;
         this.currentMeasure.MeasureNumber = sourceMeasureCounter;
         for (let i: number = 0; i < instrumentsDurations.length; i++) {
             const instrumentsDuration: Fraction = instrumentsDurations[i];

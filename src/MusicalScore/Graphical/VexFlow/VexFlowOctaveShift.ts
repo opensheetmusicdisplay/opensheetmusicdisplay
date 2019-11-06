@@ -72,6 +72,14 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         this.endNote = (graphicalStaffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote;
     }
 
+    public getStartNote(): Vex.Flow.StemmableNote {
+        return this.startNote;
+    }
+
+    public getEndNote(): Vex.Flow.StemmableNote {
+        return this.endNote;
+    }
+
     /**
      * Get the actual vexflow text bracket used for drawing
      */

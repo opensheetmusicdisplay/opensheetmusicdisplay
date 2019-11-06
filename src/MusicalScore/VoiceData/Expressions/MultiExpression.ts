@@ -8,7 +8,7 @@ import {UnknownExpression} from "./UnknownExpression";
 import {AbstractExpression} from "./AbstractExpression";
 import {PlacementEnum} from "./AbstractExpression";
 
-export class MultiExpression /*implements IComparable<MultiExpression>*/ {
+export class MultiExpression {
 
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {
         this.sourceMeasure = sourceMeasure;
@@ -155,18 +155,13 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
         this.addExpressionToEntryList(abstractExpression, prefix);
     }
     public CompareTo(other: MultiExpression): number {
-        if (this.SourceMeasureParent.MeasureNumber > other.SourceMeasureParent.MeasureNumber) {
+        if (this.Timestamp.RealValue > other.Timestamp.RealValue) {
             return 1;
         }
-        if (this.SourceMeasureParent.MeasureNumber < other.SourceMeasureParent.MeasureNumber) {
+        if (this.Timestamp.RealValue < other.Timestamp.RealValue) {
             return -1;
         } else {
-            if (this.Timestamp.RealValue > other.Timestamp.RealValue) { return 1; }
-            if (this.Timestamp.RealValue < other.Timestamp.RealValue) {
-                return -1;
-            } else {
-                return 0;
-            }
+            return 0;
         }
     }
     private addExpressionToEntryList(expression: AbstractExpression, prefix: string): void {

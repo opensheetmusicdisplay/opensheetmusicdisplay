@@ -302,6 +302,19 @@ export class Fraction {
     }
   }
 
+  public static FloatInaccuracyTolerance: number = 0.0001; // inaccuracy allowed when comparing Fraction.RealValues, because of floating point inaccuracy
+
+  public isOnBeat(timeSignature: Fraction): boolean { // use sourceMeasure.ActiveTimeSignature as timeSignature
+      const beatDistance: number = this.distanceFromBeat(timeSignature);
+      return Math.abs(beatDistance) < Fraction.FloatInaccuracyTolerance;
+  }
+
+  public distanceFromBeat(timeSignature: Fraction): number {
+      const beatStep: Fraction = new Fraction(1, timeSignature.Denominator);
+      const distanceFromBeat: number = this.RealValue % beatStep.RealValue; // take modulo the beat value, e.g. 1/8 in a 3/8 time signature
+      return distanceFromBeat;
+  }
+
 
   //private static equals(f1: Fraction, f2: Fraction): boolean {
   //    return f1.numerator * f2.denominator === f2.numerator * f1.denominator;

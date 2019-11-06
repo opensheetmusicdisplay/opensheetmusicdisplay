@@ -67,4 +67,20 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public Clef(): ClefInstruction {
         return this.clef;
     }
+
+    /**
+     * Gets the id of the SVGGElement containing this note, given the SVGRenderer is used.
+     * This is for low-level rendering hacks and should be used with caution.
+     */
+    public getSVGId(): string {
+        return this.vfnote[0].getAttribute("id");
+    }
+
+    /**
+     * Gets the SVGGElement containing this note, given the SVGRenderer is used.
+     * This is for low-level rendering hacks and should be used with caution.
+     */
+    public getSVGGElement(): SVGGElement {
+        return this.vfnote[0].getAttribute("el");
+    }
 }

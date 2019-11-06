@@ -25,7 +25,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
      * Main initialize method for MusicPartManager.
      */
     public init(): void {
-        this.parts = this.musicSheet.Repetitions.slice();
+        this.parts = this.musicSheet.Repetitions.slice(); // slice=arrayCopy
         this.sheetStart = this.musicSheet.SelectionStart = new Fraction(0, 1);
         this.sheetEnd = this.musicSheet.SelectionEnd = this.musicSheet.SheetEndTimestamp;
         this.calcMapping();

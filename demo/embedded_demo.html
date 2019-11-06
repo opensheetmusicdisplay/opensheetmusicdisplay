@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>OpenSheetMusicDisplay as an embedded iframe</title>
+    <meta name="description" content="A showcase for OpenSheetMusicDisplay.">
+    <meta name="author" content="OpenSheetMusicDisplay contributors">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.min.js"
+        type="text/javascript"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.css" media="all" rel="stylesheet" />
+    <link rel="icon" href="./favicon.ico?" type="image/x-icon" />
+</head>
+
+<body>
+    <br>
+    <div style="text-align: center;width: 60%;margin:0 auto">
+        <h1 class="ui centered header" id="header">
+            <img src="./favicon.ico?" class="ui image">
+
+        </h1>
+        <h2>
+            OpenSheetMusicDisplay as an embedded iframe
+        </h2>
+    </div>
+    <div style="padding: 40px;margin:0 auto">
+        <h3>
+            Use parameters:
+        </h3>
+        <p>
+            <table class="ui table celled ">
+                <tr>
+                    <th>Parameter</th>
+                    <th>Values</th>
+                    <th>Default</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><b>embedded</b></td>
+                    <td></td>
+                    <td></td>
+                    <td>Activates the embedded mode: controls are hidden (unless other parameters specified)
+                    </td>
+                </tr>
+                <tr>
+                    <td>showControls</td>
+                    <td>"0" and "1"</td>
+                    <td>"0" = OFF</td>
+                    <td>If active, the controls of OSMD are shown like usually.</td>
+                </tr>
+                <tr>
+                    <td>showZoomControl</td>
+                    <td>"0" and "1"</td>
+                    <td>"0" = OFF</td>
+                    <td>If showControls == 0 and showZoomControl == 1, a small zoomControl widget will be displayed to safe space
+                    </td>
+                </tr>
+                <tr>
+                    <td>showHeader</td>
+                    <td>"0" and "1"</td>
+                    <td>"0" = OFF</td>
+                    <td>If activated, the OSMD title will be rendered on top of the sheet</td>
+                </tr>
+                <tr>
+                    <td>zoom</td>
+                    <td>floating number between 0.1 and 5.0</td>
+                    <td>1.0</td>
+                    <td>If given, the OSMD zoom level will be set at loading time</td>
+                </tr>
+                <tr>
+                    <td>overflow</td>
+                    <td>"hidden" , "auto", "scroll", "visible"</td>
+                    <td>"auto"</td>
+                    <td>If given, this attribute will refresh the state of the css attribute overflow to control the
+                        scrollbar.
+                    </td>
+                </tr>
+                <tr>
+                    <td>openUrl</td>
+                    <td>valid URL pointing to a valid musicxml file</td>
+                    <td>"auto"</td>
+                    <td>If given, this attribute open the given musicxml file and display it.
+                        <p>
+                            <h5>Important:</h5>
+                            For now, the resources must be hosted on the same server, otherwise it will be blocked by
+                            <a href="https://de.wikipedia.org/wiki/Cross-Origin_Resource_Sharing">CORS policy</a>.
+                        </p>
+                        <p>
+                            <h5>Examples:</h5>
+                            <a
+                                href="http://localhost:8000/?embedded&openUrl=http://localhost:8000/BrookeWestSample.musicxml">
+                                http://localhost:8000/?embedded&openUrl=http://localhost:8000/BrookeWestSample.musicxml</a>
+                                <br>
+                            <a
+                                href="http://localhost:8000/?embedded&openUrl=https://wpmedia.musicxml.com/wp-content/uploads/2017/12/MahlFaGe4Sample.mxl">http://localhost:8000/?embedded&openUrl=https://wpmedia.musicxml.com/wp-content/uploads/2017/12/MahlFaGe4Sample.mxl</a>
+
+                        </p>
+                    </td>
+                </tr>
+            </table>
+    </div>
+    <div>
+        <center>
+            <h4>Example: http://localhost:8000/?embedded&showZoomControl=1&zoom=0.5</h4>
+            <iframe src="http://localhost:8000/?embedded&showZoomControl=1&zoom=0.5" width="800" height="1500"
+                frameborder="1"></iframe>
+        </center>
+    </div>
+
+
+</body>
+
+</html>

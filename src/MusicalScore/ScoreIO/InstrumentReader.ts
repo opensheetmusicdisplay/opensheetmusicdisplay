@@ -24,6 +24,8 @@ import {ExpressionReader} from "./MusicSymbolModules/ExpressionReader";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
+import {NoteType, NoteTypeHandler} from "../VoiceData";
+import {SystemLinesEnumHelper} from "../Graphical";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -232,6 +234,7 @@ export class InstrumentReader {
           }
           // alternative: check for <type size="cue">
           const typeNode: IXmlElement = xmlNode.element("type");
+          let noteTypeXml: NoteType = NoteType.UNDEFINED;
           if (typeNode !== undefined) {
             const sizeAttr: Attr = typeNode.attribute("size");
             if (sizeAttr !== undefined && sizeAttr !== null) {
@@ -239,6 +242,7 @@ export class InstrumentReader {
                 isCueNote = true;
               }
             }
+            noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
           }
 
           // check stem element
@@ -360,7 +364,7 @@ export class InstrumentReader {
             noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
           this.currentVoiceGenerator.read(
-            xmlNode, noteDuration, typeDuration, normalNotes, restNote,
+            xmlNode, noteDuration, typeDuration, noteTypeXml, normalNotes, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
@@ -473,9 +477,13 @@ export class InstrumentReader {
              this.currentMeasure.endsPiece = true;
            }
           }
-          if (xmlNode.element("bar-style") !== undefined) {
-            this.currentMeasure.endingBarStyle = xmlNode.element("bar-style").value;
+          const location: IXmlAttribute = xmlNode.attribute("location");
+          if (location && location.value === "right") {
+            const stringValue: string = xmlNode.element("bar-style").value;
+            this.currentMeasure.endingBarStyleXml = stringValue;
+            this.currentMeasure.endingBarStyleEnum = SystemLinesEnumHelper.xmlBarlineStyleToSystemLinesEnum(stringValue);
           }
+          // TODO do we need to process bars with left location too?
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
         } else if (xmlNode.name === "harmony") {
@@ -502,8 +510,16 @@ export class InstrumentReader {
          const reader: ExpressionReader = this.expressionReaders[i];
          if (reader !== undefined) {
            reader.checkForOpenExpressions(this.currentMeasure, currentFraction);
-      }
+          }
         }
+      }
+
+      // if this is the first measure and no BPM info found, we set it to 120
+      // next measures will automatically inherit that value
+      if (!this.musicSheet.HasBPMInfo) {
+        this.currentMeasure.TempoInBPM = 120;
+      } else if (currentMeasure.TempoInBPM === 0) {
+        this.currentMeasure.TempoInBPM = this.previousMeasure.TempoInBPM;
       }
     } catch (e) {
       if (divisionsException) {
@@ -664,7 +680,7 @@ export class InstrumentReader {
    * @returns {boolean}
    */
   private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    const childs: IXmlElement[] = parentNode.elements().slice();
+    const childs: IXmlElement[] = parentNode.elements().slice(); // slice=arrayCopy
     let attributesNodeIndex: number = 0;
     for (let i: number = 0; i < childs.length; i++) {
       if (childs[i] === attributesNode) {

@@ -1,15 +1,16 @@
-import { VoiceEntry, StemDirectionType } from "./VoiceEntry";
-import { SourceStaffEntry } from "./SourceStaffEntry";
-import { Fraction } from "../../Common/DataObjects/Fraction";
-import { Pitch } from "../../Common/DataObjects/Pitch";
-import { Beam } from "./Beam";
-import { Tuplet } from "./Tuplet";
-import { Tie } from "./Tie";
-import { Staff } from "./Staff";
-import { Slur } from "./Expressions/ContinuousExpressions/Slur";
-import { NoteState } from "../Graphical/DrawingEnums";
-import { Notehead } from "./Notehead";
-import { Arpeggio } from "./Arpeggio";
+import {VoiceEntry, StemDirectionType} from "./VoiceEntry";
+import {SourceStaffEntry} from "./SourceStaffEntry";
+import {Fraction} from "../../Common/DataObjects/Fraction";
+import {Pitch} from "../../Common/DataObjects/Pitch";
+import {Beam} from "./Beam";
+import {Tuplet} from "./Tuplet";
+import {Tie} from "./Tie";
+import {Staff} from "./Staff";
+import {Slur} from "./Expressions/ContinuousExpressions/Slur";
+import {NoteState} from "../Graphical/DrawingEnums";
+import {Notehead} from "./Notehead";
+import {Arpeggio} from "./Arpeggio";
+import {NoteType} from "./NoteType";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -38,6 +39,8 @@ export class Note {
     private length: Fraction;
     /** The length/duration given in the <type> tag. different from length for tuplets/tremolos. */
     private typeLength: Fraction;
+    /** The NoteType given in the XML, e.g. quarter, which can be a normal quarter or tuplet quarter -> can have different length/fraction */
+    private noteTypeXml: NoteType;
     /** The amount of notes the tuplet of this note (if there is one) replaces. */
     private normalNotes: number;
     /**
@@ -103,6 +106,12 @@ export class Note {
     }
     public set TypeLength(value: Fraction) {
         this.typeLength = value;
+    }
+    public get NoteTypeXml(): NoteType {
+        return this.noteTypeXml;
+    }
+    public set NoteTypeXml(value: NoteType) {
+        this.noteTypeXml = value;
     }
     public get NormalNotes(): number {
         return this.normalNotes;
