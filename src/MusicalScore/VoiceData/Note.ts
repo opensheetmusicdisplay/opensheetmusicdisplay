@@ -202,14 +202,6 @@ export class Note {
         return this.Pitch === undefined;
     }
 
-    public isWholeRest(): boolean {
-        if (this.length.Denominator === 1 && this.isRest()) {
-            return true;
-        } else {
-            return false;
-        }
-
-    }
     public ToString(): string {
         if (this.pitch !== undefined) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();

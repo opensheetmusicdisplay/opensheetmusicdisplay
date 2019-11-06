@@ -393,7 +393,7 @@ export class EngravingRules {
         this.minNoteDistance = 2.0;
         this.subMeasureXSpacingThreshold = 35;
         this.measureDynamicsMaxScalingFactor = 2.5;
-        this.wholeRestXShiftVexflow = 0; // VexFlow draws rest notes too far to the right
+        this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
         this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.metronomeMarkYShift = -0.5;
 

@@ -6,7 +6,6 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
 import { EngravingRules } from "../EngravingRules";
-// import { Notehead } from "../../VoiceData/Notehead";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -37,7 +36,10 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 gve.applyBordersFromVexflow();
                 this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
                 const sourceNote: Note = gve.notes[0].sourceNote;
-                if (sourceNote.isWholeRest()) { // whole rest
+                const sourceNoteRealValue: number = sourceNote.Length.RealValue; // get the sourceNoteValue
+                const sourceNoteStaffDuration: number = sourceNote.ParentStaff.ParentInstrument.GetMusicSheet.getFirstSourceMeasure().Duration.RealValue;
+                //get measure duration value of the target source note
+                if (sourceNote.isRest() && sourceNoteRealValue === sourceNoteStaffDuration) { // whole rest
                     this.PositionAndShape.RelativePosition.x +=
                         EngravingRules.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
                     gve.PositionAndShape.BorderLeft = -0.7;
