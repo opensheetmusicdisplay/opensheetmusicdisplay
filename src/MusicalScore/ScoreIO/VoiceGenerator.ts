@@ -155,6 +155,9 @@ export class VoiceGenerator {
               if (voiceEntry.Arpeggio !== undefined) {
                 arpeggioAlreadyExists = true;
                 currentArpeggio = voiceEntry.Arpeggio;
+                // this.currentVoiceEntry.Arpeggio = currentArpeggio; // register the arpeggio in the current voice entry as well?
+                //   but then we duplicate information, and may have to take care not to render it multiple times
+
                 // we already have an arpeggio in another voice, at the current timestamp. add the notes there.
                 break;
               }
