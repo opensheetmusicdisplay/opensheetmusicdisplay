@@ -33,7 +33,7 @@ import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstru
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
-import {NoteType} from "../../VoiceData";
+import {NoteType, Arpeggio} from "../../VoiceData";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, staffLine: StaffLine = undefined, sourceMeasure: SourceMeasure = undefined) {
@@ -936,8 +936,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                 // add Arpeggio
                 if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
-                    const type: Vex.Flow.Stroke.Type = voiceEntry.parentVoiceEntry.Arpeggio.type;
-                    vexFlowVoiceEntry.vfStaveNote.addStroke(0, new Vex.Flow.Stroke(type));
+                    const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
+                    if (voiceEntry.notes && voiceEntry.notes.length > 1) {
+                        // only draw arpeggio if there's more than one note in it. otherwise Vexflow renders the arpeggio to a very high y level
+                        const type: Vex.Flow.Stroke.Type = arpeggio.type;
+                        vexFlowVoiceEntry.vfStaveNote.addStroke(0, new Vex.Flow.Stroke(type));
+                    } else {
+                        log.debug(`[OSMD] arpeggio in measure ${this.MeasureNumber} could not be drawn.
+                        voice entry had less than two notes, arpeggio is likely between voice entries, not currently supported in Vexflow.`);
+                        // TODO: create new arpeggio with all the arpeggio's notes (arpeggio.notes), perhaps with GhostNotes in a new vfStaveNote. not easy.
+                    }
                 }
 
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
