@@ -93,7 +93,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
             }
 
             // color notebeam if all noteheads have same color and stem coloring enabled
-            if (note.sourceNote.NoteBeam && EngravingRules.Rules.ColorStemsLikeNoteheads) {
+            if (EngravingRules.Rules.ColoringEnabled && note.sourceNote.NoteBeam && EngravingRules.Rules.ColorStemsLikeNoteheads) {
                 const beamNotes: Note[] = note.sourceNote.NoteBeam.Notes;
                 let colorBeam: boolean = true;
                 for (let j: number = 0; j < beamNotes.length; j++) {
@@ -119,13 +119,16 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         }
 
         // color stems
-        let stemColor: string = this.parentVoiceEntry.StemColor; // TODO: once coloringSetCustom gets stem color, respect it
-        if (!stemColor || EngravingRules.Rules.ColorStemsLikeNoteheads) {
-            // condition could be even more fine-grained by only recoloring if there was no custom StemColor set. will be more complex though
-            if (noteheadColor) {
-                stemColor = noteheadColor;
-            } else if (defaultColorStem) {
-                stemColor = defaultColorStem;
+        let stemColor: string = EngravingRules.Rules.DefaultColorStem; // reset to black/default when coloring was disabled. maybe needed elsewhere too
+        if (EngravingRules.Rules.ColoringEnabled) {
+            stemColor = this.parentVoiceEntry.StemColor; // TODO: once coloringSetCustom gets stem color, respect it
+            if (!stemColor || EngravingRules.Rules.ColorStemsLikeNoteheads) {
+                // condition could be even more fine-grained by only recoloring if there was no custom StemColor set. will be more complex though
+                if (noteheadColor) {
+                    stemColor = noteheadColor;
+                } else if (defaultColorStem) {
+                    stemColor = defaultColorStem;
+                }
             }
         }
         let stemTransparent: boolean = true;
@@ -140,7 +143,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         }
         const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
 
-        if (stemColor && vfStaveNote.setStemStyle) {
+        if (vfStaveNote.setStemStyle) {
             if (!stemTransparent) {
                 this.parentVoiceEntry.StemColor = stemColor;
             }
