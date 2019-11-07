@@ -305,7 +305,7 @@ export class MusicPartManagerIterator {
     private moveDynamicIndexToTimestamp(absoluteTimestamp: Fraction): void {
         let dynamics: DynamicsContainer[] = this.manager.MusicSheet.TimestampSortedDynamicExpressionsList;
         for (let index: number = 0; index < dynamics.length; index++) {
-            if (dynamics[index].parMultiExpression().AbsoluteTimestamp >= absoluteTimestamp) {
+            if (dynamics[index].parMultiExpression().AbsoluteTimestamp.gte(absoluteTimestamp)) {
                 this.currentDynamicEntryIndex = Math.Max(0, index - 1);
                 return
             }
@@ -501,7 +501,9 @@ export class MusicPartManagerIterator {
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
             this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
             this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
-            if (this.currentTimeStamp >= this.manager.MusicSheet.SelectionEnd) {
+            const selectionEnd: Fraction = this.manager.MusicSheet.SelectionEnd;
+            // TODO handle selectionEnd undefined, can happen in Beethoven Ferne Geliebte
+            if (selectionEnd && this.currentTimeStamp.gte(selectionEnd)) {
                 this.endReached = true;
             }
             this.activateCurrentDynamicOrTempoInstructions();

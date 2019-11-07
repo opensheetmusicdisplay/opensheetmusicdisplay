@@ -461,7 +461,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             let gNotesEndTimestamp: Fraction = new Fraction();
             for (const graphicalNote of gve.notes) {
                 const noteEnd: Fraction  = Fraction.plus(graphicalNote.sourceNote.getAbsoluteTimestamp(), graphicalNote.sourceNote.Length);
-                if (gNotesEndTimestamp < noteEnd) {
+                if (gNotesEndTimestamp.lt(noteEnd)) {
                     gNotesEndTimestamp = noteEnd;
                 }
             }

@@ -256,6 +256,14 @@ export class Fraction {
     return this.realValue <= frac.realValue;
   }
 
+  public gt(frac: Fraction): boolean {
+    return !this.lte(frac);
+  }
+
+  public gte(frac: Fraction): boolean {
+    return !this.lt(frac);
+  }
+
   //public Equals(f: Fraction): boolean {
   //    if (ReferenceEquals(this, f))
   //        return true;

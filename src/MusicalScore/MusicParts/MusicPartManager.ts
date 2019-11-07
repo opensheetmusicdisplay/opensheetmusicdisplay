@@ -34,7 +34,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         let curTransform: TimestampTransform = undefined;
         for (let i: number = this.timestamps.length - 1; i >= 0; i--) {
             curTransform = this.timestamps[i];
-            if (curEnrolledTimestamp >= curTransform.$from) {
+            if (curEnrolledTimestamp.gte(curTransform.$from)) {
                 return curTransform;
             }
         }
