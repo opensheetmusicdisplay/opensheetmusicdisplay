@@ -35,7 +35,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         if (!this.ctx) {
             return;
         }
-        const { svg } = this.ctx;
+        //const { svg } = this.ctx; // seems to make svg static between osmd instances.
+        const svg: SVGElement = this.ctx.svg;
         // removes all children from the SVG element,
         // effectively clearing the SVG viewport
         while (svg.lastChild) {
