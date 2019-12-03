@@ -143,7 +143,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         }
         const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
 
-        if (vfStaveNote.setStemStyle) {
+        if (vfStaveNote && vfStaveNote.setStemStyle) {
             if (!stemTransparent) {
                 this.parentVoiceEntry.StemColor = stemColor;
             }
