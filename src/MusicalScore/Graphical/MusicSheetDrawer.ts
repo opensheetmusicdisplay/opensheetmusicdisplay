@@ -295,14 +295,16 @@ export abstract class MusicSheetDrawer {
         for (const staffLine of musicSystem.StaffLines) {
             this.drawStaffLine(staffLine);
 
-            // draw lyric dashes
-            if (staffLine.LyricsDashes.length > 0) {
-                this.drawDashes(staffLine.LyricsDashes);
-            }
+            if (EngravingRules.Rules.RenderLyrics) {
+                // draw lyric dashes
+                if (staffLine.LyricsDashes.length > 0) {
+                    this.drawDashes(staffLine.LyricsDashes);
+                }
 
-            // draw lyric lines (e.g. LyricExtends: "dich,___")
-            if (staffLine.LyricLines.length > 0) {
-                this.drawLyricLines(staffLine.LyricLines, staffLine);
+                // draw lyric lines (e.g. LyricExtends: "dich,___")
+                if (staffLine.LyricLines.length > 0) {
+                    this.drawLyricLines(staffLine.LyricLines, staffLine);
+                }
             }
         }
         for (const systemLine of musicSystem.SystemLines) {
@@ -349,8 +351,10 @@ export abstract class MusicSheetDrawer {
             this.drawMeasure(measure);
         }
 
-        if (staffLine.LyricsDashes.length > 0) {
-            this.drawDashes(staffLine.LyricsDashes);
+        if (EngravingRules.Rules.RenderLyrics) {
+            if (staffLine.LyricsDashes.length > 0) {
+                this.drawDashes(staffLine.LyricsDashes);
+            }
         }
 
         this.drawOctaveShifts(staffLine);

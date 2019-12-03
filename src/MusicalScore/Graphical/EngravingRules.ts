@@ -202,6 +202,7 @@ export class EngravingRules {
     private renderPartAbbreviations: boolean;
     private renderFingerings: boolean;
     private renderMeasureNumbers: boolean;
+    private renderLyrics: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
@@ -421,6 +422,7 @@ export class EngravingRules {
         this.renderPartAbbreviations = true;
         this.renderFingerings = true;
         this.renderMeasureNumbers = true;
+        this.renderLyrics = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
 
@@ -1477,6 +1479,12 @@ export class EngravingRules {
     }
     public set RenderMeasureNumbers(value: boolean) {
         this.renderMeasureNumbers = value;
+    }
+    public get RenderLyrics(): boolean {
+        return this.renderLyrics;
+    }
+    public set RenderLyrics(value: boolean) {
+        this.renderLyrics = value;
     }
     public get FingeringPosition(): PlacementEnum {
         return this.fingeringPosition;

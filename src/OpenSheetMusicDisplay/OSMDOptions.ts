@@ -70,6 +70,8 @@ export interface IOSMDOptions {
      * See the [measureNumberInterval] option, default is 2.
      */
     drawMeasureNumbers?: boolean;
+    /** Whether to draw lyrics (and their extensions and dashes). */
+    drawLyrics?: boolean;
     /** Where to draw fingerings (left, right, above, below, auto).
      * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
      */

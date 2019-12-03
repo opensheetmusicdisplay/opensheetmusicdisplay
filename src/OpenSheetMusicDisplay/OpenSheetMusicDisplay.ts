@@ -308,6 +308,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawMeasureNumbers !== undefined) {
             EngravingRules.Rules.RenderMeasureNumbers = options.drawMeasureNumbers;
         }
+        if (options.drawLyrics !== undefined) {
+            EngravingRules.Rules.RenderLyrics = options.drawLyrics;
+        }
         if (options.measureNumberInterval !== undefined) {
             EngravingRules.Rules.MeasureNumberLabelOffset = options.measureNumberInterval;
         }
