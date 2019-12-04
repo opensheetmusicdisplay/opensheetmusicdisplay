@@ -5,9 +5,9 @@ import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/
  *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
  */
 export interface IOSMDOptions {
-    /** Whether to let Vexflow align rests to voices and avoid rest collisions with notes. Default false.
-     * Unfortunately, rest note collision can not be enabled without aligning rests yet,
-     * which also changes the position of rests when there is no simultaneous note at the same x-coordinate.
+    /** Whether to let Vexflow align rests to preceding or following notes (Vexflow option). Default false.
+     * This can naturally reduce collisions of rest notes with other notes.
+     * This also changes the position of rests when there is no simultaneous note at the same x-coordinate.
      */
     alignRests?: boolean;
     /** Whether to automatically create beams for notes that don't have beams set in XML. */
