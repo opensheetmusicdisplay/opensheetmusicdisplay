@@ -150,7 +150,7 @@ export class OpenSheetMusicDisplay {
         }
         log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
 
-        this.updateGraphicSheet();
+        this.updateGraphic();
 
         return Promise.resolve({});
     }
@@ -158,7 +158,7 @@ export class OpenSheetMusicDisplay {
     /**
      * (Re-)creates the graphic sheet from the music sheet
      */
-    public updateGraphicSheet(): void {
+    public updateGraphic(): void {
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         if (this.drawingParameters.drawCursors && this.cursor) {
