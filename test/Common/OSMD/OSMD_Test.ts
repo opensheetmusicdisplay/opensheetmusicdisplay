@@ -300,7 +300,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                     new Pitch(11, 1, AccidentalEnum.NATURAL));
                 voiceEntry.Notes.push(newNote);
 
-                opensheetmusicdisplay.updateGraphicSheet();
+                opensheetmusicdisplay.updateGraphic();
 
                 {
                     const graphicalStaffEntry: GraphicalStaffEntry = opensheetmusicdisplay.GraphicSheet.getStaffEntry(0);
