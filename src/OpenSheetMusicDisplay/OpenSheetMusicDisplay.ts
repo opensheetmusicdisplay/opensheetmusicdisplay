@@ -263,6 +263,9 @@ export class OpenSheetMusicDisplay {
             }
         }
 
+        if (options.alignRests !== undefined) {
+            EngravingRules.Rules.AlignRests = options.alignRests;
+        }
         if (options.coloringMode !== undefined) {
             this.setColoringMode(options);
         }

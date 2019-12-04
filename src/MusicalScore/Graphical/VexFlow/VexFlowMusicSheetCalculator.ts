@@ -136,14 +136,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         if (measure === measures[0]) {
           const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
           // prepare format function for voices, will be called later for formatting measure again
-          vexflowMeasure.formatVoices = (w: number) => {
+          let formatVoices: (w: number) => void = (w) => {
             formatter.format(allVoices, w);
-            // formatter.format(allVoices, w, {
-            //   align_rests: false, // TODO
-            //   // align_rests = true causes a Vexflow Exception for Mozart - An Chloe
-            //   // align_rests = false still aligns rests with beams according to Vexflow, but doesn't seem to do anything
-            // });
           };
+          if (EngravingRules.Rules.AlignRests) { // aligns rests and avoids rest collisions. has to be enabled in OSMDOptions.alignRests
+            formatVoices = (w) => {
+              formatter.format(allVoices, w, {
+              align_rests: true,
+              context: undefined
+              });
+            };
+          }
+          vexflowMeasure.formatVoices = formatVoices;
           // format now for minimum width, calculateMeasureWidthFromLyrics later
           vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
         } else {

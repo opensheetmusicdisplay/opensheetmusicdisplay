@@ -179,6 +179,7 @@ export class EngravingRules {
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
+    private alignRests: boolean;
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
     private colorStemsLikeNoteheads: boolean;
@@ -401,6 +402,7 @@ export class EngravingRules {
         this.metronomeMarkYShift = -0.5;
 
         // Render options (whether to render specific or invisible elements)
+        this.alignRests = false;
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
         this.colorStemsLikeNoteheads = false;
@@ -1347,6 +1349,12 @@ export class EngravingRules {
     }
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
+    }
+    public get AlignRests(): boolean {
+        return this.alignRests;
+    }
+    public set AlignRests(value: boolean) {
+        this.alignRests = value;
     }
     public get ColoringMode(): ColoringMode {
         return this.coloringMode;
