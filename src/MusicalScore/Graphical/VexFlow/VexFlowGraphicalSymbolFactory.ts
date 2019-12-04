@@ -157,7 +157,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createChordSymbols(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
         let xShift: number = 0;
-        const chordSymbolSpacing: number = 1; // TODO add engravingrules variable, check for available space until next staffEntry
+        const chordSymbolSpacing: number = EngravingRules.Rules.ChordSymbolXSpacing;
         for (const chordSymbolContainer of sourceStaffEntry.ChordContainers) {
             const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
               new GraphicalChordSymbolContainer(chordSymbolContainer,
@@ -167,6 +167,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
             const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
             graphicalLabel.PositionAndShape.RelativePosition.y -= EngravingRules.Rules.ChordSymbolYOffset;
             graphicalLabel.PositionAndShape.RelativePosition.x += xShift;
+            // TODO check for available space until next staffEntry or chord symbol (x direction)
             graphicalLabel.setLabelPositionAndShapeBorders();
             graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
             graphicalStaffEntry.graphicalChordContainers.push(graphicalChordSymbolContainer);

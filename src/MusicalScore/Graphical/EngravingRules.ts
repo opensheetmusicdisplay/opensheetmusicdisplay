@@ -89,6 +89,7 @@ export class EngravingRules {
     private betweenDotsDistance: number;
     private ornamentAccidentalScalingFactor: number;
     private chordSymbolTextHeight: number;
+    private chordSymbolXSpacing: number;
     private chordSymbolYOffset: number;
     private fingeringLabelFontHeight: number;
     private measureNumberLabelHeight: number;
@@ -315,6 +316,7 @@ export class EngravingRules {
         this.betweenDotsDistance = 0.8;
         this.ornamentAccidentalScalingFactor = 0.65;
         this.chordSymbolTextHeight = 2.0;
+        this.chordSymbolXSpacing = 1.0;
         this.chordSymbolYOffset = 2.0;
         this.fingeringLabelFontHeight = 1.7;
 
@@ -886,6 +888,12 @@ export class EngravingRules {
     }
     public set ChordSymbolTextHeight(value: number) {
         this.chordSymbolTextHeight = value;
+    }
+    public get ChordSymbolXSpacing(): number {
+        return this.chordSymbolXSpacing;
+    }
+    public set ChordSymbolXSpacing(value: number) {
+        this.chordSymbolXSpacing = value;
     }
     public get ChordSymbolYOffset(): number {
         return this.chordSymbolYOffset;
