@@ -88,7 +88,7 @@ export class InstrumentReader {
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
   private abstractInstructions: [number, AbstractNotationInstruction][] = [];
-  private openChordSymbolContainer: ChordSymbolContainer;
+  private openChordSymbolContainers: ChordSymbolContainer[] = [];
   private expressionReaders: ExpressionReader[];
   private currentVoiceGenerator: VoiceGenerator;
   //private openSlurDict: { [n: number]: Slur; } = {};
@@ -353,9 +353,10 @@ export class InstrumentReader {
             this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) && !this.currentStaffEntry.hasNotes()
           );
           this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
-          if (this.openChordSymbolContainer !== undefined) {
-            this.currentStaffEntry.ChordContainer = this.openChordSymbolContainer;
-            this.openChordSymbolContainer = undefined;
+          if (this.openChordSymbolContainers.length !== 0) {
+            this.currentStaffEntry.ChordContainer = this.openChordSymbolContainers[0];
+            // TODO handle multiple chords on one note/staffentry
+            this.openChordSymbolContainers = [];
           }
           if (this.activeRhythm !== undefined) {
             // (*) this.musicSheet.SheetPlaybackSetting.Rhythm = this.activeRhythm.Rhythm;
@@ -487,7 +488,8 @@ export class InstrumentReader {
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
         } else if (xmlNode.name === "harmony") {
-                    this.openChordSymbolContainer = ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey);
+          // new chord, could be second chord on same staffentry/note
+          this.openChordSymbolContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
         }
       }
       for (const j in this.voiceGeneratorsDict) {
