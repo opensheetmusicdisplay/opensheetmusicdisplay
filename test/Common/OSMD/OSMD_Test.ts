@@ -1,7 +1,7 @@
 import chai = require("chai");
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../Util/TestUtils";
-import { VoiceEntry, Instrument, Note } from "../../../src";
+import { VoiceEntry, Instrument, Note, Staff, Voice, GraphicalStaffEntry, GraphicalNote, Fraction, Pitch, AccidentalEnum } from "../../../src";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -275,6 +275,39 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             it("gets all notes under cursor when instrument unspecified", () => {
                 const notes: Note[] = opensheetmusicdisplay.cursor.NotesUnderCursor();
                 chai.expect(notes.length).to.equal(2);
+            });
+        });
+
+        describe("updateGraphic", () => {
+            it("updates the graphical sheet with mutations on the music sheet", () => {
+                const staff: Staff = opensheetmusicdisplay.Sheet.Staves[0];
+                const voice: Voice = staff.Voices[0];
+                const voiceEntry: VoiceEntry = voice.VoiceEntries[0];
+                const numNotesBefore: number = voiceEntry.Notes.length;
+
+                // Validate current state
+                {
+                    const graphicalStaffEntry: GraphicalStaffEntry = opensheetmusicdisplay.GraphicSheet.getStaffEntry(0);
+                    const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.findVoiceEntryGraphicalNotes(voiceEntry);
+
+                    chai.expect(graphicalNotes.length).to.equal(numNotesBefore);
+                }
+
+                const newNote: Note = new Note(
+                    voiceEntry,
+                    voiceEntry.ParentSourceStaffEntry,
+                    new Fraction(1),
+                    new Pitch(11, 1, AccidentalEnum.NATURAL));
+                voiceEntry.Notes.push(newNote);
+
+                opensheetmusicdisplay.updateGraphic();
+
+                {
+                    const graphicalStaffEntry: GraphicalStaffEntry = opensheetmusicdisplay.GraphicSheet.getStaffEntry(0);
+                    const graphicalNotes: GraphicalNote[] = graphicalStaffEntry.findVoiceEntryGraphicalNotes(voiceEntry);
+
+                    chai.expect(graphicalNotes.length).to.equal(numNotesBefore + 1);
+                }
             });
         });
     });

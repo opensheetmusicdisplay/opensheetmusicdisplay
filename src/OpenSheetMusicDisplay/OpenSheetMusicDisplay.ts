@@ -142,19 +142,28 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
         const score: IXmlElement = new IXmlElement(scorePartwiseElement);
-        const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         const reader: MusicSheetReader = new MusicSheetReader();
         this.sheet = reader.createMusicSheet(score, "Untitled Score");
         if (this.sheet === undefined) {
             // error loading sheet, probably already logged, do nothing
             return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
         }
+        log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
+
+        this.updateGraphic();
+
+        return Promise.resolve({});
+    }
+
+    /**
+     * (Re-)creates the graphic sheet from the music sheet
+     */
+    public updateGraphic(): void {
+        const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
-        log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
-        return Promise.resolve({});
     }
 
     /**
