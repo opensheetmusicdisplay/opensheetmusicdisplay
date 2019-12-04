@@ -54,7 +54,7 @@ export interface IGraphicalSymbolFactory {
 
     createInStaffClef(graphicalStaffEntry: GraphicalStaffEntry, clefInstruction: ClefInstruction): void;
 
-    createChordSymbol(
+    createChordSymbols(
         sourceStaffEntry: SourceStaffEntry,
         graphicalStaffEntry: GraphicalStaffEntry,
         transposeHalftones: number): void;

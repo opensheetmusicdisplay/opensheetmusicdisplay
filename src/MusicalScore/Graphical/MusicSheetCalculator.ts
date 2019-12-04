@@ -868,14 +868,16 @@ export abstract class MusicSheetCalculator {
                     const sbc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
                     for (const measure of staffLine.Measures) {
                         for (const staffEntry of measure.staffEntries) {
-                            if (!staffEntry.graphicalChordContainer) {
+                            if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                                 continue;
                             }
-                            const sps: BoundingBox = staffEntry.PositionAndShape;
-                            const gps: BoundingBox = staffEntry.graphicalChordContainer.PositionAndShape;
-                            const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
-                            const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
-                            sbc.updateSkyLineInRange(start, end, sps.BorderMarginTop);
+                            for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
+                                const sps: BoundingBox = staffEntry.PositionAndShape;
+                                const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
+                                const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
+                                const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
+                                sbc.updateSkyLineInRange(start, end, sps.BorderMarginTop);
+                            }
                         }
                     }
                 }
@@ -2047,9 +2049,9 @@ export abstract class MusicSheetCalculator {
                     const clefInstruction: ClefInstruction = <ClefInstruction>sourceStaffEntry.Instructions[0];
                     MusicSheetCalculator.symbolFactory.createInStaffClef(graphicalStaffEntry, clefInstruction);
                 }
-                if (sourceStaffEntry.ChordContainer !== undefined) {
+                if (sourceStaffEntry.ChordContainers && sourceStaffEntry.ChordContainers.length > 0) {
                     sourceStaffEntry.ParentStaff.ParentInstrument.HasChordSymbols = true;
-                    MusicSheetCalculator.symbolFactory.createChordSymbol(
+                    MusicSheetCalculator.symbolFactory.createChordSymbols(
                         sourceStaffEntry,
                         graphicalStaffEntry,
                         this.graphicalMusicSheet.ParentMusicSheet.Transpose);

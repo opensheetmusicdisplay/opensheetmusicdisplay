@@ -354,7 +354,7 @@ export class InstrumentReader {
           );
           this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
           if (this.openChordSymbolContainers.length !== 0) {
-            this.currentStaffEntry.ChordContainer = this.openChordSymbolContainers[0];
+            this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
             // TODO handle multiple chords on one note/staffentry
             this.openChordSymbolContainers = [];
           }
