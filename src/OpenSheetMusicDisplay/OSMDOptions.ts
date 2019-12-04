@@ -77,6 +77,8 @@ export interface IOSMDOptions {
     drawMeasureNumbers?: boolean;
     /** Whether to draw lyrics (and their extensions and dashes). */
     drawLyrics?: boolean;
+    /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
+    drawSlurs?: boolean;
     /** Where to draw fingerings (left, right, above, below, auto).
      * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
      */

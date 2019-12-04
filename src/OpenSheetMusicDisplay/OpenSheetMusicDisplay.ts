@@ -314,6 +314,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawLyrics !== undefined) {
             EngravingRules.Rules.RenderLyrics = options.drawLyrics;
         }
+        if (options.drawSlurs !== undefined) {
+            EngravingRules.Rules.DrawSlurs = options.drawSlurs;
+        }
         if (options.measureNumberInterval !== undefined) {
             EngravingRules.Rules.MeasureNumberLabelOffset = options.measureNumberInterval;
         }

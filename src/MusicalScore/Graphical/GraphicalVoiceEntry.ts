@@ -66,7 +66,10 @@ export class GraphicalVoiceEntry extends GraphicalObject {
             }
             if (!note.sourceNote.PrintObject) {
                 noteheadColor = transparentColor; // transparent
-            } else if (!noteheadColor) { // revert transparency after PrintObject was set to false, then true again
+            } else if (!noteheadColor // revert transparency after PrintObject was set to false, then true again
+                || noteheadColor === "#000000" // questionable, because you might want to set specific notes to black,
+                                               // but unfortunately some programs export everything explicitly as black
+                ) {
                 noteheadColor = EngravingRules.Rules.DefaultColorNotehead;
             }
 
@@ -122,7 +125,8 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         let stemColor: string = EngravingRules.Rules.DefaultColorStem; // reset to black/default when coloring was disabled. maybe needed elsewhere too
         if (EngravingRules.Rules.ColoringEnabled) {
             stemColor = this.parentVoiceEntry.StemColor; // TODO: once coloringSetCustom gets stem color, respect it
-            if (!stemColor || EngravingRules.Rules.ColorStemsLikeNoteheads) {
+            if (!stemColor || EngravingRules.Rules.ColorStemsLikeNoteheads
+                || stemColor === "#000000") { // see above, noteheadColor === "#000000"
                 // condition could be even more fine-grained by only recoloring if there was no custom StemColor set. will be more complex though
                 if (noteheadColor) {
                     stemColor = noteheadColor;

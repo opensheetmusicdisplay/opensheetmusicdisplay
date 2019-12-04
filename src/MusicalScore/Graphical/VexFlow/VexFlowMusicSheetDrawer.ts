@@ -83,7 +83,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawStaffLine(staffLine: StaffLine): void {
         super.drawStaffLine(staffLine);
         const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
-        this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
+        if (EngravingRules.Rules.DrawSlurs) {
+            this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
+        }
     }
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {

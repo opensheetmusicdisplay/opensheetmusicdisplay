@@ -728,8 +728,10 @@ export abstract class MusicSheetCalculator {
             this.optimizeRestPlacement();
             // possible Displacement of RestNotes
             this.calculateStaffEntryArticulationMarks();
-            // calculate Ties
-            this.calculateTieCurves();
+            if (EngravingRules.Rules.DrawSlurs) { // technically we should separate slurs and ties, but shouldn't be relevant for now
+                // calculate Ties
+                this.calculateTieCurves();
+            }
         }
         // calculate Sky- and BottomLine
         // will have reasonable values only between ObjectsBorders (eg StaffEntries)
@@ -748,7 +750,7 @@ export abstract class MusicSheetCalculator {
             }
         }
         // calculate Slurs
-        if (!this.leadSheet) {
+        if (!this.leadSheet && EngravingRules.Rules.DrawSlurs) {
             this.calculateSlurs();
         }
         // calculate StaffEntry Ornaments
