@@ -180,6 +180,7 @@ export class EngravingRules {
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
     private alignRests: boolean;
+    private drawSlurs: boolean;
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
     private colorStemsLikeNoteheads: boolean;
@@ -403,6 +404,7 @@ export class EngravingRules {
 
         // Render options (whether to render specific or invisible elements)
         this.alignRests = false;
+        this.drawSlurs = true;
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
         this.colorStemsLikeNoteheads = false;
@@ -1355,6 +1357,12 @@ export class EngravingRules {
     }
     public set AlignRests(value: boolean) {
         this.alignRests = value;
+    }
+    public get DrawSlurs(): boolean {
+        return this.drawSlurs;
+    }
+    public set DrawSlurs(value: boolean) {
+        this.drawSlurs = value;
     }
     public get ColoringMode(): ColoringMode {
         return this.coloringMode;
