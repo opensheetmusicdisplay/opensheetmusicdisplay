@@ -211,6 +211,15 @@ export class Note {
         return this.Pitch === undefined;
     }
 
+    /** Note: May be dangerous to use if ParentStaffEntry.VerticalContainerParent etc is not set.
+     * better calculate this directly when you have access to the note's measure.
+     * whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
+     * TODO give a Note a reference to its measure?
+     */
+    public isWholeRest(): boolean {
+        return this.isRest() && this.Length.RealValue === this.ParentStaffEntry.VerticalContainerParent.ParentMeasure.ActiveTimeSignature.RealValue;
+    }
+
     public ToString(): string {
         if (this.pitch !== undefined) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
