@@ -405,7 +405,7 @@ export class EngravingRules {
         this.metronomeMarkYShift = -0.5;
 
         // Render options (whether to render specific or invisible elements)
-        this.alignRests = AlignRestOption.False; // 0 = false, 1 = true, 2 = auto
+        this.alignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
         this.drawSlurs = true;
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;

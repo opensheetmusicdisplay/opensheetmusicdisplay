@@ -111,8 +111,8 @@ export interface IOSMDOptions {
 }
 
 export enum AlignRestOption {
-    False = 0,
-    True = 1,
+    Never = 0, // false should also work
+    Always = 1, // true should also work
     Auto = 2
 }
 

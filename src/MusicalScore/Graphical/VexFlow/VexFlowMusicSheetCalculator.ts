@@ -146,9 +146,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       for (const measure of measures) {
         // determine whether to align rests
-        if (EngravingRules.Rules.AlignRests === AlignRestOption.False) {
+        if (EngravingRules.Rules.AlignRests === AlignRestOption.Never) {
           (measure as VexFlowMeasure).formatVoices = formatVoicesDefault;
-        } else if (EngravingRules.Rules.AlignRests === AlignRestOption.True) {
+        } else if (EngravingRules.Rules.AlignRests === AlignRestOption.Always) {
           (measure as VexFlowMeasure).formatVoices = formatVoicesAlignRests;
         } else if (EngravingRules.Rules.AlignRests === AlignRestOption.Auto) {
           let alignRests: boolean = false;
