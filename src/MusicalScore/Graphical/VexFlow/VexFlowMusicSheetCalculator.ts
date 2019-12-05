@@ -46,6 +46,7 @@ import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
+import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -132,26 +133,71 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //     formatter.format(allVoices, w);
       // };
       MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
+
+      const formatVoicesDefault: (w: number) => void = (w) => {
+        formatter.format(allVoices, w);
+      };
+      const formatVoicesAlignRests: (w: number) => void = (w) => {
+        formatter.format(allVoices, w, {
+          align_rests: true,
+          context: undefined
+        });
+      };
+
       for (const measure of measures) {
+        // determine whether to align rests
+        if (EngravingRules.Rules.AlignRests === AlignRestOption.False) {
+          (measure as VexFlowMeasure).formatVoices = formatVoicesDefault;
+        } else if (EngravingRules.Rules.AlignRests === AlignRestOption.True) {
+          (measure as VexFlowMeasure).formatVoices = formatVoicesAlignRests;
+        } else if (EngravingRules.Rules.AlignRests === AlignRestOption.Auto) {
+          let alignRests: boolean = false;
+          for (const staffEntry of measure.staffEntries) {
+            let collidableVoiceEntries: number = 0;
+            let numberOfRests: number = 0;
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+              if (!voiceEntry.parentVoiceEntry.IsGrace) {
+                if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {// TODO null chaining, TS 3.7
+                  if (voiceEntry.notes[0].sourceNote.PrintObject) { // only respect collision when not invisible
+                    collidableVoiceEntries++;
+                  }
+                }
+              }
+              if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {// TODO null chaining, TS 3.7
+                if (voiceEntry.notes[0].sourceNote.isRest() && voiceEntry.notes[0].sourceNote.PrintObject) {
+                  numberOfRests++; // only align rests if there is actually a rest (which could collide)
+                }
+              }
+              if (collidableVoiceEntries > 1 && numberOfRests >= 1) {
+                // TODO could add further checks like if any of the already checked voice entries actually collide
+                alignRests = true;
+                break;
+              }
+            }
+            if (alignRests) {
+              break;
+            }
+          }
+
+          // set measure's format function
+          if (alignRests) {
+            (measure as VexFlowMeasure).formatVoices = formatVoicesAlignRests;
+          } else {
+            (measure as VexFlowMeasure).formatVoices = formatVoicesDefault;
+          }
+        }
+
+        // format first measure with minimum width
         if (measure === measures[0]) {
           const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
           // prepare format function for voices, will be called later for formatting measure again
-          let formatVoices: (w: number) => void = (w) => {
-            formatter.format(allVoices, w);
-          };
-          if (EngravingRules.Rules.AlignRests) { // aligns rests and avoids rest collisions. has to be enabled in OSMDOptions.alignRests
-            formatVoices = (w) => {
-              formatter.format(allVoices, w, {
-              align_rests: true,
-              context: undefined
-              });
-            };
-          }
-          vexflowMeasure.formatVoices = formatVoices;
+          //vexflowMeasure.formatVoices = formatVoicesDefault;
+
           // format now for minimum width, calculateMeasureWidthFromLyrics later
           vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
         } else {
-          (measure as VexFlowMeasure).formatVoices = undefined;
+          //(measure as VexFlowMeasure).formatVoices = undefined;
+          // TODO why was the formatVoices function disabled for other measures? would now disable the new align rests option.
         }
       }
     }

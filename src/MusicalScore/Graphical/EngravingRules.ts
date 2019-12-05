@@ -3,7 +3,7 @@ import { PagePlacementEnum } from "./GraphicalMusicPage";
 import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { AutoBeamOptions } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import { AutoBeamOptions, AlignRestOption } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "../..";
@@ -180,7 +180,7 @@ export class EngravingRules {
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
-    private alignRests: boolean;
+    private alignRests: number; // 0 = false, 1 = true, 2 = auto
     private drawSlurs: boolean;
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
@@ -405,7 +405,7 @@ export class EngravingRules {
         this.metronomeMarkYShift = -0.5;
 
         // Render options (whether to render specific or invisible elements)
-        this.alignRests = false;
+        this.alignRests = AlignRestOption.False; // 0 = false, 1 = true, 2 = auto
         this.drawSlurs = true;
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
@@ -1360,10 +1360,10 @@ export class EngravingRules {
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
     }
-    public get AlignRests(): boolean {
+    public get AlignRests(): number {
         return this.alignRests;
     }
-    public set AlignRests(value: boolean) {
+    public set AlignRests(value: number) {
         this.alignRests = value;
     }
     public get DrawSlurs(): boolean {
