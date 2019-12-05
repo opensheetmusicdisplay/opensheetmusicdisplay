@@ -728,7 +728,7 @@ export abstract class MusicSheetCalculator {
             this.optimizeRestPlacement();
             // possible Displacement of RestNotes
             this.calculateStaffEntryArticulationMarks();
-            if (EngravingRules.Rules.DrawSlurs) { // technically we should separate slurs and ties, but shouldn't be relevant for now
+            if (EngravingRules.Rules.RenderSlurs) { // technically we should separate slurs and ties, but shouldn't be relevant for now
                 // calculate Ties
                 this.calculateTieCurves();
             }
@@ -750,7 +750,7 @@ export abstract class MusicSheetCalculator {
             }
         }
         // calculate Slurs
-        if (!this.leadSheet && EngravingRules.Rules.DrawSlurs) {
+        if (!this.leadSheet && EngravingRules.Rules.RenderSlurs) {
             this.calculateSlurs();
         }
         // calculate StaffEntry Ornaments

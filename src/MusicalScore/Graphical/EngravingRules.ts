@@ -181,7 +181,9 @@ export class EngravingRules {
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
     private alignRests: number; // 0 = false, 1 = true, 2 = auto
-    private drawSlurs: boolean;
+    private arpeggiosGoAcrossVoices: boolean;
+    private renderArpeggios: boolean;
+    private renderSlurs: boolean;
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
     private colorStemsLikeNoteheads: boolean;
@@ -406,7 +408,9 @@ export class EngravingRules {
 
         // Render options (whether to render specific or invisible elements)
         this.alignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
-        this.drawSlurs = true;
+        this.arpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
+        this.renderArpeggios = true;
+        this.renderSlurs = true;
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
         this.colorStemsLikeNoteheads = false;
@@ -1366,11 +1370,24 @@ export class EngravingRules {
     public set AlignRests(value: number) {
         this.alignRests = value;
     }
-    public get DrawSlurs(): boolean {
-        return this.drawSlurs;
+    public get ArpeggiosGoAcrossVoices(): boolean {
+        return this.arpeggiosGoAcrossVoices;
     }
-    public set DrawSlurs(value: boolean) {
-        this.drawSlurs = value;
+    public set ArpeggiosGoAcrossVoices(value: boolean) {
+        this.arpeggiosGoAcrossVoices = value;
+    }
+    public get RenderArpeggios(): boolean {
+        return this.renderArpeggios;
+    }
+    public set RenderArpeggios(value: boolean) {
+        this.renderArpeggios = value;
+    }
+
+    public get RenderSlurs(): boolean {
+        return this.renderSlurs;
+    }
+    public set RenderSlurs(value: boolean) {
+        this.renderSlurs = value;
     }
     public get ColoringMode(): ColoringMode {
         return this.coloringMode;
