@@ -70,29 +70,29 @@ export interface IOSMDOptions {
     drawPartNames?: boolean;
     /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
     drawPartAbbreviations?: boolean;
-    /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
-    drawFingerings?: boolean;
-    /** Whether to draw measure numbers (labels) (default true).
+    /** Whether to draw measure numbers (labels). Default true.
      * Draws a measure number label at first measure, system start measure, and every [measureNumberInterval] measures.
      * See the [measureNumberInterval] option, default is 2.
      */
     drawMeasureNumbers?: boolean;
-    /** Whether to draw lyrics (and their extensions and dashes). */
-    drawLyrics?: boolean;
-    /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
-    drawSlurs?: boolean;
+    /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
+    measureNumberInterval?: number;
+    /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
+    drawFingerings?: boolean;
     /** Where to draw fingerings (left, right, above, below, auto).
      * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
      */
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
     fingeringInsideStafflines?: boolean;
+    /** Whether to draw lyrics (and their extensions and dashes). */
+    drawLyrics?: boolean;
+    /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
+    drawSlurs?: boolean;
     /** Only draw measure n to m, where m is the number you specify. */
     drawUpToMeasureNumber?: number;
     /** Only draw measure n to m, where n is the number you specify. */
     drawFromMeasureNumber?: number;
-    /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
-    measureNumberInterval?: number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
