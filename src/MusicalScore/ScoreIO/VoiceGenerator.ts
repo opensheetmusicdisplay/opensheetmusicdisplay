@@ -155,6 +155,8 @@ export class VoiceGenerator {
               if (voiceEntry.Arpeggio !== undefined) {
                 arpeggioAlreadyExists = true;
                 currentArpeggio = voiceEntry.Arpeggio;
+                // TODO handle multiple arpeggios across multiple voices at same timestamp
+
                 // this.currentVoiceEntry.Arpeggio = currentArpeggio; // register the arpeggio in the current voice entry as well?
                 //   but then we duplicate information, and may have to take care not to render it multiple times
 

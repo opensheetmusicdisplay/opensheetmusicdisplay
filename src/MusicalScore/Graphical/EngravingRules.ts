@@ -3,7 +3,7 @@ import { PagePlacementEnum } from "./GraphicalMusicPage";
 import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { AutoBeamOptions } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import { AutoBeamOptions, AlignRestOption } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "../..";
@@ -180,8 +180,10 @@ export class EngravingRules {
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
-    private alignRests: boolean;
-    private drawSlurs: boolean;
+    private alignRests: number; // 0 = false, 1 = true, 2 = auto
+    private arpeggiosGoAcrossVoices: boolean;
+    private renderArpeggios: boolean;
+    private renderSlurs: boolean;
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
     private colorStemsLikeNoteheads: boolean;
@@ -405,8 +407,10 @@ export class EngravingRules {
         this.metronomeMarkYShift = -0.5;
 
         // Render options (whether to render specific or invisible elements)
-        this.alignRests = false;
-        this.drawSlurs = true;
+        this.alignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
+        this.arpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
+        this.renderArpeggios = true;
+        this.renderSlurs = true;
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
         this.colorStemsLikeNoteheads = false;
@@ -1360,17 +1364,30 @@ export class EngravingRules {
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
     }
-    public get AlignRests(): boolean {
+    public get AlignRests(): number {
         return this.alignRests;
     }
-    public set AlignRests(value: boolean) {
+    public set AlignRests(value: number) {
         this.alignRests = value;
     }
-    public get DrawSlurs(): boolean {
-        return this.drawSlurs;
+    public get ArpeggiosGoAcrossVoices(): boolean {
+        return this.arpeggiosGoAcrossVoices;
     }
-    public set DrawSlurs(value: boolean) {
-        this.drawSlurs = value;
+    public set ArpeggiosGoAcrossVoices(value: boolean) {
+        this.arpeggiosGoAcrossVoices = value;
+    }
+    public get RenderArpeggios(): boolean {
+        return this.renderArpeggios;
+    }
+    public set RenderArpeggios(value: boolean) {
+        this.renderArpeggios = value;
+    }
+
+    public get RenderSlurs(): boolean {
+        return this.renderSlurs;
+    }
+    public set RenderSlurs(value: boolean) {
+        this.renderSlurs = value;
     }
     public get ColoringMode(): ColoringMode {
         return this.coloringMode;

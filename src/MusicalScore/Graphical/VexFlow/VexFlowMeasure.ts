@@ -940,10 +940,19 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // add Arpeggio
                 if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
                     const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
+                    // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
+                    // see VoiceGenerator. Doesn't matter for Vexflow for now though
                     if (voiceEntry.notes && voiceEntry.notes.length > 1) {
-                        // only draw arpeggio if there's more than one note in it. otherwise Vexflow renders the arpeggio to a very high y level
                         const type: Vex.Flow.Stroke.Type = arpeggio.type;
-                        vexFlowVoiceEntry.vfStaveNote.addStroke(0, new Vex.Flow.Stroke(type));
+                        const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
+                            all_voices: EngravingRules.Rules.ArpeggiosGoAcrossVoices
+                            // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
+                            // also, this can cause infinite height of stroke, see #546
+                        });
+                        //if (arpeggio.notes.length === vexFlowVoiceEntry.notes.length) { // different workaround for endless y bug
+                        if (EngravingRules.Rules.RenderArpeggios) {
+                            vexFlowVoiceEntry.vfStaveNote.addStroke(0, stroke);
+                        }
                     } else {
                         log.debug(`[OSMD] arpeggio in measure ${this.MeasureNumber} could not be drawn.
                         voice entry had less than two notes, arpeggio is likely between voice entries, not currently supported in Vexflow.`);

@@ -5,11 +5,13 @@ import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/
  *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
  */
 export interface IOSMDOptions {
-    /** Whether to let Vexflow align rests to preceding or following notes (Vexflow option). Default false.
+    /** Whether to let Vexflow align rests to preceding or following notes (Vexflow option). Default false (0).
      * This can naturally reduce collisions of rest notes with other notes.
-     * This also changes the position of rests when there is no simultaneous note at the same x-coordinate.
+     * Auto mode (2) only aligns rests when there are multiple voices in a measure, and at least once at the same x-coordinate.
+     * Auto is the recommended setting, and would be default, if it couldn't in rare cases deteriorate rest placement for existing users.
+     * The on mode (1) always aligns rests, also changing their position when there is no simultaneous note at the same x-coordinate, which is nonstandard.
      */
-    alignRests?: boolean;
+    alignRests?: AlignRestOption | number;
     /** Whether to automatically create beams for notes that don't have beams set in XML. */
     autoBeam?: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
@@ -68,29 +70,29 @@ export interface IOSMDOptions {
     drawPartNames?: boolean;
     /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
     drawPartAbbreviations?: boolean;
-    /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
-    drawFingerings?: boolean;
-    /** Whether to draw measure numbers (labels) (default true).
+    /** Whether to draw measure numbers (labels). Default true.
      * Draws a measure number label at first measure, system start measure, and every [measureNumberInterval] measures.
      * See the [measureNumberInterval] option, default is 2.
      */
     drawMeasureNumbers?: boolean;
-    /** Whether to draw lyrics (and their extensions and dashes). */
-    drawLyrics?: boolean;
-    /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
-    drawSlurs?: boolean;
+    /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
+    measureNumberInterval?: number;
+    /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
+    drawFingerings?: boolean;
     /** Where to draw fingerings (left, right, above, below, auto).
      * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
      */
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
     fingeringInsideStafflines?: boolean;
+    /** Whether to draw lyrics (and their extensions and dashes). */
+    drawLyrics?: boolean;
+    /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
+    drawSlurs?: boolean;
     /** Only draw measure n to m, where m is the number you specify. */
     drawUpToMeasureNumber?: number;
     /** Only draw measure n to m, where n is the number you specify. */
     drawFromMeasureNumber?: number;
-    /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
-    measureNumberInterval?: number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
@@ -106,6 +108,12 @@ export interface IOSMDOptions {
     tripletsBracketed?: boolean;
     /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
     drawHiddenNotes?: boolean;
+}
+
+export enum AlignRestOption {
+    Never = 0, // false should also work
+    Always = 1, // true should also work
+    Auto = 2
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */
