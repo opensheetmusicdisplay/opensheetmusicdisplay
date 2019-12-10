@@ -1606,7 +1606,13 @@ export abstract class MusicSheetCalculator {
                                                                                                         undefined);
                 tabStaffEntry.addGraphicalNoteToListAtCorrectYPosition(graphicalTabVoiceEntry, graphicalTabNote);
                 graphicalTabNote.PositionAndShape.calculateBoundingBox();
-        }
+
+                if (!this.leadSheet) {
+                    if (note.NoteTuplet) {
+                        this.handleTuplet(graphicalTabNote, note.NoteTuplet, openTuplets);
+                    }
+                }
+            }
         }
         if (voiceEntry.Articulations.length > 0) {
             this.handleVoiceEntryArticulations(voiceEntry.Articulations, voiceEntry, graphicalStaffEntry);
