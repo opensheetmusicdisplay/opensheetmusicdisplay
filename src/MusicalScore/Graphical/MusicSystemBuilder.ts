@@ -468,7 +468,7 @@ export class MusicSystemBuilder {
         let keyAdded: boolean = false;
         let rhythmAdded: boolean = false;
         if (currentClef !== undefined) {
-            if (measure.tabMeasure !== undefined) {
+            if (measure.tabMeasure) {
                 measure.tabMeasure.addClefAtBegin(currentClef);
                 measure.addClefAtBegin(new ClefInstruction(ClefEnum.G));
             } else {
@@ -486,6 +486,9 @@ export class MusicSystemBuilder {
         }
         if (currentRhythm !== undefined && currentRhythm.PrintObject) {
             measure.addRhythmAtBegin(currentRhythm);
+            if (measure.tabMeasure) {
+                measure.tabMeasure.addRhythmAtBegin(currentRhythm);
+            }
             rhythmAdded = true;
         }
         if (clefAdded || keyAdded || rhythmAdded) {
