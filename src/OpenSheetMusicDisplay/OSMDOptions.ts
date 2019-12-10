@@ -108,6 +108,11 @@ export interface IOSMDOptions {
     tripletsBracketed?: boolean;
     /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
     drawHiddenNotes?: boolean;
+    /** osmd will auto place whole rest note, if there are no notes information on specific staff, and will render it out.
+     * Default is true. which is will print the whole rest note out
+     * false, will print the ghost whole rest note, which is print-object = no
+     */
+    showAutoPlaceWholeRestNote?: boolean;
 }
 
 export enum AlignRestOption {

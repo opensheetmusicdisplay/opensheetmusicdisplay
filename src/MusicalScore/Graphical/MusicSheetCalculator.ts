@@ -2091,6 +2091,10 @@ export abstract class MusicSheetCalculator {
                 staff);
             const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
             const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
+            //if osmd option showAutoPlaceWholeRestNote is false, will draw invisible whole rest note
+            if (this.rules.ShowAutoPlaceWholeRestNote === false) {
+                note.PrintObject = false;
+            }
             voiceEntry.Notes.push(note);
             const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
             measure.addGraphicalStaffEntry(graphicalStaffEntry);

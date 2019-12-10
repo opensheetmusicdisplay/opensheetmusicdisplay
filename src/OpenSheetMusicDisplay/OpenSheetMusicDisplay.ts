@@ -383,6 +383,9 @@ export class OpenSheetMusicDisplay {
             this.autoResizeEnabled = false;
             // we could remove the window EventListener here, but not necessary.
         }
+        if (options.showAutoPlaceWholeRestNote !== undefined) {
+            EngravingRules.Rules.ShowAutoPlaceWholeRestNote = options.showAutoPlaceWholeRestNote;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {

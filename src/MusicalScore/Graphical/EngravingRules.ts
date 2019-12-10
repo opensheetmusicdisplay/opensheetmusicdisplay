@@ -213,6 +213,7 @@ export class EngravingRules {
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
+    private showAutoPlaceWholeRestNote: boolean;
 
     constructor() {
         // global variables
@@ -435,6 +436,7 @@ export class EngravingRules {
         this.renderLyrics = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
+        this.showAutoPlaceWholeRestNote = true;
 
         this.populateDictionaries();
         try {
@@ -1538,6 +1540,12 @@ export class EngravingRules {
     }
     public set FingeringInsideStafflines(value: boolean) {
         this.fingeringInsideStafflines = value;
+    }
+    public get ShowAutoPlaceWholeRestNote(): boolean {
+        return this.showAutoPlaceWholeRestNote;
+    }
+    public set ShowAutoPlaceWholeRestNote(value: boolean) {
+        this.showAutoPlaceWholeRestNote = value;
     }
 
     /**
