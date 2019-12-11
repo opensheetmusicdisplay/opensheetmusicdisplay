@@ -480,6 +480,7 @@ export class VexFlowConverter {
             const tabNote: TabNote = note.sourceNote as TabNote;
             const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumber, fret: tabNote.FretNumber};
             tabPositions.push(tabPosition);
+
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
             }

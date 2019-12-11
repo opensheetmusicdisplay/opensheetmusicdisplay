@@ -66,7 +66,6 @@ import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoE
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
 import { ContDynamicEnum } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
-import { TabNote } from "../VoiceData/TabNote";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -684,11 +683,18 @@ export abstract class MusicSheetCalculator {
                 const graphicalMeasure: GraphicalMeasure = allMeasures[idx][idx2];
 
                 if (graphicalMeasure.isVisible()) {
-                    visiblegraphicalMeasures.push(graphicalMeasure);
-
-                    // add Tab Measure if exists:
+                    // if a Tab Measure exists:
                     if (graphicalMeasure.tabMeasure !== undefined) {
+                        // if there is no linked measure with "normal notes" given for the Tabs,
+                        // add the current measure to show the normal notes:
+                        if (visiblegraphicalMeasures.length === 0) {
+                            visiblegraphicalMeasures.push(graphicalMeasure);
+                        }
+                        // add the Tab measure:
                         visiblegraphicalMeasures.push(graphicalMeasure.tabMeasure);
+                    } else {
+                        // default case: normal measure
+                        visiblegraphicalMeasures.push(graphicalMeasure);
                     }
 
                     if (EngravingRules.Rules.ColoringEnabled) {
@@ -1598,7 +1604,8 @@ export abstract class MusicSheetCalculator {
             }
 
             // handle TabNotes:
-            if (note instanceof TabNote) {
+            if (graphicalTabVoiceEntry) {
+                // notes should be either TabNotes or RestNotes -> add all:
                 const graphicalTabNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(  note,
                                                                                                         graphicalTabVoiceEntry,
                                                                                                         activeClef,
