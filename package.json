@@ -2,17 +2,18 @@
   "name": "opensheetmusicdisplay",
   "version": "0.7.1",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
-  "main": "build/opensheetmusicdisplay.min.js",
-  "typings": "build/dist/src/",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
   "scripts": {
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --ignoreCompilerErrors --mode file ./src",
     "eslint": "eslint .",
-    "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
+    "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" ",
     "lint": "npm-run-all eslint tslint",
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
     "prepare": "npm run build",
-    "build": "npm-run-all lint build:webpack",
+    "tsc": "tsc",
+    "build": "npm-run-all lint tsc",
     "build:doc": "cross-env STATIC_FILES_SUBFOLDER=sheets npm run build",
     "build:webpack": "webpack --progress --colors --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
@@ -24,12 +25,10 @@
     "lint"
   ],
   "files": [
-    "build/dist/src",
-    "build/opensheetmusicdisplay.min.js",
+    "lib",
     "AUTHORS",
     "CHANGELOG.md",
-    "README.md",
-    "external"
+    "README.md"
   ],
   "repository": {
     "type": "git",

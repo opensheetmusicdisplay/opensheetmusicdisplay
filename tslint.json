@@ -1,4 +1,13 @@
 {
+  "linterOptions": {
+    "exclude": [
+      "bin",
+      "node_modules",
+      "lib",
+      "dist",
+      "demo"
+    ]
+  },
   "rules": {
     "align": [
       true,
@@ -19,6 +28,7 @@
       true,
       "spaces"
     ],
+    "ordered-imports": false,
     "interface-name": false,
     "jsdoc-format": true,
     "label-position": true,
@@ -58,7 +68,7 @@
     "no-unused-expression": true,
     "no-var-keyword": true,
     "no-var-requires": true,
-    "object-literal-sort-keys": true,
+    "object-literal-sort-keys": false,
     "prefer-const": true,
     "one-line": [
       true,

@@ -4,13 +4,16 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noUnusedLocals": true,
-    "outDir": "dist",
+    "outDir": "lib",
     "declaration": true,
     "sourceMap": true,
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"],
+    "skipLibCheck": true
   },
+  "include": ["src"],
   "exclude": [
     "node_modules",
+    "lib",
     "dist",
     "demo",
     "build"
