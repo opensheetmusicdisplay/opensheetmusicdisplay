@@ -335,6 +335,9 @@ export class OpenSheetMusicDisplay {
         if (options.fingeringInsideStafflines !== undefined) {
             EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
         }
+        if (options.fillEmptyMeasuresWithWholeRest !== undefined) {
+            EngravingRules.Rules.FillEmptyMeasuresWithWholeRest = options.fillEmptyMeasuresWithWholeRest;
+        }
         if (options.followCursor !== undefined) {
             this.FollowCursor = options.followCursor;
         }

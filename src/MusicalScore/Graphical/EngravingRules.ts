@@ -3,7 +3,7 @@ import { PagePlacementEnum } from "./GraphicalMusicPage";
 import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { AutoBeamOptions, AlignRestOption } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import { AutoBeamOptions, AlignRestOption, FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "../..";
@@ -181,6 +181,7 @@ export class EngravingRules {
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
     private alignRests: number; // 0 = false, 1 = true, 2 = auto
+    private fillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
     private arpeggiosGoAcrossVoices: boolean;
     private renderArpeggios: boolean;
     private renderSlurs: boolean;
@@ -408,6 +409,7 @@ export class EngravingRules {
 
         // Render options (whether to render specific or invisible elements)
         this.alignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
+        this.fillEmptyMeasuresWithWholeRest = FillEmptyMeasuresWithWholeRests.No;
         this.arpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.renderArpeggios = true;
         this.renderSlurs = true;
@@ -1369,6 +1371,12 @@ export class EngravingRules {
     }
     public set AlignRests(value: number) {
         this.alignRests = value;
+    }
+    public get FillEmptyMeasuresWithWholeRest(): FillEmptyMeasuresWithWholeRests | number {
+        return this.fillEmptyMeasuresWithWholeRest;
+    }
+    public set FillEmptyMeasuresWithWholeRest(value: FillEmptyMeasuresWithWholeRests | number) {
+        this.fillEmptyMeasuresWithWholeRest = value;
     }
     public get ArpeggiosGoAcrossVoices(): boolean {
         return this.arpeggiosGoAcrossVoices;

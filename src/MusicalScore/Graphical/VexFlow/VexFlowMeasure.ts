@@ -831,7 +831,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     public graphicalMeasureCreatedCalculations(): void {
         let graceSlur: boolean;
-        let graceGVoiceEntriesBefore: GraphicalVoiceEntry[];
+        let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             graceSlur = false;
             graceGVoiceEntriesBefore = [];

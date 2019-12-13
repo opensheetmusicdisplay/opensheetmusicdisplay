@@ -66,6 +66,7 @@ import { AbstractTempoExpression } from "../VoiceData/Expressions/AbstractTempoE
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
 import { ContDynamicEnum } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
+import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -2083,25 +2084,30 @@ export abstract class MusicSheetCalculator {
             }
         }
         // if there are no staffEntries in this measure, create a rest for the whole measure:
-        if (measure.staffEntries.length === 0) {
-            const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(
-                new VerticalSourceStaffEntryContainer(measure.parentSourceMeasure,
-                                                      measure.parentSourceMeasure.AbsoluteTimestamp,
-                                                      measure.parentSourceMeasure.CompleteNumberOfStaves),
-                staff);
-            const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
-            const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
-            voiceEntry.Notes.push(note);
-            const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
-            measure.addGraphicalStaffEntry(graphicalStaffEntry);
-            graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
-            const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
-            graphicalStaffEntry.graphicalVoiceEntries.push(gve);
-            const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
-                                                                                               gve,
-                                                                                               new ClefInstruction(),
-                                                                                               OctaveEnum.NONE, undefined);
-            gve.notes.push(graphicalNote);
+        // check OSMDOptions.fillEmptyMeasuresWithWholeRest
+        if (EngravingRules.Rules.FillEmptyMeasuresWithWholeRest >= 1) { // fill measures with no notes given with whole rests, visible (1) or invisible (2)
+            if (measure.staffEntries.length === 0) {
+                const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(
+                    new VerticalSourceStaffEntryContainer(measure.parentSourceMeasure,
+                                                          measure.parentSourceMeasure.AbsoluteTimestamp,
+                                                          measure.parentSourceMeasure.CompleteNumberOfStaves),
+                    staff);
+                const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
+                const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
+                note.PrintObject = EngravingRules.Rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
+                  // don't display whole rest that wasn't given in XML, only for layout/voice completion
+                voiceEntry.Notes.push(note);
+                const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
+                measure.addGraphicalStaffEntry(graphicalStaffEntry);
+                graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
+                const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
+                graphicalStaffEntry.graphicalVoiceEntries.push(gve);
+                const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
+                                                                                                   gve,
+                                                                                                   new ClefInstruction(),
+                                                                                                   OctaveEnum.NONE, undefined);
+                gve.notes.push(graphicalNote);
+            }
         }
         return measure;
     }
