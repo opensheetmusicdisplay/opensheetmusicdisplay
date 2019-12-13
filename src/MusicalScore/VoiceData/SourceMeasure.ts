@@ -11,7 +11,6 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
-import {GraphicalMeasure, SystemLinesEnum} from "../Graphical";
 //import {BaseIdClass} from "../../Util/BaseIdClass"; // SourceMeasure originally extended BaseIdClass, but ids weren't used.
 
 /**
@@ -30,7 +29,7 @@ export class SourceMeasure {
         this.breakSystemAfter = false;
         this.endsPiece = false;
         this.endingBarStyleXml = "";
-        this.endingBarStyleEnum = SystemLinesEnum.SingleThin;
+        this.endingBarStyleEnum = {};
         this.firstInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.lastInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.TempoInBPM = 0;
@@ -52,7 +51,7 @@ export class SourceMeasure {
      * The style of the ending bar line.
      */
     public endingBarStyleXml: string;
-    public endingBarStyleEnum: SystemLinesEnum;
+    public endingBarStyleEnum: any;
 
     private measureNumber: number;
     private absoluteTimestamp: Fraction;
@@ -70,7 +69,7 @@ export class SourceMeasure {
     private firstRepetitionInstructions: RepetitionInstruction[] = [];
     private lastRepetitionInstructions: RepetitionInstruction[] = [];
     private tempoInBPM: number;
-    private verticalMeasureList: GraphicalMeasure[]; // useful, see GraphicalMusicSheet.GetGraphicalFromSourceStaffEntry
+    private verticalMeasureList: any[]; // useful, see GraphicalMusicSheet.GetGraphicalFromSourceStaffEntry
 
     public get MeasureNumber(): number {
         return this.measureNumber;
@@ -171,11 +170,11 @@ export class SourceMeasure {
         return undefined;
     }
 
-    public get VerticalMeasureList(): GraphicalMeasure[] {
+    public get VerticalMeasureList(): any[] {
         return this.verticalMeasureList;
     }
 
-    public set VerticalMeasureList(value: GraphicalMeasure[]) {
+    public set VerticalMeasureList(value: any[]) {
         this.verticalMeasureList = value;
     }
 

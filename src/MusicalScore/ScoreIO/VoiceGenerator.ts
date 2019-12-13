@@ -165,18 +165,18 @@ export class VoiceGenerator {
               }
             }
             if (!arpeggioAlreadyExists) {
-                let arpeggioType: Vex.Flow.Stroke.Type = Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+                let arpeggioType: string = "Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS";
                 const directionAttr: Attr = arpeggioNode.attribute("direction");
                 if (directionAttr !== null) {
                   switch (directionAttr.value) {
                     case "up":
-                      arpeggioType = Vex.Flow.Stroke.Type.ROLL_UP;
+                      arpeggioType = "Vex.Flow.Stroke.Type.ROLL_UP";
                       break;
                     case "down":
-                      arpeggioType = Vex.Flow.Stroke.Type.ROLL_DOWN;
+                      arpeggioType = "Vex.Flow.Stroke.Type.ROLL_DOWN";
                       break;
                     default:
-                      arpeggioType = Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+                      arpeggioType = "Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS";
                   }
                 }
 

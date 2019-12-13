@@ -50,9 +50,7 @@
     "es6-promise": "^4.2.5",
     "jszip": "^3.0.0",
     "loglevel": "^1.5.0",
-    "typescript-collections": "^1.1.2",
-    "@types/vexflow": "^1.2.33",
-    "vexflow": "^1.2.89"
+    "typescript-collections": "^1.1.2"
   },
   "devDependencies": {
     "@types/chai": "^4.0.3",

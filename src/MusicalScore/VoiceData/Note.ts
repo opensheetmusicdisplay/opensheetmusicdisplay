@@ -7,7 +7,6 @@ import {Tuplet} from "./Tuplet";
 import {Tie} from "./Tie";
 import {Staff} from "./Staff";
 import {Slur} from "./Expressions/ContinuousExpressions/Slur";
-import {NoteState} from "../Graphical/DrawingEnums";
 import {Notehead} from "./Notehead";
 import {Arpeggio} from "./Arpeggio";
 import {NoteType} from "./NoteType";
@@ -33,7 +32,7 @@ export class Note {
      * The transposed (!!!) HalfTone of this note.
      */
     public halfTone: number;
-    public state: NoteState;
+    public state: any;
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;

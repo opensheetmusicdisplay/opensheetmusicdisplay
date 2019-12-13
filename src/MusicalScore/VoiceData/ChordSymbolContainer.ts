@@ -1,7 +1,6 @@
-import {Pitch} from "../../Common/DataObjects/Pitch";
-import {KeyInstruction} from "./Instructions/KeyInstruction";
-import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
-import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
+import { Pitch } from "../../Common/DataObjects/Pitch";
+import { KeyInstruction } from "./Instructions/KeyInstruction";
+import { AccidentalEnum } from "../../Common/DataObjects/Pitch";
 
 export class ChordSymbolContainer {
     private rootPitch: Pitch;
@@ -39,28 +38,16 @@ export class ChordSymbolContainer {
     }
 
     public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number): string {
-        let transposedRootPitch: Pitch = chordSymbol.RootPitch;
-        if (MusicSheetCalculator.transposeCalculator !== undefined) {
-            transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
-                chordSymbol.RootPitch,
-                chordSymbol.KeyInstruction,
-                transposeHalftones
-            );
-        }
+        const transposedRootPitch: Pitch = chordSymbol.RootPitch;
+
         let text: string = Pitch.getNoteEnumString(transposedRootPitch.FundamentalNote);
         if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
             text += this.getTextForAccidental(transposedRootPitch.Accidental);
         }
         text += ChordSymbolContainer.getTextFromChordKindEnum(chordSymbol.ChordKind);
         if (chordSymbol.BassPitch !== undefined) {
-            let transposedBassPitch: Pitch = chordSymbol.BassPitch;
-            if (MusicSheetCalculator.transposeCalculator !== undefined) {
-                transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
-                    chordSymbol.BassPitch,
-                    chordSymbol.KeyInstruction,
-                    transposeHalftones
-                );
-            }
+            const transposedBassPitch: Pitch = chordSymbol.BassPitch;
+
             text += "/";
             text += Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote);
             text += this.getTextForAccidental(transposedBassPitch.Accidental);

@@ -2,7 +2,7 @@ import { VoiceEntry } from "./VoiceEntry";
 import { Note } from "./Note";
 
 export class Arpeggio {
-    constructor(parentVoiceEntry: VoiceEntry, type: Vex.Flow.Stroke.Type = Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS) {
+    constructor(parentVoiceEntry: VoiceEntry, type: string) {
         this.parentVoiceEntry = parentVoiceEntry;
         this.type = type;
         this.notes = [];
@@ -10,7 +10,7 @@ export class Arpeggio {
 
     public parentVoiceEntry: VoiceEntry;
     public notes: Note[];
-    public type: Vex.Flow.Stroke.Type;
+    public type: string;
 
     public addNote(note: Note): void {
         this.notes.push(note);

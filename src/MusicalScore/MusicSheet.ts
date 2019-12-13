@@ -12,8 +12,6 @@ import {VerticalSourceStaffEntryContainer} from "./VoiceData/VerticalSourceStaff
 import {Voice} from "./VoiceData/Voice";
 import {MusicSheetErrors} from "../Common/DataObjects/MusicSheetErrors";
 import {MultiTempoExpression} from "./VoiceData/Expressions/MultiTempoExpression";
-import {EngravingRules} from "./Graphical/EngravingRules";
-import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
 import * as log from "loglevel";
@@ -32,7 +30,7 @@ export class PlaybackSettings {
  */
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
-        this.rules = EngravingRules.Rules;
+        this.rules = {};
         this.playbackSettings = new PlaybackSettings();
         // FIXME?
         // initialize SheetPlaybackSetting with default values
@@ -47,7 +45,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
 
     public userStartTempoInBPM: number;
     public pageWidth: number;
-    public rules: EngravingRules;
+    public rules: any;
 
     private idString: string = "random idString, not initialized";
     private sourceMeasures: SourceMeasure[] = [];
@@ -77,7 +75,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private hasBeenOpenedForTheFirstTime: boolean = false;
     private currentEnrolledPosition: Fraction = new Fraction(0, 1);
     // (*) private musicSheetParameterObject: MusicSheetParameterObject = undefined;
-    private engravingRules: EngravingRules;
+    private engravingRules: any;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
     /*
      * The BPM info is present in the sheet, if it is set to false, means each measure's
@@ -214,10 +212,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public set Lyricist(value: Label) {
         this.lyricist = value;
     }
-    public get Rules(): EngravingRules {
+    public get Rules(): any {
        return this.engravingRules;
     }
-    public set Rules(value: EngravingRules) {
+    public set Rules(value: any) {
        this.engravingRules = value;
     }
     public get SheetErrors(): MusicSheetErrors {
@@ -345,7 +343,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
                const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
                for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                    const note: Note = voiceEntry.Notes[idx2];
-                   note.state = NoteState.Normal;
+                   note.state = {};
                }
            }
            iterator.moveToNext();

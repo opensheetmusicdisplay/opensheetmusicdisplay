@@ -1,4 +1,3 @@
-import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
 
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
@@ -23,7 +22,7 @@ export interface IOSMDOptions {
     /** Defines the mode that is used for coloring: XML (0), Boomwhacker(1), CustomColorSet (2). Default XML.
      *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
      */
-    coloringMode?: ColoringModes;
+    coloringMode?: any;
     /** Set of 8 colors for automatic coloring of 7 notes from C to B + rest note in HTML form (e.g. "#00ff00" for green).  */
     coloringSetCustom?: string[];
     /** Whether to enable coloring noteheads and stems, depending on coloringMode. */
@@ -55,7 +54,7 @@ export interface IOSMDOptions {
     /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */
     followCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
-    drawingParameters?: string | DrawingParametersEnum;
+    drawingParameters?: string | any;
     /** Whether to draw credits (title, subtitle, composer, lyricist) (in future: copyright etc., see <credit>). */
     drawCredits?: boolean;
     /** Whether to draw the title of the piece. If false, disables drawing Subtitle as well. */
@@ -133,7 +132,7 @@ export class OSMDOptions {
         return {
             autoResize: true,
             backend: "svg",
-            drawingParameters: DrawingParametersEnum.default,
+            drawingParameters: {},
         };
     }
 }
