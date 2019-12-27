@@ -26,6 +26,7 @@ import { Label } from "../Label";
  */
 export abstract class MusicSystem extends GraphicalObject {
     public needsToBeRedrawn: boolean = true;
+    public rules: EngravingRules;
     protected parent: GraphicalMusicPage;
     protected id: number;
     protected staffLines: StaffLine[] = [];
@@ -43,7 +44,6 @@ export abstract class MusicSystem extends GraphicalObject {
     protected graphicalMarkedAreas: GraphicalMarkedArea[] = [];
     protected graphicalComments: GraphicalComment[] = [];
     protected systemLines: SystemLine[] = [];
-    protected rules: EngravingRules;
 
     constructor(parent: GraphicalMusicPage, id: number) {
         super();
@@ -286,7 +286,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const instrument: Instrument = instruments[idx];
                 let instrNameLabel: Label;
                 if (this !== this.parent.MusicSystems[0]) {
-                    if (!EngravingRules.Rules.RenderPartAbbreviations
+                    if (!this.rules.RenderPartAbbreviations
                         // don't render part abbreviations if there's only one instrument/part (could be an option in the future)
                         || this.Parent.Parent.ParentMusicSheet.Instruments.length === 1
                         || !instrument.PartAbbreviation
@@ -298,7 +298,7 @@ export abstract class MusicSystem extends GraphicalObject {
                     instrNameLabel = new Label(labelText, instrument.NameLabel.textAlignment, instrument.NameLabel.font);
                 } else {
                     instrNameLabel = instrument.NameLabel;
-                    if (!EngravingRules.Rules.RenderPartNames) {
+                    if (!this.rules.RenderPartNames) {
                         instrNameLabel = new Label("", instrument.NameLabel.textAlignment, instrument.NameLabel.font);
                         systemLabelsRightMargin = 0; // might affect lyricist/tempo placement. but without this there's still some extra x-spacing.
                     }

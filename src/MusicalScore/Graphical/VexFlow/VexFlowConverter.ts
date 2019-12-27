@@ -166,6 +166,7 @@ export class VexFlowConverter {
         } */
         // VexFlow needs the notes ordered vertically in the other direction:
         const notes: GraphicalNote[] = gve.notes.reverse();
+        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentMusicSystem.rules;
 
         const baseNote: GraphicalNote = notes[0];
         let keys: string[] = [];
@@ -201,7 +202,7 @@ export class VexFlowConverter {
                     // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
                     // if the measure has no modifiers.
                     alignCenter = true;
-                    xShift = EngravingRules.Rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
+                    xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
                     // affects VexFlowStaffEntry.calculateXPosition()
                 }
                 break;
@@ -258,8 +259,8 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        if (EngravingRules.Rules.ColoringEnabled) {
-            const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
+        if (rules.ColoringEnabled) {
+            const defaultColorStem: string = rules.DefaultColorStem;
             let stemColor: string = gve.parentVoiceEntry.StemColor;
             if (!stemColor && defaultColorStem) {
                 stemColor = defaultColorStem;
@@ -269,7 +270,7 @@ export class VexFlowConverter {
             if (stemColor) {
                 gve.parentVoiceEntry.StemColor = stemColor;
                 vfnote.setStemStyle(stemStyle);
-                if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
+                if (vfnote.flag && rules.ColorFlags) {
                     vfnote.setFlagStyle(stemStyle);
                 }
             }

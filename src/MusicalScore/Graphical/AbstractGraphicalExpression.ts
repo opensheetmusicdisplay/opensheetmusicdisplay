@@ -11,7 +11,7 @@ export abstract class AbstractGraphicalExpression extends GraphicalObject {
     /** Internal cache of read expression */
     protected expression: AbstractExpression;
     /** EngravingRules for positioning */
-    protected rules: EngravingRules = EngravingRules.Rules;
+    protected rules: EngravingRules;
 
     constructor(parentStaffline: StaffLine, expression: AbstractExpression) {
         super();
@@ -19,6 +19,7 @@ export abstract class AbstractGraphicalExpression extends GraphicalObject {
         this.boundingBox = new BoundingBox(this, parentStaffline.PositionAndShape);
         this.parentStaffLine = parentStaffline;
         this.parentStaffLine.AbstractExpressions.push(this);
+        this.rules = parentStaffline.ParentMusicSystem.rules;
     }
 
     /** Graphical label of the expression if available */

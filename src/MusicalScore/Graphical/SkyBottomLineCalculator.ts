@@ -30,7 +30,7 @@ export class SkyBottomLineCalculator {
      */
     constructor(staffLineParent: StaffLine) {
         this.mStaffLineParent = staffLineParent;
-        this.mRules = EngravingRules.Rules;
+        this.mRules = staffLineParent.ParentMusicSystem.rules;
     }
 
     /**
