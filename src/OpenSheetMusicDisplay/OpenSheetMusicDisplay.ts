@@ -225,6 +225,7 @@ export class OpenSheetMusicDisplay {
         }
         if (!this.drawingParameters) {
             this.drawingParameters = new DrawingParameters();
+            this.drawingParameters.Rules = this.rules;
         }
         if (options === undefined || options === null) {
             log.warn("warning: osmd.setOptions() called without an options parameter, has no effect."
