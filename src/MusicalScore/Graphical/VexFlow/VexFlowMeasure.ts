@@ -101,9 +101,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         // the correct bar types seem to be set later
 
-        //if (nextMeasureIndex >= EngravingRules.Rules.MinMeasureToDrawIndex && nextMeasureIndex <= EngravingRules.Rules.MaxMeasureToDrawIndex) {
-        //this.stave.setBegBarType(Vex.Flow.Barline.type.NONE);
-
         this.updateInstructionWidth();
     }
 
