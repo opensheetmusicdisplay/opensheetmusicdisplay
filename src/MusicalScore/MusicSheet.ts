@@ -32,7 +32,6 @@ export class PlaybackSettings {
  */
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
-        this.rules = EngravingRules.Rules;
         this.playbackSettings = new PlaybackSettings();
         // FIXME?
         // initialize SheetPlaybackSetting with default values
@@ -47,7 +46,6 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
 
     public userStartTempoInBPM: number;
     public pageWidth: number;
-    public rules: EngravingRules;
 
     private idString: string = "random idString, not initialized";
     private sourceMeasures: SourceMeasure[] = [];
@@ -77,7 +75,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private hasBeenOpenedForTheFirstTime: boolean = false;
     private currentEnrolledPosition: Fraction = new Fraction(0, 1);
     // (*) private musicSheetParameterObject: MusicSheetParameterObject = undefined;
-    private engravingRules: EngravingRules;
+    private rules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
     /*
      * The BPM info is present in the sheet, if it is set to false, means each measure's
@@ -215,10 +213,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.lyricist = value;
     }
     public get Rules(): EngravingRules {
-       return this.engravingRules;
+        return this.rules;
     }
     public set Rules(value: EngravingRules) {
-       this.engravingRules = value;
+        this.rules = value;
     }
     public get SheetErrors(): MusicSheetErrors {
         return this.musicSheetErrors;

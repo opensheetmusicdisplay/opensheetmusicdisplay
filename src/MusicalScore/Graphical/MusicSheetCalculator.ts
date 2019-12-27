@@ -108,7 +108,7 @@ export abstract class MusicSheetCalculator {
 
     public initialize(graphicalMusicSheet: GraphicalMusicSheet): void {
         this.graphicalMusicSheet = graphicalMusicSheet;
-        this.rules = graphicalMusicSheet.ParentMusicSheet.rules;
+        this.rules = graphicalMusicSheet.ParentMusicSheet.Rules;
         this.prepareGraphicalMusicSheet();
         //this.calculate();
     }
@@ -235,21 +235,21 @@ export abstract class MusicSheetCalculator {
         // xPosition is always fixed
         let relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin, 0);
 
-        if (EngravingRules.Rules.CompactMode) {
-            relativePosition.y += EngravingRules.Rules.PageTopMarginNarrow;
+        if (this.rules.CompactMode) {
+            relativePosition.y += this.rules.PageTopMarginNarrow;
         } else {
-            relativePosition.y += EngravingRules.Rules.PageTopMargin;
+            relativePosition.y += this.rules.PageTopMargin;
         }
 
         // first System is handled extra
         const firstMusicSystem: MusicSystem = graphicalMusicPage.MusicSystems[0];
         if (graphicalMusicPage === graphicalMusicPage.Parent.MusicPages[0]) {
-            if (EngravingRules.Rules.RenderTitle) {
+            if (this.rules.RenderTitle) {
                 relativePosition.y += this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
                     this.rules.TitleBottomDistance;
             }
         } else {
-            if (EngravingRules.Rules.RenderTitle) {
+            if (this.rules.RenderTitle) {
                 relativePosition.y += this.rules.PageTopMargin + this.rules.TitleTopDistance;
             } else {
                 relativePosition.y = this.rules.PageTopMargin;
@@ -669,15 +669,15 @@ export abstract class MusicSheetCalculator {
         if (allMeasures === undefined) {
             return;
         }
-        if (EngravingRules.Rules.MinMeasureToDrawIndex > allMeasures.length - 1) {
+        if (this.rules.MinMeasureToDrawIndex > allMeasures.length - 1) {
             log.debug("minimum measure to draw index out of range. resetting min measure index to limit.");
-            EngravingRules.Rules.MinMeasureToDrawIndex = allMeasures.length - 1;
+            this.rules.MinMeasureToDrawIndex = allMeasures.length - 1;
         }
 
         // visible 2D-MeasureList
         const visibleMeasureList: GraphicalMeasure[][] = [];
-        for (let idx: number = EngravingRules.Rules.MinMeasureToDrawIndex, len: number = allMeasures.length;
-            idx < len && idx <= EngravingRules.Rules.MaxMeasureToDrawIndex; ++idx) {
+        for (let idx: number = this.rules.MinMeasureToDrawIndex, len: number = allMeasures.length;
+            idx < len && idx <= this.rules.MaxMeasureToDrawIndex; ++idx) {
             const graphicalMeasures: GraphicalMeasure[] = allMeasures[idx];
             const visiblegraphicalMeasures: GraphicalMeasure[] = [];
             for (let idx2: number = 0, len2: number = graphicalMeasures.length; idx2 < len2; ++idx2) {
@@ -686,7 +686,7 @@ export abstract class MusicSheetCalculator {
                 if (graphicalMeasure.isVisible()) {
                     visiblegraphicalMeasures.push(graphicalMeasure);
 
-                    if (EngravingRules.Rules.ColoringEnabled) {
+                    if (this.rules.ColoringEnabled) {
                         // (re-)color notes
                         for (const staffEntry of graphicalMeasure.staffEntries) {
                             for (const gve of staffEntry.graphicalVoiceEntries) {
@@ -729,7 +729,7 @@ export abstract class MusicSheetCalculator {
             this.optimizeRestPlacement();
             // possible Displacement of RestNotes
             this.calculateStaffEntryArticulationMarks();
-            if (EngravingRules.Rules.RenderSlurs) { // technically we should separate slurs and ties, but shouldn't be relevant for now
+            if (this.rules.RenderSlurs) { // technically we should separate slurs and ties, but shouldn't be relevant for now
                 // calculate Ties
                 this.calculateTieCurves();
             }
@@ -741,7 +741,7 @@ export abstract class MusicSheetCalculator {
         this.calculateTupletNumbers();
 
         // calculate MeasureNumbers
-        if (EngravingRules.Rules.RenderMeasureNumbers) {
+        if (this.rules.RenderMeasureNumbers) {
             for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
                 const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
                 for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
@@ -751,7 +751,7 @@ export abstract class MusicSheetCalculator {
             }
         }
         // calculate Slurs
-        if (!this.leadSheet && EngravingRules.Rules.RenderSlurs) {
+        if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
         }
         // calculate StaffEntry Ornaments
@@ -1377,7 +1377,7 @@ export abstract class MusicSheetCalculator {
 
         if (multiTempoExpression.ContinuousTempo || multiTempoExpression.InstantaneousTempo) {
             // TempoExpressions always on the first visible System's StaffLine // TODO is it though?
-            if (EngravingRules.Rules.MinMeasureToDrawIndex > 0) {
+            if (this.rules.MinMeasureToDrawIndex > 0) {
                 return; // assuming that the tempo is always in measure 1 (idx 0), adding the expression causes issues when we don't draw measure 1
             }
             let staffLine: StaffLine = measures[0].ParentStaffLine;
@@ -1418,7 +1418,7 @@ export abstract class MusicSheetCalculator {
                         const lastInstruction: AbstractGraphicalInstruction = firstInstructionEntry.GraphicalInstructions.last();
                         relative.x = lastInstruction.PositionAndShape.RelativePosition.x;
                     }
-                    if (EngravingRules.Rules.CompactMode) {
+                    if (this.rules.CompactMode) {
                         relative.x = staffLine.PositionAndShape.RelativePosition.x +
                             staffLine.Measures[0].PositionAndShape.RelativePosition.x;
                     }
@@ -1428,7 +1428,7 @@ export abstract class MusicSheetCalculator {
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
                 let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
-                if (EngravingRules.Rules.CompactMode) {
+                if (this.rules.CompactMode) {
                     textAlignment = TextAlignmentEnum.LeftBottom;
                 }
                 const graphLabel: GraphicalLabel = this.calculateLabel(staffLine,
@@ -1436,7 +1436,7 @@ export abstract class MusicSheetCalculator {
                                                                        entry.label,
                                                                        multiTempoExpression.getFontstyleOfFirstEntry(),
                                                                        entry.Expression.Placement,
-                                                                       EngravingRules.Rules.UnknownTextHeight,
+                                                                       this.rules.UnknownTextHeight,
                                                                        textAlignment);
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
@@ -1538,7 +1538,7 @@ export abstract class MusicSheetCalculator {
                                octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
         if (voiceEntry.StemDirectionXml !== StemDirectionType.Undefined &&
-            EngravingRules.Rules.SetWantedStemDirectionByXml &&
+            this.rules.SetWantedStemDirectionByXml &&
             voiceEntry.StemDirectionXml !== undefined) {
                 voiceEntry.WantedStemDirection = voiceEntry.StemDirectionXml;
         } else {
@@ -1616,7 +1616,7 @@ export abstract class MusicSheetCalculator {
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
             if (instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
                 let renderedLabel: Label = instrument.NameLabel;
-                if (!EngravingRules.Rules.RenderPartNames) {
+                if (!this.rules.RenderPartNames) {
                     renderedLabel = new Label("", renderedLabel.textAlignment, renderedLabel.font);
                 }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
@@ -1625,7 +1625,7 @@ export abstract class MusicSheetCalculator {
                 maxLabelLength = Math.max(maxLabelLength, graphicalLabel.PositionAndShape.MarginSize.width);
             }
         }
-        if (!EngravingRules.Rules.RenderPartNames) {
+        if (!this.rules.RenderPartNames) {
             return 0;
         }
         return maxLabelLength;
@@ -1633,37 +1633,37 @@ export abstract class MusicSheetCalculator {
 
     protected calculateSheetLabelBoundingBoxes(): void {
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
-        const defaultColorTitle: string = EngravingRules.Rules.DefaultColorTitle; // can be undefined => black
-        if (musicSheet.Title !== undefined && EngravingRules.Rules.RenderTitle) {
+        const defaultColorTitle: string = this.rules.DefaultColorTitle; // can be undefined => black
+        if (musicSheet.Title !== undefined && this.rules.RenderTitle) {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
             title.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
-        } else if (!EngravingRules.Rules.RenderTitle) {
+        } else if (!this.rules.RenderTitle) {
             this.graphicalMusicSheet.Title = undefined; // clear label if rendering it was disabled after last render
         }
-        if (musicSheet.Subtitle !== undefined && EngravingRules.Rules.RenderSubtitle) {
+        if (musicSheet.Subtitle !== undefined && this.rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = new GraphicalLabel(musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter);
             subtitle.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
-        } else if (!EngravingRules.Rules.RenderSubtitle) {
+        } else if (!this.rules.RenderSubtitle) {
             this.graphicalMusicSheet.Subtitle = undefined;
         }
-        if (musicSheet.Composer !== undefined && EngravingRules.Rules.RenderComposer) {
+        if (musicSheet.Composer !== undefined && this.rules.RenderComposer) {
             const composer: GraphicalLabel = new GraphicalLabel(musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter);
             composer.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
-        } else if (!EngravingRules.Rules.RenderComposer) {
+        } else if (!this.rules.RenderComposer) {
             this.graphicalMusicSheet.Composer = undefined;
         }
-        if (musicSheet.Lyricist !== undefined && EngravingRules.Rules.RenderLyricist) {
+        if (musicSheet.Lyricist !== undefined && this.rules.RenderLyricist) {
             const lyricist: GraphicalLabel = new GraphicalLabel(musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter);
             lyricist.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();
-        } else if (!EngravingRules.Rules.RenderLyricist) {
+        } else if (!this.rules.RenderLyricist) {
             this.graphicalMusicSheet.Lyricist = undefined;
         }
     }
@@ -2085,7 +2085,7 @@ export abstract class MusicSheetCalculator {
         }
         // if there are no staffEntries in this measure, create a rest for the whole measure:
         // check OSMDOptions.fillEmptyMeasuresWithWholeRest
-        if (EngravingRules.Rules.FillEmptyMeasuresWithWholeRest >= 1) { // fill measures with no notes given with whole rests, visible (1) or invisible (2)
+        if (this.rules.FillEmptyMeasuresWithWholeRest >= 1) { // fill measures with no notes given with whole rests, visible (1) or invisible (2)
             if (measure.staffEntries.length === 0) {
                 const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(
                     new VerticalSourceStaffEntryContainer(measure.parentSourceMeasure,
@@ -2094,7 +2094,7 @@ export abstract class MusicSheetCalculator {
                     staff);
                 const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
                 const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
-                note.PrintObject = EngravingRules.Rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
+                note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                   // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
                 const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
@@ -2647,8 +2647,8 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateDynamicExpressions(): void {
-        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, EngravingRules.Rules.MaxMeasureToDrawIndex);
-        const minIndex: number = Math.min(EngravingRules.Rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
+        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
+        const minIndex: number = Math.min(this.rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
         for (let i: number = minIndex; i <= maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
@@ -2729,8 +2729,8 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateTempoExpressions(): void {
-        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, EngravingRules.Rules.MaxMeasureToDrawIndex);
-        const minIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
+        const minIndex: number = this.rules.MinMeasureToDrawIndex;
         for (let i: number = minIndex; i <= maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.TempoExpressions.length; j++) {

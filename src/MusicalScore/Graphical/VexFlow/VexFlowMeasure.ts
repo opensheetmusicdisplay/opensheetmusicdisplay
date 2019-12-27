@@ -27,7 +27,7 @@ import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {Voice} from "../../VoiceData/Voice";
 import {LinkedVoice} from "../../VoiceData/LinkedVoice";
-import {EngravingRules} from "../EngravingRules";
+import { EngravingRules } from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
@@ -68,6 +68,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
     private tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
     /** VexFlow Tuplets */
     private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
+    // The engraving rules of OSMD.
+    private rules: EngravingRules = this.parentMusicSystem.rules;
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
@@ -616,7 +618,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         if (entry.parentVoiceEntry.IsGrace) {
                             isGraceBeam = true;
                         }
-                        if (entry.parentVoiceEntry.StemColor && EngravingRules.Rules.ColoringEnabled) {
+                        if (entry.parentVoiceEntry.StemColor && this.rules.ColoringEnabled) {
                             stemColors.push(entry.parentVoiceEntry.StemColor);
                         }
                     }
@@ -627,7 +629,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             (<any>vfBeam).render_options.beam_width = 3;
                             (<any>vfBeam).render_options.partial_beam_length = 4;
                         }
-                        if (stemColors.length >= 2 && EngravingRules.Rules.ColorBeams) {
+                        if (stemColors.length >= 2 && this.rules.ColorBeams) {
                             beamColor = stemColors[0];
                             for (const stemColor of stemColors) {
                                 if (stemColor !== beamColor) {
@@ -644,13 +646,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
             }
         }
-        if (EngravingRules.Rules.AutoBeamNotes) {
+        if (this.rules.AutoBeamNotes) {
             this.autoBeamNotes(beamedNotes); // try to autobeam notes except those that are already beamed (beamedNotes).
         }
     }
 
     /** Automatically creates beams for notes except beamedNotes, using Vexflow's Beam.generateBeams().
-     *  Takes options from EngravingRules.Rules.AutoBeamOptions.
+     *  Takes options from this.rules.AutoBeamOptions.
      * @param beamedNotes notes that will not be autobeamed (usually because they are already beamed)
      */
     private autoBeamNotes(beamedNotes: StemmableNote[]): void {
@@ -719,7 +721,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             //   however, taking the note length as fraction is tricky because of tuplets.
                             //   a quarter in a triplet has length < quarter, but quarter note head, which Vexflow can't beam.
                                 note.ParentVoiceEntry.IsGrace ||
-                                note.isRest() && !EngravingRules.Rules.AutoBeamOptions.beam_rests) {
+                                note.isRest() && !this.rules.AutoBeamOptions.beam_rests) {
                                 tupletContainsUnbeamableNote = true;
                                 break;
                             }
@@ -762,7 +764,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
 
         // create options for generateBeams
-        const autoBeamOptions: AutoBeamOptions = EngravingRules.Rules.AutoBeamOptions;
+        const autoBeamOptions: AutoBeamOptions = this.rules.AutoBeamOptions;
         const generateBeamOptions: any = {
             beam_middle_only: autoBeamOptions.beam_middle_rests_only,
             beam_rests: autoBeamOptions.beam_rests,
@@ -808,14 +810,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       const tuplet: Tuplet = tupletBuilder[0];
                       const notesOccupied: number = tuplet.Notes[0][0].NormalNotes;
                       const bracketed: boolean = tuplet.Bracket ||
-                        (tuplet.TupletLabelNumber === 3 && EngravingRules.Rules.TripletsBracketed) ||
-                        (tuplet.TupletLabelNumber !== 3 && EngravingRules.Rules.TupletsBracketed);
+                        (tuplet.TupletLabelNumber === 3 && this.rules.TripletsBracketed) ||
+                        (tuplet.TupletLabelNumber !== 3 && this.rules.TupletsBracketed);
                       vftuplets.push(new Vex.Flow.Tuplet( tupletStaveNotes,
                                                           {
                                                             bracketed: bracketed,
                                                             notes_occupied: notesOccupied,
                                                             num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
-                                                            ratioed: EngravingRules.Rules.TupletsRatioed,
+                                                            ratioed: this.rules.TupletsRatioed,
                                                           }));
                     } else {
                         log.debug("Warning! Tuplet with no notes! Trying to ignore, but this is a serious problem.");
@@ -933,7 +935,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
 
                 // add fingering
-                if (voiceEntry.parentVoiceEntry && EngravingRules.Rules.RenderFingerings) {
+                if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
                     this.createFingerings(voiceEntry);
                 }
 
@@ -945,12 +947,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     if (voiceEntry.notes && voiceEntry.notes.length > 1) {
                         const type: Vex.Flow.Stroke.Type = arpeggio.type;
                         const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
-                            all_voices: EngravingRules.Rules.ArpeggiosGoAcrossVoices
+                            all_voices: this.rules.ArpeggiosGoAcrossVoices
                             // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
                             // also, this can cause infinite height of stroke, see #546
                         });
                         //if (arpeggio.notes.length === vexFlowVoiceEntry.notes.length) { // different workaround for endless y bug
-                        if (EngravingRules.Rules.RenderArpeggios) {
+                        if (this.rules.RenderArpeggios) {
                             vexFlowVoiceEntry.vfStaveNote.addStroke(0, stroke);
                         }
                     } else {
@@ -1038,7 +1040,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const fingeringsCount: number = technicalInstructions.length;
         for (let i: number = 0; i < technicalInstructions.length; i++) {
             const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
-            let fingeringPosition: PlacementEnum = EngravingRules.Rules.FingeringPosition;
+            let fingeringPosition: PlacementEnum = this.rules.FingeringPosition;
             if (technicalInstruction.placement !== PlacementEnum.NotYetDefined) {
                 fingeringPosition = technicalInstruction.placement;
             }
@@ -1076,13 +1078,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
                 const ordering: number = fingeringPosition === PlacementEnum.Above ? i :
                     technicalInstructions.length - 1 - i; // reverse order for fingerings below staff
-                if (EngravingRules.Rules.FingeringInsideStafflines && fingeringsCount > 1) { // y-shift for single fingering is ok
+                if (this.rules.FingeringInsideStafflines && fingeringsCount > 1) { // y-shift for single fingering is ok
                     // experimental, bounding boxes wrong for fretFinger above/below, better would be creating Labels
                     // set y-shift. vexflow fretfinger simply places directly above/below note
                     const perFingeringShift: number = fretFinger.getWidth() / 2;
                     const shiftCount: number = fingeringsCount * 2.5;
                     (<any>fretFinger).setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
-                } else if (!EngravingRules.Rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
+                } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(technicalInstruction.value);
                     (<any>stringNumber).radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);

@@ -45,7 +45,7 @@ export class MusicSystemBuilder {
         graphicalMusicSheet: GraphicalMusicSheet, measureList: GraphicalMeasure[][], numberOfStaffLines: number): void {
         this.leadSheet = graphicalMusicSheet.LeadSheet;
         this.graphicalMusicSheet = graphicalMusicSheet;
-        this.rules = this.graphicalMusicSheet.ParentMusicSheet.rules;
+        this.rules = this.graphicalMusicSheet.ParentMusicSheet.Rules;
         this.measureList = measureList;
         this.currentMusicPage = this.createMusicPage();
         this.currentPageHeight = 0.0;
@@ -336,7 +336,7 @@ export class MusicSystemBuilder {
             const relativePosition: PointF2D = new PointF2D();
             if (musicSystem.Parent.MusicSystems[0] === musicSystem &&
                 musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0] &&
-                !EngravingRules.Rules.CompactMode) {
+                !this.rules.CompactMode) {
                 relativePosition.x = this.rules.FirstSystemMargin;
                 boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width - this.rules.FirstSystemMargin;
             } else {

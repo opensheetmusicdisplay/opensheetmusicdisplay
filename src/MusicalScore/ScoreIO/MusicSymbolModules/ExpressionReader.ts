@@ -16,7 +16,6 @@ import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {TextAlignmentEnum} from "../../../Common/Enums/TextAlignment";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import * as log from "loglevel";
-import { EngravingRules } from "../../Graphical/EngravingRules";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -544,7 +543,7 @@ export class ExpressionReader {
             }
         }
         let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
-        if (EngravingRules.Rules.CompactMode) {
+        if (this.musicSheet.Rules.CompactMode) {
             textAlignment = TextAlignmentEnum.LeftBottom;
         }
         const unknownExpression: UnknownExpression = new UnknownExpression(

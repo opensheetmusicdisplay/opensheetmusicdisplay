@@ -17,7 +17,6 @@ import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { StaffLine } from "../StaffLine";
-import { EngravingRules } from "../EngravingRules";
 import { GraphicalSlur } from "../GraphicalSlur";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalInstantaneousTempoExpression } from "../GraphicalInstantaneousTempoExpression";
@@ -42,6 +41,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 backend: VexFlowBackend,
                 drawingParameters: DrawingParameters = new DrawingParameters()) {
         super(new VexFlowTextMeasurer(), drawingParameters);
+
         this.backend = backend;
     }
 
@@ -83,7 +83,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawStaffLine(staffLine: StaffLine): void {
         super.drawStaffLine(staffLine);
         const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
-        if (EngravingRules.Rules.RenderSlurs) {
+        if (this.rules.RenderSlurs) {
             this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
         }
     }
@@ -195,7 +195,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         const absolute: PointF2D = startPosition;
         if (indices.length > 0) {
-            const samplingUnit: number = EngravingRules.Rules.SamplingUnit;
+            const samplingUnit: number = this.rules.SamplingUnit;
 
             let horizontalStart: PointF2D = new PointF2D(absolute.x, absolute.y);
             let horizontalEnd: PointF2D = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y);
@@ -246,7 +246,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 this.drawLabel(graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
             }
         }
-        if (EngravingRules.Rules.RenderLyrics) {
+        if (this.rules.RenderLyrics) {
             if (staffEntry.LyricsEntries.length > 0) {
                 this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
             }
@@ -363,10 +363,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { fontStyle, font, text } = graphicalLabel.Label;
         let color: string;
-        if (EngravingRules.Rules.ColoringEnabled) {
+        if (this.rules.ColoringEnabled) {
             color = graphicalLabel.Label.colorDefault;
             if (!color) {
-                color = EngravingRules.Rules.DefaultColorLabel;
+                color = this.rules.DefaultColorLabel;
             }
         }
         this.backend.renderText(height, fontStyle, font, text, heightInPixel, screenPosition, color);

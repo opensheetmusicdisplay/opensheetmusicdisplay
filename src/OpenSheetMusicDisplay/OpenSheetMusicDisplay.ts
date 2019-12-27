@@ -148,6 +148,8 @@ export class OpenSheetMusicDisplay {
         if (this.sheet === undefined) {
             // error loading sheet, probably already logged, do nothing
             return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
+        } else {
+            this.sheet.Rules = this.rules;
         }
         log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
 
