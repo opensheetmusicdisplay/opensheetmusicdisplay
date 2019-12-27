@@ -122,10 +122,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         // this method name should remain for a while to maintain compatibility even when Instrument is renamed to Part
         return this.instruments;
     }
-     public get SheetPlaybackSetting(): PlaybackSettings {
+    public get SheetPlaybackSetting(): PlaybackSettings {
         return this.playbackSettings;
     }
-     public set SheetPlaybackSetting(value: PlaybackSettings) {
+    public set SheetPlaybackSetting(value: PlaybackSettings) {
         this.playbackSettings = value;
     }
     public get DrawErroneousMeasures(): boolean {
@@ -337,17 +337,17 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return this.sourceMeasures[this.sourceMeasures.length - 1];
     }
     public resetAllNoteStates(): void {
-       const iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
-       while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
-           for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
-               const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
-               for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-                   const note: Note = voiceEntry.Notes[idx2];
-                   note.state = NoteState.Normal;
-               }
-           }
-           iterator.moveToNext();
-       }
+        const iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
+        while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
+            for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
+                const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
+                for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
+                    const note: Note = voiceEntry.Notes[idx2];
+                    note.state = NoteState.Normal;
+                }
+            }
+            iterator.moveToNext();
+        }
     }
     public getMusicSheetInstrumentIndex(instrument: Instrument): number {
         return this.Instruments.indexOf(instrument);
@@ -496,13 +496,13 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    this.musicSheetParameterChangedDelegate = value;
     //}
     public get FullNameString(): string {
-       return this.ComposerString + " " + this.TitleString;
+        return this.ComposerString + " " + this.TitleString;
     }
     public get IdString(): string {
-       return this.idString;
+        return this.idString;
     }
     public set IdString(value: string) {
-       this.idString = value;
+        this.idString = value;
     }
     // (*)
     // public Dispose(): void {
