@@ -70,6 +70,7 @@ export class OpenSheetMusicDisplay {
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
     private drawingParameters: DrawingParameters;
+    private rules: EngravingRules;
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
     private followCursor: boolean;
@@ -217,6 +218,9 @@ export class OpenSheetMusicDisplay {
      *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
      */
     public setOptions(options: IOSMDOptions): void {
+        if (!this.rules) {
+            this.rules = new EngravingRules();
+        }
         if (!this.drawingParameters) {
             this.drawingParameters = new DrawingParameters();
         }
@@ -255,14 +259,14 @@ export class OpenSheetMusicDisplay {
 
         // individual drawing parameters options
         if (options.autoBeam !== undefined) {
-            EngravingRules.Rules.AutoBeamNotes = options.autoBeam;
+            this.rules.AutoBeamNotes = options.autoBeam;
         }
         const autoBeamOptions: AutoBeamOptions = options.autoBeamOptions;
         if (autoBeamOptions) {
             if (autoBeamOptions.maintain_stem_directions === undefined) {
                 autoBeamOptions.maintain_stem_directions = false;
             }
-            EngravingRules.Rules.AutoBeamOptions = autoBeamOptions;
+            this.rules.AutoBeamOptions = autoBeamOptions;
             if (autoBeamOptions.groups && autoBeamOptions.groups.length) {
                 for (const fraction of autoBeamOptions.groups) {
                     if (fraction.length !== 2) {
@@ -273,16 +277,16 @@ export class OpenSheetMusicDisplay {
         }
 
         if (options.alignRests !== undefined) {
-            EngravingRules.Rules.AlignRests = options.alignRests;
+            this.rules.AlignRests = options.alignRests;
         }
         if (options.coloringMode !== undefined) {
             this.setColoringMode(options);
         }
         if (options.coloringEnabled !== undefined) {
-            EngravingRules.Rules.ColoringEnabled = options.coloringEnabled;
+            this.rules.ColoringEnabled = options.coloringEnabled;
         }
         if (options.colorStemsLikeNoteheads !== undefined) {
-            EngravingRules.Rules.ColorStemsLikeNoteheads = options.colorStemsLikeNoteheads;
+            this.rules.ColorStemsLikeNoteheads = options.colorStemsLikeNoteheads;
         }
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
@@ -312,70 +316,70 @@ export class OpenSheetMusicDisplay {
             this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
         }
         if (options.drawPartAbbreviations !== undefined) {
-            EngravingRules.Rules.RenderPartAbbreviations = options.drawPartAbbreviations;
+            this.rules.RenderPartAbbreviations = options.drawPartAbbreviations;
         }
         if (options.drawFingerings === false) {
-            EngravingRules.Rules.RenderFingerings = false;
+            this.rules.RenderFingerings = false;
         }
         if (options.drawMeasureNumbers !== undefined) {
-            EngravingRules.Rules.RenderMeasureNumbers = options.drawMeasureNumbers;
+            this.rules.RenderMeasureNumbers = options.drawMeasureNumbers;
         }
         if (options.drawLyrics !== undefined) {
-            EngravingRules.Rules.RenderLyrics = options.drawLyrics;
+            this.rules.RenderLyrics = options.drawLyrics;
         }
         if (options.drawSlurs !== undefined) {
-            EngravingRules.Rules.RenderSlurs = options.drawSlurs;
+            this.rules.RenderSlurs = options.drawSlurs;
         }
         if (options.measureNumberInterval !== undefined) {
-            EngravingRules.Rules.MeasureNumberLabelOffset = options.measureNumberInterval;
+            this.rules.MeasureNumberLabelOffset = options.measureNumberInterval;
         }
         if (options.fingeringPosition !== undefined) {
-            EngravingRules.Rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
+            this.rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
         }
         if (options.fingeringInsideStafflines !== undefined) {
-            EngravingRules.Rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
+            this.rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
         }
         if (options.fillEmptyMeasuresWithWholeRest !== undefined) {
-            EngravingRules.Rules.FillEmptyMeasuresWithWholeRest = options.fillEmptyMeasuresWithWholeRest;
+            this.rules.FillEmptyMeasuresWithWholeRest = options.fillEmptyMeasuresWithWholeRest;
         }
         if (options.followCursor !== undefined) {
             this.FollowCursor = options.followCursor;
         }
         if (options.setWantedStemDirectionByXml !== undefined) {
-            EngravingRules.Rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
+            this.rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
         }
         if (options.defaultColorNotehead) {
-            EngravingRules.Rules.DefaultColorNotehead = options.defaultColorNotehead;
+            this.rules.DefaultColorNotehead = options.defaultColorNotehead;
         }
         if (options.defaultColorRest) {
-            EngravingRules.Rules.DefaultColorRest = options.defaultColorRest;
+            this.rules.DefaultColorRest = options.defaultColorRest;
         }
         if (options.defaultColorStem) {
-            EngravingRules.Rules.DefaultColorStem = options.defaultColorStem;
+            this.rules.DefaultColorStem = options.defaultColorStem;
         }
         if (options.defaultColorLabel) {
-            EngravingRules.Rules.DefaultColorLabel = options.defaultColorLabel;
+            this.rules.DefaultColorLabel = options.defaultColorLabel;
         }
         if (options.defaultColorTitle) {
-            EngravingRules.Rules.DefaultColorTitle = options.defaultColorTitle;
+            this.rules.DefaultColorTitle = options.defaultColorTitle;
         }
         if (options.defaultFontFamily) {
-            EngravingRules.Rules.DefaultFontFamily = options.defaultFontFamily; // default "Times New Roman", also used if font family not found
+            this.rules.DefaultFontFamily = options.defaultFontFamily; // default "Times New Roman", also used if font family not found
         }
         if (options.drawUpToMeasureNumber) {
-            EngravingRules.Rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber - 1;
+            this.rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber - 1;
         }
         if (options.drawFromMeasureNumber) {
-            EngravingRules.Rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
+            this.rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
         }
         if (options.tupletsRatioed) {
-            EngravingRules.Rules.TupletsRatioed = true;
+            this.rules.TupletsRatioed = true;
         }
         if (options.tupletsBracketed) {
-            EngravingRules.Rules.TupletsBracketed = true;
+            this.rules.TupletsBracketed = true;
         }
         if (options.tripletsBracketed) {
-            EngravingRules.Rules.TripletsBracketed = true;
+            this.rules.TripletsBracketed = true;
         }
         if (options.autoResize) {
             if (!this.resizeHandlerAttached) {
@@ -390,7 +394,7 @@ export class OpenSheetMusicDisplay {
 
     public setColoringMode(options: IOSMDOptions): void {
         if (options.coloringMode === ColoringModes.XML) {
-            EngravingRules.Rules.ColoringMode = ColoringModes.XML;
+            this.rules.ColoringMode = ColoringModes.XML;
             return;
         }
         const noteIndices: NoteEnum[] = [NoteEnum.C, NoteEnum.D, NoteEnum.E, NoteEnum.F, NoteEnum.G, NoteEnum.A, NoteEnum.B, -1];
@@ -421,9 +425,9 @@ export class OpenSheetMusicDisplay {
             coloringSetCurrent.setValue(noteIndices[i], colorSetString[i]);
         }
         coloringSetCurrent.setValue(-1, colorSetString[7]);
-        EngravingRules.Rules.ColoringSetCurrent = coloringSetCurrent;
+        this.rules.ColoringSetCurrent = coloringSetCurrent;
 
-        EngravingRules.Rules.ColoringMode = options.coloringMode;
+        this.rules.ColoringMode = options.coloringMode;
     }
 
     /**
@@ -625,7 +629,7 @@ export class OpenSheetMusicDisplay {
         return this.drawingParameters;
     }
     public get EngravingRules(): EngravingRules { // custom getter, useful for engraving parameter setting in Demo
-        return EngravingRules.Rules;
+        return this.rules;
     }
     /** Returns the version of OSMD this object is built from (the version you are using). */
     public get Version(): string {
