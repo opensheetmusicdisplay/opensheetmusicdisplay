@@ -34,6 +34,7 @@ import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {NoteType, Arpeggio} from "../../VoiceData";
+import { VexFlowTabMeasure } from "./VexFlowTabMeasure";
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
@@ -110,6 +111,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.connectors = [];
         // Clean up instructions
         this.resetLayout();
+
+        // clean also tab measure if present:
+        if (this.tabMeasure !== undefined) {
+            (this.tabMeasure as VexFlowTabMeasure).clean();
+        }
     }
 
     /**
