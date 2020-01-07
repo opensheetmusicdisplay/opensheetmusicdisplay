@@ -93,6 +93,8 @@ export interface IOSMDOptions {
     drawUpToMeasureNumber?: number;
     /** Only draw measure n to m, where n is the number you specify. */
     drawFromMeasureNumber?: number;
+    /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
+    fillEmptyMeasuresWithWholeRest?: FillEmptyMeasuresWithWholeRests | number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
@@ -114,6 +116,12 @@ export enum AlignRestOption {
     Never = 0, // false should also work
     Always = 1, // true should also work
     Auto = 2
+}
+
+export enum FillEmptyMeasuresWithWholeRests {
+    No = 0,
+    YesVisible = 1,
+    YesInvisible = 2
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */

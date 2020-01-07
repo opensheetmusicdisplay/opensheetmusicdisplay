@@ -148,6 +148,7 @@ export abstract class MusicSystem extends GraphicalObject {
      */
     public createVerticalLineForMeasure(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
                                         measureIndex: number, measure: GraphicalMeasure): void {
+        //return; // TODO check why there's a bold line here for the double barline sample
         const staffLine: StaffLine = measure.ParentStaffLine;
         const staffLineRelative: PointF2D = new PointF2D(staffLine.PositionAndShape.RelativePosition.x,
                                                          staffLine.PositionAndShape.RelativePosition.y);
