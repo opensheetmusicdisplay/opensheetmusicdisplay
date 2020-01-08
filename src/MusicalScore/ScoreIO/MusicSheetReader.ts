@@ -21,10 +21,11 @@ import {MusicSymbolModuleFactory} from "./MusicSymbolModuleFactory";
 import {IAfterSheetReadingModule} from "../Interfaces/IAfterSheetReadingModule";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
+import { EngravingRules } from "../Graphical";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
-    constructor(afterSheetReadingModules: IAfterSheetReadingModule[] = undefined) {
+    constructor(afterSheetReadingModules: IAfterSheetReadingModule[] = undefined, rules: EngravingRules = new EngravingRules()) {
      if (afterSheetReadingModules === undefined) {
        this.afterSheetReadingModules = [];
      } else {
@@ -32,6 +33,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      }
      this.repetitionInstructionReader = MusicSymbolModuleFactory.createRepetitionInstructionReader();
      this.repetitionCalculator = MusicSymbolModuleFactory.createRepetitionCalculator();
+     this.rules = rules;
     }
 
     private repetitionInstructionReader: RepetitionInstructionReader;
@@ -42,6 +44,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private currentMeasure: SourceMeasure;
     private previousMeasure: SourceMeasure;
     private currentFraction: Fraction;
+    private rules: EngravingRules;
 
     public get CompleteNumberOfStaves(): number {
         return this.completeNumberOfStaves;
@@ -116,6 +119,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         let sourceMeasureCounter: number = 0;
         this.musicSheet = new MusicSheet();
         this.musicSheet.Path = path;
+        this.musicSheet.Rules = this.rules;
         if (root === undefined) {
             throw new MusicSheetReadingException("Undefined root element");
         }

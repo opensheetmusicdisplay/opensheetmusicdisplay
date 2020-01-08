@@ -143,13 +143,11 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
         const score: IXmlElement = new IXmlElement(scorePartwiseElement);
-        const reader: MusicSheetReader = new MusicSheetReader();
+        const reader: MusicSheetReader = new MusicSheetReader(undefined, this.rules);
         this.sheet = reader.createMusicSheet(score, "Untitled Score");
         if (this.sheet === undefined) {
             // error loading sheet, probably already logged, do nothing
             return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
-        } else {
-            this.sheet.Rules = this.rules;
         }
         log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
 
