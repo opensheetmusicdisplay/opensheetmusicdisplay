@@ -146,7 +146,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             if (this.currentMeasure !== undefined && this.currentMeasure.endsPiece) {
                 sourceMeasureCounter = 0;
             }
-            this.currentMeasure = new SourceMeasure(this.completeNumberOfStaves);
+            this.currentMeasure = new SourceMeasure(this.completeNumberOfStaves, this.musicSheet.Rules);
             for (const instrumentReader of instrumentReaders) {
                 try {
                     couldReadMeasure = couldReadMeasure && instrumentReader.readNextXmlMeasure(this.currentMeasure, this.currentFraction, guitarPro);

@@ -28,7 +28,7 @@ describe("VexFlow Measure", () => {
 
    it.skip("Simple Measure", (done: MochaDone) => {
       const sheet: MusicSheet = new MusicSheet();
-      const measure: SourceMeasure = new SourceMeasure(1);
+      const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
       sheet.addMeasure(measure);
       const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
@@ -41,7 +41,7 @@ describe("VexFlow Measure", () => {
 
    it.skip("Empty Measure", (done: MochaDone) => {
       const sheet: MusicSheet = new MusicSheet();
-      const measure: SourceMeasure = new SourceMeasure(1);
+      const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
       measure.FirstInstructionsStaffEntries[0] = new SourceStaffEntry(undefined, undefined);
       sheet.addMeasure(measure);
       const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();

@@ -18,7 +18,7 @@ export class GraphicalLyricEntry {
     constructor(lyricsEntry: LyricsEntry, graphicalStaffEntry: GraphicalStaffEntry, lyricsHeight: number, staffHeight: number) {
         this.lyricsEntry = lyricsEntry;
         this.graphicalStaffEntry = graphicalStaffEntry;
-        const lyricsTextAlignment: TextAlignmentEnum = graphicalStaffEntry.parentMeasure.parentMusicSystem.rules.LyricsAlignmentStandard;
+        const lyricsTextAlignment: TextAlignmentEnum = graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules.LyricsAlignmentStandard;
         // for small notes with long text, use center alignment
         // TODO use this, fix center+left alignment combination spacing
         if (lyricsEntry.Text.length >= 4

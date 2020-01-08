@@ -20,7 +20,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         this.parentStaffEntry = parentStaffEntry;
         this.PositionAndShape = new BoundingBox(this, parentStaffEntry ? parentStaffEntry.PositionAndShape : undefined, true);
         this.notes = [];
-        this.rules = parentStaffEntry.parentMeasure.parentMusicSystem.rules;
+        this.rules = parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
     }
 
     public parentVoiceEntry: VoiceEntry;

@@ -156,7 +156,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param transposeHalftones
      */
     public createChordSymbols(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
-        const rules: EngravingRules = graphicalStaffEntry.parentMeasure.parentMusicSystem.rules;
+        const rules: EngravingRules = graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules;
         let xShift: number = 0;
         const chordSymbolSpacing: number = rules.ChordSymbolXSpacing;
         for (const chordSymbolContainer of sourceStaffEntry.ChordContainers) {

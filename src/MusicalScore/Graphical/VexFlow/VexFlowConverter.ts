@@ -166,7 +166,7 @@ export class VexFlowConverter {
         } */
         // VexFlow needs the notes ordered vertically in the other direction:
         const notes: GraphicalNote[] = gve.notes.reverse();
-        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentMusicSystem.rules;
+        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
 
         const baseNote: GraphicalNote = notes[0];
         let keys: string[] = [];
