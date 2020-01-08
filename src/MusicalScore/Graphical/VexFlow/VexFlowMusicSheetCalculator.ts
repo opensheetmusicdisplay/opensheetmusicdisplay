@@ -366,6 +366,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
+    (measure as VexFlowMeasure).rules = this.rules;
     (measure as VexFlowMeasure).graphicalMeasureCreatedCalculations();
   }
 

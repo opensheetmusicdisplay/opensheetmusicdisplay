@@ -69,7 +69,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** VexFlow Tuplets */
     private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
     // The engraving rules of OSMD.
-    private rules: EngravingRules = this.parentMusicSystem.rules;
+    public rules: EngravingRules;
 
     // Sets the absolute coordinates of the VFStave on the canvas
     public setAbsoluteCoordinates(x: number, y: number): void {
