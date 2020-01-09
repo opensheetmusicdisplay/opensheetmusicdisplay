@@ -47,6 +47,7 @@ import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/Continu
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
+import { VexFlowStaffLine } from "./VexFlowStaffLine";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -682,6 +683,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     return;
+  }
+
+  /**
+   * Re-adjust the x positioning of expressions. Update the skyline afterwards
+   */
+  protected calculateExpressionAlignements(): void {
+    for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
+        for (const musicSystem of graphicalMusicPage.MusicSystems) {
+            for (const staffLine of musicSystem.StaffLines) {
+                (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
+                staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
+            }
+        }
+    }
   }
 
   /**

@@ -12,7 +12,6 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
-import { AlignmentManager } from "./AlignmentManager";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 
 /**
@@ -26,7 +25,6 @@ export abstract class StaffLine extends GraphicalObject {
     protected parentStaff: Staff;
     protected octaveShifts: GraphicalOctaveShift[] = [];
     protected skyBottomLine: SkyBottomLineCalculator;
-    protected alignmentManager: AlignmentManager;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
     protected abstractExpressions: AbstractGraphicalExpression[] = [];
@@ -40,7 +38,6 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
         this.skyBottomLine = new SkyBottomLineCalculator(this);
-        this.alignmentManager = new AlignmentManager(this);
     }
 
     public get Measures(): GraphicalMeasure[] {
@@ -102,10 +99,6 @@ export abstract class StaffLine extends GraphicalObject {
 
     public set ParentStaff(value: Staff) {
         this.parentStaff = value;
-    }
-
-    public get AlignmentManager(): AlignmentManager {
-        return this.alignmentManager;
     }
 
     public get SkyBottomLineCalculator(): SkyBottomLineCalculator {

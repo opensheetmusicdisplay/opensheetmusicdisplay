@@ -2166,17 +2166,10 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
-     * Re-adjust the x positioning of expressions. Update the skyline afterwards
+     * Re-adjust the x positioning of expressions.
      */
-    private calculateExpressionAlignements(): void {
-        for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
-            for (const musicSystem of graphicalMusicPage.MusicSystems) {
-                for (const staffLine of musicSystem.StaffLines) {
-                    staffLine.AlignmentManager.alignDynamicExpressions();
-                    staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
-                }
-            }
-        }
+    protected calculateExpressionAlignements(): void {
+        // override
     }
 
     private calculateBeams(): void {
