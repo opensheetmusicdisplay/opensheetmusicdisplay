@@ -26,6 +26,8 @@ import log = require("loglevel");
 import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { DrawingParameters } from "../DrawingParameters";
+import { GraphicalMusicPage } from "../GraphicalMusicPage";
+import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -36,39 +38,47 @@ export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private backend: VexFlowBackend;
+    private backends: VexFlowBackend[] = [];
     private zoom: number = 1.0;
+    private pageIdx: number = 0;
 
-    constructor(element: HTMLElement,
-                backend: VexFlowBackend,
-                drawingParameters: DrawingParameters = new DrawingParameters()) {
+    constructor(drawingParameters: DrawingParameters = new DrawingParameters()) {
         super(new VexFlowTextMeasurer(), drawingParameters);
-        this.backend = backend;
+    }
+
+    public get Backends(): VexFlowBackend[] {
+        return this.backends;
+    }
+
+    public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        this.pageIdx = 0;
+        for (const {} of graphicalMusicSheet.MusicPages) {
+            const backend: VexFlowBackend = this.backends[this.pageIdx];
+            backend.scale(this.zoom);
+            backend.resize(graphicalMusicSheet.ParentMusicSheet.pageWidth * unitInPixels * this.zoom,
+                           EngravingRules.Rules.PageHeight * unitInPixels * this.zoom);
+            this.pageIdx += 1;
+        }
+
+        this.pageIdx = 0;
+        this.backend = this.backends[0];
+        super.drawSheet(graphicalMusicSheet);
+    }
+
+    protected drawPage(page: GraphicalMusicPage): void {
+        super.drawPage(page);
+        this.pageIdx += 1;
+        this.backend = this.backends[this.pageIdx];
     }
 
     public clear(): void {
-        this.backend.clear();
+        for (const backend of this.backends) {
+            backend.clear();
+        }
     }
 
-    /**
-     * Zoom the rendering areas
-     * @param k is the zoom factor
-     */
-    public scale(k: number): void {
-        this.zoom = k;
-        this.backend.scale(this.zoom);
-    }
-
-    /**
-     * Resize the rendering areas
-     * @param x
-     * @param y
-     */
-    public resize(x: number, y: number): void {
-        this.backend.resize(x, y);
-    }
-
-    public translate(x: number, y: number): void {
-        this.backend.translate(x, y);
+    public setZoom(zoom: number): void {
+        this.zoom = zoom;
     }
 
     /**

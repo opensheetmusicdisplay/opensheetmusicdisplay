@@ -63,9 +63,7 @@ export class OpenSheetMusicDisplay {
     public zoom: number = 1.0;
 
     private container: HTMLElement;
-    private canvas: HTMLElement;
-    private backend: VexFlowBackend;
-    private innerElement: HTMLElement;
+    private backendType: any;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
@@ -178,6 +176,7 @@ export class OpenSheetMusicDisplay {
         // Set page width
         const width: number = this.container.offsetWidth;
         this.sheet.pageWidth = width / this.zoom / 10.0;
+        EngravingRules.Rules.PageHeight = this.sheet.pageWidth * 1.41;
         // Before introducing the following optimization (maybe irrelevant), tests
         // have to be modified to ensure that width is > 0 when executed
         //if (isNaN(width) || width === 0) {
@@ -186,13 +185,17 @@ export class OpenSheetMusicDisplay {
 
         // Calculate again
         this.graphic.reCalculate();
-        const height: number = this.graphic.MusicPages[0].PositionAndShape.BorderBottom * 10.0 * this.zoom;
+
         if (this.drawingParameters.drawCursors) {
             this.graphic.Cursors.length = 0;
         }
+
         // Update Sheet Page
-        this.drawer.resize(width, height);
-        this.drawer.scale(this.zoom);
+        this.drawer.Backends.clear();
+        for (const {} of this.graphic.MusicPages) {
+            this.drawer.Backends.push(this.createBackend(this.backendType));
+        }
+        this.drawer.setZoom(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
         if (this.drawingParameters.drawCursors && this.cursor) {
@@ -230,28 +233,23 @@ export class OpenSheetMusicDisplay {
                 (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
         }
 
-        const updateExistingBackend: boolean = this.backend !== undefined;
-        if (options.backend !== undefined || this.backend === undefined) {
-            if (updateExistingBackend) {
-                // TODO doesn't work yet, still need to create a new OSMD object
+        this.backendType = options.backend;
+        // const updateExistingBackend: boolean = this.backend !== undefined;
+        // if (options.backend !== undefined || this.backend === undefined) {
+        //     if (updateExistingBackend) {
+        //         // TODO doesn't work yet, still need to create a new OSMD object
 
-                this.drawer.clear();
+        //         this.drawer.clear();
 
-                // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
-                // musicSheetCalculator.clearRecreatedObjects();
-            }
-            if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
-                this.backend = new SvgVexFlowBackend();
-            } else {
-                this.backend = new CanvasVexFlowBackend();
-            }
-            this.backend.initialize(this.container);
-            this.canvas = this.backend.getCanvas();
-            this.innerElement = this.backend.getInnerElement();
-            this.enableOrDisableCursor(this.drawingParameters.drawCursors);
-            // Create the drawer
-            this.drawer = new VexFlowMusicSheetDrawer(this.canvas, this.backend, this.drawingParameters);
-        }
+        //         // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
+        //         // musicSheetCalculator.clearRecreatedObjects();
+        //     }
+        // }
+
+        // Create the drawer
+        this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters);
+
+        //this.enableOrDisableCursor(this.drawingParameters.drawCursors);
 
         // individual drawing parameters options
         if (options.autoBeam !== undefined) {
@@ -552,7 +550,7 @@ export class OpenSheetMusicDisplay {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
             if (!this.cursor) {
-                this.cursor = new Cursor(this.innerElement, this);
+                this.cursor = new Cursor(this.drawer.Backends[0].getInnerElement(), this);
                 if (this.sheet && this.graphic) { // else init is called in load()
                     this.cursor.init(this.sheet.MusicPartManager, this.graphic);
                 }
@@ -566,6 +564,17 @@ export class OpenSheetMusicDisplay {
             // TODO cursor should be disabled, not just hidden. otherwise user can just call osmd.cursor.hide().
             // however, this could cause null calls (cursor.next() etc), maybe that needs some solution.
         }
+    }
+
+    public createBackend(type: any): VexFlowBackend {
+        let backend: VexFlowBackend;
+        if (type === undefined || type.toLowerCase() === "svg") {
+            backend = new SvgVexFlowBackend();
+        } else {
+            backend = new CanvasVexFlowBackend();
+        }
+        backend.initialize(this.container);
+        return backend;
     }
 
     //#region GETTER / SETTER

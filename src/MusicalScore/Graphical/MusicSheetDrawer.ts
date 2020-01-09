@@ -464,7 +464,7 @@ export abstract class MusicSheetDrawer {
         this.graphicalMusicSheet.LeadSheet = value;
     }
 
-    private drawPage(page: GraphicalMusicPage): void {
+    protected drawPage(page: GraphicalMusicPage): void {
         if (!this.isVisible(page.PositionAndShape)) {
             return;
         }

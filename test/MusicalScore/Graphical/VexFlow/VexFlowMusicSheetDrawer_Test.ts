@@ -28,7 +28,8 @@ describe("VexFlow Music Sheet Drawer", () => {
         const canvas: HTMLCanvasElement = document.createElement("canvas");
         const backend: VexFlowBackend = new CanvasVexFlowBackend();
         backend.initialize(canvas);
-        const drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(canvas, backend);
+        const drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer();
+        drawer.Backends.push(backend);
         drawer.drawSheet(gms);
         done();
     });
@@ -48,7 +49,8 @@ describe("VexFlow Music Sheet Drawer", () => {
         const canvas: HTMLCanvasElement = document.createElement("canvas");
         const backend: VexFlowBackend = new CanvasVexFlowBackend();
         backend.initialize(canvas);
-        const drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(canvas, backend, new DrawingParameters());
+        const drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(new DrawingParameters());
+        drawer.Backends.push(backend);
         drawer.drawSheet(gms);
         done();
     });
