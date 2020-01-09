@@ -11,6 +11,12 @@ import { EngravingRules } from "..";
 export class SvgVexFlowBackend extends VexFlowBackend {
 
     private ctx: Vex.Flow.SVGContext;
+    private rules: EngravingRules;
+
+    constructor(rules: EngravingRules) {
+        super();
+        this.rules = rules;
+    }
 
     public getBackendType(): number {
         return Vex.Flow.Renderer.Backends.SVG;
@@ -59,7 +65,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             this.ctx.attributes.fill = color;
             this.ctx.attributes.stroke = color;
         }
-        this.ctx.setFont(EngravingRules.Rules.DefaultFontFamily, fontHeight, VexFlowConverter.fontStyle(fontStyle));
+        this.ctx.setFont(this.rules.DefaultFontFamily, fontHeight, VexFlowConverter.fontStyle(fontStyle));
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
         this.ctx.attributes["font-size"] = `${fontHeight}px`;
         this.ctx.state["font-size"] = `${fontHeight}px`;

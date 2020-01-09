@@ -246,7 +246,7 @@ export class OpenSheetMusicDisplay {
                 // musicSheetCalculator.clearRecreatedObjects();
             }
             if (options.backend === undefined || options.backend.toLowerCase() === "svg") {
-                this.backend = new SvgVexFlowBackend();
+                this.backend = new SvgVexFlowBackend(this.rules);
             } else {
                 this.backend = new CanvasVexFlowBackend();
             }
