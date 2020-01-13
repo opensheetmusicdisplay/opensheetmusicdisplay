@@ -200,7 +200,7 @@ export class OpenSheetMusicDisplay {
         this.drawer.setZoom(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
-        this.createPdf((<SvgVexFlowBackend>this.drawer.Backends[0]).getSvgElement());
+        this.createPdf(this.sheet.FullNameString + ".pdf", this.drawer.Backends);
         if (this.drawingParameters.drawCursors && this.cursor) {
             // Update the cursor position
             this.cursor.update();
@@ -580,21 +580,28 @@ export class OpenSheetMusicDisplay {
         return backend;
     }
 
-    public createPdf(svgElement: SVGElement): void {
-        const width: number = 1000, height: number = 1400;
+    public createPdf(pdfName: string, backends: VexFlowBackend[]): void {
+        let svgElement: SVGElement = (<SvgVexFlowBackend>backends[0]).getSvgElement();
 
         // create a new jsPDF instance
-        const pdf: any = new jspdf("l", "pt", [width, height]);
+        const pdf: any = new jspdf("p", "pt", [svgElement.clientWidth, svgElement.clientWidth * 1.41]);
 
-        // render the svg element
-        svg2pdf(svgElement, pdf, {
-            scale: 1,
-            xOffset: 0,
-            yOffset: 0
-        });
+        for (let idx: number = 0, len: number = backends.length; idx < len; ++idx) {
+            if (idx > 0) {
+                pdf.addPage();
+            }
+            svgElement = (<SvgVexFlowBackend>backends[idx]).getSvgElement();
+
+            // render the svg element
+            svg2pdf(svgElement, pdf, {
+                scale: 1,
+                xOffset: 0,
+                yOffset: 0
+            });
+        }
 
         // simply save the created pdf
-        pdf.save("myPDF.pdf");
+        pdf.save(pdfName);
     }
 
     //#region GETTER / SETTER
