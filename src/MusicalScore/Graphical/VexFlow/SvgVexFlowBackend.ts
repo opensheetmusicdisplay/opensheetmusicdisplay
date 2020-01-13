@@ -31,6 +31,10 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return this.ctx;
     }
 
+    public getSvgElement(): SVGElement {
+        return this.ctx.svg;
+    }
+
     public clear(): void {
         if (!this.ctx) {
             return;

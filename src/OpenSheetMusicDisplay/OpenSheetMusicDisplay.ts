@@ -20,6 +20,8 @@ import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/Abstra
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "..";
 import { AutoColorSet } from "../MusicalScore";
+import jspdf = require("jspdf-yworks/dist/jspdf.min");
+import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -198,6 +200,7 @@ export class OpenSheetMusicDisplay {
         this.drawer.setZoom(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
+        this.createPdf((<SvgVexFlowBackend>this.drawer.Backends[0]).getSvgElement());
         if (this.drawingParameters.drawCursors && this.cursor) {
             // Update the cursor position
             this.cursor.update();
@@ -575,6 +578,23 @@ export class OpenSheetMusicDisplay {
         }
         backend.initialize(this.container);
         return backend;
+    }
+
+    public createPdf(svgElement: SVGElement): void {
+        const width: number = 1000, height: number = 1400;
+
+        // create a new jsPDF instance
+        const pdf: any = new jspdf("l", "pt", [width, height]);
+
+        // render the svg element
+        svg2pdf(svgElement, pdf, {
+            scale: 1,
+            xOffset: 0,
+            yOffset: 0
+        });
+
+        // simply save the created pdf
+        pdf.save("myPDF.pdf");
     }
 
     //#region GETTER / SETTER
