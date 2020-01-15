@@ -977,13 +977,24 @@ export abstract class MusicSheetCalculator {
         }
 
         graphicalContinuousDynamic.EndMeasure = endMeasure;
+        const staffLine: StaffLine = graphicalContinuousDynamic.ParentStaffLine;
         const endStaffLine: StaffLine = endMeasure.ParentStaffLine;
+
+        // check if Expression spreads over the same StaffLine or not
+        const sameStaffLine: boolean = endStaffLine !== undefined && staffLine === endStaffLine;
+
+        let isPartOfMultiStaffInstrument: boolean = false;
+        if (endStaffLine) { // unfortunately we can't do something like (endStaffLine?.check() || staffLine?.check()) in this typescript version
+            isPartOfMultiStaffInstrument = endStaffLine.isPartOfMultiStaffInstrument();
+        } else if (staffLine) {
+            isPartOfMultiStaffInstrument = staffLine.isPartOfMultiStaffInstrument();
+        }
+
         const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.AbsoluteTimestamp);
 
         const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-            endAbsoluteTimestamp, staffIndex, endStaffLine, endStaffLine.isPartOfMultiStaffInstrument(), 0);
+            endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0);
 
-        const staffLine: StaffLine = graphicalContinuousDynamic.ParentStaffLine;
         //currentMusicSystem and currentStaffLine
         const musicSystem: MusicSystem = staffLine.ParentMusicSystem;
         const currentStaffLineIndex: number = musicSystem.StaffLines.indexOf(staffLine);
@@ -996,9 +1007,6 @@ export abstract class MusicSheetCalculator {
         // if ContinuousDynamicExpression is given from wedge
         let secondGraphicalContinuousDynamic: GraphicalContinuousDynamicExpression = undefined;
 
-        // check if Expression spreads over the same StaffLine or not
-        const sameStaffLine: boolean = endStaffLine !== undefined && staffLine === endStaffLine;
-
         // last length check
         if (sameStaffLine && endPosInStaffLine.x - startPosInStaffline.x < this.rules.WedgeMinLength) {
             endPosInStaffLine.x = startPosInStaffline.x + this.rules.WedgeMinLength;
@@ -1007,6 +1015,7 @@ export abstract class MusicSheetCalculator {
         // Upper staff wedge always starts at the given position and the lower staff wedge always starts at the begin of measure
         const upperStartX: number = startPosInStaffline.x;
         const lowerStartX: number = endStaffLine.Measures[0].beginInstructionsWidth - this.rules.WedgeHorizontalMargin - 2;
+        //TODO fix this when a range of measures to draw is given that doesn't include all the dynamic's measures (e.g. for crescendo)
         let upperEndX: number = 0;
         let lowerEndX: number = 0;
 
