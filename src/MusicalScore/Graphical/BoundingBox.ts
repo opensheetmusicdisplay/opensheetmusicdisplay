@@ -3,6 +3,8 @@ import {ArgumentOutOfRangeException} from "../Exceptions";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
+import { StaffLineActivitySymbol } from "./StaffLineActivitySymbol";
+import { EngravingRules } from "./EngravingRules";
 
 /**
  * A bounding box delimits an area on the 2D plane.
@@ -367,7 +369,12 @@ export class BoundingBox {
         for (let idx: number = 0, len: number = this.ChildElements.length; idx < len; ++idx) {
             const childElement: BoundingBox = this.ChildElements[idx];
             minTop = Math.min(minTop, childElement.relativePosition.y + childElement.borderTop);
-            maxBottom = Math.max(maxBottom, childElement.relativePosition.y + childElement.borderBottom);
+            if (!EngravingRules.Rules.FixStafflineBoundingBox || !(childElement.dataObject instanceof StaffLineActivitySymbol)) {
+                maxBottom = Math.max(maxBottom, childElement.relativePosition.y + childElement.borderBottom);
+                // TODO there's a problem with the bottom bounding box of many stafflines, often caused by StaffLineActivitySymbol,
+                // often leading to the page SVG canvas being unnecessarily long in y-direction. This seems to be remedied by this workaround.
+                // see #643
+            }
             minMarginTop = Math.min(minMarginTop, childElement.relativePosition.y + childElement.borderMarginTop);
             maxMarginBottom = Math.max(maxMarginBottom, childElement.relativePosition.y + childElement.borderMarginBottom);
         }
