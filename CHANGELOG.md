@@ -5,7 +5,7 @@
 
 * **Arpeggio:** fix up/down direction (wrong in Vexflow), remove Vexflow dependency ([450b2d9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/450b2d9)), closes [#645](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/645)
 * **Dynamics, drawing Range:** fix crescendo crashing when partially out of drawingRange ([#644](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/644)) ([8105270](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8105270))
-* **Exports:** Remove many Vexflow dependencies in core OSMD classes (Arpeggio, MusicSheetCalculator, other /Graphical/ classes) (414d147, 90d93b9)
+* **Exports:** Remove many Vexflow dependencies in core OSMD classes (Arpeggio, MusicSheetCalculator, other /Graphical/ classes) ([450b2d9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/450b2d91bb4d52a60aeb6fa3425865e58efffebc), [90d93b9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/90d93b907315b8b1d93586d4849d96c41fb60661))
 
 
 
