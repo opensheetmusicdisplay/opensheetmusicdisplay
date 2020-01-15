@@ -25,6 +25,7 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 import { Note } from "../..";
 import StaveNote = Vex.Flow.StaveNote;
+import { ArpeggioType } from "../../VoiceData";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -461,6 +462,27 @@ export class VexFlowConverter {
             }
             vfOrna.setPosition(vfPosition);
             (vfnote as StaveNote).addModifier(0, vfOrna);
+        }
+    }
+
+    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): Vex.Flow.Stroke.Type {
+        switch (arpeggioType) {
+            case ArpeggioType.ARPEGGIO_DIRECTIONLESS:
+                return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+            case ArpeggioType.BRUSH_DOWN:
+                return Vex.Flow.Stroke.Type.BRUSH_UP; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.BRUSH_UP:
+                return Vex.Flow.Stroke.Type.BRUSH_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.RASQUEDO_DOWN:
+                return Vex.Flow.Stroke.Type.RASQUEDO_UP;
+            case ArpeggioType.RASQUEDO_UP:
+                return Vex.Flow.Stroke.Type.RASQUEDO_DOWN;
+            case ArpeggioType.ROLL_DOWN:
+                return Vex.Flow.Stroke.Type.ROLL_UP; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.ROLL_UP:
+                return Vex.Flow.Stroke.Type.ROLL_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
+            default:
+                return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
         }
     }
 

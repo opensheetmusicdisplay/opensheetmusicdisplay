@@ -943,7 +943,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
                     // see VoiceGenerator. Doesn't matter for Vexflow for now though
                     if (voiceEntry.notes && voiceEntry.notes.length > 1) {
-                        const type: Vex.Flow.Stroke.Type = arpeggio.type;
+                        const type: Vex.Flow.Stroke.Type = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
                         const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
                             all_voices: EngravingRules.Rules.ArpeggiosGoAcrossVoices
                             // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
