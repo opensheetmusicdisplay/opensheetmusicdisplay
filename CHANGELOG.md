@@ -1,3 +1,13 @@
+## [0.7.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.2...0.7.3) (2020-01-15)
+
+
+### Bug Fixes
+
+* **Arpeggio:** fix up/down direction (wrong in Vexflow), remove Vexflow dependency ([450b2d9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/450b2d9)), closes [#645](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/645)
+* **dynamics, drawingRange:** fix crescendo crashing when partially out of drawingRange ([#644](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/644)) ([8105270](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8105270))
+
+
+
 ## [0.7.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.1...0.7.2) (2019-12-13)
 
 
