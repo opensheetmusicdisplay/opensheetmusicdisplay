@@ -42,7 +42,7 @@
     "musicxml"
   ],
   "author": "PhonicScore",
-  "license": "MIT",
+  "license": "BSD-3-clause",
   "bugs": {
     "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
   },
