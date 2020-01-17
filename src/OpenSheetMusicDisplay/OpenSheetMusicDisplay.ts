@@ -192,10 +192,17 @@ export class OpenSheetMusicDisplay {
             this.graphic.Cursors.length = 0;
         }
 
-        // Update Sheet Page
+        // Remove old backends
+        for (const backend of this.drawer.Backends) {
+            backend.removeFromContainer(this.container);
+        }
         this.drawer.Backends.clear();
+
+        // create new backends
         for (const {} of this.graphic.MusicPages) {
-            this.drawer.Backends.push(this.createBackend(this.backendType));
+            const backend: VexFlowBackend = this.createBackend(this.backendType);
+            backend.resize(width, width * 1.41);
+            this.drawer.Backends.push(backend);
         }
         this.drawer.setZoom(this.zoom);
         // Finally, draw
@@ -580,12 +587,12 @@ export class OpenSheetMusicDisplay {
         return backend;
     }
 
-    public createPdf(pdfName: string, backends: VexFlowBackend[]): void {
+    public createPdf(pdfName: string, backends: VexFlowBackend[], pageWidth: number = 210, pageHeight: number = 297): void {
         let svgElement: SVGElement = (<SvgVexFlowBackend>backends[0]).getSvgElement();
-
+        const orientation: string = pageHeight > pageWidth ? "p" : "l";
         // create a new jsPDF instance
-        const pdf: any = new jspdf("p", "pt", [svgElement.clientWidth, svgElement.clientWidth * 1.41]);
-
+        const pdf: any = new jspdf(orientation, "mm", [pageWidth, pageHeight]);
+        const scale: number = pageWidth / svgElement.clientWidth;
         for (let idx: number = 0, len: number = backends.length; idx < len; ++idx) {
             if (idx > 0) {
                 pdf.addPage();
@@ -594,7 +601,7 @@ export class OpenSheetMusicDisplay {
 
             // render the svg element
             svg2pdf(svgElement, pdf, {
-                scale: 1,
+                scale: scale,
                 xOffset: 0,
                 yOffset: 0
             });

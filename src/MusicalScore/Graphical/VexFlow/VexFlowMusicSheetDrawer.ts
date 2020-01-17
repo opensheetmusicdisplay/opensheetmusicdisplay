@@ -55,8 +55,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const {} of graphicalMusicSheet.MusicPages) {
             const backend: VexFlowBackend = this.backends[this.pageIdx];
             backend.scale(this.zoom);
-            backend.resize(graphicalMusicSheet.ParentMusicSheet.pageWidth * unitInPixels * this.zoom,
-                           EngravingRules.Rules.PageHeight * unitInPixels * this.zoom);
+            //backend.resize(graphicalMusicSheet.ParentMusicSheet.pageWidth * unitInPixels * this.zoom,
+            //               EngravingRules.Rules.PageHeight * unitInPixels * this.zoom);
             this.pageIdx += 1;
         }
 

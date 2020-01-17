@@ -30,14 +30,13 @@ export class EngravingRules {
     private pageRightMargin: number;
     private titleTopDistance: number;
     private titleBottomDistance: number;
-    private systemDistance: number;
     private systemLeftMargin: number;
     private systemRightMargin: number;
     private firstSystemMargin: number;
     private systemLabelsRightMargin: number;
     private systemComposerDistance: number;
     private instrumentLabelTextHeight: number;
-    private minimumAllowedDistanceBetweenSystems: number;
+    private minimumDistanceBetweenSystems: number;
     private lastSystemMaxScalingFactor: number;
     private staffDistance: number;
     private betweenStaffDistance: number;
@@ -243,14 +242,13 @@ export class EngravingRules {
         // System Sizing and Label Variables
         this.staffHeight = 4.0;
         this.betweenStaffLinesDistance = EngravingRules.unit;
-        this.systemDistance = 10.0;
         this.systemLeftMargin = 0.0;
         this.systemRightMargin = 0.0;
         this.firstSystemMargin = 15.0;
         this.systemLabelsRightMargin = 2.0;
         this.systemComposerDistance = 2.0;
         this.instrumentLabelTextHeight = 2;
-        this.minimumAllowedDistanceBetweenSystems = 3.0;
+        this.minimumDistanceBetweenSystems = 4.0;
         this.lastSystemMaxScalingFactor = 1.4;
 
         // autoBeam options
@@ -559,12 +557,6 @@ export class EngravingRules {
     public set InstrumentLabelTextHeight(value: number) {
         this.instrumentLabelTextHeight = value;
     }
-    public get SystemDistance(): number {
-        return this.systemDistance;
-    }
-    public set SystemDistance(value: number) {
-        this.systemDistance = value;
-    }
     public get SystemLeftMargin(): number {
         return this.systemLeftMargin;
     }
@@ -589,11 +581,11 @@ export class EngravingRules {
     public set SystemLabelsRightMargin(value: number) {
         this.systemLabelsRightMargin = value;
     }
-    public get MinimumAllowedDistanceBetweenSystems(): number {
-        return this.minimumAllowedDistanceBetweenSystems;
+    public get MinimumDistanceBetweenSystems(): number {
+        return this.minimumDistanceBetweenSystems;
     }
-    public set MinimumAllowedDistanceBetweenSystems(value: number) {
-        this.minimumAllowedDistanceBetweenSystems = value;
+    public set MinimumDistanceBetweenSystems(value: number) {
+        this.minimumDistanceBetweenSystems = value;
     }
     public get LastSystemMaxScalingFactor(): number {
         return this.lastSystemMaxScalingFactor;
