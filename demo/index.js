@@ -70,7 +70,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         hideCursorBtn,
         backendSelect,
         debugReRenderBtn,
-        debugClearBtn;
+        debugClearBtn,
+        selectPageSize,
+        printPdfBtn;
 
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -142,6 +144,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         backendSelect = document.getElementById("backend-select");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
         debugClearBtn = document.getElementById("debug-clear-btn");
+        selectPageSize = document.getElementById("selectPageSize");
+        printPdfBtn = document.getElementById("print-pdf-btn");
 
         if (!showControls) {
             divControls.style.display = 'none';
@@ -179,6 +183,20 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         selectSample.onchange = selectSampleOnChange;
         if (selectBounding) {
             selectBounding.onchange = selectBoundingOnChange;
+        }
+
+        if (selectPageSize) {
+            selectPageSize.onchange = function (evt) {
+                var value = evt.target.value;
+                openSheetMusicDisplay.setPageFormat(value);
+                openSheetMusicDisplay.render();
+            };
+        }
+
+        if (printPdfBtn) {
+            printPdfBtn.onclick = function () {
+                openSheetMusicDisplay.createPdf();
+            }
         }
 
         // Pre-select default music piece
@@ -277,7 +295,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             }
         }
         hideCursorBtn.addEventListener("click", function () {
-            openSheetMusicDisplay.cursor.hide();
+            if (openSheetMusicDisplay.cursor) {
+                openSheetMusicDisplay.cursor.hide();
+            } else {
+                console.info("Can't hide cursor, as it was disabled (e.g. by drawingParameters).");
+            }
         });
         showCursorBtn.addEventListener("click", function () {
             if (openSheetMusicDisplay.cursor) {
