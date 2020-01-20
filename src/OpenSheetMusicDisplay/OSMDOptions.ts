@@ -1,4 +1,5 @@
 import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
+import { PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
@@ -110,6 +111,8 @@ export interface IOSMDOptions {
     tripletsBracketed?: boolean;
     /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
     drawHiddenNotes?: boolean;
+
+    pageFormat?: PageFormat;
 }
 
 export enum AlignRestOption {

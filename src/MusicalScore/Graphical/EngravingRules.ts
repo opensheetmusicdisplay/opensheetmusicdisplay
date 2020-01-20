@@ -213,6 +213,7 @@ export class EngravingRules {
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
+    private pageFormat: PageFormat;
 
     constructor() {
         // global variables
@@ -1540,6 +1541,13 @@ export class EngravingRules {
         this.fingeringInsideStafflines = value;
     }
 
+    public get PageFormat(): PageFormat {
+        return this.pageFormat;
+    }
+    public set PageFormat(value: PageFormat) {
+        this.pageFormat = value;
+    }
+
     /**
      * This method maps NoteDurations to Distances and DistancesScalingFactors.
      */
@@ -1599,5 +1607,17 @@ export class EngravingRules {
             this.factorOne[i] = 3 * Math.pow((1 - t), 2) * t;
             this.factorTwo[i] = 3 * (1 - t) * Math.pow(t, 2);
         }
+    }
+}
+
+export class PageFormat {
+    constructor(width: number, height: number) {
+        this.width = width;
+        this.height = height;
+    }
+    public width: number;
+    public height: number;
+    public get aspectRatio(): number {
+        return this.width / this.height;
     }
 }

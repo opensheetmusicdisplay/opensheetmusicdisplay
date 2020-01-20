@@ -15,7 +15,7 @@ import { AJAX } from "./AJAX";
 import * as log from "loglevel";
 import { DrawingParametersEnum, DrawingParameters, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
 import { IOSMDOptions, OSMDOptions, AutoBeamOptions } from "./OSMDOptions";
-import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
+import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "..";
@@ -178,7 +178,12 @@ export class OpenSheetMusicDisplay {
         // Set page width
         const width: number = this.container.offsetWidth;
         this.sheet.pageWidth = width / this.zoom / 10.0;
-        EngravingRules.Rules.PageHeight = this.sheet.pageWidth * 1.41;
+        if (EngravingRules.Rules.PageFormat) {
+            EngravingRules.Rules.PageHeight = this.sheet.pageWidth / EngravingRules.Rules.PageFormat.aspectRatio;
+        } else {
+            EngravingRules.Rules.PageHeight = 100001.0;
+        }
+
         // Before introducing the following optimization (maybe irrelevant), tests
         // have to be modified to ensure that width is > 0 when executed
         //if (isNaN(width) || width === 0) {
@@ -199,20 +204,25 @@ export class OpenSheetMusicDisplay {
         this.drawer.Backends.clear();
 
         // create new backends
-        for (const {} of this.graphic.MusicPages) {
+        for (const page of this.graphic.MusicPages) {
             const backend: VexFlowBackend = this.createBackend(this.backendType);
-            backend.resize(width, width * 1.41);
+            if (EngravingRules.Rules.PageFormat) {
+                backend.resize(width, width / EngravingRules.Rules.PageFormat.aspectRatio);
+            } else {
+                backend.resize(width, (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0);
+            }
             this.drawer.Backends.push(backend);
         }
         this.drawer.setZoom(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
-        this.createPdf(this.sheet.FullNameString + ".pdf", this.drawer.Backends);
         if (this.drawingParameters.drawCursors && this.cursor) {
             // Update the cursor position
             this.cursor.update();
         }
     }
+
+
 
     /** States whether the render() function can be safely called. */
     public IsReadyToRender(): boolean {
@@ -257,6 +267,14 @@ export class OpenSheetMusicDisplay {
         // }
 
         // Create the drawer
+        if (this.drawer) {
+            // Remove old backends
+            for (const backend of this.drawer.Backends) {
+                backend.removeFromContainer(this.container);
+            }
+            this.drawer.Backends.clear();
+        }
+
         this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters);
 
         //this.enableOrDisableCursor(this.drawingParameters.drawCursors);
@@ -394,6 +412,9 @@ export class OpenSheetMusicDisplay {
             this.autoResizeEnabled = false;
             // we could remove the window EventListener here, but not necessary.
         }
+
+        // no if -> shall also be set to undefined:
+        EngravingRules.Rules.PageFormat = options.pageFormat;
     }
 
     public setColoringMode(options: IOSMDOptions): void {
@@ -587,8 +608,62 @@ export class OpenSheetMusicDisplay {
         return backend;
     }
 
-    public createPdf(pdfName: string, backends: VexFlowBackend[], pageWidth: number = 210, pageHeight: number = 297): void {
+    public static PageFormatStandards: {[type: string]: PageFormat} = {
+        "A3 L": new PageFormat(420, 297),
+        "A3 P": new PageFormat(297, 420),
+        "A4 L": new PageFormat(297, 210),
+        "A4 P": new PageFormat(210, 297),
+        "A5 L": new PageFormat(210, 148),
+        "A5 P": new PageFormat(148, 210),
+        "A6 L": new PageFormat(148, 105),
+        "A6 P": new PageFormat(105, 148),
+        "Letter L": new PageFormat(279.4, 215.9),
+        "Letter P": new PageFormat(215.9, 279.4)
+    };
+
+    public setPageFormat(formatId: string): void {
+        let f: PageFormat = undefined;
+        if (OpenSheetMusicDisplay.PageFormatStandards.hasOwnProperty(formatId)) {
+            f = OpenSheetMusicDisplay.PageFormatStandards[formatId];
+        }
+        const options: IOSMDOptions = {
+            pageFormat: f,
+        };
+        this.setOptions(options);
+    }
+
+    public setCustomPageFormat(width: number, height: number): void {
+        if (width > 0 && height > 0) {
+            const f: PageFormat = new PageFormat(width, height);
+            const options: IOSMDOptions = {
+                pageFormat: f,
+            };
+            this.setOptions(options);
+        }
+    }
+
+    /**
+     * Creates a Pdf of the currently rendered MusicXML
+     * @param pdfName if no name is given, the composer and title of the piece will be used
+     */
+    public createPdf(pdfName: string = undefined): void {
+
+        if (pdfName === undefined) {
+            pdfName = this.sheet.FullNameString + ".pdf";
+        }
+
+        const backends: VexFlowBackend[] =  this.drawer.Backends;
         let svgElement: SVGElement = (<SvgVexFlowBackend>backends[0]).getSvgElement();
+
+        let pageWidth: number = 210;
+        let pageHeight: number = 297;
+        if (EngravingRules.Rules.PageFormat) {
+            pageWidth = EngravingRules.Rules.PageFormat.width;
+            pageHeight = EngravingRules.Rules.PageFormat.height;
+        } else {
+            pageHeight = pageWidth * svgElement.clientHeight / svgElement.clientWidth;
+        }
+
         const orientation: string = pageHeight > pageWidth ? "p" : "l";
         // create a new jsPDF instance
         const pdf: any = new jspdf(orientation, "mm", [pageWidth, pageHeight]);
