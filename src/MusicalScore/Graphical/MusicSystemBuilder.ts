@@ -904,7 +904,7 @@ export class MusicSystemBuilder {
     }
 
     /**
-     * This method checks the distances between two System's StaffLines and if needed, shifts the lower down.
+     * This method checks the distances between any two consecutive StaffLines of a System and if needed, shifts the lower one down.
      * @param musicSystem
      */
     private optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
