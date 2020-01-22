@@ -178,10 +178,10 @@ export class OpenSheetMusicDisplay {
         // Set page width
         const width: number = this.container.offsetWidth;
         this.sheet.pageWidth = width / this.zoom / 10.0;
-        if (EngravingRules.Rules.PageFormat) {
+        if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
             EngravingRules.Rules.PageHeight = this.sheet.pageWidth / EngravingRules.Rules.PageFormat.aspectRatio;
         } else {
-            EngravingRules.Rules.PageHeight = 100001.0;
+            EngravingRules.Rules.PageHeight = 100001; // infinite page height // TODO Number.MAX_SAFE_INTEGER ?
         }
 
         // Before introducing the following optimization (maybe irrelevant), tests
@@ -206,7 +206,7 @@ export class OpenSheetMusicDisplay {
         // create new backends
         for (const page of this.graphic.MusicPages) {
             const backend: VexFlowBackend = this.createBackend(this.backendType);
-            if (EngravingRules.Rules.PageFormat) {
+            if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
                 backend.resize(width, width / EngravingRules.Rules.PageFormat.aspectRatio);
             } else {
                 backend.resize(width, (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0);
@@ -281,7 +281,7 @@ export class OpenSheetMusicDisplay {
         this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters);
 
         // individual drawing parameters options
-        if (options.autoBeam !== undefined) {
+        if (options.autoBeam !== undefined) { // only change an option if it was given in options, otherwise it will be undefined
             EngravingRules.Rules.AutoBeamNotes = options.autoBeam;
         }
         const autoBeamOptions: AutoBeamOptions = options.autoBeamOptions;
@@ -413,9 +413,9 @@ export class OpenSheetMusicDisplay {
             this.autoResizeEnabled = false;
             // we could remove the window EventListener here, but not necessary.
         }
-
-        // no if -> shall also be set to undefined:
-        EngravingRules.Rules.PageFormat = options.pageFormat;
+        if (options.pageFormat !== undefined) { // only change this option if it was given, see above
+            EngravingRules.Rules.PageFormat = options.pageFormat;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {
@@ -607,6 +607,7 @@ export class OpenSheetMusicDisplay {
         return backend;
     }
 
+    /** Standard page format options like A4 or Letter, in portrait and landscape. E.g. PageFormatStandards["A4 P"] or PageFormatStandards["Letter L"]. */
     public static PageFormatStandards: {[type: string]: PageFormat} = {
         "A3 L": new PageFormat(420, 297),
         "A3 P": new PageFormat(297, 420),
@@ -621,7 +622,7 @@ export class OpenSheetMusicDisplay {
     };
 
     public setPageFormat(formatId: string): void {
-        let f: PageFormat = undefined;
+        let f: PageFormat = PageFormat.UndefinedPageFormat; // default: 'endless' page height, take canvas/container width
         if (OpenSheetMusicDisplay.PageFormatStandards.hasOwnProperty(formatId)) {
             f = OpenSheetMusicDisplay.PageFormatStandards[formatId];
         }
@@ -656,9 +657,10 @@ export class OpenSheetMusicDisplay {
 
         let pageWidth: number = 210;
         let pageHeight: number = 297;
-        if (EngravingRules.Rules.PageFormat) {
-            pageWidth = EngravingRules.Rules.PageFormat.width;
-            pageHeight = EngravingRules.Rules.PageFormat.height;
+        const engravingRulesPageFormat: PageFormat = EngravingRules.Rules.PageFormat;
+        if (engravingRulesPageFormat && !engravingRulesPageFormat.IsUndefined) {
+            pageWidth = engravingRulesPageFormat.width;
+            pageHeight = engravingRulesPageFormat.height;
         } else {
             pageHeight = pageWidth * svgElement.clientHeight / svgElement.clientWidth;
         }

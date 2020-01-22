@@ -112,6 +112,7 @@ export interface IOSMDOptions {
     /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
     drawHiddenNotes?: boolean;
 
+    /**  See OpenSheetMusicDisplay.PageFormatStandards for standard options like OpenSheetMusicDisplay.PageFormatStandards["A4 P"]. */
     pageFormat?: PageFormat;
 }
 

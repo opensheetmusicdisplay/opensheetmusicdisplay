@@ -441,6 +441,8 @@ export class EngravingRules {
 
         this.fixStafflineBoundingBox = false; // TODO temporary workaround
 
+        this.pageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
+
         this.populateDictionaries();
         try {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
@@ -1620,6 +1622,7 @@ export class EngravingRules {
     }
 }
 
+// TODO maybe this should be moved to OSMDOptions. Also see OpenSheetMusicDisplay.PageFormatStandards
 export class PageFormat {
     constructor(width: number, height: number) {
         this.width = width;
@@ -1628,6 +1631,18 @@ export class PageFormat {
     public width: number;
     public height: number;
     public get aspectRatio(): number {
-        return this.width / this.height;
+        if (!this.IsUndefined) {
+            return this.width / this.height;
+        } else {
+            return 0; // infinite page height
+        }
+    }
+    /** Undefined page format: use default page format. */
+    public get IsUndefined(): boolean {
+        return this.width === undefined || this.height === undefined || this.height === 0 || this.width === 0;
+    }
+
+    public static get UndefinedPageFormat(): PageFormat {
+        return new PageFormat(0, 0);
     }
 }
