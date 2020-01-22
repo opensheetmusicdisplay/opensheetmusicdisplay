@@ -11,6 +11,7 @@ import {NoteState} from "../Graphical/DrawingEnums";
 import {Notehead} from "./Notehead";
 import {Arpeggio} from "./Arpeggio";
 import {NoteType} from "./NoteType";
+import { GraphicalNote } from "../Graphical";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -82,6 +83,8 @@ export class Note {
      * because Note.Notehead is undefined for normal Noteheads to save space and time.
      */
     private noteheadColor: string;
+    /** Graphical note */
+    private graphicalNote: GraphicalNote;
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
@@ -209,6 +212,14 @@ export class Note {
 
     public isRest(): boolean {
         return this.Pitch === undefined;
+    }
+
+    public get GraphicalNote(): GraphicalNote {
+        return this.graphicalNote;
+    }
+
+    public set GraphicalNote(graphicalNote: GraphicalNote) {
+        this.graphicalNote = graphicalNote;
     }
 
     /** Note: May be dangerous to use if ParentStaffEntry.VerticalContainerParent etc is not set.

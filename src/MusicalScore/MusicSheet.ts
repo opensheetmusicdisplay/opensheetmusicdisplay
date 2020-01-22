@@ -79,14 +79,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     // (*) private musicSheetParameterObject: MusicSheetParameterObject = undefined;
     private engravingRules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
-<<<<<<< HEAD
-    /*
-     * The BPM info is present in the sheet, if it is set to false, means each measure's
-     * BPM was set to its value, 120
-     */
-=======
     /* Whether BPM info is present in the sheet. If it is set to false, each measure's BPM was set to a default of 120. */
->>>>>>> upstream/develop
     private hasBPMInfo: boolean;
 
     /**

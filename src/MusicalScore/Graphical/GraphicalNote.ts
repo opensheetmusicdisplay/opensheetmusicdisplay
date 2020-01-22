@@ -16,6 +16,7 @@ export class GraphicalNote extends GraphicalObject {
     constructor(note: Note, parent: GraphicalVoiceEntry, graphicalNoteLength: Fraction = undefined) {
         super();
         this.sourceNote = note;
+        note.GraphicalNote = this;
         this.parentVoiceEntry = parent;
         this.PositionAndShape = new BoundingBox(this, parent.PositionAndShape);
         if (graphicalNoteLength !== undefined) {
