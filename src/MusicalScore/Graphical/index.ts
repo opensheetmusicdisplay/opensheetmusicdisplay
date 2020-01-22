@@ -3,7 +3,7 @@
 export * from "./AbstractGraphicalExpression";
 export * from "./AbstractGraphicalInstruction";
 export * from "./AccidentalCalculator";
-export * from "./AlignmentManager";
+export * from "./VexFlow/AlignmentManager";
 export * from "./BoundingBox";
 export * from "./Clickable";
 export * from "./DrawingEnums";
@@ -49,3 +49,4 @@ export * from "./SystemLine";
 export * from "./SystemLinePosition";
 export * from "./SystemLinesEnum";
 export * from "./VerticalGraphicalStaffEntryContainer";
+export * from "./VexFlow";

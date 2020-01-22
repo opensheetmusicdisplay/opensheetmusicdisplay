@@ -1,3 +1,6 @@
+parserOptions: {
+        ecmaVersion: 7, // the ecmaVersion isn't set in stone, for now added to satisfy eslint 
+    }
 extends: standard
 rules:
   indent: [2, 4]

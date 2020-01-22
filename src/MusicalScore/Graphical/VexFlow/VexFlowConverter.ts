@@ -25,6 +25,7 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 import { Note } from "../..";
 import StaveNote = Vex.Flow.StaveNote;
+import { ArpeggioType } from "../../VoiceData";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -191,6 +192,7 @@ export class VexFlowConverter {
             if (note.sourceNote.isRest()) {
                 isRest = true;
                 keys = ["b/4"];
+                // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
                 // if it is a full measure rest:
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
                     keys = ["d/5"];
@@ -463,6 +465,27 @@ export class VexFlowConverter {
         }
     }
 
+    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): Vex.Flow.Stroke.Type {
+        switch (arpeggioType) {
+            case ArpeggioType.ARPEGGIO_DIRECTIONLESS:
+                return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+            case ArpeggioType.BRUSH_DOWN:
+                return Vex.Flow.Stroke.Type.BRUSH_UP; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.BRUSH_UP:
+                return Vex.Flow.Stroke.Type.BRUSH_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.RASQUEDO_DOWN:
+                return Vex.Flow.Stroke.Type.RASQUEDO_UP;
+            case ArpeggioType.RASQUEDO_UP:
+                return Vex.Flow.Stroke.Type.RASQUEDO_DOWN;
+            case ArpeggioType.ROLL_DOWN:
+                return Vex.Flow.Stroke.Type.ROLL_UP; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.ROLL_UP:
+                return Vex.Flow.Stroke.Type.ROLL_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
+            default:
+                return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+        }
+    }
+
     /**
      * Convert a ClefInstruction to a string represention of a clef type in VexFlow.
      *
@@ -652,7 +675,7 @@ export class VexFlowConverter {
     public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular, font: Fonts = Fonts.TimesNewRoman): string {
         let style: string = "normal";
         let weight: string = "normal";
-        const family: string = "'Times New Roman'";
+        const family: string = "'" + EngravingRules.Rules.DefaultFontFamily + "'"; // default "'Times New Roman'"
 
         switch (fontStyle) {
             case FontStyles.Bold:
@@ -672,7 +695,7 @@ export class VexFlowConverter {
                 break;
         }
 
-        switch (font) {
+        switch (font) { // currently not used
             case Fonts.Kokila:
                 // TODO Not Supported
                 break;

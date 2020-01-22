@@ -39,7 +39,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         }
     }
 
-    public graphicalChordContainer: GraphicalChordSymbolContainer;
+    public graphicalChordContainers: GraphicalChordSymbolContainer[] = [];
     public graphicalLink: GraphicalStaffEntryLink;
 
     // Extra member needed, as tie notes have no direct source entry with the right time stamp.

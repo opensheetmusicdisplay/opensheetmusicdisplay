@@ -28,7 +28,11 @@ export abstract class VexFlowBackend {
     return this.renderer;
   }
 
-  public abstract getContext(): Vex.IRenderContext;
+  public removeFromContainer(container: HTMLElement): void {
+    container.removeChild(this.canvas);
+  }
+
+public abstract getContext(): Vex.IRenderContext;
 
   // public abstract setWidth(width: number): void;
   // public abstract setHeight(height: number): void;

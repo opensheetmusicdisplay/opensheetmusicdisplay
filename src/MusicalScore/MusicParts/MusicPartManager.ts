@@ -25,7 +25,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
      * Main initialize method for MusicPartManager.
      */
     public init(): void {
-        this.parts = this.musicSheet.Repetitions.slice();
+        this.parts = this.musicSheet.Repetitions.slice(); // slice=arrayCopy
         this.sheetStart = this.musicSheet.SelectionStart = new Fraction(0, 1);
         this.sheetEnd = this.musicSheet.SelectionEnd = this.musicSheet.SheetEndTimestamp;
         this.calcMapping();
@@ -34,7 +34,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         let curTransform: TimestampTransform = undefined;
         for (let i: number = this.timestamps.length - 1; i >= 0; i--) {
             curTransform = this.timestamps[i];
-            if (curEnrolledTimestamp >= curTransform.$from) {
+            if (curEnrolledTimestamp.gte(curTransform.$from)) {
                 return curTransform;
             }
         }

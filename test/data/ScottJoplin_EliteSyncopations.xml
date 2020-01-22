@@ -812,8 +812,6 @@
                 <type>16th</type>
                 <stem default-y="12.5">up</stem>
                 <staff>1</staff>
-                <beam number="1">begin</beam>
-                <beam number="2">begin</beam>
             </note>
             <note default-x="172">
                 <rest/>
@@ -832,8 +830,6 @@
                 <type>16th</type>
                 <stem default-y="12.5">up</stem>
                 <staff>1</staff>
-                <beam number="1">end</beam>
-                <beam number="2">end</beam>
             </note>
             <backup>
                 <duration>8</duration>
@@ -4604,8 +4600,6 @@
                 <type>16th</type>
                 <stem default-y="-7">up</stem>
                 <staff>1</staff>
-                <beam number="1">begin</beam>
-                <beam number="2">begin</beam>
             </note>
             <note default-x="147">
                 <rest>
@@ -4627,8 +4621,6 @@
                 <type>16th</type>
                 <stem default-y="-7">up</stem>
                 <staff>1</staff>
-                <beam number="1">end</beam>
-                <beam number="2">end</beam>
             </note>
             <backup>
                 <duration>8</duration>

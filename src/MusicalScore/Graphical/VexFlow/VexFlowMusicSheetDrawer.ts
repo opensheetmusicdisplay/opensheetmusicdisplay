@@ -26,6 +26,8 @@ import log = require("loglevel");
 import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { DrawingParameters } from "../DrawingParameters";
+import { GraphicalMusicPage } from "../GraphicalMusicPage";
+import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -36,39 +38,47 @@ export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private backend: VexFlowBackend;
+    private backends: VexFlowBackend[] = [];
     private zoom: number = 1.0;
+    private pageIdx: number = 0;
 
-    constructor(element: HTMLElement,
-                backend: VexFlowBackend,
-                drawingParameters: DrawingParameters = new DrawingParameters()) {
+    constructor(drawingParameters: DrawingParameters = new DrawingParameters()) {
         super(new VexFlowTextMeasurer(), drawingParameters);
-        this.backend = backend;
+    }
+
+    public get Backends(): VexFlowBackend[] {
+        return this.backends;
+    }
+
+    public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        this.pageIdx = 0;
+        for (const {} of graphicalMusicSheet.MusicPages) {
+            const backend: VexFlowBackend = this.backends[this.pageIdx];
+            backend.scale(this.zoom);
+            //backend.resize(graphicalMusicSheet.ParentMusicSheet.pageWidth * unitInPixels * this.zoom,
+            //               EngravingRules.Rules.PageHeight * unitInPixels * this.zoom);
+            this.pageIdx += 1;
+        }
+
+        this.pageIdx = 0;
+        this.backend = this.backends[0];
+        super.drawSheet(graphicalMusicSheet);
+    }
+
+    protected drawPage(page: GraphicalMusicPage): void {
+        super.drawPage(page);
+        this.pageIdx += 1;
+        this.backend = this.backends[this.pageIdx];
     }
 
     public clear(): void {
-        this.backend.clear();
+        for (const backend of this.backends) {
+            backend.clear();
+        }
     }
 
-    /**
-     * Zoom the rendering areas
-     * @param k is the zoom factor
-     */
-    public scale(k: number): void {
-        this.zoom = k;
-        this.backend.scale(this.zoom);
-    }
-
-    /**
-     * Resize the rendering areas
-     * @param x
-     * @param y
-     */
-    public resize(x: number, y: number): void {
-        this.backend.resize(x, y);
-    }
-
-    public translate(x: number, y: number): void {
-        this.backend.translate(x, y);
+    public setZoom(zoom: number): void {
+        this.zoom = zoom;
     }
 
     /**
@@ -83,7 +93,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawStaffLine(staffLine: StaffLine): void {
         super.drawStaffLine(staffLine);
         const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
-        this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
+        if (EngravingRules.Rules.RenderSlurs) {
+            this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
+        }
     }
 
     private drawSlurs(vfstaffLine: VexFlowStaffLine, absolutePos: PointF2D): void {
@@ -238,12 +250,16 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
 
     private drawStaffEntry(staffEntry: GraphicalStaffEntry): void {
-        // Draw ChordSymbol
-        if (staffEntry.graphicalChordContainer !== undefined) {
-            this.drawLabel(staffEntry.graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
+        // Draw ChordSymbols
+        if (staffEntry.graphicalChordContainers !== undefined && staffEntry.graphicalChordContainers.length > 0) {
+            for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
+                this.drawLabel(graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
+            }
         }
-        if (staffEntry.LyricsEntries.length > 0) {
-            this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
+        if (EngravingRules.Rules.RenderLyrics) {
+            if (staffEntry.LyricsEntries.length > 0) {
+                this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
+            }
         }
     }
 
@@ -278,9 +294,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 const stopX: number = staffLine.PositionAndShape.AbsolutePosition.x + textBracket.stop.getX() / 10;
                 if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
                     const headroom: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX);
+                    if (headroom === Infinity) { // will cause Vexflow error
+                        return;
+                    }
                     textBracket.start.getStave().options.space_above_staff_ln = headroom;
                 } else {
                     const footroom: number = staffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
+                    if (footroom === Infinity) { // will cause Vexflow error
+                        return;
+                    }
                     textBracket.start.getStave().options.space_below_staff_ln = footroom;
                 }
                 textBracket.draw();

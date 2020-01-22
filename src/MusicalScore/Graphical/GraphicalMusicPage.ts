@@ -48,26 +48,29 @@ export class GraphicalMusicPage extends GraphicalObject {
      * @returns {PointF2D}
      */
     public setMusicPageAbsolutePosition(pageIndex: number, rules: EngravingRules): PointF2D {
-        if (rules.PagePlacement === PagePlacementEnum.Down) {
-            return new PointF2D(0.0, pageIndex * rules.PageHeight);
-        } else if (rules.PagePlacement === PagePlacementEnum.Right) {
-            return new PointF2D(pageIndex * this.parent.ParentMusicSheet.pageWidth, 0.0);
-        } else {
-            // placement RightDown
-            if (pageIndex % 2 === 0) {
-                if (pageIndex === 0) {
-                    return new PointF2D(0.0, pageIndex * rules.PageHeight);
-                } else {
-                    return new PointF2D(0.0, (pageIndex - 1) * rules.PageHeight);
-                }
-            } else {
-                if (pageIndex === 1) {
-                    return new PointF2D(this.parent.ParentMusicSheet.pageWidth, (pageIndex - 1) * rules.PageHeight);
-                } else {
-                    return new PointF2D(this.parent.ParentMusicSheet.pageWidth, (pageIndex - 2) * rules.PageHeight);
-                }
-            }
-        }
+        return new PointF2D(0.0, 0.0);
+
+        // use this code if pages are rendered on only one canvas:
+        // if (rules.PagePlacement === PagePlacementEnum.Down) {
+        //     return new PointF2D(0.0, pageIndex * rules.PageHeight);
+        // } else if (rules.PagePlacement === PagePlacementEnum.Right) {
+        //     return new PointF2D(pageIndex * this.parent.ParentMusicSheet.pageWidth, 0.0);
+        // } else {
+        //     // placement RightDown
+        //     if (pageIndex % 2 === 0) {
+        //         if (pageIndex === 0) {
+        //             return new PointF2D(0.0, pageIndex * rules.PageHeight);
+        //         } else {
+        //             return new PointF2D(0.0, (pageIndex - 1) * rules.PageHeight);
+        //         }
+        //     } else {
+        //         if (pageIndex === 1) {
+        //             return new PointF2D(this.parent.ParentMusicSheet.pageWidth, (pageIndex - 1) * rules.PageHeight);
+        //         } else {
+        //             return new PointF2D(this.parent.ParentMusicSheet.pageWidth, (pageIndex - 2) * rules.PageHeight);
+        //         }
+        //     }
+        // }
     }
 }
 

@@ -1,6 +1,5 @@
 import Vex = require("vexflow");
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
-import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";
 import {Staff} from "../../VoiceData/Staff";
@@ -36,8 +35,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param systemIndex
      * @returns {VexFlowMusicSystem}
      */
-    public createMusicSystem(page: GraphicalMusicPage, systemIndex: number): MusicSystem {
-        return new VexFlowMusicSystem(page, systemIndex);
+    public createMusicSystem(systemIndex: number): MusicSystem {
+        return new VexFlowMusicSystem(systemIndex);
     }
 
     /**
@@ -155,17 +154,25 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param graphicalStaffEntry
      * @param transposeHalftones
      */
-    public createChordSymbol(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
-      const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
-        new GraphicalChordSymbolContainer(sourceStaffEntry.ChordContainer,
-                                          graphicalStaffEntry.PositionAndShape,
-                                          EngravingRules.Rules.ChordSymbolTextHeight,
-                                          transposeHalftones);
-      const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
-      graphicalLabel.PositionAndShape.RelativePosition.y -= EngravingRules.Rules.ChordSymbolYOffset;
-      graphicalLabel.setLabelPositionAndShapeBorders();
-      graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
-      graphicalStaffEntry.graphicalChordContainer = graphicalChordSymbolContainer;
+    public createChordSymbols(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
+        let xShift: number = 0;
+        const chordSymbolSpacing: number = EngravingRules.Rules.ChordSymbolXSpacing;
+        for (const chordSymbolContainer of sourceStaffEntry.ChordContainers) {
+            const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
+              new GraphicalChordSymbolContainer(chordSymbolContainer,
+                                                graphicalStaffEntry.PositionAndShape,
+                                                EngravingRules.Rules.ChordSymbolTextHeight,
+                                                transposeHalftones);
+            const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
+            graphicalLabel.PositionAndShape.RelativePosition.y -= EngravingRules.Rules.ChordSymbolYOffset;
+            graphicalLabel.PositionAndShape.RelativePosition.x += xShift;
+            // TODO check for available space until next staffEntry or chord symbol (x direction)
+            graphicalLabel.setLabelPositionAndShapeBorders();
+            graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
+            graphicalStaffEntry.graphicalChordContainers.push(graphicalChordSymbolContainer);
+
+            xShift += graphicalLabel.PositionAndShape.Size.width + chordSymbolSpacing;
+        }
     }
 
     /**

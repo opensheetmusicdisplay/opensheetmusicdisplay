@@ -46,6 +46,8 @@ import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
+import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
+import { VexFlowStaffLine } from "./VexFlowStaffLine";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -116,7 +118,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
       if (voices.length === 0) {
-        log.info("Found a measure with no voices. Continuing anyway.", mvoices);
+        log.debug("Found a measure with no voices. Continuing anyway.", mvoices);
+        // no need to log this, measures with no voices/notes are fine. see OSMDOptions.fillEmptyMeasuresWithWholeRest
         continue;
       }
       // all voices that belong to one stave are collectively added to create a common context in VexFlow.
@@ -132,22 +135,71 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       //     formatter.format(allVoices, w);
       // };
       MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
+
+      const formatVoicesDefault: (w: number) => void = (w) => {
+        formatter.format(allVoices, w);
+      };
+      const formatVoicesAlignRests: (w: number) => void = (w) => {
+        formatter.format(allVoices, w, {
+          align_rests: true,
+          context: undefined
+        });
+      };
+
       for (const measure of measures) {
+        // determine whether to align rests
+        if (EngravingRules.Rules.AlignRests === AlignRestOption.Never) {
+          (measure as VexFlowMeasure).formatVoices = formatVoicesDefault;
+        } else if (EngravingRules.Rules.AlignRests === AlignRestOption.Always) {
+          (measure as VexFlowMeasure).formatVoices = formatVoicesAlignRests;
+        } else if (EngravingRules.Rules.AlignRests === AlignRestOption.Auto) {
+          let alignRests: boolean = false;
+          for (const staffEntry of measure.staffEntries) {
+            let collidableVoiceEntries: number = 0;
+            let numberOfRests: number = 0;
+            for (const voiceEntry of staffEntry.graphicalVoiceEntries) {
+              if (!voiceEntry.parentVoiceEntry.IsGrace) {
+                if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {// TODO null chaining, TS 3.7
+                  if (voiceEntry.notes[0].sourceNote.PrintObject) { // only respect collision when not invisible
+                    collidableVoiceEntries++;
+                  }
+                }
+              }
+              if (voiceEntry && voiceEntry.notes && voiceEntry.notes[0] && voiceEntry.notes[0].sourceNote) {// TODO null chaining, TS 3.7
+                if (voiceEntry.notes[0].sourceNote.isRest() && voiceEntry.notes[0].sourceNote.PrintObject) {
+                  numberOfRests++; // only align rests if there is actually a rest (which could collide)
+                }
+              }
+              if (collidableVoiceEntries > 1 && numberOfRests >= 1) {
+                // TODO could add further checks like if any of the already checked voice entries actually collide
+                alignRests = true;
+                break;
+              }
+            }
+            if (alignRests) {
+              break;
+            }
+          }
+
+          // set measure's format function
+          if (alignRests) {
+            (measure as VexFlowMeasure).formatVoices = formatVoicesAlignRests;
+          } else {
+            (measure as VexFlowMeasure).formatVoices = formatVoicesDefault;
+          }
+        }
+
+        // format first measure with minimum width
         if (measure === measures[0]) {
           const vexflowMeasure: VexFlowMeasure = (measure as VexFlowMeasure);
           // prepare format function for voices, will be called later for formatting measure again
-          vexflowMeasure.formatVoices = (w: number) => {
-            formatter.format(allVoices, w);
-            // formatter.format(allVoices, w, {
-            //   align_rests: false, // TODO
-            //   // align_rests = true causes a Vexflow Exception for Mozart - An Chloe
-            //   // align_rests = false still aligns rests with beams according to Vexflow, but doesn't seem to do anything
-            // });
-          };
+          //vexflowMeasure.formatVoices = formatVoicesDefault;
+
           // format now for minimum width, calculateMeasureWidthFromLyrics later
           vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
         } else {
-          (measure as VexFlowMeasure).formatVoices = undefined;
+          //(measure as VexFlowMeasure).formatVoices = undefined;
+          // TODO why was the formatVoices function disabled for other measures? would now disable the new align rests option.
         }
       }
     }
@@ -343,21 +395,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   /**
-   * calculates the y positions of the staff lines within a system and
-   * furthermore the y positions of the systems themselves.
-   */
-  protected calculateSystemYLayout(): void {
-    for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
-      for (const musicSystem of graphicalMusicPage.MusicSystems) {
-        this.optimizeDistanceBetweenStaffLines(musicSystem);
-      }
-
-      // set y positions of systems using the previous system and a fixed distance.
-      this.calculateMusicSystemsRelativePositions(graphicalMusicPage);
-    }
-  }
-
-  /**
    * Is called at the begin of the method for creating the vertically aligned staff measures belonging to one source measure.
    */
   protected initGraphicalMeasuresCreation(): void {
@@ -467,7 +504,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       graphicalContinuousDynamic.StartMeasure = startMeasure;
 
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
-        this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
+        try {
+          this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
+        } catch (e) {
+          // TODO this sometimes fails when the measure range to draw doesn't include all the dynamic's measures, method needs to be adjusted
+          //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
+
+        }
       } else if (graphicalContinuousDynamic.IsVerbal) {
         this.calculateGraphicalVerbalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
       } else {
@@ -513,41 +556,87 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const startTimeStamp: Fraction = octaveShift.ParentStartMultiExpression.Timestamp;
     const endTimeStamp: Fraction = octaveShift.ParentEndMultiExpression.Timestamp;
 
-    const startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
+    const minMeasureToDrawIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+    const maxMeasureToDrawIndex: number = EngravingRules.Rules.MaxMeasureToDrawIndex;
+
+    let startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
+    if (startStaffLine === undefined) { // fix for rendering range set. all of these can probably done cleaner.
+      startStaffLine = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex].ParentStaffLine;
+    }
 
     let endMeasure: GraphicalMeasure = undefined;
     if (octaveShift.ParentEndMultiExpression !== undefined) {
       endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
                                                                                          staffIndex);
+    } else {
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // get last rendered measure
+    }
+    if (endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) { // octaveshift ends in measure not rendered
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
     let startMeasure: GraphicalMeasure = undefined;
     if (octaveShift.ParentEndMultiExpression !== undefined) {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
                                                                                            staffIndex);
+    } else {
+      startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
+    }
+    if (startMeasure.MeasureNumber < minMeasureToDrawIndex + 1) { // octaveshift starts before range of measures selected to render
+      startMeasure = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex]; // first rendered measure
     }
 
-    // TODO octave shifts probably need a fix when we only draw measure 1 for example, then stafflines are undefined
-    if (endMeasure !== undefined && startStaffLine !== undefined && endMeasure.ParentStaffLine !== undefined) {
+    if (startMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
+        startMeasure.MeasureNumber > maxMeasureToDrawIndex + 1 ||
+        endMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
+        endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) {
+      // octave shift completely out of drawing range, don't draw anything
+      return;
+    }
+
+    let endStaffLine: StaffLine = endMeasure.ParentStaffLine;
+    if (endStaffLine === undefined) {
+      endStaffLine = startStaffLine;
+    }
+
+    if (endMeasure !== undefined && startStaffLine !== undefined && endStaffLine !== undefined) {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
+      if (graphicalOctaveShift.getStartNote() === undefined) { // fix for rendering range set
+        graphicalOctaveShift.setStartNote(startMeasure.staffEntries[0]);
+      }
+      if (graphicalOctaveShift.getStartNote() === undefined) { // fix for rendering range set
+        graphicalOctaveShift.setEndNote(endMeasure.staffEntries.last());
+      }
       startStaffLine.OctaveShifts.push(graphicalOctaveShift);
 
       // calculate RelativePosition and Dashes
-      const startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
-      const endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
+      if (startStaffEntry === undefined) { // fix for rendering range set
+        startStaffEntry = startMeasure.staffEntries[0];
+      }
+      let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
+      if (endStaffEntry === undefined) { // fix for rendering range set
+        endStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
+      }
 
       graphicalOctaveShift.setStartNote(startStaffEntry);
 
-      if (endMeasure.ParentStaffLine !== startMeasure.ParentStaffLine) {
+      if (endStaffLine !== startStaffLine) {
         graphicalOctaveShift.endsOnDifferentStaffLine = true;
-        const lastMeasure: GraphicalMeasure = startMeasure.ParentStaffLine.Measures[startMeasure.ParentStaffLine.Measures.length - 1];
+        let lastMeasure: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
+        if (lastMeasure === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+          lastMeasure = endMeasure;
+        }
         const lastNote: GraphicalStaffEntry = lastMeasure.staffEntries[lastMeasure.staffEntries.length - 1];
         graphicalOctaveShift.setEndNote(lastNote);
 
         // Now finish the shift on the next line
         const remainingOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, endMeasure.PositionAndShape);
-        endMeasure.ParentStaffLine.OctaveShifts.push(remainingOctaveShift);
-        const firstMeasure: GraphicalMeasure = endMeasure.ParentStaffLine.Measures[0];
+        endStaffLine.OctaveShifts.push(remainingOctaveShift);
+        let firstMeasure: GraphicalMeasure = endStaffLine.Measures[0];
+        if (firstMeasure === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+          firstMeasure = startMeasure;
+        }
         const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
         remainingOctaveShift.setStartNote(firstNote);
         remainingOctaveShift.setEndNote(endStaffEntry);
@@ -585,6 +674,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
     return;
+  }
+
+  /**
+   * Re-adjust the x positioning of expressions. Update the skyline afterwards
+   */
+  protected calculateExpressionAlignements(): void {
+    for (const musicSystem of this.musicSystems) {
+            for (const staffLine of musicSystem.StaffLines) {
+              try {
+                (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
+                staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
+              } catch (e) {
+                // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
+                //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
+        }
+    }
+  }
   }
 
   /**
@@ -738,8 +844,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
     */
 
-    for (const gmPage of this.graphicalMusicSheet.MusicPages) {
-      for (const musicSystem of gmPage.MusicSystems) {
+    for (const musicSystem of this.musicSystems) {
         for (const staffLine of musicSystem.StaffLines) {
           // if a graphical slur reaches out of the last musicsystem, we have to create another graphical slur reaching into this musicsystem
           // (one slur needs 2 graphical slurs)
@@ -766,34 +871,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           // add reference of slur array to the VexFlowStaffline class
           for (const graphicalMeasure of staffLine.Measures) {
             for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
-              // for (var idx5: number = 0, len5 = graphicalStaffEntry.GraceStaffEntriesBefore.Count; idx5 < len5; ++idx5) {
-              //     var graceStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.GraceStaffEntriesBefore[idx5];
-              //     if (graceStaffEntry.Notes[0][0].SourceNote.NoteSlurs.Count > 0) {
-              //         var graceNote: Note = graceStaffEntry.Notes[0][0].SourceNote;
-              //         graceStaffEntry.RelInMeasureTimestamp = Fraction.createFromFraction(graphicalStaffEntry.RelInMeasureTimestamp);
-              //         for (var idx6: number = 0, len6 = graceNote.NoteSlurs.Count; idx6 < len6; ++idx6) {
-              //             var graceNoteSlur: Slur = graceNote.NoteSlurs[idx6];
-              //             if (graceNoteSlur.StartNote == graceNote) {
-              //                 var vfSlur: VexFlowSlur = new VexFlowSlur(graceNoteSlur);
-              //                 vfSlur.GraceStart = true;
-              //                 staffLine.GraphicalSlurs.Add(vfSlur);
-              //                 openGraphicalSlurs[i].Add(vfSlur);
-              //                 for (var j: number = graphicalStaffEntry.GraceStaffEntriesBefore.IndexOf(graceStaffEntry);
-              //                     j < graphicalStaffEntry.GraceStaffEntriesBefore.Count; j++)
-              //                        vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesBefore[j]);
-              //             }
-              //             if (graceNote == graceNoteSlur.EndNote) {
-              //                 var vfSlur: VexFlowSlur = findGraphicalSlurFromSlur(openGraphicalSlurs[i], graceNoteSlur);
-              //                 if (vfSlur != null) {
-              //                     vfSlur.GraceEnd = true;
-              //                     openGraphicalSlurs[i].Remove(vfSlur);
-              //                     for (var j: number = 0; j <= graphicalStaffEntry.GraceStaffEntriesBefore.IndexOf(graceStaffEntry); j++)
-              //                         vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesBefore[j]);
-              //                 }
-              //             }
-              //         }
-              //     }
-              // }
               // loop over "normal" notes (= no gracenotes)
               for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
                 for (const graphicalNote of graphicalVoiceEntry.notes) {
@@ -850,35 +927,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                   }
                 }
               }
-              // for (var idx5: number = 0, len5 = graphicalStaffEntry.GraceStaffEntriesAfter.Count; idx5 < len5; ++idx5) {
-              //     var graceStaffEntry: GraphicalStaffEntry = graphicalStaffEntry.GraceStaffEntriesAfter[idx5];
-              //     if (graceStaffEntry.Notes[0][0].SourceNote.NoteSlurs.Count > 0) {
-              //         var graceNote: Note = graceStaffEntry.Notes[0][0].SourceNote;
-              //         graceStaffEntry.RelInMeasureTimestamp = Fraction.createFromFraction(graphicalStaffEntry.RelInMeasureTimestamp);
-              //         for (var idx6: number = 0, len6 = graceNote.NoteSlurs.Count; idx6 < len6; ++idx6) {
-              //             var graceNoteSlur: Slur = graceNote.NoteSlurs[idx6];
-              //             if (graceNoteSlur.StartNote == graceNote) {
-              //                 var vfSlur: VexFlowSlur = new VexFlowSlur(graceNoteSlur);
-              //                 vfSlur.GraceStart = true;
-              //                 staffLine.GraphicalSlurs.Add(vfSlur);
-              //                 openGraphicalSlurs[i].Add(vfSlur);
-              //                 for (var j: number = graphicalStaffEntry.GraceStaffEntriesAfter.IndexOf(graceStaffEntry);
-              //                      j < graphicalStaffEntry.GraceStaffEntriesAfter.Count; j++)
-              //                        vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesAfter[j]);
-              //             }
-              //             if (graceNote == graceNoteSlur.EndNote) {
-              //                 var vfSlur: VexFlowSlur = findGraphicalSlurFromSlur(openGraphicalSlurs[i], graceNoteSlur);
-              //                 if (vfSlur != null) {
-              //                     vfSlur.GraceEnd = true;
-              //                     openGraphicalSlurs[i].Remove(vfSlur);
-              //                     vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry);
-              //                     for (var j: number = 0; j <= graphicalStaffEntry.GraceStaffEntriesAfter.IndexOf(graceStaffEntry); j++)
-              //                         vfSlur.StaffEntries.Add(<PsStaffEntry>graphicalStaffEntry.GraceStaffEntriesAfter[j]);
-              //                 }
-              //             }
-              //         }
-              //     }
-              // }
 
               //add the present Staffentry to all open slurs that don't contain this Staffentry already
               for (const gSlur of openGraphicalSlurs) {
@@ -893,11 +941,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // Attach vfSlur array to the vfStaffline to be drawn
         //vfStaffLine.SlursInVFStaffLine = vfSlurs;
       } // loop over MusicSystems
-    } // loop over MusicPages
 
     // order slurs that were saved to the Staffline
-    for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
-        for (const musicSystem of graphicalMusicPage.MusicSystems) {
+    for (const musicSystem of this.musicSystems) {
           for (const staffLine of musicSystem.StaffLines) {
             // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
             const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
@@ -912,4 +958,3 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
   }
-}

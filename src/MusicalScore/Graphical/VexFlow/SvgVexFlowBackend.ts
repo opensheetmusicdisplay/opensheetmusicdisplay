@@ -6,6 +6,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
+import { EngravingRules } from "..";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
@@ -23,18 +24,22 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
-
     }
 
     public getContext(): Vex.Flow.SVGContext {
         return this.ctx;
     }
 
+    public getSvgElement(): SVGElement {
+        return this.ctx.svg;
+    }
+
     public clear(): void {
         if (!this.ctx) {
             return;
         }
-        const { svg } = this.ctx;
+        //const { svg } = this.ctx; // seems to make svg static between osmd instances.
+        const svg: SVGElement = this.ctx.svg;
         // removes all children from the SVG element,
         // effectively clearing the SVG viewport
         while (svg.lastChild) {
@@ -57,7 +62,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             this.ctx.attributes.fill = color;
             this.ctx.attributes.stroke = color;
         }
-        this.ctx.setFont("Times New Roman", fontHeight, VexFlowConverter.fontStyle(fontStyle));
+        this.ctx.setFont(EngravingRules.Rules.DefaultFontFamily, fontHeight, VexFlowConverter.fontStyle(fontStyle));
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
         this.ctx.attributes["font-size"] = `${fontHeight}px`;
         this.ctx.state["font-size"] = `${fontHeight}px`;

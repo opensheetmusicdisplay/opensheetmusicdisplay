@@ -3,7 +3,7 @@ import { PagePlacementEnum } from "./GraphicalMusicPage";
 import * as log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { AutoBeamOptions } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import { AutoBeamOptions, AlignRestOption, FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "../..";
@@ -30,14 +30,13 @@ export class EngravingRules {
     private pageRightMargin: number;
     private titleTopDistance: number;
     private titleBottomDistance: number;
-    private systemDistance: number;
     private systemLeftMargin: number;
     private systemRightMargin: number;
     private firstSystemMargin: number;
     private systemLabelsRightMargin: number;
     private systemComposerDistance: number;
     private instrumentLabelTextHeight: number;
-    private minimumAllowedDistanceBetweenSystems: number;
+    private minimumDistanceBetweenSystems: number;
     private lastSystemMaxScalingFactor: number;
     private staffDistance: number;
     private betweenStaffDistance: number;
@@ -89,6 +88,7 @@ export class EngravingRules {
     private betweenDotsDistance: number;
     private ornamentAccidentalScalingFactor: number;
     private chordSymbolTextHeight: number;
+    private chordSymbolXSpacing: number;
     private chordSymbolYOffset: number;
     private fingeringLabelFontHeight: number;
     private measureNumberLabelHeight: number;
@@ -179,6 +179,11 @@ export class EngravingRules {
     private durationDistanceDict: {[_: number]: number; } = {};
     private durationScalingDistanceDict: {[_: number]: number; } = {};
 
+    private alignRests: number; // 0 = false, 1 = true, 2 = auto
+    private fillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
+    private arpeggiosGoAcrossVoices: boolean;
+    private renderArpeggios: boolean;
+    private renderSlurs: boolean;
     private coloringMode: ColoringMode;
     private coloringEnabled: boolean;
     private colorStemsLikeNoteheads: boolean;
@@ -190,6 +195,7 @@ export class EngravingRules {
     private defaultColorStem: string;
     private defaultColorLabel: string;
     private defaultColorTitle: string;
+    private defaultFontFamily: string;
     private maxMeasureToDrawIndex: number;
     private minMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
@@ -200,11 +206,16 @@ export class EngravingRules {
     private renderPartNames: boolean;
     private renderPartAbbreviations: boolean;
     private renderFingerings: boolean;
+    private renderMeasureNumbers: boolean;
+    private renderLyrics: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
+    private pageFormat: PageFormat;
+
+    private fixStafflineBoundingBox: boolean; // TODO temporary workaround
 
     constructor() {
         // global variables
@@ -234,14 +245,13 @@ export class EngravingRules {
         // System Sizing and Label Variables
         this.staffHeight = 4.0;
         this.betweenStaffLinesDistance = EngravingRules.unit;
-        this.systemDistance = 10.0;
         this.systemLeftMargin = 0.0;
         this.systemRightMargin = 0.0;
         this.firstSystemMargin = 15.0;
         this.systemLabelsRightMargin = 2.0;
         this.systemComposerDistance = 2.0;
         this.instrumentLabelTextHeight = 2;
-        this.minimumAllowedDistanceBetweenSystems = 3.0;
+        this.minimumDistanceBetweenSystems = 4.0;
         this.lastSystemMaxScalingFactor = 1.4;
 
         // autoBeam options
@@ -310,6 +320,7 @@ export class EngravingRules {
         this.betweenDotsDistance = 0.8;
         this.ornamentAccidentalScalingFactor = 0.65;
         this.chordSymbolTextHeight = 2.0;
+        this.chordSymbolXSpacing = 1.0;
         this.chordSymbolYOffset = 2.0;
         this.fingeringLabelFontHeight = 1.7;
 
@@ -398,6 +409,11 @@ export class EngravingRules {
         this.metronomeMarkYShift = -0.5;
 
         // Render options (whether to render specific or invisible elements)
+        this.alignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
+        this.fillEmptyMeasuresWithWholeRest = FillEmptyMeasuresWithWholeRests.No;
+        this.arpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
+        this.renderArpeggios = true;
+        this.renderSlurs = true;
         this.coloringMode = ColoringMode.XML;
         this.coloringEnabled = true;
         this.colorStemsLikeNoteheads = false;
@@ -408,6 +424,7 @@ export class EngravingRules {
         this.defaultColorStem = this.defaultColorNotehead;
         this.defaultColorLabel = this.defaultColorNotehead;
         this.defaultColorTitle = this.defaultColorNotehead;
+        this.defaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
         this.minMeasureToDrawIndex = 0;
         this.renderComposer = true;
@@ -417,8 +434,12 @@ export class EngravingRules {
         this.renderPartNames = true;
         this.renderPartAbbreviations = true;
         this.renderFingerings = true;
+        this.renderMeasureNumbers = true;
+        this.renderLyrics = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
+
+        this.fixStafflineBoundingBox = false; // TODO temporary workaround
 
         this.populateDictionaries();
         try {
@@ -541,12 +562,6 @@ export class EngravingRules {
     public set InstrumentLabelTextHeight(value: number) {
         this.instrumentLabelTextHeight = value;
     }
-    public get SystemDistance(): number {
-        return this.systemDistance;
-    }
-    public set SystemDistance(value: number) {
-        this.systemDistance = value;
-    }
     public get SystemLeftMargin(): number {
         return this.systemLeftMargin;
     }
@@ -571,11 +586,11 @@ export class EngravingRules {
     public set SystemLabelsRightMargin(value: number) {
         this.systemLabelsRightMargin = value;
     }
-    public get MinimumAllowedDistanceBetweenSystems(): number {
-        return this.minimumAllowedDistanceBetweenSystems;
+    public get MinimumDistanceBetweenSystems(): number {
+        return this.minimumDistanceBetweenSystems;
     }
-    public set MinimumAllowedDistanceBetweenSystems(value: number) {
-        this.minimumAllowedDistanceBetweenSystems = value;
+    public set MinimumDistanceBetweenSystems(value: number) {
+        this.minimumDistanceBetweenSystems = value;
     }
     public get LastSystemMaxScalingFactor(): number {
         return this.lastSystemMaxScalingFactor;
@@ -876,6 +891,12 @@ export class EngravingRules {
     }
     public set ChordSymbolTextHeight(value: number) {
         this.chordSymbolTextHeight = value;
+    }
+    public get ChordSymbolXSpacing(): number {
+        return this.chordSymbolXSpacing;
+    }
+    public set ChordSymbolXSpacing(value: number) {
+        this.chordSymbolXSpacing = value;
     }
     public get ChordSymbolYOffset(): number {
         return this.chordSymbolYOffset;
@@ -1342,6 +1363,37 @@ export class EngravingRules {
     public get DurationScalingDistanceDict(): {[_: number]: number; } {
         return this.durationScalingDistanceDict;
     }
+    public get AlignRests(): number {
+        return this.alignRests;
+    }
+    public set AlignRests(value: number) {
+        this.alignRests = value;
+    }
+    public get FillEmptyMeasuresWithWholeRest(): FillEmptyMeasuresWithWholeRests | number {
+        return this.fillEmptyMeasuresWithWholeRest;
+    }
+    public set FillEmptyMeasuresWithWholeRest(value: FillEmptyMeasuresWithWholeRests | number) {
+        this.fillEmptyMeasuresWithWholeRest = value;
+    }
+    public get ArpeggiosGoAcrossVoices(): boolean {
+        return this.arpeggiosGoAcrossVoices;
+    }
+    public set ArpeggiosGoAcrossVoices(value: boolean) {
+        this.arpeggiosGoAcrossVoices = value;
+    }
+    public get RenderArpeggios(): boolean {
+        return this.renderArpeggios;
+    }
+    public set RenderArpeggios(value: boolean) {
+        this.renderArpeggios = value;
+    }
+
+    public get RenderSlurs(): boolean {
+        return this.renderSlurs;
+    }
+    public set RenderSlurs(value: boolean) {
+        this.renderSlurs = value;
+    }
     public get ColoringMode(): ColoringMode {
         return this.coloringMode;
     }
@@ -1408,6 +1460,12 @@ export class EngravingRules {
     public set DefaultColorTitle(value: string) {
         this.defaultColorTitle = value;
     }
+    public get DefaultFontFamily(): string {
+        return this.defaultFontFamily;
+    }
+    public set DefaultFontFamily(value: string) {
+        this.defaultFontFamily = value;
+    }
     public get MaxMeasureToDrawIndex(): number {
         return this.maxMeasureToDrawIndex;
     }
@@ -1462,6 +1520,18 @@ export class EngravingRules {
     public set RenderFingerings(value: boolean) {
         this.renderFingerings = value;
     }
+    public get RenderMeasureNumbers(): boolean {
+        return this.renderMeasureNumbers;
+    }
+    public set RenderMeasureNumbers(value: boolean) {
+        this.renderMeasureNumbers = value;
+    }
+    public get RenderLyrics(): boolean {
+        return this.renderLyrics;
+    }
+    public set RenderLyrics(value: boolean) {
+        this.renderLyrics = value;
+    }
     public get FingeringPosition(): PlacementEnum {
         return this.fingeringPosition;
     }
@@ -1473,6 +1543,19 @@ export class EngravingRules {
     }
     public set FingeringInsideStafflines(value: boolean) {
         this.fingeringInsideStafflines = value;
+    }
+    public set FixStafflineBoundingBox(value: boolean) { // TODO temporary workaround
+        this.fixStafflineBoundingBox = value;
+    }
+    public get FixStafflineBoundingBox(): boolean {
+        return this.fixStafflineBoundingBox;
+    }
+
+    public get PageFormat(): PageFormat {
+        return this.pageFormat;
+    }
+    public set PageFormat(value: PageFormat) {
+        this.pageFormat = value;
     }
 
     /**
@@ -1534,5 +1617,17 @@ export class EngravingRules {
             this.factorOne[i] = 3 * Math.pow((1 - t), 2) * t;
             this.factorTwo[i] = 3 * (1 - t) * Math.pow(t, 2);
         }
+    }
+}
+
+export class PageFormat {
+    constructor(width: number, height: number) {
+        this.width = width;
+        this.height = height;
+    }
+    public width: number;
+    public height: number;
+    public get aspectRatio(): number {
+        return this.width / this.height;
     }
 }

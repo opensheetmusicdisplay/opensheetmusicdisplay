@@ -36,7 +36,9 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 gve.applyBordersFromVexflow();
                 this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
                 const sourceNote: Note = gve.notes[0].sourceNote;
-                if (sourceNote.isRest() && sourceNote.Length.WholeValue === 1) { // whole rest
+                if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
+                    // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
+                    // see Note.isWholeRest(), which is currently not safe
                     this.PositionAndShape.RelativePosition.x +=
                         EngravingRules.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
                     gve.PositionAndShape.BorderLeft = -0.7;

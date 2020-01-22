@@ -7,6 +7,8 @@ import {OpenSheetMusicDisplay} from "./OpenSheetMusicDisplay";
 import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet";
 import {Instrument} from "../MusicalScore/Instrument";
 import {Note} from "../MusicalScore/VoiceData/Note";
+import {EngravingRules, Fraction} from "..";
+import {SourceMeasure} from "../MusicalScore";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -44,7 +46,32 @@ export class Cursor {
    */
   public show(): void {
     this.hidden = false;
+    this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
     this.update();
+  }
+
+  public resetIterator(): void {
+    if (!this.openSheetMusicDisplay.Sheet || !this.openSheetMusicDisplay.Sheet.SourceMeasures) { // just a safety measure
+      console.log("OSMD.Cursor.resetIterator(): sheet or measures were null/undefined.");
+      return;
+    }
+
+    // set selection start, so that when there's MinMeasureToDraw set, the cursor starts there right away instead of at measure 1
+    const lastSheetMeasureIndex: number = this.openSheetMusicDisplay.Sheet.SourceMeasures.length - 1; // last measure in data model
+    let startMeasureIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+    startMeasureIndex = Math.min(startMeasureIndex, lastSheetMeasureIndex);
+    let endMeasureIndex: number = EngravingRules.Rules.MaxMeasureToDrawIndex;
+    endMeasureIndex = Math.min(endMeasureIndex, lastSheetMeasureIndex);
+
+    if (this.openSheetMusicDisplay.Sheet && this.openSheetMusicDisplay.Sheet.SourceMeasures.length > startMeasureIndex) {
+      this.openSheetMusicDisplay.Sheet.SelectionStart = this.openSheetMusicDisplay.Sheet.SourceMeasures[startMeasureIndex].AbsoluteTimestamp;
+    }
+    if (this.openSheetMusicDisplay.Sheet && this.openSheetMusicDisplay.Sheet.SourceMeasures.length > endMeasureIndex) {
+      const lastMeasure: SourceMeasure = this.openSheetMusicDisplay.Sheet.SourceMeasures[endMeasureIndex];
+      this.openSheetMusicDisplay.Sheet.SelectionEnd = Fraction.plus(lastMeasure.AbsoluteTimestamp, lastMeasure.Duration);
+    }
+
+    this.iterator = this.manager.getIterator();
   }
 
   private getStaffEntriesFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
@@ -60,6 +87,8 @@ export class Cursor {
     }
     this.graphic.Cursors.length = 0;
     const iterator: MusicPartManagerIterator = this.iterator;
+    // TODO when measure draw range (drawUpToMeasureNumber) was changed, next/update can fail to move cursor. but of course it can be reset before.
+
     const voiceEntries: VoiceEntry[] = iterator.CurrentVisibleVoiceEntries();
     if (iterator.EndReached || iterator.CurrentVoiceEntries === undefined || voiceEntries.length === 0) {
       return;
@@ -105,7 +134,8 @@ export class Cursor {
       this.updateStyle(newWidth);
     }
     if (this.openSheetMusicDisplay.FollowCursor) {
-      this.cursorElement.scrollIntoView({behavior: "smooth", block: "center"});
+      const diff: number = this.cursorElement.getBoundingClientRect().top;
+      this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
     }
     // Show cursor
     // // Old cursor: this.graphic.Cursors.push(cursor);
@@ -131,17 +161,15 @@ export class Cursor {
    */
   public next(): void {
     this.iterator.moveToNext();
-    if (!this.hidden) {
-      this.show();
-    }
+    this.update();
   }
 
   /**
    * reset cursor to start
    */
   public reset(): void {
-    this.iterator = this.manager.getIterator();
-    this.iterator.moveToNext();
+    this.resetIterator();
+    //this.iterator.moveToNext();
     this.update();
   }
 

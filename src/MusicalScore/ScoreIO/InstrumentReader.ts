@@ -24,6 +24,8 @@ import {ExpressionReader} from "./MusicSymbolModules/ExpressionReader";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
+import {NoteType, NoteTypeHandler} from "../VoiceData";
+import {SystemLinesEnumHelper} from "../Graphical";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -86,7 +88,7 @@ export class InstrumentReader {
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
   private abstractInstructions: [number, AbstractNotationInstruction][] = [];
-  private openChordSymbolContainer: ChordSymbolContainer;
+  private openChordSymbolContainers: ChordSymbolContainer[] = [];
   private expressionReaders: ExpressionReader[];
   private currentVoiceGenerator: VoiceGenerator;
   //private openSlurDict: { [n: number]: Slur; } = {};
@@ -232,6 +234,7 @@ export class InstrumentReader {
           }
           // alternative: check for <type size="cue">
           const typeNode: IXmlElement = xmlNode.element("type");
+          let noteTypeXml: NoteType = NoteType.UNDEFINED;
           if (typeNode !== undefined) {
             const sizeAttr: Attr = typeNode.attribute("size");
             if (sizeAttr !== undefined && sizeAttr !== null) {
@@ -239,6 +242,7 @@ export class InstrumentReader {
                 isCueNote = true;
               }
             }
+            noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
           }
 
           // check stem element
@@ -349,9 +353,10 @@ export class InstrumentReader {
             this.currentStaffEntry.Timestamp.Equals(new Fraction(0, 1)) && !this.currentStaffEntry.hasNotes()
           );
           this.saveAbstractInstructionList(this.instrument.Staves.length, beginOfMeasure);
-          if (this.openChordSymbolContainer !== undefined) {
-            this.currentStaffEntry.ChordContainer = this.openChordSymbolContainer;
-            this.openChordSymbolContainer = undefined;
+          if (this.openChordSymbolContainers.length !== 0) {
+            this.currentStaffEntry.ChordContainers = this.openChordSymbolContainers;
+            // TODO handle multiple chords on one note/staffentry
+            this.openChordSymbolContainers = [];
           }
           if (this.activeRhythm !== undefined) {
             // (*) this.musicSheet.SheetPlaybackSetting.Rhythm = this.activeRhythm.Rhythm;
@@ -360,7 +365,7 @@ export class InstrumentReader {
             noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
           this.currentVoiceGenerator.read(
-            xmlNode, noteDuration, typeDuration, normalNotes, restNote,
+            xmlNode, noteDuration, typeDuration, noteTypeXml, normalNotes, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
@@ -473,13 +478,18 @@ export class InstrumentReader {
              this.currentMeasure.endsPiece = true;
            }
           }
-          if (xmlNode.element("bar-style") !== undefined) {
-            this.currentMeasure.endingBarStyle = xmlNode.element("bar-style").value;
+          const location: IXmlAttribute = xmlNode.attribute("location");
+          if (location && location.value === "right") {
+            const stringValue: string = xmlNode.element("bar-style").value;
+            this.currentMeasure.endingBarStyleXml = stringValue;
+            this.currentMeasure.endingBarStyleEnum = SystemLinesEnumHelper.xmlBarlineStyleToSystemLinesEnum(stringValue);
           }
+          // TODO do we need to process bars with left location too?
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
         } else if (xmlNode.name === "harmony") {
-                    this.openChordSymbolContainer = ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey);
+          // new chord, could be second chord on same staffentry/note
+          this.openChordSymbolContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
         }
       }
       for (const j in this.voiceGeneratorsDict) {
@@ -672,7 +682,7 @@ export class InstrumentReader {
    * @returns {boolean}
    */
   private isAttributesNodeAtEndOfMeasure(parentNode: IXmlElement, attributesNode: IXmlElement): boolean {
-    const childs: IXmlElement[] = parentNode.elements().slice();
+    const childs: IXmlElement[] = parentNode.elements().slice(); // slice=arrayCopy
     let attributesNodeIndex: number = 0;
     for (let i: number = 0; i < childs.length; i++) {
       if (childs[i] === attributesNode) {

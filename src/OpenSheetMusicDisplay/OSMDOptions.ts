@@ -1,10 +1,18 @@
 import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
+import { PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
  *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
  */
 export interface IOSMDOptions {
+    /** Whether to let Vexflow align rests to preceding or following notes (Vexflow option). Default false (0).
+     * This can naturally reduce collisions of rest notes with other notes.
+     * Auto mode (2) only aligns rests when there are multiple voices in a measure, and at least once at the same x-coordinate.
+     * Auto is the recommended setting, and would be default, if it couldn't in rare cases deteriorate rest placement for existing users.
+     * The on mode (1) always aligns rests, also changing their position when there is no simultaneous note at the same x-coordinate, which is nonstandard.
+     */
+    alignRests?: AlignRestOption | number;
     /** Whether to automatically create beams for notes that don't have beams set in XML. */
     autoBeam?: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
@@ -23,7 +31,12 @@ export interface IOSMDOptions {
     coloringEnabled?: boolean;
     /** Whether to color the stems of notes the same as their noteheads */
     colorStemsLikeNoteheads?: boolean;
-    /** Default color for a note head (without stem). Default black (undefined). */
+    /** Default color for a note head (without stem). Default black (undefined).
+     * Only considered before loading a sample, not before render.
+     * To change the color after loading a sample and before render, use note(.sourceNote).NoteheadColor.
+     * The format is Vexflow format, either "#rrggbb" or "#rrggbbtt" where <tt> is transparency. All hex values.
+     * E.g., a half-transparent red would be "#FF000080", invisible would be "#00000000" or "#12345600".
+     */
     defaultColorNotehead?: string;
     /** Default color for a note stem. Default black (undefined). */
     defaultColorStem?: string;
@@ -33,9 +46,14 @@ export interface IOSMDOptions {
     defaultColorLabel?: string;
     /** Default color for labels in the title. Overrides defaultColorLabel for title labels like composer. Default black (undefined). */
     defaultColorTitle?: string;
+    /** Default font used for text and labels, e.g. title or lyrics. Default Times New Roman
+     * Note that OSMD originally always used Times New Roman, so things like layout and spacing may still be optimized for it.
+     * Valid options are CSS font families available in the browser used for rendering, e.g. Times New Roman, Helvetica.
+     */
+    defaultFontFamily?: string;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
-    /** Follow Cursor */
+    /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */
     followCursor?: boolean;
     /** Broad Parameters like compact or preview mode. */
     drawingParameters?: string | DrawingParametersEnum;
@@ -53,6 +71,13 @@ export interface IOSMDOptions {
     drawPartNames?: boolean;
     /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
     drawPartAbbreviations?: boolean;
+    /** Whether to draw measure numbers (labels). Default true.
+     * Draws a measure number label at first measure, system start measure, and every [measureNumberInterval] measures.
+     * See the [measureNumberInterval] option, default is 2.
+     */
+    drawMeasureNumbers?: boolean;
+    /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
+    measureNumberInterval?: number;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
     /** Where to draw fingerings (left, right, above, below, auto).
@@ -61,10 +86,16 @@ export interface IOSMDOptions {
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
     fingeringInsideStafflines?: boolean;
+    /** Whether to draw lyrics (and their extensions and dashes). */
+    drawLyrics?: boolean;
+    /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
+    drawSlurs?: boolean;
     /** Only draw measure n to m, where m is the number you specify. */
     drawUpToMeasureNumber?: number;
     /** Only draw measure n to m, where n is the number you specify. */
     drawFromMeasureNumber?: number;
+    /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
+    fillEmptyMeasuresWithWholeRest?: FillEmptyMeasuresWithWholeRests | number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
     setWantedStemDirectionByXml?: boolean;
     /** Whether tuplets are labeled with ratio (e.g. 5:2 instead of 5 for quintuplets). Default false. */
@@ -80,6 +111,20 @@ export interface IOSMDOptions {
     tripletsBracketed?: boolean;
     /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
     drawHiddenNotes?: boolean;
+
+    pageFormat?: PageFormat;
+}
+
+export enum AlignRestOption {
+    Never = 0, // false should also work
+    Always = 1, // true should also work
+    Auto = 2
+}
+
+export enum FillEmptyMeasuresWithWholeRests {
+    No = 0,
+    YesVisible = 1,
+    YesInvisible = 2
 }
 
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */

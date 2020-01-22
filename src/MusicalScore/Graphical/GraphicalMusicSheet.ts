@@ -23,6 +23,7 @@ import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
+import {EngravingRules} from "./EngravingRules";
 
 /**
  * The graphical counterpart of a [[MusicSheet]]
@@ -39,6 +40,7 @@ export class GraphicalMusicSheet {
     //private fontInfo: FontInfo = FontInfo.Info;
     private calculator: MusicSheetCalculator;
     private musicPages: GraphicalMusicPage[] = [];
+    /** measures (i,j) where i is the measure number and j the staff index (e.g. staff indices 0, 1 for two piano parts) */
     private measureList: GraphicalMeasure[][] = [];
     private verticalGraphicalStaffEntryContainers: VerticalGraphicalStaffEntryContainer[] = [];
     private title: GraphicalLabel;
@@ -203,7 +205,7 @@ export class GraphicalMusicSheet {
 
     /**
      * Search the MeasureList for a certain GraphicalStaffEntry with the given SourceStaffEntry,
-     * at a certain verticalIndex (eg a corresponnding Staff), starting at a specific horizontalIndex (eg specific GraphicalMeasure).
+     * at a certain verticalIndex (eg a corresponding Staff), starting at a specific horizontalIndex (eg specific GraphicalMeasure).
      * @param staffIndex
      * @param measureIndex
      * @param sourceStaffEntry
@@ -243,7 +245,7 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
-    public getFirstVisibleMeasuresListFromIndeces(start: number, end: number): GraphicalMeasure[] {
+    public getFirstVisibleMeasuresListFromIndices(start: number, end: number): GraphicalMeasure[] {
         const graphicalMeasures: GraphicalMeasure[] = [];
         const numberOfStaves: number = this.measureList[0].length;
         for (let i: number = start; i <= end; i++) {
@@ -418,14 +420,14 @@ export class GraphicalMusicSheet {
     }
 
     /**
-     * Get a List with the indeces of all the visible GraphicalMeasures and calculates their
+     * Get a List with the indices of all the visible GraphicalMeasures and calculates their
      * corresponding indices in the first SourceMeasure, taking into account Instruments with multiple Staves.
      * @param visibleMeasures
      * @returns {number[]}
      */
-    public getVisibleStavesIndecesFromSourceMeasure(visibleMeasures: GraphicalMeasure[]): number[] {
+    public getVisibleStavesIndicesFromSourceMeasure(visibleMeasures: GraphicalMeasure[]): number[] {
         const visibleInstruments: Instrument[] = [];
-        const visibleStavesIndeces: number[] = [];
+        const visibleStavesIndices: number[] = [];
         for (let idx: number = 0, len: number = visibleMeasures.length; idx < len; ++idx) {
             const graphicalMeasure: GraphicalMeasure = visibleMeasures[idx];
             const instrument: Instrument = graphicalMeasure.ParentStaff.ParentInstrument;
@@ -437,25 +439,33 @@ export class GraphicalMusicSheet {
             const instrument: Instrument = visibleInstruments[idx];
             const index: number = this.musicSheet.getGlobalStaffIndexOfFirstStaff(instrument);
             for (let j: number = 0; j < instrument.Staves.length; j++) {
-                visibleStavesIndeces.push(index + j);
+                visibleStavesIndices.push(index + j);
             }
         }
-        return visibleStavesIndeces;
+        return visibleStavesIndices;
     }
 
     /**
-     * Returns the GraphicalMeasure with the given SourceMeasure as Parent at the given Index.
+     * Returns the GraphicalMeasure with the given SourceMeasure as Parent at the given staff index.
      * @param sourceMeasure
-     * @param index
+     * @param staffIndex
      * @returns {any}
      */
-    public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, index: number): GraphicalMeasure {
+    public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, staffIndex: number): GraphicalMeasure {
         for (let i: number = 0; i < this.measureList.length; i++) {
             if (this.measureList[i][0].parentSourceMeasure === sourceMeasure) {
-                return this.measureList[i][index];
+                return this.measureList[i][staffIndex];
             }
         }
         return undefined;
+    }
+
+    public getLastGraphicalMeasureFromIndex(staffIndex: number, lastRendered: boolean = true): GraphicalMeasure {
+        let measureIndex: number = this.measureList.length - 1;
+        if (lastRendered) {
+            measureIndex = EngravingRules.Rules.MaxMeasureToDrawIndex;
+        }
+        return this.measureList[measureIndex][staffIndex];
     }
 
     public getMeasureIndex(graphicalMeasure: GraphicalMeasure, measureIndex: number, inListIndex: number): boolean {
@@ -472,7 +482,7 @@ export class GraphicalMusicSheet {
         return false;
     }
 
-    public GetNearesNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
+    public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
         const initialSearchArea: number = 10;
         const foundNotes: GraphicalNote[] = [];
 

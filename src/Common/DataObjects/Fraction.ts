@@ -256,6 +256,14 @@ export class Fraction {
     return this.realValue <= frac.realValue;
   }
 
+  public gt(frac: Fraction): boolean {
+    return !this.lte(frac);
+  }
+
+  public gte(frac: Fraction): boolean {
+    return !this.lt(frac);
+  }
+
   //public Equals(f: Fraction): boolean {
   //    if (ReferenceEquals(this, f))
   //        return true;
@@ -300,6 +308,19 @@ export class Fraction {
       this.numerator = Math.round(this.numerator / factor);
       this.denominator = Math.round(this.denominator / factor);
     }
+  }
+
+  public static FloatInaccuracyTolerance: number = 0.0001; // inaccuracy allowed when comparing Fraction.RealValues, because of floating point inaccuracy
+
+  public isOnBeat(timeSignature: Fraction): boolean { // use sourceMeasure.ActiveTimeSignature as timeSignature
+      const beatDistance: number = this.distanceFromBeat(timeSignature);
+      return Math.abs(beatDistance) < Fraction.FloatInaccuracyTolerance;
+  }
+
+  public distanceFromBeat(timeSignature: Fraction): number {
+      const beatStep: Fraction = new Fraction(1, timeSignature.Denominator);
+      const distanceFromBeat: number = this.RealValue % beatStep.RealValue; // take modulo the beat value, e.g. 1/8 in a 3/8 time signature
+      return distanceFromBeat;
   }
 
 

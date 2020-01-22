@@ -1,3 +1,84 @@
+## [0.7.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.2...0.7.3) (2020-01-15)
+
+
+### Bug Fixes
+
+* **Arpeggio:** fix up/down direction (wrong in Vexflow), remove Vexflow dependency ([450b2d9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/450b2d9)), closes [#645](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/645)
+* **Dynamics, drawing Range:** fix crescendo crashing when partially out of drawingRange ([#644](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/644)) ([8105270](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8105270))
+
+### Etc
+* **Imports:** Remove many Vexflow dependencies in core OSMD classes (Arpeggio, MusicSheetCalculator, other /Graphical/ classes) ([450b2d9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/450b2d91bb4d52a60aeb6fa3425865e58efffebc), [90d93b9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/90d93b907315b8b1d93586d4849d96c41fb60661))
+* **Cursor:** Improve Follow Cursor performance (thanks to @praisethemoon) ([#639](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/639))
+
+
+
+## [0.7.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.1...0.7.2) (2019-12-13)
+
+
+### Bug Fixes
+
+* **Arpeggio:** don't draw one-note arpeggios ([#617](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/617)) ([5f7e183](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5f7e183))
+* **Arpeggios:** prevent infinite height bug, arpeggio always going across voices ([#546](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/546)) ([3fbed99](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3fbed99))
+* **autoBeam:** don't beam over half notes or beat, prevent separate beams connecting ([da464aa](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/da464aa)), closes [#574](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/574)
+* **autoBeamOption:** don't beam notes of type quarter or longer in tuplets ([c3b3b5a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c3b3b5a))
+* **barline:** don't automatically end piece with final barline if not specified ([#569](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/569)) ([8ae7938](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8ae7938))
+* **barlines:** fix left barline added to end barline ([#588](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/588)) ([6608f17](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6608f17))
+* **ChordSymbols:** save all chords on single note, show first instead of last for now ([#599](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/599)) ([2d7e265](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2d7e265))
+* **credits placement:** fix title and composer label placement, now in relation to Staffline width ([b7af9b8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b7af9b8)), closes [#578](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/578)
+* **Cursor:** starts and ends at selected range of measures to draw ([#566](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/566)) ([3fe770e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3fe770e))
+* **demo:** set and reset options for specific test samples correctly ([b28b5dc](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b28b5dc))
+* **empty measures:** not filled with whole rests by default anymore. new option fillEmptyMeasuresWithWholeRest ([#625](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/625)) ([00522db](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/00522db))
+* **exports:** export Vexflow graphical classes (e.g. VexflowGraphicalNote) ([06ef2f3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/06ef2f3)), closes [#549](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/549)
+* **Fractions:** add gt and gte methods, replace some > and < occurences ([#518](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/518)) ([c80fea6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c80fea6))
+* **lyrics Placement:** fix support for Sibelius format ([#583](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/583)) ([084f308](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/084f308))
+* **octaveShift, drawRange:** start and end at within draw range, fix error ([9f6bb82](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9f6bb82)), closes [#586](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/586)
+* **SkyBottomLineCalculator:** prevent infinity bug with startIndex = endIndex and .slice ([554d277](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/554d277)), closes [#575](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/575)
+* **stemColor:** respect ColoringEnabled, re-color to default if disabled ([#614](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/614)) ([52928cb](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/52928cb))
+* **whole rest bbox:** fix whole rest bounding box in non-4/4 time ([#609](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/609)) ([2b91655](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2b91655)), closes [#616](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/616) [#605](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/605)
+
+
+### Features
+
+* **alignRests:** add auto option (alignRests: 2) which only aligns rests if measure contains simultaneous voices ([1c8de9f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1c8de9f)), closes [#621](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/621)
+* **API:** Allow updating the graphical sheet from the music sheet ([#622](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/622)) ([55c3d8a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/55c3d8a))
+* **API:** save ActiveTimeSignature in SourceMeasure ([4927727](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4927727))
+* **barline:** able to not draw barlines (fix barline none) ([#391](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/391)) ([7524287](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7524287))
+* **ChordSymbols:** show all chordsymbols over a single note/staffEntry (spacing WIP) ([#599](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/599)) ([6eb97fa](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6eb97fa))
+* **exports:** Add module exports for VoiceData ([#631](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/631)) ([a2ce3a2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a2ce3a2))
+* **open same-origin xml url:** supported ([#603](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/603)) ([0ac0132](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0ac0132)), closes [#576](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/576)
+* **options:** add option to (not) draw slurs ([#602](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/602)) ([1333195](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/1333195))
+* **options:** add option to align rests and avoid rest collisions, which also aligns rests with voices ([#621](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/621)) ([ca6d730](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ca6d730))
+* **options:** can set font family for labels (default Times New Roman) ([35ee9e2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/35ee9e2)), closes [#477](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/477)
+* **options:** offer options to disable measure numbers, set their interval ([0d5af7a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0d5af7a))
+* **Options:** add drawLyrics option ([#602](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/602)) ([9d09586](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9d09586))
+
+
+
+
+<a name="0.7.1"></a>
+## [0.7.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.0...0.7.1) (2019-08-19)
+
+
+### Bug Fixes
+
+* **part names:** drawPartNames = false does not leave left x-spacing in first line anymore ([595f8ab](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/595f8ab)), closes [#515](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/515)
+* **stemColor:** respect colorStemsLikeNoteheads option in XML color mode as well ([6548c57](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6548c57)), closes [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486)
+* **Ties:** fix not displaying ties because measure to graphicalMeasure dictionary didn't work ([27d3645](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/27d3645)), closes [#503](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/503)
+
+
+### Features
+
+* **drawFromMeasureNumber:** can now specify first measure to draw from as well as last,
+closes [#528](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/528) [#482](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/482)
+* **bar lines:** Add support for double and final bar lines ([#519](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/519)) ([e05b99a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e05b99a))
+* **color:** add colorStemsLikeNoteheads option, color beams like stems as well if matching ([b631879](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b631879)), closes [#486](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/486)
+* **tempo:** Save measures' BPM ([#558](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/558)) ([cf199ad](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cf199ad)), closes [#557](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/557)
+* **transparency:** add invisible notes as transparent StaveNotes instead of GhostNotes ([d0211a7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d0211a7))
+* **transparency:** allow transparency after re-render with Note.PrintObject = false ([52212d6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/52212d6)), closes [#509](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/509)
+* **demo:** add option to follow cursor (, add function test selectMeasuresToDraw)
+
+
+
 <a name="0.7.0"></a>
 # [0.7.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.6.8...0.7.0) (2019-03-25)
 

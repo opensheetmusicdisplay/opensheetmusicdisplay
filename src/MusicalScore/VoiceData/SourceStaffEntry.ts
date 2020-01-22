@@ -24,7 +24,7 @@ export class SourceStaffEntry {
     private voiceEntries: VoiceEntry[] = [];
     private staffEntryLink: StaffEntryLink;
     private instructions: AbstractNotationInstruction[] = [];
-    private chordSymbolContainer: ChordSymbolContainer;
+    private chordSymbolContainers: ChordSymbolContainer[] = [];
 
     public get ParentStaff(): Staff {
         return this.parentStaff;
@@ -72,12 +72,12 @@ export class SourceStaffEntry {
         this.instructions = value;
     }
 
-    public get ChordContainer(): ChordSymbolContainer {
-        return this.chordSymbolContainer;
+    public get ChordContainers(): ChordSymbolContainer[] {
+        return this.chordSymbolContainers;
     }
 
-    public set ChordContainer(value: ChordSymbolContainer) {
-        this.chordSymbolContainer = value;
+    public set ChordContainers(value: ChordSymbolContainer[]) {
+        this.chordSymbolContainers = value;
     }
 
     // public removeAllInstructionsOfType(type: AbstractNotationInstruction): number {

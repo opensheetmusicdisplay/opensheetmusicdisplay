@@ -11,7 +11,7 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
-import {GraphicalMeasure} from "../Graphical";
+import {GraphicalMeasure, SystemLinesEnum} from "../Graphical";
 //import {BaseIdClass} from "../../Util/BaseIdClass"; // SourceMeasure originally extended BaseIdClass, but ids weren't used.
 
 /**
@@ -29,7 +29,8 @@ export class SourceMeasure {
         this.implicitMeasure = false;
         this.breakSystemAfter = false;
         this.endsPiece = false;
-        this.endingBarStyle = "";
+        this.endingBarStyleXml = "";
+        this.endingBarStyleEnum = SystemLinesEnum.SingleThin;
         this.firstInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.lastInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.TempoInBPM = 0;
@@ -50,12 +51,14 @@ export class SourceMeasure {
     /**
      * The style of the ending bar line.
      */
-    public endingBarStyle: string;
+    public endingBarStyleXml: string;
+    public endingBarStyleEnum: SystemLinesEnum;
 
     private measureNumber: number;
     private absoluteTimestamp: Fraction;
     private completeNumberOfStaves: number;
     private duration: Fraction;
+    private activeTimeSignature: Fraction;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
@@ -90,11 +93,19 @@ export class SourceMeasure {
     }
 
     public get Duration(): Fraction {
-        return this.duration;
+        return this.duration; // can be 1/1 in a 4/4 measure
     }
 
     public set Duration(value: Fraction) {
         this.duration = value;
+    }
+
+    public get ActiveTimeSignature(): Fraction {
+        return this.activeTimeSignature;
+    }
+
+    public set ActiveTimeSignature(value: Fraction) {
+        this.activeTimeSignature = value;
     }
 
     public get ImplicitMeasure(): boolean {
