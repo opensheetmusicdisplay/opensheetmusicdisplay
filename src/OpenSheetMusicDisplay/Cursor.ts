@@ -74,7 +74,7 @@ export class Cursor {
     this.iterator = this.manager.getIterator();
   }
 
-  private getStaffEntriesFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
+  private getStaffEntryFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
     const measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.measureListIndex;
     const staffIndex: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.idInMusicSheet;
     return <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
@@ -96,7 +96,7 @@ export class Cursor {
     let x: number = 0, y: number = 0, height: number = 0;
 
     // get all staff entries inside the current voice entry
-    const gseArr: VexFlowStaffEntry[] = voiceEntries.map(ve => this.getStaffEntriesFromVoiceEntry(ve));
+    const gseArr: VexFlowStaffEntry[] = voiceEntries.map(ve => this.getStaffEntryFromVoiceEntry(ve));
     // sort them by x position and take the leftmost entry
     const gse: VexFlowStaffEntry =
           gseArr.sort((a, b) => a.PositionAndShape.AbsolutePosition.x <= b.PositionAndShape.AbsolutePosition.x ? -1 : 1 )[0];
