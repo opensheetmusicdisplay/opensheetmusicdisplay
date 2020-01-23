@@ -52,8 +52,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         this.pageIdx = 0;
-        for (const {} of graphicalMusicSheet.MusicPages) {
+        for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
             const backend: VexFlowBackend = this.backends[this.pageIdx];
+            backend.graphicalMusicPage = graphicalMusicPage;
             backend.scale(this.zoom);
             //backend.resize(graphicalMusicSheet.ParentMusicSheet.pageWidth * unitInPixels * this.zoom,
             //               EngravingRules.Rules.PageHeight * unitInPixels * this.zoom);
@@ -165,10 +166,36 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     //     ctx.fillStyle = oldStyle;
     // }
 
-    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): void {
+    /** Draws a line in the current backend. Only usable while pages are drawn sequentially, because backend reference is updated in that process.
+     *  To add your own lines after rendering, use DrawOverlayLine.
+     */
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): void {
+        // TODO maybe the backend should be given as an argument here as well, otherwise this can't be used after rendering of multiple pages is done.
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
+        /*if (!this.backend) {
+            this.backend = this.backends[0];
+        }*/
         this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
+    }
+
+    /** Lets a user/developer draw an overlay line on the score. Use this instead of drawLine, which is for OSMD internally only.
+     *  The MusicPage has to be specified, because each page and Vexflow backend has its own relative coordinates.
+     *  (the AbsolutePosition of a GraphicalNote is relative to its backend)
+     *  To get a MusicPage, use GraphicalNote.ParentMusicPage.
+     */
+    public DrawOverlayLine(start: PointF2D, stop: PointF2D, musicPage: GraphicalMusicPage,
+                           color: string = "#FF0000FF", lineWidth: number = 0.2): void {
+        if (!musicPage.PageNumber || musicPage.PageNumber > this.backends.length || musicPage.PageNumber < 1) {
+            console.log("VexFlowMusicSheetDrawer.drawOverlayLine: invalid page number / music page number doesn't correspond to an existing backend.");
+            return;
+        }
+        const musicPageIndex: number = musicPage.PageNumber - 1;
+        const backendToUse: VexFlowBackend = this.backends[musicPageIndex];
+
+        start = this.applyScreenTransformation(start);
+        stop = this.applyScreenTransformation(stop);
+        backendToUse.renderLine(start, stop, color, lineWidth * unitInPixels);
     }
 
     protected drawSkyLine(staffline: StaffLine): void {

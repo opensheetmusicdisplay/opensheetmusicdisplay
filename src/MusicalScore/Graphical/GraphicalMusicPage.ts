@@ -10,6 +10,7 @@ export class GraphicalMusicPage extends GraphicalObject {
     private musicSystems: MusicSystem[] = [];
     private labels: GraphicalLabel[] = [];
     private parent: GraphicalMusicSheet;
+    private pageNumber: number;
 
     constructor(parent: GraphicalMusicSheet) {
         super();
@@ -39,6 +40,14 @@ export class GraphicalMusicPage extends GraphicalObject {
 
     public set Parent(value: GraphicalMusicSheet) {
         this.parent = value;
+    }
+
+    public get PageNumber(): number {
+        return this.pageNumber;
+    }
+
+    public set PageNumber(value: number) {
+        this.pageNumber = value;
     }
 
     /**

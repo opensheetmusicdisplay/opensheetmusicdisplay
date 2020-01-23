@@ -950,6 +950,7 @@ export class MusicSystemBuilder {
     private createMusicPage(): GraphicalMusicPage {
         const page: GraphicalMusicPage = new GraphicalMusicPage(this.graphicalMusicSheet);
         this.graphicalMusicSheet.MusicPages.push(page);
+        page.PageNumber = this.graphicalMusicSheet.MusicPages.length; // caution: page number = page index + 1
         page.PositionAndShape.BorderLeft = 0.0;
         page.PositionAndShape.BorderRight = this.graphicalMusicSheet.ParentMusicSheet.pageWidth;
         page.PositionAndShape.BorderTop = 0.0;

@@ -396,7 +396,7 @@ export abstract class MusicSheetDrawer {
         this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
     }
 
-    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
         // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 
