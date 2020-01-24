@@ -86,6 +86,8 @@ export interface IOSMDOptions {
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
     fingeringInsideStafflines?: boolean;
+    /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
+    drawHiddenNotes?: boolean;
     /** Whether to draw lyrics (and their extensions and dashes). */
     drawLyrics?: boolean;
     /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
@@ -109,9 +111,6 @@ export interface IOSMDOptions {
      * (Bracketing all triplets can be cluttering)
      */
     tripletsBracketed?: boolean;
-    /** Whether to draw hidden/invisible notes (print-object="no" in XML). Default false. Not yet supported. */ // TODO
-    drawHiddenNotes?: boolean;
-
     /**  See OpenSheetMusicDisplay.PageFormatStandards for standard options like OpenSheetMusicDisplay.PageFormatStandards["A4 P"]. */
     pageFormat?: PageFormat;
 }
