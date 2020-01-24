@@ -6,14 +6,19 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
-import { EngravingRules } from "..";
+import {EngravingRules} from "..";
+import {BackendType} from "../../../OpenSheetMusicDisplay";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
     private ctx: Vex.Flow.SVGContext;
 
-    public getBackendType(): number {
+    public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
         return Vex.Flow.Renderer.Backends.SVG;
+    }
+
+    public getOSMDBackendType(): BackendType {
+        return BackendType.SVG;
     }
 
     public initialize(container: HTMLElement): void {
@@ -22,7 +27,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
         container.appendChild(this.inner);
-        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
+        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
     }
 

@@ -6,11 +6,15 @@ import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {VexFlowConverter} from "./VexFlowConverter";
+import {BackendType} from "../../../OpenSheetMusicDisplay";
 
 export class CanvasVexFlowBackend extends VexFlowBackend {
-
-    public getBackendType(): number {
+    public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
         return Vex.Flow.Renderer.Backends.CANVAS;
+    }
+
+    public getOSMDBackendType(): BackendType {
+        return BackendType.Canvas;
     }
 
     public initialize(container: HTMLElement): void {
@@ -20,7 +24,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvas.style.zIndex = "0";
         this.inner.appendChild(this.canvas);
         container.appendChild(this.inner);
-        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
+        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
     }
 
@@ -33,7 +37,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvas = document.createElement("canvas");
         (this.canvas as any).width = width;
         (this.canvas as any).height = height;
-        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
+        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
     }
 

@@ -4,6 +4,7 @@ import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {GraphicalMusicPage} from "..";
+import {BackendType} from "../../../OpenSheetMusicDisplay";
 
 export class VexFlowBackends {
   public static CANVAS: 0;
@@ -33,7 +34,14 @@ export abstract class VexFlowBackend {
   }
 
   public removeFromContainer(container: HTMLElement): void {
-    container.removeChild(this.canvas);
+    //console.log("backend type: " + this.getVexflowBackendType());
+    if (this.getVexflowBackendType() === Vex.Flow.Renderer.Backends.SVG) {
+      container.removeChild(this.canvas);
+    } else if (this.getVexflowBackendType() === Vex.Flow.Renderer.Backends.CANVAS) {
+      container.removeChild(this.inner);
+      // for SVG, this.canvas === this.inner, but for Canvas, removing this.canvas causes an error because it's not a child of container,
+      // so we have to remove this.inner instead.
+    }
   }
 
 public abstract getContext(): Vex.IRenderContext;
@@ -66,7 +74,12 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract renderCurve(points: PointF2D[]): void;
 
-  public abstract getBackendType(): number;
+  public abstract getVexflowBackendType(): Vex.Flow.Renderer.Backends;
+
+  /** The general type of backend: Canvas or SVG.
+   * This is not used for now (only VexflowBackendType used), but it may be useful when we don't want to use a Vexflow class.
+   */
+  public abstract getOSMDBackendType(): BackendType;
 
   protected renderer: Vex.Flow.Renderer;
   protected inner: HTMLElement;

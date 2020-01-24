@@ -128,6 +128,11 @@ export enum FillEmptyMeasuresWithWholeRests {
     YesInvisible = 2
 }
 
+export enum BackendType {
+    SVG = 0,
+    Canvas = 1
+}
+
 /** Handles [[IOSMDOptions]], e.g. returning default options with OSMDOptionsStandard() */
 export class OSMDOptions {
     /** Returns the default options for OSMD.
@@ -139,6 +144,14 @@ export class OSMDOptions {
             backend: "svg",
             drawingParameters: DrawingParametersEnum.default,
         };
+    }
+
+    public static BackendTypeFromString(value: string): BackendType {
+        if (value && value.toLowerCase() === "canvas") {
+            return BackendType.Canvas;
+        } else {
+            return BackendType.SVG;
+        }
     }
 }
 

@@ -14,7 +14,7 @@ import { Promise } from "es6-promise";
 import { AJAX } from "./AJAX";
 import * as log from "loglevel";
 import { DrawingParametersEnum, DrawingParameters, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
-import { IOSMDOptions, OSMDOptions, AutoBeamOptions } from "./OSMDOptions";
+import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
@@ -58,6 +58,7 @@ export class OpenSheetMusicDisplay {
         if (options.autoResize === undefined) {
             options.autoResize = true;
         }
+        this.backendType = BackendType.SVG; // default, can be changed by options
         this.setOptions(options);
     }
 
@@ -65,7 +66,8 @@ export class OpenSheetMusicDisplay {
     public zoom: number = 1.0;
 
     private container: HTMLElement;
-    private backendType: any;
+    private backendType: BackendType;
+    private needBackendUpdate: boolean;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private graphic: GraphicalMusicSheet;
@@ -173,7 +175,11 @@ export class OpenSheetMusicDisplay {
         if (!this.graphic) {
             throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
-        this.drawer.clear(); // clear canvas before setting width
+        if (this.drawer) {
+            this.drawer.clear(); // clear canvas before setting width
+        }
+        // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
+        // musicSheetCalculator.clearRecreatedObjects();
 
         // Set page width
         const width: number = this.container.offsetWidth;
@@ -197,22 +203,11 @@ export class OpenSheetMusicDisplay {
             this.graphic.Cursors.length = 0;
         }
 
-        // Remove old backends
-        for (const backend of this.drawer.Backends) {
-            backend.removeFromContainer(this.container);
+        if (this.needBackendUpdate) {
+            this.createOrRefreshRenderBackend();
+            this.needBackendUpdate = false;
         }
-        this.drawer.Backends.clear();
 
-        // create new backends
-        for (const page of this.graphic.MusicPages) {
-            const backend: VexFlowBackend = this.createBackend(this.backendType);
-            if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
-                backend.resize(width, width / EngravingRules.Rules.PageFormat.aspectRatio);
-            } else {
-                backend.resize(width, (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0);
-            }
-            this.drawer.Backends.push(backend);
-        }
         this.drawer.setZoom(this.zoom);
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
@@ -225,7 +220,33 @@ export class OpenSheetMusicDisplay {
         }
     }
 
+    private createOrRefreshRenderBackend(): void {
+        //console.log("render: need update");
+        // Remove old backends
+        if (this.drawer && this.drawer.Backends) {
+            for (const backend of this.drawer.Backends) {
+                backend.removeFromContainer(this.container);
+            }
+            this.drawer.Backends.clear();
+        }
+        // Create the drawer
+        this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters);
 
+        // Set page width
+        const width: number = this.container.offsetWidth;
+        // TODO may need to be coordinated with render() where width is also used
+
+        // TODO check if resize is necessary. set needResize or something when size was changed
+        for (const page of this.graphic.MusicPages) {
+            const backend: VexFlowBackend = this.createBackend(this.backendType);
+            if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
+                backend.resize(width, width / EngravingRules.Rules.PageFormat.aspectRatio);
+            } else {
+                backend.resize(width, (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0);
+            }
+            this.drawer.Backends.push(backend);
+        }
+    }
 
     /** States whether the render() function can be safely called. */
     public IsReadyToRender(): boolean {
@@ -256,29 +277,15 @@ export class OpenSheetMusicDisplay {
                 (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
         }
 
-        this.backendType = options.backend;
-        // const updateExistingBackend: boolean = this.backend !== undefined;
-        // if (options.backend !== undefined || this.backend === undefined) {
-        //     if (updateExistingBackend) {
-        //         // TODO doesn't work yet, still need to create a new OSMD object
-
-        //         this.drawer.clear();
-
-        //         // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
-        //         // musicSheetCalculator.clearRecreatedObjects();
-        //     }
-        // }
-
-        // Create the drawer
-        if (this.drawer) {
-            // Remove old backends
-            for (const backend of this.drawer.Backends) {
-                backend.removeFromContainer(this.container);
-            }
-            this.drawer.Backends.clear();
+        const backendNotInitialized: boolean = !this.drawer || !this.drawer.Backends || this.drawer.Backends.length < 1;
+        let needBackendUpdate: boolean = backendNotInitialized;
+        if (options.backend !== undefined) {
+            const backendTypeGiven: BackendType = OSMDOptions.BackendTypeFromString(options.backend);
+            needBackendUpdate = needBackendUpdate || this.backendType !== backendTypeGiven;
+            this.backendType = backendTypeGiven;
         }
-
-        this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters);
+        this.needBackendUpdate = needBackendUpdate;
+        // TODO this is a necessary step during the OSMD constructor. Maybe move this somewhere else
 
         // individual drawing parameters options
         if (options.autoBeam !== undefined) { // only change an option if it was given in options, otherwise it will be undefined
@@ -596,9 +603,9 @@ export class OpenSheetMusicDisplay {
         }
     }
 
-    public createBackend(type: any): VexFlowBackend {
+    public createBackend(type: BackendType): VexFlowBackend {
         let backend: VexFlowBackend;
-        if (type === undefined || type.toLowerCase() === "svg") {
+        if (type === undefined || type === BackendType.SVG) {
             backend = new SvgVexFlowBackend();
         } else {
             backend = new CanvasVexFlowBackend();
