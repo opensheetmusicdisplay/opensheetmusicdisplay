@@ -69,11 +69,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         showCursorBtn,
         hideCursorBtn,
         backendSelect,
+        backendSelectDiv,
         debugReRenderBtn,
         debugClearBtn,
         selectPageSize,
         printPdfBtn;
-
+    
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
     var minMeasureToDrawStashed = 1;
@@ -90,6 +91,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var showControls = true;
     var showZoomControl = true;
     var showHeader = true;
+    var showDebugControls = false;
+
+    if (process.env.OSMD_DEMO_TITLE) {
+        document.title = process.env.OSMD_DEMO_TITLE;
+    }
+
     // Initialization code
     function init() {
         var name, option;
@@ -102,11 +109,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         var paramZoom = findGetParameter('zoom');
         var paramOverflow = findGetParameter('overflow');
         var paramOpenUrl = findGetParameter('openUrl');
+        var paramDebugControls = findGetParameter('debugControls');
 
+        showHeader = (paramShowHeader !== '0');
         if (paramEmbedded !== undefined) {
-            showControls = (paramShowControls === '1');
-            showZoomControl = (paramShowZoomControl === '1');
-            showHeader = (paramShowHeader === '1');
+            showControls = (paramShowControls !== '0');
+            showZoomControl = (paramShowZoomControl !== '0');
         }
         if (paramZoom !== undefined) {
             if (paramZoom > 0.1 && paramZoom < 5.0) {
@@ -142,10 +150,28 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         showCursorBtn = document.getElementById("show-cursor-btn");
         hideCursorBtn = document.getElementById("hide-cursor-btn");
         backendSelect = document.getElementById("backend-select");
+        backendSelectDiv = document.getElementById("backend-select-div");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
         debugClearBtn = document.getElementById("debug-clear-btn");
         selectPageSize = document.getElementById("selectPageSize");
         printPdfBtn = document.getElementById("print-pdf-btn");
+
+        //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
+        var defaultVisibilityValue = "visible";
+        var devDemoRunning = process.env.OSMD_DEBUG_CONTROLS;
+        showDebugControls = paramDebugControls === '1' || (devDemoRunning && paramDebugControls !== '0')
+        if (showDebugControls) {
+            var elementsToEnable = [
+                selectSample, selectBounding, selectPageSize, backendSelect, backendSelectDiv, divControls
+            ];
+            for (var i=0; i<elementsToEnable.length; i++) {
+                if (elementsToEnable[i].style) {
+                    elementsToEnable[i].style.visibility = defaultVisibilityValue;
+                }
+            }
+        } else {
+            divControls.style.display = "none";
+        }
 
         if (!showControls) {
             divControls.style.display = 'none';
@@ -325,7 +351,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             }
             console.log("[OSMD] selectSampleOnChange addEventListener change");
             // selectSampleOnChange();
-
         });
 
         if (paramOpenUrl !== undefined) {
@@ -351,7 +376,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 tmp = item.split('=');
                 if (tmp[0] === parameterName) {
                     result = decodeURIComponent(tmp[1]);
-                    console.log('Found param:' + parameterName + ' = ' + result);
+                    //console.log('Found param:' + parameterName + ' = ' + result);
                 }
             });
         return result;
@@ -367,7 +392,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         disable();
         var isCustom = typeof str === "string";
         if (!isCustom) {
-            str = sampleFolder + selectSample.value;
+            if (selectSample) {
+                str = sampleFolder + selectSample.value;
+            } else {
+                if (samples && samples.length > 0) {
+                    str = sampleFolder + samples[0];
+                } else {
+                    return; // no sample to load right now
+                }
+            }
         }
         // zoom = 1.0;
 
@@ -522,12 +555,25 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     // Enable/Disable Controls
     function disable() {
         document.body.style.opacity = 0.3;
-        selectSample.disabled = zoomIn.disabled = zoomOut.disabled = "disabled";
+        setDisabledForControls("disabled");
     }
+
     function enable() {
         document.body.style.opacity = 1;
-        selectSample.disabled = zoomIn.disabled = zoomOut.disabled = "";
+        setDisabledForControls("");
         logCanvasSize();
+    }
+
+    function setDisabledForControls(disabledValue) {
+        if (selectSample) {
+            selectSample.disabled = disabledValue;
+        }
+        if (zoomIn) {
+            zoomIn.disabled = disabledValue;
+        }
+        if (zoomOut) {
+            zoomOut.disabled = disabledValue;
+        }
     }
 
     // Register events: load, drag&drop
