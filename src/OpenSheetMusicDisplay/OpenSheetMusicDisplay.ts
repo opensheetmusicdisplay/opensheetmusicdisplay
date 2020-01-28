@@ -654,6 +654,11 @@ export class OpenSheetMusicDisplay {
      * @param pdfName if no name is given, the composer and title of the piece will be used
      */
     public createPdf(pdfName: string = undefined): void {
+        if (this.backendType !== BackendType.SVG) {
+            console.log("[OSMD] osmd.createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
+                " Please use osmd.setOptions({backendType: SVG}).");
+            return;
+        }
 
         if (pdfName === undefined) {
             pdfName = this.sheet.FullNameString + ".pdf";

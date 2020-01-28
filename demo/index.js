@@ -115,6 +115,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         var paramMeasureRangeStart = findGetParameter('measureRangeStart');
         var paramMeasureRangeEnd = findGetParameter('measureRangeEnd');
         var paramPageFormat = findGetParameter('pageFormat');
+        var paramBackendType = findGetParameter('backendType');
 
         showHeader = (paramShowHeader !== '0');
         if (paramEmbedded !== undefined) {
@@ -142,6 +143,20 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             measureRangeStart = measureRangeEnd;
         }
         var pageFormat = paramPageFormat ? paramPageFormat : "Endless";
+        var backendType = (paramBackendType && paramBackendType.toLowerCase) ? paramBackendType : "svg";
+        
+        // set the backendSelect debug controls dropdown menu selected item
+        //console.log("true: " + backendSelect && backendType.toLowerCase && backendType.toLowerCase() === "canvas");
+        // TODO somehow backendSelect becomes undefined here:
+        /*if (backendSelect && backendType.toLowerCase && backendType.toLowerCase() === "canvas") {
+            console.log("here1");
+            for (var i=0; i<backendSelect.options.length; i++) {
+                if (backendSelect.options[i].value.toLowerCase() === "canvas") {
+                    backendSelect.selectedIndex = i;
+                }
+            }
+            backendSelect.value = "Canvas";
+        }*/
 
         divControls = document.getElementById('divControls');
         zoomControls = document.getElementById('zoomControls');
@@ -300,7 +315,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         // Create OSMD object and canvas
         openSheetMusicDisplay = new OpenSheetMusicDisplay(canvas, {
             autoResize: true,
-            backend: backendSelect.value,
+            backend: backendType,
             //backend: "canvas",
             disableCursor: false,
             drawingParameters: compactMode ? "compact" : "default", // try compact (instead of default)
