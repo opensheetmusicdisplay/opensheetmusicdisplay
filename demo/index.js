@@ -111,23 +111,37 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         var paramOpenUrl = findGetParameter('openUrl');
         var paramDebugControls = findGetParameter('debugControls');
 
+        var paramCompactMode = findGetParameter('compactMode');
+        var paramMeasureRangeStart = findGetParameter('measureRangeStart');
+        var paramMeasureRangeEnd = findGetParameter('measureRangeEnd');
+        var paramPageFormat = findGetParameter('pageFormat');
+
         showHeader = (paramShowHeader !== '0');
         if (paramEmbedded !== undefined) {
             showControls = (paramShowControls !== '0');
             showZoomControl = (paramShowZoomControl !== '0');
         }
+
         if (paramZoom !== undefined) {
             if (paramZoom > 0.1 && paramZoom < 5.0) {
                 zoom = paramZoom;
                 console.log('Set zoom to ' + zoom);
             }
         }
-
         if (paramOverflow !== undefined && typeof paramOverflow === 'string') {
             if (paramOverflow === 'hidden' || paramOverflow === 'auto' || paramOverflow === 'scroll' || paramOverflow === 'visible') {
                 document.body.style.overflow = paramOverflow;
             }
         }
+        
+        var compactMode = paramCompactMode && paramCompactMode !== '0';
+        var measureRangeStart = paramMeasureRangeStart ? Number.parseInt(paramMeasureRangeStart) : 0;
+        var measureRangeEnd = paramMeasureRangeEnd ? Number.parseInt(paramMeasureRangeEnd) : Number.MAX_SAFE_INTEGER;
+        if (measureRangeStart && measureRangeEnd && measureRangeEnd < measureRangeStart) {
+            console.log("[OSMD] warning: measure range end parameter should not be smaller than measure range start. We've set start measure = end measure now.")
+            measureRangeStart = measureRangeEnd;
+        }
+        var pageFormat = paramPageFormat ? paramPageFormat : "Endless";
 
         divControls = document.getElementById('divControls');
         zoomControls = document.getElementById('zoomControls');
@@ -289,17 +303,17 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             backend: backendSelect.value,
             //backend: "canvas",
             disableCursor: false,
-            drawingParameters: "default", // try compact (instead of default)
+            drawingParameters: compactMode ? "compact" : "default", // try compact (instead of default)
             drawPartNames: true, // try false
             // drawTitle: false,
             // drawSubtitle: false,
-            //drawFromMeasureNumber: 4,
-            //drawUpToMeasureNumber: 8,
             drawFingerings: true,
             fingeringPosition: "left", // left is default. try right. experimental: auto, above, below.
             // fingeringInsideStafflines: "true", // default: false. true draws fingerings directly above/below notes
             setWantedStemDirectionByXml: true, // try false, which was previously the default behavior
             // drawUpToMeasureNumber: 3, // draws only up to measure 3, meaning it draws measure 1 to 3 of the piece.
+            drawFromMeasureNumber : measureRangeStart,
+            drawUpToMeasureNumber : measureRangeEnd,
 
             //drawMeasureNumbers: false, // disable drawing measure numbers
             //measureNumberInterval: 4, // draw measure numbers only every 4 bars (and at the beginning of a new system)
@@ -316,6 +330,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 //groups: [[3,4], [1,1]],
                 maintain_stem_directions: false
             },
+
+            pageFormat: pageFormat
 
             // tupletsBracketed: true, // creates brackets for all tuplets except triplets, even when not set by xml
             // tripletsBracketed: true,

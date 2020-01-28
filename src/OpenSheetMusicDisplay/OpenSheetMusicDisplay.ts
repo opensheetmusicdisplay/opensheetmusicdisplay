@@ -421,7 +421,7 @@ export class OpenSheetMusicDisplay {
             // we could remove the window EventListener here, but not necessary.
         }
         if (options.pageFormat !== undefined) { // only change this option if it was given, see above
-            EngravingRules.Rules.PageFormat = options.pageFormat;
+            EngravingRules.Rules.PageFormat = OpenSheetMusicDisplay.StringToPageFormat(options.pageFormat);
         }
     }
 
@@ -614,38 +614,38 @@ export class OpenSheetMusicDisplay {
         return backend;
     }
 
-    /** Standard page format options like A4 or Letter, in portrait and landscape. E.g. PageFormatStandards["A4 P"] or PageFormatStandards["Letter L"]. */
+    /** Standard page format options like A4 or Letter, in portrait and landscape. E.g. PageFormatStandards["A4_P"] or PageFormatStandards["Letter_L"]. */
     public static PageFormatStandards: {[type: string]: PageFormat} = {
-        "A3 L": new PageFormat(420, 297),
-        "A3 P": new PageFormat(297, 420),
-        "A4 L": new PageFormat(297, 210),
-        "A4 P": new PageFormat(210, 297),
-        "A5 L": new PageFormat(210, 148),
-        "A5 P": new PageFormat(148, 210),
-        "A6 L": new PageFormat(148, 105),
-        "A6 P": new PageFormat(105, 148),
-        "Letter L": new PageFormat(279.4, 215.9),
-        "Letter P": new PageFormat(215.9, 279.4)
+        "A3_L": new PageFormat(420, 297), // id strings should use underscores instead of white spaces to facilitate use as URL parameters.
+        "A3_P": new PageFormat(297, 420),
+        "A4_L": new PageFormat(297, 210),
+        "A4_P": new PageFormat(210, 297),
+        "A5_L": new PageFormat(210, 148),
+        "A5_P": new PageFormat(148, 210),
+        "A6_L": new PageFormat(148, 105),
+        "A6_P": new PageFormat(105, 148),
+        "Endless": PageFormat.UndefinedPageFormat,
+        "Letter_L": new PageFormat(279.4, 215.9),
+        "Letter_P": new PageFormat(215.9, 279.4)
     };
 
-    public setPageFormat(formatId: string): void {
+    public static StringToPageFormat(formatId: string): PageFormat {
         let f: PageFormat = PageFormat.UndefinedPageFormat; // default: 'endless' page height, take canvas/container width
         if (OpenSheetMusicDisplay.PageFormatStandards.hasOwnProperty(formatId)) {
             f = OpenSheetMusicDisplay.PageFormatStandards[formatId];
         }
-        const options: IOSMDOptions = {
-            pageFormat: f,
-        };
-        this.setOptions(options);
+        return f;
+    }
+
+    /** Sets page format by string. Alternative to setOptions({pageFormat: PageFormatStandards.Endless}) for example. */
+    public setPageFormat(formatId: string): void {
+        EngravingRules.Rules.PageFormat = OpenSheetMusicDisplay.StringToPageFormat(formatId);
     }
 
     public setCustomPageFormat(width: number, height: number): void {
         if (width > 0 && height > 0) {
             const f: PageFormat = new PageFormat(width, height);
-            const options: IOSMDOptions = {
-                pageFormat: f,
-            };
-            this.setOptions(options);
+            EngravingRules.Rules.PageFormat = f;
         }
     }
 

@@ -1,5 +1,4 @@
 import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
-import { PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
@@ -111,8 +110,10 @@ export interface IOSMDOptions {
      * (Bracketing all triplets can be cluttering)
      */
     tripletsBracketed?: boolean;
-    /**  See OpenSheetMusicDisplay.PageFormatStandards for standard options like OpenSheetMusicDisplay.PageFormatStandards["A4 P"]. */
-    pageFormat?: PageFormat;
+    /**  See OpenSheetMusicDisplay.PageFormatStandards for standard options like "A4 P" or "Endless". Default Endless.
+     *   Uses OpenSheetMusicDisplay.StringToPageFormat(). Unfortunately it would be error-prone to set a PageFormat type directly.
+     */
+    pageFormat?: string;
 }
 
 export enum AlignRestOption {
