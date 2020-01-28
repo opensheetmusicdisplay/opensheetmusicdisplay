@@ -418,6 +418,30 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function findGetParameter(parameterName) {
+        // special treatment for the openUrl parameter, because different systems attach different arguments to an URL.
+        // because of CORS (cross-origin safety restrictions), you can only load an xml file from the same origin (server).
+
+        // test parameter: ?openUrl=https://opensheetmusiceducation.org/index.php?gf-download=2020%2F01%2FJohannSebastianBach_PraeludiumInCDur_BWV846_1.xml&endUrl&form-id=1&field-id=4&hash=c4ba271ef08204a26cbd4cd2d751c53b78f238c25ddbb1f343e1172f2ce2aa53
+        //   (enable the console.log at the end of this method for testing)
+        // working test parameter in local demo: ?openUrl=OSMD_function_test_all.xml&endUrl
+    
+        if (parameterName === 'openUrl') {
+            let startParameterName = 'openUrl=';
+            let endParameterName = '&endUrl';
+            let openUrlIndex = location.search.indexOf(startParameterName);
+            if (openUrlIndex < 0) {
+                return undefined;
+            }
+            let endIndex = location.search.indexOf(endParameterName) + endParameterName.length;
+            if (endIndex < 0) {
+                console.log("[OSMD] If using openUrl as a parameter, you have to end it with '&endUrl'. openUrl parameter omitted.");
+                return undefined;
+            }
+            let urlString = location.search.substring(openUrlIndex + startParameterName.length, endIndex - endParameterName.length);
+            //console.log("openUrl: " + urlString);
+            return urlString;
+        }
+
         let result = undefined;
         let tmp = [];
         location.search

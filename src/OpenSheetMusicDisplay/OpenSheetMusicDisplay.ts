@@ -120,7 +120,7 @@ export class OpenSheetMusicDisplay {
                     (exc: Error) => { throw exc; }
                 );
             } else {
-                console.error("Missing else branch?");
+                console.error("[OSMD] osmd.load(string): Could not process string. Missing else branch?");
             }
         }
 
