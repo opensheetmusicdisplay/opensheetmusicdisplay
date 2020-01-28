@@ -165,19 +165,27 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 selectSample, selectBounding, selectPageSize, backendSelect, backendSelectDiv, divControls
             ];
             for (var i=0; i<elementsToEnable.length; i++) {
-                if (elementsToEnable[i].style) {
-                    elementsToEnable[i].style.visibility = defaultVisibilityValue;
+                if (elementsToEnable[i]) { // make sure this element is not null/exists in the index.html, e.g. github.io demo has different index.html
+                    if (elementsToEnable[i].style) {
+                        elementsToEnable[i].style.visibility = defaultVisibilityValue;
+                    }
                 }
             }
         } else {
-            divControls.style.display = "none";
+            if (divControls) {
+                divControls.style.display = "none";
+            }
         }
 
         if (!showControls) {
-            divControls.style.display = 'none';
+            if (divControls) {
+                divControls.style.display = 'none';
+            }
         }
         if (!showHeader) {
-            header.style.display = 'none';
+            if (header) {
+                header.style.display = 'none';
+            }
         }
         // Hide error
         error();
@@ -186,15 +194,19 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             const zoomControlsButtons = document.getElementById('zoomControlsButtons');
             const zoomControlsString = document.getElementById('zoom-str');
             const optionalControls = document.getElementById('optionalControls');
-            optionalControls.appendChild(zoomControlsButtons);
-            optionalControls.appendChild(zoomControlsString);
-            optionalControls.style.position = 'absolute';
-            optionalControls.style.zIndex = '10';
-            optionalControls.style.right = '10px';
-            optionalControls.style.padding = '10px';
+            if (optionalControls) {
+                optionalControls.appendChild(zoomControlsButtons);
+                optionalControls.appendChild(zoomControlsString);
+                optionalControls.style.position = 'absolute';
+                optionalControls.style.zIndex = '10';
+                optionalControls.style.right = '10px';
+                optionalControls.style.padding = '10px';
+            }
 
-            zoomControlsString.style.display = 'inline';
-            zoomControlsString.style.padding = '10px';
+            if (zoomControlsString) {
+                zoomControlsString.style.display = 'inline';
+                zoomControlsString.style.padding = '10px';
+            }
         }
 
         // Create select
@@ -204,9 +216,13 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 option.value = samples[name];
                 option.textContent = name;
             }
-            selectSample.appendChild(option);
+            if (selectSample) {
+                selectSample.appendChild(option);
+            }
         }
-        selectSample.onchange = selectSampleOnChange;
+        if (selectSample) {
+            selectSample.onchange = selectSampleOnChange;
+        }
         if (selectBounding) {
             selectBounding.onchange = selectBoundingOnChange;
         }
@@ -230,14 +246,18 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         custom.appendChild(document.createTextNode("Custom"));
 
         // Create zoom controls
-        zoomIn.onclick = function () {
-            zoom *= 1.2;
-            scale();
-        };
-        zoomOut.onclick = function () {
-            zoom /= 1.2;
-            scale();
-        };
+        if (zoomIn) {
+            zoomIn.onclick = function () {
+                zoom *= 1.2;
+                scale();
+            };
+        }
+        if (zoomOut) {
+            zoomOut.onclick = function () {
+                zoom /= 1.2;
+                scale();
+            };
+        }
 
         if (skylineDebug) {
             skylineDebug.onclick = function () {
