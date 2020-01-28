@@ -63,7 +63,7 @@
     "@types/node": "^13.1.0",
     "chai": "^4.1.0",
     "clean-webpack-plugin": "^1.0.1",
-    "cross-env": "^6.0.2",
+    "cross-env": "^7.0.0",
     "cz-conventional-changelog": "^3.0.0",
     "eslint": "^6.2.2",
     "eslint-config-standard": "^14.1.0",
