@@ -52,17 +52,7 @@ import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 //   CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator;
 // }
 
-export class VexFlowMusicSheetCalculatorFactory {
-  // constructor() {
-  //   //
-  // }
-
-  public static CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
-    return new VexFlowMusicSheetCalculator();
-  }
-}
-
-export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
+export default class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   public constructor() {
     super();
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
