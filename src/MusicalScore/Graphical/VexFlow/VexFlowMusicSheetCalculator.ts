@@ -20,7 +20,7 @@ import { ArticulationEnum } from "../../VoiceData/VoiceEntry";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import Vex = require("vexflow");
+import * as Vex from "vexflow";
 import * as log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";

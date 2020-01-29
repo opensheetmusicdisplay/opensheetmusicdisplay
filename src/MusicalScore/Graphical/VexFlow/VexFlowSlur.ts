@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import * as Vex from "vexflow";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 
 export interface ICurveOptions {
