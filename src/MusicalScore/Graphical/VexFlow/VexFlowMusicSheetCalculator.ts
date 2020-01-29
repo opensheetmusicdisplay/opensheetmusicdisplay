@@ -49,22 +49,28 @@ import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 
 export interface IVexFlowMusicSheetCalculator {
-  VexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator;
+  CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator;
 }
 
-export class VexFlowMusicSheetCalculator extends MusicSheetCalculator implements IVexFlowMusicSheetCalculator {
-  public VexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
+export class VexFlowMusicSheetCalculatorFactory implements IVexFlowMusicSheetCalculator {
+  public CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
+    return new VexFlowMusicSheetCalculator();
+  }
+}
+
+export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
+  public constructor() {
+    super();
+    MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
+    MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
+  }
+
+  public static VexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
     return new VexFlowMusicSheetCalculator();
   }
 
   /** space needed for a dash for lyrics spacing, calculated once */
   private dashSpace: number;
-
-  constructor() {
-    super();
-    MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
-    MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
-  }
 
   protected clearRecreatedObjects(): void {
     super.clearRecreatedObjects();
