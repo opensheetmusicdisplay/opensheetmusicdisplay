@@ -1,5 +1,5 @@
 import { IXmlElement } from "./../Common/FileIO/Xml";
-import { VexFlowMusicSheetCalculator } from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
+import VexFlowMusicSheetCalculator from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import { VexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/VexFlowBackend";
 import { MusicSheetReader } from "./../MusicalScore/ScoreIO/MusicSheetReader";
 import { GraphicalMusicSheet } from "./../MusicalScore/Graphical/GraphicalMusicSheet";

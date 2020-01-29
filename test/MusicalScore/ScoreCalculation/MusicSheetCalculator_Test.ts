@@ -2,7 +2,7 @@ import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetRead
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
 import {MusicSheetCalculator} from "../../../src/MusicalScore/Graphical/MusicSheetCalculator";
-import {VexFlowMusicSheetCalculator} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
+import VexFlowMusicSheetCalculator from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetCalculator";
 import {GraphicalMusicSheet} from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {VexFlowTextMeasurer} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 import {TestUtils} from "../../Util/TestUtils";
