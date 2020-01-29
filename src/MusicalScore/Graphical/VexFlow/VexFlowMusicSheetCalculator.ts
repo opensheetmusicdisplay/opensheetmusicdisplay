@@ -48,7 +48,15 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 
-export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
+export interface IVexFlowMusicSheetCalculator {
+  VexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator;
+}
+
+export class VexFlowMusicSheetCalculator extends MusicSheetCalculator implements IVexFlowMusicSheetCalculator {
+  public VexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
+    return new VexFlowMusicSheetCalculator();
+  }
+
   /** space needed for a dash for lyrics spacing, calculated once */
   private dashSpace: number;
 
