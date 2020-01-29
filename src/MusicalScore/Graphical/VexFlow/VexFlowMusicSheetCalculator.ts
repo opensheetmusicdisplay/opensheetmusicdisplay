@@ -48,12 +48,16 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 
-export interface IVexFlowMusicSheetCalculator {
-  CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator;
-}
+// export interface IVexFlowMusicSheetCalculator {
+//   CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator;
+// }
 
-export class VexFlowMusicSheetCalculatorFactory implements IVexFlowMusicSheetCalculator {
-  public CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
+export class VexFlowMusicSheetCalculatorFactory {
+  // constructor() {
+  //   //
+  // }
+
+  public static CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
     return new VexFlowMusicSheetCalculator();
   }
 }
