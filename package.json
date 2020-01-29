@@ -87,7 +87,7 @@
     "tslint": "^5.14.0",
     "tslint-loader": "^3.5.3",
     "typedoc": "^0.15.0",
-    "typescript": "^2.6.1",
+    "typescript": "^3.6.5",
     "webpack": "^4.39.3",
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.8.0",
