@@ -65,7 +65,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
   }
 
-  public static VexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
+  public static CreateVexFlowMusicSheetCalculator(): VexFlowMusicSheetCalculator {
     return new VexFlowMusicSheetCalculator();
   }
 
