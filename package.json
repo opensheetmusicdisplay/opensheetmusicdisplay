@@ -50,9 +50,9 @@
   "dependencies": {
     "@types/vexflow": "^1.2.33",
     "es6-promise": "^4.2.5",
+    "jspdf-yworks": "^2.1.1",
     "jszip": "^3.0.0",
     "loglevel": "^1.5.0",
-    "jspdf-yworks": "^2.1.1",
     "svg2pdf.js": "^1.5.0",
     "typescript-collections": "^1.1.2",
     "vexflow": "^1.2.89"
