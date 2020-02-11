@@ -50,6 +50,15 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         while (svg.lastChild) {
             svg.removeChild(svg.lastChild);
         }
+
+        // set background color if not transparent
+        if (EngravingRules.Rules.PageBackgroundColor !== undefined) {
+            this.ctx.save();
+            this.ctx.setFillStyle(EngravingRules.Rules.PageBackgroundColor);
+
+            this.ctx.fillRect(0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
+            this.ctx.restore();
+        }
     }
 
     public scale(k: number): void {

@@ -34,7 +34,7 @@ export interface IOSMDOptions {
      * Only considered before loading a sample, not before render.
      * To change the color after loading a sample and before render, use note(.sourceNote).NoteheadColor.
      * The format is Vexflow format, either "#rrggbb" or "#rrggbbtt" where <tt> is transparency. All hex values.
-     * E.g., a half-transparent red would be "#FF000080", invisible would be "#00000000" or "#12345600".
+     * E.g., a half-transparent red would be "#FF000080", invisible/transparent would be "#00000000" or "#12345600".
      */
     defaultColorNotehead?: string;
     /** Default color for a note stem. Default black (undefined). */
@@ -114,6 +114,12 @@ export interface IOSMDOptions {
      *   Uses OpenSheetMusicDisplay.StringToPageFormat(). Unfortunately it would be error-prone to set a PageFormat type directly.
      */
     pageFormat?: string;
+    /** A custom page/canvas background color. Default undefined/transparent.
+     *  Example: "#FFFFFF" = white. "#12345600" = transparent.
+     *  This can be useful when you want to export an image with e.g. white background color instead of transparent,
+     *  from a CanvasBackend.
+     */
+    pageBackgroundColor?: string;
 }
 
 export enum AlignRestOption {

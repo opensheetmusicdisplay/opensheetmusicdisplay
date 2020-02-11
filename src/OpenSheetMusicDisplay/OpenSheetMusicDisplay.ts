@@ -183,6 +183,7 @@ export class OpenSheetMusicDisplay {
 
         // Set page width
         const width: number = this.container.offsetWidth;
+        //console.log("[OSMD] container width: " + width);
         this.sheet.pageWidth = width / this.zoom / 10.0;
         if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
             EngravingRules.Rules.PageHeight = this.sheet.pageWidth / EngravingRules.Rules.PageFormat.aspectRatio;
@@ -218,6 +219,7 @@ export class OpenSheetMusicDisplay {
             // Update the cursor position
             this.cursor.update();
         }
+        //console.log("[OSMD] render finished");
     }
 
     private createOrRefreshRenderBackend(): void {
@@ -244,6 +246,7 @@ export class OpenSheetMusicDisplay {
             } else {
                 backend.resize(width, (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0);
             }
+            backend.clear(); // set bgcolor if defined (EngravingRules.Rules.PageBackgroundColor, see OSMDOptions)
             this.drawer.Backends.push(backend);
         }
     }
@@ -422,6 +425,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.pageFormat !== undefined) { // only change this option if it was given, see above
             EngravingRules.Rules.PageFormat = OpenSheetMusicDisplay.StringToPageFormat(options.pageFormat);
+        }
+        if (options.pageBackgroundColor !== undefined) {
+            EngravingRules.Rules.PageBackgroundColor = options.pageBackgroundColor;
         }
     }
 

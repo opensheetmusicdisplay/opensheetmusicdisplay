@@ -214,6 +214,7 @@ export class EngravingRules {
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
     private pageFormat: PageFormat;
+    private pageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
 
     private fixStafflineBoundingBox: boolean; // TODO temporary workaround
 
@@ -442,6 +443,7 @@ export class EngravingRules {
         this.fixStafflineBoundingBox = false; // TODO temporary workaround
 
         this.pageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
+        this.pageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
 
         this.populateDictionaries();
         try {
@@ -1558,6 +1560,12 @@ export class EngravingRules {
     }
     public set PageFormat(value: PageFormat) {
         this.pageFormat = value;
+    }
+    public get PageBackgroundColor(): string {
+        return this.pageBackgroundColor;
+    }
+    public set PageBackgroundColor(value: string) {
+        this.pageBackgroundColor = value;
     }
 
     /**

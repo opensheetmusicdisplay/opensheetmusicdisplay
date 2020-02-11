@@ -115,6 +115,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         var paramMeasureRangeStart = findGetParameter('measureRangeStart');
         var paramMeasureRangeEnd = findGetParameter('measureRangeEnd');
         var paramPageFormat = findGetParameter('pageFormat');
+        var paramPageBackgroundColor = findGetParameter('pageBackgroundColor');
         var paramBackendType = findGetParameter('backendType');
 
         showHeader = (paramShowHeader !== '0');
@@ -143,6 +144,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             measureRangeStart = measureRangeEnd;
         }
         var pageFormat = paramPageFormat ? paramPageFormat : "Endless";
+        var pageBackgroundColor = paramPageBackgroundColor ? "#" + paramPageBackgroundColor : undefined; // vexflow format, see OSMDOptions. can't use # in parameters.
+        //console.log("demo: osmd pagebgcolor: " + pageBackgroundColor);
         var backendType = (paramBackendType && paramBackendType.toLowerCase) ? paramBackendType : "svg";
         
         // set the backendSelect debug controls dropdown menu selected item
@@ -172,6 +175,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         zoomIn = document.getElementById("zoom-in-btn");
         zoomOut = document.getElementById("zoom-out-btn");
         canvas = document.createElement("div");
+        //canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
         nextCursorBtn = document.getElementById("next-cursor-btn");
         resetCursorBtn = document.getElementById("reset-cursor-btn");
@@ -346,7 +350,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 maintain_stem_directions: false
             },
 
-            pageFormat: pageFormat
+            pageFormat: pageFormat,
+            pageBackgroundColor: pageBackgroundColor,
 
             // tupletsBracketed: true, // creates brackets for all tuplets except triplets, even when not set by xml
             // tripletsBracketed: true,

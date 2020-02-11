@@ -7,6 +7,7 @@ import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {BackendType} from "../../../OpenSheetMusicDisplay";
+import {EngravingRules} from "../EngravingRules";
 
 export class CanvasVexFlowBackend extends VexFlowBackend {
     public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
@@ -19,6 +20,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
 
     public initialize(container: HTMLElement): void {
         this.canvas = document.createElement("canvas");
+        this.canvas.id = "osmdCanvasVexFlowBackendCanvas"; // needed to extract image buffer from js
         this.inner = document.createElement("div");
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
@@ -47,6 +49,14 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
 
     public clear(): void {
         (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
+
+        // set background color if not transparent
+        if (EngravingRules.Rules.PageBackgroundColor !== undefined) {
+            this.ctx.save();
+            this.ctx.setFillStyle(EngravingRules.Rules.PageBackgroundColor);
+            this.ctx.fillRect(0, 0, (this.canvas as any).width, (this.canvas as any).height);
+            this.ctx.restore();
+        }
     }
 
     public scale(k: number): void {
