@@ -189,7 +189,7 @@ export class OpenSheetMusicDisplay {
         if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
             EngravingRules.Rules.PageHeight = this.sheet.pageWidth / EngravingRules.Rules.PageFormat.aspectRatio;
         } else {
-            EngravingRules.Rules.PageHeight = 100001; // infinite page height // TODO Number.MAX_SAFE_INTEGER ?
+            EngravingRules.Rules.PageHeight = 100001; // infinite page height // TODO maybe Number.MAX_VALUE or Math.pow(10, 20)?
         }
 
         // Before introducing the following optimization (maybe irrelevant), tests

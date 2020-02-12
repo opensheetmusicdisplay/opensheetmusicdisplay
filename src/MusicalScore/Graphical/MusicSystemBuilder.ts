@@ -972,6 +972,7 @@ export class MusicSystemBuilder {
         let currentYPosition: number = 0;
         // xPosition is always fixed
         let currentSystem: MusicSystem = this.musicSystems[0];
+        let timesPageCouldntFitSingleSystem: number = 0;
 
         for (let i: number = 0; i < this.musicSystems.length; i++) {
             currentSystem = this.musicSystems[i];
@@ -995,7 +996,16 @@ export class MusicSystemBuilder {
                                                                 currentYPosition);
                 currentSystem.PositionAndShape.RelativePosition = relativePosition;
                 currentYPosition += currentSystem.PositionAndShape.BorderBottom;
-
+                if (currentYPosition > this.rules.PageHeight - this.rules.PageBottomMargin) { // can't fit single system on page, maybe PageFormat too small
+                    timesPageCouldntFitSingleSystem++;
+                    if (timesPageCouldntFitSingleSystem <= 4) { // only warn once with detailed info
+                        console.log(`warning: could not fit a single system on page ${currentPage.PageNumber}` +
+                            ` and measure number ${currentSystem.GraphicalMeasures[0][0].MeasureNumber}.
+                            The PageFormat may be too small for this sheet."
+                            Will not give further warnings for all pages, only total.`
+                        );
+                    }
+                }
             } else {
                 // if this is not the first system on the page:
                 // find optimum distance between Systems
@@ -1022,6 +1032,9 @@ export class MusicSystemBuilder {
                     continue;
                 }
             }
+        }
+        if (timesPageCouldntFitSingleSystem > 0) {
+            console.log(`total amount of pages that couldn't fit a single music system: ${timesPageCouldntFitSingleSystem} of ${currentPage.PageNumber}`);
         }
     }
 }
