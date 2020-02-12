@@ -58,7 +58,7 @@
     "vexflow": "^1.2.89"
   },
   "devDependencies": {
-    "@types/chai": "^4.0.3",
+    "@types/chai": "^4.2.9",
     "@types/mocha": "^7.0.1",
     "@types/node": "^13.1.0",
     "chai": "^4.1.0",
