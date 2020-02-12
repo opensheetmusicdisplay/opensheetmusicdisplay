@@ -53,7 +53,7 @@ module.exports = function (config) {
             resolve: common.resolve
         },
 
-        // Required for Firefox and Chorme to work
+        // Required for Firefox and Chrome to work
         // see https://github.com/webpack-contrib/karma-webpack/issues/188
         mime: {
             'text/x-typescript': ['ts']
