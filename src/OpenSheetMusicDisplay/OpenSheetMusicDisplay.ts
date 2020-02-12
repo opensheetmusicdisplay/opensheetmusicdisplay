@@ -636,6 +636,10 @@ export class OpenSheetMusicDisplay {
     };
 
     public static StringToPageFormat(formatId: string): PageFormat {
+        formatId = formatId.replace(" ", "_");
+        formatId = formatId.replace("Landscape", "L");
+        formatId = formatId.replace("Portrait", "P");
+        //console.log("change format to: " + formatId);
         let f: PageFormat = PageFormat.UndefinedPageFormat; // default: 'endless' page height, take canvas/container width
         if (OpenSheetMusicDisplay.PageFormatStandards.hasOwnProperty(formatId)) {
             f = OpenSheetMusicDisplay.PageFormatStandards[formatId];
