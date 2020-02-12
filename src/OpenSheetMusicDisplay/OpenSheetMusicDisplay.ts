@@ -152,6 +152,7 @@ export class OpenSheetMusicDisplay {
         }
         log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
 
+        this.needBackendUpdate = true;
         this.updateGraphic();
 
         return Promise.resolve({});
@@ -204,7 +205,10 @@ export class OpenSheetMusicDisplay {
             this.graphic.Cursors.length = 0;
         }
 
-        if (this.needBackendUpdate) {
+        // needBackendUpdate is well intentioned, but we need to cover all cases.
+        //   backends also need an update when this.zoom was set from outside, which unfortunately doesn't have a setter method to set this in.
+        //   so just for compatibility, we need to assume users set osmd.zoom, so we'd need to check whether it was changed compared to last time.
+        if (true || this.needBackendUpdate) {
             this.createOrRefreshRenderBackend();
             this.needBackendUpdate = false;
         }
