@@ -8,7 +8,7 @@
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES5 --ignoreCompilerErrors --mode file ./src",
     "eslint": "eslint .",
     "tslint": "tslint --project tsconfig.json \"src/**/*.ts\" \"test/**/*.ts\"",
-    "lint": "npm-run-all tslint",
+    "lint": "npm-run-all tslint eslint",
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
     "prepare": "npm run build",
@@ -18,13 +18,13 @@
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
     "build:webpack-sourcemap": "webpack --progress --colors --config webpack.sourcemap.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
-    "generatePNG": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ../../build ./data/images/current",
-    "generate:current": "node ./test/Util/generateDiffImages.js ../../build ./data/images/current",
-    "generate:blessed": "node ./test/Util/generateDiffImages.js ../../build ./data/images/blessed",
+    "generatePNG": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./data/images/current",
+    "generate:current": "node ./test/Util/generateDiffImages.js ./test/data/ ./data/images/current",
+    "generate:blessed": "node ./test/Util/generateDiffImages.js ./test/data/ ./data/images/blessed",
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
   "pre-commit": [
-    "tslint"
+    "lint"
   ],
   "files": [
     "build/dist/src",

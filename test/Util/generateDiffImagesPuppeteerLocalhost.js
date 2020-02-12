@@ -15,82 +15,81 @@
 // }
 
 // main function
-async function init() {
-    console.log("init");
+async function init () {
+    console.log('init')
 
-    const fs = require('fs');
-    const [scriptDir, imageDir] = process.argv.slice(2, 4);
-    const sampleDir = './test/data/';
+    const fs = require('fs')
+    const [sampleDir, imageDir] = process.argv.slice(2, 4)
+    console.log('sampleDir: ' + sampleDir)
+    console.log('imageDir: ' + imageDir)
 
     // Create the image directory if it doesn't exist.
-    fs.mkdirSync(imageDir, { recursive: true });
+    fs.mkdirSync(imageDir, { recursive: true })
 
     const samples = {
-        "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
-        //"Hello World": "HelloWorld.xml",
+        'Clementi, M. - Sonatina Op.36 No.1 Pt.1': 'MuzioClementi_SonatinaOpus36No1_Part1.xml'
+        // "Hello World": "HelloWorld.xml",
         // "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
         // "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
     }
-    const sampleKeys = Object.keys(samples);
-    const sampleValues = Object.values(samples);
+    const sampleKeys = Object.keys(samples)
+    // const sampleValues = Object.values(samples)
 
-    const puppeteer = require('puppeteer');
-    const browser = await puppeteer.launch({headless: true});
-    const page = await browser.newPage(); // TODO set width/height
-    const sampleFileName = sampleKeys[0]; // TODO for loop over samples / take filenames from script arguments
-    const sampleParameter = `&url=${sampleFileName}&endUrl`;
-    console.log("puppeteer: going to url");
-    await page.goto("http://localhost:8000/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF" + sampleParameter, {waitUntil: 'networkidle2'});
-    console.log("goto done");
+    const puppeteer = require('puppeteer')
+    const browser = await puppeteer.launch({ headless: true })
+    const page = await browser.newPage() // TODO set width/height
+    const sampleFileName = sampleKeys[0] // TODO for loop over samples / take filenames from script arguments
+    const sampleParameter = `&url=${sampleFileName}&endUrl`
+    console.log('puppeteer: going to url')
+    await page.goto('http://localhost:8000/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF' + sampleParameter, { waitUntil: 'networkidle2' })
+    console.log('goto done')
 
-    {
-        // fix navigation error
-        var response_event_occurred = false;
-        var response_handler = function(event){ response_event_occurred = true; };
-        
-        var response_watcher = new Promise(function(resolve, reject){
-            setTimeout(function(){
-            if (!response_event_occurred) {
-                resolve(true); 
+    // fix navigation error
+    var responseEventOccurred = false
+    var responseHandler = function (event) { responseEventOccurred = true }
+
+    var responseWatcher = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+            if (!responseEventOccurred) {
+                resolve(true)
             } else {
-                setTimeout(function(){ resolve(true); }, 30000);
+                setTimeout(function () { resolve(true) }, 30000)
             }
-            page.removeListener('response', response_handler);
-            }, 500);
-        });
-        
-        page.on('response', response_handler);
+            page.removeListener('response', responseHandler)
+        }, 500)
+    })
 
-        var navigation_watcher = page.waitForNavigation();
+    page.on('response', responseHandler)
 
-        await Promise.race([response_watcher, navigation_watcher]);
-    }
-    console.log("navigation race done");
+    var navigationWatcher = page.waitForNavigation()
 
+    await Promise.race([responseWatcher, navigationWatcher])
+    console.log('navigation race done')
+
+    // get image data
     const getDataUrl = async () => {
-        return await page.evaluate(async () => {
-            return await new Promise(resolve => {
-                const canvasImage = document.getElementById("osmdCanvasVexFlowBackendCanvas");
-                var imageData = canvasImage.toDataURL();
+        return page.evaluate(async () => {
+            return new Promise(resolve => {
+                const canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas')
+                var imageData = canvasImage.toDataURL()
                 // TODO fetch multiple pages from multiple OSMD backends
-                resolve(imageData);
+                resolve(imageData)
             })
         })
     }
-    const dataUrl = await getDataUrl();
-    //console.log("dataUrl: " + dataUrl);
-    const imageData = dataUrl.split(';base64,').pop();
-    const imageBuffer = Buffer.from(imageData, 'base64');
+    const dataUrl = await getDataUrl()
+    // console.log("dataUrl: " + dataUrl);
+    const imageData = dataUrl.split(';base64,').pop()
+    const imageBuffer = Buffer.from(imageData, 'base64')
 
-    var fileName = `${imageDir}/${sampleFileName}.png`;
-    console.log("got image data, saving to: " + fileName);
-    fs.writeFileSync(fileName, imageBuffer, { encoding: 'base64' });
+    var fileName = `${imageDir}/${sampleFileName}.png`
+    console.log('got image data, saving to: ' + fileName)
+    fs.writeFileSync(fileName, imageBuffer, { encoding: 'base64' })
 
-    //const html = await page.content();
-    //console.log("page content: " + html);
-    browser.close();
-    console.log("puppeteer browser closed. exiting.");
-    return;
+    // const html = await page.content();
+    // console.log("page content: " + html);
+    browser.close()
+    console.log('puppeteer browser closed. exiting.')
 }
 
 // function start() {
@@ -104,10 +103,10 @@ async function init() {
 //     })();
 // }
 
-function resizeCanvas(elementId, width, height) {
-    $('#' + elementId).width(width);
-    $('#' + elementId).attr('width', width);
-    $('#' + elementId).attr('height', height);
-}
+// function resizeCanvas (elementId, width, height) {
+//     $('#' + elementId).width(width)
+//     $('#' + elementId).attr('width', width)
+//     $('#' + elementId).attr('height', height)
+// }
 
-init();
+init()
