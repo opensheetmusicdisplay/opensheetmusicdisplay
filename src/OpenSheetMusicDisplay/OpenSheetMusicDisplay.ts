@@ -626,17 +626,17 @@ export class OpenSheetMusicDisplay {
 
     /** Standard page format options like A4 or Letter, in portrait and landscape. E.g. PageFormatStandards["A4_P"] or PageFormatStandards["Letter_L"]. */
     public static PageFormatStandards: {[type: string]: PageFormat} = {
-        "A3_L": new PageFormat(420, 297), // id strings should use underscores instead of white spaces to facilitate use as URL parameters.
-        "A3_P": new PageFormat(297, 420),
-        "A4_L": new PageFormat(297, 210),
-        "A4_P": new PageFormat(210, 297),
-        "A5_L": new PageFormat(210, 148),
-        "A5_P": new PageFormat(148, 210),
-        "A6_L": new PageFormat(148, 105),
-        "A6_P": new PageFormat(105, 148),
+        "A3_L": new PageFormat(420, 297, "A3_L"), // id strings should use underscores instead of white spaces to facilitate use as URL parameters.
+        "A3_P": new PageFormat(297, 420, "A3_P"),
+        "A4_L": new PageFormat(297, 210, "A4_L"),
+        "A4_P": new PageFormat(210, 297, "A4_P"),
+        "A5_L": new PageFormat(210, 148, "A5_L"),
+        "A5_P": new PageFormat(148, 210, "A5_P"),
+        "A6_L": new PageFormat(148, 105, "A6_L"),
+        "A6_P": new PageFormat(105, 148, "A6_P"),
         "Endless": PageFormat.UndefinedPageFormat,
-        "Letter_L": new PageFormat(279.4, 215.9),
-        "Letter_P": new PageFormat(215.9, 279.4)
+        "Letter_L": new PageFormat(279.4, 215.9, "Letter_L"),
+        "Letter_P": new PageFormat(215.9, 279.4, "Letter_P")
     };
 
     public static StringToPageFormat(formatId: string): PageFormat {
@@ -653,7 +653,9 @@ export class OpenSheetMusicDisplay {
 
     /** Sets page format by string. Alternative to setOptions({pageFormat: PageFormatStandards.Endless}) for example. */
     public setPageFormat(formatId: string): void {
-        EngravingRules.Rules.PageFormat = OpenSheetMusicDisplay.StringToPageFormat(formatId);
+        const newPageFormat: PageFormat = OpenSheetMusicDisplay.StringToPageFormat(formatId);
+        this.needBackendUpdate = !(newPageFormat.Equals(EngravingRules.Rules.PageFormat));
+        EngravingRules.Rules.PageFormat = newPageFormat;
     }
 
     public setCustomPageFormat(width: number, height: number): void {
