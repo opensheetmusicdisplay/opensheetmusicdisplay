@@ -1,6 +1,8 @@
 import { OpenSheetMusicDisplay, CanvasVexFlowBackend } from "../../src";
 import { TestUtils } from "./TestUtils";
-import * as fs from "fs";
+//import * as fs from "fs";
+
+// experimental code, shouldn't be included in Karma test suite
 
 describe("GeneratePNGImages", () => {
     // Test all the following xml files:
@@ -25,11 +27,12 @@ describe("GeneratePNGImages", () => {
         // "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
     ];
     for (const score of sampleFilenames) {
-        testFile(score);
+        generatePNG(score);
     }
 
-    // Generates a test for a mxl file name
-    function testFile(sampleFilename: string): void {
+    // TODO This is just example code for now.
+    // generate PNG. TODO fs doesn't work with Karma. This is the big problem that needs to be worked around with ts/Karma.
+    function generatePNG(sampleFilename: string): void {
         it(sampleFilename, (done: MochaDone) => {
             // Load the xml file content
             const score: Document = TestUtils.getScore(sampleFilename);
@@ -39,19 +42,20 @@ describe("GeneratePNGImages", () => {
             openSheetMusicDisplay.load(score);
 
             const testDir: string = "../data/images";
-            fs.mkdirSync(testDir, { recursive: true });
+            //fs.mkdirSync(testDir, { recursive: true });
 
             const fileName: string = `${testDir}/${sampleFilename}.png`;
+            console.log("fileName: " + fileName);
 
             console.log("before buffer");
             const canvasBackend: CanvasVexFlowBackend = openSheetMusicDisplay.Drawer.Backends[0] as CanvasVexFlowBackend;
             const imageData: string = (canvasBackend.getCanvas() as HTMLCanvasElement).toDataURL().split(";base64,").pop();
             const imageBuffer: Buffer = Buffer.from(imageData, "base64");
+            console.log("imageBuffer.length: " + imageBuffer.length);
             //console.log("after buffer");
             //let arraybuffer = Uint8Array.from(imageBuffer, 'base64').buffer;
 
-            // TODO doesn't work with Karma. This is the big problem that needs to be worked around with ts/Karma.
-            fs.writeFileSync(fileName, imageBuffer, { encoding: "base64" });
+            //fs.writeFileSync(fileName, imageBuffer, { encoding: "base64" });
 
             done();
             }).timeout(10000);
