@@ -83,6 +83,7 @@ export class OpenSheetMusicDisplay {
     public load(content: string | Document): Promise<{}> {
         // Warning! This function is asynchronous! No error handling is done here.
         this.reset();
+        //console.log("typeof content: " + typeof content);
         if (typeof content === "string") {
 
             const str: string = <string>content;
