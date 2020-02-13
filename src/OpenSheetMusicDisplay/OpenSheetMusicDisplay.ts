@@ -71,6 +71,8 @@ export class OpenSheetMusicDisplay {
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
     private drawBoundingBox: string;
+    private drawSkyLine: boolean;
+    private drawBottomLine: boolean;
     private graphic: GraphicalMusicSheet;
     private drawingParameters: DrawingParameters;
     private autoResizeEnabled: boolean;
@@ -239,6 +241,8 @@ export class OpenSheetMusicDisplay {
         // Create the drawer
         this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters); // note that here the drawer.drawableBoundingBoxElement is lost. now saved in OSMD.
         this.drawer.drawableBoundingBoxElement = this.DrawBoundingBox;
+        this.drawer.bottomLineVisible = this.drawBottomLine;
+        this.drawer.skyLineVisible = this.drawSkyLine;
 
         // Set page width
         const width: number = this.container.offsetWidth;
@@ -719,6 +723,7 @@ export class OpenSheetMusicDisplay {
 
     //#region GETTER / SETTER
     public set DrawSkyLine(value: boolean) {
+        this.drawSkyLine = value;
         if (this.drawer) {
             this.drawer.skyLineVisible = value;
             this.render();
@@ -729,6 +734,7 @@ export class OpenSheetMusicDisplay {
     }
 
     public set DrawBottomLine(value: boolean) {
+        this.drawBottomLine = value;
         if (this.drawer) {
             this.drawer.bottomLineVisible = value;
             this.render();
