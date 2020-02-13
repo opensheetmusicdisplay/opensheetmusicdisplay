@@ -70,6 +70,7 @@ export class OpenSheetMusicDisplay {
     private needBackendUpdate: boolean;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
+    private drawBoundingBox: string;
     private graphic: GraphicalMusicSheet;
     private drawingParameters: DrawingParameters;
     private autoResizeEnabled: boolean;
@@ -236,7 +237,8 @@ export class OpenSheetMusicDisplay {
             this.drawer.Backends.clear();
         }
         // Create the drawer
-        this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters);
+        this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters); // note that here the drawer.drawableBoundingBoxElement is lost. now saved in OSMD.
+        this.drawer.drawableBoundingBoxElement = this.DrawBoundingBox;
 
         // Set page width
         const width: number = this.container.offsetWidth;
@@ -737,11 +739,12 @@ export class OpenSheetMusicDisplay {
     }
 
     public set DrawBoundingBox(value: string) {
-        this.drawer.drawableBoundingBoxElement = value;
-        this.render();
+        this.drawBoundingBox = value;
+        this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
+        this.render(); // may create new Drawer.
     }
     public get DrawBoundingBox(): string {
-        return this.drawer.drawableBoundingBoxElement;
+        return this.drawBoundingBox;
     }
 
     public get AutoResizeEnabled(): boolean {
