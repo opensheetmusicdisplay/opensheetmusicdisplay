@@ -1768,6 +1768,14 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+        // this.iterateGraphicalStaffEntry((graphicalStaffEntry: GraphicalStaffEntry) => {
+        //     const verticalContainer: VerticalGraphicalStaffEntryContainer =
+        //     this.graphicalMusicSheet.getOrCreateVerticalContainer(graphicalStaffEntry.getAbsoluteTimestamp());
+        //     if (verticalContainer !== undefined) {
+        //         verticalContainer.StaffEntries[j] = graphicalStaffEntry;
+        //         graphicalStaffEntry.parentVerticalContainer = verticalContainer;
+        //     }
+        // });
     }
 
     private setIndicesToVerticalGraphicalContainers(): void {
@@ -1964,20 +1972,14 @@ export abstract class MusicSheetCalculator {
     // }
 
     private handleStaffEntries(): void {
-        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MeasureList.length; idx < len; ++idx) {
-            const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[idx];
-            for (let idx2: number = 0, len2: number = measures.length; idx2 < len2; ++idx2) {
-                const measure: GraphicalMeasure = measures[idx2];
-                for (const graphicalStaffEntry of measure.staffEntries) {
-                    if (graphicalStaffEntry.parentMeasure !== undefined
-                        && graphicalStaffEntry.graphicalVoiceEntries.length > 0
-                        && graphicalStaffEntry.graphicalVoiceEntries[0].notes.length > 0) {
-                        this.layoutVoiceEntries(graphicalStaffEntry);
-                        this.layoutStaffEntry(graphicalStaffEntry);
-                    }
-                }
+        this.iterateGraphicalStaffEntry((graphicalStaffEntry: GraphicalStaffEntry) => {
+            if (graphicalStaffEntry.parentMeasure !== undefined
+                && graphicalStaffEntry.graphicalVoiceEntries.length > 0
+                && graphicalStaffEntry.graphicalVoiceEntries[0].notes.length > 0) {
+                this.layoutVoiceEntries(graphicalStaffEntry);
+                this.layoutStaffEntry(graphicalStaffEntry);
             }
-        }
+        });
     }
 
     private calculateSkyBottomLines(): void {
@@ -1994,85 +1996,41 @@ export abstract class MusicSheetCalculator {
     protected abstract calculateExpressionAlignements(): void;
 
     private calculateBeams(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const musicSystem: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
-                    const measure: GraphicalMeasure = staffLine.Measures[idx4];
-                    for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
-                        const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
-                        this.layoutBeams(staffEntry);
-                    }
-                }
-            }
-        }
+        this.iterateGraphicalStaffEntry((staffEntry: GraphicalStaffEntry) => this.layoutBeams(staffEntry));
     }
 
     private calculateStaffEntryArticulationMarks(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const system: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = system.StaffLines.length; idx3 < len3; ++idx3) {
-                const line: StaffLine = system.StaffLines[idx3];
-                for (let idx4: number = 0, len4: number = line.Measures.length; idx4 < len4; ++idx4) {
-                    const measure: GraphicalMeasure = line.Measures[idx4];
-                    for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
-                        const graphicalStaffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
-                        for (let idx6: number = 0, len6: number = graphicalStaffEntry.sourceStaffEntry.VoiceEntries.length; idx6 < len6; ++idx6) {
-                            const voiceEntry: VoiceEntry = graphicalStaffEntry.sourceStaffEntry.VoiceEntries[idx6];
-                            if (voiceEntry.Articulations.length > 0) {
-                                this.layoutArticulationMarks(voiceEntry.Articulations, voiceEntry, graphicalStaffEntry);
-                            }
-                        }
-                    }
+        this.iterateGraphicalStaffEntry((graphicalStaffEntry: GraphicalStaffEntry) => {
+            for (const voiceEntry of graphicalStaffEntry.sourceStaffEntry.VoiceEntries) {
+                if (voiceEntry.Articulations.length > 0) {
+                    this.layoutArticulationMarks(voiceEntry.Articulations, voiceEntry, graphicalStaffEntry);
                 }
             }
-        }
+        });
     }
 
-    // SIZE: foreach
     private calculateOrnaments(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const system: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = system.StaffLines.length; idx3 < len3; ++idx3) {
-                const line: StaffLine = system.StaffLines[idx3];
-                for (let idx4: number = 0, len4: number = line.Measures.length; idx4 < len4; ++idx4) {
-                    const measure: GraphicalMeasure = line.Measures[idx4];
-                    for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
-                        const graphicalStaffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
-                        for (let idx6: number = 0, len6: number = graphicalStaffEntry.sourceStaffEntry.VoiceEntries.length; idx6 < len6; ++idx6) {
-                            const voiceEntry: VoiceEntry = graphicalStaffEntry.sourceStaffEntry.VoiceEntries[idx6];
-                            if (voiceEntry.OrnamentContainer !== undefined) {
-                                if (voiceEntry.hasTie() && !graphicalStaffEntry.relInMeasureTimestamp.Equals(voiceEntry.Timestamp)) {
-                                    continue;
-                                }
-                                this.layoutOrnament(voiceEntry.OrnamentContainer, voiceEntry, graphicalStaffEntry);
-                                if (!(this.staffEntriesWithOrnaments.indexOf(graphicalStaffEntry) !== -1)) {
-                                    this.staffEntriesWithOrnaments.push(graphicalStaffEntry);
-                                }
-                            }
-                        }
+        this.iterateGraphicalStaffEntry((graphicalStaffEntry: GraphicalStaffEntry) => {
+            for (const voiceEntry of graphicalStaffEntry.sourceStaffEntry.VoiceEntries) {
+                if (voiceEntry.OrnamentContainer !== undefined) {
+                    if (voiceEntry.hasTie() && !graphicalStaffEntry.relInMeasureTimestamp.Equals(voiceEntry.Timestamp)) {
+                        continue;
+                    }
+                    this.layoutOrnament(voiceEntry.OrnamentContainer, voiceEntry, graphicalStaffEntry);
+                    if (!(this.staffEntriesWithOrnaments.indexOf(graphicalStaffEntry) !== -1)) {
+                        this.staffEntriesWithOrnaments.push(graphicalStaffEntry);
                     }
                 }
             }
-        }
+        });
     }
 
-    // SIZE: foreach
     private optimizeRestPlacement(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const system: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = system.StaffLines.length; idx3 < len3; ++idx3) {
-                const line: StaffLine = system.StaffLines[idx3];
-                for (let idx4: number = 0, len4: number = line.Measures.length; idx4 < len4; ++idx4) {
-                    const measure: GraphicalMeasure = line.Measures[idx4];
-                    for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
-                        const graphicalStaffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
-                        this.optimizeRestNotePlacement(graphicalStaffEntry, measure);
-                    }
-                }
+        this.iterateGraphicalMeasures((measure: GraphicalMeasure) => {
+            for (const graphicalStaffEntry of measure.staffEntries) {
+                this.optimizeRestNotePlacement(graphicalStaffEntry, measure);
             }
-        }
+        });
     }
 
     private calculateTwoRestNotesPlacementWithCollisionDetection(graphicalStaffEntry: GraphicalStaffEntry): void {
@@ -2135,29 +2093,40 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateTieCurves(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const musicSystem: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                for (let idx4: number = 0, len5: number = staffLine.Measures.length; idx4 < len5; ++idx4) {
-                    const measure: GraphicalMeasure = staffLine.Measures[idx4];
-                    for (let idx6: number = 0, len6: number = measure.staffEntries.length; idx6 < len6; ++idx6) {
-                        const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx6];
-                        const graphicalTies: GraphicalTie[] = staffEntry.GraphicalTies;
-                        for (let idx7: number = 0, len7: number = graphicalTies.length; idx7 < len7; ++idx7) {
-                            const graphicalTie: GraphicalTie = graphicalTies[idx7];
-                            if (graphicalTie.StartNote !== undefined && graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry === staffEntry) {
-                                const tieIsAtSystemBreak: boolean = (
-                                    graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine !==
-                                    graphicalTie.EndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine
-                                );
-                                this.layoutGraphicalTie(graphicalTie, tieIsAtSystemBreak);
-                            }
-                        }
-                    }
+        this.iterateGraphicalStaffEntry((staffEntry: GraphicalStaffEntry) => {
+            for (const graphicalTie of staffEntry.GraphicalTies) {
+                if (graphicalTie.StartNote !== undefined && graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry === staffEntry) {
+                    const tieIsAtSystemBreak: boolean = (
+                        graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine !==
+                        graphicalTie.EndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine
+                    );
+                    this.layoutGraphicalTie(graphicalTie, tieIsAtSystemBreak);
                 }
             }
+        });
+    }
+
+    private iterateGraphicalMeasures(callback: (measure: GraphicalMeasure) => void): void {
+        // for (const musicSystem of this.musicSystems) {
+        //     for (const staffLine of musicSystem.StaffLines)  {
+        //         for (const measure of staffLine.Measures) {
+        //             callback(measure);
+        //         }
+        //     }
+        // }
+        for (const measures of this.graphicalMusicSheet.MeasureList) {
+            for (const measure of measures) {
+                callback(measure);
+            }
         }
+    }
+
+    private iterateGraphicalStaffEntry(callback: (measure: GraphicalStaffEntry) => void): void {
+        this.iterateGraphicalMeasures((measure: GraphicalMeasure) => {
+            for (const graphicalStaffEntry of measure.staffEntries) {
+                callback(graphicalStaffEntry);
+            }
+        });
     }
 
     private calculateLyricsPosition(): void {
