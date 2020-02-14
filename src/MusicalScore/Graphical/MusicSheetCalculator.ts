@@ -1474,55 +1474,27 @@ export abstract class MusicSheetCalculator {
         return maxLabelLength;
     }
 
-    // SIZE: Redundant code
     protected calculateSheetLabelBoundingBoxes(): void {
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
-        const defaultColorTitle: string = this.rules.DefaultColorTitle; // can be undefined => black
-        this.setGraphicalLabelTextAndColor(this.graphicalMusicSheet.Title, musicSheet.Title, this.rules.RenderTitle);
-        if (musicSheet.Title !== undefined && EngravingRules.Rules.RenderTitle) {
-            const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
-            title.Label.colorDefault = defaultColorTitle;
-            this.graphicalMusicSheet.Title = title;
-            title.setLabelPositionAndShapeBorders();
-        } else if (!EngravingRules.Rules.RenderTitle) {
-            this.graphicalMusicSheet.Title = undefined; // clear label if rendering it was disabled after last render
-        }
-        if (musicSheet.Subtitle !== undefined && EngravingRules.Rules.RenderSubtitle) {
-            const subtitle: GraphicalLabel = new GraphicalLabel(musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter);
-            subtitle.Label.colorDefault = defaultColorTitle;
-            this.graphicalMusicSheet.Subtitle = subtitle;
-            subtitle.setLabelPositionAndShapeBorders();
-        } else if (!EngravingRules.Rules.RenderSubtitle) {
-            this.graphicalMusicSheet.Subtitle = undefined;
-        }
-        if (musicSheet.Composer !== undefined && EngravingRules.Rules.RenderComposer) {
-            const composer: GraphicalLabel = new GraphicalLabel(musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter);
-            composer.Label.colorDefault = defaultColorTitle;
-            this.graphicalMusicSheet.Composer = composer;
-            composer.setLabelPositionAndShapeBorders();
-        } else if (!EngravingRules.Rules.RenderComposer) {
-            this.graphicalMusicSheet.Composer = undefined;
-        }
-        if (musicSheet.Lyricist !== undefined && EngravingRules.Rules.RenderLyricist) {
-            const lyricist: GraphicalLabel = new GraphicalLabel(musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter);
-            lyricist.Label.colorDefault = defaultColorTitle;
-            this.graphicalMusicSheet.Lyricist = lyricist;
-            lyricist.setLabelPositionAndShapeBorders();
-        } else if (!EngravingRules.Rules.RenderLyricist) {
-            this.graphicalMusicSheet.Lyricist = undefined;
-        }
+        this.graphicalMusicSheet.Title    = this.setGraphicalLabelTextAndColor(musicSheet.Title, this.rules.RenderTitle,
+                                                                               this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
+        this.graphicalMusicSheet.Subtitle = this.setGraphicalLabelTextAndColor(musicSheet.Subtitle, this.rules.RenderSubtitle,
+                                                                               this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter);
+        this.graphicalMusicSheet.Composer = this.setGraphicalLabelTextAndColor(musicSheet.Composer, this.rules.RenderComposer,
+                                                                               this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter);
+        this.graphicalMusicSheet.Lyricist = this.setGraphicalLabelTextAndColor(musicSheet.Lyricist, this.rules.RenderLyricist,
+                                                                               this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter);
     }
 
-    private setGraphicalLabelTextAndColor(target: GraphicalLabel, text: Label, shouldDraw: boolean): void {
-        const defaultColorTitle: string = EngravingRules.Rules.DefaultColorTitle;
+    private setGraphicalLabelTextAndColor(text: Label, shouldDraw: boolean, height: number, alignment: TextAlignmentEnum): GraphicalLabel {
+        const defaultColorTitle: string = this.rules.DefaultColorTitle;
+        let target: GraphicalLabel = undefined;
         if (text !== undefined && shouldDraw) {
-            const graphLabel: GraphicalLabel = new GraphicalLabel(text, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
-            graphLabel.Label.colorDefault = defaultColorTitle;
-            this.graphicalMusicSheet.Title = graphLabel;
-            graphLabel.setLabelPositionAndShapeBorders();
-        } else if (!shouldDraw) {
-            this.graphicalMusicSheet.Title = undefined; // clear label if rendering it was disabled after last render
+            target = new GraphicalLabel(text, height, alignment);
+            target.Label.colorDefault = defaultColorTitle;
+            target.setLabelPositionAndShapeBorders();
         }
+        return target;
     }
 
     protected checkMeasuresForWholeRestNotes(): void {
@@ -1938,7 +1910,7 @@ export abstract class MusicSheetCalculator {
         }
         // if there are no staffEntries in this measure, create a rest for the whole measure:
         // check OSMDOptions.fillEmptyMeasuresWithWholeRest
-        if (EngravingRules.Rules.FillEmptyMeasuresWithWholeRest >= 1) { // fill measures with no notes given with whole rests, visible (1) or invisible (2)
+        if (this.rules.FillEmptyMeasuresWithWholeRest >= 1) { // fill measures with no notes given with whole rests, visible (1) or invisible (2)
             if (measure.staffEntries.length === 0) {
                 const sourceStaffEntry: SourceStaffEntry = new SourceStaffEntry(
                     new VerticalSourceStaffEntryContainer(measure.parentSourceMeasure,
@@ -1947,7 +1919,7 @@ export abstract class MusicSheetCalculator {
                     staff);
                 const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
                 const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
-                note.PrintObject = EngravingRules.Rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
+                note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                 // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
                 const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
@@ -2471,8 +2443,8 @@ export abstract class MusicSheetCalculator {
 
     // SIZE: foreach
     private calculateDynamicExpressions(): void {
-        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, EngravingRules.Rules.MaxMeasureToDrawIndex);
-        const minIndex: number = Math.min(EngravingRules.Rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
+        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
+        const minIndex: number = Math.min(this.rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
         for (let i: number = minIndex; i <= maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
@@ -2555,8 +2527,8 @@ export abstract class MusicSheetCalculator {
 
     // SIZE: foreach
     private calculateTempoExpressions(): void {
-        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, EngravingRules.Rules.MaxMeasureToDrawIndex);
-        const minIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+        const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
+        const minIndex: number = this.rules.MinMeasureToDrawIndex;
         for (let i: number = minIndex; i <= maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
             for (let j: number = 0; j < sourceMeasure.TempoExpressions.length; j++) {
