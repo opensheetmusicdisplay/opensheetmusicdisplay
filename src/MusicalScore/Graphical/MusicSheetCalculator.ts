@@ -591,14 +591,14 @@ export abstract class MusicSheetCalculator {
         if (allMeasures === undefined) {
             return;
         }
-        if (EngravingRules.Rules.MinMeasureToDrawIndex > allMeasures.length - 1) {
-            EngravingRules.Rules.MinMeasureToDrawIndex = allMeasures.length - 1;
+        if (this.rules.MinMeasureToDrawIndex > allMeasures.length - 1) {
+            this.rules.MinMeasureToDrawIndex = allMeasures.length - 1;
         }
 
         // visible 2D-MeasureList
         const visibleMeasureList: GraphicalMeasure[][] = [];
-        for (let idx: number = EngravingRules.Rules.MinMeasureToDrawIndex, len: number = allMeasures.length;
-            idx < len && idx <= EngravingRules.Rules.MaxMeasureToDrawIndex; ++idx) {
+        for (let idx: number = this.rules.MinMeasureToDrawIndex, len: number = allMeasures.length;
+            idx < len && idx <= this.rules.MaxMeasureToDrawIndex; ++idx) {
             const graphicalMeasures: GraphicalMeasure[] = allMeasures[idx];
             const visiblegraphicalMeasures: GraphicalMeasure[] = [];
             for (let idx2: number = 0, len2: number = graphicalMeasures.length; idx2 < len2; ++idx2) {
@@ -607,7 +607,7 @@ export abstract class MusicSheetCalculator {
                 if (graphicalMeasure.isVisible()) {
                     visiblegraphicalMeasures.push(graphicalMeasure);
 
-                    if (EngravingRules.Rules.ColoringEnabled) {
+                    if (this.rules.ColoringEnabled) {
                         // (re-)color notes
                         for (const staffEntry of graphicalMeasure.staffEntries) {
                             for (const gve of staffEntry.graphicalVoiceEntries) {
@@ -650,7 +650,7 @@ export abstract class MusicSheetCalculator {
             this.optimizeRestPlacement();
             // possible Displacement of RestNotes
             this.calculateStaffEntryArticulationMarks();
-            if (EngravingRules.Rules.RenderSlurs) { // technically we should separate slurs and ties, but shouldn't be relevant for now
+            if (this.rules.RenderSlurs) { // technically we should separate slurs and ties, but shouldn't be relevant for now
                 // calculate Ties
                 this.calculateTieCurves();
             }
@@ -662,14 +662,14 @@ export abstract class MusicSheetCalculator {
         this.calculateTupletNumbers();
 
         // calculate MeasureNumbers
-        if (EngravingRules.Rules.RenderMeasureNumbers) {
+        if (this.rules.RenderMeasureNumbers) {
             for (let idx: number = 0, len: number = this.musicSystems.length; idx < len; ++idx) {
                 const musicSystem: MusicSystem = this.musicSystems[idx];
                 this.calculateMeasureNumberPlacement(musicSystem);
             }
         }
         // calculate Slurs
-        if (!this.leadSheet && EngravingRules.Rules.RenderSlurs) {
+        if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
         }
         // calculate StaffEntry Ornaments
@@ -1228,7 +1228,7 @@ export abstract class MusicSheetCalculator {
 
         if (multiTempoExpression.ContinuousTempo || multiTempoExpression.InstantaneousTempo) {
             // TempoExpressions always on the first visible System's StaffLine // TODO is it though?
-            if (EngravingRules.Rules.MinMeasureToDrawIndex > 0) {
+            if (this.rules.MinMeasureToDrawIndex > 0) {
                 return; // assuming that the tempo is always in measure 1 (idx 0), adding the expression causes issues when we don't draw measure 1
             }
             let staffLine: StaffLine = measures[0].ParentStaffLine;
@@ -1269,7 +1269,7 @@ export abstract class MusicSheetCalculator {
                         const lastInstruction: AbstractGraphicalInstruction = firstInstructionEntry.GraphicalInstructions.last();
                         relative.x = lastInstruction.PositionAndShape.RelativePosition.x;
                     }
-                    if (EngravingRules.Rules.CompactMode) {
+                    if (this.rules.CompactMode) {
                         relative.x = staffLine.PositionAndShape.RelativePosition.x +
                             staffLine.Measures[0].PositionAndShape.RelativePosition.x;
                     }
@@ -1279,7 +1279,7 @@ export abstract class MusicSheetCalculator {
             // const addAtLastList: GraphicalObject[] = [];
             for (const entry of multiTempoExpression.EntriesList) {
                 let textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom;
-                if (EngravingRules.Rules.CompactMode) {
+                if (this.rules.CompactMode) {
                     textAlignment = TextAlignmentEnum.LeftBottom;
                 }
                 const graphLabel: GraphicalLabel = this.calculateLabel(staffLine,
@@ -1287,7 +1287,7 @@ export abstract class MusicSheetCalculator {
                                                                        entry.label,
                                                                        multiTempoExpression.getFontstyleOfFirstEntry(),
                                                                        entry.Expression.Placement,
-                                                                       EngravingRules.Rules.UnknownTextHeight,
+                                                                       this.rules.UnknownTextHeight,
                                                                        textAlignment);
 
                 if (entry.Expression instanceof InstantaneousTempoExpression) {
@@ -1381,7 +1381,7 @@ export abstract class MusicSheetCalculator {
                                octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
         if (voiceEntry.StemDirectionXml !== StemDirectionType.Undefined &&
-            EngravingRules.Rules.SetWantedStemDirectionByXml &&
+            this.rules.SetWantedStemDirectionByXml &&
             voiceEntry.StemDirectionXml !== undefined) {
             voiceEntry.WantedStemDirection = voiceEntry.StemDirectionXml;
         } else {
@@ -1459,7 +1459,7 @@ export abstract class MusicSheetCalculator {
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
             if (instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
                 let renderedLabel: Label = instrument.NameLabel;
-                if (!EngravingRules.Rules.RenderPartNames) {
+                if (!this.rules.RenderPartNames) {
                     renderedLabel = new Label("", renderedLabel.textAlignment, renderedLabel.font);
                 }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
@@ -1468,7 +1468,7 @@ export abstract class MusicSheetCalculator {
                 maxLabelLength = Math.max(maxLabelLength, graphicalLabel.PositionAndShape.MarginSize.width);
             }
         }
-        if (!EngravingRules.Rules.RenderPartNames) {
+        if (!this.rules.RenderPartNames) {
             return 0;
         }
         return maxLabelLength;
@@ -1477,7 +1477,8 @@ export abstract class MusicSheetCalculator {
     // SIZE: Redundant code
     protected calculateSheetLabelBoundingBoxes(): void {
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
-        const defaultColorTitle: string = EngravingRules.Rules.DefaultColorTitle; // can be undefined => black
+        const defaultColorTitle: string = this.rules.DefaultColorTitle; // can be undefined => black
+        this.setGraphicalLabelTextAndColor(this.graphicalMusicSheet.Title, musicSheet.Title, this.rules.RenderTitle);
         if (musicSheet.Title !== undefined && EngravingRules.Rules.RenderTitle) {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
             title.Label.colorDefault = defaultColorTitle;
@@ -1512,14 +1513,22 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    //SIZE: Can be simplified using foreaches and let webpack get rid of consts
+    private setGraphicalLabelTextAndColor(target: GraphicalLabel, text: Label, shouldDraw: boolean) {
+        const defaultColorTitle: string = EngravingRules.Rules.DefaultColorTitle;
+        if (text !== undefined && shouldDraw) {
+            const graphLabel: GraphicalLabel = new GraphicalLabel(text, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
+            graphLabel.Label.colorDefault = defaultColorTitle;
+            this.graphicalMusicSheet.Title = graphLabel;
+            graphLabel.setLabelPositionAndShapeBorders();
+        } else if (!shouldDraw) {
+            this.graphicalMusicSheet.Title = undefined; // clear label if rendering it was disabled after last render
+        }
+    }
+
     protected checkMeasuresForWholeRestNotes(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const musicSystem: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
-                    const measure: GraphicalMeasure = staffLine.Measures[idx4];
+        for (const musicSystem of this.musicSystems) {
+            for (const staffLine of musicSystem.StaffLines)  {
+                for (const measure of staffLine.Measures) {
                     if (measure.staffEntries.length === 1) {
                         const gse: GraphicalStaffEntry = measure.staffEntries[0];
                         if (gse.graphicalVoiceEntries.length > 0 && gse.graphicalVoiceEntries[0].notes.length === 1) {
