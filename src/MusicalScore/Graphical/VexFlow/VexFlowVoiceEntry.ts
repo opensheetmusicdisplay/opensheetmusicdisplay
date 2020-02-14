@@ -103,7 +103,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 const beamNotes: Note[] = note.sourceNote.NoteBeam.Notes;
                 let colorBeam: boolean = true;
                 for (let j: number = 0; j < beamNotes.length; j++) {
-                    if (beamNotes[j].NoteheadColor !== noteheadColor) {
+                    if (beamNotes[j].NoteheadColorCurrentlyRendered !== noteheadColor) {
                         colorBeam = false;
                     }
                 }
