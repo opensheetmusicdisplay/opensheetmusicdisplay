@@ -20,8 +20,9 @@ import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/Abstra
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "..";
 import { AutoColorSet } from "../MusicalScore";
-import jspdf = require("jspdf-yworks/dist/jspdf.min");
-import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
+// import jspdf = require("jspdf-yworks/dist/jspdf.min");
+// import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
+// TODO ClosurePlugin can't handle svg2pdf and jspdf conflict because jspdf is imported in OSMD and in svg2pdf
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -676,6 +677,8 @@ export class OpenSheetMusicDisplay {
      * @param pdfName if no name is given, the composer and title of the piece will be used
      */
     public createPdf(pdfName: string = undefined): void {
+        /*
+        // TODO ClosurePlugin can't handle svg2pdf and jspdf conflict because jspdf is imported in OSMD and in svg2pdf
         if (this.backendType !== BackendType.SVG) {
             console.log("[OSMD] osmd.createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
                 " Please use osmd.setOptions({backendType: SVG}).");
@@ -719,6 +722,7 @@ export class OpenSheetMusicDisplay {
 
         // simply save the created pdf
         pdf.save(pdfName);
+        */
     }
 
     //#region GETTER / SETTER
