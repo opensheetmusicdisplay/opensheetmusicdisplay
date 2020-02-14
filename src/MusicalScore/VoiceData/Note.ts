@@ -77,11 +77,12 @@ export class Note {
      * because Note.Notehead is undefined for normal Noteheads to save space and time.
      */
     private noteheadColorXml: string;
-    /** Color of the notehead currently set. RGB Hexadecimal, like #00FF00.
+    /** Color of the notehead currently set/desired for next render. RGB Hexadecimal, like #00FF00.
      * Needs to be stored here and not in Note.Notehead,
      * because Note.Notehead is undefined for normal Noteheads to save space and time.
      */
     private noteheadColor: string;
+    private noteheadColorCurrentlyRendered: string;
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
@@ -200,11 +201,18 @@ export class Note {
     public set NoteheadColorXml(value: string) {
         this.noteheadColorXml = value;
     }
+    /** The desired notehead color for the next render. */
     public get NoteheadColor(): string {
         return this.noteheadColor;
     }
     public set NoteheadColor(value: string) {
         this.noteheadColor = value;
+    }
+    public get NoteheadColorCurrentlyRendered(): string {
+        return this.noteheadColorCurrentlyRendered;
+    }
+    public set NoteheadColorCurrentlyRendered(value: string) {
+        this.noteheadColorCurrentlyRendered = value;
     }
 
     public isRest(): boolean {

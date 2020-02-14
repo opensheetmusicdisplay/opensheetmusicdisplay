@@ -49,12 +49,14 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
         const transparentColor: string = "#00000000"; // transparent color in vexflow
         let noteheadColor: string; // if null: no noteheadcolor to set (stays black)
+        let sourceNoteNoteheadColor: string;
 
         const vfStaveNote: any = (<VexFlowVoiceEntry>(this as any)).vfStaveNote;
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: GraphicalNote = this.notes[i];
 
-            noteheadColor = note.sourceNote.NoteheadColor;
+            sourceNoteNoteheadColor = note.sourceNote.NoteheadColor;
+            noteheadColor = sourceNoteNoteheadColor;
             // Switch between XML colors and automatic coloring
             if (EngravingRules.Rules.ColoringMode === ColoringModes.AutoColoring ||
                 EngravingRules.Rules.ColoringMode === ColoringModes.CustomColorSet) {
@@ -83,7 +85,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     ", in measure #" + measureNumber);
             }*/
 
-            if (!noteheadColor) {
+            if (!sourceNoteNoteheadColor && EngravingRules.Rules.ColoringMode === ColoringModes.XML) {
                 if (!note.sourceNote.isRest() && defaultColorNotehead) {
                     noteheadColor = defaultColorNotehead;
                 } else if (note.sourceNote.isRest() && defaultColorRest) {
@@ -91,7 +93,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 }
             }
             if (noteheadColor && note.sourceNote.PrintObject) {
-                note.sourceNote.NoteheadColor = noteheadColor;
+                note.sourceNote.NoteheadColorCurrentlyRendered = noteheadColor;
             } else if (!noteheadColor) {
                 continue;
             }
