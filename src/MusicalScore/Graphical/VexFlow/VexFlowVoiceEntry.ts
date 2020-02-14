@@ -99,7 +99,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             }
 
             // color notebeam if all noteheads have same color and stem coloring enabled
-            if (EngravingRules.Rules.ColoringEnabled && note.sourceNote.NoteBeam && EngravingRules.Rules.ColorStemsLikeNoteheads) {
+            if (EngravingRules.Rules.ColoringEnabled && note.sourceNote.NoteBeam && EngravingRules.Rules.ColorBeams) {
                 const beamNotes: Note[] = note.sourceNote.NoteBeam.Notes;
                 let colorBeam: boolean = true;
                 for (let j: number = 0; j < beamNotes.length; j++) {
@@ -125,17 +125,16 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         }
 
         // color stems
-        let stemColor: string = EngravingRules.Rules.DefaultColorStem; // reset to black/default when coloring was disabled. maybe needed elsewhere too
+        let stemColor: string = defaultColorStem; // reset to black/default when coloring was disabled. maybe needed elsewhere too
         if (EngravingRules.Rules.ColoringEnabled) {
             stemColor = this.parentVoiceEntry.StemColor; // TODO: once coloringSetCustom gets stem color, respect it
-            if (!stemColor || EngravingRules.Rules.ColorStemsLikeNoteheads
+            if (!stemColor
                 || stemColor === "#000000") { // see above, noteheadColor === "#000000"
+                stemColor = defaultColorStem;
+            }
+            if (EngravingRules.Rules.ColorStemsLikeNoteheads && noteheadColor) {
                 // condition could be even more fine-grained by only recoloring if there was no custom StemColor set. will be more complex though
-                if (noteheadColor) {
-                    stemColor = noteheadColor;
-                } else if (defaultColorStem) {
-                    stemColor = defaultColorStem;
-                }
+                stemColor = noteheadColor;
             }
         }
         let stemTransparent: boolean = true;
