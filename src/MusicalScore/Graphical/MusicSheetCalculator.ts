@@ -1513,7 +1513,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    private setGraphicalLabelTextAndColor(target: GraphicalLabel, text: Label, shouldDraw: boolean) {
+    private setGraphicalLabelTextAndColor(target: GraphicalLabel, text: Label, shouldDraw: boolean): void {
         const defaultColorTitle: string = EngravingRules.Rules.DefaultColorTitle;
         if (text !== undefined && shouldDraw) {
             const graphLabel: GraphicalLabel = new GraphicalLabel(text, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
