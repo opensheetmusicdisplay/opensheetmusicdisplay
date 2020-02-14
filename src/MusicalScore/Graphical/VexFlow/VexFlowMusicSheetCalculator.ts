@@ -48,8 +48,10 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
+import { Repetition } from "../../MusicSource";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
+
   /** space needed for a dash for lyrics spacing, calculated once */
   private dashSpace: number;
 
@@ -524,14 +526,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
     vfStave.setTempo(
       {
-          bpm: metronomeExpression.TempoInBpm,
-          dots: metronomeExpression.dotted,
-          //duration: metronomeExpression.beatUnit
-          duration: "q"
+        bpm: metronomeExpression.TempoInBpm,
+        dots: metronomeExpression.dotted,
+        //duration: metronomeExpression.beatUnit
+        duration: "q"
       },
       EngravingRules.Rules.MetronomeMarkYShift * unitInPixels);
-       // -50, -30), 0); //needs Vexflow PR
-       //.setShiftX(-50);
+    // -50, -30), 0); //needs Vexflow PR
+    //.setShiftX(-50);
 
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
       EngravingRules.Rules.MetronomeMarkXShift * unitInPixels
@@ -586,9 +588,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     if (startMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
-        startMeasure.MeasureNumber > maxMeasureToDrawIndex + 1 ||
-        endMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
-        endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) {
+      startMeasure.MeasureNumber > maxMeasureToDrawIndex + 1 ||
+      endMeasure.MeasureNumber < minMeasureToDrawIndex + 1 ||
+      endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) {
       // octave shift completely out of drawing range, don't draw anything
       return;
     }
@@ -681,16 +683,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected calculateExpressionAlignements(): void {
     for (const musicSystem of this.musicSystems) {
-            for (const staffLine of musicSystem.StaffLines) {
-              try {
-                (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
-                staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
-              } catch (e) {
-                // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
-                //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
+      for (const staffLine of musicSystem.StaffLines) {
+        try {
+          (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
+          staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
+        } catch (e) {
+          // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
+          //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
         }
+      }
     }
-  }
   }
 
   /**
@@ -845,116 +847,150 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     */
 
     for (const musicSystem of this.musicSystems) {
-        for (const staffLine of musicSystem.StaffLines) {
-          // if a graphical slur reaches out of the last musicsystem, we have to create another graphical slur reaching into this musicsystem
-          // (one slur needs 2 graphical slurs)
-          const openGraphicalSlurs: GraphicalSlur[] = openSlursDict[staffLine.ParentStaff.idInMusicSheet];
-          for (let slurIndex: number = 0; slurIndex < openGraphicalSlurs.length; slurIndex++) {
-            const oldGSlur: GraphicalSlur = openGraphicalSlurs[slurIndex];
-            const newGSlur: GraphicalSlur = new GraphicalSlur(oldGSlur.slur); //Graphicalslur.createFromSlur(oldSlur);
-            staffLine.addSlurToStaffline(newGSlur); // every VFSlur is added to the array in the VFStaffline!
-            openGraphicalSlurs[slurIndex] = newGSlur;
-          }
+      for (const staffLine of musicSystem.StaffLines) {
+        // if a graphical slur reaches out of the last musicsystem, we have to create another graphical slur reaching into this musicsystem
+        // (one slur needs 2 graphical slurs)
+        const openGraphicalSlurs: GraphicalSlur[] = openSlursDict[staffLine.ParentStaff.idInMusicSheet];
+        for (let slurIndex: number = 0; slurIndex < openGraphicalSlurs.length; slurIndex++) {
+          const oldGSlur: GraphicalSlur = openGraphicalSlurs[slurIndex];
+          const newGSlur: GraphicalSlur = new GraphicalSlur(oldGSlur.slur); //Graphicalslur.createFromSlur(oldSlur);
+          staffLine.addSlurToStaffline(newGSlur); // every VFSlur is added to the array in the VFStaffline!
+          openGraphicalSlurs[slurIndex] = newGSlur;
+        }
 
-          /* VexFlow Version - for later use
-          const vfOpenSlurs: VexFlowSlur[] = vfOpenSlursDict[staffLine.ParentStaff.idInMusicSheet];
-          const vfStaffLine: VexFlowStaffLine = <VexFlowStaffLine> staffLine;
-          for (let slurIndex: number = 0; slurIndex < vfOpenSlurs.length; slurIndex++) {
-              const oldVFSlur: VexFlowSlur = vfOpenSlurs[slurIndex];
-              const newVFSlur: VexFlowSlur = VexFlowSlur.createFromVexflowSlur(oldVFSlur);
-              newVFSlur.vfStartNote = undefined;
-              vfStaffLine.addVFSlurToVFStaffline(newVFSlur); // every VFSlur is added to the array in the VFStaffline!
-              vfOpenSlurs[slurIndex] = newVFSlur;
-          }
-          */
+        /* VexFlow Version - for later use
+        const vfOpenSlurs: VexFlowSlur[] = vfOpenSlursDict[staffLine.ParentStaff.idInMusicSheet];
+        const vfStaffLine: VexFlowStaffLine = <VexFlowStaffLine> staffLine;
+        for (let slurIndex: number = 0; slurIndex < vfOpenSlurs.length; slurIndex++) {
+            const oldVFSlur: VexFlowSlur = vfOpenSlurs[slurIndex];
+            const newVFSlur: VexFlowSlur = VexFlowSlur.createFromVexflowSlur(oldVFSlur);
+            newVFSlur.vfStartNote = undefined;
+            vfStaffLine.addVFSlurToVFStaffline(newVFSlur); // every VFSlur is added to the array in the VFStaffline!
+            vfOpenSlurs[slurIndex] = newVFSlur;
+        }
+        */
 
-          // add reference of slur array to the VexFlowStaffline class
-          for (const graphicalMeasure of staffLine.Measures) {
-            for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
-              // loop over "normal" notes (= no gracenotes)
-              for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
-                for (const graphicalNote of graphicalVoiceEntry.notes) {
-                  for (const slur of graphicalNote.sourceNote.NoteSlurs) {
-                    // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
-                    if (slur.EndNote === undefined || slur.StartNote === undefined) {
-                      continue;
+        // add reference of slur array to the VexFlowStaffline class
+        for (const graphicalMeasure of staffLine.Measures) {
+          for (const graphicalStaffEntry of graphicalMeasure.staffEntries) {
+            // loop over "normal" notes (= no gracenotes)
+            for (const graphicalVoiceEntry of graphicalStaffEntry.graphicalVoiceEntries) {
+              for (const graphicalNote of graphicalVoiceEntry.notes) {
+                for (const slur of graphicalNote.sourceNote.NoteSlurs) {
+                  // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
+                  if (slur.EndNote === undefined || slur.StartNote === undefined) {
+                    continue;
+                  }
+                  // add new VexFlowSlur to List
+                  if (slur.StartNote === graphicalNote.sourceNote) {
+                    if (graphicalNote.sourceNote.NoteTie !== undefined) {
+                      if (graphicalNote.parentVoiceEntry.parentStaffEntry.getAbsoluteTimestamp() !==
+                        graphicalNote.sourceNote.NoteTie.StartNote.getAbsoluteTimestamp()) {
+                        break;
+                      }
                     }
-                    // add new VexFlowSlur to List
-                    if (slur.StartNote === graphicalNote.sourceNote) {
-                      if (graphicalNote.sourceNote.NoteTie !== undefined) {
-                        if (graphicalNote.parentVoiceEntry.parentStaffEntry.getAbsoluteTimestamp() !==
-                          graphicalNote.sourceNote.NoteTie.StartNote.getAbsoluteTimestamp()) {
-                          break;
-                        }
+
+                    // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
+                    const gSlur: GraphicalSlur = new GraphicalSlur(slur);
+                    openGraphicalSlurs.push(gSlur);
+                    staffLine.addSlurToStaffline(gSlur);
+
+                    /* VexFlow Version - for later use
+                    const vfSlur: VexFlowSlur = new VexFlowSlur(slur);
+                    vfOpenSlurs.push(vfSlur); //add open... adding / removing is JUST DONE in the open... array
+                    vfSlur.vfStartNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
+                    vfStaffLine.addVFSlurToVFStaffline(vfSlur); // every VFSlur is added to the array in the VFStaffline!
+                    */
+                  }
+                  if (slur.EndNote === graphicalNote.sourceNote) {
+                    // Remove the Graphical Slur from the staffline if the note is the Endnote of a slur
+                    const index: number = this.findIndexGraphicalSlurFromSlur(openGraphicalSlurs, slur);
+                    if (index >= 0) {
+                      // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
+                      const gSlur: GraphicalSlur = openGraphicalSlurs[index];
+                      if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                        gSlur.staffEntries.push(graphicalStaffEntry);
                       }
 
-                      // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
-                      const gSlur: GraphicalSlur = new GraphicalSlur(slur);
-                      openGraphicalSlurs.push(gSlur);
-                      staffLine.addSlurToStaffline(gSlur);
-
-                      /* VexFlow Version - for later use
-                      const vfSlur: VexFlowSlur = new VexFlowSlur(slur);
-                      vfOpenSlurs.push(vfSlur); //add open... adding / removing is JUST DONE in the open... array
-                      vfSlur.vfStartNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
-                      vfStaffLine.addVFSlurToVFStaffline(vfSlur); // every VFSlur is added to the array in the VFStaffline!
-                      */
+                      openGraphicalSlurs.splice(index, 1);
                     }
-                    if (slur.EndNote === graphicalNote.sourceNote) {
-                      // Remove the Graphical Slur from the staffline if the note is the Endnote of a slur
-                      const index: number = this.findIndexGraphicalSlurFromSlur(openGraphicalSlurs, slur);
-                      if (index >= 0) {
+
+                    /* VexFlow Version - for later use
+                    const vfIndex: number = this.findIndexVFSlurFromSlur(vfOpenSlurs, slur);
+                    if (vfIndex !== undefined) {
                         // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
-                        const gSlur: GraphicalSlur = openGraphicalSlurs[index];
-                        if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
-                          gSlur.staffEntries.push(graphicalStaffEntry);
-                        }
-
-                        openGraphicalSlurs.splice(index, 1);
-                      }
-
-                      /* VexFlow Version - for later use
-                      const vfIndex: number = this.findIndexVFSlurFromSlur(vfOpenSlurs, slur);
-                      if (vfIndex !== undefined) {
-                          // save Voice Entry in VFSlur and then remove it from array of open VFSlurs
-                          const vfSlur: VexFlowSlur = vfOpenSlurs[vfIndex];
-                          vfSlur.vfEndNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
-                          vfSlur.createVexFlowCurve();
-                          vfOpenSlurs.splice(vfIndex, 1);
-                      }
-                      */
+                        const vfSlur: VexFlowSlur = vfOpenSlurs[vfIndex];
+                        vfSlur.vfEndNote = (graphicalVoiceEntry as VexFlowVoiceEntry).vfStaveNote;
+                        vfSlur.createVexFlowCurve();
+                        vfOpenSlurs.splice(vfIndex, 1);
                     }
+                    */
                   }
                 }
               }
+            }
 
-              //add the present Staffentry to all open slurs that don't contain this Staffentry already
-              for (const gSlur of openGraphicalSlurs) {
-                if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
-                  gSlur.staffEntries.push(graphicalStaffEntry);
-                }
+            //add the present Staffentry to all open slurs that don't contain this Staffentry already
+            for (const gSlur of openGraphicalSlurs) {
+              if (gSlur.staffEntries.indexOf(graphicalStaffEntry) === -1) {
+                gSlur.staffEntries.push(graphicalStaffEntry);
               }
-            } // loop over StaffEntries
-          } // loop over Measures
-        } // loop over StaffLines
+            }
+          } // loop over StaffEntries
+        } // loop over Measures
+      } // loop over StaffLines
 
-        // Attach vfSlur array to the vfStaffline to be drawn
-        //vfStaffLine.SlursInVFStaffLine = vfSlurs;
-      } // loop over MusicSystems
+      // Attach vfSlur array to the vfStaffline to be drawn
+      //vfStaffLine.SlursInVFStaffLine = vfSlurs;
+    } // loop over MusicSystems
 
     // order slurs that were saved to the Staffline
     for (const musicSystem of this.musicSystems) {
-          for (const staffLine of musicSystem.StaffLines) {
-            // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
-            const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
-            for (const gSlur of sortedGSlurs) {
-                // crossed slurs will be handled later:
-                if (gSlur.slur.isCrossed()) {
-                    continue;
-                }
-                gSlur.calculateCurve(this.rules);
-            }
+      for (const staffLine of musicSystem.StaffLines) {
+        // Sort all gSlurs in the staffline using the Compare function in class GraphicalSlurSorter
+        const sortedGSlurs: GraphicalSlur[] = staffLine.GraphicalSlurs.sort(GraphicalSlur.Compare);
+        for (const gSlur of sortedGSlurs) {
+          // crossed slurs will be handled later:
+          if (gSlur.slur.isCrossed()) {
+            continue;
           }
+          gSlur.calculateCurve(this.rules);
         }
       }
+    }
   }
+  protected calcGraphicalRepetitionEndingsRecursively(repetition: Repetition): void {
+    return;
+  }
+  protected layoutSingleRepetitionEnding(start: GraphicalMeasure, end: GraphicalMeasure, numberText: string,
+                                         offset: number, leftOpen: boolean, rightOpen: boolean): void {
+    return;
+  }
+  protected calculateMarkedAreas(): void {
+    return;
+  }
+  protected handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry, staffEntryLinks: import("../..").StaffEntryLink[]): void {
+    return;
+  }
+  protected calculateComments(): void {
+    return;
+  }
+  protected layoutMeasureWithWholeRest(rest: GraphicalNote, gse: GraphicalStaffEntry, measure: GraphicalMeasure): void {
+    return;
+  }
+  protected layoutBeams(staffEntry: GraphicalStaffEntry): void {
+    return;
+  }
+  protected layoutOrnament(ornaments: OrnamentContainer, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
+    return;
+  }
+  protected calculateRestNotePlacementWithinGraphicalBeam(graphicalStaffEntry: GraphicalStaffEntry, restNote: GraphicalNote,
+                                                          previousNote: GraphicalNote, nextStaffEntry: GraphicalStaffEntry,
+                                                          nextNote: GraphicalNote): void {
+    return;
+  }
+  protected calculateTupletNumbers(): void {
+    return;
+  }
+
+}
