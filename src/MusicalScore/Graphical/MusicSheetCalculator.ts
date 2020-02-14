@@ -222,33 +222,23 @@ export abstract class MusicSheetCalculator {
         this.graphicalMusicSheet.MinAllowedSystemWidth = minLength;
     }
 
-    public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
-        throw new Error("abstract, not implemented");
-    }
+    public abstract  calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number;
 
-    protected formatMeasures(): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract formatMeasures(): void;
 
     /**
      * Calculates the x layout of the staff entries within the staff measures belonging to one source measure.
      * All staff entries are x-aligned throughout all the measures.
      * @param measures - The minimum required x width of the source measure
      */
-    protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract calculateMeasureXLayout(measures: GraphicalMeasure[]): number;
 
     /**
      * Called for every source measure when generating the list of staff measures for it.
      */
-    protected initGraphicalMeasuresCreation(): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract initGraphicalMeasuresCreation(): void;
 
-    protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void;
 
     /**
      * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.
@@ -261,27 +251,19 @@ export abstract class MusicSheetCalculator {
      * @param openTie
      * @param isLastTieNote
      */
-    protected handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
-                                      octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
-                                      openTie: Tie, isLastTieNote: boolean): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
+                                               octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
+                                               openTie: Tie, isLastTieNote: boolean): void;
 
-    protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
-                                     openLyricWords: LyricWord[]): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
+                                              openLyricWords: LyricWord[]): void;
 
-    protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
-                                        graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
+                                                 graphicalStaffEntry: GraphicalStaffEntry): void;
 
-    protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
-                                            voiceEntry: VoiceEntry,
-                                            staffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleVoiceEntryArticulations(articulations: ArticulationEnum[],
+                                                     voiceEntry: VoiceEntry,
+                                                     staffEntry: GraphicalStaffEntry): void;
 
     /**
      * Adds a technical instruction at the given staff entry.
@@ -289,33 +271,21 @@ export abstract class MusicSheetCalculator {
      * @param voiceEntry
      * @param staffEntry
      */
-    protected handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
-                                                    voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
+                                                             voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void;
 
 
-    protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void;
 
-    protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
-                               graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
+                                        graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean): void;
 
-    protected layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void;
 
-    protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry, startNote: GraphicalNote,
-                                 endNote: GraphicalNote): GraphicalTie {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry, startNote: GraphicalNote,
+                                          endNote: GraphicalNote): GraphicalTie;
 
-    protected updateStaffLineBorders(staffLine: StaffLine): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract updateStaffLineBorders(staffLine: StaffLine): void;
 
     /**
      * Iterate through all Measures and calculates the MeasureNumberLabels.
@@ -402,9 +372,7 @@ export abstract class MusicSheetCalculator {
      * @param tie
      * @param tieIsAtSystemBreak
      */
-    protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void;
 
     /**
      * Calculate the Lyrics YPositions for a single [[StaffLine]].
@@ -519,20 +487,16 @@ export abstract class MusicSheetCalculator {
      * @param measureIndex
      * @param staffIndex
      */
-    protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
-                                         measureIndex: number, staffIndex: number): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract  calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
+                                                   measureIndex: number, staffIndex: number): void;
 
     /**
      * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
      * @param repetitionInstruction
      * @param measureIndex
      */
-    protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
-                                                 measureIndex: number): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract  calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
+                                                           measureIndex: number): void;
 
     /**
      * Calculate all the Mood and Unknown Expressions for a single [[MultiExpression]].
@@ -540,9 +504,7 @@ export abstract class MusicSheetCalculator {
      * @param measureIndex
      * @param staffIndex
      */
-    protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void;
 
     /**
      * Delete all Objects that must be recalculated.
@@ -1395,13 +1357,9 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void;
 
-    protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
-        return;
-    }
+    protected abstract graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void;
 
     protected clearSystemsAndMeasures(): void {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
