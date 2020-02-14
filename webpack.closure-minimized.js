@@ -21,6 +21,17 @@ module.exports = merge(common, {
     },
     mode: 'production',
     optimization: {
+        minimizer: [
+            new ClosurePlugin({ mode: 'STANDARD' }, { // takes a lot of time; AGGRESSIVE_BUNDLE should save even more space, but causes errors.
+                // compiler flags here
+                //
+                // for debugging help, try these:
+                //
+                // formatting: 'PRETTY_PRINT'
+                // debug: true,
+                // renaming: false
+            })
+        ]
         /* minimizer: [ // TerserPlugin hardly causes any size reduction at all, unfortunately
             new TerserPlugin({
                 cache: true,
@@ -31,17 +42,6 @@ module.exports = merge(common, {
                 }
             })
         ] */
-        minimizer: [
-            new ClosurePlugin({ mode: 'STANDARD' }, { // takes a lot of time, maybe should be in webpack.smallsize.js or something
-                // compiler flags here
-                //
-                // for debugging help, try these:
-                //
-                // formatting: 'PRETTY_PRINT'
-                // debug: true,
-                // renaming: false
-            })
-        ]
     },
     plugins: [
         // build optimization plugins
