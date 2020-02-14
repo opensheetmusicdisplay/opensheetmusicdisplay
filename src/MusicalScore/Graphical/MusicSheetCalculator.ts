@@ -222,33 +222,24 @@ export abstract class MusicSheetCalculator {
         this.graphicalMusicSheet.MinAllowedSystemWidth = minLength;
     }
 
-    public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
-        throw new Error("abstract, not implemented");
-    }
+    //#region Abstract methods
+    public abstract calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number;
 
-    protected formatMeasures(): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract formatMeasures(): void;
 
     /**
      * Calculates the x layout of the staff entries within the staff measures belonging to one source measure.
      * All staff entries are x-aligned throughout all the measures.
      * @param measures - The minimum required x width of the source measure
      */
-    protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract calculateMeasureXLayout(measures: GraphicalMeasure[]): number;
 
     /**
      * Called for every source measure when generating the list of staff measures for it.
      */
-    protected initGraphicalMeasuresCreation(): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract initGraphicalMeasuresCreation(): void;
 
-    protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void;
 
     /**
      * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.
@@ -261,27 +252,19 @@ export abstract class MusicSheetCalculator {
      * @param openTie
      * @param isLastTieNote
      */
-    protected handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
-                                      octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
-                                      openTie: Tie, isLastTieNote: boolean): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
+                                               octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
+                                               openTie: Tie, isLastTieNote: boolean): void;
 
-    protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
-                                     openLyricWords: LyricWord[]): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
+                                              openLyricWords: LyricWord[]): void;
 
-    protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
-                                        graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
+                                                 graphicalStaffEntry: GraphicalStaffEntry): void;
 
-    protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
-                                            voiceEntry: VoiceEntry,
-                                            staffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleVoiceEntryArticulations(articulations: ArticulationEnum[],
+                                                     voiceEntry: VoiceEntry,
+                                                     staffEntry: GraphicalStaffEntry): void;
 
     /**
      * Adds a technical instruction at the given staff entry.
@@ -289,34 +272,111 @@ export abstract class MusicSheetCalculator {
      * @param voiceEntry
      * @param staffEntry
      */
-    protected handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
-                                                    voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
+                                                             voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void;
 
 
-    protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void;
 
-    protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
-                               graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
+                                        graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean): void;
 
-    protected layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void;
 
-    protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry, startNote: GraphicalNote,
-                                 endNote: GraphicalNote): GraphicalTie {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry, startNote: GraphicalNote,
+                                          endNote: GraphicalNote): GraphicalTie;
 
-    protected updateStaffLineBorders(staffLine: StaffLine): void {
-        throw new Error("abstract, not implemented");
-    }
+    protected abstract updateStaffLineBorders(staffLine: StaffLine): void;
 
+    protected abstract calcGraphicalRepetitionEndingsRecursively(repetition: Repetition): void;
+
+    /**
+     * Calculate a single GraphicalRepetition.
+     * @param start
+     * @param end
+     * @param numberText
+     * @param offset
+     * @param leftOpen
+     * @param rightOpen
+     */
+    protected abstract layoutSingleRepetitionEnding(start: GraphicalMeasure, end: GraphicalMeasure, numberText: string,
+                                                    offset: number, leftOpen: boolean, rightOpen: boolean): void;
+
+    protected abstract createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void;
+
+    protected abstract graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void;
+
+    /**
+     * Calculate the shape (Bézier curve) for this tie.
+     * @param tie
+     * @param tieIsAtSystemBreak
+     */
+    protected abstract layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void;
+
+    /**
+     * Calculate a single OctaveShift for a [[MultiExpression]].
+     * @param sourceMeasure
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
+    protected abstract calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
+                                                  measureIndex: number, staffIndex: number): void;
+
+    /**
+     * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
+     * @param repetitionInstruction
+     * @param measureIndex
+     */
+    protected abstract calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
+                                                          measureIndex: number): void;
+
+    /**
+     * Calculate all the Mood and Unknown Expressions for a single [[MultiExpression]].
+     * @param multiExpression
+     * @param measureIndex
+     * @param staffIndex
+     */
+    protected abstract calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void;
+
+    protected abstract calculateMarkedAreas(): void;
+
+    /**
+     * This method handles a [[StaffEntryLink]].
+     * @param graphicalStaffEntry
+     * @param staffEntryLinks
+     */
+    protected abstract handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry, staffEntryLinks: StaffEntryLink[]): void;
+
+    protected abstract calculateComments(): void;
+
+    /**
+     * Do layout on staff measures which only consist of a full rest.
+     * @param rest
+     * @param gse
+     * @param measure
+     */
+    protected abstract layoutMeasureWithWholeRest(rest: GraphicalNote, gse: GraphicalStaffEntry, measure: GraphicalMeasure): void;
+
+    protected abstract layoutBeams(staffEntry: GraphicalStaffEntry): void;
+
+    protected abstract layoutArticulationMarks(articulations: ArticulationEnum[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void;
+
+    protected abstract layoutOrnament(ornaments: OrnamentContainer, voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void;
+
+    protected abstract calculateRestNotePlacementWithinGraphicalBeam(graphicalStaffEntry: GraphicalStaffEntry,
+                                                                     restNote: GraphicalNote,
+                                                                     previousNote: GraphicalNote,
+                                                                     nextStaffEntry: GraphicalStaffEntry,
+                                                                     nextNote: GraphicalNote): void;
+
+    protected abstract calculateTupletNumbers(): void;
+
+    protected abstract calculateSlurs(): void;
+
+    protected abstract calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void;
+    //#endregion
+    // #region  Protected methods
     /**
      * Iterate through all Measures and calculates the MeasureNumberLabels.
      * @param musicSystem
@@ -397,14 +457,6 @@ export abstract class MusicSheetCalculator {
         musicSystem.MeasureNumberLabels.push(graphicalLabel);
     }
 
-    /**
-     * Calculate the shape (Bézier curve) for this tie.
-     * @param tie
-     * @param tieIsAtSystemBreak
-     */
-    protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
-        throw new Error("abstract, not implemented");
-    }
 
     /**
      * Calculate the Lyrics YPositions for a single [[StaffLine]].
@@ -513,38 +565,6 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
-     * Calculate a single OctaveShift for a [[MultiExpression]].
-     * @param sourceMeasure
-     * @param multiExpression
-     * @param measureIndex
-     * @param staffIndex
-     */
-    protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
-                                         measureIndex: number, staffIndex: number): void {
-        throw new Error("abstract, not implemented");
-    }
-
-    /**
-     * Calculate all the textual [[RepetitionInstruction]]s (e.g. dal segno) for a single [[SourceMeasure]].
-     * @param repetitionInstruction
-     * @param measureIndex
-     */
-    protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
-                                                 measureIndex: number): void {
-        throw new Error("abstract, not implemented");
-    }
-
-    /**
-     * Calculate all the Mood and Unknown Expressions for a single [[MultiExpression]].
-     * @param multiExpression
-     * @param measureIndex
-     * @param staffIndex
-     */
-    protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-        throw new Error("abstract, not implemented");
-    }
-
-    /**
      * Delete all Objects that must be recalculated.
      * If graphicalMusicSheet.reCalculate has been called, then this method will be called to reset or remove all flexible
      * graphical music symbols (e.g. Ornaments, Lyrics, Slurs) graphicalMusicSheet will have MusicPages, they will have MusicSystems etc...
@@ -560,16 +580,6 @@ export abstract class MusicSheetCalculator {
     }
 
     /**
-     * This method handles a [[StaffEntryLink]].
-     * @param graphicalStaffEntry
-     * @param staffEntryLinks
-     */
-    protected handleStaffEntryLink(graphicalStaffEntry: GraphicalStaffEntry,
-                                   staffEntryLinks: StaffEntryLink[]): void {
-        log.debug("handleStaffEntryLink not implemented");
-    }
-
-    /**
      * Store the newly computed [[Measure]]s in newly created [[MusicSystem]]s.
      */
     protected calculateMusicSystems(): void {
@@ -582,7 +592,6 @@ export abstract class MusicSheetCalculator {
             return;
         }
         if (EngravingRules.Rules.MinMeasureToDrawIndex > allMeasures.length - 1) {
-            log.debug("minimum measure to draw index out of range. resetting min measure index to limit.");
             EngravingRules.Rules.MinMeasureToDrawIndex = allMeasures.length - 1;
         }
 
@@ -705,9 +714,9 @@ export abstract class MusicSheetCalculator {
         // calculate Y-spacing -> MusicPages are created here
         musicSystemBuilder.calculateSystemYLayout();
         // calculate Comments for each Staffline
-        this.calculateComments();
+        // this.calculateComments();
         // calculate marked Areas for Systems
-        this.calculateMarkedAreas();
+        // this.calculateMarkedAreas();
 
         // the following must be done after Y-spacing, when the MusicSystems's final Dimensions are set
         // set the final yPositions of Objects such as SystemLabels and SystemLinesContainers,
@@ -759,16 +768,6 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    protected calculateMarkedAreas(): void {
-        //log.debug("calculateMarkedAreas not implemented");
-        return;
-    }
-
-    protected calculateComments(): void {
-        //log.debug("calculateComments not implemented");
-        return;
-    }
-
     protected calculateChordSymbols(): void {
         for (const musicSystem of this.musicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
@@ -789,50 +788,6 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
-    }
-
-    /**
-     * Do layout on staff measures which only consist of a full rest.
-     * @param rest
-     * @param gse
-     * @param measure
-     */
-    protected layoutMeasureWithWholeRest(rest: GraphicalNote, gse: GraphicalStaffEntry,
-                                         measure: GraphicalMeasure): void {
-        return;
-    }
-
-    protected layoutBeams(staffEntry: GraphicalStaffEntry): void {
-        return;
-    }
-
-    protected layoutArticulationMarks(articulations: ArticulationEnum[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
-        return;
-    }
-
-    protected layoutOrnament(ornaments: OrnamentContainer, voiceEntry: VoiceEntry,
-                             graphicalStaffEntry: GraphicalStaffEntry): void {
-        return;
-    }
-
-    protected calculateRestNotePlacementWithinGraphicalBeam(graphicalStaffEntry: GraphicalStaffEntry,
-                                                            restNote: GraphicalNote,
-                                                            previousNote: GraphicalNote,
-                                                            nextStaffEntry: GraphicalStaffEntry,
-                                                            nextNote: GraphicalNote): void {
-        return;
-    }
-
-    protected calculateTupletNumbers(): void {
-        return;
-    }
-
-    protected calculateSlurs(): void {
-        return;
-    }
-
-    protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-        return;
     }
 
 
@@ -862,11 +817,11 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-   /**
-    * This method calculates the RelativePosition of a single GraphicalContinuousDynamic.
-    * @param graphicalContinuousDynamic Graphical continous dynamic to be calculated
-    * @param startPosInStaffline Starting point in staff line
-    */
+    /**
+     * This method calculates the RelativePosition of a single GraphicalContinuousDynamic.
+     * @param graphicalContinuousDynamic Graphical continous dynamic to be calculated
+     * @param startPosInStaffline Starting point in staff line
+     */
     public calculateGraphicalContinuousDynamic(graphicalContinuousDynamic: GraphicalContinuousDynamicExpression, startPosInStaffline: PointF2D): void {
         const staffIndex: number = graphicalContinuousDynamic.ParentStaffLine.ParentStaff.idInMusicSheet;
         // TODO: Previously the staffIndex was passed down. BUT you can (and this function actually does this) get it from
@@ -877,7 +832,6 @@ export abstract class MusicSheetCalculator {
         const endMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
             graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.SourceMeasureParent, staffIndex);
         if (!endMeasure) {
-            log.warn("Not working");
             return;
         }
 
@@ -1088,7 +1042,7 @@ export abstract class MusicSheetCalculator {
                     if (withinCrossedBeam) {
                         const formerStaffLine: StaffLine = musicSystem.StaffLines[formerStaffLineIndex];
                         const formerStaffLineMaxBottomLineValue: number = formerStaffLine.SkyBottomLineCalculator.
-                                                                          getBottomLineMaxInRange(upperStartX, upperEndX);
+                            getBottomLineMaxInRange(upperStartX, upperEndX);
                         const distanceBetweenStaffLines: number = staffLine.PositionAndShape.RelativePosition.y -
                             formerStaffLine.PositionAndShape.RelativePosition.y;
                         const relativeSkyLineHeight: number = distanceBetweenStaffLines - formerStaffLineMaxBottomLineValue;
@@ -1121,6 +1075,7 @@ export abstract class MusicSheetCalculator {
         // the idealY is calculated relative to the currentStaffLine
 
         // Crescendo (point to the left, opening to the right)
+        // SIZE: Duplicate code
         graphicalContinuousDynamic.Lines.clear();
         if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
             if (sameStaffLine) {
@@ -1206,24 +1161,6 @@ export abstract class MusicSheetCalculator {
             graphicalInstantaneousDynamic.PositionAndShape.RelativePosition = new PointF2D(startPosInStaffline.x, yPosition);
         }
         graphicalInstantaneousDynamic.updateSkyBottomLine();
-    }
-
-    protected calcGraphicalRepetitionEndingsRecursively(repetition: Repetition): void {
-        return;
-    }
-
-    /**
-     * Calculate a single GraphicalRepetition.
-     * @param start
-     * @param end
-     * @param numberText
-     * @param offset
-     * @param leftOpen
-     * @param rightOpen
-     */
-    protected layoutSingleRepetitionEnding(start: GraphicalMeasure, end: GraphicalMeasure, numberText: string,
-                                           offset: number, leftOpen: boolean, rightOpen: boolean): void {
-        return;
     }
 
     protected calculateLabel(staffLine: StaffLine,
@@ -1395,14 +1332,6 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-        throw new Error("abstract, not implemented");
-    }
-
-    protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
-        return;
-    }
-
     protected clearSystemsAndMeasures(): void {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
             const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
@@ -1454,7 +1383,7 @@ export abstract class MusicSheetCalculator {
         if (voiceEntry.StemDirectionXml !== StemDirectionType.Undefined &&
             EngravingRules.Rules.SetWantedStemDirectionByXml &&
             voiceEntry.StemDirectionXml !== undefined) {
-                voiceEntry.WantedStemDirection = voiceEntry.StemDirectionXml;
+            voiceEntry.WantedStemDirection = voiceEntry.StemDirectionXml;
         } else {
             this.calculateStemDirectionFromVoices(voiceEntry);
         }
@@ -1545,6 +1474,7 @@ export abstract class MusicSheetCalculator {
         return maxLabelLength;
     }
 
+    // SIZE: Redundant code
     protected calculateSheetLabelBoundingBoxes(): void {
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
         const defaultColorTitle: string = EngravingRules.Rules.DefaultColorTitle; // can be undefined => black
@@ -1582,6 +1512,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    //SIZE: Can be simplified using foreaches and let webpack get rid of consts
     protected checkMeasuresForWholeRestNotes(): void {
         for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
             const musicSystem: MusicSystem = this.musicSystems[idx2];
@@ -1790,7 +1721,9 @@ export abstract class MusicSheetCalculator {
             }
         }
     }
+    //#endregion
 
+    //#region private methods
     private handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number): void {
         let startGse: GraphicalStaffEntry = startGraphicalStaffEntry;
         let startNote: GraphicalNote = startGse.findEndTieGraphicalNoteFromNote(tie.StartNote);
@@ -2006,7 +1939,7 @@ export abstract class MusicSheetCalculator {
                 const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
                 const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
                 note.PrintObject = EngravingRules.Rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
-                  // don't display whole rest that wasn't given in XML, only for layout/voice completion
+                // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
                 const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
                 measure.addGraphicalStaffEntry(graphicalStaffEntry);
@@ -2077,9 +2010,7 @@ export abstract class MusicSheetCalculator {
     /**
      * Re-adjust the x positioning of expressions.
      */
-    protected calculateExpressionAlignements(): void {
-        // override
-    }
+    protected abstract calculateExpressionAlignements(): void;
 
     private calculateBeams(): void {
         for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
@@ -2118,6 +2049,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    // SIZE: foreach
     private calculateOrnaments(): void {
         for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
             const system: MusicSystem = this.musicSystems[idx2];
@@ -2145,6 +2077,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    // SIZE: foreach
     private optimizeRestPlacement(): void {
         for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
             const system: MusicSystem = this.musicSystems[idx2];
@@ -2341,7 +2274,7 @@ export abstract class MusicSheetCalculator {
             if (nextStaffLine &&
                 endStaffentry.parentMeasure.ParentStaffLine &&
                 !(endStaffentry === endStaffentry.parentMeasure.staffEntries[0] &&
-                endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {
+                    endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = nextStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
                 const secondEndX: number = endStaffentry.parentMeasure.PositionAndShape.RelativePosition.x +
                     endStaffentry.PositionAndShape.RelativePosition.x +
@@ -2527,6 +2460,7 @@ export abstract class MusicSheetCalculator {
         return (rightDash.PositionAndShape.RelativePosition.x - leftDash.PositionAndShape.RelativePosition.x);
     }
 
+    // SIZE: foreach
     private calculateDynamicExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, EngravingRules.Rules.MaxMeasureToDrawIndex);
         const minIndex: number = Math.min(EngravingRules.Rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
@@ -2548,6 +2482,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    // SIZE: foreach
     private calculateOctaveShifts(): void {
         for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
@@ -2609,6 +2544,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    // SIZE: foreach
     private calculateTempoExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, EngravingRules.Rules.MaxMeasureToDrawIndex);
         const minIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
@@ -2620,6 +2556,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
+    // SIZE: foreach
     private calculateMoodAndUnknownExpressions(): void {
         for (let i: number = 0; i < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
@@ -2691,4 +2628,6 @@ export abstract class MusicSheetCalculator {
             }
         }
     }
+
+    //#endregion
 }
