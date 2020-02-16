@@ -100,11 +100,13 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      * @param wedgeLineWidth line width of the wedge
      */
     public createCrescendoLines(startX: number, endX: number, y: number,
-                                wedgeOpeningLength: number = this.rules.WedgeOpeningLength, wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
+                                wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
+                                wedgeLineWidth: number = this.rules.WedgeLineWidth): GraphicalContinuousDynamicExpression {
         const lineStart: PointF2D = new PointF2D(startX, y);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeOpeningLength / 2);
         this.addWedgeLines(lineStart, upperLineEnd, lowerLineEnd, wedgeLineWidth);
+        return this;
     }
 
     /**
@@ -118,11 +120,12 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      */
     public createFirstHalfCrescendoLines(startX: number, endX: number, y: number,
                                          wedgeMeasureEndOpeningLength: number = this.rules.WedgeMeasureEndOpeningLength,
-                                         wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
+                                         wedgeLineWidth: number = this.rules.WedgeLineWidth): GraphicalContinuousDynamicExpression {
         const lineStart: PointF2D = new PointF2D(startX, y);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeMeasureEndOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeMeasureEndOpeningLength / 2);
         this.addWedgeLines(lineStart, upperLineEnd, lowerLineEnd, wedgeLineWidth);
+        return this;
     }
 
 
@@ -138,12 +141,13 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     public createSecondHalfCrescendoLines(startX: number, endX: number, y: number,
                                           wedgeMeasureBeginOpeningLength: number = this.rules.WedgeMeasureBeginOpeningLength,
                                           wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
-                                          wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
+                                          wedgeLineWidth: number = this.rules.WedgeLineWidth): GraphicalContinuousDynamicExpression {
         const upperLineStart: PointF2D = new PointF2D(startX, y - wedgeMeasureBeginOpeningLength / 2);
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeMeasureBeginOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeOpeningLength / 2);
         this.addDoubleLines(upperLineStart, upperLineEnd, lowerLineStart, lowerLineEnd, wedgeLineWidth);
+        return this;
     }
 
     /**
@@ -174,11 +178,13 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      * @param wedgeLineWidth line width of the wedge
      */
     public createDiminuendoLines(startX: number, endX: number, y: number,
-                                 wedgeOpeningLength: number = this.rules.WedgeOpeningLength, wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
+                                 wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
+                                 wedgeLineWidth: number = this.rules.WedgeLineWidth): GraphicalContinuousDynamicExpression {
         const upperWedgeStart: PointF2D = new PointF2D(startX, y - wedgeOpeningLength / 2);
         const lowerWedgeStart: PointF2D = new PointF2D(startX, y + wedgeOpeningLength / 2);
         const wedgeEnd: PointF2D = new PointF2D(endX, y);
         this.addWedgeLines(wedgeEnd, upperWedgeStart, lowerWedgeStart, wedgeLineWidth);
+        return this;
     }
 
     /**
@@ -193,12 +199,13 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     public createFirstHalfDiminuendoLines(startX: number, endX: number, y: number,
                                           wedgeOpeningLength: number = this.rules.WedgeOpeningLength,
                                           wedgeMeasureEndOpeningLength: number = this.rules.WedgeMeasureEndOpeningLength,
-                                          wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
+                                          wedgeLineWidth: number = this.rules.WedgeLineWidth): GraphicalContinuousDynamicExpression {
         const upperLineStart: PointF2D = new PointF2D(startX, y - wedgeOpeningLength / 2);
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeOpeningLength / 2);
         const upperLineEnd: PointF2D = new PointF2D(endX, y - wedgeMeasureEndOpeningLength / 2);
         const lowerLineEnd: PointF2D = new PointF2D(endX, y + wedgeMeasureEndOpeningLength / 2);
         this.addDoubleLines(upperLineStart, upperLineEnd, lowerLineStart, lowerLineEnd, wedgeLineWidth);
+        return this;
     }
 
     /**
@@ -211,11 +218,12 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      */
     public createSecondHalfDiminuendoLines(startX: number, endX: number, y: number,
                                            wedgeMeasureBeginOpeningLength: number = this.rules.WedgeMeasureBeginOpeningLength,
-                                           wedgeLineWidth: number = this.rules.WedgeLineWidth): void {
+                                           wedgeLineWidth: number = this.rules.WedgeLineWidth): GraphicalContinuousDynamicExpression {
         const upperLineStart: PointF2D = new PointF2D(startX, y - wedgeMeasureBeginOpeningLength / 2);
         const lowerLineStart: PointF2D = new PointF2D(startX, y + wedgeMeasureBeginOpeningLength / 2);
         const lineEnd: PointF2D = new PointF2D(endX, y);
         this.addWedgeLines(lineEnd, upperLineStart, lowerLineStart, wedgeLineWidth);
+        return this;
     }
 
     /**

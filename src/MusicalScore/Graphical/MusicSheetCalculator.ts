@@ -1075,30 +1075,21 @@ export abstract class MusicSheetCalculator {
         // the idealY is calculated relative to the currentStaffLine
 
         // Crescendo (point to the left, opening to the right)
-        // SIZE: Duplicate code
         graphicalContinuousDynamic.Lines.clear();
         if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
             if (sameStaffLine) {
-                graphicalContinuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
+                graphicalContinuousDynamic.createCrescendoLines(upperStartX, upperEndX, idealY).calcPsi();
             } else {
                 // two different Wedges
-                graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
-
-                secondGraphicalContinuousDynamic.createSecondHalfCrescendoLines(lowerStartX, lowerEndX, secondIdealY);
-                secondGraphicalContinuousDynamic.calcPsi();
+                graphicalContinuousDynamic.createFirstHalfCrescendoLines(upperStartX, upperEndX, idealY).calcPsi();
+                secondGraphicalContinuousDynamic.createSecondHalfCrescendoLines(lowerStartX, lowerEndX, secondIdealY).calcPsi();
             }
         } else if (graphicalContinuousDynamic.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
             if (sameStaffLine) {
-                graphicalContinuousDynamic.createDiminuendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
+                graphicalContinuousDynamic.createDiminuendoLines(upperStartX, upperEndX, idealY).calcPsi();
             } else {
-                graphicalContinuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY);
-                graphicalContinuousDynamic.calcPsi();
-
-                secondGraphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, secondIdealY);
-                secondGraphicalContinuousDynamic.calcPsi();
+                graphicalContinuousDynamic.createFirstHalfDiminuendoLines(upperStartX, upperEndX, idealY).calcPsi();
+                secondGraphicalContinuousDynamic.createSecondHalfDiminuendoLines(lowerStartX, lowerEndX, secondIdealY).calcPsi();
             }
         } //End Diminuendo
     }
@@ -1333,14 +1324,10 @@ export abstract class MusicSheetCalculator {
     }
 
     protected clearSystemsAndMeasures(): void {
-        for (let idx: number = 0, len: number = this.graphicalMusicSheet.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[idx];
-            for (let idx2: number = 0, len2: number = graphicalMusicPage.MusicSystems.length; idx2 < len2; ++idx2) {
-                const musicSystem: MusicSystem = graphicalMusicPage.MusicSystems[idx2];
-                for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                    const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                    for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
-                        const graphicalMeasure: GraphicalMeasure = staffLine.Measures[idx4];
+        for (const graphicalMusicPage of this.graphicalMusicSheet.MusicPages) {
+            for (const musicSystem of graphicalMusicPage.MusicSystems) {
+                for (const staffLine of musicSystem.StaffLines) {
+                    for (const graphicalMeasure of staffLine.Measures) {
                         if (graphicalMeasure.FirstInstructionStaffEntry !== undefined) {
                             const index: number = graphicalMeasure.PositionAndShape.ChildElements.indexOf(
                                 graphicalMeasure.FirstInstructionStaffEntry.PositionAndShape
@@ -1476,17 +1463,25 @@ export abstract class MusicSheetCalculator {
 
     protected calculateSheetLabelBoundingBoxes(): void {
         const musicSheet: MusicSheet = this.graphicalMusicSheet.ParentMusicSheet;
-        this.graphicalMusicSheet.Title    = this.setGraphicalLabelTextAndColor(musicSheet.Title, this.rules.RenderTitle,
-                                                                               this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
-        this.graphicalMusicSheet.Subtitle = this.setGraphicalLabelTextAndColor(musicSheet.Subtitle, this.rules.RenderSubtitle,
-                                                                               this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter);
-        this.graphicalMusicSheet.Composer = this.setGraphicalLabelTextAndColor(musicSheet.Composer, this.rules.RenderComposer,
-                                                                               this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter);
-        this.graphicalMusicSheet.Lyricist = this.setGraphicalLabelTextAndColor(musicSheet.Lyricist, this.rules.RenderLyricist,
-                                                                               this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter);
+        this.graphicalMusicSheet.Title    = this.createGraphicalLabelText(musicSheet.Title, this.rules.RenderTitle,
+                                                                          this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom);
+        this.graphicalMusicSheet.Subtitle = this.createGraphicalLabelText(musicSheet.Subtitle, this.rules.RenderSubtitle,
+                                                                          this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter);
+        this.graphicalMusicSheet.Composer = this.createGraphicalLabelText(musicSheet.Composer, this.rules.RenderComposer,
+                                                                          this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter);
+        this.graphicalMusicSheet.Lyricist = this.createGraphicalLabelText(musicSheet.Lyricist, this.rules.RenderLyricist,
+                                                                          this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter);
     }
 
-    private setGraphicalLabelTextAndColor(text: Label, shouldDraw: boolean, height: number, alignment: TextAlignmentEnum): GraphicalLabel {
+    /**
+     * Create a graphical label with given text, height and alignement
+     * @param text Label containing the text
+     * @param shouldDraw If label should be generated at all
+     * @param height Height of text
+     * @param alignment Alignment of text
+     * @returns New graphical label
+     */
+    private createGraphicalLabelText(text: Label, shouldDraw: boolean, height: number, alignment: TextAlignmentEnum): GraphicalLabel {
         const defaultColorTitle: string = this.rules.DefaultColorTitle;
         let target: GraphicalLabel = undefined;
         if (text !== undefined && shouldDraw) {
@@ -1498,21 +1493,17 @@ export abstract class MusicSheetCalculator {
     }
 
     protected checkMeasuresForWholeRestNotes(): void {
-        for (const musicSystem of this.musicSystems) {
-            for (const staffLine of musicSystem.StaffLines)  {
-                for (const measure of staffLine.Measures) {
-                    if (measure.staffEntries.length === 1) {
-                        const gse: GraphicalStaffEntry = measure.staffEntries[0];
-                        if (gse.graphicalVoiceEntries.length > 0 && gse.graphicalVoiceEntries[0].notes.length === 1) {
-                            const graphicalNote: GraphicalNote = gse.graphicalVoiceEntries[0].notes[0];
-                            if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.Length)) {
-                                this.layoutMeasureWithWholeRest(graphicalNote, gse, measure);
-                            }
-                        }
+        this.iterateGraphicalMeasures((measure: GraphicalMeasure) => {
+            if (measure.staffEntries.length === 1) {
+                const gse: GraphicalStaffEntry = measure.staffEntries[0];
+                if (gse.graphicalVoiceEntries.length > 0 && gse.graphicalVoiceEntries[0].notes.length === 1) {
+                    const graphicalNote: GraphicalNote = gse.graphicalVoiceEntries[0].notes[0];
+                    if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.Length)) {
+                        this.layoutMeasureWithWholeRest(graphicalNote, gse, measure);
                     }
                 }
             }
-        }
+        });
     }
 
     protected optimizeRestNotePlacement(graphicalStaffEntry: GraphicalStaffEntry, measure: GraphicalMeasure): void {
@@ -1619,61 +1610,27 @@ export abstract class MusicSheetCalculator {
             const firstMusicSystem: MusicSystem = page.MusicSystems[0];
             firstSystemAbsoluteTopMargin = firstMusicSystem.PositionAndShape.RelativePosition.y + firstMusicSystem.PositionAndShape.BorderTop;
         }
-        //const firstStaffLine: StaffLine = this.graphicalMusicSheet.MusicPages[0].MusicSystems[0].StaffLines[0];
-        if (this.graphicalMusicSheet.Title !== undefined) {
-            const title: GraphicalLabel = this.graphicalMusicSheet.Title;
-            title.PositionAndShape.Parent = page.PositionAndShape;
-            //title.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
-            const relative: PointF2D = new PointF2D();
-            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
-            //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
-            relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight;
-            title.PositionAndShape.RelativePosition = relative;
-            page.Labels.push(title);
-        }
-        if (this.graphicalMusicSheet.Subtitle !== undefined) {
-            const subtitle: GraphicalLabel = this.graphicalMusicSheet.Subtitle;
-            //subtitle.PositionAndShape.Parent = firstStaffLine.PositionAndShape;
-            subtitle.PositionAndShape.Parent = page.PositionAndShape;
-            const relative: PointF2D = new PointF2D();
-            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2;
-            //relative.x = firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width / 2; // half of first staffline width
-            relative.y = this.rules.TitleTopDistance + this.rules.SheetTitleHeight + this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle;
-            subtitle.PositionAndShape.RelativePosition = relative;
-            page.Labels.push(subtitle);
-        }
-        const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
-        if (composer !== undefined) {
-            composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
-            //composer.PositionAndShape.Parent = firstStaffLine.PositionAndShape; if using firstStaffLine...width.
-            //      y-collision problems, harder to y-align with lyrics
-            composer.setLabelPositionAndShapeBorders();
-            const relative: PointF2D = new PointF2D();
-            //const firstStaffLineEndX: number = this.rules.PageLeftMargin + this.rules.SystemLeftMargin + this.rules.left
-            //    firstStaffLine.PositionAndShape.RelativePosition.x + firstStaffLine.PositionAndShape.Size.width;
-            //relative.x = Math.min(this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin,
-            //  firstStaffLineEndX); // awkward with 2-bar score
-            relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
-            //relative.x = firstStaffLine.PositionAndShape.Size.width;
-            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
-            //relative.y = - this.rules.SystemComposerDistance;
-            //relative.y = -firstStaffLine.PositionAndShape.Size.height;
-            // TODO only add measure label height if rendering labels and composer measure has label
-            // TODO y-align with lyricist? which is harder if they have different bbox parents (page and firstStaffLine).
-            // when the pageWidth gets fixed, we could use page as parent again.
-            composer.PositionAndShape.RelativePosition = relative;
-            page.Labels.push(composer);
-        }
-        const lyricist: GraphicalLabel = this.graphicalMusicSheet.Lyricist;
-        if (lyricist !== undefined) {
-            lyricist.PositionAndShape.Parent = page.PositionAndShape;
-            lyricist.setLabelPositionAndShapeBorders();
-            const relative: PointF2D = new PointF2D();
-            relative.x = this.rules.PageLeftMargin;
-            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
-            //relative.y = Math.max(relative.y, composer.PositionAndShape.RelativePosition.y);
-            lyricist.PositionAndShape.RelativePosition = relative;
-            page.Labels.push(lyricist);
+        this.addLadelToPageList(page, this.graphicalMusicSheet.Title,
+                                new PointF2D(this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2,
+                                             this.rules.TitleTopDistance + this.rules.SheetTitleHeight));
+        this.addLadelToPageList(page, this.graphicalMusicSheet.Subtitle,
+                                new PointF2D(this.graphicalMusicSheet.ParentMusicSheet.pageWidth / 2,
+                                             this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
+                                             this.rules.SheetMinimumDistanceBetweenTitleAndSubtitle));
+        this.addLadelToPageList(page, this.graphicalMusicSheet.Composer,
+                                new PointF2D(this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin,
+                                             firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance));
+        this.addLadelToPageList(page, this.graphicalMusicSheet.Lyricist,
+                                new PointF2D(this.rules.PageLeftMargin,
+                                             firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance));
+    }
+
+    private addLadelToPageList(page: GraphicalMusicPage, graphicalLabel: GraphicalLabel, relative: PointF2D): void {
+        if (graphicalLabel !== undefined) {
+            graphicalLabel.PositionAndShape.Parent = page.PositionAndShape;
+            graphicalLabel.setLabelPositionAndShapeBorders();
+            graphicalLabel.PositionAndShape.RelativePosition = relative;
+            page.Labels.push(graphicalLabel);
         }
     }
 
