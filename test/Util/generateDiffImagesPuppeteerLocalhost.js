@@ -29,30 +29,17 @@ async function init () {
     fs.mkdirSync(imageDir, { recursive: true })
 
     const samples = {
-        'Beethoven, L.v. - An die ferne Geliebte': 'Beethoven_AnDieFerneGeliebte.xml'
-        // 'Clementi, M. - Sonatina Op.36 No.1 Pt.1': 'MuzioClementi_SonatinaOpus36No1_Part1.xml'
+        'Beethoven, L.v. - An die ferne Geliebte': 'Beethoven_AnDieFerneGeliebte.xml',
+        'Clementi, M. - Sonatina Op.36 No.1 Pt.1': 'MuzioClementi_SonatinaOpus36No1_Part1.xml'
         // "Hello World": "HelloWorld.xml",
         // "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
     }
     const sampleKeys = Object.keys(samples)
-    // const sampleValues = Object.values(samples)
+    const sampleValues = Object.values(samples)
 
     const puppeteer = require('puppeteer')
     const browser = await puppeteer.launch({ headless: true })
     const page = await browser.newPage() // TODO set width/height
-    const sampleFileName = sampleKeys[0] // TODO for loop over samples / take filenames from script arguments
-    const sampleParameter = `&url=${sampleFileName}&endUrl`
-    console.log('puppeteer: going to url')
-    try {
-        await page.goto(`http://localhost:${osmdPort}/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}` +
-            sampleParameter, { waitUntil: 'networkidle2' })
-    } catch (error) {
-        console.log(error)
-        console.log('[OSMD.generateImages] Error generating images: could not reach local OSMD server.' +
-            'Make sure to start OSMD (npm start) local webpack server before running this script.')
-        process.exit(-1) // exit script with error. otherwise process will continue running
-    }
-    console.log('goto done')
 
     // fix navigation error
     var responseEventOccurred = false
@@ -71,13 +58,8 @@ async function init () {
 
     page.on('response', responseHandler)
 
-    var navigationWatcher = page.waitForNavigation()
-
-    await Promise.race([responseWatcher, navigationWatcher])
-    console.log('navigation race done')
-
     // get image data
-    const getDataUrl = async () => {
+    const getDataUrl = async (page) => {
         return page.evaluate(async () => {
             return new Promise(resolve => {
                 const canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas')
@@ -87,14 +69,37 @@ async function init () {
             })
         })
     }
-    const dataUrl = await getDataUrl()
-    // console.log("dataUrl: " + dataUrl);
-    const imageData = dataUrl.split(';base64,').pop()
-    const imageBuffer = Buffer.from(imageData, 'base64')
 
-    var fileName = `${imageDir}/${sampleFileName}.png`
-    console.log('got image data, saving to: ' + fileName)
-    fs.writeFileSync(fileName, imageBuffer, { encoding: 'base64' })
+    // generate png for all given samples
+    for (let i = 0; i < sampleKeys.length; i++) {
+        const sampleTitle = sampleKeys[i]
+        const sampleFileName = sampleValues[i] // TODO maybe take filenames from script arguments
+        const sampleParameter = `&openUrl=${sampleFileName}&endUrl`
+        const pageUrl = `http://localhost:${osmdPort}/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}` +
+            sampleParameter
+        console.log('puppeteer: page.goto url: ' + pageUrl)
+        try {
+            await page.goto(pageUrl, { waitUntil: 'networkidle2' })
+        } catch (error) {
+            console.log(error)
+            console.log('[OSMD.generateImages] Error generating images: could not reach local OSMD server.' +
+                'Make sure to start OSMD (npm start) local webpack server before running this script.')
+            process.exit(-1) // exit script with error. otherwise process will continue running
+        }
+        console.log('puppeteer.page.goto done')
+
+        var navigationWatcher = page.waitForNavigation()
+        await Promise.race([responseWatcher, navigationWatcher])
+        console.log('navigation race done')
+        const dataUrl = await getDataUrl(page)
+        // console.log("dataUrl: " + dataUrl);
+        const imageData = dataUrl.split(';base64,').pop()
+        const imageBuffer = Buffer.from(imageData, 'base64')
+
+        var fileName = `${imageDir}/${sampleTitle}.png`
+        console.log('got image data, saving to: ' + fileName)
+        fs.writeFileSync(fileName, imageBuffer, { encoding: 'base64' })
+    }
 
     // const html = await page.content();
     // console.log("page content: " + html);
