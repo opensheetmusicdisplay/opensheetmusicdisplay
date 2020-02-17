@@ -14,6 +14,8 @@
 //     });
 // }
 
+const osmdPort = 8000 // OSMD webpack server port. OSMD has to be running (npm start) when this script runs.
+
 // main function
 async function init () {
     console.log('init')
@@ -41,7 +43,15 @@ async function init () {
     const sampleFileName = sampleKeys[0] // TODO for loop over samples / take filenames from script arguments
     const sampleParameter = `&url=${sampleFileName}&endUrl`
     console.log('puppeteer: going to url')
-    await page.goto('http://localhost:8000/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF' + sampleParameter, { waitUntil: 'networkidle2' })
+    try {
+        await page.goto(`http://localhost:${osmdPort}/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}` +
+            sampleParameter, { waitUntil: 'networkidle2' })
+    } catch (error) {
+        console.log(error)
+        console.log('[OSMD.generateImages] Error generating images: could not reach local OSMD server.' +
+            'Make sure to start OSMD (npm start) local webpack server before running this script.')
+        process.exit(-1) // exit script with error. otherwise process will continue running
+    }
     console.log('goto done')
 
     // fix navigation error
