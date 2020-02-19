@@ -36,7 +36,7 @@ async function init () {
         'Clementi, M. - Sonatina Op.36 No.3 Pt.2': 'MuzioClementi_SonatinaOpus36No3_Part2.xml',
         'Bach, J.S. - Praeludium in C-Dur BWV846 1': 'JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml',
         'Bach, J.S. - Air': 'JohannSebastianBach_Air.xml',
-        'Gounod, C. - Méditation': 'CharlesGounod_Meditation.xml',
+        // 'Gounod, C. - Méditation': 'CharlesGounod_Meditation.xml', // TODO this Gounod sample fails to generate a proper PNG image for some reason
         'Haydn, J. - Concertante Cello': 'JosephHaydn_ConcertanteCello.xml',
         'Joplin, S. - Elite Syncopations': 'ScottJoplin_EliteSyncopations.xml',
         'Joplin, S. - The Entertainer': 'ScottJoplin_The_Entertainer.xml',
