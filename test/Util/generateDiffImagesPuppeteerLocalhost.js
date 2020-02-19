@@ -30,11 +30,47 @@ async function init () {
 
     const samples = {
         'Beethoven, L.v. - An die ferne Geliebte': 'Beethoven_AnDieFerneGeliebte.xml',
-        'Clementi, M. - Sonatina Op.36 No.1 Pt.1': 'MuzioClementi_SonatinaOpus36No1_Part1.xml'
-        // "Hello World": "HelloWorld.xml",
-        // "Clementi, M. - Sonatina Op.36 No.1 Pt.2": "MuzioClementi_SonatinaOpus36No1_Part2.xml",
+        'Clementi, M. - Sonatina Op.36 No.1 Pt.1': 'MuzioClementi_SonatinaOpus36No1_Part1.xml',
+        'Clementi, M. - Sonatina Op.36 No.1 Pt.2': 'MuzioClementi_SonatinaOpus36No1_Part2.xml',
+        'Clementi, M. - Sonatina Op.36 No.3 Pt.1': 'MuzioClementi_SonatinaOpus36No3_Part1.xml',
+        'Clementi, M. - Sonatina Op.36 No.3 Pt.2': 'MuzioClementi_SonatinaOpus36No3_Part2.xml',
+        'Bach, J.S. - Praeludium in C-Dur BWV846 1': 'JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml',
+        'Bach, J.S. - Air': 'JohannSebastianBach_Air.xml',
+        'Gounod, C. - Méditation': 'CharlesGounod_Meditation.xml',
+        'Haydn, J. - Concertante Cello': 'JosephHaydn_ConcertanteCello.xml',
+        'Joplin, S. - Elite Syncopations': 'ScottJoplin_EliteSyncopations.xml',
+        'Joplin, S. - The Entertainer': 'ScottJoplin_The_Entertainer.xml',
+        'Mozart, W.A. - An Chloe': 'Mozart_AnChloe.xml',
+        'Mozart, W.A. - Das Veilchen': 'Mozart_DasVeilchen.xml',
+        'Mozart, W.A. - Clarinet Quintet (Excerpt)': 'Mozart_Clarinet_Quintet_Excerpt.mxl',
+        'Mozart, W.A. - String Quartet in G, K. 387, 1st Mvmt Excerpt': 'Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml',
+        'Mozart/Holzer - Land der Berge (national anthem of Austria)': 'Land_der_Berge.musicxml',
+        'OSMD Function Test - All': 'OSMD_function_test_all.xml',
+        'OSMD Function Test - Accidentals': 'OSMD_function_test_accidentals.musicxml',
+        'OSMD Function Test - Autobeam': 'OSMD_function_test_autobeam.musicxml',
+        'OSMD Function Test - Auto-/Custom-Coloring': 'OSMD_function_test_auto-custom-coloring-entchen.musicxml',
+        'OSMD Function Test - Bar lines': 'OSMD_function_test_bar_lines.musicxml',
+        'OSMD Function Test - Color (from XML)': 'OSMD_function_test_color.musicxml',
+        'OSMD Function Test - Drumset': 'OSMD_function_test_drumset.musicxml',
+        'OSMD Function Test - Expressions': 'OSMD_function_test_expressions.musicxml',
+        'OSMD Function Test - Expressions Overlap': 'OSMD_function_test_expressions_overlap.musicxml',
+        'OSMD Function Test - Grace Notes': 'OSMD_function_test_GraceNotes.xml',
+        'OSMD Function Test - Invisible Notes': 'OSMD_function_test_invisible_notes.musicxml',
+        'OSMD Function Test - Selecting Measures To Draw': 'OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml',
+        'OSMD Function Test - Notehead Shapes': 'OSMD_function_test_noteheadShapes.musicxml',
+        'OSMD Function Test - Ornaments': 'OSMD_function_test_Ornaments.xml',
+        'OSMD Function Test - Tremolo': 'OSMD_Function_Test_Tremolo_2bars.musicxml',
+        'Schubert, F. - An Die Musik': 'Schubert_An_die_Musik.xml',
+        'Anonymous - Saltarello': 'Saltarello.mxl',
+        'Debussy, C. - Mandoline': 'Debussy_Mandoline.xml',
+        'Levasseur, F. - Parlez Mois': 'Parlez-moi.mxl',
+        'Schumann, R. - Dichterliebe': 'Dichterliebe01.xml',
+        'Telemann, G.P. - Sonate-Nr.1.1-Dolce': 'TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml',
+        'Telemann, G.P. - Sonate-Nr.1.2-Allegro': 'TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml'
+        // 'Hello World': 'HelloWorld.xml',
+        // 'Clementi, M. - Sonatina Op.36 No.1 Pt.2': 'MuzioClementi_SonatinaOpus36No1_Part2.xml',
     }
-    const sampleKeys = Object.keys(samples)
+    // const sampleKeys = Object.keys(samples)
     const sampleValues = Object.values(samples)
 
     const puppeteer = require('puppeteer')
@@ -71,9 +107,9 @@ async function init () {
     }
 
     // generate png for all given samples
-    for (let i = 0; i < sampleKeys.length; i++) {
-        const sampleTitle = sampleKeys[i]
-        const sampleFileName = sampleValues[i] // TODO maybe take filenames from script arguments
+    for (let i = 0; i < sampleValues.length; i++) {
+        // const sampleTitle = sampleValues[i].replace('/', '|')
+        const sampleFileName = sampleValues[i].replace('/', '|') // TODO maybe take filenames from script arguments
         const sampleParameter = `&openUrl=${sampleFileName}&endUrl`
         const pageUrl = `http://localhost:${osmdPort}/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}` +
             sampleParameter
@@ -92,17 +128,17 @@ async function init () {
         await Promise.race([responseWatcher, navigationWatcher])
         console.log('navigation race done')
         const dataUrl = await getDataUrl(page)
-        // console.log("dataUrl: " + dataUrl);
+        // console.log('dataUrl: ' + dataUrl);
         const imageData = dataUrl.split(';base64,').pop()
         const imageBuffer = Buffer.from(imageData, 'base64')
 
-        var fileName = `${imageDir}/${sampleTitle}.png`
+        var fileName = `${imageDir}/${sampleFileName}.png`
         console.log('got image data, saving to: ' + fileName)
         fs.writeFileSync(fileName, imageBuffer, { encoding: 'base64' })
     }
 
     // const html = await page.content();
-    // console.log("page content: " + html);
+    // console.log('page content: ' + html);
     browser.close()
     console.log('puppeteer browser closed. exiting.')
 }
