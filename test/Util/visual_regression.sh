@@ -43,7 +43,7 @@ THRESHOLD=0.01
 # Directories. You might want to change BASE, if you're running from a
 # different working directory.
 BASE=.
-IMAGESPARENTFOLDER=$BASE/data/images
+IMAGESPARENTFOLDER=$BASE/visual_regression
 BLESSED=$IMAGESPARENTFOLDER/blessed
 CURRENT=$IMAGESPARENTFOLDER/current
 DIFF=$IMAGESPARENTFOLDER/diff
@@ -51,6 +51,56 @@ DIFF=$IMAGESPARENTFOLDER/diff
 # All results are stored here.
 RESULTS=$DIFF/results.txt
 WARNINGS=$DIFF/warnings.txt
+
+# If no prefix is provided, test all images.
+if [ "$1" == "" ]
+then
+  files=*.png
+else
+  files=$1*.png
+fi
+
+# some sanity checks: check if some png images are in the right folder and warn if not. doesn't make sure there are actual, correct png images though.
+folderWarningStringMsg="Also, please run this npm script from the base OSMD folder. (npm run test:visual should do this automatically)
+    Exiting without running visual regression tests.\n"
+# check if current directory exists / started from base OSMD folder
+if [ ! -e "$CURRENT" ]
+then
+  printf "Warning: directory ${CURRENT} missing. Please run npm run generate:current (and if necessary npm run generate:blessed) first.
+    ${folderWarningStringMsg}"
+  exit 1
+fi
+# check if blessed directory exists / started from base OSMD folder
+if [ ! -e "$BLESSED" ]
+then
+  printf "Warning: directory ${BLESSED} missing. Please run npm run generate:blessed first (or otherwise get the blessed images).
+    ${folderWarningStringMsg}"
+  exit 1
+fi
+# note: ls returns errors if the directory doesn't exist
+totalCurrentImages=`ls -l $CURRENT/*.png | wc -l | sed 's/[[:space:]]//g'`
+totalBlessedImages=`ls -l $BLESSED/*.png | wc -l | sed 's/[[:space:]]//g'`
+# check if there are some current images
+if [ "$totalCurrentImages" -lt 1 ]
+then
+  printf "Warning: Found no pngs in ${CURRENT}. Please run npm run generate (and if necessary npm run blessed) first.
+    ${folderWarningStringMsg}"
+  exit 1
+fi
+# check if there are some blessed images
+if [ "$totalBlessedImages" -lt 1 ]
+then
+  printf "Warning: Found no pngs in ${BLESSED}. Please run npm run blessed first, ideally on the repository's develop state.
+    ${folderWarningStringMsg}"
+  exit 1
+fi
+# check that #currentImages == #blessedImages (will continue anyways)
+if [ ! "$totalCurrentImages" -eq "$totalBlessedImages" ]
+then
+  printf "Warning: Number of current images (${totalCurrentImages}) is not the same as blessed images (${totalBlessedImages}). Continuing anyways.\n"
+else
+  printf "Found ${totalCurrentImages} current and ${totalBlessedImages} blessed images. Continuing.\n"
+fi
 
 mkdir -p $DIFF
 if [ -e "$RESULTS" ]
@@ -61,20 +111,6 @@ touch $RESULTS
 touch $RESULTS.pass
 touch $RESULTS.fail
 touch $WARNINGS
-
-# If no prefix is provided, test all images.
-if [ "$1" == "" ]
-then
-  files=*.png
-else
-  files=$1*.png
-fi
-
-if [ "`basename $PWD`" == "Util" ]
-then
-  echo Please run this script from the OSMD base directory.
-  exit 1
-fi
 
 # Number of simultaneous jobs
 nproc=$(sysctl -n hw.physicalcpu 2> /dev/null || nproc)
