@@ -21,13 +21,19 @@ async function init () {
     console.log('init')
 
     const fs = require('fs')
-    const [sampleDir, imageDir] = process.argv.slice(2, 4)
+    const [sampleDir, imageDir, filterRegex] = process.argv.slice(2, 5)
     console.log('sampleDir: ' + sampleDir)
     console.log('imageDir: ' + imageDir)
+    if (!sampleDir || !imageDir) {
+        console.log('usage: node test/Util/generateDiffImagesPuppeteerLocalhost sampleDirectory imageDirectory [filterRegex]')
+        console.log('Error: need sampleDir and imageDir. Exiting.')
+        process.exit(-1)
+    }
 
     // Create the image directory if it doesn't exist.
     fs.mkdirSync(imageDir, { recursive: true })
 
+    // TODO fetch samples from sampleDir (iterate over all files in folder)
     const samples = {
         'Beethoven, L.v. - An die ferne Geliebte': 'Beethoven_AnDieFerneGeliebte.xml',
         'Clementi, M. - Sonatina Op.36 No.1 Pt.1': 'MuzioClementi_SonatinaOpus36No1_Part1.xml',
@@ -108,7 +114,17 @@ async function init () {
 
     // generate png for all given samples
     for (let i = 0; i < sampleValues.length; i++) {
-        // const sampleTitle = sampleValues[i].replace('/', '|')
+        // filter regex if given
+        if (filterRegex && filterRegex !== '') {
+            if (i === 0) {
+                console.log('filtering for regex: ' + filterRegex)
+            }
+            if (!sampleValues[i].match(filterRegex)) {
+                continue
+            }
+            console.log('match found: ' + sampleValues[i])
+        }
+
         const sampleFileName = sampleValues[i].replace('/', '|') // TODO maybe take filenames from script arguments
         const sampleParameter = `&openUrl=${sampleFileName}&endUrl`
         const pageUrl = `http://localhost:${osmdPort}/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}` +
@@ -122,7 +138,7 @@ async function init () {
                 'Make sure to start OSMD local webpack server (npm start) before running this script.')
             process.exit(-1) // exit script with error. otherwise process will continue running
         }
-        console.log('puppeteer.page.goto done')
+        console.log('puppeteer.page.goto done. (now fetching image data)')
 
         var navigationWatcher = page.waitForNavigation()
         await Promise.race([responseWatcher, navigationWatcher])

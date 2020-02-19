@@ -65,6 +65,7 @@ then
   files=*.png
 else
   files=$2*.png
+  printf "only processing images matching bash string (not regex): ${files}\n"
 fi
 
 # some sanity checks: check if some png images are in the right folder and warn if not. doesn't make sure there are actual, correct png images though.
