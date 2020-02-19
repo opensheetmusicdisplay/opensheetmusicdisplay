@@ -21,6 +21,7 @@
     "generatePNG": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./export/",
     "generate:current": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./data/images/current",
     "generate:blessed": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./data/images/blessed",
+    "test:visual": "sh ./test/Util/visual_regression.sh",
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
   "pre-commit": [
