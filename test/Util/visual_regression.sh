@@ -2,7 +2,7 @@
 # This script runs a visual regression test on all the images
 # generated from OSMD samples (npm run generate:current and npm run generate:blessed)
 #
-#   inspired by Vexflow's visual regression tests.
+#   inspired by and adapted from Vexflow's visual regression tests.
 #
 # Prerequisites: ImageMagick
 #
@@ -23,15 +23,18 @@
 #
 #  Run the regression tests against the blessed images in tests/blessed.
 #
-#    # (this should be done from the main OSMD folder)
-#    sh test/Util/visual_regression.sh
+#    npm run test:visual
+#    # npm will navigate to the base folder automatically
 #
-#  Check build/images/diff/results.txt for results. This file is sorted
+#    # or: (this should be done from the main OSMD folder)
+#    # sh test/Util/visual_regression.sh
+#
+#  Check visual_regression/diff/results.txt for results. This file is sorted
 #  by PHASH difference (most different files on top.) The composite diff
-#  images for failed tests (i.e., PHASH > 1.0) are stored in build/images/diff.
+#  images for failed tests (i.e., PHASH > 1.0) are stored in visual_regression/diff.
 #
-#  If you are satisfied with the differences, copy *.png from build/images
-#  into tests/blessed, and submit your change.
+#  If you are satisfied with the differences, copy *.png from visual_regression/current
+#  into visual_regression/blessed, and submit your change.
 
 # PNG viewer on OSX. Switch this to whatever your system uses.
 # VIEWER=open
@@ -41,7 +44,7 @@
 THRESHOLD=0.01
 
 # Directories. You might want to change BASE, if you're running from a
-# different working directory.
+# different working directory. (only necessary if you're running the script manually, i.e. not from npm run test:visual)
 BASE=.
 IMAGESPARENTFOLDER=$BASE/visual_regression
 BLESSED=$IMAGESPARENTFOLDER/blessed
@@ -99,7 +102,7 @@ if [ ! "$totalCurrentImages" -eq "$totalBlessedImages" ]
 then
   printf "Warning: Number of current images (${totalCurrentImages}) is not the same as blessed images (${totalBlessedImages}). Continuing anyways.\n"
 else
-  printf "Found ${totalCurrentImages} current and ${totalBlessedImages} blessed images. Continuing.\n"
+  printf "Found ${totalCurrentImages} current and ${totalBlessedImages} blessed png files (not tested if valid). Continuing.\n"
 fi
 
 mkdir -p $DIFF

@@ -118,8 +118,8 @@ async function init () {
             await page.goto(pageUrl, { waitUntil: 'networkidle2' })
         } catch (error) {
             console.log(error)
-            console.log('[OSMD.generateImages] Error generating images: could not reach local OSMD server.' +
-                'Make sure to start OSMD (npm start) local webpack server before running this script.')
+            console.log('[OSMD.generateImages] Error generating images: could not reach local OSMD server. ' +
+                'Make sure to start OSMD local webpack server (npm start) before running this script.')
             process.exit(-1) // exit script with error. otherwise process will continue running
         }
         console.log('puppeteer.page.goto done')
