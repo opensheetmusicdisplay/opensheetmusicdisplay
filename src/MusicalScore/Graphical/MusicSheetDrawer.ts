@@ -484,7 +484,6 @@ export abstract class MusicSheetDrawer {
         if (this.drawableBoundingBoxElement) {
             this.drawBoundingBoxes(page.PositionAndShape, 0, this.drawableBoundingBoxElement);
         }
-
     }
 
     /**

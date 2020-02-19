@@ -2338,7 +2338,8 @@ export abstract class MusicSheetCalculator {
             this.calculateDashes(startStaffLine, startX, endX, y);
 
             // calculate Dashes for the second StaffLine (only if endStaffEntry isn't the first StaffEntry of the StaffLine)
-            if (nextStaffLine &&
+            if (nextStaffLine && // check for undefined objects e.g. when drawingRange given
+                nextStaffLine.Measures[0] &&
                 endStaffentry.parentMeasure.ParentStaffLine &&
                 !(endStaffentry === endStaffentry.parentMeasure.staffEntries[0] &&
                 endStaffentry.parentMeasure === endStaffentry.parentMeasure.ParentStaffLine.Measures[0])) {

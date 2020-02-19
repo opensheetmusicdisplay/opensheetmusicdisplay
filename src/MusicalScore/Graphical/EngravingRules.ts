@@ -1632,12 +1632,14 @@ export class EngravingRules {
 
 // TODO maybe this should be moved to OSMDOptions. Also see OpenSheetMusicDisplay.PageFormatStandards
 export class PageFormat {
-    constructor(width: number, height: number) {
+    constructor(width: number, height: number, idString: string = "noIdStringGiven") {
         this.width = width;
         this.height = height;
+        this.idString = idString;
     }
     public width: number;
     public height: number;
+    public idString: string;
     public get aspectRatio(): number {
         if (!this.IsUndefined) {
             return this.width / this.height;
@@ -1652,5 +1654,12 @@ export class PageFormat {
 
     public static get UndefinedPageFormat(): PageFormat {
         return new PageFormat(0, 0);
+    }
+
+    public Equals(otherPageFormat: PageFormat): boolean {
+        if (!otherPageFormat) {
+            return false;
+        }
+        return otherPageFormat.width === this.width && otherPageFormat.height === this.height;
     }
 }

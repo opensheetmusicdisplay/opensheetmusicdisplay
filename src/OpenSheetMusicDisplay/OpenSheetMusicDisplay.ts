@@ -70,6 +70,9 @@ export class OpenSheetMusicDisplay {
     private needBackendUpdate: boolean;
     private sheet: MusicSheet;
     private drawer: VexFlowMusicSheetDrawer;
+    private drawBoundingBox: string;
+    private drawSkyLine: boolean;
+    private drawBottomLine: boolean;
     private graphic: GraphicalMusicSheet;
     private drawingParameters: DrawingParameters;
     private autoResizeEnabled: boolean;
@@ -153,6 +156,7 @@ export class OpenSheetMusicDisplay {
         }
         log.info(`[OSMD] Loaded sheet ${this.sheet.TitleString} successfully.`);
 
+        this.needBackendUpdate = true;
         this.updateGraphic();
 
         return Promise.resolve({});
@@ -189,7 +193,7 @@ export class OpenSheetMusicDisplay {
         if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
             EngravingRules.Rules.PageHeight = this.sheet.pageWidth / EngravingRules.Rules.PageFormat.aspectRatio;
         } else {
-            EngravingRules.Rules.PageHeight = 100001; // infinite page height // TODO Number.MAX_SAFE_INTEGER ?
+            EngravingRules.Rules.PageHeight = 100001; // infinite page height // TODO maybe Number.MAX_VALUE or Math.pow(10, 20)?
         }
 
         // Before introducing the following optimization (maybe irrelevant), tests
@@ -205,7 +209,10 @@ export class OpenSheetMusicDisplay {
             this.graphic.Cursors.length = 0;
         }
 
-        if (this.needBackendUpdate) {
+        // needBackendUpdate is well intentioned, but we need to cover all cases.
+        //   backends also need an update when this.zoom was set from outside, which unfortunately doesn't have a setter method to set this in.
+        //   so just for compatibility, we need to assume users set osmd.zoom, so we'd need to check whether it was changed compared to last time.
+        if (true || this.needBackendUpdate) {
             this.createOrRefreshRenderBackend();
             this.needBackendUpdate = false;
         }
@@ -233,7 +240,10 @@ export class OpenSheetMusicDisplay {
             this.drawer.Backends.clear();
         }
         // Create the drawer
-        this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters);
+        this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters); // note that here the drawer.drawableBoundingBoxElement is lost. now saved in OSMD.
+        this.drawer.drawableBoundingBoxElement = this.DrawBoundingBox;
+        this.drawer.bottomLineVisible = this.drawBottomLine;
+        this.drawer.skyLineVisible = this.drawSkyLine;
 
         // Set page width
         const width: number = this.container.offsetWidth;
@@ -623,20 +633,24 @@ export class OpenSheetMusicDisplay {
 
     /** Standard page format options like A4 or Letter, in portrait and landscape. E.g. PageFormatStandards["A4_P"] or PageFormatStandards["Letter_L"]. */
     public static PageFormatStandards: {[type: string]: PageFormat} = {
-        "A3_L": new PageFormat(420, 297), // id strings should use underscores instead of white spaces to facilitate use as URL parameters.
-        "A3_P": new PageFormat(297, 420),
-        "A4_L": new PageFormat(297, 210),
-        "A4_P": new PageFormat(210, 297),
-        "A5_L": new PageFormat(210, 148),
-        "A5_P": new PageFormat(148, 210),
-        "A6_L": new PageFormat(148, 105),
-        "A6_P": new PageFormat(105, 148),
+        "A3_L": new PageFormat(420, 297, "A3_L"), // id strings should use underscores instead of white spaces to facilitate use as URL parameters.
+        "A3_P": new PageFormat(297, 420, "A3_P"),
+        "A4_L": new PageFormat(297, 210, "A4_L"),
+        "A4_P": new PageFormat(210, 297, "A4_P"),
+        "A5_L": new PageFormat(210, 148, "A5_L"),
+        "A5_P": new PageFormat(148, 210, "A5_P"),
+        "A6_L": new PageFormat(148, 105, "A6_L"),
+        "A6_P": new PageFormat(105, 148, "A6_P"),
         "Endless": PageFormat.UndefinedPageFormat,
-        "Letter_L": new PageFormat(279.4, 215.9),
-        "Letter_P": new PageFormat(215.9, 279.4)
+        "Letter_L": new PageFormat(279.4, 215.9, "Letter_L"),
+        "Letter_P": new PageFormat(215.9, 279.4, "Letter_P")
     };
 
     public static StringToPageFormat(formatId: string): PageFormat {
+        formatId = formatId.replace(" ", "_");
+        formatId = formatId.replace("Landscape", "L");
+        formatId = formatId.replace("Portrait", "P");
+        //console.log("change format to: " + formatId);
         let f: PageFormat = PageFormat.UndefinedPageFormat; // default: 'endless' page height, take canvas/container width
         if (OpenSheetMusicDisplay.PageFormatStandards.hasOwnProperty(formatId)) {
             f = OpenSheetMusicDisplay.PageFormatStandards[formatId];
@@ -646,7 +660,9 @@ export class OpenSheetMusicDisplay {
 
     /** Sets page format by string. Alternative to setOptions({pageFormat: PageFormatStandards.Endless}) for example. */
     public setPageFormat(formatId: string): void {
-        EngravingRules.Rules.PageFormat = OpenSheetMusicDisplay.StringToPageFormat(formatId);
+        const newPageFormat: PageFormat = OpenSheetMusicDisplay.StringToPageFormat(formatId);
+        this.needBackendUpdate = !(newPageFormat.Equals(EngravingRules.Rules.PageFormat));
+        EngravingRules.Rules.PageFormat = newPageFormat;
     }
 
     public setCustomPageFormat(width: number, height: number): void {
@@ -708,6 +724,7 @@ export class OpenSheetMusicDisplay {
 
     //#region GETTER / SETTER
     public set DrawSkyLine(value: boolean) {
+        this.drawSkyLine = value;
         if (this.drawer) {
             this.drawer.skyLineVisible = value;
             this.render();
@@ -718,6 +735,7 @@ export class OpenSheetMusicDisplay {
     }
 
     public set DrawBottomLine(value: boolean) {
+        this.drawBottomLine = value;
         if (this.drawer) {
             this.drawer.bottomLineVisible = value;
             this.render();
@@ -728,11 +746,12 @@ export class OpenSheetMusicDisplay {
     }
 
     public set DrawBoundingBox(value: string) {
-        this.drawer.drawableBoundingBoxElement = value;
-        this.render();
+        this.drawBoundingBox = value;
+        this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
+        this.render(); // may create new Drawer.
     }
     public get DrawBoundingBox(): string {
-        return this.drawer.drawableBoundingBoxElement;
+        return this.drawBoundingBox;
     }
 
     public get AutoResizeEnabled(): boolean {

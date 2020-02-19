@@ -40,7 +40,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private backend: VexFlowBackend;
     private backends: VexFlowBackend[] = [];
     private zoom: number = 1.0;
-    private pageIdx: number = 0;
+    private pageIdx: number = 0; // this is a bad solution, should use MusicPage.PageNumber instead.
 
     constructor(drawingParameters: DrawingParameters = new DrawingParameters()) {
         super(new VexFlowTextMeasurer(), drawingParameters);
@@ -67,6 +67,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawPage(page: GraphicalMusicPage): void {
+        this.backend = this.backends[page.PageNumber - 1]; // TODO we may need to set this in a couple of other places. this.pageIdx is a bad solution
         super.drawPage(page);
         this.pageIdx += 1;
         this.backend = this.backends[this.pageIdx];
