@@ -45,22 +45,26 @@ THRESHOLD=0.01
 
 # Directories. You might want to change BASE, if you're running from a
 # different working directory. (only necessary if you're running the script manually, i.e. not from npm run test:visual)
-BASE=.
-IMAGESPARENTFOLDER=$BASE/visual_regression
-BLESSED=$IMAGESPARENTFOLDER/blessed
-CURRENT=$IMAGESPARENTFOLDER/current
-DIFF=$IMAGESPARENTFOLDER/diff
+if [ "$1" == "" ]
+then
+  BASEFOLDER="./visual_regression"
+else
+  BASEFOLDER=$1
+fi
+BLESSED=$BASEFOLDER/blessed
+CURRENT=$BASEFOLDER/current
+DIFF=$BASEFOLDER/diff
 
 # All results are stored here.
 RESULTS=$DIFF/results.txt
 WARNINGS=$DIFF/warnings.txt
 
 # If no prefix is provided, test all images.
-if [ "$1" == "" ]
+if [ "$2" == "" ]
 then
   files=*.png
 else
-  files=$1*.png
+  files=$2*.png
 fi
 
 # some sanity checks: check if some png images are in the right folder and warn if not. doesn't make sure there are actual, correct png images though.
