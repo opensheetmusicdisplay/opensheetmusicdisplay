@@ -36,6 +36,7 @@ async function init () {
     // TODO fetch samples from sampleDir (iterate over all files in folder)
     const samples = {
         'Beethoven, L.v. - An die ferne Geliebte': 'Beethoven_AnDieFerneGeliebte.xml',
+        // ' Beethoven Evil filename test': 'Beethoven&Evil/Filename.xml', // TODO may need decodeURIComponent in OSMD openURL parsing
         'Clementi, M. - Sonatina Op.36 No.1 Pt.1': 'MuzioClementi_SonatinaOpus36No1_Part1.xml',
         'Clementi, M. - Sonatina Op.36 No.1 Pt.2': 'MuzioClementi_SonatinaOpus36No1_Part2.xml',
         'Clementi, M. - Sonatina Op.36 No.3 Pt.1': 'MuzioClementi_SonatinaOpus36No3_Part1.xml',
@@ -77,7 +78,17 @@ async function init () {
         // 'Clementi, M. - Sonatina Op.36 No.1 Pt.2': 'MuzioClementi_SonatinaOpus36No1_Part2.xml',
     }
     // const sampleKeys = Object.keys(samples)
-    const sampleValues = Object.values(samples)
+    let sampleValues = Object.values(samples)
+
+    // filter regex if given
+    if (filterRegex && filterRegex !== '') {
+        console.log('filtering samples for regex: ' + filterRegex)
+        sampleValues = sampleValues.filter((filename) => filename.match(filterRegex))
+        console.log(`found ${sampleValues.length} matches: `)
+        for (let i = 0; i < sampleValues.length; i++) {
+            console.log(sampleValues[i])
+        }
+    }
 
     const puppeteer = require('puppeteer')
     const browser = await puppeteer.launch({ headless: true })
@@ -114,21 +125,9 @@ async function init () {
 
     // generate png for all given samples
     for (let i = 0; i < sampleValues.length; i++) {
-        // filter regex if given
-        if (filterRegex && filterRegex !== '') {
-            if (i === 0) {
-                console.log('filtering for regex: ' + filterRegex)
-            }
-            if (!sampleValues[i].match(filterRegex)) {
-                continue
-            }
-            console.log('match found: ' + sampleValues[i])
-        }
-
-        const sampleFileName = sampleValues[i].replace('/', '|') // TODO maybe take filenames from script arguments
+        const sampleFileName = encodeURIComponent(sampleValues[i]) // escape slashes, '&' and so on
         const sampleParameter = `&openUrl=${sampleFileName}&endUrl`
-        const pageUrl = `http://localhost:${osmdPort}/?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}` +
-            sampleParameter
+        const pageUrl = `http://localhost:${osmdPort}?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}`
         console.log('puppeteer: page.goto url: ' + pageUrl)
         try {
             await page.goto(pageUrl, { waitUntil: 'networkidle2' })
