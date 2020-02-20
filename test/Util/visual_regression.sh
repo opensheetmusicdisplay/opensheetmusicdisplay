@@ -43,17 +43,18 @@
 # a good first pass.
 THRESHOLD=0.01
 
-# Directories. You might want to change BASE, if you're running from a
-# different working directory. (only necessary if you're running the script manually, i.e. not from npm run test:visual)
-if [ "$1" == "" ]
+# Set up Directories
+#   It does not matter where this script is executed, as long as these folders are given correctly (and blessed/current have png images set up correctly)
+BUILDFOLDER=./visual_regression
+if [ "$1" != "" ]
 then
-  BASEFOLDER="./visual_regression"
-else
-  BASEFOLDER=$1
+  BUILDFOLDER=$1
 fi
-BLESSED=$BASEFOLDER/blessed
-CURRENT=$BASEFOLDER/current
-DIFF=$BASEFOLDER/diff
+BLESSED=$BUILDFOLDER/blessed
+CURRENT=$BUILDFOLDER/current
+DIFF=$BUILDFOLDER/diff
+# diff also acts as the temp folder here, unlike in Vexflow, where it is current.
+# it would be nice to have a tmp folder (for temporary files), but we'd want to delete the folder entirely, and we'd better not risk using rm -rf in a script
 
 # All results are stored here.
 RESULTS=$DIFF/results.txt
@@ -69,8 +70,7 @@ else
 fi
 
 # some sanity checks: check if some png images are in the right folder and warn if not. doesn't make sure there are actual, correct png images though.
-folderWarningStringMsg="Also, please run this npm script from the base OSMD folder. (npm run test:visual should do this automatically)
-    Exiting without running visual regression tests.\n"
+folderWarningStringMsg="Exiting without running visual regression tests.\n"
 # check if current directory exists / started from base OSMD folder
 if [ ! -e "$CURRENT" ]
 then
@@ -116,8 +116,8 @@ then
   rm $DIFF/*
 fi
 touch $RESULTS
-touch $RESULTS.pass
-touch $RESULTS.fail
+touch $RESULTS.fails
+#   this shouldn't be named .fail because we have a *.fail shell match further below, which will loop endlessly if files are in the same folder (diff).
 touch $WARNINGS
 
 # Number of simultaneous jobs
@@ -145,7 +145,7 @@ function diff_image() {
   local name=`basename $image .png`
   local blessed=$BLESSED/$name.png
   local current=$CURRENT/$name.png
-  local diff=$current-temp
+  local diff=$DIFF/$name.png-temp
 
   if [ ! -e "$current" ]
   then
@@ -167,7 +167,7 @@ function diff_image() {
   local isGT=`echo "$hash > $THRESHOLD" | bc -l`
   if [ "$isGT" == "1" ]
   then
-    # Add the result to results.text
+    # Add the result to results.txt
     echo $name $hash >$diff.fail
     # Threshold exceeded, save the diff and the original, current
     cp $diff-diff.png $DIFF/$name.png
@@ -207,8 +207,8 @@ do
 done
 wait
 
-cat $CURRENT/*.warn 1>$WARNINGS 2>/dev/null
-rm -f $CURRENT/*.warn
+cat $DIFF/*.warn 1>$WARNINGS 2>/dev/null
+rm -f $DIFF/*.warn
 
 ## Check for files newly built that are not yet blessed.
 for image in $CURRENT/$files
@@ -225,14 +225,14 @@ done
 
 num_warnings=`cat $WARNINGS | wc -l`
 
-cat $CURRENT/*.fail 1>$RESULTS.fail 2>/dev/null
-num_fails=`cat $RESULTS.fail | wc -l`
-rm -f  $CURRENT/*.fail
+cat $DIFF/*.fail 1>$RESULTS.fails 2>/dev/null
+num_fails=`cat $RESULTS.fails | wc -l`
+rm -f  $DIFF/*.fail
 
 # Sort results by PHASH
-sort -r -n -k 2 $RESULTS.fail >$RESULTS
-sort -r -n -k 2 $CURRENT/*.pass 1>>$RESULTS 2>/dev/null
-rm -f $CURRENT/*.pass $RESULTS.fail $RESULTS.pass
+sort -r -n -k 2 $RESULTS.fails >$RESULTS
+sort -r -n -k 2 $DIFF/*.pass 1>>$RESULTS 2>/dev/null
+rm -f $DIFF/*.pass $RESULTS.fails
 
 echo
 echo Results stored in $DIFF/results.txt
