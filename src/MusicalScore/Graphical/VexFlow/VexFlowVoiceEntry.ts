@@ -85,7 +85,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     ", in measure #" + measureNumber);
             }*/
 
-            if (!sourceNoteNoteheadColor && EngravingRules.Rules.ColoringMode === ColoringModes.XML) {
+            if (!sourceNoteNoteheadColor && EngravingRules.Rules.ColoringMode === ColoringModes.XML && note.sourceNote.PrintObject) {
                 if (!note.sourceNote.isRest() && defaultColorNotehead) {
                     noteheadColor = defaultColorNotehead;
                 } else if (note.sourceNote.isRest() && defaultColorRest) {
