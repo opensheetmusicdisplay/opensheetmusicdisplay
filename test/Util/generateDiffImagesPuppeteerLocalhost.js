@@ -94,6 +94,9 @@ async function init () {
     const browser = await puppeteer.launch({ headless: true })
     const page = await browser.newPage() // TODO set width/height
 
+    const defaultTimeoutInMs = 30000
+    page.setDefaultNavigationTimeout(defaultTimeoutInMs) // default setting for page navigationtimeout is 30000ms.
+
     // fix navigation error
     var responseEventOccurred = false
     var responseHandler = function (event) { responseEventOccurred = true }
@@ -103,10 +106,10 @@ async function init () {
             if (!responseEventOccurred) {
                 resolve(true)
             } else {
-                setTimeout(function () { resolve(true) }, 30000)
+                setTimeout(function () { resolve(true) }, defaultTimeoutInMs)
             }
             page.removeListener('response', responseHandler)
-        }, 500)
+        }, 1000)
     })
 
     page.on('response', responseHandler)

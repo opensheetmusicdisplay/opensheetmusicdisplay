@@ -231,14 +231,20 @@ export class OpenSheetMusicDisplay {
     }
 
     private createOrRefreshRenderBackend(): void {
-        //console.log("render: need update");
+        // console.log("[OSMD] createOrRefreshRenderBackend()");
+
         // Remove old backends
         if (this.drawer && this.drawer.Backends) {
-            for (const backend of this.drawer.Backends) {
-                backend.removeFromContainer(this.container);
+            // removing single children to remove all is error-prone, because sometimes a random SVG-child remains.
+            // for (const backend of this.drawer.Backends) {
+            //     backend.removeFromContainer(this.container);
+            // }
+            if (this.drawer.Backends[0]) {
+                this.drawer.Backends[0].removeAllChildrenFromContainer(this.container);
             }
             this.drawer.Backends.clear();
         }
+
         // Create the drawer
         this.drawer = new VexFlowMusicSheetDrawer(this.drawingParameters); // note that here the drawer.drawableBoundingBoxElement is lost. now saved in OSMD.
         this.drawer.drawableBoundingBoxElement = this.DrawBoundingBox;
