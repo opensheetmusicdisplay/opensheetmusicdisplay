@@ -66,25 +66,25 @@ then
   files=*.png
 else
   files=$2*.png
-  printf "only processing images matching bash string (not regex): ${files}\n"
+  echo "only processing images matching bash string (not regex): $files"
 fi
 
 # some sanity checks: check if some png files are in the right folder and warn if not. doesn't make sure there are actual, correct png images though.
-folderWarningStringMsg="Exiting without running visual regression tests.\n"
+folderWarningStringMsg="Exiting without running visual regression tests."
 # check if current directory exists / started from base OSMD folder
 if [ ! -e "$CURRENT" ]
 then
-  printf "Warning: directory ${CURRENT} missing.
+  echo "Warning: directory $CURRENT missing.
     Please run npm run generate:current (and if necessary npm run generate:blessed) first.
-    ${folderWarningStringMsg}"
+    $folderWarningStringMsg"
   exit 1
 fi
 # check if blessed directory exists / started from base OSMD folder
 if [ ! -e "$BLESSED" ]
 then
-  printf "Warning: directory ${BLESSED} missing.
+  echo "Warning: directory $BLESSED missing.
     Please run npm run generate:blessed first (or otherwise get the blessed images).
-    ${folderWarningStringMsg}"
+    $folderWarningStringMsg"
   exit 1
 fi
 # note: ls returns errors if the directory doesn't exist (that's why we do the checks above)
@@ -93,25 +93,25 @@ totalBlessedImages=`ls -l $BLESSED/*.png | wc -l | sed 's/[[:space:]]//g'`
 # check if there are some current images
 if [ "$totalCurrentImages" -lt 1 ]
 then
-  printf "Warning: Found no pngs in ${CURRENT}.
+  echo "Warning: Found no pngs in $CURRENT.
     Please run npm run generate (and if necessary npm run blessed) first.
-    ${folderWarningStringMsg}"
+    $folderWarningStringMsg"
   exit 1
 fi
 # check if there are some blessed images
 if [ "$totalBlessedImages" -lt 1 ]
 then
-  printf "Warning: Found no pngs in ${BLESSED}.
+  echo "Warning: Found no pngs in $BLESSED.
     Please run npm run blessed first, ideally on the repository's develop state.
-    ${folderWarningStringMsg}"
+    $folderWarningStringMsg"
   exit 1
 fi
 # check that #currentImages == #blessedImages (will continue anyways)
 if [ ! "$totalCurrentImages" -eq "$totalBlessedImages" ]
 then
-  printf "Warning: Number of current images (${totalCurrentImages}) is not the same as blessed images (${totalBlessedImages}). Continuing anyways.\n"
+  echo "Warning: Number of current images ($totalCurrentImages) is not the same as blessed images ($totalBlessedImages). Continuing anyways."
 else
-  printf "Found ${totalCurrentImages} current and ${totalBlessedImages} blessed png files (not tested if valid). Continuing.\n"
+  echo "Found $totalCurrentImages current and $totalBlessedImages blessed png files (not tested if valid). Continuing."
 fi
 
 mkdir -p $DIFF
