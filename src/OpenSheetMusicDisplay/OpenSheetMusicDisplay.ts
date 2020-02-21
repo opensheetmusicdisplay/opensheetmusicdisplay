@@ -252,17 +252,33 @@ export class OpenSheetMusicDisplay {
         this.drawer.skyLineVisible = this.drawSkyLine;
 
         // Set page width
-        const width: number = this.container.offsetWidth;
-        // TODO may need to be coordinated with render() where width is also used
+        let width: number = this.container.offsetWidth;
+        // TODO width may need to be coordinated with render() where width is also used
+        let height: number;
+        const canvasDimensionsLimit: number = 32767; // browser limitation. Chrome/Firefox (16 bit, 32768 causes an error).
+        // Could be calculated by canvas-size module.
+        // see #678 on Github and here: https://stackoverflow.com/a/11585939/10295942
 
         // TODO check if resize is necessary. set needResize or something when size was changed
         for (const page of this.graphic.MusicPages) {
             const backend: VexFlowBackend = this.createBackend(this.backendType);
-            if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
-                backend.resize(width, width / EngravingRules.Rules.PageFormat.aspectRatio);
-            } else {
-                backend.resize(width, (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0);
+            const sizeWarningPartTwo: string = " exceeds CanvasBackend limit of 32767. Cutting off score.";
+            if (backend.getOSMDBackendType() === BackendType.Canvas && width > canvasDimensionsLimit) {
+                console.log("[OSMD] Warning: width of " + width + sizeWarningPartTwo);
+                width = canvasDimensionsLimit;
             }
+            if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
+                height = width / EngravingRules.Rules.PageFormat.aspectRatio;
+            } else {
+                height = (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0;
+            }
+            if (backend.getOSMDBackendType() === BackendType.Canvas && height > canvasDimensionsLimit) {
+                console.log("[OSMD] Warning: height of " + height + sizeWarningPartTwo);
+                height = Math.min(height, canvasDimensionsLimit); // this cuts off the the score, but doesn't break rendering.
+                // TODO optional: reduce zoom to fit the score within the limit.
+            }
+
+            backend.resize(width, height);
             backend.clear(); // set bgcolor if defined (EngravingRules.Rules.PageBackgroundColor, see OSMDOptions)
             this.drawer.Backends.push(backend);
         }
