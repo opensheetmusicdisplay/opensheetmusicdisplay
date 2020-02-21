@@ -21,20 +21,22 @@
 #
 #    npm run generate:current
 #
-#  Run the regression tests against the blessed images in tests/blessed.
+#  Run the regression tests against the blessed images in visual_regression/blessed.
 #
 #    npm run test:visual
 #    # npm will navigate to the base folder automatically
 #
 #    # or: (this should be done from the main OSMD folder)
-#    # sh test/Util/visual_regression.sh
+#    # sh test/Util/visual_regression.sh [imageBaseFolder] [sampleShellPrefix]
+#    #    example: sh test/Util/visual_regression.sh ./visual_regression OSMD_function_test_
+#    #        will run visual regression tests for all images matching OSMD_function_test_*.png.
 #
 #  Check visual_regression/diff/results.txt for results. This file is sorted
 #  by PHASH difference (most different files on top.) The composite diff
 #  images for failed tests (i.e., PHASH > 1.0) are stored in visual_regression/diff.
 #
-#  If you are satisfied with the differences, copy *.png from visual_regression/current
-#  into visual_regression/blessed, and submit your change.
+#  (If you are satisfied with the differences, copy *.png from visual_regression/current
+#  into visual_regression/blessed, and submit your change (TODO))
 
 # PNG viewer on OSX. Switch this to whatever your system uses.
 # VIEWER=open
@@ -66,53 +68,35 @@ then
   files=*.png
 else
   files=$2*.png
-  echo "only processing images matching bash string (not regex): $files"
+  echo "image filter (shell): $files"
 fi
 
-# some sanity checks: check if some png files are in the right folder and warn if not. doesn't make sure there are actual, correct png images though.
+## Sanity checks: some simple checks that the script can run correctly (doesn't validate pngs)
 folderWarningStringMsg="Exiting without running visual regression tests."
-# check if current directory exists / started from base OSMD folder
-if [ ! -e "$CURRENT" ]
+totalCurrentImages=`ls -1 $CURRENT/$files | wc -l | xargs` # xargs trims space
+if [ $? -ne 0 ] || [ "$totalCurrentImages" -lt 1 ] # $? returns the exit code of the previous command (ls). (0 is success)
 then
-  echo "Warning: directory $CURRENT missing.
-    Please run npm run generate:current (and if necessary npm run generate:blessed) first.
-    $folderWarningStringMsg"
+  echo Missing images in $CURRENT.
+  echo Please run \"npm run generate:current\"
   exit 1
 fi
-# check if blessed directory exists / started from base OSMD folder
-if [ ! -e "$BLESSED" ]
+
+totalBlessedImages=`ls -1 $BLESSED/$files | wc -l | xargs`
+if [ $? -ne 0 ] || [ "$totalBlessedImages" -lt 1 ]
 then
-  echo "Warning: directory $BLESSED missing.
-    Please run npm run generate:blessed first (or otherwise get the blessed images).
-    $folderWarningStringMsg"
+  echo Missing images in $BLESSED.
+  echo Please run \"npm run generate:blessed\"
   exit 1
 fi
-# note: ls returns errors if the directory doesn't exist (that's why we do the checks above)
-totalCurrentImages=`ls -l $CURRENT/*.png | wc -l | sed 's/[[:space:]]//g'`
-totalBlessedImages=`ls -l $BLESSED/*.png | wc -l | sed 's/[[:space:]]//g'`
-# check if there are some current images
-if [ "$totalCurrentImages" -lt 1 ]
-then
-  echo "Warning: Found no pngs in $CURRENT.
-    Please run npm run generate (and if necessary npm run blessed) first.
-    $folderWarningStringMsg"
-  exit 1
-fi
-# check if there are some blessed images
-if [ "$totalBlessedImages" -lt 1 ]
-then
-  echo "Warning: Found no pngs in $BLESSED.
-    Please run npm run blessed first, ideally on the repository's develop state.
-    $folderWarningStringMsg"
-  exit 1
-fi
+
 # check that #currentImages == #blessedImages (will continue anyways)
 if [ ! "$totalCurrentImages" -eq "$totalBlessedImages" ]
 then
-  echo "Warning: Number of current images ($totalCurrentImages) is not the same as blessed images ($totalBlessedImages). Continuing anyways."
+  echo "Warning: Number of current images ($totalCurrentImages) is not the same as blessed images ($totalBlessedImages). Continuing anyways.\n"
 else
-  echo "Found $totalCurrentImages current and $totalBlessedImages blessed png files (not tested if valid). Continuing."
+  echo "Found $totalCurrentImages current and $totalBlessedImages blessed png files (not tested if valid). Continuing.\n"
 fi
+# ----------------- end of sanity checks -----------------
 
 mkdir -p $DIFF
 if [ -e "$RESULTS" ]
