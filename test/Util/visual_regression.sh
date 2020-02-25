@@ -137,12 +137,15 @@ function diff_image() {
 
   if [ ! -e "$current" ]
   then
-    echo "Warning: $name.png missing in $CURRENT." >$diff.warn
+    echo " Warning: $name.png missing in $CURRENT. Skipped." >$diff.warn
+    #((total--))
     return
   fi
 
   if [ ! -e "$blessed" ]
   then
+    echo " Warning: $name.png doesn't exist in $BLESSED. Skipped." >$diff.warn
+    #((total--))
     return
   fi
 
@@ -204,11 +207,6 @@ do
   name=`basename $image .png`
   blessed=$BLESSED/$name.png
   current=$CURRENT/$name.png
-
-  if [ ! -e "$blessed" ]
-  then
-    echo "  Warning: $name.png missing in $BLESSED." >>$WARNINGS
-  fi
 done
 
 num_warnings=`cat $WARNINGS | wc -l`

@@ -8,85 +8,71 @@
   `tools/visual_regression.sh`. (TODO)
 */
 
-// function sleep(ms) {
-//     return new Promise((resolve) => {
-//       setTimeout(resolve, ms);
-//     });
-// }
+function sleep (ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms)
+    })
+}
 
 const osmdPort = 8000 // OSMD webpack server port. OSMD has to be running (npm start) when this script runs.
 
+// try this to debug: node --inspect=9229 test/Util/generateDiffImagesPuppeteerLocalhost.js test/data/ export/  5000
+
 // main function
 async function init () {
-    console.log('init')
+    console.log('[OSMD.generate] init')
+
+    const [sampleDir, imageDir, filterRegex, debugFlag, debugSleepTimeString] = process.argv.slice(2, 7)
+    const DEBUG = debugFlag === '--debug'
+    // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
+    if (DEBUG) {
+        console.log('debug sleep time: ' + debugSleepTimeString)
+        const debugSleepTimeMs = Number.parseInt(debugSleepTimeString)
+        if (debugSleepTimeMs > 0) {
+            await sleep(Number.parseInt(debugSleepTimeMs))
+            // [VSCode] apparently this is necessary for the debugger to attach itself in time before the program closes.
+            // sometimes this is not enough, so you may have to try multiple times or increase the sleep timer. Unfortunately debugging nodejs isn't easy.
+        }
+    }
 
     const fs = require('fs')
-    const [sampleDir, imageDir, filterRegex] = process.argv.slice(2, 5)
     console.log('sampleDir: ' + sampleDir)
     console.log('imageDir: ' + imageDir)
     if (!sampleDir || !imageDir) {
-        console.log('usage: node test/Util/generateDiffImagesPuppeteerLocalhost sampleDirectory imageDirectory [filterRegex]')
+        console.log('usage: node test/Util/generateDiffImagesPuppeteerLocalhost sampleDirectory imageDirectory [filterRegex|all] [--debug] [debugSleepTime]')
+        console.log('  (use "all" to skip filterRegex parameter)')
         console.log('Error: need sampleDir and imageDir. Exiting.')
-        process.exit(-1)
+        process.exit(1)
+    }
+
+    const sampleDirFilenames = fs.readdirSync(sampleDir)
+    let samplesToProcess = [] // samples we want to process/generate pngs of, excluding the filtered out files/filenames
+    for (const sampleFilename of sampleDirFilenames) {
+        if (DEBUG) {
+            if (sampleFilename.match('^(Actor)|(Gounod)')) {
+                console.log('DEBUG: filtering big file: ' + sampleFilename)
+                continue
+            }
+        }
+        // eslint-disable-next-line no-useless-escape
+        if (sampleFilename.match('^.*(\.xml)|(\.musicxml)|(\.mxl)$')) {
+            console.log('found musicxml/mxl: ' + sampleFilename)
+            samplesToProcess.push(sampleFilename)
+        } else {
+            console.log('discarded file/directory: ' + sampleFilename)
+        }
     }
 
     // Create the image directory if it doesn't exist.
     fs.mkdirSync(imageDir, { recursive: true })
 
-    // TODO fetch samples from sampleDir (iterate over all files in folder)
-    const samples = {
-        'Beethoven, L.v. - An die ferne Geliebte': 'Beethoven_AnDieFerneGeliebte.xml',
-        // ' Beethoven Evil filename test': 'Beethoven&Evil/Filename.xml', // TODO may need decodeURIComponent in OSMD openURL parsing
-        'Clementi, M. - Sonatina Op.36 No.1 Pt.1': 'MuzioClementi_SonatinaOpus36No1_Part1.xml',
-        'Clementi, M. - Sonatina Op.36 No.1 Pt.2': 'MuzioClementi_SonatinaOpus36No1_Part2.xml',
-        'Clementi, M. - Sonatina Op.36 No.3 Pt.1': 'MuzioClementi_SonatinaOpus36No3_Part1.xml',
-        'Clementi, M. - Sonatina Op.36 No.3 Pt.2': 'MuzioClementi_SonatinaOpus36No3_Part2.xml',
-        'Bach, J.S. - Praeludium in C-Dur BWV846 1': 'JohannSebastianBach_PraeludiumInCDur_BWV846_1.xml',
-        'Bach, J.S. - Air': 'JohannSebastianBach_Air.xml',
-        // 'Gounod, C. - Méditation': 'CharlesGounod_Meditation.xml', // TODO this Gounod sample fails to generate a proper PNG image for some reason
-        'Haydn, J. - Concertante Cello': 'JosephHaydn_ConcertanteCello.xml',
-        'Joplin, S. - Elite Syncopations': 'ScottJoplin_EliteSyncopations.xml',
-        'Joplin, S. - The Entertainer': 'ScottJoplin_The_Entertainer.xml',
-        'Mozart, W.A. - An Chloe': 'Mozart_AnChloe.xml',
-        'Mozart, W.A. - Das Veilchen': 'Mozart_DasVeilchen.xml',
-        'Mozart, W.A. - Clarinet Quintet (Excerpt)': 'Mozart_Clarinet_Quintet_Excerpt.mxl',
-        'Mozart, W.A. - String Quartet in G, K. 387, 1st Mvmt Excerpt': 'Mozart_String_Quartet_in_G_K._387_1st_Mvmnt_excerpt.musicxml',
-        'Mozart/Holzer - Land der Berge (national anthem of Austria)': 'Land_der_Berge.musicxml',
-        'OSMD Function Test - All': 'OSMD_function_test_all.xml',
-        'OSMD Function Test - Accidentals': 'OSMD_function_test_accidentals.musicxml',
-        'OSMD Function Test - Autobeam': 'OSMD_function_test_autobeam.musicxml',
-        'OSMD Function Test - Auto-/Custom-Coloring': 'OSMD_function_test_auto-custom-coloring-entchen.musicxml',
-        'OSMD Function Test - Bar lines': 'OSMD_function_test_bar_lines.musicxml',
-        'OSMD Function Test - Color (from XML)': 'OSMD_function_test_color.musicxml',
-        'OSMD Function Test - Drumset': 'OSMD_function_test_drumset.musicxml',
-        'OSMD Function Test - Expressions': 'OSMD_function_test_expressions.musicxml',
-        'OSMD Function Test - Expressions Overlap': 'OSMD_function_test_expressions_overlap.musicxml',
-        'OSMD Function Test - Grace Notes': 'OSMD_function_test_GraceNotes.xml',
-        'OSMD Function Test - Invisible Notes': 'OSMD_function_test_invisible_notes.musicxml',
-        'OSMD Function Test - Selecting Measures To Draw': 'OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml',
-        'OSMD Function Test - Notehead Shapes': 'OSMD_function_test_noteheadShapes.musicxml',
-        'OSMD Function Test - Ornaments': 'OSMD_function_test_Ornaments.xml',
-        'OSMD Function Test - Tremolo': 'OSMD_Function_Test_Tremolo_2bars.musicxml',
-        'Schubert, F. - An Die Musik': 'Schubert_An_die_Musik.xml',
-        'Anonymous - Saltarello': 'Saltarello.mxl',
-        'Debussy, C. - Mandoline': 'Debussy_Mandoline.xml',
-        'Levasseur, F. - Parlez Mois': 'Parlez-moi.mxl',
-        'Schumann, R. - Dichterliebe': 'Dichterliebe01.xml',
-        'Telemann, G.P. - Sonate-Nr.1.1-Dolce': 'TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml',
-        'Telemann, G.P. - Sonate-Nr.1.2-Allegro': 'TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml'
-        // 'Hello World': 'HelloWorld.xml',
-        // 'Clementi, M. - Sonatina Op.36 No.1 Pt.2': 'MuzioClementi_SonatinaOpus36No1_Part2.xml',
-    }
-    // const sampleKeys = Object.keys(samples)
-    let sampleValues = Object.values(samples)
-
     // filter regex if given
-    if (filterRegex && filterRegex !== '') {
+    if (filterRegex && filterRegex !== '' && filterRegex !== 'all') {
         console.log('filtering samples for regex: ' + filterRegex)
-        sampleValues = sampleValues.filter((filename) => filename.match(filterRegex))
-        console.log(`found ${sampleValues.length} matches: `)
-        for (let i = 0; i < sampleValues.length; i++) {
-            console.log(sampleValues[i])
+        samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex))
+        console.log(`found ${samplesToProcess.length} matches: `)
+        for (let i = 0; i < samplesToProcess.length; i++) {
+            console.log(samplesToProcess[i])
         }
     }
 
@@ -127,8 +113,8 @@ async function init () {
     }
 
     // generate png for all given samples
-    for (let i = 0; i < sampleValues.length; i++) {
-        const sampleFileName = encodeURIComponent(sampleValues[i]) // escape slashes, '&' and so on
+    for (let i = 0; i < samplesToProcess.length; i++) {
+        const sampleFileName = encodeURIComponent(samplesToProcess[i]) // escape slashes, '&' and so on
         const sampleParameter = `&openUrl=${sampleFileName}&endUrl`
         const pageUrl = `http://localhost:${osmdPort}?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}`
         console.log('puppeteer: page.goto url: ' + pageUrl)
@@ -158,7 +144,7 @@ async function init () {
     // const html = await page.content();
     // console.log('page content: ' + html);
     browser.close()
-    console.log('puppeteer browser closed. exiting.')
+    console.log('\n[OSMD.generate] Done. Puppeteer browser closed. Exiting.')
 }
 
 // function start() {

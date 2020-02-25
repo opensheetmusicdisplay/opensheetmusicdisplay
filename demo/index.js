@@ -625,6 +625,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (!errString) {
             error_tr.style.display = "none";
         } else {
+            console.log("[OSMD demo] error: " + errString)
             err.textContent = errString;
             error_tr.style.display = "";
             canvas.width = canvas.height = 0;
