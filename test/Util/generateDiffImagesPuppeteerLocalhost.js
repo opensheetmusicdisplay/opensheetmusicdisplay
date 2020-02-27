@@ -22,7 +22,25 @@ const osmdPort = 8000 // OSMD webpack server port. OSMD has to be running (npm s
 async function init () {
     console.log('[OSMD.generate] init')
 
-    const [sampleDir, imageDir, filterRegex, debugFlag, debugSleepTimeString] = process.argv.slice(2, 7)
+    let [sampleDir, imageDir, pageWidth, pageHeight, filterRegex, debugFlag, debugSleepTimeString] = process.argv.slice(2, 9)
+    if (!sampleDir || !imageDir) {
+        console.log('usage: node test/Util/generateDiffImagesPuppeteerLocalhost.js sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all] [--debug] [debugSleepTime]')
+        console.log('  (use "all" to skip filterRegex parameter)')
+        console.log('example: node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./export 210 297 all --debug 5000')
+        console.log('Error: need sampleDir and imageDir. Exiting.')
+        process.exit(1)
+    }
+    console.log('sampleDir: ' + sampleDir)
+    console.log('imageDir: ' + imageDir)
+
+    let pageFormatParameter = ''
+    pageHeight = Number.parseInt(pageHeight)
+    pageWidth = Number.parseInt(pageWidth)
+    const endlessPage = !(pageHeight > 0 && pageWidth > 0)
+    if (!endlessPage) {
+        pageFormatParameter = `&pageWidth=${pageWidth}&pageHeight=${pageHeight}`
+    }
+
     const DEBUG = debugFlag === '--debug'
     // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
     if (DEBUG) {
@@ -36,15 +54,6 @@ async function init () {
     }
 
     const fs = require('fs')
-    console.log('sampleDir: ' + sampleDir)
-    console.log('imageDir: ' + imageDir)
-    if (!sampleDir || !imageDir) {
-        console.log('usage: node test/Util/generateDiffImagesPuppeteerLocalhost sampleDirectory imageDirectory [filterRegex|all] [--debug] [debugSleepTime]')
-        console.log('  (use "all" to skip filterRegex parameter)')
-        console.log('Error: need sampleDir and imageDir. Exiting.')
-        process.exit(1)
-    }
-
     const sampleDirFilenames = fs.readdirSync(sampleDir)
     let samplesToProcess = [] // samples we want to process/generate pngs of, excluding the filtered out files/filenames
     for (const sampleFilename of sampleDirFilenames) {
@@ -99,24 +108,49 @@ async function init () {
     })
 
     page.on('response', responseHandler)
+    if (DEBUG) {
+        // pipe console output on the page to the console node is running from, otherwise these logs from the headless browser aren't visible
+        page.on('console', msg => console.log(msg.text()))
+    }
+    page.on('error', err => console.log(err))
+    page.on('pageerror', err => console.log(err)) // this one triggers for js errors in index.js, for example
 
     // get image data
-    const getDataUrl = async (page) => {
+    const getDataUrl = async (page, sampleFilename) => {
         return page.evaluate(async () => {
             return new Promise(resolve => {
-                const canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas')
-                var imageData = canvasImage.toDataURL()
+                const imageDataArray = []
+                let canvasImage
+
+                for (let pageNumber = 1; pageNumber < 999; pageNumber++) {
+                    canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
+                    if (!canvasImage) {
+                        break
+                    }
+                    if (!canvasImage.toDataURL) {
+                        console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
+                        break
+                    }
+                    imageDataArray.push(canvasImage.toDataURL())
+                }
+                // while (canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)) {
+                //     imageData = canvasImage.toDataURL()
+                //     console.log("got em. " + pageNumber)
+                // }
                 // TODO fetch multiple pages from multiple OSMD backends
-                resolve(imageData)
+                resolve(imageDataArray)
             })
         })
     }
 
     // generate png for all given samples
     for (let i = 0; i < samplesToProcess.length; i++) {
-        const sampleFileName = encodeURIComponent(samplesToProcess[i]) // escape slashes, '&' and so on
-        const sampleParameter = `&openUrl=${sampleFileName}&endUrl`
-        const pageUrl = `http://localhost:${osmdPort}?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF${sampleParameter}`
+        const sampleFilename = encodeURIComponent(samplesToProcess[i]) // escape slashes, '&' and so on
+        const sampleParameter = `&openUrl=${sampleFilename}&endUrl`
+        const pageUrl = `http://localhost:${osmdPort}?showHeader=0&debugControls=0&backendType=canvas&pageBackgroundColor=FFFFFF` +
+            sampleParameter +
+            pageFormatParameter
+
         console.log('puppeteer: page.goto url: ' + pageUrl)
         try {
             await page.goto(pageUrl, { waitUntil: 'networkidle2' })
@@ -131,14 +165,28 @@ async function init () {
         var navigationWatcher = page.waitForNavigation()
         await Promise.race([responseWatcher, navigationWatcher])
         console.log('navigation race done')
-        const dataUrl = await getDataUrl(page)
-        // console.log('dataUrl: ' + dataUrl);
-        const imageData = dataUrl.split(';base64,').pop()
-        const imageBuffer = Buffer.from(imageData, 'base64')
+        const dataUrls = await getDataUrl(page, sampleFilename)
+        if (dataUrls.length === 0) {
+            console.log(`error: could not get imageData for sample: ${sampleFilename}`)
+            console.log('   (dataUrls was empty list)')
+            continue
+        }
+        for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
+            const pageNumberingString = `_${urlIndex + 1}`
+            // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
+            var filename = `${imageDir}/${sampleFilename}${pageNumberingString}.png`
 
-        var fileName = `${imageDir}/${sampleFileName}.png`
-        console.log('got image data, saving to: ' + fileName)
-        fs.writeFileSync(fileName, imageBuffer, { encoding: 'base64' })
+            const dataUrl = dataUrls[urlIndex]
+            if (!dataUrl || !dataUrl.split) {
+                console.log(`error: could not get dataUrl (imageData) for page ${urlIndex + 1} of sample: ${sampleFilename}`)
+                continue
+            }
+            const imageData = dataUrl.split(';base64,').pop()
+            const imageBuffer = Buffer.from(imageData, 'base64')
+
+            console.log('got image data, saving to: ' + filename)
+            fs.writeFileSync(filename, imageBuffer, { encoding: 'base64' })
+        }
     }
 
     // const html = await page.content();
@@ -146,6 +194,8 @@ async function init () {
     browser.close()
     console.log('\n[OSMD.generate] Done. Puppeteer browser closed. Exiting.')
 }
+
+init()
 
 // function start() {
 //     // await (async () => {
@@ -163,5 +213,3 @@ async function init () {
 //     $('#' + elementId).attr('width', width)
 //     $('#' + elementId).attr('height', height)
 // }
-
-init()

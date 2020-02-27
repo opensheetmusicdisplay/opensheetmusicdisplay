@@ -117,6 +117,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         var paramPageFormat = findGetParameter('pageFormat');
         var paramPageBackgroundColor = findGetParameter('pageBackgroundColor');
         var paramBackendType = findGetParameter('backendType');
+        var paramPageWidth = findGetParameter('pageWidth');
+        var paramPageHeight = findGetParameter('pageHeight');
 
         showHeader = (paramShowHeader !== '0');
         if (paramEmbedded !== undefined) {
@@ -143,7 +145,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             console.log("[OSMD] warning: measure range end parameter should not be smaller than measure range start. We've set start measure = end measure now.")
             measureRangeStart = measureRangeEnd;
         }
-        var pageFormat = paramPageFormat ? paramPageFormat : "Endless";
+        let pageFormat = paramPageFormat ? paramPageFormat : "Endless";
+        if (paramPageHeight && paramPageWidth) {
+            pageFormat = `${paramPageWidth}x${paramPageHeight}`
+        }
         var pageBackgroundColor = paramPageBackgroundColor ? "#" + paramPageBackgroundColor : undefined; // vexflow format, see OSMDOptions. can't use # in parameters.
         //console.log("demo: osmd pagebgcolor: " + pageBackgroundColor);
         var backendType = (paramBackendType && paramBackendType.toLowerCase) ? paramBackendType : "svg";
@@ -413,6 +418,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange with " + paramOpenUrl);
             }
+            // DEBUG: cause an error for a certain sample, for testing
+            // if (paramOpenUrl.startsWith("Beethoven")) {
+            //     paramOpenUrl.causeError();
+            // }
             selectSampleOnChange(paramOpenUrl);
         } else {
             if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace

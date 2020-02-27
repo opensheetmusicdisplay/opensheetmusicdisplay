@@ -19,7 +19,7 @@ import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingR
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "..";
-import { AutoColorSet } from "../MusicalScore";
+import { AutoColorSet, GraphicalMusicPage } from "../MusicalScore";
 import jspdf = require("jspdf-yworks/dist/jspdf.min");
 import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
 
@@ -88,9 +88,9 @@ export class OpenSheetMusicDisplay {
         this.reset();
         //console.log("typeof content: " + typeof content);
         if (typeof content === "string") {
-
             const str: string = <string>content;
             const self: OpenSheetMusicDisplay = this;
+            // console.log("substring: " + str.substr(0, 5));
             if (str.substr(0, 4) === "\x50\x4b\x03\x04") {
                 log.debug("[OSMD] This is a zip file, unpack it first: " + str);
                 // This is a zip file, unpack it first
@@ -110,7 +110,7 @@ export class OpenSheetMusicDisplay {
                 // UTF with BOM detected, truncate first three bytes and pass along
                 return self.load(str.substr(3));
             }
-            if (str.substr(0, 5) === "<?xml") {
+            if (str.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
                 log.debug("[OSMD] Finally parsing XML content, length: " + str.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
@@ -261,7 +261,7 @@ export class OpenSheetMusicDisplay {
 
         // TODO check if resize is necessary. set needResize or something when size was changed
         for (const page of this.graphic.MusicPages) {
-            const backend: VexFlowBackend = this.createBackend(this.backendType);
+            const backend: VexFlowBackend = this.createBackend(this.backendType, page);
             const sizeWarningPartTwo: string = " exceeds CanvasBackend limit of 32767. Cutting off score.";
             if (backend.getOSMDBackendType() === BackendType.Canvas && width > canvasDimensionsLimit) {
                 console.log("[OSMD] Warning: width of " + width + sizeWarningPartTwo);
@@ -642,13 +642,14 @@ export class OpenSheetMusicDisplay {
         }
     }
 
-    public createBackend(type: BackendType): VexFlowBackend {
+    public createBackend(type: BackendType, page: GraphicalMusicPage): VexFlowBackend {
         let backend: VexFlowBackend;
         if (type === undefined || type === BackendType.SVG) {
             backend = new SvgVexFlowBackend();
         } else {
             backend = new CanvasVexFlowBackend();
         }
+        backend.graphicalMusicPage = page; // the page the backend renders on. needed to identify DOM element to extract image/SVG
         backend.initialize(this.container);
         return backend;
     }
@@ -668,16 +669,29 @@ export class OpenSheetMusicDisplay {
         "Letter_P": new PageFormat(215.9, 279.4, "Letter_P")
     };
 
-    public static StringToPageFormat(formatId: string): PageFormat {
-        formatId = formatId.replace(" ", "_");
-        formatId = formatId.replace("Landscape", "L");
-        formatId = formatId.replace("Portrait", "P");
-        //console.log("change format to: " + formatId);
-        let f: PageFormat = PageFormat.UndefinedPageFormat; // default: 'endless' page height, take canvas/container width
-        if (OpenSheetMusicDisplay.PageFormatStandards.hasOwnProperty(formatId)) {
-            f = OpenSheetMusicDisplay.PageFormatStandards[formatId];
+    public static StringToPageFormat(pageFormatString: string): PageFormat {
+        let pageFormat: PageFormat = PageFormat.UndefinedPageFormat; // default: 'endless' page height, take canvas/container width
+
+        // check for widthxheight parameter, e.g. "800x600"
+        if (pageFormatString.match("^[0-9]+x[0-9]+$")) {
+            const widthAndHeight: string[] = pageFormatString.split("x");
+            const width: number = Number.parseInt(widthAndHeight[0], 10);
+            const height: number = Number.parseInt(widthAndHeight[1], 10);
+            if (width > 0 && width < 32768 && height > 0 && height < 32768) {
+                pageFormat = new PageFormat(width, height, "customPageFormatWidthHeight");
+            }
         }
-        return f;
+
+        // check for formatId from OpenSheetMusicDisplay.PageFormatStandards
+        pageFormatString = pageFormatString.replace(" ", "_");
+        pageFormatString = pageFormatString.replace("Landscape", "L");
+        pageFormatString = pageFormatString.replace("Portrait", "P");
+        //console.log("change format to: " + formatId);
+        if (OpenSheetMusicDisplay.PageFormatStandards.hasOwnProperty(pageFormatString)) {
+            pageFormat = OpenSheetMusicDisplay.PageFormatStandards[pageFormatString];
+            return pageFormat;
+        }
+        return pageFormat;
     }
 
     /** Sets page format by string. Alternative to setOptions({pageFormat: PageFormatStandards.Endless}) for example. */

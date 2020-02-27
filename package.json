@@ -19,6 +19,8 @@
     "build:webpack-sourcemap": "webpack --progress --colors --config webpack.sourcemap.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
     "generatePNG": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./export/",
+    "generatePNG:paged": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./export 210 297 all --debug",
+    "generatePNG:paged:debug": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./export 210 297 all --debug 5000",
     "generate:current": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./visual_regression/current",
     "generate:current:singletest": "node test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data ./visual_regression/current .*function_test_all.*",
     "generate:blessed": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data/ ./visual_regression/blessed",
