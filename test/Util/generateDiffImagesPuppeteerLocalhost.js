@@ -6,6 +6,9 @@
 
   This is meant to be used with the visual regression test system in
   `tools/visual_regression.sh`. (TODO)
+
+  You may have to install puppeteer as dev dependency to run this:
+  npm i puppeteer --save-dev
 */
 
 function sleep (ms) {
@@ -54,6 +57,9 @@ async function init () {
     }
 
     const fs = require('fs')
+    // Create the image directory if it doesn't exist.
+    fs.mkdirSync(imageDir, { recursive: true })
+
     const sampleDirFilenames = fs.readdirSync(sampleDir)
     let samplesToProcess = [] // samples we want to process/generate pngs of, excluding the filtered out files/filenames
     for (const sampleFilename of sampleDirFilenames) {
@@ -65,17 +71,14 @@ async function init () {
         }
         // eslint-disable-next-line no-useless-escape
         if (sampleFilename.match('^.*(\.xml)|(\.musicxml)|(\.mxl)$')) {
-            console.log('found musicxml/mxl: ' + sampleFilename)
+            // console.log('found musicxml/mxl: ' + sampleFilename)
             samplesToProcess.push(sampleFilename)
         } else {
             console.log('discarded file/directory: ' + sampleFilename)
         }
     }
 
-    // Create the image directory if it doesn't exist.
-    fs.mkdirSync(imageDir, { recursive: true })
-
-    // filter regex if given
+    // filter samples to process by regex if given
     if (filterRegex && filterRegex !== '' && filterRegex !== 'all') {
         console.log('filtering samples for regex: ' + filterRegex)
         samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex))
@@ -174,7 +177,7 @@ async function init () {
         for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
             const pageNumberingString = `_${urlIndex + 1}`
             // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-            var filename = `${imageDir}/${sampleFilename}${pageNumberingString}.png`
+            var pageFilename = `${imageDir}/${sampleFilename}${pageNumberingString}.png`
 
             const dataUrl = dataUrls[urlIndex]
             if (!dataUrl || !dataUrl.split) {
@@ -184,9 +187,28 @@ async function init () {
             const imageData = dataUrl.split(';base64,').pop()
             const imageBuffer = Buffer.from(imageData, 'base64')
 
-            console.log('got image data, saving to: ' + filename)
-            fs.writeFileSync(filename, imageBuffer, { encoding: 'base64' })
+            console.log('got image data, saving to: ' + pageFilename)
+            fs.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
         }
+        /* bneumann's SVG method */
+        // const clone = this.ctx.svg.cloneNode(true) // SVGElement
+        // // create a doctype that is SVG
+        // const svgDocType = document.implementation.createDocumentType(
+        //     'svg',
+        //     '-//W3C//DTD SVG 1.1//EN',
+        //     'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'
+        // )
+        // // Create a new svg document
+        // const svgDoc = document.implementation.createDocument('http://www.w3.org/2000/svg', 'svg', svgDocType)
+        // // replace the documentElement with our clone
+        // svgDoc.replaceChild(clone, svgDoc.documentElement)
+        // // get the data
+        // const svgData = (new XMLSerializer()).serializeToString(svgDoc)
+        // var blob = new Blob([svgData.replace(/></g, '>\n\r<')])
+        // fs.writeFileSync(filename, blob)
+        // //fs.writeFileSync(filename, svgData)
+        // return
+        /* end bneumann's svg method */
     }
 
     // const html = await page.content();

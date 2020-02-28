@@ -188,11 +188,13 @@ export class OpenSheetMusicDisplay {
 
         // Set page width
         const width: number = this.container.offsetWidth;
-        //console.log("[OSMD] container width: " + width);
+        // log.debug("[OSMD] container width: " + width);
         this.sheet.pageWidth = width / this.zoom / 10.0;
         if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
             EngravingRules.Rules.PageHeight = this.sheet.pageWidth / EngravingRules.Rules.PageFormat.aspectRatio;
+            log.debug("[OSMD] PageHeight: " + EngravingRules.Rules.PageHeight);
         } else {
+            log.debug("[OSMD] endless/undefined pageformat, id: " + EngravingRules.Rules.PageFormat.idString);
             EngravingRules.Rules.PageHeight = 100001; // infinite page height // TODO maybe Number.MAX_VALUE or Math.pow(10, 20)?
         }
 
@@ -269,8 +271,10 @@ export class OpenSheetMusicDisplay {
             }
             if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
                 height = width / EngravingRules.Rules.PageFormat.aspectRatio;
+                // console.log("pageformat given. height: " + page.PositionAndShape.Size.height);
             } else {
                 height = (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0;
+                // console.log("pageformat not given. height: " + page.PositionAndShape.Size.height);
             }
             if (backend.getOSMDBackendType() === BackendType.Canvas && height > canvasDimensionsLimit) {
                 console.log("[OSMD] Warning: height of " + height + sizeWarningPartTwo);
@@ -678,7 +682,7 @@ export class OpenSheetMusicDisplay {
             const width: number = Number.parseInt(widthAndHeight[0], 10);
             const height: number = Number.parseInt(widthAndHeight[1], 10);
             if (width > 0 && width < 32768 && height > 0 && height < 32768) {
-                pageFormat = new PageFormat(width, height, "customPageFormatWidthHeight");
+                pageFormat = new PageFormat(width, height, `customPageFormat${pageFormatString}`);
             }
         }
 
