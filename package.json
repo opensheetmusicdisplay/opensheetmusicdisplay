@@ -78,7 +78,7 @@
     "chai": "^4.1.0",
     "clean-webpack-plugin": "^1.0.1",
     "cross-blob": "^1.2.0",
-    "cross-env": "^7.0.0",
+    "cross-env": "^7.0.1",
     "cz-conventional-changelog": "^3.0.0",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.0",
