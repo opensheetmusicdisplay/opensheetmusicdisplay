@@ -72,8 +72,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         backendSelectDiv,
         debugReRenderBtn,
         debugClearBtn,
-        selectPageSize,
-        printPdfBtn;
+        selectPageSizes,
+        printPdfBtns;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -89,6 +89,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var drawPartNamesOptionNeedsReset = false;
 
     var showControls = true;
+    var showExportPdfControl = false;
+    var showPageFormatControl = false;
     var showZoomControl = true;
     var showHeader = true;
     var showDebugControls = false;
@@ -104,6 +106,8 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         // Handle window parameter
         var paramEmbedded = findGetParameter('embedded');
         var paramShowControls = findGetParameter('showControls');
+        var paramShowPageFormatControl = findGetParameter('showPageFormatControl');
+        var paramShowExportPdfControl = findGetParameter('showExportPdfControl');
         var paramShowZoomControl = findGetParameter('showZoomControl');
         var paramShowHeader = findGetParameter('showHeader');
         var paramZoom = findGetParameter('zoom');
@@ -123,15 +127,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         showHeader = (paramShowHeader !== '0');
         showControls = false;
         if (paramEmbedded !== undefined) {
-            showControls = (paramShowControls !== '0');
-            console.log('show controls: ' + showControls);
-            showZoomControl = (paramShowZoomControl !== '0');
+            showControls = paramShowControls !== '0';
+            showZoomControl = paramShowZoomControl !== '0';
+            showPageFormatControl = paramShowPageFormatControl !== '0';
+            showExportPdfControl = paramShowExportPdfControl !== '0';
         }
 
         if (paramZoom !== undefined) {
             if (paramZoom > 0.1 && paramZoom < 5.0) {
                 zoom = paramZoom;
-                console.log('Set zoom to ' + zoom);
             }
         }
         if (paramOverflow !== undefined && typeof paramOverflow === 'string') {
@@ -199,8 +203,12 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         backendSelectDiv = document.getElementById("backend-select-div");
         debugReRenderBtn = document.getElementById("debug-re-render-btn");
         debugClearBtn = document.getElementById("debug-clear-btn");
-        selectPageSize = document.getElementById("selectPageSize");
-        printPdfBtn = document.getElementById("print-pdf-btn");
+        selectPageSizes = [];
+        selectPageSizes.push(document.getElementById("selectPageSize"));
+        selectPageSizes.push(document.getElementById("selectPageSize-optional"));
+        printPdfBtns = [];
+        printPdfBtns.push(document.getElementById("print-pdf-btn"));
+        printPdfBtns.push(document.getElementById("print-pdf-btn-optional"));
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
@@ -246,22 +254,56 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         // Hide error
         error();
 
-        if (showControls && showZoomControl) {
-            const zoomControlsButtons = document.getElementById('zoomControlsButtons-optional');
-            const zoomControlsString = document.getElementById('zoom-str-optional'); // actually === zoomDiv above
+        if (showControls) {
             const optionalControls = document.getElementById('optionalControls');
             if (optionalControls) {
-                optionalControls.appendChild(zoomControlsButtons);
-                optionalControls.appendChild(zoomControlsString);
+                optionalControls.style.opacity = 1.0;
+                // optionalControls.appendChild(zoomControlsButtons);
+                // optionalControls.appendChild(zoomControlsString);
                 optionalControls.style.position = 'absolute';
                 optionalControls.style.zIndex = '10';
                 optionalControls.style.right = '10px';
-                optionalControls.style.padding = '10px';
+                // optionalControls.style.padding = '10px';
             }
 
-            if (zoomControlsString) {
-                zoomControlsString.style.display = 'inline';
-                zoomControlsString.style.padding = '10px';
+            if (showZoomControl) {
+                const zoomControlsButtonsColumn = document.getElementById('zoomControlsButtons-optional-column');
+                zoomControlsButtonsColumn.style.opacity = 1.0;
+                // const zoomControlsButtons = document.getElementById('zoomControlsButtons-optional');
+                // zoomControlsButtons.style.opacity = 1.0;
+                const zoomControlsString = document.getElementById('zoom-str-optional'); // actually === zoomDivs[1] above
+
+                if (zoomControlsString) {
+                    zoomControlsString.innerHTML = Math.floor(zoom * 100.0) + "%";
+                    zoomControlsString.style.display = 'inline';
+                    // zoomControlsString.style.padding = '10px';
+                }
+            }
+
+            if (showExportPdfControl) {
+                const exportPdfButtonColumn = document.getElementById('print-pdf-btn-optional-column');
+                if (exportPdfButtonColumn) {
+                    exportPdfButtonColumn.style.opacity = 1.0;
+                }
+            }
+
+            const pageFormatControlColumn = document.getElementById("selectPageSize-optional-column");
+            if (pageFormatControlColumn) {
+                if (showPageFormatControl) {
+                    pageFormatControlColumn.style.opacity = 1.0;
+                } else {
+                    // showPageFormatControlColumn.innerHTML = "";
+                    // pageFormatControlColumn.style.minWidth = 0;
+                    // pageFormatControlColumn.style.width = 0;
+                    pageFormatControlColumn.style.display = 'none'; // squeezes buttons/columns
+                    // pageFormatControlColumn.style.visibility = 'hidden';
+
+                    // const optionalControlsColumnContainer = document.getElementById("optionalControlsColumnContainer");
+                    // optionalControlsColumnContainer.removeChild(pageFormatControlColumn);
+                    // optionalControlsColumnContainer.width *= 0.66;
+                    // optionalControls.witdh *= 0.66;
+                    // optionalControls.focus();
+                }
             }
         }
 
@@ -283,17 +325,21 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             selectBounding.onchange = selectBoundingOnChange;
         }
 
-        if (selectPageSize) {
-            selectPageSize.onchange = function (evt) {
-                var value = evt.target.value;
-                openSheetMusicDisplay.setPageFormat(value);
-                openSheetMusicDisplay.render();
-            };
+        for (const selectPageSize of selectPageSizes) {
+            if (selectPageSize) {
+                selectPageSize.onchange = function (evt) {
+                    var value = evt.target.value;
+                    openSheetMusicDisplay.setPageFormat(value);
+                    openSheetMusicDisplay.render();
+                };
+            }
         }
 
-        if (printPdfBtn) {
-            printPdfBtn.onclick = function () {
-                openSheetMusicDisplay.createPdf();
+        for (const printPdfBtn of printPdfBtns) {
+            if (printPdfBtn) {
+                printPdfBtn.onclick = function () {
+                    openSheetMusicDisplay.createPdf();
+                }
             }
         }
 
