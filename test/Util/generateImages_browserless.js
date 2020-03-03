@@ -91,10 +91,9 @@ async function init () {
     // div.canvas = document.createElement('canvas')
 
     const zoom = 1.0
-    // somehow, witdh * 5 will preserve the aspect ratio (0.7070 repeating, *1 will be way too short, *10 too long)
-    // there's width * zoom * 10 in the OSMD code because Vexflow's pixels are OSMD's size units * 10, so i thought it should be * 10.
-    // not sure where the / 2 factor comes from.
-    let width = pageWidth * zoom * 5
+    // width of the div / PNG generated
+    let width = pageWidth * zoom
+    // TODO sometimes the width is way too small for the score, may need to adjust zoom.
     if (endlessPage) {
         width = 1440
     }
