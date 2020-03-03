@@ -59,9 +59,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         selectBounding,
         skylineDebug,
         bottomlineDebug,
-        zoomIn,
-        zoomOut,
-        zoomDiv,
+        zoomIns,
+        zoomOuts,
+        zoomDivs,
         custom,
         nextCursorBtn,
         resetCursorBtn,
@@ -121,8 +121,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         var paramPageHeight = findGetParameter('pageHeight');
 
         showHeader = (paramShowHeader !== '0');
+        showControls = false;
         if (paramEmbedded !== undefined) {
             showControls = (paramShowControls !== '0');
+            console.log('show controls: ' + showControls);
             showZoomControl = (paramShowZoomControl !== '0');
         }
 
@@ -171,14 +173,20 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         header = document.getElementById('header');
         err = document.getElementById("error-td");
         error_tr = document.getElementById("error-tr");
-        zoomDiv = document.getElementById("zoom-str");
+        zoomDivs = [];
+        zoomDivs.push(document.getElementById("zoom-str"));
+        zoomDivs.push(document.getElementById("zoom-str-optional"));
         custom = document.createElement("option");
         selectSample = document.getElementById("selectSample");
         selectBounding = document.getElementById("selectBounding");
         skylineDebug = document.getElementById("skylineDebug");
         bottomlineDebug = document.getElementById("bottomlineDebug");
-        zoomIn = document.getElementById("zoom-in-btn");
-        zoomOut = document.getElementById("zoom-out-btn");
+        zoomIns = [];
+        zoomIns.push(document.getElementById("zoom-in-btn"));
+        zoomIns.push(document.getElementById("zoom-in-btn-optional"));
+        zoomOuts = [];
+        zoomOuts.push(document.getElementById("zoom-out-btn"));
+        zoomOuts.push(document.getElementById("zoom-out-btn-optional"));
         canvas = document.createElement("div");
         //canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
@@ -206,6 +214,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 if (elementsToEnable[i]) { // make sure this element is not null/exists in the index.html, e.g. github.io demo has different index.html
                     if (elementsToEnable[i].style) {
                         elementsToEnable[i].style.visibility = defaultVisibilityValue;
+                        elementsToEnable[i].style.opacity = 1.0;
                     }
                 }
             }
@@ -215,22 +224,31 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             }
         }
 
-        if (!showControls) {
-            if (divControls) {
-                divControls.style.display = 'none';
+        const optionalControls = document.getElementById('optionalControls');
+        if (optionalControls) {
+            if (showControls) {
+                optionalControls.style.visibility = defaultVisibilityValue;
+                optionalControls.style.opacity = 0.8;
+            } else {
+                optionalControls.style.display = 'none';
             }
         }
+
         if (!showHeader) {
             if (header) {
                 header.style.display = 'none';
+            }
+        } else {
+            if (header) {
+                header.style.opacity = 1.0;
             }
         }
         // Hide error
         error();
 
-        if (!showControls && showZoomControl) {
-            const zoomControlsButtons = document.getElementById('zoomControlsButtons');
-            const zoomControlsString = document.getElementById('zoom-str');
+        if (showControls && showZoomControl) {
+            const zoomControlsButtons = document.getElementById('zoomControlsButtons-optional');
+            const zoomControlsString = document.getElementById('zoom-str-optional'); // actually === zoomDiv above
             const optionalControls = document.getElementById('optionalControls');
             if (optionalControls) {
                 optionalControls.appendChild(zoomControlsButtons);
@@ -284,17 +302,21 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         custom.appendChild(document.createTextNode("Custom"));
 
         // Create zoom controls
-        if (zoomIn) {
-            zoomIn.onclick = function () {
-                zoom *= 1.2;
-                scale();
-            };
+        for (const zoomIn of zoomIns) {
+            if (zoomIn) {
+                zoomIn.onclick = function () {
+                    zoom *= 1.2;
+                    scale();
+                };
+            }
         }
-        if (zoomOut) {
-            zoomOut.onclick = function () {
-                zoom /= 1.2;
-                scale();
-            };
+        for (const zoomOut of zoomOuts) {
+            if (zoomOut) {
+                zoomOut.onclick = function () {
+                    zoom /= 1.2;
+                    scale();
+                };
+            }
         }
 
         if (skylineDebug) {
@@ -605,7 +627,11 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     }
 
     function logCanvasSize() {
-        zoomDiv.innerHTML = Math.floor(zoom * 100.0) + "%";
+        for (const zoomDiv of zoomDivs) {
+            if (zoomDiv) {
+                zoomDiv.innerHTML = Math.floor(zoom * 100.0) + "%";
+            }
+        }
     }
 
     function scale() {
@@ -658,11 +684,15 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (selectSample) {
             selectSample.disabled = disabledValue;
         }
-        if (zoomIn) {
-            zoomIn.disabled = disabledValue;
+        for (const zoomIn of zoomIns) {
+            if (zoomIn) {
+                zoomIn.disabled = disabledValue;
+            }
         }
-        if (zoomOut) {
-            zoomOut.disabled = disabledValue;
+        for (const zoomOut of zoomOuts) {
+            if (zoomOut) {
+                zoomOut.disabled = disabledValue;
+            }
         }
     }
 
