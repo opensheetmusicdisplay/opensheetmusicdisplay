@@ -31,8 +31,21 @@ async function init () {
         console.log('Error: need sampleDir and imageDir. Exiting.')
         process.exit(1)
     }
-    console.log('sampleDir: ' + sampleDir)
-    console.log('imageDir: ' + imageDir)
+
+    const DEBUG = debugFlag === '--debug'
+    // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
+    if (DEBUG) {
+        console.log(' (note that --debug slows down the script by about 0.3s per file, through logging)')
+        const debugSleepTimeMs = Number.parseInt(debugSleepTimeString)
+        if (debugSleepTimeMs > 0) {
+            console.log('debug sleep time: ' + debugSleepTimeString)
+            await sleep(Number.parseInt(debugSleepTimeMs))
+            // [VSCode] apparently this is necessary for the debugger to attach itself in time before the program closes.
+            // sometimes this is not enough, so you may have to try multiple times or increase the sleep timer. Unfortunately debugging nodejs isn't easy.
+        }
+    }
+    debug('sampleDir: ' + sampleDir, DEBUG)
+    debug('imageDir: ' + imageDir, DEBUG)
 
     let pageFormat = 'Endless'
     pageWidth = Number.parseInt(pageWidth)
@@ -40,19 +53,6 @@ async function init () {
     const endlessPage = !(pageHeight > 0 && pageWidth > 0)
     if (!endlessPage) {
         pageFormat = `${pageWidth}x${pageHeight}`
-    }
-
-    const DEBUG = debugFlag === '--debug'
-    // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
-    if (DEBUG) {
-        console.log('  note that --debug slows down the script by about 0.3s per file (through console.logs).')
-        console.log('debug sleep time: ' + debugSleepTimeString)
-        const debugSleepTimeMs = Number.parseInt(debugSleepTimeString)
-        if (debugSleepTimeMs > 0) {
-            await sleep(Number.parseInt(debugSleepTimeMs))
-            // [VSCode] apparently this is necessary for the debugger to attach itself in time before the program closes.
-            // sometimes this is not enough, so you may have to try multiple times or increase the sleep timer. Unfortunately debugging nodejs isn't easy.
-        }
     }
 
     // ---- hacks to fake Browser elements OSMD and Vexflow need, like window, document, and a canvas HTMLElement ----
@@ -149,7 +149,7 @@ async function init () {
     for (const sampleFilename of sampleDirFilenames) {
         if (filterRegex === 'allSmall') {
             if (sampleFilename.match('^(Actor)|(Gounod)')) { // TODO maybe filter by file size instead
-                console.log('DEBUG: filtering big file: ' + sampleFilename)
+                debug('filtering big file: ' + sampleFilename, DEBUG)
                 continue
             }
         }
@@ -158,17 +158,17 @@ async function init () {
             // console.log('found musicxml/mxl: ' + sampleFilename)
             samplesToProcess.push(sampleFilename)
         } else {
-            console.log('discarded file/directory: ' + sampleFilename)
+            debug('discarded file/directory: ' + sampleFilename, DEBUG)
         }
     }
 
     // filter samples to process by regex if given
     if (filterRegex && filterRegex !== '' && filterRegex !== 'all' && filterRegex !== 'allSmall') {
-        console.log('filtering samples for regex: ' + filterRegex)
+        debug('filtering samples for regex: ' + filterRegex, DEBUG)
         samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex))
-        console.log(`found ${samplesToProcess.length} matches: `)
+        debug(`found ${samplesToProcess.length} matches: `, DEBUG)
         for (let i = 0; i < samplesToProcess.length; i++) {
-            console.log(samplesToProcess[i])
+            debug(samplesToProcess[i], DEBUG)
         }
     }
 
@@ -238,7 +238,7 @@ async function init () {
                 const imageData = dataUrl.split(';base64,').pop()
                 const imageBuffer = Buffer.from(imageData, 'base64')
 
-                console.log('got image data, saving to: ' + pageFilename)
+                debug('got image data, saving to: ' + pageFilename, DEBUG)
                 fs.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
             }
         }) // end render then
