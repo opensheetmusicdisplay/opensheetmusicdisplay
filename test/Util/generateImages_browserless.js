@@ -24,9 +24,10 @@ async function init () {
 
     let [osmdBuildDir, sampleDir, imageDir, pageWidth, pageHeight, filterRegex, debugFlag, debugSleepTimeString] = process.argv.slice(2, 10)
     if (!osmdBuildDir || !sampleDir || !imageDir) {
-        console.log('usage: node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all] [--debug] [debugSleepTime]')
+        console.log('usage: ' +
+            'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all|allSmall] [--debug] [debugSleepTime]')
         console.log('  (use "all" to skip filterRegex parameter)')
-        console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export 210 297 all --debug 5000')
+        console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export 210 297 allSmall --debug 5000')
         console.log('Error: need sampleDir and imageDir. Exiting.')
         process.exit(1)
     }
@@ -44,6 +45,7 @@ async function init () {
     const DEBUG = debugFlag === '--debug'
     // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
     if (DEBUG) {
+        console.log('  note that --debug slows down the script by about 0.3s per file (through console.logs).')
         console.log('debug sleep time: ' + debugSleepTimeString)
         const debugSleepTimeMs = Number.parseInt(debugSleepTimeString)
         if (debugSleepTimeMs > 0) {
@@ -130,6 +132,10 @@ async function init () {
     })
     debug('div.offsetWidth: ' + div.offsetWidth, DEBUG)
     debug('div.height: ' + div.height, DEBUG)
+    if (!DEBUG) {
+        // deactivate console logs (mostly)
+        console.log = (msg) => {}
+    }
     // ---- end browser hacks (hopefully) ----
 
     const OSMD = require(`${osmdBuildDir}/opensheetmusicdisplay.min.js`)
@@ -141,8 +147,8 @@ async function init () {
     const sampleDirFilenames = fs.readdirSync(sampleDir)
     let samplesToProcess = [] // samples we want to process/generate pngs of, excluding the filtered out files/filenames
     for (const sampleFilename of sampleDirFilenames) {
-        if (DEBUG) {
-            if (sampleFilename.match('^(Actor)|(Gounod)')) {
+        if (filterRegex === 'allSmall') {
+            if (sampleFilename.match('^(Actor)|(Gounod)')) { // TODO maybe filter by file size instead
                 console.log('DEBUG: filtering big file: ' + sampleFilename)
                 continue
             }
@@ -157,7 +163,7 @@ async function init () {
     }
 
     // filter samples to process by regex if given
-    if (filterRegex && filterRegex !== '' && filterRegex !== 'all') {
+    if (filterRegex && filterRegex !== '' && filterRegex !== 'all' && filterRegex !== 'allSmall') {
         console.log('filtering samples for regex: ' + filterRegex)
         samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex))
         console.log(`found ${samplesToProcess.length} matches: `)
@@ -178,6 +184,8 @@ async function init () {
         // console.log(`osmd PageFormat: ${osmdInstance.EngravingRules.PageFormat.width}x${osmdInstance.EngravingRules.PageFormat.height}`)
         console.log(`osmd PageFormat idString: ${osmdInstance.EngravingRules.PageFormat.idString}`)
         console.log('PageHeight: ' + osmdInstance.EngravingRules.PageHeight)
+    } else {
+        osmdInstance.setLogLevel('info') // doesn't seem to work, log.debug still logs
     }
 
     debug('generateImages', DEBUG)
