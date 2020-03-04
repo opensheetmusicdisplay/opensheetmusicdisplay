@@ -118,6 +118,7 @@ export interface IOSMDOptions {
      *  Example: "#FFFFFF" = white. "#12345600" = transparent.
      *  This can be useful when you want to export an image with e.g. white background color instead of transparent,
      *  from a CanvasBackend.
+     *  Note: Using a background color will prevent the cursor from being visible.
      */
     pageBackgroundColor?: string;
 }

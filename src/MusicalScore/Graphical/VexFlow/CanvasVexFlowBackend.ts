@@ -63,6 +63,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         // set background color if not transparent
         if (EngravingRules.Rules.PageBackgroundColor !== undefined) {
             this.ctx.save();
+            // note that this will hide the cursor
             this.ctx.setFillStyle(EngravingRules.Rules.PageBackgroundColor);
             this.ctx.fillRect(0, 0, (this.canvas as any).width, (this.canvas as any).height);
             this.ctx.restore();
