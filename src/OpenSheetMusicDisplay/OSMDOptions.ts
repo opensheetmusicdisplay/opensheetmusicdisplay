@@ -121,6 +121,8 @@ export interface IOSMDOptions {
      *  Note: Using a background color will prevent the cursor from being visible.
      */
     pageBackgroundColor?: string;
+    /** This makes OSMD render on one single horizontal (staff-)line. */
+    renderSingleHorizontalStaffline?: boolean;
 }
 
 export enum AlignRestOption {

@@ -124,6 +124,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         var paramPageWidth = findGetParameter('pageWidth');
         var paramPageHeight = findGetParameter('pageHeight');
 
+        var paramHorizontalScrolling = findGetParameter('horizontalScrolling');
+        var paramSingleHorizontalStaffline = findGetParameter('singleHorizontalStaffline');
+
         showHeader = (paramShowHeader !== '0');
         showControls = false;
         if (paramEmbedded !== undefined) {
@@ -158,6 +161,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         var pageBackgroundColor = paramPageBackgroundColor ? "#" + paramPageBackgroundColor : undefined; // vexflow format, see OSMDOptions. can't use # in parameters.
         //console.log("demo: osmd pagebgcolor: " + pageBackgroundColor);
         var backendType = (paramBackendType && paramBackendType.toLowerCase) ? paramBackendType : "svg";
+
+        var horizontalScrolling = paramHorizontalScrolling === '1';
+        var singleHorizontalStaffline = paramSingleHorizontalStaffline === '1';
         
         // set the backendSelect debug controls dropdown menu selected item
         //console.log("true: " + backendSelect && backendType.toLowerCase && backendType.toLowerCase() === "canvas");
@@ -192,6 +198,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         zoomOuts.push(document.getElementById("zoom-out-btn"));
         zoomOuts.push(document.getElementById("zoom-out-btn-optional"));
         canvas = document.createElement("div");
+        if (horizontalScrolling) {
+            canvas.style.overflowX = 'auto'; // enable horizontal scrolling
+        }
         //canvas.id = 'osmdCanvasDiv';
         //canvas.style.overflowX = 'auto'; // enable horizontal scrolling
         nextCursorBtn = document.getElementById("next-cursor-btn");
@@ -425,6 +434,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
             pageFormat: pageFormat,
             pageBackgroundColor: pageBackgroundColor,
+            renderSingleHorizontalStaffline: singleHorizontalStaffline
 
             // tupletsBracketed: true, // creates brackets for all tuplets except triplets, even when not set by xml
             // tripletsBracketed: true,

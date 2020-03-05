@@ -1699,7 +1699,11 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculatePageLabels(page: GraphicalMusicPage): void {
-
+        if (EngravingRules.Rules.RenderSingleHorizontalStaffline) {
+            page.PositionAndShape.BorderRight = page.PositionAndShape.Size.width;
+            page.PositionAndShape.calculateBoundingBox();
+            this.graphicalMusicSheet.ParentMusicSheet.pageWidth = page.PositionAndShape.Size.width;
+        }
         // The PositionAndShape child elements of page need to be manually connected to the lyricist, composer, subtitle, etc.
         // because the page is only available now
         let firstSystemAbsoluteTopMargin: number = 10;

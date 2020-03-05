@@ -187,8 +187,15 @@ export class OpenSheetMusicDisplay {
         // musicSheetCalculator.clearRecreatedObjects();
 
         // Set page width
-        const width: number = this.container.offsetWidth;
-        // log.debug("[OSMD] container width: " + width);
+        let width: number = this.container.offsetWidth;
+        if (EngravingRules.Rules.RenderSingleHorizontalStaffline) {
+            width = 32767; // set safe maximum (browser limit), will be reduced later
+            // reduced later in MusicSheetCalculator.calculatePageLabels (sets sheet.pageWidth to page.PositionAndShape.Size.width before labels)
+            // rough calculation:
+            // width = 600 * this.sheet.SourceMeasures.length;
+        }
+        // log.debug("[OSMD] render width: " + width);
+
         this.sheet.pageWidth = width / this.zoom / 10.0;
         if (EngravingRules.Rules.PageFormat && !EngravingRules.Rules.PageFormat.IsUndefined) {
             EngravingRules.Rules.PageHeight = this.sheet.pageWidth / EngravingRules.Rules.PageFormat.aspectRatio;
@@ -255,6 +262,11 @@ export class OpenSheetMusicDisplay {
 
         // Set page width
         let width: number = this.container.offsetWidth;
+        if (EngravingRules.Rules.RenderSingleHorizontalStaffline) {
+            width = this.graphic.MusicPages[0].PositionAndShape.Size.width * 10 * this.zoom;
+            // this.container.style.width = width + "px";
+            // console.log("width: " + width)
+        }
         // TODO width may need to be coordinated with render() where width is also used
         let height: number;
         const canvasDimensionsLimit: number = 32767; // browser limitation. Chrome/Firefox (16 bit, 32768 causes an error).
@@ -466,6 +478,9 @@ export class OpenSheetMusicDisplay {
         if (options.pageBackgroundColor !== undefined) {
             EngravingRules.Rules.PageBackgroundColor = options.pageBackgroundColor;
         }
+        if (options.renderSingleHorizontalStaffline !== undefined) {
+            EngravingRules.Rules.RenderSingleHorizontalStaffline = options.renderSingleHorizontalStaffline;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {
@@ -659,7 +674,7 @@ export class OpenSheetMusicDisplay {
     }
 
     /** Standard page format options like A4 or Letter, in portrait and landscape. E.g. PageFormatStandards["A4_P"] or PageFormatStandards["Letter_L"]. */
-    public static PageFormatStandards: {[type: string]: PageFormat} = {
+    public static PageFormatStandards: { [type: string]: PageFormat } = {
         "A3_L": new PageFormat(420, 297, "A3_L"), // id strings should use underscores instead of white spaces to facilitate use as URL parameters.
         "A3_P": new PageFormat(297, 420, "A3_P"),
         "A4_L": new PageFormat(297, 210, "A4_L"),
@@ -727,7 +742,7 @@ export class OpenSheetMusicDisplay {
             pdfName = this.sheet.FullNameString + ".pdf";
         }
 
-        const backends: VexFlowBackend[] =  this.drawer.Backends;
+        const backends: VexFlowBackend[] = this.drawer.Backends;
         let svgElement: SVGElement = (<SvgVexFlowBackend>backends[0]).getSvgElement();
 
         let pageWidth: number = 210;
