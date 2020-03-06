@@ -15,6 +15,10 @@ module.exports = function (config) {
 
         files: [
             {
+                pattern: 'test/Util/*.ts',
+                included: false
+            },
+            {
                 pattern: 'test/**/*.ts',
                 included: true
             }, {
@@ -28,7 +32,8 @@ module.exports = function (config) {
                 included: false,
                 watched: false,
                 served: true
-            }],
+            }
+        ],
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor

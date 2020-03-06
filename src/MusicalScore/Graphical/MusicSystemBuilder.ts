@@ -113,6 +113,7 @@ export class MusicSystemBuilder {
             }
             const totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
             const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
+            //if (true) // prevent line break at all costs, squeezes measures and breaks lyrics spacing
             if (isSystemStartMeasure || measureFitsInSystem) {
                 this.addMeasureToSystem(
                     graphicalMeasures, measureStartLine, measureEndLine, totalMeasureWidth,

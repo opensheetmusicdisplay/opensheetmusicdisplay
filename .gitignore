@@ -15,7 +15,8 @@ pids
 *.seed
 
 # optional npm script-generated data
-data/images/current
+visual_regression/
+export/
 
 # Documentation
 docs
