@@ -1,14 +1,20 @@
 /*
-  Render each OSMD sample, grab the generated images, and
+  Render each OSMD sample in a headless browser
+  (using puppeteer, requires ~100MB chromium download),
+  grab the generated images, and
   dump them into a local directory as PNG files.
+
+  You may have to install puppeteer as dev dependency to run this:
+  npm i puppeteer --save-dev
+  (will download ~100MB for Chromium)
+
+  This script is made obsolete by the ~2x faster generateImages_browserless.js,
+  but may be useful for comparison.
 
   inspired by Vexflow's generate_png_images and vexflow-tests.js
 
   This is meant to be used with the visual regression test system in
-  `tools/visual_regression.sh`. (TODO)
-
-  You may have to install puppeteer as dev dependency to run this:
-  npm i puppeteer --save-dev
+  `tools/visual_regression.sh`.
 */
 
 function sleep (ms) {

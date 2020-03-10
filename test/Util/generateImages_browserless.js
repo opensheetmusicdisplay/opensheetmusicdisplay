@@ -11,6 +11,9 @@
   Note: this script needs to "fake" quite a few browser elements, like window, document, and a Canvas HTMLElement.
   For that it needs the canvas package installed.
   There are also some hacks needed to set the container size (offsetWidth) correctly.
+
+  Otherwise you'd need to run a headless browser, which is way slower,
+  see the semi-obsolete generateDiffImagesPuppeteerLocalhost.js
 */
 
 function sleep (ms) {
