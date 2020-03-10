@@ -176,7 +176,23 @@ async function init () {
         backend: 'canvas',
         pageBackgroundColor: '#FFFFFF',
         pageFormat: pageFormat
+        // defaultFontFamily: 'Arial',
+        // drawTitle: false
     })
+    // for more options check OSMDOptions.ts
+
+    // you can set finer-grained rendering/engraving settings in EngravingRules:
+    osmdInstance.EngravingRules.TitleTopDistance = 5.0 // 9.0 is default
+    osmdInstance.EngravingRules.PageTopMargin = 5.0 // 5 is default
+    osmdInstance.EngravingRules.PageBottomMargin = 5.0 // 5 is default. <5 can cut off scores that extend in the last staffline
+    // note that for now the png and canvas will still have the height given in the script argument,
+    //   so even with a margin of 0 the image will be filled to the full height.
+    osmdInstance.EngravingRules.PageLeftMargin = 5.0 // 5 is default
+    osmdInstance.EngravingRules.PageRightMargin = 5.0 // 5 is default
+    // osmdInstance.EngravingRules.MetronomeMarkXShift = -8; // -6 is default
+    // osmdInstance.EngravingRules.DistanceBetweenVerticalSystemLines = 0.15; // 0.35 is default
+    // for more options check EngravingRules.ts (though not all of these are meant and fully supported to be changed at will)
+
     // await sleep(5000)
     if (DEBUG) {
         osmdInstance.setLogLevel('debug')
