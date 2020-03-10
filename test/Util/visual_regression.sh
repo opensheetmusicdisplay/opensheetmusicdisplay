@@ -41,9 +41,10 @@
 # PNG viewer on OSX. Switch this to whatever your system uses.
 # VIEWER=open
 
-# Show images over this PHASH threshold. This is probably too low, but
-# a good first pass.
-THRESHOLD=0.01
+# Show images over this PHASH threshold.
+# 0.01 is probably too low, but a good first pass.
+# 0.0001 catches for example a repetition ending not having a down line at the end (see Saltarello bar 10) (0.001 doesn't catch this)
+THRESHOLD=0.0001
 
 # Set up Directories
 #   It does not matter where this script is executed, as long as these folders are given correctly (and blessed/current have png images set up correctly)
