@@ -77,7 +77,7 @@ async function init () {
     global.Node = window.Node
     global.Canvas = window.Canvas
 
-    // fix Blob not found
+    // fix Blob not found (to support external modules like is-blob)
     global.Blob = require('cross-blob')
 
     const div = document.createElement('div')
