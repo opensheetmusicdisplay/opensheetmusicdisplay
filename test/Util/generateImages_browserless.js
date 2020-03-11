@@ -78,14 +78,7 @@ async function init () {
     global.Canvas = window.Canvas
 
     // fix Blob not found
-    const Blob = require('cross-blob')
-
-    // eslint-disable-next-line no-new
-    new Blob([])
-    // => Blob {size: 0, type: ''}
-
-    // Global patch (to support external modules like is-blob).
-    global.Blob = Blob
+    global.Blob = require('cross-blob')
 
     const div = document.createElement('div')
     div.id = 'browserlessDiv'
