@@ -73,7 +73,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.10",
     "@types/mocha": "^7.0.2",
-    "@types/node": "^13.9.0",
+    "@types/node": "^13.9.1",
     "canvas": "^2.6.1",
     "chai": "^4.1.0",
     "clean-webpack-plugin": "^1.0.1",
