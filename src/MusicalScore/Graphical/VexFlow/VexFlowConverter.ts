@@ -61,7 +61,7 @@ export class VexFlowConverter {
           return "w";
       } else if (dur < 1 && dur >= 0.5) {
         // change to the next higher straight note to get the correct note display type
-        if (isTuplet) {
+        if (isTuplet && dur > 0.5) {
           return "w";
         }
         return "h";
