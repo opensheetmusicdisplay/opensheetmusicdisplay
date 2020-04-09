@@ -89,7 +89,7 @@
     "html-webpack-plugin": "^4.0.0",
     "jquery": "^3.4.1",
     "jsdom": "^16.2.0",
-    "karma": "^4.1.0",
+    "karma": "^5.0.0",
     "karma-base64-to-js-preprocessor": "^0.0.1",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
