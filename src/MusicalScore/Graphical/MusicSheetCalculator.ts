@@ -636,7 +636,7 @@ export abstract class MusicSheetCalculator {
         this.checkMeasuresForWholeRestNotes();
         if (!this.leadSheet) {
             // calculate Beam Placement
-            this.calculateBeams();
+            // this.calculateBeams(); // does nothing for now, because layoutBeams() is an empty method
             // possible Displacement of RestNotes
             this.optimizeRestPlacement();
             // possible Displacement of RestNotes
@@ -2130,21 +2130,22 @@ export abstract class MusicSheetCalculator {
         // override
     }
 
-    private calculateBeams(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const musicSystem: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
-                    const measure: GraphicalMeasure = staffLine.Measures[idx4];
-                    for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
-                        const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
-                        this.layoutBeams(staffEntry);
-                    }
-                }
-            }
-        }
-    }
+    // does nothing for now, because layoutBeams() is an empty method
+    // private calculateBeams(): void {
+    //     for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
+    //         const musicSystem: MusicSystem = this.musicSystems[idx2];
+    //         for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
+    //             const staffLine: StaffLine = musicSystem.StaffLines[idx3];
+    //             for (let idx4: number = 0, len4: number = staffLine.Measures.length; idx4 < len4; ++idx4) {
+    //                 const measure: GraphicalMeasure = staffLine.Measures[idx4];
+    //                 for (let idx5: number = 0, len5: number = measure.staffEntries.length; idx5 < len5; ++idx5) {
+    //                     const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx5];
+    //                     this.layoutBeams(staffEntry);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     private calculateStaffEntryArticulationMarks(): void {
         for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
