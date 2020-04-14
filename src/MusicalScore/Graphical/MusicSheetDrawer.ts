@@ -396,7 +396,7 @@ export abstract class MusicSheetDrawer {
         this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
     }
 
-    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
         // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 
@@ -464,7 +464,7 @@ export abstract class MusicSheetDrawer {
         this.graphicalMusicSheet.LeadSheet = value;
     }
 
-    private drawPage(page: GraphicalMusicPage): void {
+    protected drawPage(page: GraphicalMusicPage): void {
         if (!this.isVisible(page.PositionAndShape)) {
             return;
         }
@@ -484,7 +484,6 @@ export abstract class MusicSheetDrawer {
         if (this.drawableBoundingBoxElement) {
             this.drawBoundingBoxes(page.PositionAndShape, 0, this.drawableBoundingBoxElement);
         }
-
     }
 
     /**

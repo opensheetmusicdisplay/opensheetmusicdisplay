@@ -8,6 +8,7 @@ import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
 import {GraphicalVoiceEntry} from "./GraphicalVoiceEntry";
+import {GraphicalMusicPage} from "./GraphicalMusicPage";
 
 /**
  * The graphical counterpart of a [[Note]]
@@ -56,5 +57,9 @@ export class GraphicalNote extends GraphicalObject {
         }
       }
       return Math.min(3, num - 1);
+    }
+
+    public get ParentMusicPage(): GraphicalMusicPage {
+      return this.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentMusicSystem.Parent;
     }
 }

@@ -13,6 +13,7 @@ export class Staff {
     public idInMusicSheet: number;
     public audible: boolean;
     public following: boolean;
+    public isTab: boolean = false;
 
     private parentInstrument: Instrument;
     private voices: Voice[] = [];

@@ -1,5 +1,5 @@
 parserOptions: {
-        ecmaVersion: 7, // the ecmaVersion isn't set in stone, for now added to satisfy eslint 
+        ecmaVersion: 8, // 8 = ECMA2017 necessary for promises/async. The ecmaVersion isn't set in stone, for now mostly adapted for eslint.
     }
 extends: standard
 rules:

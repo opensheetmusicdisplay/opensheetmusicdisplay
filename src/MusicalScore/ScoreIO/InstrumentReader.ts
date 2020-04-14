@@ -79,6 +79,7 @@ export class InstrumentReader {
   private divisions: number = 0;
   private currentMeasure: SourceMeasure;
   private previousMeasure: SourceMeasure;
+  private currentClefNumber: number = 1;
   private currentXmlMeasureIndex: number = 0;
   private currentStaff: Staff;
   private currentStaffEntry: SourceStaffEntry;
@@ -801,6 +802,10 @@ export class InstrumentReader {
         if (nodeList.hasAttributes && nodeList.attributes()[0].name === "number") {
           try {
             staffNumber = parseInt(nodeList.attributes()[0].value, 10);
+            if (staffNumber > this.currentClefNumber) {
+              staffNumber = this.currentClefNumber;
+            }
+            this.currentClefNumber = staffNumber + 1;
           } catch (err) {
             errorMsg = ITextTranslation.translateText(
               "ReaderErrorMessages/ClefError",
@@ -808,6 +813,7 @@ export class InstrumentReader {
             );
             this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
             staffNumber = 1;
+            this.currentClefNumber = staffNumber + 1;
           }
         }
 

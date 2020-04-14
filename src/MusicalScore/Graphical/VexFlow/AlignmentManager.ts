@@ -1,9 +1,9 @@
-import { StaffLine } from "./StaffLine";
-import { BoundingBox } from "./BoundingBox";
-import { VexFlowContinuousDynamicExpression } from "./VexFlow/VexFlowContinuousDynamicExpression";
-import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
-import { PointF2D } from "../../Common/DataObjects/PointF2D";
-import { EngravingRules } from "./EngravingRules";
+import { StaffLine } from "../StaffLine";
+import { BoundingBox } from "../BoundingBox";
+import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
+import { AbstractGraphicalExpression } from "../AbstractGraphicalExpression";
+import { PointF2D } from "../../../Common/DataObjects/PointF2D";
+import { EngravingRules } from "../EngravingRules";
 
 export class AlignmentManager {
     private parentStaffline: StaffLine;

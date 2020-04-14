@@ -1,6 +1,5 @@
 import Vex = require("vexflow");
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
-import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";
 import {Staff} from "../../VoiceData/Staff";
@@ -37,8 +36,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param systemIndex
      * @returns {VexFlowMusicSystem}
      */
-    public createMusicSystem(page: GraphicalMusicPage, systemIndex: number): MusicSystem {
-        return new VexFlowMusicSystem(page, systemIndex);
+    public createMusicSystem(systemIndex: number): MusicSystem {
+        return new VexFlowMusicSystem(systemIndex);
     }
 
     /**

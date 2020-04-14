@@ -30,11 +30,15 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
                 gve.vfStaveNote.setStave(stave);
-                if (!gve.vfStaveNote.preFormatted || gve.vfStaveNote.getBoundingBox() === null) {
+                if (!gve.vfStaveNote.preFormatted) {
                     continue;
                 }
                 gve.applyBordersFromVexflow();
-                this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
+                if (this.parentMeasure.ParentStaff.isTab) {
+                    this.PositionAndShape.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + (<any>gve.vfStaveNote).glyph.getWidth()) / unitInPixels;
+                } else {
+                    this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getAbsoluteX() / unitInPixels;
+                }
                 const sourceNote: Note = gve.notes[0].sourceNote;
                 if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
                     // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)

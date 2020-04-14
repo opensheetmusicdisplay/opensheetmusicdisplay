@@ -1,3 +1,17 @@
+## [0.7.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.2...0.7.3) (2020-01-15)
+
+
+### Bug Fixes
+
+* **Arpeggio:** fix up/down direction (wrong in Vexflow), remove Vexflow dependency ([450b2d9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/450b2d9)), closes [#645](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/645)
+* **Dynamics, drawing range:** fix crescendo crashing when partially out of drawing range ([#644](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/644)) ([8105270](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8105270))
+
+### Etc
+* **Imports:** Remove many Vexflow dependencies in core OSMD classes (Arpeggio, MusicSheetCalculator, other /Graphical/ classes) ([450b2d9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/450b2d91bb4d52a60aeb6fa3425865e58efffebc), [90d93b9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/90d93b907315b8b1d93586d4849d96c41fb60661))
+* **Cursor:** Improve Follow Cursor performance (thanks to @praisethemoon) ([#639](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/639))
+
+
+
 ## [0.7.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.1...0.7.2) (2019-12-13)
 
 
@@ -9,7 +23,7 @@
 * **autoBeamOption:** don't beam notes of type quarter or longer in tuplets ([c3b3b5a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c3b3b5a))
 * **barline:** don't automatically end piece with final barline if not specified ([#569](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/569)) ([8ae7938](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8ae7938))
 * **barlines:** fix left barline added to end barline ([#588](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/588)) ([6608f17](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6608f17))
-* **ChordSymbols:** save all chords on single note, show first instead of last for now ([#599](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/599)) ([2d7e265](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2d7e265))
+* **ChordSymbols:** save and show all chords on single note ([#599](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/599)) ([2d7e265](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2d7e265))
 * **credits placement:** fix title and composer label placement, now in relation to Staffline width ([b7af9b8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b7af9b8)), closes [#578](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/578)
 * **Cursor:** starts and ends at selected range of measures to draw ([#566](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/566)) ([3fe770e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3fe770e))
 * **demo:** set and reset options for specific test samples correctly ([b28b5dc](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b28b5dc))

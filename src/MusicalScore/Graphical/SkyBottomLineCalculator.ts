@@ -147,7 +147,7 @@ export class SkyBottomLineCalculator {
         }
         // Remap the values from 0 to +/- height in units
         this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
-        this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + this.mRules.StaffHeight);
+        this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + this.StaffLineParent.StaffHeight);
     }
 
     /**
@@ -409,7 +409,7 @@ export class SkyBottomLineCalculator {
                 const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderRight) ;
 
                 this.updateInRange(this.mSkyLine, startPoint, endPoint, currentTopBorder);
-            } else if (currentBottomBorder > this.mRules.StaffHeight) {
+            } else if (currentBottomBorder > this.StaffLineParent.StaffHeight) {
                 const startPoint: number = Math.floor(boundingBox.AbsolutePosition.x + boundingBox.BorderLeft);
                 const endPoint: number = Math.ceil(boundingBox.AbsolutePosition.x + boundingBox.BorderRight);
 
