@@ -41,6 +41,7 @@ export class EngravingRules {
     private staffDistance: number;
     private betweenStaffDistance: number;
     private staffHeight: number;
+    private tabStaffHeight: number;
     private betweenStaffLinesDistance: number;
     /** Whether to automatically beam notes that don't already have beams in XML. */
     private autoBeamNotes: boolean;
@@ -246,6 +247,7 @@ export class EngravingRules {
 
         // System Sizing and Label Variables
         this.staffHeight = 4.0;
+        this.tabStaffHeight = 6.67;
         this.betweenStaffLinesDistance = EngravingRules.unit;
         this.systemLeftMargin = 0.0;
         this.systemRightMargin = 0.0;
@@ -621,6 +623,12 @@ export class EngravingRules {
     }
     public set StaffHeight(value: number) {
         this.staffHeight = value;
+    }
+    public get TabStaffHeight(): number {
+        return this.tabStaffHeight;
+    }
+    public set TabStaffHeight(value: number) {
+        this.tabStaffHeight = value;
     }
     public get BetweenStaffLinesDistance(): number {
         return this.betweenStaffLinesDistance;

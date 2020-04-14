@@ -60,6 +60,6 @@ export class GraphicalNote extends GraphicalObject {
     }
 
     public get ParentMusicPage(): GraphicalMusicPage {
-      return this.parentVoiceEntry.parentStaffEntry.parentMeasure.parentMusicSystem.Parent;
+      return this.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentMusicSystem.Parent;
     }
 }

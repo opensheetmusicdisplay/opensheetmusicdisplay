@@ -8,7 +8,7 @@ import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet
 import {Instrument} from "../MusicalScore/Instrument";
 import {Note} from "../MusicalScore/VoiceData/Note";
 import {EngravingRules, Fraction} from "..";
-import {SourceMeasure} from "../MusicalScore";
+import {SourceMeasure, StaffLine} from "../MusicalScore";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -101,10 +101,11 @@ export class Cursor {
     const gse: VexFlowStaffEntry =
           gseArr.sort((a, b) => a.PositionAndShape.AbsolutePosition.x <= b.PositionAndShape.AbsolutePosition.x ? -1 : 1 )[0];
     x = gse.PositionAndShape.AbsolutePosition.x;
-    const musicSystem: MusicSystem = gse.parentMeasure.parentMusicSystem;
+    const musicSystem: MusicSystem = gse.parentMeasure.ParentMusicSystem;
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
+    const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
     const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
-      musicSystem.StaffLines[musicSystem.StaffLines.length - 1].PositionAndShape.RelativePosition.y + 4.0;
+    bottomStaffline.PositionAndShape.RelativePosition.y + bottomStaffline.StaffHeight;
     height = endY - y;
 
     // The following code is not necessary (for now, but it could come useful later):

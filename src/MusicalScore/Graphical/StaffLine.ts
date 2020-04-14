@@ -13,6 +13,7 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
+import { EngravingRules } from "./EngravingRules";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -28,6 +29,8 @@ export abstract class StaffLine extends GraphicalObject {
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
     protected abstractExpressions: AbstractGraphicalExpression[] = [];
+    /** The staff height in units */
+    private staffHeight: number;
 
     // For displaying Slurs
     protected graphicalSlurs: GraphicalSlur[] = [];
@@ -38,6 +41,10 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
         this.skyBottomLine = new SkyBottomLineCalculator(this);
+        this.staffHeight = EngravingRules.Rules.StaffHeight;
+        if (this.parentStaff.isTab) {
+            this.staffHeight = EngravingRules.Rules.TabStaffHeight;
+        }
     }
 
     public get Measures(): GraphicalMeasure[] {
@@ -119,6 +126,10 @@ export abstract class StaffLine extends GraphicalObject {
 
     public set OctaveShifts(value: GraphicalOctaveShift[]) {
         this.octaveShifts = value;
+    }
+
+    public get StaffHeight(): number {
+        return this.staffHeight;
     }
 
     // get all Graphical Slurs of a staffline

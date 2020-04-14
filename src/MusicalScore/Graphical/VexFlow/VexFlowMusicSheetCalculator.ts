@@ -99,11 +99,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @returns the minimum required x width of the source measure (=list of staff measures)
    */
   protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
-    // Finalize beams
-    /*for (let measure of measures) {
-     (measure as VexFlowMeasure).finalizeBeams();
-     (measure as VexFlowMeasure).finalizeTuplets();
-     }*/
+    const visibleMeasures: GraphicalMeasure[] = [];
+    for (const measure of measures) {
+      visibleMeasures.push(measure);
+    }
+    measures = visibleMeasures;
+
     // Format the voices
     const allVoices: Vex.Flow.Voice[] = [];
     const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
@@ -117,6 +118,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           allVoices.push(mvoices[voiceID]);
         }
       }
+
       if (voices.length === 0) {
         log.debug("Found a measure with no voices. Continuing anyway.", mvoices);
         // no need to log this, measures with no voices/notes are fine. see OSMDOptions.fillEmptyMeasuresWithWholeRest
@@ -439,29 +441,35 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
-      const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        first_indices: [startNoteIndexInTie],
-        first_note: vfStartNote
-      });
-      const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure1.vfTies.push(vfTie1);
+      if (vfStartNote) { // first_note or last_note must be not null in Vexflow
+        const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+          first_indices: [startNoteIndexInTie],
+          first_note: vfStartNote
+        });
+        const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        measure1.vfTies.push(vfTie1);
+      }
 
-      const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        last_indices: [endNoteIndexInTie],
-        last_note: vfEndNote
-      });
-      const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure2.vfTies.push(vfTie2);
+      if (vfEndNote) {
+        const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+          last_indices: [endNoteIndexInTie],
+          last_note: vfEndNote
+        });
+        const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        measure2.vfTies.push(vfTie2);
+      }
     } else {
       // normal case
-      const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        first_indices: [startNoteIndexInTie],
-        first_note: vfStartNote,
-        last_indices: [endNoteIndexInTie],
-        last_note: vfEndNote
-      });
-      const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure.vfTies.push(vfTie);
+      if (vfStartNote || vfEndNote) { // one of these must be not null in Vexflow
+        const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+          first_indices: [startNoteIndexInTie],
+          first_note: vfStartNote,
+          last_indices: [endNoteIndexInTie],
+          last_note: vfEndNote
+        });
+        const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        measure.vfTies.push(vfTie);
+      }
     }
   }
 
@@ -505,7 +513,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
         try {
-          this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
+        this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
         } catch (e) {
           // TODO this sometimes fails when the measure range to draw doesn't include all the dynamic's measures, method needs to be adjusted
           //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.

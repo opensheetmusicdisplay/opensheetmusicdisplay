@@ -201,7 +201,7 @@ export abstract class MusicSystem extends GraphicalObject {
     public AddGraphicalMeasures(graphicalMeasures: GraphicalMeasure[]): void {
         for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
             const graphicalMeasure: GraphicalMeasure = graphicalMeasures[idx];
-            graphicalMeasure.parentMusicSystem = this;
+            graphicalMeasure.ParentMusicSystem = this;
         }
         this.graphicalMeasures.push(graphicalMeasures);
     }

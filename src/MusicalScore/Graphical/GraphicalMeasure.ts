@@ -42,7 +42,6 @@ export abstract class GraphicalMeasure extends GraphicalObject {
 
     public parentSourceMeasure: SourceMeasure;
     public staffEntries: GraphicalStaffEntry[];
-    public parentMusicSystem: MusicSystem;
     /**
      * The x-width of possibly existing: repetition start line, clef, key, rhythm.
      */
@@ -62,11 +61,20 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public hasError: boolean;
 
     private parentStaff: Staff;
+    private parentMusicSystem: MusicSystem;
     private measureNumber: number = -1;
     private parentStaffLine: StaffLine;
 
     public get ParentStaff(): Staff {
         return this.parentStaff;
+    }
+
+    public get ParentMusicSystem(): MusicSystem {
+        return this.parentMusicSystem;
+    }
+
+    public set ParentMusicSystem(value: MusicSystem) {
+        this.parentMusicSystem = value;
     }
 
     public get MeasureNumber(): number {

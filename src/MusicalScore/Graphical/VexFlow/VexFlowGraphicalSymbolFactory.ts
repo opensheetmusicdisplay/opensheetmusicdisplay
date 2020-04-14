@@ -4,7 +4,6 @@ import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
-import {VexFlowStaffLine} from "./VexFlowStaffLine";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -26,6 +25,8 @@ import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { VexFlowConverter } from "./VexFlowConverter";
+import { VexFlowTabMeasure } from "./VexFlowTabMeasure";
+import { VexFlowStaffLine } from "./VexFlowStaffLine";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -55,8 +56,18 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param staff
      * @returns {VexFlowMeasure}
      */
-    public createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure {
-        return new VexFlowMeasure(staff, undefined, sourceMeasure);
+    public createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff, isTabMeasure: boolean = false): GraphicalMeasure {
+        return new VexFlowMeasure(staff, sourceMeasure, undefined);
+    }
+
+    /**
+     * Construct an empty Tab staffMeasure from the given source measure and staff.
+     * @param sourceMeasure
+     * @param staff
+     * @returns {VexFlowTabMeasure}
+     */
+    public createTabStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure {
+        return new VexFlowTabMeasure(staff, sourceMeasure);
     }
 
     /**
@@ -65,7 +76,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure {
-        return new VexFlowMeasure(staffLine.ParentStaff, staffLine);
+        return new VexFlowMeasure(staffLine.ParentStaff, undefined, staffLine);
     }
 
     /**
