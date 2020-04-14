@@ -77,6 +77,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
+        // how much performance does this cost? finalizeBeams generates new Vexflow beams etc.
+        // TODO only do when zoom has changed
+        (measure as VexFlowMeasure).finalizeBeams(); // without this, when zooming a lot (e.g. 250%), beams keep their old, now wrong slope.
       }
     }
   }
