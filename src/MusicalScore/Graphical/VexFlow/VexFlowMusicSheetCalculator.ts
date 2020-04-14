@@ -441,29 +441,35 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
-      const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        first_indices: [startNoteIndexInTie],
-        first_note: vfStartNote
-      });
-      const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure1.vfTies.push(vfTie1);
+      if (vfStartNote) { // first_note or last_note must be not null in Vexflow
+        const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+          first_indices: [startNoteIndexInTie],
+          first_note: vfStartNote
+        });
+        const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        measure1.vfTies.push(vfTie1);
+      }
 
-      const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        last_indices: [endNoteIndexInTie],
-        last_note: vfEndNote
-      });
-      const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure2.vfTies.push(vfTie2);
+      if (vfEndNote) {
+        const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+          last_indices: [endNoteIndexInTie],
+          last_note: vfEndNote
+        });
+        const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        measure2.vfTies.push(vfTie2);
+      }
     } else {
       // normal case
-      const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
-        first_indices: [startNoteIndexInTie],
-        first_note: vfStartNote,
-        last_indices: [endNoteIndexInTie],
-        last_note: vfEndNote
-      });
-      const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-      measure.vfTies.push(vfTie);
+      if (vfStartNote || vfEndNote) { // one of these must be not null in Vexflow
+        const vfTie: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+          first_indices: [startNoteIndexInTie],
+          first_note: vfStartNote,
+          last_indices: [endNoteIndexInTie],
+          last_note: vfEndNote
+        });
+        const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        measure.vfTies.push(vfTie);
+      }
     }
   }
 
