@@ -13,6 +13,11 @@ export class SvgVexFlowBackend extends VexFlowBackend {
 
     private ctx: Vex.Flow.SVGContext;
 
+    constructor(rules: EngravingRules) {
+        super();
+        this.rules = rules;
+    }
+
     public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
         return Vex.Flow.Renderer.Backends.SVG;
     }
@@ -52,10 +57,10 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         }
 
         // set background color if not transparent
-        if (EngravingRules.Rules.PageBackgroundColor !== undefined) {
+        if (this.rules.PageBackgroundColor !== undefined) {
             this.ctx.save();
             // note that this will hide the cursor
-            this.ctx.setFillStyle(EngravingRules.Rules.PageBackgroundColor);
+            this.ctx.setFillStyle(this.rules.PageBackgroundColor);
 
             this.ctx.fillRect(0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
             this.ctx.restore();
@@ -77,7 +82,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             this.ctx.attributes.fill = color;
             this.ctx.attributes.stroke = color;
         }
-        this.ctx.setFont(EngravingRules.Rules.DefaultFontFamily, fontHeight, VexFlowConverter.fontStyle(fontStyle));
+        this.ctx.setFont(this.rules.DefaultFontFamily, fontHeight, VexFlowConverter.fontStyle(fontStyle));
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
         this.ctx.attributes["font-size"] = `${fontHeight}px`;
         this.ctx.state["font-size"] = `${fontHeight}px`;

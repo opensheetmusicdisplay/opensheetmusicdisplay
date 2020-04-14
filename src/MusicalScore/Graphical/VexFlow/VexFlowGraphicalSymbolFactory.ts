@@ -36,8 +36,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param systemIndex
      * @returns {VexFlowMusicSystem}
      */
-    public createMusicSystem(systemIndex: number): MusicSystem {
-        return new VexFlowMusicSystem(systemIndex);
+    public createMusicSystem(systemIndex: number, rules: EngravingRules): MusicSystem {
+        return new VexFlowMusicSystem(systemIndex, rules);
     }
 
     /**
@@ -166,16 +166,19 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param transposeHalftones
      */
     public createChordSymbols(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
+        const rules: EngravingRules = graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules;
         let xShift: number = 0;
-        const chordSymbolSpacing: number = EngravingRules.Rules.ChordSymbolXSpacing;
+        const chordSymbolSpacing: number = rules.ChordSymbolXSpacing;
         for (const chordSymbolContainer of sourceStaffEntry.ChordContainers) {
             const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
               new GraphicalChordSymbolContainer(chordSymbolContainer,
                                                 graphicalStaffEntry.PositionAndShape,
-                                                EngravingRules.Rules.ChordSymbolTextHeight,
-                                                transposeHalftones);
+                                                rules.ChordSymbolTextHeight,
+                                                transposeHalftones,
+                                                graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules
+                                                );
             const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
-            graphicalLabel.PositionAndShape.RelativePosition.y -= EngravingRules.Rules.ChordSymbolYOffset;
+            graphicalLabel.PositionAndShape.RelativePosition.y -= rules.ChordSymbolYOffset;
             graphicalLabel.PositionAndShape.RelativePosition.x += xShift;
             // TODO check for available space until next staffEntry or chord symbol (x direction)
             graphicalLabel.setLabelPositionAndShapeBorders();

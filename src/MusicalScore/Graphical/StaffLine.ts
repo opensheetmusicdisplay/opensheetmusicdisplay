@@ -13,7 +13,6 @@ import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
-import { EngravingRules } from "./EngravingRules";
 
 /**
  * A StaffLine contains the [[Measure]]s in one line of the music sheet
@@ -41,9 +40,9 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
         this.skyBottomLine = new SkyBottomLineCalculator(this);
-        this.staffHeight = EngravingRules.Rules.StaffHeight;
+        this.staffHeight = this.parentMusicSystem.rules.StaffHeight;
         if (this.parentStaff.isTab) {
-            this.staffHeight = EngravingRules.Rules.TabStaffHeight;
+            this.staffHeight = this.parentMusicSystem.rules.TabStaffHeight;
         }
     }
 

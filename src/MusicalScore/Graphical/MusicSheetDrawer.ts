@@ -295,7 +295,7 @@ export abstract class MusicSheetDrawer {
         for (const staffLine of musicSystem.StaffLines) {
             this.drawStaffLine(staffLine);
 
-            if (EngravingRules.Rules.RenderLyrics) {
+            if (this.rules.RenderLyrics) {
                 // draw lyric dashes
                 if (staffLine.LyricsDashes.length > 0) {
                     this.drawDashes(staffLine.LyricsDashes);
@@ -351,7 +351,7 @@ export abstract class MusicSheetDrawer {
             this.drawMeasure(measure);
         }
 
-        if (EngravingRules.Rules.RenderLyrics) {
+        if (this.rules.RenderLyrics) {
             if (staffLine.LyricsDashes.length > 0) {
                 this.drawDashes(staffLine.LyricsDashes);
             }
@@ -379,7 +379,7 @@ export abstract class MusicSheetDrawer {
             lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
             lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
             lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
-            this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidth);
+            this.drawGraphicalLine(lyricLine, this.rules.LyricUnderscoreLineWidth);
         });
     }
 
@@ -515,7 +515,7 @@ export abstract class MusicSheetDrawer {
 
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentEnum.CenterCenter),
+            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentEnum.CenterCenter, this.rules),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
         layer++;

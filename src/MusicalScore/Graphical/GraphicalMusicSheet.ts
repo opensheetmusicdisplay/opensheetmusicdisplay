@@ -23,7 +23,6 @@ import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
-import {EngravingRules} from "./EngravingRules";
 
 /**
  * The graphical counterpart of a [[MusicSheet]]
@@ -165,7 +164,7 @@ export class GraphicalMusicSheet {
      */
     public static transformRelativeToAbsolutePosition(graphicalMusicSheet: GraphicalMusicSheet): void {
         for (let i: number = 0; i < graphicalMusicSheet.MusicPages.length; i++) {
-            const pageAbsolute: PointF2D = graphicalMusicSheet.MusicPages[i].setMusicPageAbsolutePosition(i, graphicalMusicSheet.ParentMusicSheet.rules);
+            const pageAbsolute: PointF2D = graphicalMusicSheet.MusicPages[i].setMusicPageAbsolutePosition(i, graphicalMusicSheet.ParentMusicSheet.Rules);
             const page: GraphicalMusicPage = graphicalMusicSheet.MusicPages[i];
             page.PositionAndShape.calculateAbsolutePositionsRecursive(pageAbsolute.x, pageAbsolute.y);
         }
@@ -463,7 +462,7 @@ export class GraphicalMusicSheet {
     public getLastGraphicalMeasureFromIndex(staffIndex: number, lastRendered: boolean = true): GraphicalMeasure {
         let measureIndex: number = this.measureList.length - 1;
         if (lastRendered) {
-            measureIndex = EngravingRules.Rules.MaxMeasureToDrawIndex;
+            measureIndex = this.musicSheet.Rules.MaxMeasureToDrawIndex;
         }
         return this.measureList[measureIndex][staffIndex];
     }

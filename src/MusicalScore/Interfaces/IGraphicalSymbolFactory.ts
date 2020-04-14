@@ -14,10 +14,11 @@ import {GraphicalMeasure} from "../Graphical/GraphicalMeasure";
 import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalVoiceEntry } from "../Graphical/GraphicalVoiceEntry";
 import { VoiceEntry } from "../VoiceData/VoiceEntry";
+import { EngravingRules } from "../Graphical/EngravingRules";
 
 export interface IGraphicalSymbolFactory {
 
-    createMusicSystem(systemIndex: number): MusicSystem;
+    createMusicSystem(systemIndex: number, rules: EngravingRules): MusicSystem;
 
     createStaffLine(parentSystem: MusicSystem, parentStaff: Staff): StaffLine;
 
