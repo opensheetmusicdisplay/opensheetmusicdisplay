@@ -64,6 +64,7 @@ export class OpenSheetMusicDisplay {
 
     public cursor: Cursor;
     public zoom: number = 1.0;
+    private zoomUpdated: boolean = false;
 
     private container: HTMLElement;
     private backendType: BackendType;
@@ -236,6 +237,7 @@ export class OpenSheetMusicDisplay {
             // Update the cursor position
             this.cursor.update();
         }
+        this.zoomUpdated = false;
         //console.log("[OSMD] render finished");
     }
 
@@ -814,6 +816,12 @@ export class OpenSheetMusicDisplay {
     }
     public set AutoResizeEnabled(value: boolean) {
         this.autoResizeEnabled = value;
+    }
+
+    public set Zoom(value: number) {
+        this.zoom = value;
+        this.zoomUpdated = true;
+        (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = this.zoomUpdated;
     }
 
     public set FollowCursor(value: boolean) {

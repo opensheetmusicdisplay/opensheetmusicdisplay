@@ -693,7 +693,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     function scale() {
         disable();
         window.setTimeout(function () {
-            openSheetMusicDisplay.zoom = zoom;
+            openSheetMusicDisplay.Zoom = zoom;
             openSheetMusicDisplay.render();
             enable();
         }, 0);
