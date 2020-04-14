@@ -29,7 +29,7 @@ import {Voice} from "../../VoiceData/Voice";
 import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
-import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
+import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
@@ -1039,12 +1039,21 @@ export class VexFlowMeasure extends GraphicalMeasure {
     protected createFingerings(voiceEntry: GraphicalVoiceEntry): void {
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
         const technicalInstructions: TechnicalInstruction[] = voiceEntry.parentVoiceEntry.TechnicalInstructions;
-        const fingeringsCount: number = technicalInstructions.length;
-        for (let i: number = 0; i < technicalInstructions.length; i++) {
-            const technicalInstruction: TechnicalInstruction = technicalInstructions[i];
+        let fingeringsCount: number = 0;
+        for (const instruction of technicalInstructions) {
+            if (instruction.type === TechnicalInstructionType.Fingering) {
+                fingeringsCount++;
+            }
+        }
+        let fingeringIndex: number = -1;
+        for (const fingeringInstruction of technicalInstructions) {
+            if (fingeringInstruction.type !== TechnicalInstructionType.Fingering) {
+                continue;
+            }
+            fingeringIndex++; // 0 for first fingering
             let fingeringPosition: PlacementEnum = EngravingRules.Rules.FingeringPosition;
-            if (technicalInstruction.placement !== PlacementEnum.NotYetDefined) {
-                fingeringPosition = technicalInstruction.placement;
+            if (fingeringInstruction.placement !== PlacementEnum.NotYetDefined) {
+                fingeringPosition = fingeringInstruction.placement;
             }
             let modifierPosition: any; // Vex.Flow.Stavemodifier.Position
             switch (fingeringPosition) {
@@ -1074,12 +1083,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
             }
 
-            const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(technicalInstruction.value);
+            const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(fingeringInstruction.value);
             fretFinger.setPosition(modifierPosition);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
                 const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
-                const ordering: number = fingeringPosition === PlacementEnum.Above ? i :
-                    technicalInstructions.length - 1 - i; // reverse order for fingerings below staff
+                const ordering: number = fingeringPosition === PlacementEnum.Above ? fingeringIndex :
+                    fingeringsCount - 1 - fingeringIndex; // reverse order for fingerings below staff
                 if (EngravingRules.Rules.FingeringInsideStafflines && fingeringsCount > 1) { // y-shift for single fingering is ok
                     // experimental, bounding boxes wrong for fretFinger above/below, better would be creating Labels
                     // set y-shift. vexflow fretfinger simply places directly above/below note
@@ -1087,17 +1096,22 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const shiftCount: number = fingeringsCount * 2.5;
                     (<any>fretFinger).setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!EngravingRules.Rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
-                    const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(technicalInstruction.value);
+                    const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(fingeringInstruction.value);
                     (<any>stringNumber).radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
                     // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-                    vexFlowVoiceEntry.vfStaveNote.addModifier((i as any), (stringNumber as any));
+                    vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (stringNumber as any));
                     continue;
                 }
             }
-            // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-            vexFlowVoiceEntry.vfStaveNote.addModifier((i as any), (fretFinger as any));
+            if (vexFlowVoiceEntry.vfStaveNote.getCategory() === "tabnotes") {
+                // TODO this doesn't work yet. don't add fingering for tabs for now.
+                // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
+            } else {
+                // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
+                vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (fretFinger as any));
+            }
         }
     }
 
