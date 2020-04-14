@@ -104,7 +104,7 @@ export class RepetitionInstructionReader {
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
         } else { // location right
-          if (type === "stop" || type === "discontinue") {
+          if (type === "stop") {
             const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
                                                                                     AlignmentType.End, undefined, endingIndices);
             this.addInstruction(this.repetitionInstructions, newInstruction);

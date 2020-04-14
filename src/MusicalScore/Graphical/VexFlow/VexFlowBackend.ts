@@ -3,6 +3,8 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
+import {GraphicalMusicPage} from "..";
+import {BackendType} from "../../../OpenSheetMusicDisplay";
 
 export class VexFlowBackends {
   public static CANVAS: 0;
@@ -13,6 +15,9 @@ export class VexFlowBackends {
 }
 
 export abstract class VexFlowBackend {
+
+  /** The GraphicalMusicPage the backend is drawing from. Each backend only renders one GraphicalMusicPage, to which the coordinates are relative. */
+  public graphicalMusicPage: GraphicalMusicPage;
 
   public abstract initialize(container: HTMLElement): void;
 
@@ -28,7 +33,33 @@ export abstract class VexFlowBackend {
     return this.renderer;
   }
 
-  public abstract getContext(): Vex.IRenderContext;
+  public removeAllChildrenFromContainer(container: HTMLElement): void {
+    while (container.children.length !== 0) {
+      container.removeChild(container.children.item(0));
+    }
+  }
+
+  // note: removing single children to remove all is error-prone, because sometimes a random SVG-child remains.
+  public removeFromContainer(container: HTMLElement): void {
+    //console.log("backend type: " + this.getVexflowBackendType());
+    let htmlElementToRemove: HTMLElement = this.canvas; // for SVGBackend
+    if (this.getVexflowBackendType() === Vex.Flow.Renderer.Backends.CANVAS) {
+      htmlElementToRemove = this.inner;
+      // for SVG, this.canvas === this.inner, but for Canvas, removing this.canvas causes an error because it's not a child of container,
+      // so we have to remove this.inner instead.
+    }
+
+    // only remove child if the container has this child, otherwise it will throw an error.
+    for (let i: number = 0; i < container.children.length; i++) {
+      if (container.children.item(i) === htmlElementToRemove) {
+        container.removeChild(htmlElementToRemove);
+        break;
+      }
+    }
+    // there is unfortunately no built-in container.hasChild(child) method.
+  }
+
+public abstract getContext(): Vex.IRenderContext;
 
   // public abstract setWidth(width: number): void;
   // public abstract setHeight(height: number): void;
@@ -58,7 +89,12 @@ export abstract class VexFlowBackend {
 
   public abstract renderCurve(points: PointF2D[]): void;
 
-  public abstract getBackendType(): number;
+  public abstract getVexflowBackendType(): Vex.Flow.Renderer.Backends;
+
+  /** The general type of backend: Canvas or SVG.
+   * This is not used for now (only VexflowBackendType used), but it may be useful when we don't want to use a Vexflow class.
+   */
+  public abstract getOSMDBackendType(): BackendType;
 
   protected renderer: Vex.Flow.Renderer;
   protected inner: HTMLElement;

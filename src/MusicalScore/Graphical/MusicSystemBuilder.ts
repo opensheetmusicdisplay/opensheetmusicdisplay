@@ -24,12 +24,11 @@ import {SystemLinePosition} from "./SystemLinePosition";
 export class MusicSystemBuilder {
     private measureList: GraphicalMeasure[][];
     private graphicalMusicSheet: GraphicalMusicSheet;
-    private currentMusicPage: GraphicalMusicPage;
-    private currentPageHeight: number;
     private currentSystemParams: SystemBuildParameters;
     private numberOfVisibleStaffLines: number;
     private rules: EngravingRules;
     private measureListIndex: number;
+    private musicSystems: MusicSystem[] = [];
 
     /**
      * Does the mapping from the currently visible staves to the global staff-list of the music sheet.
@@ -47,8 +46,6 @@ export class MusicSystemBuilder {
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = this.graphicalMusicSheet.ParentMusicSheet.rules;
         this.measureList = measureList;
-        this.currentMusicPage = this.createMusicPage();
-        this.currentPageHeight = 0.0;
         this.numberOfVisibleStaffLines = numberOfStaffLines;
         this.activeRhythm = new Array(this.numberOfVisibleStaffLines);
         this.activeKeys = new Array(this.numberOfVisibleStaffLines);
@@ -56,7 +53,7 @@ export class MusicSystemBuilder {
         this.initializeActiveInstructions(this.measureList[0]);
     }
 
-    public buildMusicSystems(): void {
+    public buildMusicSystems(): MusicSystem[] {
         let previousMeasureEndsSystem: boolean = false;
         const systemMaxWidth: number = this.getFullPageSystemWidth();
         this.measureListIndex = 0;
@@ -64,9 +61,6 @@ export class MusicSystemBuilder {
 
         // the first System - create also its Labels
         this.currentSystemParams.currentSystem = this.initMusicSystem();
-        this.layoutSystemStaves();
-        this.addSystemLabels();
-        this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.RelativePosition.y;
 
         let numberOfMeasures: number = 0;
         for (let idx: number = 0, len: number = this.measureList.length; idx < len; ++idx) {
@@ -119,6 +113,7 @@ export class MusicSystemBuilder {
             }
             const totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
             const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
+            //if (true) // prevent line break at all costs, squeezes measures and breaks lyrics spacing
             if (isSystemStartMeasure || measureFitsInSystem) {
                 this.addMeasureToSystem(
                     graphicalMeasures, measureStartLine, measureEndLine, totalMeasureWidth,
@@ -134,6 +129,20 @@ export class MusicSystemBuilder {
             previousMeasureEndsSystem = sourceMeasureEndsSystem;
         }
         this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true);
+        return this.musicSystems;
+    }
+
+    /**
+     * calculates the y positions of the staff lines within a system and
+     * furthermore the y positions of the systems themselves.
+     */
+    public calculateSystemYLayout(): void {
+        for (const musicSystem of this.musicSystems) {
+            this.optimizeDistanceBetweenStaffLines(musicSystem);
+        }
+
+        // set y positions of systems using the previous system and a fixed distance.
+        this.calculateMusicSystemsRelativePositions();
     }
 
     /**
@@ -168,24 +177,9 @@ export class MusicSystemBuilder {
             this.checkAndCreateExtraInstructionMeasure(measures);
         }
         this.stretchMusicSystem(isPartEndingSystem);
-        if (this.currentPageHeight + this.currentSystemParams.currentSystem.PositionAndShape.Size.height + this.rules.SystemDistance <= this.rules.PageHeight) {
-            this.currentPageHeight += this.currentSystemParams.currentSystem.PositionAndShape.Size.height + this.rules.SystemDistance;
-            if (
-                this.currentPageHeight + this.currentSystemParams.currentSystem.PositionAndShape.Size.height
-                + this.rules.SystemDistance >= this.rules.PageHeight
-            ) {
-                this.currentMusicPage = this.createMusicPage();
-                this.currentPageHeight = this.rules.PageTopMargin + this.rules.TitleTopDistance;
-            }
-        } else {
-            this.currentMusicPage = this.createMusicPage();
-            this.currentPageHeight = this.rules.PageTopMargin + this.rules.TitleTopDistance;
-        }
         this.currentSystemParams = new SystemBuildParameters();
         if (this.measureListIndex < this.measureList.length) {
             this.currentSystemParams.currentSystem = this.initMusicSystem();
-            this.layoutSystemStaves();
-            this.addSystemLabels();
         }
     }
 
@@ -229,37 +223,20 @@ export class MusicSystemBuilder {
         this.currentSystemParams.systemMeasureIndex++;
     }
 
-    private addSystemLabels(): void {
-        this.currentSystemParams.currentSystem.createMusicSystemLabel(
-            this.rules.InstrumentLabelTextHeight,
-            this.rules.SystemLabelsRightMargin,
-            this.rules.LabelMarginBorderFactor
-        );
-    }
-
-    /**
-     * Create a new [[GraphicalMusicPage]]
-     * (for now only one long page is used per music sheet, as we scroll down and have no page flips)
-     * @returns {GraphicalMusicPage}
-     */
-    private createMusicPage(): GraphicalMusicPage {
-        const page: GraphicalMusicPage = new GraphicalMusicPage(this.graphicalMusicSheet);
-        this.graphicalMusicSheet.MusicPages.push(page);
-        page.PositionAndShape.BorderLeft = 0.0;
-        page.PositionAndShape.BorderRight = this.graphicalMusicSheet.ParentMusicSheet.pageWidth;
-        page.PositionAndShape.BorderTop = 0.0;
-        page.PositionAndShape.BorderBottom = this.rules.PageHeight;
-        page.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
-        return page;
-    }
-
     /**
      * Initialize a new [[MusicSystem]].
      * @returns {MusicSystem}
      */
     private initMusicSystem(): MusicSystem {
-        const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.currentMusicPage, this.globalSystemIndex++);
-        this.currentMusicPage.MusicSystems.push(musicSystem);
+        const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.globalSystemIndex++);
+        this.musicSystems.push(musicSystem);
+        this.layoutSystemStaves(musicSystem);
+        musicSystem.createMusicSystemLabel(
+            this.rules.InstrumentLabelTextHeight,
+            this.rules.SystemLabelsRightMargin,
+            this.rules.LabelMarginBorderFactor,
+            this.musicSystems.length === 1
+        );
         return musicSystem;
     }
 
@@ -268,13 +245,12 @@ export class MusicSystemBuilder {
      * @returns {number}
      */
     private getFullPageSystemWidth(): number {
-        return this.currentMusicPage.PositionAndShape.Size.width - this.rules.PageLeftMargin
+        return this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageLeftMargin
             - this.rules.PageRightMargin - this.rules.SystemLeftMargin - this.rules.SystemRightMargin;
     }
 
-    private layoutSystemStaves(): void {
+    private layoutSystemStaves(musicSystem: MusicSystem): void {
         const systemWidth: number = this.getFullPageSystemWidth();
-        const musicSystem: MusicSystem = this.currentSystemParams.currentSystem;
         const boundingBox: BoundingBox = musicSystem.PositionAndShape;
         boundingBox.BorderLeft = 0.0;
         boundingBox.BorderRight = systemWidth;
@@ -334,8 +310,7 @@ export class MusicSystemBuilder {
             musicSystem.StaffLines.push(staffLine);
             const boundingBox: BoundingBox = staffLine.PositionAndShape;
             const relativePosition: PointF2D = new PointF2D();
-            if (musicSystem.Parent.MusicSystems[0] === musicSystem &&
-                musicSystem.Parent === musicSystem.Parent.Parent.MusicPages[0] &&
+            if (musicSystem === this.musicSystems[0] &&
                 !EngravingRules.Rules.CompactMode) {
                 relativePosition.x = this.rules.FirstSystemMargin;
                 boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width - this.rules.FirstSystemMargin;
@@ -928,7 +903,143 @@ export class MusicSystemBuilder {
         }
         currentSystem.PositionAndShape.BorderRight = width + this.currentSystemParams.maxLabelLength + this.rules.SystemLabelsRightMargin;
     }
+
+    /**
+     * This method checks the distances between any two consecutive StaffLines of a System and if needed, shifts the lower one down.
+     * @param musicSystem
+     */
+    private optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
+        // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
+        if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
+            for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
+                const upperBottomLine: number = musicSystem.StaffLines[i].SkyBottomLineCalculator.getBottomLineMax();
+                // TODO: Lower skyline should add to offset when there are items above the line. Currently no test
+                // file available
+                // const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
+                if (Math.abs(upperBottomLine) > this.rules.MinimumStaffLineDistance) {
+                    // Remove staffheight from offset. As it results in huge distances
+                    const offset: number = Math.abs(upperBottomLine) + this.rules.MinimumStaffLineDistance - this.rules.StaffHeight;
+                    this.updateStaffLinesRelativePosition(musicSystem, i + 1, offset);
+                }
+            }
+        }
+        const firstStaffLine: StaffLine = musicSystem.StaffLines[0];
+        musicSystem.PositionAndShape.BorderTop = firstStaffLine.PositionAndShape.RelativePosition.y + firstStaffLine.PositionAndShape.BorderTop;
+        const lastStaffLine: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
+        musicSystem.PositionAndShape.BorderBottom = lastStaffLine.PositionAndShape.RelativePosition.y + lastStaffLine.PositionAndShape.BorderBottom;
+    }
+
+    /**
+     * This method updates the System's StaffLine's RelativePosition (starting from the given index).
+     * @param musicSystem
+     * @param index
+     * @param value
+     */
+    private updateStaffLinesRelativePosition(musicSystem: MusicSystem, index: number, value: number): void {
+        for (let i: number = index; i < musicSystem.StaffLines.length; i++) {
+            musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y += value;
+        }
+
+        musicSystem.PositionAndShape.BorderBottom += value;
+    }
+
+    /**
+     * Create a new [[GraphicalMusicPage]]
+     * (for now only one long page is used per music sheet, as we scroll down and have no page flips)
+     * @returns {GraphicalMusicPage}
+     */
+    private createMusicPage(): GraphicalMusicPage {
+        const page: GraphicalMusicPage = new GraphicalMusicPage(this.graphicalMusicSheet);
+        this.graphicalMusicSheet.MusicPages.push(page);
+        page.PageNumber = this.graphicalMusicSheet.MusicPages.length; // caution: page number = page index + 1
+        page.PositionAndShape.BorderLeft = 0.0;
+        page.PositionAndShape.BorderRight = this.graphicalMusicSheet.ParentMusicSheet.pageWidth;
+        page.PositionAndShape.BorderTop = 0.0;
+        page.PositionAndShape.BorderBottom = this.rules.PageHeight;
+        page.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
+        return page;
+    }
+
+    private addSystemToPage(page: GraphicalMusicPage, system: MusicSystem): void {
+        page.MusicSystems.push(system);
+        system.Parent = page;
+    }
+
+    /** Calculates the relative Positions of all MusicSystems.
+     *
+     */
+    private calculateMusicSystemsRelativePositions(): void {
+        let currentPage: GraphicalMusicPage = this.createMusicPage();
+        let currentYPosition: number = 0;
+        // xPosition is always fixed
+        let currentSystem: MusicSystem = this.musicSystems[0];
+        let timesPageCouldntFitSingleSystem: number = 0;
+
+        for (let i: number = 0; i < this.musicSystems.length; i++) {
+            currentSystem = this.musicSystems[i];
+            if (currentPage.MusicSystems.length === 0) {
+                // first system on the page:
+                this.addSystemToPage(currentPage, currentSystem);
+                if (EngravingRules.Rules.CompactMode) {
+                    currentYPosition = EngravingRules.Rules.PageTopMarginNarrow;
+                } else {
+                    currentYPosition = EngravingRules.Rules.PageTopMargin;
+                }
+
+                // Handle Title for first System on the first page
+                if (this.graphicalMusicSheet.MusicPages.length === 1 &&
+                    EngravingRules.Rules.RenderTitle) {
+                    currentYPosition +=   this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
+                                            this.rules.TitleBottomDistance;
+                }
+                currentYPosition += -currentSystem.PositionAndShape.BorderTop;
+                const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
+                                                                currentYPosition);
+                currentSystem.PositionAndShape.RelativePosition = relativePosition;
+                currentYPosition += currentSystem.PositionAndShape.BorderBottom;
+                if (currentYPosition > this.rules.PageHeight - this.rules.PageBottomMargin) { // can't fit single system on page, maybe PageFormat too small
+                    timesPageCouldntFitSingleSystem++;
+                    if (timesPageCouldntFitSingleSystem <= 4) { // only warn once with detailed info
+                        console.log(`warning: could not fit a single system on page ${currentPage.PageNumber}` +
+                            ` and measure number ${currentSystem.GraphicalMeasures[0][0].MeasureNumber}.
+                            The PageFormat may be too small for this sheet."
+                            Will not give further warnings for all pages, only total.`
+                        );
+                    }
+                }
+            } else {
+                // if this is not the first system on the page:
+                // find optimum distance between Systems
+                const previousSystem: MusicSystem = this.musicSystems[i - 1];
+                const previousStaffLineBB: BoundingBox = previousSystem.StaffLines[previousSystem.StaffLines.length - 1].PositionAndShape;
+                const currentStaffLineBB: BoundingBox = currentSystem.StaffLines[0].PositionAndShape;
+                let distance: number =  currentStaffLineBB.RelativePosition.y + previousStaffLineBB.BorderTop -
+                                        (previousStaffLineBB.RelativePosition.y + previousStaffLineBB.BorderBottom);
+                distance = Math.max(this.rules.MinimumDistanceBetweenSystems, distance);
+                const neededHeight: number = distance - currentSystem.PositionAndShape.BorderTop + currentSystem.PositionAndShape.BorderBottom;
+                if (currentYPosition + neededHeight <
+                    this.rules.PageHeight - this.rules.PageBottomMargin) {
+                    // enough space on this page:
+                    this.addSystemToPage(currentPage, currentSystem);
+                    const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
+                                                                    currentYPosition + distance - currentSystem.PositionAndShape.BorderTop);
+                    currentSystem.PositionAndShape.RelativePosition = relativePosition;
+                    currentYPosition += neededHeight;
+                } else {
+                    // new page needed:
+                    currentPage = this.createMusicPage();
+                    // re-check this system again:
+                    i -= 1;
+                    continue;
+                }
+            }
+        }
+        if (timesPageCouldntFitSingleSystem > 0) {
+            console.log(`total amount of pages that couldn't fit a single music system: ${timesPageCouldntFitSingleSystem} of ${currentPage.PageNumber}`);
+        }
+    }
 }
+
 export class SystemBuildParameters {
     public currentSystem: MusicSystem;
     public systemMeasures: MeasureBuildParameters[] = [];

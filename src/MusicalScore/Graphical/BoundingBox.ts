@@ -203,7 +203,15 @@ export class BoundingBox {
     }
 
     public set Parent(value: BoundingBox) {
+        if (this.parent !== undefined) {
+            // remove from old parent
+            const index: number = this.parent.ChildElements.indexOf(this, 0);
+            if (index > -1) {
+                this.parent.ChildElements.splice(index, 1);
+            }
+        }
         this.parent = value;
+        // add to new parent
         if (this.parent.ChildElements.indexOf(this) > -1) {
             log.error("BoundingBox of " + (this.dataObject.constructor as any).name +
             " already in children list of " + (this.parent.dataObject.constructor as any).name + "'s BoundingBox");

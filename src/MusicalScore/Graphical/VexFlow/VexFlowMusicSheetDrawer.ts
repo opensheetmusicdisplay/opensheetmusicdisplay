@@ -26,6 +26,8 @@ import log = require("loglevel");
 import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { DrawingParameters } from "../DrawingParameters";
+import { GraphicalMusicPage } from "../GraphicalMusicPage";
+import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -36,39 +38,49 @@ export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private backend: VexFlowBackend;
+    private backends: VexFlowBackend[] = [];
     private zoom: number = 1.0;
+    private pageIdx: number = 0; // this is a bad solution, should use MusicPage.PageNumber instead.
 
-    constructor(element: HTMLElement,
-                backend: VexFlowBackend,
-                drawingParameters: DrawingParameters = new DrawingParameters()) {
+    constructor(drawingParameters: DrawingParameters = new DrawingParameters()) {
         super(new VexFlowTextMeasurer(), drawingParameters);
-        this.backend = backend;
+    }
+
+    public get Backends(): VexFlowBackend[] {
+        return this.backends;
+    }
+
+    public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        this.pageIdx = 0;
+        for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
+            const backend: VexFlowBackend = this.backends[this.pageIdx];
+            backend.graphicalMusicPage = graphicalMusicPage;
+            backend.scale(this.zoom);
+            //backend.resize(graphicalMusicSheet.ParentMusicSheet.pageWidth * unitInPixels * this.zoom,
+            //               EngravingRules.Rules.PageHeight * unitInPixels * this.zoom);
+            this.pageIdx += 1;
+        }
+
+        this.pageIdx = 0;
+        this.backend = this.backends[0];
+        super.drawSheet(graphicalMusicSheet);
+    }
+
+    protected drawPage(page: GraphicalMusicPage): void {
+        this.backend = this.backends[page.PageNumber - 1]; // TODO we may need to set this in a couple of other places. this.pageIdx is a bad solution
+        super.drawPage(page);
+        this.pageIdx += 1;
+        this.backend = this.backends[this.pageIdx];
     }
 
     public clear(): void {
-        this.backend.clear();
+        for (const backend of this.backends) {
+            backend.clear();
+        }
     }
 
-    /**
-     * Zoom the rendering areas
-     * @param k is the zoom factor
-     */
-    public scale(k: number): void {
-        this.zoom = k;
-        this.backend.scale(this.zoom);
-    }
-
-    /**
-     * Resize the rendering areas
-     * @param x
-     * @param y
-     */
-    public resize(x: number, y: number): void {
-        this.backend.resize(x, y);
-    }
-
-    public translate(x: number, y: number): void {
-        this.backend.translate(x, y);
+    public setZoom(zoom: number): void {
+        this.zoom = zoom;
     }
 
     /**
@@ -155,10 +167,36 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     //     ctx.fillStyle = oldStyle;
     // }
 
-    public drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): void {
+    /** Draws a line in the current backend. Only usable while pages are drawn sequentially, because backend reference is updated in that process.
+     *  To add your own lines after rendering, use DrawOverlayLine.
+     */
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): void {
+        // TODO maybe the backend should be given as an argument here as well, otherwise this can't be used after rendering of multiple pages is done.
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
+        /*if (!this.backend) {
+            this.backend = this.backends[0];
+        }*/
         this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
+    }
+
+    /** Lets a user/developer draw an overlay line on the score. Use this instead of drawLine, which is for OSMD internally only.
+     *  The MusicPage has to be specified, because each page and Vexflow backend has its own relative coordinates.
+     *  (the AbsolutePosition of a GraphicalNote is relative to its backend)
+     *  To get a MusicPage, use GraphicalNote.ParentMusicPage.
+     */
+    public DrawOverlayLine(start: PointF2D, stop: PointF2D, musicPage: GraphicalMusicPage,
+                           color: string = "#FF0000FF", lineWidth: number = 0.2): void {
+        if (!musicPage.PageNumber || musicPage.PageNumber > this.backends.length || musicPage.PageNumber < 1) {
+            console.log("VexFlowMusicSheetDrawer.drawOverlayLine: invalid page number / music page number doesn't correspond to an existing backend.");
+            return;
+        }
+        const musicPageIndex: number = musicPage.PageNumber - 1;
+        const backendToUse: VexFlowBackend = this.backends[musicPageIndex];
+
+        start = this.applyScreenTransformation(start);
+        stop = this.applyScreenTransformation(stop);
+        backendToUse.renderLine(start, stop, color, lineWidth * unitInPixels);
     }
 
     protected drawSkyLine(staffline: StaffLine): void {

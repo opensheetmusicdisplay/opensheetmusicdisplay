@@ -49,6 +49,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public graphicalVoiceEntries: GraphicalVoiceEntry[];
     public staffEntryParent: GraphicalStaffEntry;
     public parentVerticalContainer: VerticalGraphicalStaffEntryContainer;
+    public tabStaffEntry: GraphicalStaffEntry = undefined;
 
     private graphicalInstructions: AbstractGraphicalInstruction[] = [];
     private graphicalTies: GraphicalTie[] = [];

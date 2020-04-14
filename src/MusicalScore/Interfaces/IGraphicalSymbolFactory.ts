@@ -1,6 +1,5 @@
 import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {Fraction} from "../../Common/DataObjects/Fraction";
-import {GraphicalMusicPage} from "../Graphical/GraphicalMusicPage";
 import {GraphicalNote} from "../Graphical/GraphicalNote";
 import {GraphicalStaffEntry} from "../Graphical/GraphicalStaffEntry";
 import {MusicSystem} from "../Graphical/MusicSystem";
@@ -18,11 +17,13 @@ import { VoiceEntry } from "../VoiceData/VoiceEntry";
 
 export interface IGraphicalSymbolFactory {
 
-    createMusicSystem(page: GraphicalMusicPage, systemIndex: number): MusicSystem;
+    createMusicSystem(systemIndex: number): MusicSystem;
 
     createStaffLine(parentSystem: MusicSystem, parentStaff: Staff): StaffLine;
 
     createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
+
+    createTabStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
     createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure;
 
