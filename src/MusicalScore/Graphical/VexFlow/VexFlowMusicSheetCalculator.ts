@@ -52,6 +52,7 @@ import { EngravingRules } from "..";
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
   private dashSpace: number;
+  public beamsNeedUpdate: boolean = false;
 
   constructor(rules: EngravingRules) {
     super();
@@ -70,6 +71,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected formatMeasures(): void {
+    // let totalFinalizeBeamsTime: number = 0;
     for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
       const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
@@ -78,8 +80,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
+        // const t0: number = performance.now();
+        if (this.beamsNeedUpdate) { // finalizeBeams takes a few milliseconds, so we can save some performance here
+          (measure as VexFlowMeasure).finalizeBeams(); // without this, when zooming a lot (e.g. 250%), beams keep their old, now wrong slope.
+          // totalFinalizeBeamsTime += performance.now() - t0;
+          // console.log("Total calls to finalizeBeams in VexFlowMusicSheetCalculator took " + totalFinalizeBeamsTime + " milliseconds.");
+        }
       }
     }
+    this.beamsNeedUpdate = false;
   }
 
   //protected clearSystemsAndMeasures(): void {

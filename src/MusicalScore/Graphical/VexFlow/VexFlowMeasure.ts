@@ -898,7 +898,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
 
+        // const t0: number = performance.now();
         this.finalizeBeams();
+        // const t1: number = performance.now();
+        // console.log("Call to finalizeBeams in VexFlowMeasure took " + (t1 - t0) + " milliseconds.");
+
         this.finalizeTuplets();
 
         const voices: Voice[] = this.getVoicesWithinMeasure();
