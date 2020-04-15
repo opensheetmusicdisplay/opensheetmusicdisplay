@@ -1,9 +1,22 @@
-## [0.7.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.2...0.7.4) (2020-04-14)
+## [0.7.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.4...0.7.5) (2020-04-15)
 
 
 ### Bug Fixes
 
-* **Arpeggio:** fix up/down direction (wrong in Vexflow), remove Vexflow dependency ([450b2d9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/450b2d91bb4d52a60aeb6fa3425865e58efffebc)), closes [#645](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/645)
+* **Fingering:** fix all TechnicalInstructions counted as fingering, fix fingering for tabs (don't display on tab clef) ([ee80e91](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ee80e911c85e33bb1c96daf14be9af4420e59c22)), closes [#711](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/711)
+* **Slurs:** fix undefined slur error in beethoven moonlight sonata ([#679](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/679)) ([d23581f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d23581fa6f80ad2da9fcbfef248cb19d2f0f9932))
+* **Ties:** prevent undefined tieNotes from creating a Vexflow error and crashing rendering ([6209cd3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6209cd32257fb0639e3801e2a87e9f47cf0f9efa))
+* **Beams:** fix beams retaining old slope after zooming ([#655](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/655))  ([447c4f9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/447c4f9a22be4348356761498c50a1f0a916894b))
+* **Tuplets:** fix rendering for half note tuplets (were displayed as whole notes) ([#700](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/700) ([9512c3a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9512c3aaf013034370545f47748c4d156e144b58))
+
+### Features
+* **Options:** Instances of osmd don't share static options/EngravingRules anymore. Can have multiple independently on one page ([#559](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/559)) ([fc095ad](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/fc095ad4b5c2fbc68a220ccd518c70fbbf26a477))
+* **Tabs/Testing:** Add function test and testing/demo sample for guitar tabs ([e18f133](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e18f1331facae39cd47e3ffb383448af8752a764))
+
+## [0.7.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.3...0.7.4) (2020-04-14)
+
+### Bug Fixes
+
 * **BackendSelection:** can now create and remove canvas backend (again), backend option only changed when given, improve backend creation code ([#662](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/662)) ([c0a522c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c0a522cf68398c8e346fd204d6f4d1a43fa59733))
 * **CanvasBackend:** limit canvas dimensions to browser limitation of 32767, for now ([#678](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/678)) ([55ef164](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/55ef164e33166dde865d97724ffe7ea352378f46))
 * **Clefs:** fix clef not detected when exported with invalid clef number (sibelius) ([#635](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/635)) ([3250842](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/325084285373c3b0203d5eee031d3689853e5538))
@@ -11,7 +24,6 @@
 * **Color:** fix EngravingRules.ColorStemsLikeNoteheads, ColorBeams not respected for false ([9a6ac74](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9a6ac74bae7b3d8fdc55db4af5d218a03ce38010))
 * **Demo:** fix optional zoom controls not shown, improve hiding/unhiding of control elements ([#661](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/661)) ([9783204](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/97832042f462b5b890711ea4d4a78fd8a59dcaf1))
 * **Demo/Embedding:** hide debug controls before rendering, always check showHeader option, only show debug controls by default on dev server ([#661](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/661)) ([8b60397](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8b6039794ccf0617c1446f633cd2367a55e3b15b))
-* **Dynamics, drawingRange:** fix crescendo crashing when partially out of drawingRange ([#644](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/644)) ([8105270](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8105270871058b770533abd9cf345d0bbbc8381a))
 * **Fingering:** fix all TechnicalInstructions counted as fingering, fix fingering for tabs (don't display on tab clef) ([ee80e91](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ee80e911c85e33bb1c96daf14be9af4420e59c22)), closes [#711](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/711)
 * **Lyrics:** fix null reference for lyrics dashes when drawing range set ([a19b3cd](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a19b3cd6b8f74859d534a685343c45776bcea42f))
 * **Repetition:** don't render a downward jog at type 'discontinue' ([#656](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/656)) ([996847d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/996847db098859b6934dc74b3610eb1a3e40b594))
