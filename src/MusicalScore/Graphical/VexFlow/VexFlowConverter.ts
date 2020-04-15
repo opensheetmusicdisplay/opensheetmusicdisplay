@@ -62,7 +62,7 @@ export class VexFlowConverter {
           return "w";
       } else if (dur < 1 && dur >= 0.5) {
         // change to the next higher straight note to get the correct note display type
-        if (isTuplet) {
+        if (isTuplet && dur > 0.5) {
           return "w";
         }
         return "h";
@@ -168,6 +168,7 @@ export class VexFlowConverter {
         } */
         // VexFlow needs the notes ordered vertically in the other direction:
         const notes: GraphicalNote[] = gve.notes.reverse();
+        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
 
         const baseNote: GraphicalNote = notes[0];
         let keys: string[] = [];
@@ -203,7 +204,7 @@ export class VexFlowConverter {
                     // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
                     // if the measure has no modifiers.
                     alignCenter = true;
-                    xShift = EngravingRules.Rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
+                    xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
                     // affects VexFlowStaffEntry.calculateXPosition()
                 }
                 break;
@@ -260,8 +261,8 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
 
-        if (EngravingRules.Rules.ColoringEnabled) {
-            const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
+        if (rules.ColoringEnabled) {
+            const defaultColorStem: string = rules.DefaultColorStem;
             let stemColor: string = gve.parentVoiceEntry.StemColor;
             if (!stemColor && defaultColorStem) {
                 stemColor = defaultColorStem;
@@ -271,7 +272,7 @@ export class VexFlowConverter {
             if (stemColor) {
                 gve.parentVoiceEntry.StemColor = stemColor;
                 vfnote.setStemStyle(stemStyle);
-                if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
+                if (vfnote.flag && rules.ColorFlags) {
                     vfnote.setFlagStyle(stemStyle);
                 }
             }
@@ -705,10 +706,11 @@ export class VexFlowConverter {
      * @param font
      * @returns {string}
      */
-    public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular, font: Fonts = Fonts.TimesNewRoman): string {
+    public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular,
+                       font: Fonts = Fonts.TimesNewRoman, rules: EngravingRules): string {
         let style: string = "normal";
         let weight: string = "normal";
-        const family: string = "'" + EngravingRules.Rules.DefaultFontFamily + "'"; // default "'Times New Roman'"
+        const family: string = "'" + rules.DefaultFontFamily + "'"; // default "'Times New Roman'"
 
         switch (fontStyle) {
             case FontStyles.Bold:

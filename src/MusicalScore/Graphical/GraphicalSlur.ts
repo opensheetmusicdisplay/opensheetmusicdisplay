@@ -34,6 +34,11 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param y
      */
     public static Compare (x: GraphicalSlur, y: GraphicalSlur ): number {
+        if (x.staffEntries.length < 1) { // x.staffEntries[i] can return undefined in Beethoven Moonlight Sonata sample
+            return -1;
+        } else if (y.staffEntries.length < 1) {
+            return 1;
+        }
         const xTimestampSpan: Fraction = Fraction.minus(x.staffEntries[x.staffEntries.length - 1].getAbsoluteTimestamp(),
                                                         x.staffEntries[0].getAbsoluteTimestamp());
         const yTimestampSpan: Fraction = Fraction.minus(y.staffEntries[y.staffEntries.length - 1].getAbsoluteTimestamp(),

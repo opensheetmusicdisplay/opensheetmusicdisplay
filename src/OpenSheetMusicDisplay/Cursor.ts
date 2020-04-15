@@ -17,6 +17,7 @@ export class Cursor {
   constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay) {
     this.container = container;
     this.openSheetMusicDisplay = openSheetMusicDisplay;
+    this.rules = this.openSheetMusicDisplay.EngravingRules;
     const curs: HTMLElement = document.createElement("img");
     curs.style.position = "absolute";
     curs.style.zIndex = "-1";
@@ -26,6 +27,7 @@ export class Cursor {
 
   private container: HTMLElement;
   private openSheetMusicDisplay: OpenSheetMusicDisplay;
+  private rules: EngravingRules;
   private manager: MusicPartManager;
   protected iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
@@ -58,9 +60,9 @@ export class Cursor {
 
     // set selection start, so that when there's MinMeasureToDraw set, the cursor starts there right away instead of at measure 1
     const lastSheetMeasureIndex: number = this.openSheetMusicDisplay.Sheet.SourceMeasures.length - 1; // last measure in data model
-    let startMeasureIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
+    let startMeasureIndex: number = this.rules.MinMeasureToDrawIndex;
     startMeasureIndex = Math.min(startMeasureIndex, lastSheetMeasureIndex);
-    let endMeasureIndex: number = EngravingRules.Rules.MaxMeasureToDrawIndex;
+    let endMeasureIndex: number = this.rules.MaxMeasureToDrawIndex;
     endMeasureIndex = Math.min(endMeasureIndex, lastSheetMeasureIndex);
 
     if (this.openSheetMusicDisplay.Sheet && this.openSheetMusicDisplay.Sheet.SourceMeasures.length > startMeasureIndex) {

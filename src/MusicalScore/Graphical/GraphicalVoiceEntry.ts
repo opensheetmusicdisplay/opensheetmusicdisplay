@@ -4,6 +4,7 @@ import { BoundingBox } from "./BoundingBox";
 import { GraphicalNote } from "./GraphicalNote";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { OctaveEnum } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
+import { EngravingRules } from ".";
 
 /**
  * The graphical counterpart of a [[VoiceEntry]].
@@ -15,6 +16,8 @@ export class GraphicalVoiceEntry extends GraphicalObject {
         this.parentStaffEntry = parentStaffEntry;
         this.PositionAndShape = new BoundingBox(this, parentStaffEntry ? parentStaffEntry.PositionAndShape : undefined, true);
         this.notes = [];
+        this.rules = parentStaffEntry ?
+                        parentStaffEntry.parentMeasure.parentSourceMeasure.Rules : new EngravingRules();
     }
 
     public parentVoiceEntry: VoiceEntry;
@@ -22,6 +25,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
     public notes: GraphicalNote[];
     /** Contains octave shifts affecting this voice entry, caused by octave brackets. */
     public octaveShiftValue: OctaveEnum;
+    protected rules: EngravingRules;
 
     /** Sort this entry's notes by pitch.
      * Notes need to be sorted for Vexflow StaveNote creation.

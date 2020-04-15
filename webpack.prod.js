@@ -3,12 +3,7 @@ var webpack = require('webpack')
 var path = require('path')
 var common = require('./webpack.common.js')
 var Visualizer = require('webpack-visualizer-plugin')
-var Cleaner = require('clean-webpack-plugin')
-
-var pathsToClean = [
-    'dist/**',
-    'build/**'
-]
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = merge(common, {
     output: {
@@ -27,6 +22,11 @@ module.exports = merge(common, {
     },
     plugins: [
         // build optimization plugins
+        new CleanWebpackPlugin({
+            verbose: false,
+            dry: false,
+            cleanOnceBeforeBuildPatterns: ['**/*', '!statistics.html*']
+        }),
         new webpack.LoaderOptionsPlugin({
             minimize: true,
             debug: true
@@ -34,7 +34,6 @@ module.exports = merge(common, {
         new Visualizer({
             path: path.resolve(__dirname, 'build'),
             filename: './statistics.html'
-        }),
-        new Cleaner(pathsToClean, { verbose: true, dry: false })
+        })
     ]
 })

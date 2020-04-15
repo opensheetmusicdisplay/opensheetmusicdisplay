@@ -8,6 +8,7 @@ import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasur
 import {SourceStaffEntry} from "../../../../src/MusicalScore/VoiceData/SourceStaffEntry";
 import {GraphicalMeasure} from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
+import { EngravingRules } from "../../../../src/MusicalScore/Graphical/EngravingRules";
 
 /* tslint:disable:no-unused-expression */
 describe("VexFlow Measure", () => {
@@ -18,8 +19,8 @@ describe("VexFlow Measure", () => {
       chai.expect(score).to.not.be.undefined;
       const partwise: Element = TestUtils.getPartWiseElement(score);
       chai.expect(partwise).to.not.be.undefined;
-      const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
       const reader: MusicSheetReader = new MusicSheetReader();
+      const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
       const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
       console.log(gms);
@@ -28,9 +29,10 @@ describe("VexFlow Measure", () => {
 
    it.skip("Simple Measure", (done: MochaDone) => {
       const sheet: MusicSheet = new MusicSheet();
-      const measure: SourceMeasure = new SourceMeasure(1);
+      sheet.Rules = new EngravingRules();
+      const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
       sheet.addMeasure(measure);
-      const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
+      const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(sheet.Rules);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
       chai.expect(gms.MeasureList.length).to.equal(1);
       chai.expect(gms.MeasureList[0].length).to.equal(1);
@@ -41,10 +43,11 @@ describe("VexFlow Measure", () => {
 
    it.skip("Empty Measure", (done: MochaDone) => {
       const sheet: MusicSheet = new MusicSheet();
-      const measure: SourceMeasure = new SourceMeasure(1);
+      sheet.Rules = new EngravingRules();
+      const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
       measure.FirstInstructionsStaffEntries[0] = new SourceStaffEntry(undefined, undefined);
       sheet.addMeasure(measure);
-      const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
+      const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(sheet.Rules);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
       chai.expect(gms.MeasureList.length).to.equal(1);
       chai.expect(gms.MeasureList[0].length).to.equal(0);

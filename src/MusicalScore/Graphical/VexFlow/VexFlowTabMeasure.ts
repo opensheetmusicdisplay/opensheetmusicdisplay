@@ -7,7 +7,6 @@ import { VexFlowConverter } from "./VexFlowConverter";
 import { StaffLine } from "../StaffLine";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import { EngravingRules } from "../EngravingRules";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { Voice } from "../../VoiceData/Voice";
 import * as log from "loglevel";
@@ -80,7 +79,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                 }
 
                 // add fingering
-                if (voiceEntry.parentVoiceEntry && EngravingRules.Rules.RenderFingerings) {
+                if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
                     this.createFingerings(voiceEntry);
                 }
 
@@ -92,12 +91,12 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                     if (voiceEntry.notes && voiceEntry.notes.length > 1) {
                         const type: Vex.Flow.Stroke.Type = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
                         const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
-                            all_voices: EngravingRules.Rules.ArpeggiosGoAcrossVoices
+                            all_voices: this.rules.ArpeggiosGoAcrossVoices
                             // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
                             // also, this can cause infinite height of stroke, see #546
                         });
                         //if (arpeggio.notes.length === vexFlowVoiceEntry.notes.length) { // different workaround for endless y bug
-                        if (EngravingRules.Rules.RenderArpeggios) {
+                        if (this.rules.RenderArpeggios) {
                             vexFlowVoiceEntry.vfStaveNote.addStroke(0, stroke);
                         }
                     } else {

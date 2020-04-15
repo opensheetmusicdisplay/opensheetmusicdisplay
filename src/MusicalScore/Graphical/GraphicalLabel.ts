@@ -10,6 +10,7 @@ import { MusicSheetCalculator } from "./MusicSheetCalculator";
  */
 export class GraphicalLabel extends Clickable {
     private label: Label;
+    private rules: EngravingRules;
 
     /**
      * Creates a new GraphicalLabel from a Label
@@ -18,12 +19,14 @@ export class GraphicalLabel extends Clickable {
      * @param alignment Alignement like left, right, top, ...
      * @param parent Parent Bounding Box where the label is attached to
      */
-    constructor(label: Label, textHeight: number, alignment: TextAlignmentEnum, parent: BoundingBox = undefined) {
+    constructor(label: Label, textHeight: number, alignment: TextAlignmentEnum, rules: EngravingRules,
+                parent: BoundingBox = undefined, ) {
         super();
         this.label = label;
         this.boundingBox = new BoundingBox(this, parent);
         this.label.fontHeight = textHeight;
         this.label.textAlignment = alignment;
+        this.rules = rules;
     }
 
     public get Label(): Label {
@@ -41,7 +44,7 @@ export class GraphicalLabel extends Clickable {
         if (this.Label.text.trim() === "") {
             return;
         }
-        const labelMarginBorderFactor: number = EngravingRules.Rules.LabelMarginBorderFactor;
+        const labelMarginBorderFactor: number = this.rules?.LabelMarginBorderFactor ?? 0.1;
 
         const widthToHeightRatio: number =
             MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.text, this.Label.font, this.Label.fontStyle);

@@ -11,6 +11,11 @@ import {EngravingRules} from "../EngravingRules";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 
 export class CanvasVexFlowBackend extends VexFlowBackend {
+    constructor(rules: EngravingRules) {
+        super();
+        this.rules = rules;
+    }
+
     public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
         return Vex.Flow.Renderer.Backends.CANVAS;
     }
@@ -61,10 +66,10 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         (<any>this.ctx).clearRect(0, 0, (<any>this.canvas).width, (<any>this.canvas).height);
 
         // set background color if not transparent
-        if (EngravingRules.Rules.PageBackgroundColor !== undefined) {
+        if (this.rules.PageBackgroundColor !== undefined) {
             this.ctx.save();
             // note that this will hide the cursor
-            this.ctx.setFillStyle(EngravingRules.Rules.PageBackgroundColor);
+            this.ctx.setFillStyle(this.rules.PageBackgroundColor);
             this.ctx.fillRect(0, 0, (this.canvas as any).width, (this.canvas as any).height);
             this.ctx.restore();
         }
@@ -84,7 +89,8 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.CanvasRenderingCtx.font = VexFlowConverter.font(
             fontHeight,
             fontStyle,
-            font
+            font,
+            this.rules
         );
         this.CanvasRenderingCtx.fillStyle = color;
         this.CanvasRenderingCtx.strokeStyle = color;

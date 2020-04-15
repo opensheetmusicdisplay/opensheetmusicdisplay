@@ -5,7 +5,6 @@ import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
-import { EngravingRules } from "../EngravingRules";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -46,7 +45,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                     // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
                     // see Note.isWholeRest(), which is currently not safe
                     this.PositionAndShape.RelativePosition.x +=
-                        EngravingRules.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                        this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
                     gve.PositionAndShape.BorderLeft = -0.7;
                     gve.PositionAndShape.BorderRight = 0.7;
                 }

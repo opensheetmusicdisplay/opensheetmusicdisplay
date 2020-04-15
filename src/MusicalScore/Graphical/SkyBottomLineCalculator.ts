@@ -30,7 +30,7 @@ export class SkyBottomLineCalculator {
      */
     constructor(staffLineParent: StaffLine) {
         this.mStaffLineParent = staffLineParent;
-        this.mRules = EngravingRules.Rules;
+        this.mRules = staffLineParent.ParentMusicSystem.rules;
     }
 
     /**
@@ -43,7 +43,7 @@ export class SkyBottomLineCalculator {
         this.mBottomLine = [];
 
         // Create a temporary canvas outside the DOM to draw the measure in.
-        const tmpCanvas: any = new CanvasVexFlowBackend();
+        const tmpCanvas: any = new CanvasVexFlowBackend(this.StaffLineParent.ParentMusicSystem.rules);
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
             // must calculate first AbsolutePositions

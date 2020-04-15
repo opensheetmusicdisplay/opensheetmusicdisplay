@@ -38,7 +38,6 @@ import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 // import { VexFlowStaffLine } from "./VexFlowStaffLine";
 // import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 */
-import { EngravingRules } from "../EngravingRules";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { TextAlignmentEnum, TextAlignment } from "../../../Common/Enums/TextAlignment";
 import { GraphicalSlur } from "../GraphicalSlur";
@@ -48,15 +47,18 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
+import { EngravingRules } from "..";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
   private dashSpace: number;
+  public beamsNeedUpdate: boolean = false;
 
-  constructor() {
+  constructor(rules: EngravingRules) {
     super();
+    this.rules = rules;
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
-    MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
+    MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
   }
 
   protected clearRecreatedObjects(): void {
@@ -69,6 +71,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected formatMeasures(): void {
+    // let totalFinalizeBeamsTime: number = 0;
     for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
       const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
@@ -77,8 +80,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         for (const staffEntry of measure.staffEntries) {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
+        // const t0: number = performance.now();
+        if (this.beamsNeedUpdate) { // finalizeBeams takes a few milliseconds, so we can save some performance here
+          (measure as VexFlowMeasure).finalizeBeams(); // without this, when zooming a lot (e.g. 250%), beams keep their old, now wrong slope.
+          // totalFinalizeBeamsTime += performance.now() - t0;
+          // console.log("Total calls to finalizeBeams in VexFlowMusicSheetCalculator took " + totalFinalizeBeamsTime + " milliseconds.");
+        }
       }
     }
+    this.beamsNeedUpdate = false;
   }
 
   //protected clearSystemsAndMeasures(): void {
@@ -150,11 +160,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       for (const measure of measures) {
         // determine whether to align rests
-        if (EngravingRules.Rules.AlignRests === AlignRestOption.Never) {
+        if (this.rules.AlignRests === AlignRestOption.Never) {
           (measure as VexFlowMeasure).formatVoices = formatVoicesDefault;
-        } else if (EngravingRules.Rules.AlignRests === AlignRestOption.Always) {
+        } else if (this.rules.AlignRests === AlignRestOption.Always) {
           (measure as VexFlowMeasure).formatVoices = formatVoicesAlignRests;
-        } else if (EngravingRules.Rules.AlignRests === AlignRestOption.Auto) {
+        } else if (this.rules.AlignRests === AlignRestOption.Auto) {
           let alignRests: boolean = false;
           for (const staffEntry of measure.staffEntries) {
             let collidableVoiceEntries: number = 0;
@@ -247,18 +257,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[j];
           // const lyricsEntryText = lyricsEntry.LyricsEntry.Text; // for easier debugging
           const lyricAlignment: TextAlignmentEnum = lyricsEntry.GraphicalLabel.Label.textAlignment;
-          let minLyricsSpacing: number = EngravingRules.Rules.HorizontalBetweenLyricsDistance;
+          let minLyricsSpacing: number = this.rules.HorizontalBetweenLyricsDistance;
           // for quarter note in Vexflow, where spacing is halfed for each smaller note duration.
 
           let lyricOverlapAllowedIntoNextMeasure: number =
-            EngravingRules.Rules.LyricOverlapAllowedIntoNextMeasure;
+            this.rules.LyricOverlapAllowedIntoNextMeasure;
           // TODO allow more overlap if there are no lyrics in next measure
 
           // spacing for multi-syllable words
           if (lyricsEntry.ParentLyricWord) {
             if (lyricsEntry.LyricsEntry.SyllableIndex > 0) { // syllables after first
               // give a little more spacing for dash between syllables
-              minLyricsSpacing = EngravingRules.Rules.BetweenSyllableMinimumDistance;
+              minLyricsSpacing = this.rules.BetweenSyllableMinimumDistance;
               if (TextAlignment.IsCenterAligned(lyricsEntry.GraphicalLabel.Label.textAlignment)) {
                 minLyricsSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
                 // without this, there's not enough space for dashes between long syllables on eigth notes
@@ -370,6 +380,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
+    (measure as VexFlowMeasure).rules = this.rules;
     (measure as VexFlowMeasure).graphicalMeasureCreatedCalculations();
   }
 
@@ -474,7 +485,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected calculateDynamicExpressionsForMultiExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-    if (measureIndex < EngravingRules.Rules.MinMeasureToDrawIndex || measureIndex > EngravingRules.Rules.MaxMeasureToDrawIndex) {
+    if (measureIndex < this.rules.MinMeasureToDrawIndex || measureIndex > this.rules.MaxMeasureToDrawIndex) {
       return;
       // we do already use the min/max in MusicSheetCalculator.calculateDynamicsExpressions,
       // but this may be necessary for StaffLinkedExpressions, not tested.
@@ -537,16 +548,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           //duration: metronomeExpression.beatUnit
           duration: "q"
       },
-      EngravingRules.Rules.MetronomeMarkYShift * unitInPixels);
+      this.rules.MetronomeMarkYShift * unitInPixels);
        // -50, -30), 0); //needs Vexflow PR
        //.setShiftX(-50);
 
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
-      EngravingRules.Rules.MetronomeMarkXShift * unitInPixels
+      this.rules.MetronomeMarkXShift * unitInPixels
     );
     // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
     const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
-    skyline[0] = Math.min(skyline[0], -4.5 + EngravingRules.Rules.MetronomeMarkYShift);
+    skyline[0] = Math.min(skyline[0], -4.5 + this.rules.MetronomeMarkYShift);
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
   }
 
@@ -564,8 +575,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const startTimeStamp: Fraction = octaveShift.ParentStartMultiExpression.Timestamp;
     const endTimeStamp: Fraction = octaveShift.ParentEndMultiExpression.Timestamp;
 
-    const minMeasureToDrawIndex: number = EngravingRules.Rules.MinMeasureToDrawIndex;
-    const maxMeasureToDrawIndex: number = EngravingRules.Rules.MaxMeasureToDrawIndex;
+    const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
+    const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
 
     let startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
     if (startStaffLine === undefined) { // fix for rendering range set. all of these can probably done cleaner.

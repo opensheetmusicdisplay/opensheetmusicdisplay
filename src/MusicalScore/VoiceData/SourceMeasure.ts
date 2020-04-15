@@ -11,7 +11,7 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
-import {GraphicalMeasure, SystemLinesEnum} from "../Graphical";
+import {GraphicalMeasure, SystemLinesEnum, EngravingRules} from "../Graphical";
 //import {BaseIdClass} from "../../Util/BaseIdClass"; // SourceMeasure originally extended BaseIdClass, but ids weren't used.
 
 /**
@@ -24,7 +24,7 @@ export class SourceMeasure {
      * so that existing objects can be referred to by staff index.
      * @param completeNumberOfStaves
      */
-    constructor(completeNumberOfStaves: number) {
+    constructor(completeNumberOfStaves: number, rules: EngravingRules) {
         this.completeNumberOfStaves = completeNumberOfStaves;
         this.implicitMeasure = false;
         this.breakSystemAfter = false;
@@ -33,6 +33,7 @@ export class SourceMeasure {
         this.endingBarStyleEnum = SystemLinesEnum.SingleThin;
         this.firstInstructionsStaffEntries = new Array(completeNumberOfStaves);
         this.lastInstructionsStaffEntries = new Array(completeNumberOfStaves);
+        this.rules = rules;
         this.TempoInBPM = 0;
         for (let i: number = 0; i < completeNumberOfStaves; i++) {
             this.graphicalMeasureErrors.push(false);
@@ -69,6 +70,7 @@ export class SourceMeasure {
     private lastInstructionsStaffEntries: SourceStaffEntry[];
     private firstRepetitionInstructions: RepetitionInstruction[] = [];
     private lastRepetitionInstructions: RepetitionInstruction[] = [];
+    private rules: EngravingRules;
     private tempoInBPM: number;
     private verticalMeasureList: GraphicalMeasure[]; // useful, see GraphicalMusicSheet.GetGraphicalFromSourceStaffEntry
 
@@ -171,6 +173,10 @@ export class SourceMeasure {
         return undefined;
     }
 
+    public get Rules(): EngravingRules {
+        return this.rules;
+    }
+
     public get VerticalMeasureList(): GraphicalMeasure[] {
         return this.verticalMeasureList;
     }
@@ -186,6 +192,7 @@ export class SourceMeasure {
     public set TempoInBPM(value: number) {
         this.tempoInBPM = value;
     }
+
     /**
      * Check at the given timestamp if a VerticalContainer exists, if not creates a new, timestamp-ordered one,
      * and at the given index, if a [[SourceStaffEntry]] exists, and if not, creates a new one.

@@ -19,14 +19,14 @@ describe("VexFlow Music Sheet Drawer", () => {
         chai.expect(score).to.not.be.undefined;
         const partwise: Element = TestUtils.getPartWiseElement(score);
         chai.expect(partwise).to.not.be.undefined;
-        const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
         const reader: MusicSheetReader = new MusicSheetReader();
+        const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
         const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), "** missing path **");
         const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
 
         // Create the canvas in the document:
         const canvas: HTMLCanvasElement = document.createElement("canvas");
-        const backend: VexFlowBackend = new CanvasVexFlowBackend();
+        const backend: VexFlowBackend = new CanvasVexFlowBackend(sheet.Rules);
         backend.initialize(canvas);
         const drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer();
         drawer.Backends.push(backend);
@@ -39,15 +39,15 @@ describe("VexFlow Music Sheet Drawer", () => {
         chai.expect(score).to.not.be.undefined;
         const partwise: Element = TestUtils.getPartWiseElement(score);
         chai.expect(partwise).to.not.be.undefined;
-        const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator();
         const reader: MusicSheetReader = new MusicSheetReader();
+        const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
         const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), "** missing path **");
         const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
         gms.Cursors.push(gms.calculateCursorLineAtTimestamp(new Fraction(0, 4), OutlineAndFillStyleEnum.PlaybackCursor));
 
         // Create the canvas in the document:
         const canvas: HTMLCanvasElement = document.createElement("canvas");
-        const backend: VexFlowBackend = new CanvasVexFlowBackend();
+        const backend: VexFlowBackend = new CanvasVexFlowBackend(sheet.Rules);
         backend.initialize(canvas);
         const drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer(new DrawingParameters());
         drawer.Backends.push(backend);
