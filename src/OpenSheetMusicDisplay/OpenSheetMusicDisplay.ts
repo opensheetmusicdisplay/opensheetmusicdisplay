@@ -29,7 +29,7 @@ import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.7.4-release"; // getter: this.Version
+    private version: string = "0.7.5-release"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
