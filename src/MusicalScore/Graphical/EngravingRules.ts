@@ -9,7 +9,6 @@ import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "../..";
 
 export class EngravingRules {
-    private static rules: EngravingRules;
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
     private static unit: number = 1.0;
     private samplingUnit: number;
@@ -218,7 +217,7 @@ export class EngravingRules {
     private pageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
     private renderSingleHorizontalStaffline: boolean;
 
-    private fixStafflineBoundingBox: boolean; // TODO temporary workaround
+    private static fixStafflineBoundingBox: boolean; // TODO temporary workaround
 
     constructor() {
         // global variables
@@ -443,7 +442,7 @@ export class EngravingRules {
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
 
-        this.fixStafflineBoundingBox = false; // TODO temporary workaround
+        EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
 
         this.pageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.pageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
@@ -460,10 +459,14 @@ export class EngravingRules {
         } catch (ex) {
             log.info("EngravingRules()", ex);
         }
-
     }
-    public static get Rules(): EngravingRules {
-        return EngravingRules.rules !== undefined ? EngravingRules.rules : (EngravingRules.rules = new EngravingRules());
+
+    // these two need to be static so that we can avoid passing EngravingRules to BoundingBox in lots of code
+    public static get FixStafflineBoundingBox(): boolean {
+        return EngravingRules.fixStafflineBoundingBox;
+    }
+    public static set FixStafflineBoundingBox(value: boolean) {
+        EngravingRules.fixStafflineBoundingBox = value;
     }
     public get SamplingUnit(): number {
         return this.samplingUnit;
@@ -1558,13 +1561,6 @@ export class EngravingRules {
     public set FingeringInsideStafflines(value: boolean) {
         this.fingeringInsideStafflines = value;
     }
-    public set FixStafflineBoundingBox(value: boolean) { // TODO temporary workaround
-        this.fixStafflineBoundingBox = value;
-    }
-    public get FixStafflineBoundingBox(): boolean {
-        return this.fixStafflineBoundingBox;
-    }
-
     public get PageFormat(): PageFormat {
         return this.pageFormat;
     }

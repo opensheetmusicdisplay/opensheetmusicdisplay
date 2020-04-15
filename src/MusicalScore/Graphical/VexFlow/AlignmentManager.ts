@@ -7,10 +7,11 @@ import { EngravingRules } from "../EngravingRules";
 
 export class AlignmentManager {
     private parentStaffline: StaffLine;
-    private rules: EngravingRules = EngravingRules.Rules;
+    private rules: EngravingRules;
 
     constructor(staffline: StaffLine) {
         this.parentStaffline = staffline;
+        this.rules = this.parentStaffline.ParentMusicSystem.rules;
     }
 
     public alignDynamicExpressions(): void {

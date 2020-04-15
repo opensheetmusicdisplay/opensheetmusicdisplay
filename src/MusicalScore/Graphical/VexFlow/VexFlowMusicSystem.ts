@@ -13,9 +13,9 @@ import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 
 export class VexFlowMusicSystem extends MusicSystem {
-    constructor(id: number) {
+    constructor(id: number, rules: EngravingRules) {
         super(id);
-
+        this.rules = rules;
     }
 
     public calculateBorders(rules: EngravingRules): void {

@@ -3,7 +3,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
-import {GraphicalMusicPage} from "..";
+import {GraphicalMusicPage, EngravingRules} from "..";
 import {BackendType} from "../../../OpenSheetMusicDisplay";
 
 export class VexFlowBackends {
@@ -18,6 +18,7 @@ export abstract class VexFlowBackend {
 
   /** The GraphicalMusicPage the backend is drawing from. Each backend only renders one GraphicalMusicPage, to which the coordinates are relative. */
   public graphicalMusicPage: GraphicalMusicPage;
+  protected rules: EngravingRules;
 
   public abstract initialize(container: HTMLElement): void;
 

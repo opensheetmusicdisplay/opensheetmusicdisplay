@@ -32,7 +32,6 @@ export class PlaybackSettings {
  */
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
-        this.rules = EngravingRules.Rules;
         this.playbackSettings = new PlaybackSettings();
         // FIXME?
         // initialize SheetPlaybackSetting with default values
@@ -47,7 +46,6 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
 
     public userStartTempoInBPM: number;
     public pageWidth: number;
-    public rules: EngravingRules;
 
     private idString: string = "random idString, not initialized";
     private sourceMeasures: SourceMeasure[] = [];
@@ -77,7 +75,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private hasBeenOpenedForTheFirstTime: boolean = false;
     private currentEnrolledPosition: Fraction = new Fraction(0, 1);
     // (*) private musicSheetParameterObject: MusicSheetParameterObject = undefined;
-    private engravingRules: EngravingRules;
+    private rules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
     /* Whether BPM info is present in the sheet. If it is set to false, each measure's BPM was set to a default of 120. */
     private hasBPMInfo: boolean;
@@ -121,10 +119,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         // this method name should remain for a while to maintain compatibility even when Instrument is renamed to Part
         return this.instruments;
     }
-     public get SheetPlaybackSetting(): PlaybackSettings {
+    public get SheetPlaybackSetting(): PlaybackSettings {
         return this.playbackSettings;
     }
-     public set SheetPlaybackSetting(value: PlaybackSettings) {
+    public set SheetPlaybackSetting(value: PlaybackSettings) {
         this.playbackSettings = value;
     }
     public get DrawErroneousMeasures(): boolean {
@@ -212,10 +210,14 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.lyricist = value;
     }
     public get Rules(): EngravingRules {
-       return this.engravingRules;
+        if (!this.rules) {
+            log.debug("warning: sheet.Rules was undefined. Creating new EngravingRules.");
+            this.rules = new EngravingRules();
+        }
+        return this.rules;
     }
     public set Rules(value: EngravingRules) {
-       this.engravingRules = value;
+        this.rules = value;
     }
     public get SheetErrors(): MusicSheetErrors {
         return this.musicSheetErrors;
@@ -336,17 +338,17 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return this.sourceMeasures[this.sourceMeasures.length - 1];
     }
     public resetAllNoteStates(): void {
-       const iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
-       while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
-           for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
-               const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
-               for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-                   const note: Note = voiceEntry.Notes[idx2];
-                   note.state = NoteState.Normal;
-               }
-           }
-           iterator.moveToNext();
-       }
+        const iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
+        while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
+            for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
+                const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
+                for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
+                    const note: Note = voiceEntry.Notes[idx2];
+                    note.state = NoteState.Normal;
+                }
+            }
+            iterator.moveToNext();
+        }
     }
     public getMusicSheetInstrumentIndex(instrument: Instrument): number {
         return this.Instruments.indexOf(instrument);
@@ -495,13 +497,13 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    this.musicSheetParameterChangedDelegate = value;
     //}
     public get FullNameString(): string {
-       return this.ComposerString + " " + this.TitleString;
+        return this.ComposerString + " " + this.TitleString;
     }
     public get IdString(): string {
-       return this.idString;
+        return this.idString;
     }
     public set IdString(value: string) {
-       this.idString = value;
+        this.idString = value;
     }
     // (*)
     // public Dispose(): void {

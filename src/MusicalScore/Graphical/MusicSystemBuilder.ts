@@ -44,7 +44,7 @@ export class MusicSystemBuilder {
         graphicalMusicSheet: GraphicalMusicSheet, measureList: GraphicalMeasure[][], numberOfStaffLines: number): void {
         this.leadSheet = graphicalMusicSheet.LeadSheet;
         this.graphicalMusicSheet = graphicalMusicSheet;
-        this.rules = this.graphicalMusicSheet.ParentMusicSheet.rules;
+        this.rules = this.graphicalMusicSheet.ParentMusicSheet.Rules;
         this.measureList = measureList;
         this.numberOfVisibleStaffLines = numberOfStaffLines;
         this.activeRhythm = new Array(this.numberOfVisibleStaffLines);
@@ -228,7 +228,7 @@ export class MusicSystemBuilder {
      * @returns {MusicSystem}
      */
     private initMusicSystem(): MusicSystem {
-        const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.globalSystemIndex++);
+        const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.globalSystemIndex++, this.rules);
         this.musicSystems.push(musicSystem);
         this.layoutSystemStaves(musicSystem);
         musicSystem.createMusicSystemLabel(
@@ -311,7 +311,7 @@ export class MusicSystemBuilder {
             const boundingBox: BoundingBox = staffLine.PositionAndShape;
             const relativePosition: PointF2D = new PointF2D();
             if (musicSystem === this.musicSystems[0] &&
-                !EngravingRules.Rules.CompactMode) {
+                !this.rules.CompactMode) {
                 relativePosition.x = this.rules.FirstSystemMargin;
                 boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width - this.rules.FirstSystemMargin;
             } else {
@@ -980,15 +980,15 @@ export class MusicSystemBuilder {
             if (currentPage.MusicSystems.length === 0) {
                 // first system on the page:
                 this.addSystemToPage(currentPage, currentSystem);
-                if (EngravingRules.Rules.CompactMode) {
-                    currentYPosition = EngravingRules.Rules.PageTopMarginNarrow;
+                if (this.rules.CompactMode) {
+                    currentYPosition = this.rules.PageTopMarginNarrow;
                 } else {
-                    currentYPosition = EngravingRules.Rules.PageTopMargin;
+                    currentYPosition = this.rules.PageTopMargin;
                 }
 
                 // Handle Title for first System on the first page
                 if (this.graphicalMusicSheet.MusicPages.length === 1 &&
-                    EngravingRules.Rules.RenderTitle) {
+                    this.rules.RenderTitle) {
                     currentYPosition +=   this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
                                             this.rules.TitleBottomDistance;
                 }

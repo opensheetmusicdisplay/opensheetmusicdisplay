@@ -14,6 +14,7 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
         this.label = new GraphicalLabel(new Label(this.Expression),
                                         this.rules.ContinuousDynamicTextHeight,
                                         TextAlignmentEnum.CenterCenter,
+                                        this.rules,
                                         this.PositionAndShape);
 
         this.label.Label.fontStyle = FontStyles.BoldItalic;
