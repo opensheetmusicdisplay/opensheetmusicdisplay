@@ -440,6 +440,9 @@ export class OpenSheetMusicDisplay {
         if (options.fingeringInsideStafflines !== undefined) {
             this.rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
         }
+        if (options.newSystemFromXML !== undefined) {
+            this.rules.NewSystemAtXMLNewSystemAttribute = options.newSystemFromXML;
+        }
         if (options.fillEmptyMeasuresWithWholeRest !== undefined) {
             this.rules.FillEmptyMeasuresWithWholeRest = options.fillEmptyMeasuresWithWholeRest;
         }

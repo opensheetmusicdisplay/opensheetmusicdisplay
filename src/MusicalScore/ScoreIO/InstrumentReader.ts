@@ -135,7 +135,12 @@ export class InstrumentReader {
     try {
       const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
       for (const xmlNode of xmlMeasureListArr) {
-        if (xmlNode.name === "note") {
+        if (xmlNode.name === "print") {
+          const newSystemAttr: IXmlAttribute = xmlNode.attribute("new-system");
+          if (newSystemAttr?.value === "yes") {
+            currentMeasure.printNewSystemXml = true;
+          }
+        } else if (xmlNode.name === "note") {
           let printObject: boolean = true;
           if (xmlNode.hasAttributes && xmlNode.attribute("print-object") &&
               xmlNode.attribute("print-object").value === "no") {

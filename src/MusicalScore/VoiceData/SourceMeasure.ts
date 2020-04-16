@@ -54,6 +54,8 @@ export class SourceMeasure {
      */
     public endingBarStyleXml: string;
     public endingBarStyleEnum: SystemLinesEnum;
+    /** Whether the MusicXML says to print a new system (line break). See OSMDOptions.newSystemFromXML */
+    public printNewSystemXml: boolean = false;
 
     private measureNumber: number;
     private absoluteTimestamp: Fraction;

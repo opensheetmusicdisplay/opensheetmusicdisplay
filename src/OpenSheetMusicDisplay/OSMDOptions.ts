@@ -123,6 +123,11 @@ export interface IOSMDOptions {
     pageBackgroundColor?: string;
     /** This makes OSMD render on one single horizontal (staff-)line. */
     renderSingleHorizontalStaffline?: boolean;
+    /** Whether to begin a new system ("line break") when given in XML ('new-system="yes"').
+     *  Default false, because OSMD does its own layout that will do line breaks interactively
+     *  at different measures. So this option may result in a system break after a single measure in a system.
+     */
+    newSystemFromXML?: boolean;
 }
 
 export enum AlignRestOption {
