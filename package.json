@@ -25,10 +25,10 @@
     "generatePNG:paged": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./export 210 297 allSmall",
     "generatePNG:paged:debug": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./export 210 297 all --debug 5000",
     "generatePNG:paged:single": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./export 0 0 ^Beethoven",
-    "generate:current": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 allSmall",
-    "generate:current:debug": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 allSmall --debug",
+    "generate:current": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 allSmall --osmdtesting",
+    "generate:current:debug": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 allSmall --debugosmdtesting",
     "generate:current:singletest": "node test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 .*function_test_all.*",
-    "generate:blessed": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/blessed 0 0 allSmall",
+    "generate:blessed": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/blessed 0 0 allSmall --osmdtesting",
     "test:visual": "sh ./test/Util/visual_regression.sh ./visual_regression",
     "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression OSMD_function_test_all",
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"

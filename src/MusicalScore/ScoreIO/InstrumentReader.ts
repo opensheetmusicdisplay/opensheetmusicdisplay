@@ -490,9 +490,12 @@ export class InstrumentReader {
           }
           const location: IXmlAttribute = xmlNode.attribute("location");
           if (location && location.value === "right") {
-            const stringValue: string = xmlNode.element("bar-style").value;
-            this.currentMeasure.endingBarStyleXml = stringValue;
-            this.currentMeasure.endingBarStyleEnum = SystemLinesEnumHelper.xmlBarlineStyleToSystemLinesEnum(stringValue);
+            const stringValue: string = xmlNode.element("bar-style")?.value;
+            // TODO apparently we didn't anticipate bar-style not existing (the ? above was missing). how to handle?
+            if (stringValue) {
+              this.currentMeasure.endingBarStyleXml = stringValue;
+              this.currentMeasure.endingBarStyleEnum = SystemLinesEnumHelper.xmlBarlineStyleToSystemLinesEnum(stringValue);
+            }
           }
           // TODO do we need to process bars with left location too?
         } else if (xmlNode.name === "sound") {

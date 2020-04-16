@@ -25,17 +25,18 @@ function sleep (ms) {
 async function init () {
     console.log('[OSMD.generate] init')
 
-    let [osmdBuildDir, sampleDir, imageDir, pageWidth, pageHeight, filterRegex, debugFlag, debugSleepTimeString] = process.argv.slice(2, 10)
+    let [osmdBuildDir, sampleDir, imageDir, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString] = process.argv.slice(2, 10)
     if (!osmdBuildDir || !sampleDir || !imageDir) {
         console.log('usage: ' +
-            'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all|allSmall] [--debug] [debugSleepTime]')
-        console.log('  (use "all" to skip filterRegex parameter. "allSmall" skips two huge OSMD samples that take forever to render)')
+            'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]')
+        console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)')
         console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export 210 297 allSmall --debug 5000')
         console.log('Error: need osmdBuildDir, sampleDir and imageDir. Exiting.')
         process.exit(1)
     }
 
-    const DEBUG = debugFlag === '--debug'
+    const osmdTestingMode = mode.includes('osmdtesting') // can also be --debugosmdtesting
+    const DEBUG = mode.startsWith('--debug')
     // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
     if (DEBUG) {
         console.log(' (note that --debug slows down the script by about 0.3s per file, through logging)')
@@ -142,7 +143,7 @@ async function init () {
     const sampleDirFilenames = fs.readdirSync(sampleDir)
     let samplesToProcess = [] // samples we want to process/generate pngs of, excluding the filtered out files/filenames
     for (const sampleFilename of sampleDirFilenames) {
-        if (filterRegex === 'allSmall') {
+        if (osmdTestingMode && filterRegex === 'allSmall') {
             if (sampleFilename.match('^(Actor)|(Gounod)')) { // TODO maybe filter by file size instead
                 debug('filtering big file: ' + sampleFilename, DEBUG)
                 continue
@@ -158,7 +159,7 @@ async function init () {
     }
 
     // filter samples to process by regex if given
-    if (filterRegex && filterRegex !== '' && filterRegex !== 'all' && filterRegex !== 'allSmall') {
+    if (filterRegex && filterRegex !== '' && filterRegex !== 'all' && !(osmdTestingMode && filterRegex === 'allSmall')) {
         debug('filtering samples for regex: ' + filterRegex, DEBUG)
         samplesToProcess = samplesToProcess.filter((filename) => filename.match(filterRegex))
         debug(`found ${samplesToProcess.length} matches: `, DEBUG)
@@ -179,12 +180,12 @@ async function init () {
 
     // you can set finer-grained rendering/engraving settings in EngravingRules:
     osmdInstance.EngravingRules.TitleTopDistance = 5.0 // 9.0 is default
-    osmdInstance.EngravingRules.PageTopMargin = 5.0 // 5 is default
-    osmdInstance.EngravingRules.PageBottomMargin = 5.0 // 5 is default. <5 can cut off scores that extend in the last staffline
+    // osmdInstance.EngravingRules.PageTopMargin = 5.0 // 5 is default
+    // osmdInstance.EngravingRules.PageBottomMargin = 5.0 // 5 is default. <5 can cut off scores that extend in the last staffline
     // note that for now the png and canvas will still have the height given in the script argument,
     //   so even with a margin of 0 the image will be filled to the full height.
-    osmdInstance.EngravingRules.PageLeftMargin = 5.0 // 5 is default
-    osmdInstance.EngravingRules.PageRightMargin = 5.0 // 5 is default
+    // osmdInstance.EngravingRules.PageLeftMargin = 5.0 // 5 is default
+    // osmdInstance.EngravingRules.PageRightMargin = 5.0 // 5 is default
     // osmdInstance.EngravingRules.MetronomeMarkXShift = -8; // -6 is default
     // osmdInstance.EngravingRules.DistanceBetweenVerticalSystemLines = 0.15; // 0.35 is default
     // for more options check EngravingRules.ts (though not all of these are meant and fully supported to be changed at will)
@@ -214,21 +215,22 @@ async function init () {
         // console.log('typeof loadParameter: ' + typeof loadParameter)
 
         // set sample-specific options for OSMD visual regression testing
-        // TODO separate OSMD-testing-specific code from a generic image export script for other purposes
-        const isFunctionTestAutobeam = sampleFilename.startsWith('OSMD_function_test_autobeam')
-        const isFunctionTestAutoColoring = sampleFilename.startsWith('OSMD_function_test_auto-custom-coloring')
-        const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
-        const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
-        osmdInstance.setOptions({
-            autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
-            coloringMode: isFunctionTestAutoColoring ? 2 : 0,
-            coloringSetCustom: isFunctionTestAutoColoring ? ['#d82c6b', '#F89D15', '#FFE21A', '#4dbd5c', '#009D96', '#43469d', '#76429c', '#ff0000'] : undefined,
-            colorStemsLikeNoteheads: isFunctionTestAutoColoring,
-            drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
-            drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
-            newSystemFromXML: isFunctionTestSystemAndPageBreaks,
-            newPageFromXML: isFunctionTestSystemAndPageBreaks
-        })
+        if (osmdTestingMode) {
+            const isFunctionTestAutobeam = sampleFilename.startsWith('OSMD_function_test_autobeam')
+            const isFunctionTestAutoColoring = sampleFilename.startsWith('OSMD_function_test_auto-custom-coloring')
+            const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
+            const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
+            osmdInstance.setOptions({
+                autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
+                coloringMode: isFunctionTestAutoColoring ? 2 : 0,
+                coloringSetCustom: isFunctionTestAutoColoring ? ['#d82c6b', '#F89D15', '#FFE21A', '#4dbd5c', '#009D96', '#43469d', '#76429c', '#ff0000'] : undefined,
+                colorStemsLikeNoteheads: isFunctionTestAutoColoring,
+                drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
+                drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
+                newSystemFromXML: isFunctionTestSystemAndPageBreaks,
+                newPageFromXML: isFunctionTestSystemAndPageBreaks
+            })
+        }
 
         await osmdInstance.load(loadParameter).then(function () {
             debug('xml loaded', DEBUG)
