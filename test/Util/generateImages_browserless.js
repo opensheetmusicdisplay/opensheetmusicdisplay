@@ -213,6 +213,23 @@ async function init () {
         // console.log('loadParameter: ' + loadParameter)
         // console.log('typeof loadParameter: ' + typeof loadParameter)
 
+        // set sample-specific options for OSMD visual regression testing
+        // TODO separate OSMD-testing-specific code from a generic image export script for other purposes
+        const isFunctionTestAutobeam = sampleFilename.startsWith('OSMD_function_test_autobeam')
+        const isFunctionTestAutoColoring = sampleFilename.startsWith('OSMD_function_test_auto-custom-coloring')
+        const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
+        const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
+        osmdInstance.setOptions({
+            autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
+            coloringMode: isFunctionTestAutoColoring ? 2 : 0,
+            coloringSetCustom: isFunctionTestAutoColoring ? ['#d82c6b', '#F89D15', '#FFE21A', '#4dbd5c', '#009D96', '#43469d', '#76429c', '#ff0000'] : undefined,
+            colorStemsLikeNoteheads: isFunctionTestAutoColoring,
+            drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
+            drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
+            newSystemFromXML: isFunctionTestSystemAndPageBreaks,
+            newPageFromXML: isFunctionTestSystemAndPageBreaks
+        })
+
         await osmdInstance.load(loadParameter).then(function () {
             debug('xml loaded', DEBUG)
             try {
