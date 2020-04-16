@@ -28,7 +28,7 @@ export interface IOSMDOptions {
     coloringSetCustom?: string[];
     /** Whether to enable coloring noteheads and stems, depending on coloringMode. */
     coloringEnabled?: boolean;
-    /** Whether to color the stems of notes the same as their noteheads */
+    /** Whether to color the stems of notes the same as their noteheads. Default false. */
     colorStemsLikeNoteheads?: boolean;
     /** Default color for a note head (without stem). Default black (undefined).
      * Only considered before loading a sample, not before render.
