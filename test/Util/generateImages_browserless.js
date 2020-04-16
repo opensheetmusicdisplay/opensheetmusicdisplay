@@ -31,7 +31,7 @@ async function init () {
             'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all|allSmall] [--debug] [debugSleepTime]')
         console.log('  (use "all" to skip filterRegex parameter. "allSmall" skips two huge OSMD samples that take forever to render)')
         console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export 210 297 allSmall --debug 5000')
-        console.log('Error: need sampleDir and imageDir. Exiting.')
+        console.log('Error: need osmdBuildDir, sampleDir and imageDir. Exiting.')
         process.exit(1)
     }
 

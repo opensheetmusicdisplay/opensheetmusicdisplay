@@ -18,7 +18,7 @@ export interface IOSMDOptions {
     autoBeamOptions?: AutoBeamOptions;
     /** Automatically resize score with canvas size. Default is true. */
     autoResize?: boolean;
-    /** Render Backend, will be SVG if given undefined, SVG or svg, otherwise Canvas. */
+    /** Render Backend, will be SVG if given undefined, "SVG" or "svg", otherwise Canvas. */
     backend?: string;
     /** Defines the mode that is used for coloring: XML (0), Boomwhacker(1), CustomColorSet (2). Default XML.
      *  If coloringMode.CustomColorSet (2) is chosen, a coloringSetCustom parameter must be added.
@@ -118,7 +118,7 @@ export interface IOSMDOptions {
      *  Example: "#FFFFFF" = white. "#12345600" = transparent.
      *  This can be useful when you want to export an image with e.g. white background color instead of transparent,
      *  from a CanvasBackend.
-     *  Note: Using a background color will prevent the cursor from being visible.
+     *  Note: Using a background color will prevent the cursor from being visible for now (will be fixed at some point).
      */
     pageBackgroundColor?: string;
     /** This makes OSMD render on one single horizontal (staff-)line. */
