@@ -443,6 +443,9 @@ export class OpenSheetMusicDisplay {
         if (options.newSystemFromXML !== undefined) {
             this.rules.NewSystemAtXMLNewSystemAttribute = options.newSystemFromXML;
         }
+        if (options.newPageFromXML !== undefined) {
+            this.rules.NewPageAtXMLNewPageAttribute = options.newPageFromXML;
+        }
         if (options.fillEmptyMeasuresWithWholeRest !== undefined) {
             this.rules.FillEmptyMeasuresWithWholeRest = options.fillEmptyMeasuresWithWholeRest;
         }

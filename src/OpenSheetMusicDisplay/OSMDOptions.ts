@@ -128,6 +128,11 @@ export interface IOSMDOptions {
      *  at different measures. So this option may result in a system break after a single measure in a system.
      */
     newSystemFromXML?: boolean;
+    /** Whether to begin a new page ("page break") when given in XML ('new-page="yes"').
+     *  Default false, because OSMD does its own layout that will do page breaks interactively (when given a PageFormat)
+     *  at different measures. So this option may result in a page break after a single measure on a page.
+     */
+    newPageFromXML?: boolean;
 }
 
 export enum AlignRestOption {

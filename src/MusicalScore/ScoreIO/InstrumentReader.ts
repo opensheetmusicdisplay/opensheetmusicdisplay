@@ -140,6 +140,10 @@ export class InstrumentReader {
           if (newSystemAttr?.value === "yes") {
             currentMeasure.printNewSystemXml = true;
           }
+          const newPageAttr: IXmlAttribute = xmlNode.attribute("new-page");
+          if (newPageAttr?.value === "yes") {
+            currentMeasure.printNewPageXml = true;
+          }
         } else if (xmlNode.name === "note") {
           let printObject: boolean = true;
           if (xmlNode.hasAttributes && xmlNode.attribute("print-object") &&

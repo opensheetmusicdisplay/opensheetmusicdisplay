@@ -104,17 +104,19 @@ export class MusicSystemBuilder {
             let nextMeasureBeginInstructionWidth: number = this.rules.MeasureLeftMargin;
 
             // Check if there are key or rhythm change instructions within the next measure:
+            let nextSourceMeasure: SourceMeasure = undefined;
             if (this.measureListIndex + 1 < this.measureList.length) {
                 const nextGraphicalMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex + 1];
-                const nextSourceMeasure: SourceMeasure = nextGraphicalMeasures[0].parentSourceMeasure;
+                nextSourceMeasure = nextGraphicalMeasures[0].parentSourceMeasure;
                 if (nextSourceMeasure.hasBeginInstructions()) {
                     nextMeasureBeginInstructionWidth += this.addBeginInstructions(nextGraphicalMeasures, false, false);
                 }
             }
             const totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
             const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
-            //if (true) // prevent line break at all costs, squeezes measures and breaks lyrics spacing
-            const doXmlLineBreak: boolean = this.rules.NewSystemAtXMLNewSystemAttribute && sourceMeasure.printNewSystemXml;
+            const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;
+            const doXmlLineBreak: boolean = doXmlPageBreak || // also create new system if doing page break
+                (this.rules.NewSystemAtXMLNewSystemAttribute && sourceMeasure.printNewSystemXml);
             if (isSystemStartMeasure || (measureFitsInSystem && !doXmlLineBreak)) {
                 this.addMeasureToSystem(
                     graphicalMeasures, measureStartLine, measureEndLine, totalMeasureWidth,
@@ -124,12 +126,12 @@ export class MusicSystemBuilder {
                 this.measureListIndex++;
             } else {
                 // finalize current system and prepare a new one
-                this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, previousMeasureEndsSystem);
+                this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, previousMeasureEndsSystem, doXmlPageBreak);
                 // don't increase measure index to check this measure now again
             }
             previousMeasureEndsSystem = sourceMeasureEndsSystem;
         }
-        this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true);
+        this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true, false);
         return this.musicSystems;
     }
 
@@ -172,7 +174,9 @@ export class MusicSystemBuilder {
      * @param measures
      * @param isPartEndingSystem
      */
-    private finalizeCurrentAndCreateNewSystem(measures: GraphicalMeasure[], isPartEndingSystem: boolean = false): void {
+    private finalizeCurrentAndCreateNewSystem(measures: GraphicalMeasure[],
+                                              isPartEndingSystem: boolean = false, startNewPage: boolean = false): void {
+        this.currentSystemParams.currentSystem.breaksPage = startNewPage;
         this.adaptRepetitionLineWithIfNeeded();
         if (!isPartEndingSystem) {
             this.checkAndCreateExtraInstructionMeasure(measures);
@@ -1018,8 +1022,9 @@ export class MusicSystemBuilder {
                                         (previousStaffLineBB.RelativePosition.y + previousStaffLineBB.BorderBottom);
                 distance = Math.max(this.rules.MinimumDistanceBetweenSystems, distance);
                 const neededHeight: number = distance - currentSystem.PositionAndShape.BorderTop + currentSystem.PositionAndShape.BorderBottom;
-                if (currentYPosition + neededHeight <
-                    this.rules.PageHeight - this.rules.PageBottomMargin) {
+                const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && previousSystem.breaksPage;
+                if (!doXmlPageBreak &&
+                    (currentYPosition + neededHeight < this.rules.PageHeight - this.rules.PageBottomMargin)) {
                     // enough space on this page:
                     this.addSystemToPage(currentPage, currentSystem);
                     const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
