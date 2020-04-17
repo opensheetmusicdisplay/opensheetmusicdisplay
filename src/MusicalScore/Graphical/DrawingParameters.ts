@@ -10,6 +10,7 @@ export enum ColoringModes {
 export enum DrawingParametersEnum {
     allon = "allon",
     compact = "compact",
+    compacttight = "compacttight",
     default = "default",
     leadsheet = "leadsheet",
     preview = "preview",
@@ -60,6 +61,9 @@ export class DrawingParameters {
                 break;
             case DrawingParametersEnum.compact:
                 this.setForCompactMode();
+                break;
+            case DrawingParametersEnum.compacttight:
+                this.setForCompactTightMode();
                 break;
             case DrawingParametersEnum.default:
             default:
@@ -115,6 +119,16 @@ export class DrawingParameters {
         this.DrawCredits = false; // sets DrawComposer, DrawTitle, DrawLyricist to false
         // this.DrawPartNames = true; // unnecessary
         this.drawHiddenNotes = false;
+    }
+
+    public setForCompactTightMode(): void {
+        this.rules.CompactMode = true;
+        this.DrawCredits = false;
+        this.DrawPartNames = false;
+        this.drawHiddenNotes = false;
+        // this.BetweenStaffDistance = 2.5 // etc needs to be set in OSMD.rules
+        // this.StaffDistance = 3.5
+        // this.MinimumDistanceBetweenSystems = 1
     }
 
     public setForLeadsheet(): void {

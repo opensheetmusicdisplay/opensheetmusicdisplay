@@ -29,7 +29,7 @@ import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.7.5-release"; // getter: this.Version
+    private version: string = "0.7.5-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -335,6 +335,17 @@ export class OpenSheetMusicDisplay {
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum =
                 (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
+            if (this.drawingParameters.DrawingParametersEnum === DrawingParametersEnum.compacttight) {
+                // tight rendering mode, lower margins and safety distances between systems, staffs etc. may cause overlap.
+                // these options can afterwards be finetuned by setting osmd.rules.BetweenStaffDistance for example
+                this.rules.BetweenStaffDistance = 2.5;
+                this.rules.StaffDistance = 3.5;
+                this.rules.MinimumDistanceBetweenSystems = 1;
+                // this.rules.PageTopMargin = 0.0; // see this.rules.PageTopMarginNarrow used in compact mode
+                this.rules.PageBottomMargin = 1.0;
+                this.rules.PageLeftMargin = 2.0;
+                this.rules.PageRightMargin = 2.0;
+            }
         }
 
         const backendNotInitialized: boolean = !this.drawer || !this.drawer.Backends || this.drawer.Backends.length < 1;
@@ -428,6 +439,12 @@ export class OpenSheetMusicDisplay {
         }
         if (options.fingeringInsideStafflines !== undefined) {
             this.rules.FingeringInsideStafflines = options.fingeringInsideStafflines;
+        }
+        if (options.newSystemFromXML !== undefined) {
+            this.rules.NewSystemAtXMLNewSystemAttribute = options.newSystemFromXML;
+        }
+        if (options.newPageFromXML !== undefined) {
+            this.rules.NewPageAtXMLNewPageAttribute = options.newPageFromXML;
         }
         if (options.fillEmptyMeasuresWithWholeRest !== undefined) {
             this.rules.FillEmptyMeasuresWithWholeRest = options.fillEmptyMeasuresWithWholeRest;

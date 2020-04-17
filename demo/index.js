@@ -33,9 +33,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
             "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
-            "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
             "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
             "OSMD Function Test - Ornaments": "OSMD_function_test_Ornaments.xml",
+            "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
+            "OSMD Function Test - System and Page Breaks": "OSMD_Function_Test_System_and_Page_Breaks_4_pages.mxl",
             "OSMD Function Test - Tabulature": "OSMD_Function_Test_Tabulature_hayden_study_1.mxl",
             "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
@@ -88,6 +89,9 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
     var drawPartNamesOptionStashedValue = true;
     var drawPartAbbreviationsStashedValue = true;
     var drawPartNamesOptionNeedsReset = false;
+    var pageBreaksOptionStashedValue = false;
+    var pageBreaksOptionNeedsReset = false;
+    var systemBreaksOptionStashedValue = false; // reset handled by pageBreaksOptionNeedsReset
 
     var showControls = true;
     var showExportPdfControl = false;
@@ -634,7 +638,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 coloringMode: 2, // custom coloring set. 0 would be XML, 1 autocoloring
                 coloringSetCustom: ["#d82c6b", "#F89D15", "#FFE21A", "#4dbd5c", "#009D96", "#43469d", "#76429c", "#ff0000"],
                 // last color value of coloringSetCustom is for rest notes
-
                 colorStemsLikeNoteheads: true
             });
         } else if (autoCustomColoringOptionNeedsReset) {
@@ -652,6 +655,16 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         } else if (autobeamOptionNeedsReset) {
             openSheetMusicDisplay.setOptions({ autoBeam: autobeamOptionStashedValue });
             autobeamOptionNeedsReset = false;
+        }
+        if (!isCustom && str.startsWith('OSMD_Function_Test_System_and_Page_Breaks')) {
+            pageBreaksOptionStashedValue = openSheetMusicDisplay.EngravingRules.NewPageAtXMLNewPageAttribute;
+            systemBreaksOptionStashedValue = openSheetMusicDisplay.EngravingRules.NewSystemAtXMLNewSystemAttribute;
+            pageBreaksOptionNeedsReset = true;
+            openSheetMusicDisplay.setOptions({ newPageFromXML: true, newSystemFromXML: true });
+        }
+        else if (pageBreaksOptionNeedsReset) {
+            openSheetMusicDisplay.setOptions({ newPageFromXML: pageBreaksOptionStashedValue, newSystemFromXML: systemBreaksOptionStashedValue });
+            pageBreaksOptionNeedsReset = false;
         }
         if (!isCustom && str.includes("Schubert_An_die_Musik")) { // TODO weird layout bug here with part names. but shouldn't be in score anyways
             drawPartNamesOptionStashedValue = openSheetMusicDisplay.EngravingRules.RenderPartNames;

@@ -213,6 +213,8 @@ export class EngravingRules {
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
+    private newSystemAtXMLNewSystemAttribute: boolean;
+    private newPageAtXMLNewPageAttribute: boolean;
     private pageFormat: PageFormat;
     private pageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
     private renderSingleHorizontalStaffline: boolean;
@@ -441,6 +443,8 @@ export class EngravingRules {
         this.renderLyrics = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
+        this.newSystemAtXMLNewSystemAttribute = false;
+        this.newPageAtXMLNewPageAttribute = false;
 
         EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
 
@@ -1560,6 +1564,18 @@ export class EngravingRules {
     }
     public set FingeringInsideStafflines(value: boolean) {
         this.fingeringInsideStafflines = value;
+    }
+    public get NewSystemAtXMLNewSystemAttribute(): boolean {
+        return this.newSystemAtXMLNewSystemAttribute;
+    }
+    public set NewSystemAtXMLNewSystemAttribute(value: boolean) {
+        this.newSystemAtXMLNewSystemAttribute = value;
+    }
+    public get NewPageAtXMLNewPageAttribute(): boolean {
+        return this.newPageAtXMLNewPageAttribute;
+    }
+    public set NewPageAtXMLNewPageAttribute(value: boolean) {
+        this.newPageAtXMLNewPageAttribute = value;
     }
     public get PageFormat(): PageFormat {
         return this.pageFormat;

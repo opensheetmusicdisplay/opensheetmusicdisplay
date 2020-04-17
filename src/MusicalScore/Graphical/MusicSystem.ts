@@ -44,6 +44,7 @@ export abstract class MusicSystem extends GraphicalObject {
     protected graphicalMarkedAreas: GraphicalMarkedArea[] = [];
     protected graphicalComments: GraphicalComment[] = [];
     protected systemLines: SystemLine[] = [];
+    public breaksPage: boolean = false;
 
     constructor(id: number) {
         super();

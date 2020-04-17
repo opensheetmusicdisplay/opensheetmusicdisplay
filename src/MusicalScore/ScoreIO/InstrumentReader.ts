@@ -135,7 +135,16 @@ export class InstrumentReader {
     try {
       const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
       for (const xmlNode of xmlMeasureListArr) {
-        if (xmlNode.name === "note") {
+        if (xmlNode.name === "print") {
+          const newSystemAttr: IXmlAttribute = xmlNode.attribute("new-system");
+          if (newSystemAttr?.value === "yes") {
+            currentMeasure.printNewSystemXml = true;
+          }
+          const newPageAttr: IXmlAttribute = xmlNode.attribute("new-page");
+          if (newPageAttr?.value === "yes") {
+            currentMeasure.printNewPageXml = true;
+          }
+        } else if (xmlNode.name === "note") {
           let printObject: boolean = true;
           if (xmlNode.hasAttributes && xmlNode.attribute("print-object") &&
               xmlNode.attribute("print-object").value === "no") {
@@ -481,9 +490,12 @@ export class InstrumentReader {
           }
           const location: IXmlAttribute = xmlNode.attribute("location");
           if (location && location.value === "right") {
-            const stringValue: string = xmlNode.element("bar-style").value;
-            this.currentMeasure.endingBarStyleXml = stringValue;
-            this.currentMeasure.endingBarStyleEnum = SystemLinesEnumHelper.xmlBarlineStyleToSystemLinesEnum(stringValue);
+            const stringValue: string = xmlNode.element("bar-style")?.value;
+            // TODO apparently we didn't anticipate bar-style not existing (the ? above was missing). how to handle?
+            if (stringValue) {
+              this.currentMeasure.endingBarStyleXml = stringValue;
+              this.currentMeasure.endingBarStyleEnum = SystemLinesEnumHelper.xmlBarlineStyleToSystemLinesEnum(stringValue);
+            }
           }
           // TODO do we need to process bars with left location too?
         } else if (xmlNode.name === "sound") {
