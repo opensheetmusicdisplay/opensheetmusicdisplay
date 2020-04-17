@@ -656,7 +656,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             openSheetMusicDisplay.setOptions({ autoBeam: autobeamOptionStashedValue });
             autobeamOptionNeedsReset = false;
         }
-        if (!isCustom && str.startsWith('OSMD_Function_Test_System_and_Page_Breaks')) {
+        if (!isCustom && str.includes("OSMD_Function_Test_System_and_Page_Breaks")) {
             pageBreaksOptionStashedValue = openSheetMusicDisplay.EngravingRules.NewPageAtXMLNewPageAttribute;
             systemBreaksOptionStashedValue = openSheetMusicDisplay.EngravingRules.NewSystemAtXMLNewSystemAttribute;
             pageBreaksOptionNeedsReset = true;
