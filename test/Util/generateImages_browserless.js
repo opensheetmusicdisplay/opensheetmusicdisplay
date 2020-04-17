@@ -23,7 +23,7 @@ function sleep (ms) {
 }
 
 async function init () {
-    console.log('[OSMD.generate] init')
+    console.log('[OSMD.generateImages] init')
 
     let [osmdBuildDir, sampleDir, imageDir, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString] = process.argv.slice(2, 10)
     if (!osmdBuildDir || !sampleDir || !imageDir) {
@@ -39,7 +39,7 @@ async function init () {
     const DEBUG = mode.startsWith('--debug')
     // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
     if (DEBUG) {
-        console.log(' (note that --debug slows down the script by about 0.3s per file, through logging)')
+        // console.log(' (note that --debug slows down the script by about 0.3s per file, through logging)')
         const debugSleepTimeMs = Number.parseInt(debugSleepTimeString)
         if (debugSleepTimeMs > 0) {
             console.log('debug sleep time: ' + debugSleepTimeString)
@@ -190,7 +190,6 @@ async function init () {
     // osmdInstance.EngravingRules.DistanceBetweenVerticalSystemLines = 0.15; // 0.35 is default
     // for more options check EngravingRules.ts (though not all of these are meant and fully supported to be changed at will)
 
-    // await sleep(5000)
     if (DEBUG) {
         osmdInstance.setLogLevel('debug')
         // console.log(`osmd PageFormat: ${osmdInstance.EngravingRules.PageFormat.width}x${osmdInstance.EngravingRules.PageFormat.height}`)
@@ -279,7 +278,7 @@ async function init () {
         // }) // end read file
     }
 
-    console.log('[OSMD.generate_browserless] exit')
+    console.log('[OSMD.generateImages_browserless] exit')
 }
 
 function debug (msg, debugEnabled) {
