@@ -68,7 +68,7 @@
     "loglevel": "^1.5.0",
     "svg2pdf.js": "^1.5.0",
     "typescript-collections": "^1.3.3",
-    "vexflow": "1.2.90"
+    "vexflow": "3.0.7"
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
