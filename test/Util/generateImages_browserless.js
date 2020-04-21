@@ -286,7 +286,7 @@ async function init () {
         // }) // end read file
     }
 
-    console.log('[OSMD.generateImages_browserless] exit')
+    console.log('[OSMD.generateImages] done, exiting.')
 }
 
 function debug (msg, debugEnabled) {
