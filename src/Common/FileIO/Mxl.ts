@@ -13,6 +13,8 @@ export class MXLHelper {
      * @constructor
      */
     public static MXLtoIXmlElement(data: string): Promise<IXmlElement> {
+        // starting with jszip 3.4.0, JSZip.JSZip is not found,
+        //    probably because of new possibly conflicting TypeScript definitions
         const zip: JSZip.JSZip = new JSZip();
         // asynchronously load zip file and process it - with Promises
         return zip.loadAsync(data).then(
