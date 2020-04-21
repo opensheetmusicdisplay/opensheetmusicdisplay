@@ -1,6 +1,3 @@
-// import Vex from "vexflow";
-// import * as Vex from "vexflow";
-// import {NoteSubGroup} from "vexflow";
 import Vex from "vexflow";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";

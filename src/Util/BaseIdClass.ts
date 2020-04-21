@@ -1,4 +1,4 @@
-//import * as shortid from "shortid";
+//import shortid from "shortid";
 
 /**
  * Support for the unique id generator.
