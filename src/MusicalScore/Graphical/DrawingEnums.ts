@@ -41,7 +41,6 @@ export enum OutlineAndFillStyleEnum {
 }
 
 // tslint:disable-next-line:max-line-length A linebreak would be more confusing here
-console.dir(Collections);
 export const OUTLINE_AND_FILL_STYLE_DICT: Collections.Dictionary<OutlineAndFillStyleEnum, string> =
     new Collections.Dictionary<OutlineAndFillStyleEnum, string>();
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.BaseWritingColor, "Thistle");
