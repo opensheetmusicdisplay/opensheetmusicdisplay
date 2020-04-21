@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import { Staff } from "../../VoiceData/Staff";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";

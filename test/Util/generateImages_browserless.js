@@ -60,17 +60,29 @@ async function init () {
     }
 
     // ---- hacks to fake Browser elements OSMD and Vexflow need, like window, document, and a canvas HTMLElement ----
-    const { JSDOM } = require('jsdom')
-    const dom = new JSDOM('<!DOCTYPE html></html>')
+    var jsdom = require('jsdom')
+    const dom = new jsdom.JSDOM('<!DOCTYPE html></html>')
     // eslint-disable-next-line no-global-assign
     window = dom.window
     // eslint-disable-next-line no-global-assign
     document = dom.window.document
 
+    // OSMD console output in nodejs broke after using "esModuleInterop": true in tsconfig to update Vexflow to 1.2.91.
+    // the virtualConsole could be used to get logs from OSMD, but then we need to pass our whole script in HTML to JSDOM.
+    // it would probably be cleaner to implement a more powerful logging system in OSMD you can hook into.
+    // var virtualConsole = new jsdom.VirtualConsole()
+    // virtualConsole.sendTo(console);
+    // var dom = global.document = new jsdom.JSDOM('', {
+    //     features: {
+    //         virtualConsole: virtualConsole
+    //     }
+    // })
+
     // eslint-disable-next-line no-global-assign
     global.window = dom.window
     // eslint-disable-next-line no-global-assign
     global.document = window.document
+    window.console = console // probably does nothing
     global.HTMLElement = window.HTMLElement
     global.HTMLAnchorElement = window.HTMLAnchorElement
     global.XMLHttpRequest = window.XMLHttpRequest
@@ -108,8 +120,8 @@ async function init () {
     div.setAttribute('width', width)
     div.setAttribute('height', height)
     div.setAttribute('offsetWidth', width)
-    debug('div.offsetWidth: ' + div.offsetWidth, DEBUG)
-    debug('div.height: ' + div.height, DEBUG)
+    // debug('div.offsetWidth: ' + div.offsetWidth, DEBUG) // 0 here, set correctly later
+    // debug('div.height: ' + div.height, DEBUG)
 
     // hack: set offsetWidth reliably
     Object.defineProperties(window.HTMLElement.prototype, {
@@ -128,10 +140,6 @@ async function init () {
     })
     debug('div.offsetWidth: ' + div.offsetWidth, DEBUG)
     debug('div.height: ' + div.height, DEBUG)
-    if (!DEBUG) {
-        // deactivate console logs (mostly)
-        console.log = (msg) => {}
-    }
     // ---- end browser hacks (hopefully) ----
 
     const OSMD = require(`${osmdBuildDir}/opensheetmusicdisplay.min.js`)
@@ -199,7 +207,7 @@ async function init () {
         osmdInstance.setLogLevel('info') // doesn't seem to work, log.debug still logs
     }
 
-    debug('generateImages', DEBUG)
+    debug('[OSMD.generateImages] starting loop over samples, saving images to ' + imageDir, DEBUG)
     for (let i = 0; i < samplesToProcess.length; i++) {
         var sampleFilename = samplesToProcess[i]
         debug('sampleFilename: ' + sampleFilename, DEBUG)

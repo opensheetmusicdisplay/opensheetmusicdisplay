@@ -1,4 +1,7 @@
-import Vex = require("vexflow");
+// import Vex from "vexflow";
+// import * as Vex from "vexflow";
+// import {NoteSubGroup} from "vexflow";
+import Vex from "vexflow";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
@@ -34,6 +37,8 @@ import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {NoteType, Arpeggio} from "../../VoiceData";
+
+// type StemmableNote = Vex.Flow.StemmableNote;
 
 export class VexFlowMeasure extends GraphicalMeasure {
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {

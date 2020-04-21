@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";

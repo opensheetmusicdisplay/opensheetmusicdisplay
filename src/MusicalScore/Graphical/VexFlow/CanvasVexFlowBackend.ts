@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 
 import {VexFlowBackend} from "./VexFlowBackend";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
