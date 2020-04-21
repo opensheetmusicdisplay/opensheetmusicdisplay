@@ -1,5 +1,3 @@
-import {Promise} from "es6-promise";
-
 /**
  * Class with helper methods to handle asynchronous JavaScript requests
  */
