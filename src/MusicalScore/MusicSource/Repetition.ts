@@ -4,7 +4,7 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
 import {MusicSheet} from "../MusicSheet";
 import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
 import {PartListEntry} from "./PartListEntry";
-import * as log from "loglevel";
+import log from "loglevel";
 
 export class Repetition extends PartListEntry /*implements IRepetition*/ {
     constructor(musicSheet: MusicSheet, virtualOverallRepetition: boolean) {

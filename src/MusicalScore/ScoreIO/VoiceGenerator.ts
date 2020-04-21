@@ -19,7 +19,7 @@ import { NoteEnum } from "../../Common/DataObjects/Pitch";
 import { Staff } from "../VoiceData/Staff";
 import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
 import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
-import * as log from "loglevel";
+import log from "loglevel";
 import { Pitch } from "../../Common/DataObjects/Pitch";
 import { IXmlAttribute } from "../../Common/FileIO/Xml";
 import { CollectionUtil } from "../../Util/CollectionUtil";

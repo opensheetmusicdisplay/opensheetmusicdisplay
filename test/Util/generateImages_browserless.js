@@ -67,17 +67,6 @@ async function init () {
     // eslint-disable-next-line no-global-assign
     document = dom.window.document
 
-    // OSMD console output in nodejs broke after using "esModuleInterop": true in tsconfig to update Vexflow to 1.2.91.
-    // the virtualConsole could be used to get logs from OSMD, but then we need to pass our whole script in HTML to JSDOM.
-    // it would probably be cleaner to implement a more powerful logging system in OSMD you can hook into.
-    // var virtualConsole = new jsdom.VirtualConsole()
-    // virtualConsole.sendTo(console);
-    // var dom = global.document = new jsdom.JSDOM('', {
-    //     features: {
-    //         virtualConsole: virtualConsole
-    //     }
-    // })
-
     // eslint-disable-next-line no-global-assign
     global.window = dom.window
     // eslint-disable-next-line no-global-assign

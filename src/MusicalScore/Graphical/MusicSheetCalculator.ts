@@ -47,7 +47,7 @@ import { AccidentalCalculator } from "./AccidentalCalculator";
 import { MidiInstrument } from "../VoiceData/Instructions/ClefInstruction";
 import { Staff } from "../VoiceData/Staff";
 import { OctaveShift } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
-import * as log from "loglevel";
+import log from "loglevel";
 import Dictionary from "typescript-collections/dist/lib/Dictionary";
 import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
 import { GraphicalLyricWord } from "./GraphicalLyricWord";

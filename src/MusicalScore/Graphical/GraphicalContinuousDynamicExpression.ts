@@ -7,7 +7,7 @@ import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
-import * as log from "loglevel";
+import log from "loglevel";
 
 /**
  * This class prepares the graphical elements for a continuous expression. It calculates the wedges and

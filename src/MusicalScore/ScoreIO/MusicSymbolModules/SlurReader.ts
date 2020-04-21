@@ -2,7 +2,7 @@
 import { IXmlElement, IXmlAttribute } from "../../../Common/FileIO/Xml";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { Note } from "../../VoiceData/Note";
-import * as log from "loglevel";
+import log from "loglevel";
 import { ITextTranslation } from "../../Interfaces/ITextTranslation";
 
 export class SlurReader {

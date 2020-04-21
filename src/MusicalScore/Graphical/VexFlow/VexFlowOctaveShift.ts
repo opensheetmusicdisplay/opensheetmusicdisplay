@@ -4,7 +4,7 @@ import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousE
 import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import * as log from "loglevel";
+import log from "loglevel";
 
 /**
  * The vexflow adaptation of a graphical shift.

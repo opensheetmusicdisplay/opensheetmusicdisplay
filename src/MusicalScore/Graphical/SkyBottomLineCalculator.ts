@@ -7,7 +7,7 @@ import { PointF2D } from "../../Common/DataObjects/PointF2D";
 import { CanvasVexFlowBackend } from "./VexFlow/CanvasVexFlowBackend";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
-import * as log from "loglevel";
+import log from "loglevel";
 import { BoundingBox } from "./BoundingBox";
 /**
  * This class calculates and holds the skyline and bottom line information.

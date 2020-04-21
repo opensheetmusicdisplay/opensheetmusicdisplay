@@ -12,7 +12,7 @@ import { Cursor } from "./Cursor";
 import { MXLHelper } from "../Common/FileIO/Mxl";
 import { Promise } from "es6-promise";
 import { AJAX } from "./AJAX";
-import * as log from "loglevel";
+import log from "loglevel";
 import { DrawingParametersEnum, DrawingParameters, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
 import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";

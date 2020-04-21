@@ -4,7 +4,7 @@ import {ChordDegreeText, ChordSymbolContainer, ChordSymbolEnum, Degree} from "..
 import {AccidentalEnum, NoteEnum, Pitch} from "../../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
-import * as log from "loglevel";
+import log from "loglevel";
 
 export class ChordSymbolReader {
     public static readChordSymbol(xmlNode: IXmlElement, musicSheet: MusicSheet, activeKey: KeyInstruction): ChordSymbolContainer {

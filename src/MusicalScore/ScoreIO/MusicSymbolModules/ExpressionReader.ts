@@ -15,7 +15,7 @@ import {UnknownExpression} from "../../VoiceData/Expressions/UnknownExpression";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {TextAlignmentEnum} from "../../../Common/Enums/TextAlignment";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
-import * as log from "loglevel";
+import log from "loglevel";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
