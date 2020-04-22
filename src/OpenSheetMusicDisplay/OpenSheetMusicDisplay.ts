@@ -612,6 +612,11 @@ export class OpenSheetMusicDisplay {
                 //    document.documentElement.offsetWidth
                 //);
                 //self.container.style.width = width + "px";
+
+                // recalculate beems, are otherwise not updated and can detach from beams, see #724
+                if (this.graphic?.GetCalculator) {
+                    (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = true;
+                }
                 if (self.IsReadyToRender()) {
                     self.render();
                 }
