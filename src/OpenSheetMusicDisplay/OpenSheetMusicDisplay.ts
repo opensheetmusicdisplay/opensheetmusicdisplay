@@ -614,7 +614,7 @@ export class OpenSheetMusicDisplay {
                 //self.container.style.width = width + "px";
 
                 // recalculate beems, are otherwise not updated and can detach from beams, see #724
-                if (this.graphic?.GetCalculator) {
+                if (this.graphic?.GetCalculator instanceof VexFlowMusicSheetCalculator) { // null and type check
                     (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = true;
                 }
                 if (self.IsReadyToRender()) {
@@ -848,7 +848,9 @@ export class OpenSheetMusicDisplay {
     public set Zoom(value: number) {
         this.zoom = value;
         this.zoomUpdated = true;
-        (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = this.zoomUpdated;
+        if (this.graphic?.GetCalculator instanceof VexFlowMusicSheetCalculator) { // null and type check
+            (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = this.zoomUpdated;
+        }
     }
 
     public set FollowCursor(value: boolean) {
