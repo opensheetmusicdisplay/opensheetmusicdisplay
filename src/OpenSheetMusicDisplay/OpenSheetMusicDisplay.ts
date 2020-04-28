@@ -21,6 +21,7 @@ import { NoteEnum } from "..";
 import { AutoColorSet, GraphicalMusicPage } from "../MusicalScore";
 import jspdf = require("jspdf-yworks/dist/jspdf.min");
 import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
+import { MusicPartManagerIterator } from "../MusicalScore/MusicParts";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -675,9 +676,22 @@ export class OpenSheetMusicDisplay {
     public enableOrDisableCursor(enable: boolean): void {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
+            // save previous cursor state
+            const hidden: boolean = this.cursor?.Hidden;
+            const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
+
+            // create new cursor
             this.cursor = new Cursor(this.drawer.Backends[0].getInnerElement(), this);
             if (this.sheet && this.graphic) { // else init is called in load()
                 this.cursor.init(this.sheet.MusicPartManager, this.graphic);
+            }
+
+            // restore old cursor state
+            if (this.rules.RestoreCursorAfterRerender) {
+                this.cursor.hidden = hidden;
+                if (previousIterator) {
+                    this.cursor.iterator = previousIterator;
+                }
             }
         } else { // disable cursor
             if (!this.cursor) {

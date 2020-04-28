@@ -29,16 +29,16 @@ export class Cursor {
   private openSheetMusicDisplay: OpenSheetMusicDisplay;
   private rules: EngravingRules;
   private manager: MusicPartManager;
-  protected iterator: MusicPartManagerIterator;
+  public iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
-  private hidden: boolean = true;
+  public hidden: boolean = true;
   private cursorElement: HTMLImageElement;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
     this.manager = manager;
-    this.reset();
     this.graphic = graphic;
+    this.reset();
     this.hidden = true;
     this.hide();
   }
@@ -84,10 +84,10 @@ export class Cursor {
 
   public update(): void {
     // Warning! This should NEVER call this.openSheetMusicDisplay.render()
-    if (this.hidden) {
+    if (this.hidden || this.hidden === undefined) {
       return;
     }
-    this.graphic.Cursors.length = 0;
+    // this.graphic?.Cursors?.length = 0;
     const iterator: MusicPartManagerIterator = this.iterator;
     // TODO when measure draw range (drawUpToMeasureNumber) was changed, next/update can fail to move cursor. but of course it can be reset before.
 

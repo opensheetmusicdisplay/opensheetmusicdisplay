@@ -218,6 +218,7 @@ export class EngravingRules {
     private pageFormat: PageFormat;
     private pageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
     private renderSingleHorizontalStaffline: boolean;
+    private restoreCursorAfterRerender: boolean;
 
     private static fixStafflineBoundingBox: boolean; // TODO temporary workaround
 
@@ -445,6 +446,7 @@ export class EngravingRules {
         this.fingeringInsideStafflines = false;
         this.newSystemAtXMLNewSystemAttribute = false;
         this.newPageAtXMLNewPageAttribute = false;
+        this.restoreCursorAfterRerender = true;
 
         EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
 
@@ -1594,6 +1596,12 @@ export class EngravingRules {
     }
     public set RenderSingleHorizontalStaffline(value: boolean) {
         this.renderSingleHorizontalStaffline = value;
+    }
+    public get RestoreCursorAfterRerender(): boolean {
+        return this.restoreCursorAfterRerender;
+    }
+    public set RestoreCursorAfterRerender(value: boolean) {
+        this.restoreCursorAfterRerender = value;
     }
 
     /**
