@@ -101,9 +101,12 @@ export class Cursor {
     const gseArr: VexFlowStaffEntry[] = voiceEntries.map(ve => this.getStaffEntryFromVoiceEntry(ve));
     // sort them by x position and take the leftmost entry
     const gse: VexFlowStaffEntry =
-          gseArr.sort((a, b) => a.PositionAndShape.AbsolutePosition.x <= b.PositionAndShape.AbsolutePosition.x ? -1 : 1 )[0];
+          gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
     x = gse.PositionAndShape.AbsolutePosition.x;
     const musicSystem: MusicSystem = gse.parentMeasure.ParentMusicSystem;
+    if (musicSystem === undefined) {
+      return;
+    }
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
     const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
