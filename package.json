@@ -92,7 +92,7 @@
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-firefox-launcher": "^1.0.0",
-    "karma-mocha": "^2.0.0",
+    "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.0.4",
     "karma-webpack": "^4.0.2",
     "karma-xml2js-preprocessor": "^0.0.3",
