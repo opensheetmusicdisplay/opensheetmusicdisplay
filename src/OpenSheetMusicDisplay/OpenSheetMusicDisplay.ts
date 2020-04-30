@@ -415,6 +415,11 @@ export class OpenSheetMusicDisplay {
         }
         if (options.drawPartNames !== undefined) {
             this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
+
+            // by default, disable part abbreviations too, unless set explicitly.
+            if (!options.drawPartAbbreviations) {
+                this.rules.RenderPartAbbreviations = options.drawPartNames;
+            }
         }
         if (options.drawPartAbbreviations !== undefined) {
             this.rules.RenderPartAbbreviations = options.drawPartAbbreviations;

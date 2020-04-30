@@ -66,7 +66,9 @@ export interface IOSMDOptions {
     drawComposer?: boolean;
     /** Whether to draw the lyricist's name, if given (top left of the score). */
     drawLyricist?: boolean;
-    /** Whether to draw part (instrument) names. */
+    /** Whether to draw part (instrument) names. Setting this to false also disables drawPartAbbreviations,
+     *  unless explicitly enabled (drawPartNames: false, drawPartAbbreviations: true).
+     */
     drawPartNames?: boolean;
     /** Whether to draw part (instrument) name abbreviations each system after the first. Only draws if drawPartNames. Default true. */
     drawPartAbbreviations?: boolean;
