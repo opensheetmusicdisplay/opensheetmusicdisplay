@@ -619,7 +619,7 @@ export class OpenSheetMusicDisplay {
                 //);
                 //self.container.style.width = width + "px";
 
-                // recalculate beems, are otherwise not updated and can detach from beams, see #724
+                // recalculate beams, are otherwise not updated and can detach from stems, see #724
                 if (this.graphic?.GetCalculator instanceof VexFlowMusicSheetCalculator) { // null and type check
                     (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = true;
                 }
