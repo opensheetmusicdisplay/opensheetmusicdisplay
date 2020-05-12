@@ -686,7 +686,7 @@ export class OpenSheetMusicDisplay {
             const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
 
             // create new cursor
-            if (this.drawer?.Backends?.length >= 1) {
+            if (this.drawer?.Backends?.length >= 1 && this.drawer.Backends[0].getRenderElement()) {
                 this.cursor = new Cursor(this.drawer.Backends[0].getRenderElement(), this);
             }
             if (this.sheet && this.graphic && this.cursor) { // else init is called in load()
