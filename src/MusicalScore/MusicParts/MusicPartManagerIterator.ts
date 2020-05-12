@@ -28,7 +28,7 @@ export class MusicPartManagerIterator {
             }
             this.activeDynamicExpressions = new Array(manager.MusicSheet.getCompleteNumberOfStaves());
             this.currentMeasure = this.manager.MusicSheet.SourceMeasures[0];
-            if (startTimestamp === undefined) { return; }
+            if (!startTimestamp) { return; }
             do {
                 this.moveToNext();
             } while ((this.currentVoiceEntries === undefined || this.currentTimeStamp.lt(startTimestamp)) && !this.endReached);
@@ -70,7 +70,7 @@ export class MusicPartManagerIterator {
     private currentRepetition: Repetition = undefined;
     private endReached: boolean = false;
     private frontReached: boolean = false;
-    private currentTimeStamp: Fraction = new Fraction(0, 1);
+    public currentTimeStamp: Fraction = new Fraction(0, 1);
     private currentEnrolledMeasureTimestamp: Fraction = new Fraction(0, 1);
     private currentVerticalContainerInMeasureTimestamp: Fraction = new Fraction(0, 1);
     private jumpResponsibleRepetition: Repetition = undefined;
@@ -132,14 +132,17 @@ export class MusicPartManagerIterator {
     /**
      * Creates a clone of this iterator which has the same actual position.
      */
-    public clone(): MusicPartManagerIterator {
-        const ret: MusicPartManagerIterator = new MusicPartManagerIterator(this.manager);
+    public clone(startTimeStamp: Fraction = undefined): MusicPartManagerIterator {
+        // TODO this hopefully sets the cloned iterator to the given startTimeStamp. needs testing
+        const ret: MusicPartManagerIterator = new MusicPartManagerIterator(this.manager, startTimeStamp);
         ret.currentVoiceEntryIndex = this.currentVoiceEntryIndex;
         ret.currentMappingPart = this.currentMappingPart;
         ret.currentPartIndex = this.currentPartIndex;
         ret.currentVoiceEntries = this.currentVoiceEntries;
         ret.endReached = this.endReached;
         ret.frontReached = this.frontReached;
+        // alternative method to set currentTimeStamp? may not fully affect current iterator position
+        // ret.currentTimeStamp = this.currentTimeStamp;
         return ret;
     }
 
