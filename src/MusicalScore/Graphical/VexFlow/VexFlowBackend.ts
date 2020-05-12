@@ -8,9 +8,10 @@ import {BackendType} from "../../../OpenSheetMusicDisplay";
 
 export class VexFlowBackends {
   public static CANVAS: 0;
-  public static RAPHAEL: 1;
+  public static RAPHAEL: 1; // this is currently unused in OSMD, and outdated in Vexflow.
+  // maybe SVG should be 1? but this could be a breaking change if people use numbers (2) instead of names (.SVG).
   public static SVG: 2;
-  public static VML: 3;
+  public static VML: 3; // this is currently unused in OSMD, and outdated in Vexflow
 
 }
 
