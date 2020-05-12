@@ -18,7 +18,19 @@ export class Cursor {
     this.container = container;
     this.openSheetMusicDisplay = openSheetMusicDisplay;
     this.rules = this.openSheetMusicDisplay.EngravingRules;
+
+    // set cursor id
+    // TODO add this for the OSMD object as well and refactor this into a util method?
+    let id: number = 0;
+    this.cursorElementId = "cursorImg-0";
+    // find unique cursor id in document
+    while (document.getElementById(this.cursorElementId)) {
+      id++;
+      this.cursorElementId = `cursorImg-${id}`;
+    }
+
     const curs: HTMLElement = document.createElement("img");
+    curs.id = this.cursorElementId;
     curs.style.position = "absolute";
     curs.style.zIndex = "-1";
     this.cursorElement = <HTMLImageElement>curs;
@@ -26,13 +38,18 @@ export class Cursor {
   }
 
   private container: HTMLElement;
+  public cursorElement: HTMLImageElement;
+  /** a unique id of the cursor's HTMLElement in the document.
+   * Should be constant between re-renders and backend changes,
+   * but different between different OSMD objects on the same page.
+   */
+  public cursorElementId: string;
   private openSheetMusicDisplay: OpenSheetMusicDisplay;
   private rules: EngravingRules;
   private manager: MusicPartManager;
   public iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
   public hidden: boolean = true;
-  private cursorElement: HTMLImageElement;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
