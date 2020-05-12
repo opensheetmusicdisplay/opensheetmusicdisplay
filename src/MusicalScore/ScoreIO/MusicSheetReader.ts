@@ -690,7 +690,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             if (subtitleNodeChild !== undefined) {
                 const workNumber: string = subtitleNodeChild.value;
                 if (workNumber) {
-                    if (finalSubTitle) {
+                    if (finalSubTitle === "") {
                         finalSubTitle = workNumber;
                     } else {
                         finalSubTitle = finalSubTitle + ", " + workNumber;
