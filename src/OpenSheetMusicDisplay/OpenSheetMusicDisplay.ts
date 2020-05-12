@@ -503,7 +503,7 @@ export class OpenSheetMusicDisplay {
             // we could remove the window EventListener here, but not necessary.
         }
         if (options.pageFormat !== undefined) { // only change this option if it was given, see above
-            this.rules.PageFormat = OpenSheetMusicDisplay.StringToPageFormat(options.pageFormat);
+            this.setPageFormat(options.pageFormat);
         }
         if (options.pageBackgroundColor !== undefined) {
             this.rules.PageBackgroundColor = options.pageBackgroundColor;
@@ -761,7 +761,7 @@ export class OpenSheetMusicDisplay {
         return pageFormat;
     }
 
-    /** Sets page format by string. Alternative to setOptions({pageFormat: PageFormatStandards.Endless}) for example. */
+    /** Sets page format by string. Used by setOptions({pageFormat: "A4_P"}) for example. */
     public setPageFormat(formatId: string): void {
         const newPageFormat: PageFormat = OpenSheetMusicDisplay.StringToPageFormat(formatId);
         this.needBackendUpdate = !(newPageFormat.Equals(this.rules.PageFormat));
