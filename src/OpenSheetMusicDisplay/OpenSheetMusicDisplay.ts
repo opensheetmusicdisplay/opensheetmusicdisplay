@@ -825,6 +825,9 @@ export class OpenSheetMusicDisplay {
 
         // simply save the created pdf
         pdf.save(pdfName);
+
+        // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
+        // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32
     }
 
     //#region GETTER / SETTER
