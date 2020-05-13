@@ -8,6 +8,7 @@ export enum NoteType {
     _256th,
     _128th,
     _64th,
+    _32nd,
     _16th,
     EIGTH,
     QUARTER,
@@ -20,13 +21,15 @@ export enum NoteType {
 
 export class NoteTypeHandler {
     // tslint:disable-next-line: variable-name
-    public static NoteTypeXmlValues: string[] = ["", "1024th", "512th", "256th", "128th", "64th", "32th", "16th",
+    public static NoteTypeXmlValues: string[] = ["", "1024th", "512th", "256th", "128th", "64th", "32nd", "16th",
         "eigth", "quarter", "half", "whole", "breve", "long", "maxima"];
     // alternative to array: use switch/case
 
 
     public static NoteTypeToString(noteType: NoteType): string {
-        return this.NoteTypeXmlValues[noteType]; // assumes that the enum values are ordered from 0 to x, like NoteTypeXmlValues array members
+        return this.NoteTypeXmlValues[noteType];
+        // assumes that the enum values are ordered from 0 to x, like NoteTypeXmlValues array members
+        // see NoteType_Test.ts
     }
 
     public static StringToNoteType(noteType: string): NoteType {
