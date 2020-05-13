@@ -23,7 +23,7 @@ describe("VexFlow Measure", () => {
       const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
       const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
-      console.log(gms);
+      // console.log(gms);
       done();
    });
 
@@ -37,7 +37,7 @@ describe("VexFlow Measure", () => {
       chai.expect(gms.MeasureList.length).to.equal(1);
       chai.expect(gms.MeasureList[0].length).to.equal(1);
       const gm: GraphicalMeasure = gms.MeasureList[0][0];
-      console.log(gm);
+      // console.log(gm);
       done();
    });
 
