@@ -69,6 +69,11 @@ export abstract class MusicSheetDrawer {
         this.drawSplitScreenLine();
         if (this.drawingParameters.drawCursors) {
             for (const line of graphicalMusicSheet.Cursors) {
+                if (!line) {
+                    // TODO GraphicalMusicSheet.calculateCursorLineAtTimestamp() can return undefined.
+                    // why does this happen in the VexFlowMusicSheetDrawer_Test? (it("draws cursor..."))
+                    continue;
+                }
                 const psi: BoundingBox = new BoundingBox(line);
                 psi.AbsolutePosition = line.Start;
                 psi.BorderBottom = line.End.y - line.Start.y;

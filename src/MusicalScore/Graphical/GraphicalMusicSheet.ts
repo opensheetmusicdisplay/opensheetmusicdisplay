@@ -790,15 +790,16 @@ export class GraphicalMusicSheet {
         }
         let previousStaffEntryMusicSystem: MusicSystem = undefined;
         if (previousStaffEntry !== undefined) {
-            previousStaffEntryMusicSystem = previousStaffEntry.parentMeasure.ParentStaffLine.ParentMusicSystem;
+            // TODO sometimes one of these ParentStaffLine is undefined, either fix this or handle it here
+            previousStaffEntryMusicSystem = previousStaffEntry.parentMeasure.ParentStaffLine?.ParentMusicSystem;
         } else {
-            previousStaffEntryMusicSystem = nextStaffEntry.parentMeasure.ParentStaffLine.ParentMusicSystem;
+            previousStaffEntryMusicSystem = nextStaffEntry.parentMeasure.ParentStaffLine?.ParentMusicSystem;
         }
         let nextStaffEntryMusicSystem: MusicSystem = undefined;
         if (nextStaffEntry !== undefined) {
-            nextStaffEntryMusicSystem = nextStaffEntry.parentMeasure.ParentStaffLine.ParentMusicSystem;
+            nextStaffEntryMusicSystem = nextStaffEntry.parentMeasure.ParentStaffLine?.ParentMusicSystem;
         } else {
-            nextStaffEntryMusicSystem = previousStaffEntry.parentMeasure.ParentStaffLine.ParentMusicSystem;
+            nextStaffEntryMusicSystem = previousStaffEntry.parentMeasure.ParentStaffLine?.ParentMusicSystem;
         }
         if (previousStaffEntryMusicSystem === nextStaffEntryMusicSystem) {
             currentMusicSystem = previousStaffEntryMusicSystem;

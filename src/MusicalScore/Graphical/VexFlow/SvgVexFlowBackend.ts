@@ -28,6 +28,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
 
     public initialize(container: HTMLElement): void {
         this.canvas = document.createElement("div");
+        // this.canvas.id = uniqueID // TODO create unique tagName like with cursor now?
         this.inner = this.canvas;
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";

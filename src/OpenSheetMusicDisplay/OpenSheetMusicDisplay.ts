@@ -503,7 +503,7 @@ export class OpenSheetMusicDisplay {
             // we could remove the window EventListener here, but not necessary.
         }
         if (options.pageFormat !== undefined) { // only change this option if it was given, see above
-            this.rules.PageFormat = OpenSheetMusicDisplay.StringToPageFormat(options.pageFormat);
+            this.setPageFormat(options.pageFormat);
         }
         if (options.pageBackgroundColor !== undefined) {
             this.rules.PageBackgroundColor = options.pageBackgroundColor;
@@ -619,7 +619,7 @@ export class OpenSheetMusicDisplay {
                 //);
                 //self.container.style.width = width + "px";
 
-                // recalculate beems, are otherwise not updated and can detach from beams, see #724
+                // recalculate beams, are otherwise not updated and can detach from stems, see #724
                 if (this.graphic?.GetCalculator instanceof VexFlowMusicSheetCalculator) { // null and type check
                     (this.graphic.GetCalculator as VexFlowMusicSheetCalculator).beamsNeedUpdate = true;
                 }
@@ -686,8 +686,10 @@ export class OpenSheetMusicDisplay {
             const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
 
             // create new cursor
-            this.cursor = new Cursor(this.drawer.Backends[0].getInnerElement(), this);
-            if (this.sheet && this.graphic) { // else init is called in load()
+            if (this.drawer?.Backends?.length >= 1 && this.drawer.Backends[0].getRenderElement()) {
+                this.cursor = new Cursor(this.drawer.Backends[0].getRenderElement(), this);
+            }
+            if (this.sheet && this.graphic && this.cursor) { // else init is called in load()
                 this.cursor.init(this.sheet.MusicPartManager, this.graphic);
             }
 
@@ -761,7 +763,7 @@ export class OpenSheetMusicDisplay {
         return pageFormat;
     }
 
-    /** Sets page format by string. Alternative to setOptions({pageFormat: PageFormatStandards.Endless}) for example. */
+    /** Sets page format by string. Used by setOptions({pageFormat: "A4_P"}) for example. */
     public setPageFormat(formatId: string): void {
         const newPageFormat: PageFormat = OpenSheetMusicDisplay.StringToPageFormat(formatId);
         this.needBackendUpdate = !(newPageFormat.Equals(this.rules.PageFormat));
@@ -823,6 +825,9 @@ export class OpenSheetMusicDisplay {
 
         // simply save the created pdf
         pdf.save(pdfName);
+
+        // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
+        // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32
     }
 
     //#region GETTER / SETTER
