@@ -27,14 +27,14 @@ import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {Voice} from "../../VoiceData/Voice";
 import {LinkedVoice} from "../../VoiceData/LinkedVoice";
-import { EngravingRules } from "../EngravingRules";
+import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {NoteType, Arpeggio} from "../../VoiceData";
-import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
+import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
 
 // type StemmableNote = Vex.Flow.StemmableNote;
 
