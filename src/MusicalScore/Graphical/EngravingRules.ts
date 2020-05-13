@@ -114,6 +114,7 @@ export class EngravingRules {
     private repetitionEndingLabelYOffset: number;
     private repetitionEndingLineYLowerOffset: number;
     private repetitionEndingLineYUpperOffset: number;
+    private voltaOffset: number;
     /** Default alignment of lyrics.
      * Left alignments will extend text to the right of the bounding box,
      * which facilitates spacing by extending measure width.
@@ -364,6 +365,7 @@ export class EngravingRules {
         this.repetitionEndingLabelYOffset = 0.3;
         this.repetitionEndingLineYLowerOffset = 0.5;
         this.repetitionEndingLineYUpperOffset = 0.3;
+        this.voltaOffset = 2.5;
 
         // Lyrics
         this.lyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
@@ -1016,6 +1018,12 @@ export class EngravingRules {
     }
     public set RepetitionEndingLineYUpperOffset(value: number) {
         this.repetitionEndingLineYUpperOffset = value;
+    }
+    public get VoltaOffset(): number {
+        return this.voltaOffset;
+    }
+    public set VoltaOffset(value: number) {
+        this.voltaOffset = value;
     }
     public get LyricsAlignmentStandard(): TextAlignmentEnum {
         return this.lyricsAlignmentStandard;
