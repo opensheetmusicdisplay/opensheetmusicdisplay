@@ -633,7 +633,7 @@ export abstract class MusicSheetCalculator {
         this.formatMeasures();
 
         // check for Measures with only WholeRestNotes and correct their X-Position (middle of Measure)
-        this.checkMeasuresForWholeRestNotes();
+        // this.checkMeasuresForWholeRestNotes(); // this currently does nothing
         if (!this.leadSheet) {
             // calculate Beam Placement
             // this.calculateBeams(); // does nothing for now, because layoutBeams() is an empty method
