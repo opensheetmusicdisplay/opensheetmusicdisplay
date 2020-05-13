@@ -24,6 +24,7 @@ describe("VexFlow Measure", () => {
       const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
       const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
       // console.log(gms);
+      chai.expect(gms).to.not.be.undefined; // at least necessary for linter so that variable is not unused
       done();
    });
 
@@ -38,6 +39,7 @@ describe("VexFlow Measure", () => {
       chai.expect(gms.MeasureList[0].length).to.equal(1);
       const gm: GraphicalMeasure = gms.MeasureList[0][0];
       // console.log(gm);
+      chai.expect(gm).to.not.be.undefined; // at least necessary for linter so that variable is not unused
       done();
    });
 
