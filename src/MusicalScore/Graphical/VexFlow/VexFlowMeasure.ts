@@ -345,17 +345,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const end: number = this.PositionAndShape.AbsolutePosition.x + this.PositionAndShape.BorderMarginRight;
             //2 unit gap, since volta is positioned from y center it seems.
             //This prevents cases where the volta is rendered over another element
-            let skylineMinForMeasure: number = skyBottomLineCalculator.getSkyLineMinInRange(start, end)-2;
+            const skylineMinForMeasure: number = skyBottomLineCalculator.getSkyLineMinInRange( start, end ) - 2;
             //-6 OSMD units is the 0 value that the volta is placed on. .1 extra so the skyline goes above the volta
             //instead of on the line itself
-            let newSkylineValueForMeasure = -6.1+this.rules.VoltaOffset;
-            let vexFlowVoltaHeight = this.rules.VoltaOffset;
+            let newSkylineValueForMeasure: number = -6.1 + this.rules.VoltaOffset;
+            let vexFlowVoltaHeight: number = this.rules.VoltaOffset;
             //EngravingRules default offset is 2.5, can be user set.
             //2.5 gives us a good default value to work with.
 
             //if we calculate that the minimum skyline allowed by elements is above the default volta position, need to adjust volta up further
-            if(skylineMinForMeasure < newSkylineValueForMeasure){
-                let skylineDifference = skylineMinForMeasure - newSkylineValueForMeasure;
+            if (skylineMinForMeasure < newSkylineValueForMeasure) {
+                const skylineDifference: number = skylineMinForMeasure - newSkylineValueForMeasure;
                 vexFlowVoltaHeight += skylineDifference;
                 newSkylineValueForMeasure = skylineMinForMeasure;
             }
