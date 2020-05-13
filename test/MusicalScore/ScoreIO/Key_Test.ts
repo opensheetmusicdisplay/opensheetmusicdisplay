@@ -21,9 +21,9 @@ describe("MusicXML parser for element 'key'", () => {
 
   describe("for group traditional keys", () => {
 
-    xit("enforces single occurrence of element 'fifths'", (done: MochaDone) => {
+    it("enforces single occurrence of element 'fifths'", (done: MochaDone) => {
       const keyInstruction: KeyInstruction = getIllegalMusicXmlWithTwoFifthsElements().getFirstSourceMeasure().getKeyInstruction(0);
-      // TODO Make sure we detect the multiple fifths and react properly
+      // TODO Make sure we detect the multiple fifths and react properly // [it seems like we do this test passes. ssch]
       chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.none);
       done();
     });
