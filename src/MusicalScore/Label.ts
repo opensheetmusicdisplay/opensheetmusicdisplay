@@ -14,7 +14,6 @@ export class Label {
         this.text = text;
         this.textAlignment = alignment;
         this.font = font;
-        this.fontStyle = FontStyles.Bold; // debug
         // maybe give EngravingRules as argument, to set FontStyle and potentially further style settings
     }
 
