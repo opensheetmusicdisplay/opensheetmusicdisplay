@@ -15,7 +15,6 @@ export class Label {
         this.textAlignment = alignment;
         this.font = font;
         this.fontFamily = undefined; // default value, will use EngravingRules.DefaultFontFamily at rendering
-        // maybe give EngravingRules as argument, to set FontStyle and potentially further style settings
     }
 
     public text: string;
