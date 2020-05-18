@@ -27,7 +27,6 @@ export class GraphicalLyricEntry {
             // lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
         }
         const label: Label = new Label(lyricsEntry.Text);
-        label.fontStyle = this.graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules.DefaultFontStyle;
         this.graphicalLabel = new GraphicalLabel(
             label,
             lyricsHeight,

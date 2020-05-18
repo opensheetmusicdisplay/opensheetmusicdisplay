@@ -82,7 +82,8 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
-                             heightInPixel: number, screenPosition: PointF2D, color?: string): void;
+                             heightInPixel: number, screenPosition: PointF2D,
+                             color?: string, fontFamily?: string): void;
   /**
    * Renders a rectangle with the given style to the screen.
    * It is given in screen coordinates.

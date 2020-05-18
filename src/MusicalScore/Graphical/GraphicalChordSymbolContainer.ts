@@ -6,7 +6,6 @@ import {BoundingBox} from "./BoundingBox";
 import {GraphicalObject} from "./GraphicalObject";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {EngravingRules} from "./EngravingRules";
-import {FontStyles} from "../../Common";
 
 export class GraphicalChordSymbolContainer extends GraphicalObject {
     private chordSymbolContainer: ChordSymbolContainer;
@@ -30,7 +29,6 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     private calculateLabel(textHeight: number, transposeHalftones: number): void {
         const text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones);
         const label: Label = new Label(text);
-        label.fontStyle = this.rules?.DefaultFontStyle ?? FontStyles.Regular; // TODO seems like rules are undefined sometimes
         this.graphicalLabel = new GraphicalLabel(label, textHeight, TextAlignmentEnum.CenterBottom, this.rules, this.boundingBox);
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
     }

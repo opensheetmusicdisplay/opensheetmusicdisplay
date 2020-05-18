@@ -12,7 +12,6 @@ export class VexFlowInstantaneousDynamicExpression extends GraphicalInstantaneou
         super(instantaneousDynamicExpression, staffLine, measure);
 
         const sourceLabel: Label = new Label(this.Expression);
-        sourceLabel.fontStyle = this.rules.DefaultFontStyle;
         this.label = new GraphicalLabel(sourceLabel,
                                         this.rules.ContinuousDynamicTextHeight,
                                         TextAlignmentEnum.CenterCenter,

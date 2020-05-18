@@ -26,8 +26,10 @@ export class VexFlowTextMeasurer implements ITextMeasurer {
      * @param style
      * @returns {number}
      */
-    public computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles, fontSize: number = this.fontSize): number {
-        this.context.font = VexFlowConverter.font(fontSize, style, font, this.rules);
+    public computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles,
+                                         fontFamily: string = undefined,
+                                         fontSize: number = this.fontSize): number {
+        this.context.font = VexFlowConverter.font(fontSize, style, font, this.rules, fontFamily);
         return this.context.measureText(text).width / fontSize;
     }
 

@@ -350,7 +350,6 @@ export abstract class MusicSheetCalculator {
     private calculateSingleMeasureNumberPlacement(measure: GraphicalMeasure, staffLine: StaffLine, musicSystem: MusicSystem): void {
         const labelNumber: string = measure.MeasureNumber.toString();
         const label: Label = new Label(labelNumber);
-        label.fontStyle = this.rules.DefaultFontStyle;
         // maybe give rules as argument instead of just setting fontStyle and maybe other settings manually afterwards
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(label, this.rules.MeasureNumberLabelHeight,
                                                                   TextAlignmentEnum.LeftBottom, this.rules);
@@ -1237,12 +1236,11 @@ export abstract class MusicSheetCalculator {
                              fontHeight: number,
                              textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom): GraphicalLabel {
         const label: Label = new Label(combinedString, textAlignment);
-        label.fontStyle = this.rules.DefaultFontStyle;
+        label.fontStyle = style;
         label.fontHeight = fontHeight;
 
         // TODO_RR: TextHeight from first Entry
         const graphLabel: GraphicalLabel = new GraphicalLabel(label, fontHeight, label.textAlignment, this.rules, staffLine.PositionAndShape);
-        graphLabel.Label.fontStyle = style;
         const marginFactor: number = 1.1;
 
         if (placement === PlacementEnum.Below) {
@@ -1562,7 +1560,6 @@ export abstract class MusicSheetCalculator {
                 let renderedLabel: Label = instrument.NameLabel;
                 if (!this.rules.RenderPartNames) {
                     renderedLabel = new Label("", renderedLabel.textAlignment, renderedLabel.font);
-                    renderedLabel.fontStyle = this.rules.DefaultFontStyle;
                 }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
                     renderedLabel, this.rules.InstrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.rules);
@@ -2455,7 +2452,6 @@ export abstract class MusicSheetCalculator {
      */
     private calculateSingleDashForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): void {
         const label: Label = new Label("-");
-        label.fontStyle = this.rules.DefaultFontStyle;
         const dash: GraphicalLabel = new GraphicalLabel(
             label, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         dash.setLabelPositionAndShapeBorders();
@@ -2572,7 +2568,6 @@ export abstract class MusicSheetCalculator {
      */
     private calculateRightAndLeftDashesForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): number {
         const leftLabel: Label = new Label("-");
-        leftLabel.fontStyle = this.rules.DefaultFontStyle;
         const leftDash: GraphicalLabel = new GraphicalLabel(
             leftLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         leftDash.setLabelPositionAndShapeBorders();
@@ -2585,7 +2580,6 @@ export abstract class MusicSheetCalculator {
         leftDash.PositionAndShape.RelativePosition = leftDashRelative;
 
         const rightLabel: Label = new Label("-");
-        rightLabel.fontStyle = this.rules.DefaultFontStyle;
         const rightDash: GraphicalLabel = new GraphicalLabel(
             rightLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         rightDash.setLabelPositionAndShapeBorders();

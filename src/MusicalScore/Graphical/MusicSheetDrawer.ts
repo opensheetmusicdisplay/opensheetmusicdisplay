@@ -522,7 +522,6 @@ export abstract class MusicSheetDrawer {
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
             const label: Label = new Label(dataObjectString);
-            label.fontStyle = this.rules.DefaultFontStyle;
             this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }

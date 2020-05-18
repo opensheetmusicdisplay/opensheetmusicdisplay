@@ -14,7 +14,6 @@ export class VexFlowContinuousDynamicExpression extends GraphicalContinuousDynam
         super(continuousDynamic, staffLine);
         if (this.IsVerbal) {
             const sourceLabel: Label = new Label(continuousDynamic.Label);
-            sourceLabel.fontStyle = this.rules.DefaultFontStyle;
             this.label = new GraphicalLabel(sourceLabel,
                                             textHeight ? textHeight : this.rules.ContinuousDynamicTextHeight,
                                             TextAlignmentEnum.LeftCenter,

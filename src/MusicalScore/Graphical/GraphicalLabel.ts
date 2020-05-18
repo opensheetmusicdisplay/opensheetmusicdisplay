@@ -47,7 +47,8 @@ export class GraphicalLabel extends Clickable {
         const labelMarginBorderFactor: number = this.rules?.LabelMarginBorderFactor ?? 0.1;
 
         const widthToHeightRatio: number =
-            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.text, this.Label.font, this.Label.fontStyle);
+            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+                this.Label.text, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
         const height: number = this.Label.fontHeight;
         const width: number = height * widthToHeightRatio;
         const bbox: BoundingBox = this.PositionAndShape;
