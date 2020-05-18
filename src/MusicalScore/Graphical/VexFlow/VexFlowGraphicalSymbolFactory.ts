@@ -175,7 +175,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                                                 graphicalStaffEntry.PositionAndShape,
                                                 rules.ChordSymbolTextHeight,
                                                 transposeHalftones,
-                                                graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules
+                                                graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules // TODO undefined sometimes
                                                 );
             const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
             graphicalLabel.PositionAndShape.RelativePosition.y -= rules.ChordSymbolYOffset;
