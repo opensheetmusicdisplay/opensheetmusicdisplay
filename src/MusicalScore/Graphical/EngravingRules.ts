@@ -6,7 +6,8 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AutoBeamOptions, AlignRestOption, FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
-import { NoteEnum, FontStyles } from "../..";
+import { FontStyles } from "../../Common/Enums";
+import { NoteEnum } from "../../Common/DataObjects/Pitch";
 
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
