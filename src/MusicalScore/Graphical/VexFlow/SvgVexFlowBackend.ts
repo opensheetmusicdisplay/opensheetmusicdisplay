@@ -87,6 +87,26 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
         this.ctx.attributes["font-size"] = `${fontHeight}px`;
         this.ctx.state["font-size"] = `${fontHeight}px`;
+        let fontWeightVexflow: string = "normal";
+        let fontStyleVexflow: string = "normal";
+        switch (fontStyle) {
+            case FontStyles.Bold:
+                fontWeightVexflow = "bold";
+                break;
+            case FontStyles.Italic:
+                fontStyleVexflow = "italic";
+                break;
+            case FontStyles.BoldItalic:
+                fontWeightVexflow = "bold";
+                fontStyleVexflow = "italic";
+                break;
+            default:
+                fontWeightVexflow = "normal";
+        }
+        this.ctx.attributes["font-weight"] = fontWeightVexflow;
+        this.ctx.state["font-weight"] = fontWeightVexflow;
+        this.ctx.attributes["font-style"] = fontStyleVexflow;
+        this.ctx.state["font-style"] = fontStyleVexflow;
         this.ctx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
         this.ctx.restore();
     }

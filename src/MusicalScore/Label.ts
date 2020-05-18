@@ -9,10 +9,13 @@ import {FontStyles} from "../Common/Enums/FontStyles";
  */
 export class Label {
 
-    constructor(text: string = "", alignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom, font: Fonts = Fonts.TimesNewRoman) {
+    constructor(text: string = "", alignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom,
+                font: Fonts = Fonts.TimesNewRoman, fontStyle: FontStyles = FontStyles.Regular) {
         this.text = text;
         this.textAlignment = alignment;
         this.font = font;
+        this.fontStyle = FontStyles.Bold; // debug
+        // maybe give EngravingRules as argument, to set FontStyle and potentially further style settings
     }
 
     public text: string;

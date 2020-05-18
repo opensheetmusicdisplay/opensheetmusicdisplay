@@ -4,7 +4,7 @@ import { BoundingBox } from "./BoundingBox";
 import { GraphicalNote } from "./GraphicalNote";
 import { GraphicalStaffEntry } from "./GraphicalStaffEntry";
 import { OctaveEnum } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
-import { EngravingRules } from ".";
+import { EngravingRules } from "./EngravingRules";
 
 /**
  * The graphical counterpart of a [[VoiceEntry]].

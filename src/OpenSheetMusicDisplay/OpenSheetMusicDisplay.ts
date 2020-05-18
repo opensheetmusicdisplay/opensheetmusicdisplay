@@ -117,7 +117,7 @@ export class OpenSheetMusicDisplay {
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
                 content = parser.parseFromString(str, "application/xml");
-            } else if (str.length < 2083) {
+            } else if (str.length < 2083) { // TODO do proper URL format check
                 log.debug("[OSMD] Retrieve the file at the given URL: " + str);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
@@ -477,6 +477,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.defaultFontFamily) {
             this.rules.DefaultFontFamily = options.defaultFontFamily; // default "Times New Roman", also used if font family not found
+        }
+        if (options.defaultFontStyle) {
+            this.rules.DefaultFontStyle = options.defaultFontStyle; // e.g. FontStyles.Bold
         }
         if (options.drawUpToMeasureNumber) {
             this.rules.MaxMeasureToDrawIndex = options.drawUpToMeasureNumber - 1;

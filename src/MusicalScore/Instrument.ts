@@ -13,6 +13,7 @@ export class Instrument extends InstrumentalGroup {
         this.id = id;
         this.idString = idString;
         this.nameLabel = new Label(idString);
+        this.nameLabel.fontStyle = musicSheet.Rules.DefaultFontStyle;
     }
 
     public transpose: number = 0;

@@ -349,7 +349,10 @@ export abstract class MusicSheetCalculator {
     /// <param name="musicSystem"></param>
     private calculateSingleMeasureNumberPlacement(measure: GraphicalMeasure, staffLine: StaffLine, musicSystem: MusicSystem): void {
         const labelNumber: string = measure.MeasureNumber.toString();
-        const graphicalLabel: GraphicalLabel = new GraphicalLabel(new Label(labelNumber), this.rules.MeasureNumberLabelHeight,
+        const label: Label = new Label(labelNumber);
+        label.fontStyle = this.rules.DefaultFontStyle;
+        // maybe give rules as argument instead of just setting fontStyle and maybe other settings manually afterwards
+        const graphicalLabel: GraphicalLabel = new GraphicalLabel(label, this.rules.MeasureNumberLabelHeight,
                                                                   TextAlignmentEnum.LeftBottom, this.rules);
 
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
@@ -1234,6 +1237,7 @@ export abstract class MusicSheetCalculator {
                              fontHeight: number,
                              textAlignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom): GraphicalLabel {
         const label: Label = new Label(combinedString, textAlignment);
+        label.fontStyle = this.rules.DefaultFontStyle;
         label.fontHeight = fontHeight;
 
         // TODO_RR: TextHeight from first Entry
@@ -1558,6 +1562,7 @@ export abstract class MusicSheetCalculator {
                 let renderedLabel: Label = instrument.NameLabel;
                 if (!this.rules.RenderPartNames) {
                     renderedLabel = new Label("", renderedLabel.textAlignment, renderedLabel.font);
+                    renderedLabel.fontStyle = this.rules.DefaultFontStyle;
                 }
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
                     renderedLabel, this.rules.InstrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.rules);
@@ -2449,8 +2454,10 @@ export abstract class MusicSheetCalculator {
      * @param {number} y
      */
     private calculateSingleDashForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): void {
+        const label: Label = new Label("-");
+        label.fontStyle = this.rules.DefaultFontStyle;
         const dash: GraphicalLabel = new GraphicalLabel(
-            new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+            label, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         dash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(dash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
@@ -2564,8 +2571,10 @@ export abstract class MusicSheetCalculator {
      * @returns {number}
      */
     private calculateRightAndLeftDashesForLyricWord(staffLine: StaffLine, startX: number, endX: number, y: number): number {
+        const leftLabel: Label = new Label("-");
+        leftLabel.fontStyle = this.rules.DefaultFontStyle;
         const leftDash: GraphicalLabel = new GraphicalLabel(
-            new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+            leftLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         leftDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(leftDash);
         if (this.staffLinesWithLyricWords.indexOf(staffLine) === -1) {
@@ -2574,8 +2583,11 @@ export abstract class MusicSheetCalculator {
         leftDash.PositionAndShape.Parent = staffLine.PositionAndShape;
         const leftDashRelative: PointF2D = new PointF2D(startX, y);
         leftDash.PositionAndShape.RelativePosition = leftDashRelative;
+
+        const rightLabel: Label = new Label("-");
+        rightLabel.fontStyle = this.rules.DefaultFontStyle;
         const rightDash: GraphicalLabel = new GraphicalLabel(
-            new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
+            rightLabel, this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom, this.rules);
         rightDash.setLabelPositionAndShapeBorders();
         staffLine.LyricsDashes.push(rightDash);
         rightDash.PositionAndShape.Parent = staffLine.PositionAndShape;

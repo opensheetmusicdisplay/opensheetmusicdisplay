@@ -21,7 +21,7 @@ import {MusicSymbolModuleFactory} from "./MusicSymbolModuleFactory";
 import {IAfterSheetReadingModule} from "../Interfaces/IAfterSheetReadingModule";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
-import { EngravingRules } from "../Graphical";
+import {EngravingRules} from "../Graphical";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
@@ -510,6 +510,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 const filename: string = filePath.substr(barI);
                 const filenameSplits: string[] = filename.split(".", 1);
                 this.musicSheet.Title = new Label(filenameSplits[0]);
+                this.musicSheet.Title.fontStyle = this.rules.DefaultFontStyle;
             }
         } catch (ex) {
             log.info("MusicSheetReader.pushSheetLabels", "read title from file name", ex);
@@ -535,10 +536,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 if (creator.hasAttributes) {
                     if (this.presentAttrsWithValue(creator, "composer")) {
                         this.musicSheet.Composer = new Label(this.trimString(creator.value));
+                        this.musicSheet.Composer.fontStyle = this.rules.DefaultFontStyle;
                         continue;
                     }
                     if (this.presentAttrsWithValue(creator, "lyricist") || this.presentAttrsWithValue(creator, "poet")) {
                         this.musicSheet.Lyricist = new Label(this.trimString(creator.value));
+                        this.musicSheet.Lyricist.fontStyle = this.rules.DefaultFontStyle;
                     }
                 }
             }
@@ -597,9 +600,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                             switch (creditJustify) {
                                 case "right":
                                     this.musicSheet.Composer = new Label(this.trimString(creditChild.value));
+                                    this.musicSheet.Composer.fontStyle = this.rules.DefaultFontStyle;
                                     break;
                                 case "left":
                                     this.musicSheet.Lyricist = new Label(this.trimString(creditChild.value));
+                                    this.musicSheet.Lyricist.fontStyle = this.rules.DefaultFontStyle;
                                     break;
                                 default:
                                     break;
@@ -611,9 +616,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
         if (this.musicSheet.Title === undefined && finalTitle) {
             this.musicSheet.Title = new Label(this.trimString(finalTitle));
+            this.musicSheet.Title.fontStyle = this.rules.DefaultFontStyle;
         }
         if (this.musicSheet.Subtitle === undefined && finalSubtitle) {
             this.musicSheet.Subtitle = new Label(this.trimString(finalSubtitle));
+            this.musicSheet.Subtitle.fontStyle = this.rules.DefaultFontStyle;
         }
     }
 
@@ -674,6 +681,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             titleNodeChild = titleNode.element("work-title");
             if (titleNodeChild !== undefined && titleNodeChild.value) {
                 this.musicSheet.Title = new Label(this.trimString(titleNodeChild.value));
+                this.musicSheet.Title.fontStyle = this.rules.DefaultFontStyle;
             }
         }
         const movementNode: IXmlElement = root.element("movement-title");
@@ -681,6 +689,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (movementNode !== undefined) {
             if (this.musicSheet.Title === undefined) {
                 this.musicSheet.Title = new Label(this.trimString(movementNode.value));
+                this.musicSheet.Title.fontStyle = this.rules.DefaultFontStyle;
             } else {
                 finalSubTitle = this.trimString(movementNode.value);
             }
@@ -701,6 +710,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (finalSubTitle
         ) {
             this.musicSheet.Subtitle = new Label(finalSubTitle);
+            this.musicSheet.Subtitle.fontStyle = this.rules.DefaultFontStyle;
         }
     }
 

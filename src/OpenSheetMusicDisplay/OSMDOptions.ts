@@ -1,4 +1,5 @@
 import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
+import { FontStyles } from "../Common/Enums/FontStyles";
 
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
@@ -50,6 +51,8 @@ export interface IOSMDOptions {
      * Valid options are CSS font families available in the browser used for rendering, e.g. Times New Roman, Helvetica.
      */
     defaultFontFamily?: string;
+    /** Default font style, e.g. FontStyles.Bold (1). Default Regular (0). */
+    defaultFontStyle?: FontStyles;
     /** Don't show/load cursor. Will override disableCursor in drawingParameters. */
     disableCursor?: boolean;
     /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */

@@ -6,7 +6,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { AutoBeamOptions, AlignRestOption, FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
-import { NoteEnum } from "../..";
+import { NoteEnum, FontStyles } from "../..";
 
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
@@ -197,6 +197,7 @@ export class EngravingRules {
     private defaultColorLabel: string;
     private defaultColorTitle: string;
     private defaultFontFamily: string;
+    private defaultFontStyle: FontStyles;
     private maxMeasureToDrawIndex: number;
     private minMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
@@ -433,6 +434,7 @@ export class EngravingRules {
         this.defaultColorLabel = this.defaultColorNotehead;
         this.defaultColorTitle = this.defaultColorNotehead;
         this.defaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
+        this.defaultFontStyle = FontStyles.Regular;
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
         this.minMeasureToDrawIndex = 0;
         this.renderComposer = true;
@@ -1496,6 +1498,12 @@ export class EngravingRules {
     }
     public set DefaultFontFamily(value: string) {
         this.defaultFontFamily = value;
+    }
+    public get DefaultFontStyle(): FontStyles {
+        return this.defaultFontStyle;
+    }
+    public set DefaultFontStyle(value: FontStyles) {
+        this.defaultFontStyle = value;
     }
     public get MaxMeasureToDrawIndex(): number {
         return this.maxMeasureToDrawIndex;
