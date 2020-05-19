@@ -1,4 +1,4 @@
-import {IXmlElement} from "../../../Common/FileIO/Xml";
+import {IXmlElement, IXmlAttribute} from "../../../Common/FileIO/Xml";
 import {MusicSheet} from "../../MusicSheet";
 import {ChordDegreeText, ChordSymbolContainer, ChordSymbolEnum, Degree} from "../../VoiceData/ChordSymbolContainer";
 import {AccidentalEnum, NoteEnum, Pitch} from "../../../Common/DataObjects/Pitch";
@@ -10,6 +10,7 @@ export class ChordSymbolReader {
     public static readChordSymbol(xmlNode: IXmlElement, musicSheet: MusicSheet, activeKey: KeyInstruction): ChordSymbolContainer {
         const root: IXmlElement = xmlNode.element("root");
         const kind: IXmlElement = xmlNode.element("kind");
+        const kindText: IXmlAttribute = kind.attribute("text");
 
         // must be always present
         if (root === undefined || kind === undefined) {
@@ -49,7 +50,18 @@ export class ChordSymbolReader {
         }
         // using default octave value, to be changed later
         const rootPitch: Pitch = new Pitch(rootNote, 1, rootAlteration);
-        const kindValue: string = kind.value.trim().replace("-", "");
+        let kindValue: string = kind.value.trim().replace("-", "");
+        if (kindText) {
+            switch (kindText.value) {
+                case "aug":
+                    kindValue = "augmented";
+                    break;
+                case "dim":
+                    kindValue = "diminished";
+                    break;
+                default:
+            }
+        }
         let chordKind: ChordSymbolEnum;
         try {
             chordKind = ChordSymbolEnum[kindValue];
