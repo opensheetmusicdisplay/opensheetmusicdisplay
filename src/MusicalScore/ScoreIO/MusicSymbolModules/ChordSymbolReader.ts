@@ -62,9 +62,6 @@ export class ChordSymbolReader {
                 default:
             }
         }
-        if (kindText && kindText.value === "dim") {
-            kindValue = "diminished";
-        }
         let chordKind: ChordSymbolEnum;
         try {
             chordKind = ChordSymbolEnum[kindValue];
