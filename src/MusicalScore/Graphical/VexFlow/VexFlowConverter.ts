@@ -707,10 +707,10 @@ export class VexFlowConverter {
      * @returns {string}
      */
     public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular,
-                       font: Fonts = Fonts.TimesNewRoman, rules: EngravingRules): string {
+                       font: Fonts = Fonts.TimesNewRoman, rules: EngravingRules, fontFamily: string = undefined): string {
         let style: string = "normal";
         let weight: string = "normal";
-        const family: string = "'" + rules.DefaultFontFamily + "'"; // default "'Times New Roman'"
+        let family: string = `'${rules.DefaultFontFamily}'`; // default "'Times New Roman'"
 
         switch (fontStyle) {
             case FontStyles.Bold:
@@ -737,8 +737,11 @@ export class VexFlowConverter {
             default:
         }
 
+        if (fontFamily && fontFamily !== "default") {
+            family = `'${fontFamily}'`;
+        }
 
-        return  style + " " + weight + " " + Math.floor(fontSize) + "px " + family;
+        return style + " " + weight + " " + Math.floor(fontSize) + "px " + family;
     }
 
     /**

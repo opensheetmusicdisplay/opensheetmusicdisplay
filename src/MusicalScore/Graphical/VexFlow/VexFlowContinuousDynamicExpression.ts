@@ -13,7 +13,8 @@ export class VexFlowContinuousDynamicExpression extends GraphicalContinuousDynam
     constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine, textHeight?: number) {
         super(continuousDynamic, staffLine);
         if (this.IsVerbal) {
-            this.label = new GraphicalLabel(new Label(continuousDynamic.Label),
+            const sourceLabel: Label = new Label(continuousDynamic.Label);
+            this.label = new GraphicalLabel(sourceLabel,
                                             textHeight ? textHeight : this.rules.ContinuousDynamicTextHeight,
                                             TextAlignmentEnum.LeftCenter,
                                             this.rules,

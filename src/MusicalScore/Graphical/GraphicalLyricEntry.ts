@@ -4,7 +4,7 @@ import {GraphicalLabel} from "./GraphicalLabel";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {Label} from "../Label";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
-import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 
 /**
  * The graphical counterpart of a [[LyricsEntry]]
@@ -26,8 +26,9 @@ export class GraphicalLyricEntry {
             && lyricsTextAlignment === TextAlignmentEnum.LeftBottom) {
             // lyricsTextAlignment = TextAlignmentAndPlacement.CenterBottom;
         }
+        const label: Label = new Label(lyricsEntry.Text);
         this.graphicalLabel = new GraphicalLabel(
-            new Label(lyricsEntry.Text),
+            label,
             lyricsHeight,
             lyricsTextAlignment,
             this.graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules,

@@ -25,6 +25,7 @@ import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
+// import { FontStyles } from "../../Common/Enums/FontStyles";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -520,7 +521,8 @@ export abstract class MusicSheetDrawer {
 
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentEnum.CenterCenter, this.rules),
+            const label: Label = new Label(dataObjectString);
+            this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
         layer++;
