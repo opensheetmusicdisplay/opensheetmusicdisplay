@@ -585,20 +585,20 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         // get SkyBottomLine borders
-        let minAbove: number = skyBottomLineCalculator.getSkyLineMinInRange(sX, eX);
-        let maxBelow: number = skyBottomLineCalculator.getBottomLineMaxInRange(sX, eX);
+        const minAbove: number = skyBottomLineCalculator.getSkyLineMinInRange(sX, eX) * -1;
+        const maxBelow: number = skyBottomLineCalculator.getBottomLineMaxInRange(sX, eX) - 4;
 
         // get lowest and highest placed NoteHead
-        const notesMinY: number = Math.min(startStaffEntry.PositionAndShape.BorderTop,
-                                           endStaffEntry.PositionAndShape.BorderTop);
-        const notesMaxY: number = Math.max(startStaffEntry.PositionAndShape.BorderBottom,
-                                           endStaffEntry.PositionAndShape.BorderBottom);
+        // const notesMinY: number = Math.min(startStaffEntry.PositionAndShape.BorderTop,
+        //                                    endStaffEntry.PositionAndShape.BorderTop);
+        // const notesMaxY: number = Math.max(startStaffEntry.PositionAndShape.BorderBottom,
+        //                                    endStaffEntry.PositionAndShape.BorderBottom);
 
         // get lowest and highest placed NoteHead
-        minAbove = notesMinY - minAbove;
-        maxBelow = maxBelow - notesMaxY;
+        // minAbove = notesMinY - minAbove;
+        // maxBelow = maxBelow - notesMaxY;
 
-        if (Math.abs(maxBelow) > Math.abs(minAbove)) {
+        if (maxBelow > minAbove) {
             this.placement = PlacementEnum.Above;
         } else { this.placement = PlacementEnum.Below; }
         //}
