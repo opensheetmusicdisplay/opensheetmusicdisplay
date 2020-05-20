@@ -8,12 +8,10 @@ export class ChordSymbolContainer {
     private chordKind: ChordSymbolEnum;
     private bassPitch: Pitch;
     private degree: Degree;
-    private keyInstruction: KeyInstruction;
 
-    constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree, keyInstruction: KeyInstruction) {
+    constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree) {
         this.rootPitch = rootPitch;
         this.chordKind = chordKind;
-        this.keyInstruction = keyInstruction;
         this.bassPitch = bassPitch;
         this.degree = chordDegree;
     }
@@ -34,24 +32,13 @@ export class ChordSymbolContainer {
         return this.degree;
     }
 
-    public get KeyInstruction(): KeyInstruction {
-        return this.keyInstruction;
-    }
-
-    public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number): string {
+    public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction): string {
         let transposedRootPitch: Pitch = chordSymbol.RootPitch;
 
-        // create a copy of the key instruction (for transposing it):
-        const transposedChordKey: KeyInstruction  = new KeyInstruction( chordSymbol.keyInstruction.Parent,
-                                                                        chordSymbol.keyInstruction.Key,
-                                                                        chordSymbol.keyInstruction.Mode);
         if (MusicSheetCalculator.transposeCalculator !== undefined) {
-            // first transpose the current key instruction
-            MusicSheetCalculator.transposeCalculator.transposeKey(transposedChordKey, transposeHalftones);
-            // then the pitch
             transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                 chordSymbol.RootPitch,
-                transposedChordKey,
+                keyInstruction,
                 transposeHalftones
             );
         }
@@ -90,7 +77,7 @@ export class ChordSymbolContainer {
             if (MusicSheetCalculator.transposeCalculator !== undefined) {
                 transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                     chordSymbol.BassPitch,
-                    transposedChordKey,
+                    keyInstruction,
                     transposeHalftones
                 );
             }
