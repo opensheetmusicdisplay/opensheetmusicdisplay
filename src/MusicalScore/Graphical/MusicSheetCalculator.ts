@@ -2019,6 +2019,7 @@ export abstract class MusicSheetCalculator {
                     MusicSheetCalculator.symbolFactory.createChordSymbols(
                         sourceStaffEntry,
                         graphicalStaffEntry,
+                        accidentalCalculator.ActiveKeyInstruction,
                         this.graphicalMusicSheet.ParentMusicSheet.Transpose);
                 }
             }

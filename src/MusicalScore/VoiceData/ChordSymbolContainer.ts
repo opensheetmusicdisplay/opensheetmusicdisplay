@@ -8,12 +8,10 @@ export class ChordSymbolContainer {
     private chordKind: ChordSymbolEnum;
     private bassPitch: Pitch;
     private degree: Degree;
-    private keyInstruction: KeyInstruction;
 
-    constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree, keyInstruction: KeyInstruction) {
+    constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree) {
         this.rootPitch = rootPitch;
         this.chordKind = chordKind;
-        this.keyInstruction = keyInstruction;
         this.bassPitch = bassPitch;
         this.degree = chordDegree;
     }
@@ -34,54 +32,58 @@ export class ChordSymbolContainer {
         return this.degree;
     }
 
-    public get KeyInstruction(): KeyInstruction {
-        return this.keyInstruction;
-    }
-
-    public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number): string {
+    public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction): string {
         let transposedRootPitch: Pitch = chordSymbol.RootPitch;
+
         if (MusicSheetCalculator.transposeCalculator !== undefined) {
             transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                 chordSymbol.RootPitch,
-                chordSymbol.KeyInstruction,
+                keyInstruction,
                 transposeHalftones
             );
         }
+        // main Note
         let text: string = Pitch.getNoteEnumString(transposedRootPitch.FundamentalNote);
+        // main alteration
         if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
             text += this.getTextForAccidental(transposedRootPitch.Accidental);
         }
+        // chord kind text
         text += ChordSymbolContainer.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        // degree
+        if (chordSymbol.ChordDegree !== undefined) {
+            switch (chordSymbol.ChordDegree.text) {
+                case ChordDegreeText.add:
+                    text += "add";
+                    text += chordSymbol.ChordDegree.value.toString();
+                    break;
+                case ChordDegreeText.alter:
+                    if (chordSymbol.ChordDegree.alteration !== AccidentalEnum.NONE) {
+                        text += this.getTextForAccidental(chordSymbol.ChordDegree.alteration);
+                    }
+                    text += chordSymbol.ChordDegree.value.toString();
+                    break;
+                case ChordDegreeText.subtract:
+                    text += "(omit";
+                    text += chordSymbol.ChordDegree.value.toString();
+                    text += ")";
+                    break;
+                default:
+            }
+        }
+        // bass
         if (chordSymbol.BassPitch !== undefined) {
             let transposedBassPitch: Pitch = chordSymbol.BassPitch;
             if (MusicSheetCalculator.transposeCalculator !== undefined) {
                 transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                     chordSymbol.BassPitch,
-                    chordSymbol.KeyInstruction,
+                    keyInstruction,
                     transposeHalftones
                 );
             }
             text += "/";
             text += Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote);
             text += this.getTextForAccidental(transposedBassPitch.Accidental);
-        }
-        if (chordSymbol.ChordDegree !== undefined) {
-            switch (chordSymbol.ChordDegree.text) {
-                case ChordDegreeText.add:
-                    text += "add";
-                    break;
-                case ChordDegreeText.alter:
-                    text += "alt";
-                    break;
-                case ChordDegreeText.subtract:
-                    text += "sub";
-                    break;
-                default:
-            }
-            text += chordSymbol.ChordDegree.value;
-            if (chordSymbol.ChordDegree.alteration !== AccidentalEnum.NONE) {
-                text += ChordSymbolContainer.getTextForAccidental(chordSymbol.ChordDegree.alteration);
-            }
         }
         return text;
     }

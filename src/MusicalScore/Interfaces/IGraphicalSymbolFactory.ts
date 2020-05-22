@@ -15,6 +15,7 @@ import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruc
 import { GraphicalVoiceEntry } from "../Graphical/GraphicalVoiceEntry";
 import { VoiceEntry } from "../VoiceData/VoiceEntry";
 import { EngravingRules } from "../Graphical/EngravingRules";
+import { KeyInstruction } from "../VoiceData";
 
 export interface IGraphicalSymbolFactory {
 
@@ -59,5 +60,6 @@ export interface IGraphicalSymbolFactory {
     createChordSymbols(
         sourceStaffEntry: SourceStaffEntry,
         graphicalStaffEntry: GraphicalStaffEntry,
+        keyInstruction: KeyInstruction,
         transposeHalftones: number): void;
 }
