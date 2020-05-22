@@ -22,7 +22,7 @@ import { AutoColorSet, GraphicalMusicPage } from "../MusicalScore";
 import jspdf = require("jspdf-yworks/dist/jspdf.min");
 import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts";
-
+import { ITransposeCalculator } from "../MusicalScore/Interfaces";
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>
@@ -886,6 +886,14 @@ export class OpenSheetMusicDisplay {
 
     public get FollowCursor(): boolean {
         return this.followCursor;
+    }
+
+    public set TransposeCalculator(calculator: ITransposeCalculator) {
+        MusicSheetCalculator.transposeCalculator = calculator;
+    }
+
+    public get TransposeCalculator(): ITransposeCalculator {
+        return MusicSheetCalculator.transposeCalculator;
     }
 
     public get Sheet(): MusicSheet {

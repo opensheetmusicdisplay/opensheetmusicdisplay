@@ -7,6 +7,7 @@ import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 
 /**
  * The VexFlow version of a [[GraphicalNote]].
@@ -38,18 +39,27 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * This is called by VexFlowGraphicalSymbolFactory.addGraphicalAccidental.
      * @param pitch
      */
-    public setPitch(pitch: Pitch): void {
-        if (this.vfnote) {
-            const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
-            if (acc) {
-                alert(acc);
-                this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
-            }
-        } else {
-            // revert octave shift, as the placement of the note is independent of octave brackets
-            const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
-            this.vfpitch = VexFlowConverter.pitch(this, drawPitch);
-        }
+    public setAccidental(pitch: Pitch): void {
+        // if (this.vfnote) {
+        //     let pitchAcc: AccidentalEnum = pitch.Accidental;
+        //     const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
+        //     if (acc) {
+        //         alert(acc);
+        //         this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
+        //     }
+        // } else {
+        // revert octave shift, as the placement of the note is independent of octave brackets
+        const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
+        // recalculate the pitch, and this time don't ignore the accidental:
+        this.vfpitch = VexFlowConverter.pitch(this, drawPitch);
+        //}
+    }
+    public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
+        const tranposedPitch: Pitch = super.Transpose(keyInstruction, activeClef, halfTones, octaveEnum);
+        const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(tranposedPitch, this.octaveShift);
+        this.vfpitch = VexFlowConverter.pitch(this, drawPitch);
+        this.vfpitch[1] = undefined;
+        return drawPitch;
     }
 
     /**
