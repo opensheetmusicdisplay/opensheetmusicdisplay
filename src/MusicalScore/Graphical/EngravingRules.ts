@@ -167,6 +167,7 @@ export class EngravingRules {
     private octaveShiftVerticalLineLength: number;
     private graceLineWidth: number;
     private minimumStaffLineDistance: number;
+    private minimumSkyBottomLineDistance: number;
     private minimumCrossedBeamDifferenceMargin: number;
     private displacedNoteMargin: number;
     private minNoteDistance: number;
@@ -406,7 +407,8 @@ export class EngravingRules {
         this.graceLineWidth = this.staffLineWidth * this.GraceNoteScalingFactor;
 
         // Line Widths
-        this.minimumStaffLineDistance = 1.0;
+        this.minimumStaffLineDistance = 4.0;
+        this.minimumSkyBottomLineDistance = 2.0; // default. 1.0 for compacttight mode (1.0 can cause overlaps)
         this.minimumCrossedBeamDifferenceMargin = 0.0001;
 
         // xSpacing Variables
@@ -1324,6 +1326,12 @@ export class EngravingRules {
     }
     public set MinimumStaffLineDistance(value: number) {
         this.minimumStaffLineDistance = value;
+    }
+    public get MinimumSkyBottomLineDistance(): number {
+        return this.minimumSkyBottomLineDistance;
+    }
+    public set MinimumSkyBottomLineDistance(value: number) {
+        this.minimumSkyBottomLineDistance = value;
     }
     public get MinimumCrossedBeamDifferenceMargin(): number {
         return this.minimumCrossedBeamDifferenceMargin;
