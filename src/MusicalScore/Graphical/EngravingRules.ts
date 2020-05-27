@@ -408,7 +408,7 @@ export class EngravingRules {
 
         // Line Widths
         this.minimumStaffLineDistance = 4.0;
-        this.minimumSkyBottomLineDistance = 1.0;
+        this.minimumSkyBottomLineDistance = 2.0; // default. 1.0 for compacttight mode (1.0 can cause overlaps)
         this.minimumCrossedBeamDifferenceMargin = 0.0001;
 
         // xSpacing Variables
