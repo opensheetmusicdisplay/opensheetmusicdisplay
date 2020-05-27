@@ -919,15 +919,22 @@ export class MusicSystemBuilder {
         // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
         if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
             for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
-                const upperBottomLine: number = musicSystem.StaffLines[i].SkyBottomLineCalculator.getBottomLineMax();
-                // TODO: Lower skyline should add to offset when there are items above the line. Currently no test
-                // file available
-                // const lowerSkyLine: number = Math.min(...musicSystem.StaffLines[i + 1].SkyLine);
-                if (Math.abs(upperBottomLine) > this.rules.MinimumStaffLineDistance) {
-                    // Remove staffheight from offset. As it results in huge distances
-                    const offset: number = Math.abs(upperBottomLine) + this.rules.MinimumStaffLineDistance - this.rules.StaffHeight;
-                    this.updateStaffLinesRelativePosition(musicSystem, i + 1, offset);
+                const upperBottomLine: number[] = musicSystem.StaffLines[i].BottomLine;
+                const lowerSkyline: number[] = musicSystem.StaffLines[i + 1].SkyLine;
+                // 1. Find maximum required space for sky bottom line touching each other
+                let maxDistance: number = 0;
+                for (let j: number = 0; j < upperBottomLine.length; j++) {
+                    const bottomLineValue: number = upperBottomLine[j];
+                    const skylineValue: number = lowerSkyline[j];
+                    const distance: number = bottomLineValue - skylineValue;
+                    maxDistance = Math.max(distance, maxDistance);
                 }
+                // 2. Add user defined distance between sky bottom line
+                maxDistance += this.rules.MinimumSkyBottomLineDistance;
+                // 3. Take the maximum between previous value and user defined value for staff line minimum distance
+                maxDistance = Math.max(maxDistance, this.rules.StaffHeight + this.rules.MinimumStaffLineDistance);
+                const lowerStafflineYPos: number = maxDistance + musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y;
+                this.updateStaffLinesRelativePosition(musicSystem, i + 1, lowerStafflineYPos);
             }
         }
         const firstStaffLine: StaffLine = musicSystem.StaffLines[0];
@@ -944,7 +951,7 @@ export class MusicSystemBuilder {
      */
     protected updateStaffLinesRelativePosition(musicSystem: MusicSystem, index: number, value: number): void {
         for (let i: number = index; i < musicSystem.StaffLines.length; i++) {
-            musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y += value;
+            musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y = value;
         }
 
         musicSystem.PositionAndShape.BorderBottom += value;
