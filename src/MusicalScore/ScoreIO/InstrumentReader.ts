@@ -26,7 +26,6 @@ import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
 import {NoteType, NoteTypeHandler} from "../VoiceData";
 import {SystemLinesEnumHelper} from "../Graphical";
-import { StaffLinesInstruction } from "../VoiceData/Instructions/StaffLinesInstruction";
 //import Dictionary from "typescript-collections/dist/lib/Dictionary";
 
 // FIXME: The following classes are missing
@@ -87,7 +86,6 @@ export class InstrumentReader {
   private activeClefs: ClefInstruction[];
   private activeKey: KeyInstruction;
   private activeRhythm: RhythmInstruction;
-  private activeStafflines: StaffLinesInstruction;
   private activeClefsHaveBeenInitialized: boolean[];
   private activeKeyHasBeenInitialized: boolean = false;
   private abstractInstructions: [number, AbstractNotationInstruction][] = [];
@@ -436,6 +434,18 @@ export class InstrumentReader {
           }
           if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveClefInstructionAtEndOfMeasure();
+          }
+          const staffDetailsNode: IXmlElement = xmlNode.element("staff-details");
+          if (staffDetailsNode !== undefined) {
+            const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
+            if (staffLinesNode !== undefined) {
+              let staffNumber: number = 1;
+              const staffNumberAttr: Attr = staffDetailsNode.attribute("number");
+              if (staffNumberAttr !== undefined) {
+                staffNumber = parseInt(staffNumberAttr.value, 10);
+              }
+              this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);
+            }
           }
         } else if (xmlNode.name === "forward") {
           const forFraction: number = parseInt(xmlNode.element("duration").value, 10);
@@ -834,20 +844,6 @@ export class InstrumentReader {
         const clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
         this.abstractInstructions.push([staffNumber, clefInstruction]);
       }
-
-      //default to 5 stafflines
-      const staffLinesInstruction: StaffLinesInstruction = new StaffLinesInstruction();
-      //check for different numbers of lines on the staff
-      const staffDetailsNode: IXmlElement = node.element("staff-details");
-      if (staffDetailsNode !== undefined) {
-        const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
-        if (staffLinesNode !== undefined) {
-          //detected different number of stafflines
-          staffLinesInstruction.NumberOfLines = parseInt(staffLinesNode.value, 10);
-        }
-      }
-
-      this.abstractInstructions.push([1, staffLinesInstruction]);
     }
     if (node.element("key") !== undefined && this.instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
       let key: number = 0;
@@ -1108,29 +1104,6 @@ export class InstrumentReader {
               }
               newRhythmInstruction.Parent = firstStaffEntry;
               firstStaffEntry.Instructions.push(newRhythmInstruction);
-            }
-          }
-        } else {
-          this.abstractInstructions.splice(i, 1);
-        }
-      }
-      if (value instanceof StaffLinesInstruction) {
-        const stafflinesInstruction: StaffLinesInstruction = <StaffLinesInstruction>value;
-        if (this.activeStafflines === undefined || this.activeStafflines !== stafflinesInstruction) {
-          this.activeStafflines = stafflinesInstruction;
-          this.abstractInstructions.splice(i, 1);
-          if (this.currentMeasure !== undefined) {
-            for (let j: number = this.inSourceMeasureInstrumentIndex; j < this.inSourceMeasureInstrumentIndex + numberOfStaves; j++) {
-              const newStafflinesInstruction: StaffLinesInstruction = stafflinesInstruction;
-              let firstStaffEntry: SourceStaffEntry;
-              if (this.currentMeasure.FirstInstructionsStaffEntries[j] === undefined) {
-                firstStaffEntry = new SourceStaffEntry(undefined, undefined);
-                this.currentMeasure.FirstInstructionsStaffEntries[j] = firstStaffEntry;
-              } else {
-                firstStaffEntry = this.currentMeasure.FirstInstructionsStaffEntries[j];
-              }
-              newStafflinesInstruction.Parent = firstStaffEntry;
-              firstStaffEntry.Instructions.push(newStafflinesInstruction);
             }
           }
         } else {

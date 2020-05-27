@@ -376,7 +376,9 @@ export class OpenSheetMusicDisplay {
                 }
             }
         }
-
+        if (options.renderPercussionOneLine !== undefined) {
+            this.rules.RenderPercussionOneLine = options.renderPercussionOneLine;
+        }
         if (options.alignRests !== undefined) {
             this.rules.AlignRests = options.alignRests;
         }

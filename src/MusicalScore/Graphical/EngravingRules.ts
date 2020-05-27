@@ -41,7 +41,7 @@ export class EngravingRules {
     private staffDistance: number;
     private betweenStaffDistance: number;
     private staffHeight: number;
-    private tabStaffHeight: number;
+    private tabStaffInterlineHeight: number;
     private betweenStaffLinesDistance: number;
     /** Whether to automatically beam notes that don't already have beams in XML. */
     private autoBeamNotes: boolean;
@@ -52,6 +52,8 @@ export class EngravingRules {
     private beamForwardLength: number;
     private clefLeftMargin: number;
     private clefRightMargin: number;
+    /** Whether to automatically convert any lines with a percussion clef to a single staff line. */
+    private renderPercussionOneLine: boolean;
     private betweenKeySymbolsDistance: number;
     private keyRightMargin: number;
     private rhythmRightMargin: number;
@@ -252,7 +254,7 @@ export class EngravingRules {
 
         // System Sizing and Label Variables
         this.staffHeight = 4.0;
-        this.tabStaffHeight = 6.67;
+        this.tabStaffInterlineHeight = 1.1111;
         this.betweenStaffLinesDistance = EngravingRules.unit;
         this.systemLeftMargin = 0.0;
         this.systemRightMargin = 0.0;
@@ -279,6 +281,7 @@ export class EngravingRules {
         // Beam Sizing Variables
         this.clefLeftMargin = 0.5;
         this.clefRightMargin = 0.75;
+        this.renderPercussionOneLine = false;
         this.betweenKeySymbolsDistance = 0.2;
         this.keyRightMargin = 0.75;
         this.rhythmRightMargin = 1.25;
@@ -638,11 +641,11 @@ export class EngravingRules {
     public set StaffHeight(value: number) {
         this.staffHeight = value;
     }
-    public get TabStaffHeight(): number {
-        return this.tabStaffHeight;
+    public get TabStaffInterlineHeight(): number {
+        return this.tabStaffInterlineHeight;
     }
-    public set TabStaffHeight(value: number) {
-        this.tabStaffHeight = value;
+    public set TabStaffInterlineHeight(value: number) {
+        this.tabStaffInterlineHeight = value;
     }
     public get BetweenStaffLinesDistance(): number {
         return this.betweenStaffLinesDistance;
@@ -697,6 +700,12 @@ export class EngravingRules {
     }
     public set ClefRightMargin(value: number) {
         this.clefRightMargin = value;
+    }
+    public get RenderPercussionOneLine(): boolean {
+        return this.renderPercussionOneLine;
+    }
+    public set RenderPercussionOneLine(value: boolean) {
+        this.renderPercussionOneLine = value;
     }
     public get KeyRightMargin(): number {
         return this.keyRightMargin;

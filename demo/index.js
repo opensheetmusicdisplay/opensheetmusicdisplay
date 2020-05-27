@@ -436,7 +436,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 //groups: [[3,4], [1,1]],
                 maintain_stem_directions: false
             },
-
+            renderPercussionOneLine: true,
             pageFormat: pageFormat,
             pageBackgroundColor: pageBackgroundColor,
             renderSingleHorizontalStaffline: singleHorizontalStaffline

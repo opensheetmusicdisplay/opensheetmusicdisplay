@@ -138,6 +138,10 @@ export interface IOSMDOptions {
      *  at different measures. So this option may result in a page break after a single measure on a page.
      */
     newPageFromXML?: boolean;
+    /** Whether to render percussion lines as single lines or not (ignores staff-lines xml element)
+     * Default false, use staff-lines element or if not present default to 5 lines
+     */
+    renderPercussionOneLine?: boolean;
 }
 
 export enum AlignRestOption {

@@ -134,14 +134,6 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     }
 
     /**
-     * Sets the number of stafflines that are rendered, so that they are centered properly
-     * @param lineNumber
-     */
-    public setLineNumber(lineNumber: number): void {
-        throw new Error("not implemented");
-    }
-
-    /**
      * Add the given key to the begin of the measure.
      * This has to update/increase BeginInstructionsWidth.
      * @param currentKey - The new valid key.

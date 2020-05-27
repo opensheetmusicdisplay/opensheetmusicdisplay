@@ -19,6 +19,7 @@ export class Staff {
     private voices: Voice[] = [];
     private volume: number = 1;
     private id: number;
+    private stafflineCount: number = 5;
 
     public get ParentInstrument(): Instrument {
         return this.parentInstrument;
@@ -38,5 +39,10 @@ export class Staff {
     public set Volume(value: number) {
         this.volume = value;
     }
-
+    public get StafflineCount(): number {
+        return this.stafflineCount;
+    }
+    public set StafflineCount(value: number) {
+        this.stafflineCount = value;
+    }
 }

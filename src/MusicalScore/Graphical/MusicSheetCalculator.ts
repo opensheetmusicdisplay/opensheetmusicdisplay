@@ -67,6 +67,7 @@ import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneou
 import { ContDynamicEnum } from "../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -74,6 +75,7 @@ import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSM
 export abstract class MusicSheetCalculator {
     public static symbolFactory: IGraphicalSymbolFactory;
     public static transposeCalculator: ITransposeCalculator;
+    public static stafflineNoteCalculator: IStafflineNoteCalculator;
     protected static textMeasurer: ITextMeasurer;
 
     protected staffEntriesWithGraphicalTies: GraphicalStaffEntry[] = [];
@@ -1483,6 +1485,8 @@ export abstract class MusicSheetCalculator {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, octaveShiftValue);
             } else {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, undefined);
+                const staffLineCount: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.StafflineCount;
+                graphicalNote = MusicSheetCalculator.stafflineNoteCalculator.positionNote(graphicalNote, activeClef, staffLineCount);
             }
             if (note.Pitch !== undefined) {
                 this.checkNoteForAccidental(graphicalNote, accidentalCalculator, activeClef, octaveShiftValue);
@@ -1926,6 +1930,10 @@ export abstract class MusicSheetCalculator {
                                    staffEntryLinks: StaffEntryLink[]): GraphicalMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         let measure: GraphicalMeasure = undefined;
+        //If the rule is set to render only one line for percussion clefs, and we have percussion clef, do so
+        if (this.rules.RenderPercussionOneLine && activeClefs[staffIndex].ClefType === ClefEnum.percussion) {
+            staff.StafflineCount = 1;
+          }
         if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
             staff.isTab = true;
             measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
@@ -2068,10 +2076,14 @@ export abstract class MusicSheetCalculator {
                 graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
                 const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
                 graphicalStaffEntry.graphicalVoiceEntries.push(gve);
-                const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
-                                                                                                   gve,
-                                                                                                   new ClefInstruction(),
-                                                                                                   OctaveEnum.NONE, undefined);
+                let graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
+                                                                                                 gve,
+                                                                                                 new ClefInstruction(),
+                                                                                                 OctaveEnum.NONE, undefined);
+                const staffLineCount: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.StafflineCount;
+                graphicalNote = MusicSheetCalculator.stafflineNoteCalculator.positionNote(graphicalNote,
+                                                                                          activeClefs[staffIndex],
+                                                                                          staffLineCount);
                 gve.notes.push(graphicalNote);
             }
         }
