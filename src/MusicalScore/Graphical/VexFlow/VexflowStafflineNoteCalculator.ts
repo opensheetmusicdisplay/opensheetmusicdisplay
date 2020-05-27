@@ -1,12 +1,22 @@
 import { IStafflineNoteCalculator } from "../../Interfaces/IStafflineNoteCalculator";
 import { GraphicalNote } from "../GraphicalNote";
-import { ClefInstruction, ClefEnum, StemDirectionType } from "../../VoiceData";
+import { ClefInstruction, ClefEnum } from "../../VoiceData";
 import { Pitch, NoteEnum, AccidentalEnum } from "../../../Common";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 
 export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator {
+
+  /**
+   * This method is called for each note, and should make any necessary position changes based on the number of stafflines, clef, etc.
+   * Right now this just directly maps a voice number to a position above or below a staffline
+   * @param graphicalNote The note to be checked/positioned
+   * @param currentClef The clef that is active for this note
+   * @param stafflineCount The number of stafflines we are rendering on
+   * @returns the minimum required x width of the source measure (=list of staff measures)
+   */
     public positionNote(graphicalNote: GraphicalNote, currentClef: ClefInstruction, stafflineCount: number): GraphicalNote {
-        if (!(graphicalNote instanceof VexFlowGraphicalNote) || currentClef.ClefType !== ClefEnum.percussion) {
+        if (!(graphicalNote instanceof VexFlowGraphicalNote) || currentClef.ClefType !== ClefEnum.percussion ||
+        graphicalNote.sourceNote.isRest()) {
             return graphicalNote;
         }
 
@@ -15,52 +25,31 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
         const voiceNumber: number = graphicalNote.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
         let fundamental: NoteEnum = NoteEnum.B;
         let octave: number = 1;
-        let renderPitch: Pitch = undefined;
-        let i: number = Pitch.pitchEnumValues.indexOf(fundamental);
-        let direction: boolean = true;
 
+        //Direct mapping for more than one voice, position voices
         if (voiceCount > 1) {
-            if (voiceNumber > 1) {
-                if (vfGraphicalNote.sourceNote.StemDirectionXml === StemDirectionType.Up) {
-                    i += voiceNumber;
-                    direction = true;
-                } else {
-                    i -= voiceNumber;
-                    direction = false;
-                }
+            switch (voiceNumber) {
+                case 2:
+                    fundamental = NoteEnum.A;
+                    break;
+                case 3:
+                    fundamental = NoteEnum.F;
+                    break;
+                case 4:
+                    fundamental = NoteEnum.D;
+                    break;
+                case 5:
+                    fundamental = NoteEnum.B;
+                    octave = 0;
+                    break;
+                default:
+                    fundamental = NoteEnum.C;
+                    octave = 2;
+                    break;
             }
         }
-        const wrapAround: {value: number, overflow: number} = this.progressPitch(fundamental, i, direction);
-        fundamental = wrapAround.value;
-        octave += wrapAround.overflow;
-
-        renderPitch = new Pitch(fundamental, octave, AccidentalEnum.NONE);
-        if (renderPitch !== undefined) {
-            vfGraphicalNote.setAccidental(renderPitch);
-        }
+        //TODO: Check for playback side effects
+        vfGraphicalNote.setAccidental(new Pitch(fundamental, octave, AccidentalEnum.NONE));
         return graphicalNote;
-    }
-
-    private progressPitch(fundamental: NoteEnum, idx: number, direction: boolean): { value: number; overflow: number; } {
-        //Get the number of fundamentals up that the voice will render
-        idx = idx % Pitch.pitchEnumValues.length;
-        const newFundamental: NoteEnum = Pitch.pitchEnumValues[idx];
-        let halfToneDiff: number = 0;
-        //need the correct direction
-        if (direction) {
-            if (newFundamental < fundamental) {
-                halfToneDiff = (12 - fundamental) + newFundamental;
-            } else {
-                halfToneDiff = fundamental - newFundamental;
-            }
-        } else {
-            if (newFundamental > fundamental) {
-                halfToneDiff = (12 - newFundamental) + fundamental;
-            } else {
-                halfToneDiff = fundamental - newFundamental;
-            }
-        }
-        //check for a wrap around
-        return Pitch.WrapAroundCheck((fundamental - halfToneDiff), 12);
     }
 }
