@@ -168,6 +168,46 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     /**
+     * Sets the number of stafflines that are rendered, so that they are centered properly
+     * @param lineNumber
+     */
+    public setLineNumber(lineNumber: number): void {
+        if (lineNumber !== 5) {
+            if (lineNumber === 0) {
+                (this.stave as any).setNumLines(0);
+            } else if (lineNumber === 1) {
+                // Vex.Flow.Stave.setNumLines hides all but the top line.
+                // this is better
+                (this.stave.options as any).line_config = [
+                    { visible: false },
+                    { visible: false },
+                    { visible: true }, // show middle
+                    { visible: false },
+                    { visible: false },
+                ];
+            } else if (lineNumber === 2) {
+                (this.stave.options as any).line_config = [
+                    { visible: false },
+                    { visible: false },
+                    { visible: true }, // show middle
+                    { visible: true },
+                    { visible: false },
+                ];
+            } else if (lineNumber === 3) {
+                (this.stave.options as any).line_config = [
+                    { visible: false },
+                    { visible: true },
+                    { visible: true }, // show middle
+                    { visible: true },
+                    { visible: false },
+                ];
+            } else {
+                (this.stave as any).setNumLines(lineNumber);
+            }
+        }
+    }
+
+    /**
      * adds the given key to the begin of the measure.
      * This has to update/increase BeginInstructionsWidth.
      * @param currentKey the new valid key.

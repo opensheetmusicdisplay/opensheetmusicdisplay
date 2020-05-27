@@ -20,6 +20,7 @@ import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
+import { StaffLinesInstruction } from "../VoiceData/Instructions/StaffLinesInstruction";
 
 export class MusicSystemBuilder {
     protected measureList: GraphicalMeasure[][];
@@ -37,6 +38,7 @@ export class MusicSystemBuilder {
     protected activeRhythm: RhythmInstruction[];
     protected activeKeys: KeyInstruction[];
     protected activeClefs: ClefInstruction[];
+    protected activeStafflines: StaffLinesInstruction[];
     protected globalSystemIndex: number = 0;
     protected leadSheet: boolean = false;
 
@@ -50,6 +52,7 @@ export class MusicSystemBuilder {
         this.activeRhythm = new Array(this.numberOfVisibleStaffLines);
         this.activeKeys = new Array(this.numberOfVisibleStaffLines);
         this.activeClefs = new Array(this.numberOfVisibleStaffLines);
+        this.activeStafflines = new Array(this.numberOfVisibleStaffLines);
         this.initializeActiveInstructions(this.measureList[0]);
     }
 
@@ -363,6 +366,7 @@ export class MusicSystemBuilder {
                 keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
                 this.activeKeys[i] = keyInstruction;
                 this.activeRhythm[i] = <RhythmInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
+                this.activeStafflines[i] = <StaffLinesInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[3];
             }
         }
     }
@@ -436,15 +440,18 @@ export class MusicSystemBuilder {
         let currentClef: ClefInstruction = undefined;
         let currentKey: KeyInstruction = undefined;
         let currentRhythm: RhythmInstruction = undefined;
+        let currentStafflines: StaffLinesInstruction = undefined;
         if (firstEntry !== undefined) {
             for (let idx: number = 0, len: number = firstEntry.Instructions.length; idx < len; ++idx) {
                 const abstractNotationInstruction: AbstractNotationInstruction = firstEntry.Instructions[idx];
                 if (abstractNotationInstruction instanceof ClefInstruction) {
                     currentClef = <ClefInstruction>abstractNotationInstruction;
                 } else if (abstractNotationInstruction instanceof KeyInstruction) {
-                    currentKey = KeyInstruction.copy(<KeyInstruction>abstractNotationInstruction);
+                    currentKey = <KeyInstruction>abstractNotationInstruction;
                 } else if (abstractNotationInstruction instanceof RhythmInstruction) {
                     currentRhythm = <RhythmInstruction>abstractNotationInstruction;
+                } else if (abstractNotationInstruction instanceof StaffLinesInstruction) {
+                    currentStafflines = <StaffLinesInstruction>abstractNotationInstruction;
                 }
             }
         }
@@ -453,15 +460,23 @@ export class MusicSystemBuilder {
                 currentClef = this.activeClefs[visibleStaffIdx];
             }
             if (currentKey === undefined) {
-                currentKey = KeyInstruction.copy(this.activeKeys[visibleStaffIdx]);
+                currentKey = this.activeKeys[visibleStaffIdx];
             }
             if (isFirstSourceMeasure && currentRhythm === undefined) {
                 currentRhythm = this.activeRhythm[visibleStaffIdx];
             }
         }
+        if (currentStafflines === undefined) {
+            currentStafflines = this.activeStafflines[visibleStaffIdx];
+        }
         let clefAdded: boolean = false;
         let keyAdded: boolean = false;
         let rhythmAdded: boolean = false;
+        //Instruction applies to entire staff, don't need to check for start
+        if (currentStafflines !== undefined) {
+            measure.setLineNumber(currentStafflines.NumberOfLines);
+        }
+
         if (currentClef !== undefined) {
             measure.addClefAtBegin(currentClef);
             clefAdded = true;
@@ -521,6 +536,8 @@ export class MusicSystemBuilder {
                         this.activeKeys[visStaffIdx] = <KeyInstruction>abstractNotationInstruction;
                     } else if (abstractNotationInstruction instanceof RhythmInstruction) {
                         this.activeRhythm[visStaffIdx] = <RhythmInstruction>abstractNotationInstruction;
+                    } else if (abstractNotationInstruction instanceof StaffLinesInstruction) {
+                        this.activeStafflines[visStaffIdx] = <StaffLinesInstruction>abstractNotationInstruction;
                     }
                 }
             }
