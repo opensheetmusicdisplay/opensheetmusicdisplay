@@ -403,6 +403,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawLyricist !== undefined) {
             this.drawingParameters.DrawLyricist = options.drawLyricist;
         }
+        if (options.drawMetronomeMarks !== undefined) {
+            this.rules.MetronomeMarksDrawn = options.drawMetronomeMarks;
+        }
         if (options.drawPartNames !== undefined) {
             this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
 

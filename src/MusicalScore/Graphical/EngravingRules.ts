@@ -174,6 +174,7 @@ export class EngravingRules {
     private subMeasureXSpacingThreshold: number;
     private measureDynamicsMaxScalingFactor: number;
     private wholeRestXShiftVexflow: number;
+    private metronomeMarksDrawn: boolean;
     private metronomeMarkXShift: number;
     private metronomeMarkYShift: number;
     private maxInstructionsConstValue: number;
@@ -417,6 +418,7 @@ export class EngravingRules {
         this.subMeasureXSpacingThreshold = 35;
         this.measureDynamicsMaxScalingFactor = 2.5;
         this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
+        this.metronomeMarksDrawn = true;
         this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.metronomeMarkYShift = -0.5;
 
@@ -1368,6 +1370,12 @@ export class EngravingRules {
     }
     public set WholeRestXShiftVexflow(value: number) {
         this.wholeRestXShiftVexflow = value;
+    }
+    public get MetronomeMarksDrawn(): boolean {
+        return this.metronomeMarksDrawn;
+    }
+    public set MetronomeMarksDrawn(value: boolean) {
+        this.metronomeMarksDrawn = value;
     }
     public get MetronomeMarkXShift(): number {
         return this.metronomeMarkXShift;

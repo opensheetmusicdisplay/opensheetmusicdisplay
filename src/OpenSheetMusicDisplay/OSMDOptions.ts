@@ -69,6 +69,8 @@ export interface IOSMDOptions {
     drawComposer?: boolean;
     /** Whether to draw the lyricist's name, if given (top left of the score). */
     drawLyricist?: boolean;
+    /** Whether to draw metronome marks. Default true. (currently OSMD can only draw one at the beginning) */
+    drawMetronomeMarks?: boolean;
     /** Whether to draw part (instrument) names. Setting this to false also disables drawPartAbbreviations,
      *  unless explicitly enabled (drawPartNames: false, drawPartAbbreviations: true).
      */
