@@ -1932,8 +1932,8 @@ export abstract class MusicSheetCalculator {
         let measure: GraphicalMeasure = undefined;
         //If the rule is set to render only one line for percussion clefs, and we have percussion clef, do so
         if (this.rules.RenderPercussionOneLine && activeClefs[staffIndex].ClefType === ClefEnum.percussion) {
-            staff.StafflineCount = 1;
-          }
+          staff.StafflineCount = 1;
+        }
         if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
             staff.isTab = true;
             measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
@@ -2081,9 +2081,7 @@ export abstract class MusicSheetCalculator {
                                                                                                  new ClefInstruction(),
                                                                                                  OctaveEnum.NONE, undefined);
                 const staffLineCount: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.StafflineCount;
-                graphicalNote = MusicSheetCalculator.stafflineNoteCalculator.positionNote(graphicalNote,
-                                                                                          activeClefs[staffIndex],
-                                                                                          staffLineCount);
+                graphicalNote = MusicSheetCalculator.stafflineNoteCalculator.positionNote(graphicalNote, activeClefs[staffIndex], staffLineCount);
                 gve.notes.push(graphicalNote);
             }
         }

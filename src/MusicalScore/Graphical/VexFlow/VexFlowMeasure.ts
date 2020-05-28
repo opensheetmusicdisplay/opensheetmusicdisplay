@@ -107,7 +107,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
         });
-        this.setLineNumber(this.ParentStaff.StafflineCount);
+
+        if (this.ParentStaff !== undefined) {
+            this.setLineNumber(this.ParentStaff.StafflineCount);
+        }
         // constructor sets beginning and end bar type to standard
 
         this.stave.setBegBarType(Vex.Flow.Barline.type.NONE); // technically not correct, but we'd need to set the next measure's beginning bar type
