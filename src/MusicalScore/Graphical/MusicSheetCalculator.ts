@@ -1375,9 +1375,11 @@ export abstract class MusicSheetCalculator {
                         // in their constructor
                     }
                     // in case of metronome mark:
-                    if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
-                        this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
-                        continue;
+                    if (this.rules.MetronomeMarksDrawn) {
+                        if ((entry.Expression as InstantaneousTempoExpression).Enum === TempoEnum.metronomeMark) {
+                            this.createMetronomeMark((entry.Expression as InstantaneousTempoExpression));
+                            continue;
+                        }
                     }
                 } else if (entry.Expression instanceof ContinuousTempoExpression) {
                     // FIXME: Not yet implemented

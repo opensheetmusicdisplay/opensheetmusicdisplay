@@ -335,17 +335,7 @@ export class OpenSheetMusicDisplay {
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum =
                 (<any>DrawingParametersEnum)[options.drawingParameters.toLowerCase()];
-            if (this.drawingParameters.DrawingParametersEnum === DrawingParametersEnum.compacttight) {
-                // tight rendering mode, lower margins and safety distances between systems, staffs etc. may cause overlap.
-                // these options can afterwards be finetuned by setting osmd.rules.BetweenStaffDistance for example
-                this.rules.BetweenStaffDistance = 2.5;
-                this.rules.StaffDistance = 3.5;
-                this.rules.MinimumDistanceBetweenSystems = 1;
-                // this.rules.PageTopMargin = 0.0; // see this.rules.PageTopMarginNarrow used in compact mode
-                this.rules.PageBottomMargin = 1.0;
-                this.rules.PageLeftMargin = 2.0;
-                this.rules.PageRightMargin = 2.0;
-            }
+                // see DrawingParameters.ts: set DrawingParametersEnum, and DrawingParameters.ts:setForCompactTightMode()
         }
 
         const backendNotInitialized: boolean = !this.drawer || !this.drawer.Backends || this.drawer.Backends.length < 1;
@@ -414,6 +404,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.drawLyricist !== undefined) {
             this.drawingParameters.DrawLyricist = options.drawLyricist;
+        }
+        if (options.drawMetronomeMarks !== undefined) {
+            this.rules.MetronomeMarksDrawn = options.drawMetronomeMarks;
         }
         if (options.drawPartNames !== undefined) {
             this.drawingParameters.DrawPartNames = options.drawPartNames; // indirectly writes to EngravingRules
