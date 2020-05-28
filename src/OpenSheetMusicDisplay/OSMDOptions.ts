@@ -128,7 +128,10 @@ export interface IOSMDOptions {
      *  Note: Using a background color will prevent the cursor from being visible for now (will be fixed at some point).
      */
     pageBackgroundColor?: string;
-    /** This makes OSMD render on one single horizontal (staff-)line. */
+    /** This makes OSMD render on one single horizontal (staff-)line.
+     * This option should be set before loading a score. It only starts working after load(),
+     * calling setOptions() after load and then render() doesn't work in this case.
+     */
     renderSingleHorizontalStaffline?: boolean;
     /** Whether to begin a new system ("line break") when given in XML ('new-system="yes"').
      *  Default false, because OSMD does its own layout that will do line breaks interactively
