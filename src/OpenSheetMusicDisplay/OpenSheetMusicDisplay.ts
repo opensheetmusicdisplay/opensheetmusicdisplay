@@ -366,11 +366,12 @@ export class OpenSheetMusicDisplay {
                 }
             }
         }
-        if (options.renderPercussionOneLine !== undefined) {
-            this.rules.RenderPercussionOneLine = options.renderPercussionOneLine;
-            if (options.forcePercussionVoicesOneLine !== undefined) {
-                this.rules.ForcePercussionVoicesOneLine = options.forcePercussionVoicesOneLine;
-            }
+        if (options.percussionOneLineCutoff !== undefined) {
+            this.rules.PercussionOneLineCutoff = options.percussionOneLineCutoff;
+        }
+        if (this.rules.PercussionOneLineCutoff !== 0 &&
+            options.percussionForceVoicesOneLineCutoff !== undefined) {
+            this.rules.PercussionForceVoicesOneLineCutoff = options.percussionForceVoicesOneLineCutoff;
         }
         if (options.alignRests !== undefined) {
             this.rules.AlignRests = options.alignRests;

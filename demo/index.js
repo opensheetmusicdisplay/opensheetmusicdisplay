@@ -47,6 +47,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
             "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
             "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
+            "Snare+Piano Drum Test": "Test_Drumline_Snare.musicxml",
         },
 
         zoom = 1.0,
@@ -436,7 +437,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 //groups: [[3,4], [1,1]],
                 maintain_stem_directions: false
             },
-            renderPercussionOneLine: true,
             pageFormat: pageFormat,
             pageBackgroundColor: pageBackgroundColor,
             renderSingleHorizontalStaffline: singleHorizontalStaffline

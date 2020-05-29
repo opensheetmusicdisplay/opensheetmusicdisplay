@@ -436,12 +436,12 @@ export class InstrumentReader {
             this.saveClefInstructionAtEndOfMeasure();
           }
           const staffDetailsNode: IXmlElement = xmlNode.element("staff-details");
-          if (staffDetailsNode !== undefined) {
+          if (staffDetailsNode) {
             const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
-            if (staffLinesNode !== undefined) {
+            if (staffLinesNode) {
               let staffNumber: number = 1;
               const staffNumberAttr: Attr = staffDetailsNode.attribute("number");
-              if (staffNumberAttr !== undefined) {
+              if (staffNumberAttr) {
                 staffNumber = parseInt(staffNumberAttr.value, 10);
               }
               this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);

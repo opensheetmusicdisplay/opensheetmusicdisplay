@@ -1932,9 +1932,16 @@ export abstract class MusicSheetCalculator {
                                    staffEntryLinks: StaffEntryLink[]): GraphicalMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         let measure: GraphicalMeasure = undefined;
-        //If the rule is set to render only one line for percussion clefs, and we have percussion clef, do so
-        if (this.rules.RenderPercussionOneLine && activeClefs[staffIndex].ClefType === ClefEnum.percussion) {
-          staff.StafflineCount = 1;
+        //This property is active...
+        if (this.rules.PercussionOneLineCutoff !== undefined && this.rules.PercussionOneLineCutoff !== 0) {
+            //We have a percussion clef, check to see if this property applies...
+            if (activeClefs[staffIndex].ClefType === ClefEnum.percussion) {
+                //-1 means always trigger, or we are under the cutoff number specified
+                if (this.rules.PercussionOneLineCutoff === -1 ||
+                    staff.ParentInstrument.SubInstruments.length < this.rules.PercussionOneLineCutoff) {
+                    staff.StafflineCount = 1;
+                }
+            }
         }
         if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
             staff.isTab = true;

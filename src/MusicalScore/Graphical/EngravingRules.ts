@@ -52,9 +52,8 @@ export class EngravingRules {
     private beamForwardLength: number;
     private clefLeftMargin: number;
     private clefRightMargin: number;
-    /** Whether to automatically convert any lines with a percussion clef to a single staff line. */
-    private renderPercussionOneLine: boolean;
-    private forcePercussionVoicesOneLine: boolean;
+    private percussionOneLineCutoff: number;
+    private percussionForceVoicesOneLineCutoff: number;
     private betweenKeySymbolsDistance: number;
     private keyRightMargin: number;
     private rhythmRightMargin: number;
@@ -284,8 +283,8 @@ export class EngravingRules {
         // Beam Sizing Variables
         this.clefLeftMargin = 0.5;
         this.clefRightMargin = 0.75;
-        this.renderPercussionOneLine = false;
-        this.forcePercussionVoicesOneLine = false;
+        this.percussionOneLineCutoff = 4;
+        this.percussionForceVoicesOneLineCutoff = 3;
         this.betweenKeySymbolsDistance = 0.2;
         this.keyRightMargin = 0.75;
         this.rhythmRightMargin = 1.25;
@@ -707,17 +706,17 @@ export class EngravingRules {
     public set ClefRightMargin(value: number) {
         this.clefRightMargin = value;
     }
-    public get RenderPercussionOneLine(): boolean {
-        return this.renderPercussionOneLine;
+    public get PercussionOneLineCutoff(): number {
+        return this.percussionOneLineCutoff;
     }
-    public set RenderPercussionOneLine(value: boolean) {
-        this.renderPercussionOneLine = value;
+    public set PercussionOneLineCutoff(value: number) {
+        this.percussionOneLineCutoff = value;
     }
-    public get ForcePercussionVoicesOneLine(): boolean {
-        return this.forcePercussionVoicesOneLine;
+    public get PercussionForceVoicesOneLineCutoff(): number {
+        return this.percussionForceVoicesOneLineCutoff;
     }
-    public set ForcePercussionVoicesOneLine(value: boolean) {
-        this.forcePercussionVoicesOneLine = value;
+    public set PercussionForceVoicesOneLineCutoff(value: number) {
+        this.percussionForceVoicesOneLineCutoff = value;
     }
     public get KeyRightMargin(): number {
         return this.keyRightMargin;
