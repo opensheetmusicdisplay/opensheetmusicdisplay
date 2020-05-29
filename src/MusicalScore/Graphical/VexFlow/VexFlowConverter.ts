@@ -335,15 +335,24 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
+    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, gve: GraphicalVoiceEntry): void {
         if (vfnote === undefined || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
+        const articulations: ArticulationEnum[] = gve.notes[0].sourceNote.ParentVoiceEntry.Articulations;
+        const voiceCount: number = gve.parentStaffEntry.sourceStaffEntry.ParentStaff.Voices.length;
+        const stemDirection: number = vfnote.getStemDirection();
         // Articulations:
         let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
 
-        if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
-            vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+        if (voiceCount > 1) {
+            if (stemDirection === Vex.Flow.Stem.DOWN) {
+                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+            }
+        } else {
+            if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
+                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+            }
         }
 
         for (const articulation of articulations) {
