@@ -147,6 +147,11 @@ export interface IOSMDOptions {
      * Default false, use staff-lines element or if not present default to 5 lines
      */
     renderPercussionOneLine?: boolean;
+    /** Dependent on renderPercussionOneLine set to true. If this is true, it forces
+     *  all percussion voices to render on the single line, instead of positioning them.
+     *  (In the case of different snare voices, side stick, etc.)
+     */
+    forcePercussionVoicesOneLine?: boolean;
 }
 
 export enum AlignRestOption {

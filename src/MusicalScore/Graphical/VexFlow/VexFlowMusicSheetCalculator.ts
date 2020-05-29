@@ -60,11 +60,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     this.rules = rules;
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
-    MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator();
+    MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
   }
 
   protected clearRecreatedObjects(): void {
     super.clearRecreatedObjects();
+    MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
         (<VexFlowMeasure>graphicalMeasure).clean();

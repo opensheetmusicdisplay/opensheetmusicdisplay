@@ -54,6 +54,7 @@ export class EngravingRules {
     private clefRightMargin: number;
     /** Whether to automatically convert any lines with a percussion clef to a single staff line. */
     private renderPercussionOneLine: boolean;
+    private forcePercussionVoicesOneLine: boolean;
     private betweenKeySymbolsDistance: number;
     private keyRightMargin: number;
     private rhythmRightMargin: number;
@@ -284,6 +285,7 @@ export class EngravingRules {
         this.clefLeftMargin = 0.5;
         this.clefRightMargin = 0.75;
         this.renderPercussionOneLine = false;
+        this.forcePercussionVoicesOneLine = false;
         this.betweenKeySymbolsDistance = 0.2;
         this.keyRightMargin = 0.75;
         this.rhythmRightMargin = 1.25;
@@ -710,6 +712,12 @@ export class EngravingRules {
     }
     public set RenderPercussionOneLine(value: boolean) {
         this.renderPercussionOneLine = value;
+    }
+    public get ForcePercussionVoicesOneLine(): boolean {
+        return this.forcePercussionVoicesOneLine;
+    }
+    public set ForcePercussionVoicesOneLine(value: boolean) {
+        this.forcePercussionVoicesOneLine = value;
     }
     public get KeyRightMargin(): number {
         return this.keyRightMargin;
