@@ -47,7 +47,7 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
-import { EngravingRules } from "..";
+import { EngravingRules } from "../EngravingRules";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -703,9 +703,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     for (const musicSystem of this.musicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
               try {
-                if (this.rules.AlignDynamicExpressions) { // default false, causes big unnecessary y-shift sometimes
-                  (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
-                }
+                // for (const expr of (<VexFlowStaffLine>staffLine).AbstractExpressions) {
+                  // only align dynamic expressions if we have some wedges (cresc./decresc.). otherwise does more harm than good
+                (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
                 staffLine.AbstractExpressions.forEach(ae => {
                   ae.PositionAndShape.calculateBoundingBox();
                   ae.updateSkyBottomLine();

@@ -27,7 +27,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     /**
      * Create a new instance of the GraphicalContinuousDynamicExpression
      * @param continuousDynamic The continuous dynamic instruction read via ExpressionReader
-     * @param staffLine The staffline where the exoression is attached
+     * @param staffLine The staffline where the expression is attached
      */
     constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine, measure: SourceMeasure) {
         super(staffLine, continuousDynamic, measure);
@@ -248,6 +248,9 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         this.PositionAndShape.RelativePosition = this.lines[0].Start;
         this.PositionAndShape.BorderMarginTop = this.lines[0].End.y - this.lines[0].Start.y;
         this.PositionAndShape.BorderMarginBottom = this.lines[1].End.y - this.lines[1].Start.y;
+        this.PositionAndShape.Center.y = (this.PositionAndShape.BorderMarginTop + this.PositionAndShape.BorderMarginBottom) / 2;
+        console.log(`relative y, center y: ${this.PositionAndShape.RelativePosition.y},${this.PositionAndShape.Center.y})`);
+        // TODO is the center position correct? it wasn't set before, important for AlignmentManager.alignDynamicExpressions()
 
         if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
             this.PositionAndShape.BorderMarginLeft = 0;
@@ -271,18 +274,15 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      */
     public shiftYPosition(shift: number): void {
         if (this.IsVerbal) {
-            console.log("isVerbal");
-            console.log("borderBottom: " + this.PositionAndShape.BorderBottom);
             this.PositionAndShape.RelativePosition.y += shift;
             this.PositionAndShape.calculateBoundingBox();
-            console.log("borderBottom: " + this.PositionAndShape.BorderBottom);
         } else {
-            console.log("shiftYPosition: shift lines");
             this.lines[0].Start.y += shift;
             this.lines[0].End.y += shift;
             this.lines[1].End.y += shift;
-            this.PositionAndShape.RelativePosition.y += shift;
-            this.PositionAndShape.calculateBoundingBox();
+            // this.PositionAndShape.RelativePosition.y += shift;
+            //   TODO this should be done, but then the crescendo line becomes skewed. why?
+            this.calcPsi();
         }
     }
 

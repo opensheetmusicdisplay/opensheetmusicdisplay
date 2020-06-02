@@ -231,7 +231,6 @@ export class GraphicalSlur extends GraphicalCurve {
                 let index: number = skyBottomLineCalculator.getLeftIndexForPointX(curvePoint.x, length);
                 // update SkyLine with final slur curve:
                 if (index >= startIndex) {
-                    // TODO doesn't this need to be Math.max if the slur is going upwards?
                     staffLine.SkyLine[index] = Math.min(staffLine.SkyLine[index], curvePoint.y);
                 }
                 index++;
