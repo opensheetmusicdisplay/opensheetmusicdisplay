@@ -222,7 +222,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private drawSampledLine(line: number[], startPosition: PointF2D, width: number, color: string = "#FF0000FF"): void {
         const indices: number[] = [];
         let currentValue: number = 0;
-
+        //Loops through bottom line, grabs all indices that don't equal the previously grabbed index
+        //Starting with 0 (gets index of all line changes)
         for (let i: number = 0; i < line.length; i++) {
             if (line[i] !== currentValue) {
                 indices.push(i);
