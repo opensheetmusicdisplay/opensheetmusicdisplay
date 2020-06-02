@@ -931,7 +931,8 @@ export abstract class MusicSheetCalculator {
             lowerEndX = endPosInStaffLine.x;
 
             // must create a new Wedge
-            secondGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(graphicalContinuousDynamic.ContinuousDynamic, endStaffLine);
+            secondGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(
+                graphicalContinuousDynamic.ContinuousDynamic, endStaffLine, endMeasure.parentSourceMeasure);
             secondGraphicalContinuousDynamic.IsSplittedPart = true;
             graphicalContinuousDynamic.IsSplittedPart = true;
         } else {

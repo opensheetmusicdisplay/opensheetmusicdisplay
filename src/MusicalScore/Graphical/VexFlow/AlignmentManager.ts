@@ -4,6 +4,7 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { AbstractGraphicalExpression } from "../AbstractGraphicalExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { EngravingRules } from "../EngravingRules";
+import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 
 export class AlignmentManager {
     private parentStaffline: StaffLine;
@@ -54,7 +55,25 @@ export class AlignmentManager {
                         expr.PositionAndShape.RelativePosition.y -= centerOffset * 0.8;
                     }
                     expr.PositionAndShape.calculateBoundingBox();
+
+                    console.dir(expr);
+                    const skycalculator: SkyBottomLineCalculator = this.parentStaffline.SkyBottomLineCalculator;
+                    const bottomline: number[] = this.parentStaffline.BottomLine; // TODO assigned as reference? or need to use directly?
+                    const leftx: number = skycalculator.getLeftIndexForPointX(expr.PositionAndShape.RelativePosition.x, bottomline.length);
+                    const rightx: number = skycalculator.getRightIndexForPointX(
+                        expr.PositionAndShape.RelativePosition.x + expr.PositionAndShape.Size.width, bottomline.length);
+                    console.log(`measure ${expr.SourceExpression.parentMeasure.MeasureNumber}, staffline.bottomline[leftx]: ${this.parentStaffline.BottomLine[leftx]}`);
+                    // bottomline[leftx] = Math.max(bottomline[leftx], expr.PositionAndShape.RelativePosition.y + expr.PositionAndShape.BorderBottom);
+                    this.parentStaffline.BottomLine[leftx] = Math.max(
+                        this.parentStaffline.BottomLine[leftx],
+                        expr.PositionAndShape.Center.y);
+                    console.log(`measure ${expr.SourceExpression.parentMeasure.MeasureNumber}, staffline.bottomline[leftx]: ${this.parentStaffline.BottomLine[leftx]}`);
+                    this.parentStaffline.BottomLine[rightx] = Math.max(
+                        this.parentStaffline.BottomLine[rightx],
+                        expr.PositionAndShape.Center.y);
+
                     // Squeeze wedges
+                    // TODO update skyline?
                     if ((expr as VexFlowContinuousDynamicExpression).squeeze) {
                         const nextExpression: AbstractGraphicalExpression = exprIdx < aes.length - 1 ? aes[exprIdx + 1] : undefined;
                         const prevExpression: AbstractGraphicalExpression = exprIdx > 0 ? aes[exprIdx - 1] : undefined;

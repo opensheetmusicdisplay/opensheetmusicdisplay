@@ -519,7 +519,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
       const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(
         multiExpression.StartingContinuousDynamic,
-        staffLine);
+        staffLine,
+        startMeasure.parentSourceMeasure);
       graphicalContinuousDynamic.StartMeasure = startMeasure;
 
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {

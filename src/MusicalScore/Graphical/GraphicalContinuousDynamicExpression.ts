@@ -8,6 +8,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
 import log from "loglevel";
+import { SourceMeasure } from "../VoiceData";
 
 /**
  * This class prepares the graphical elements for a continuous expression. It calculates the wedges and
@@ -28,8 +29,8 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      * @param continuousDynamic The continuous dynamic instruction read via ExpressionReader
      * @param staffLine The staffline where the exoression is attached
      */
-    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine) {
-        super(staffLine, continuousDynamic);
+    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine, measure: SourceMeasure) {
+        super(staffLine, continuousDynamic, measure);
 
         this.isSplittedPart = false;
         this.notToBeRemoved = false;

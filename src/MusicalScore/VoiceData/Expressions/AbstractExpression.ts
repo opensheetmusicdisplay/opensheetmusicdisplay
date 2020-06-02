@@ -1,5 +1,9 @@
+import { SourceMeasure } from "../SourceMeasure";
+
 export class AbstractExpression {
     protected placement: PlacementEnum;
+    public parentMeasure: SourceMeasure; // could be undefined
+    // public measureIndex: number;
 
     constructor(placement: PlacementEnum) {
         this.placement = placement;
