@@ -223,6 +223,9 @@ export class DrawingParameters {
     public set DrawPartNames(value: boolean) {
         this.drawPartNames = value;
         this.rules.RenderPartNames = value;
+        if (!this.rules.RenderPartNames) {
+            this.rules.RenderPartAbbreviations = false;
+        }
     }
 
     public get FingeringPosition(): PlacementEnum {

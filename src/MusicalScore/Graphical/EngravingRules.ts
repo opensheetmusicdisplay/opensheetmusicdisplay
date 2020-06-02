@@ -1563,6 +1563,9 @@ export class EngravingRules {
     }
     public set RenderPartNames(value: boolean) {
         this.renderPartNames = value;
+        if (!this.renderPartNames) {
+            this.renderPartAbbreviations = false;
+        }
     }
     public get RenderPartAbbreviations(): boolean {
         return this.renderPartAbbreviations;
