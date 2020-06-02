@@ -703,8 +703,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     for (const musicSystem of this.musicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
               try {
-                (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
-                staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
+                if (this.rules.AlignDynamicExpressions) { // default false, causes big unnecessary y-shift sometimes
+                  (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
+                }
+                staffLine.AbstractExpressions.forEach(ae => {
+                  ae.PositionAndShape.calculateBoundingBox();
+                  ae.updateSkyBottomLine();
+                });
               } catch (e) {
                 // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
                 //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.

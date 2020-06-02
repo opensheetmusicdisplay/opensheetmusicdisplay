@@ -215,6 +215,7 @@ export class EngravingRules {
     private renderLyrics: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
+    private alignDynamicExpressions: boolean;
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
@@ -390,6 +391,7 @@ export class EngravingRules {
         this.continuousTempoTextHeight = 2.3;
         this.dynamicExpressionMaxDistance = 2;
         this.dynamicExpressionSpacer = 0.5;
+        this.alignDynamicExpressions = false;
 
         // Line Widths
         this.staffLineWidth = 0.12;
@@ -1231,6 +1233,12 @@ export class EngravingRules {
     }
     public set DynamicExpressionSpacer(value: number) {
         this.dynamicExpressionSpacer = value;
+    }
+    public get AlignDynamicExpressions(): boolean {
+        return this.alignDynamicExpressions;
+    }
+    public set AlignDynamicExpressions(value: boolean) {
+        this.alignDynamicExpressions = value;
     }
 
     public get UnknownTextHeight(): number {

@@ -71,12 +71,14 @@ export class AlignmentManager {
                     // bottomline[leftx] = Math.max(bottomline[leftx], expr.PositionAndShape.RelativePosition.y + expr.PositionAndShape.BorderBottom);
                     this.parentStaffline.BottomLine[leftx] = Math.max(
                         this.parentStaffline.BottomLine[leftx],
-                        expr.PositionAndShape.Center.y);
+                        expr.PositionAndShape.BorderMarginTop + expr.PositionAndShape.RelativePosition.y);
+                        // see GraphicalContinuousDynamicExpression.updateSkyBottomLine()
+
                     // console.log(`measure ${expr.SourceExpression.parentMeasure?.MeasureNumber},
                     //     staffline.bottomline[leftx]: ${this.parentStaffline.BottomLine[leftx]}`);
                     this.parentStaffline.BottomLine[rightx] = Math.max(
                         this.parentStaffline.BottomLine[rightx],
-                        expr.PositionAndShape.Center.y);
+                        expr.PositionAndShape.BorderMarginTop + expr.PositionAndShape.RelativePosition.y);
 
                     // Squeeze wedges
                     // TODO update skyline?
