@@ -49,25 +49,31 @@ export class AlignmentManager {
                     const centerOffset: number = centerYs[exprIdx] - yIdeal;
                     // FIXME: Expressions should not behave differently.
                     if (expr instanceof VexFlowContinuousDynamicExpression) {
+                        console.log("shift VexFlowContinuousDynamicExpression");
                         (expr as VexFlowContinuousDynamicExpression).shiftYPosition(-centerOffset);
+                        // (expr as VexFlowContinuousDynamicExpression).calcPsi();
                     } else {
                         // TODO: The 0.8 are because the letters are a bit to far done
                         expr.PositionAndShape.RelativePosition.y -= centerOffset * 0.8;
+                        // note: verbal GraphicalContinuousDynamicExpressions have a label, nonverbal ones don't.
+                        // take care to update and take the right bounding box for skyline.
+                        expr.PositionAndShape.calculateBoundingBox();
                     }
-                    expr.PositionAndShape.calculateBoundingBox();
 
-                    console.dir(expr);
+                    // console.dir(expr);
                     const skycalculator: SkyBottomLineCalculator = this.parentStaffline.SkyBottomLineCalculator;
                     const bottomline: number[] = this.parentStaffline.BottomLine; // TODO assigned as reference? or need to use directly?
                     const leftx: number = skycalculator.getLeftIndexForPointX(expr.PositionAndShape.RelativePosition.x, bottomline.length);
                     const rightx: number = skycalculator.getRightIndexForPointX(
                         expr.PositionAndShape.RelativePosition.x + expr.PositionAndShape.Size.width, bottomline.length);
-                    console.log(`measure ${expr.SourceExpression.parentMeasure.MeasureNumber}, staffline.bottomline[leftx]: ${this.parentStaffline.BottomLine[leftx]}`);
+                    // console.log(`measure ${expr.SourceExpression.parentMeasure?.MeasureNumber},
+                    //     staffline.bottomline[leftx]: ${this.parentStaffline.BottomLine[leftx]}`);
                     // bottomline[leftx] = Math.max(bottomline[leftx], expr.PositionAndShape.RelativePosition.y + expr.PositionAndShape.BorderBottom);
                     this.parentStaffline.BottomLine[leftx] = Math.max(
                         this.parentStaffline.BottomLine[leftx],
                         expr.PositionAndShape.Center.y);
-                    console.log(`measure ${expr.SourceExpression.parentMeasure.MeasureNumber}, staffline.bottomline[leftx]: ${this.parentStaffline.BottomLine[leftx]}`);
+                    // console.log(`measure ${expr.SourceExpression.parentMeasure?.MeasureNumber},
+                    //     staffline.bottomline[leftx]: ${this.parentStaffline.BottomLine[leftx]}`);
                     this.parentStaffline.BottomLine[rightx] = Math.max(
                         this.parentStaffline.BottomLine[rightx],
                         expr.PositionAndShape.Center.y);

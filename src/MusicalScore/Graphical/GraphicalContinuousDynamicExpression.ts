@@ -75,7 +75,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                 if (!this.IsVerbal) {
                     skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
                 } else {
-                    const yValue: number = this.label.PositionAndShape.BorderMarginTop + this.label.PositionAndShape.RelativePosition.y;
+                    const yValue: number = this.PositionAndShape.BorderMarginTop + this.PositionAndShape.RelativePosition.y;
                     skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
                 }
                 break;
@@ -83,7 +83,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                 if (!this.IsVerbal) {
                     skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
                 } else {
-                    const yValue: number = this.label.PositionAndShape.BorderMarginBottom + this.label.PositionAndShape.RelativePosition.y;
+                    const yValue: number = this.PositionAndShape.RelativePosition.y + this.PositionAndShape.BorderMarginBottom;
                     skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
                 }
                 break;
@@ -271,12 +271,18 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
      */
     public shiftYPosition(shift: number): void {
         if (this.IsVerbal) {
+            console.log("isVerbal");
+            console.log("borderBottom: " + this.PositionAndShape.BorderBottom);
             this.PositionAndShape.RelativePosition.y += shift;
             this.PositionAndShape.calculateBoundingBox();
+            console.log("borderBottom: " + this.PositionAndShape.BorderBottom);
         } else {
+            console.log("shiftYPosition: shift lines");
             this.lines[0].Start.y += shift;
             this.lines[0].End.y += shift;
             this.lines[1].End.y += shift;
+            this.PositionAndShape.RelativePosition.y += shift;
+            this.PositionAndShape.calculateBoundingBox();
         }
     }
 
