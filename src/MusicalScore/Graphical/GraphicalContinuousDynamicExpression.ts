@@ -69,18 +69,22 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         if (!this.IsVerbal && this.lines.length < 2) {
             log.warn("Not enough lines for SkyBottomLine calculation");
         }
+        if (!this.IsVerbal) {
+            if (this.ContinuousDynamic.DynamicType !== ContDynamicEnum.crescendo &&
+                this.ContinuousDynamic.DynamicType !== ContDynamicEnum.diminuendo) {
+                // for now there is only crescendo or decrescendo anyways, but this will catch errors when we add new types in the future
+                log.warn("GraphicalContinuousDynamicExpression.updateSkyBottomLine(): " +
+                    "unhandled continuous dynamic type. start measure: " + this.startMeasure?.MeasureNumber);
+            }
+        }
         switch (this.Placement) {
             case PlacementEnum.Above:
                 if (!this.IsVerbal) {
-                    // for now there is only crescendo or decrescendo anyways, but let's check anyways, in case we add new types in the future
                     if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
                         skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
                     } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
                         skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].End, this.lines[0].Start);
-                    } else {
-                        log.info("GraphicalContinuousDynamicExpression.updateSkyBottomLine(): " +
-                        "unhandled continuous dynamic type. start measure: " + this.startMeasure.MeasureNumber);
-                    }
+                    } // else covered with the log.warn above
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginTop + this.label.PositionAndShape.RelativePosition.y;
                     skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
@@ -88,11 +92,11 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                 break;
             case PlacementEnum.Below:
                 if (!this.IsVerbal) {
-                    if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
-                        skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].End, this.lines[1].Start);
-                    } else {
+                    if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
                         skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
-                    }
+                    } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+                        skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].End, this.lines[1].Start);
+                    } // else covered with the log.warn above
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginBottom + this.label.PositionAndShape.RelativePosition.y;
                     skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
