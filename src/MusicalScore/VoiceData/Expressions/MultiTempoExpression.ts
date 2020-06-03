@@ -81,6 +81,10 @@ export class MultiTempoExpression {
     //    return undefined;
     //}
     public addExpression(abstractTempoExpression: AbstractTempoExpression, prefix: string): void {
+        if (this.checkIfAlreadyExists(abstractTempoExpression)) {
+            return;
+        }
+
         if (abstractTempoExpression instanceof InstantaneousTempoExpression) {
             this.instantaneousTempo = <InstantaneousTempoExpression>abstractTempoExpression;
         } else if (abstractTempoExpression instanceof ContinuousTempoExpression) {
@@ -101,6 +105,16 @@ export class MultiTempoExpression {
         } else {
             return 0;
         }
+    }
+
+    private checkIfAlreadyExists(abstractTempoExpression: AbstractTempoExpression ): boolean {
+        for (const entry of this.expressions) {
+            if (entry.label === abstractTempoExpression.Label) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
