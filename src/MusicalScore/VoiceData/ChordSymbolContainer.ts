@@ -188,6 +188,8 @@ export class ChordSymbolContainer {
             case ChordSymbolEnum.German:
             case ChordSymbolEnum.pedal:
             case ChordSymbolEnum.power:
+                text += "5";
+                break;
             case ChordSymbolEnum.Tristan:
                 break;
             default:
