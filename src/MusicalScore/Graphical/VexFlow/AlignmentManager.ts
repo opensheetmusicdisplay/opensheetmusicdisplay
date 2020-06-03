@@ -23,6 +23,20 @@ export class AlignmentManager {
             const currentExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx];
             const nextExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx + 1];
 
+            if (currentExpression?.SourceExpression === undefined ||
+                nextExpression?.SourceExpression === undefined) {
+                continue;
+                // TODO: this doesn't work yet for GraphicalUnknownExpression, because it doesn't have an AbstractExpression,
+                //   so it doesn't have a .Placement.
+                //   this lead to if (currentExpression.Placement...) crashing.
+
+                // same result:
+                // if (currentExpression instanceof GraphicalUnknownExpression ||
+                //     nextExpression instanceof GraphicalUnknownExpression) {
+                //         continue;
+                // }
+            }
+
             // TODO this shifts dynamics in An die Ferne Geliebte, showing that there's something wrong with the RelativePositions etc with wedges
             // if (currentExpression instanceof GraphicalContinuousDynamicExpression) {
             //     currentExpression.calcPsi();

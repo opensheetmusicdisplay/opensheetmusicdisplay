@@ -47,7 +47,8 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
-import { EngravingRules } from "..";
+import { EngravingRules } from "../EngravingRules";
+import { AlignmentManager } from "./AlignmentManager";
 import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
