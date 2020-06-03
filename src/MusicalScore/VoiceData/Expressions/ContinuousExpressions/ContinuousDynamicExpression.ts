@@ -114,5 +114,6 @@ export class ContinuousDynamicExpression extends AbstractExpression {
 
 export enum ContDynamicEnum {
     crescendo = 0,
+    /** Diminuendo/Decrescendo. These terms are apparently sometimes synonyms, and a falling wedge is given in MusicXML as type="diminuendo". */
     diminuendo = 1
 }
