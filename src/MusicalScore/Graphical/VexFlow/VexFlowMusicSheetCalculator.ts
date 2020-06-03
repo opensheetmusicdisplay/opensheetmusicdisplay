@@ -691,26 +691,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-  protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-    return;
-  }
-
   /**
    * Re-adjust the x positioning of expressions. Update the skyline afterwards
    */
   protected calculateExpressionAlignements(): void {
     for (const musicSystem of this.musicSystems) {
-            for (const staffLine of musicSystem.StaffLines) {
-              try {
-                (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
-                staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
-              } catch (e) {
-                // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
-                //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
+      for (const staffLine of musicSystem.StaffLines) {
+        try {
+          (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
+          staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
+        } catch (e) {
+          // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
+          //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
         }
+      }
     }
   }
-  }
+
 
   /**
    * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.

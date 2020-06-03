@@ -13,7 +13,7 @@ export abstract class AbstractGraphicalExpression extends GraphicalObject {
     /** EngravingRules for positioning */
     protected rules: EngravingRules;
 
-    constructor(parentStaffline: StaffLine, expression: AbstractExpression) {
+    constructor(parentStaffline: StaffLine, expression: AbstractExpression = undefined) {
         super();
         this.expression = expression;
         this.boundingBox = new BoundingBox(this, parentStaffline.PositionAndShape);

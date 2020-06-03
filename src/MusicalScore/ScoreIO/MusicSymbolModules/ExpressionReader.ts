@@ -419,11 +419,11 @@ export class ExpressionReader {
         }
         const tmpInputString: string = inputString.trim();
         // split string at enumerating words or signs
-        const splitStrings: string[] = tmpInputString.split(/([\s,\r\n]and[\s,\r\n]|[\s,\r\n]und[\s,\r\n]|[\s,\r\n]e[\s,\r\n]|[\s,\r\n])+/g);
+        //const splitStrings: string[] = tmpInputString.split(/([\s,\r\n]and[\s,\r\n]|[\s,\r\n]und[\s,\r\n]|[\s,\r\n]e[\s,\r\n]|[\s,\r\n])+/g);
 
-        for (const splitStr of splitStrings) {
-            this.createExpressionFromString("", splitStr, currentMeasure, inputString);
-        }
+        //for (const splitStr of splitStrings) {
+        this.createExpressionFromString("", tmpInputString, currentMeasure, inputString);
+        //}
     }
     /*
     private splitStringRecursive(input: [string, string], stringSeparators: string[]): [string, string][] {
@@ -528,6 +528,7 @@ export class ExpressionReader {
 
         // create unknown:
         this.createNewMultiExpressionIfNeeded(currentMeasure);
+        // check here first if there might be a tempo expression doublette:
         if (currentMeasure.TempoExpressions.length > 0) {
             for (let idx: number = 0, len: number = currentMeasure.TempoExpressions.length; idx < len; ++idx) {
                 const multiTempoExpression: MultiTempoExpression = currentMeasure.TempoExpressions[idx];
@@ -535,9 +536,11 @@ export class ExpressionReader {
                     multiTempoExpression.InstantaneousTempo !== undefined &&
                     multiTempoExpression.EntriesList.length > 0 &&
                     !this.hasDigit(stringTrimmed)) {
-                    if (this.globalStaffIndex > 0) {
-                        if (multiTempoExpression.EntriesList[0].label.indexOf(stringTrimmed) >= 0) {
-                            return false;
+                        // if at other parts of the score
+                        if (this.globalStaffIndex > 0) {
+                            // don't add duplicate TempoExpression
+                            if (multiTempoExpression.EntriesList[0].label.indexOf(stringTrimmed) >= 0) {
+                                return false;
                         } else {
                             break;
                         }
