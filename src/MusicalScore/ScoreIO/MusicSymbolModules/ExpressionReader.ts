@@ -3,7 +3,7 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "../../VoiceData/Expressions/MultiTempoExpression";
 import {ContDynamicEnum, ContinuousDynamicExpression} from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import {ContinuousTempoExpression} from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
-import {DynamicEnum, InstantaneousDynamicExpression} from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
+import {InstantaneousDynamicExpression} from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import {OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {Instrument} from "../../Instrument";
 import {MultiExpression} from "../../VoiceData/Expressions/MultiExpression";
@@ -308,34 +308,37 @@ export class ExpressionReader {
                 expressionText = dynamicsNode.elements()[0].value;
             }
             if (expressionText !== undefined) {
-                let dynamicEnum: DynamicEnum;
-                try {
-                    dynamicEnum = DynamicEnum[expressionText];
-                } catch (err) {
-                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DynamicError", "Error while reading dynamic.");
-                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                    return;
+                // // ToDo: add doublettes recognition again as a afterReadingModule, as we can't check here if there is a repetition:
+                // // Make here a comparison with the active dynamic expression and only add it, if there is a change in dynamic
+                // // Exception is when there starts a repetition, where this might be different when repeating.
+                // // see PR #767 where this was removed
+                // let dynamicEnum: DynamicEnum;
+                // try {
+                //     dynamicEnum = DynamicEnum[expressionText];
+                // } catch (err) {
+                //     const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DynamicError", "Error while reading dynamic.");
+                //     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                //     return;
+                // }
+                // if (this.activeInstantaneousDynamic === undefined ||
+                //     (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.DynEnum !== dynamicEnum)) {
+                if (!fromNotation) {
+                    this.createNewMultiExpressionIfNeeded(currentMeasure);
+                } else { this.createNewMultiExpressionIfNeeded(currentMeasure, Fraction.createFromFraction(inSourceMeasureCurrentFraction)); }
+                if (this.openContinuousDynamicExpression !== undefined &&
+                    this.openContinuousDynamicExpression.StartMultiExpression !== this.getMultiExpression) {
+                    this.closeOpenContinuousDynamic();
                 }
-
-                if (this.activeInstantaneousDynamic === undefined ||
-                    (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.DynEnum !== dynamicEnum)) {
-                    if (!fromNotation) {
-                        this.createNewMultiExpressionIfNeeded(currentMeasure);
-                    } else { this.createNewMultiExpressionIfNeeded(currentMeasure, Fraction.createFromFraction(inSourceMeasureCurrentFraction)); }
-                    if (this.openContinuousDynamicExpression !== undefined &&
-                        this.openContinuousDynamicExpression.StartMultiExpression !== this.getMultiExpression) {
-                        this.closeOpenContinuousDynamic();
-                    }
-                    const instantaneousDynamicExpression: InstantaneousDynamicExpression = new InstantaneousDynamicExpression(expressionText,
-                                                                                                                              this.soundDynamic,
-                                                                                                                              this.placement,
-                                                                                                                              this.staffNumber);
-                    this.getMultiExpression.addExpression(instantaneousDynamicExpression, "");
-                    this.initialize();
-                    if (this.activeInstantaneousDynamic !== undefined) {
-                        this.activeInstantaneousDynamic.DynEnum = instantaneousDynamicExpression.DynEnum;
-                    } else { this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(expressionText, 0, PlacementEnum.NotYetDefined, 1); }
-                }
+                const instantaneousDynamicExpression: InstantaneousDynamicExpression = new InstantaneousDynamicExpression(  expressionText,
+                                                                                                                            this.soundDynamic,
+                                                                                                                            this.placement,
+                                                                                                                            this.staffNumber);
+                this.getMultiExpression.addExpression(instantaneousDynamicExpression, "");
+                this.initialize();
+                if (this.activeInstantaneousDynamic !== undefined) {
+                    this.activeInstantaneousDynamic.DynEnum = instantaneousDynamicExpression.DynEnum;
+                } else { this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(expressionText, 0, PlacementEnum.NotYetDefined, 1); }
+                //}
             }
         }
     }
