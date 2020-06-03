@@ -93,7 +93,6 @@ export class EngravingRules {
     private chordSymbolTextHeight: number;
     private chordSymbolXSpacing: number;
     private chordSymbolYOffset: number;
-    private fingeringLabelFontHeight: number;
     private measureNumberLabelHeight: number;
     private measureNumberLabelOffset: number;
     /** Whether tuplets should display ratio (3:2 instead of 3 for triplet). Default false. */
@@ -220,6 +219,8 @@ export class EngravingRules {
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
+    private fingeringLabelFontHeight: number;
+    private fingeringOffsetX: number;
     private newSystemAtXMLNewSystemAttribute: boolean;
     private newPageAtXMLNewPageAttribute: boolean;
     private pageFormat: PageFormat;
@@ -337,7 +338,6 @@ export class EngravingRules {
         this.chordSymbolTextHeight = 2.0;
         this.chordSymbolXSpacing = 1.0;
         this.chordSymbolYOffset = 2.0;
-        this.fingeringLabelFontHeight = 1.7;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.measureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -413,7 +413,7 @@ export class EngravingRules {
 
         // Line Widths
         this.minimumStaffLineDistance = 4.0;
-        this.minimumSkyBottomLineDistance = 2.0; // default. 1.0 for compacttight mode (1.0 can cause overlaps)
+        this.minimumSkyBottomLineDistance = 1.0; // default. compacttight mode sets it to 1.0 (as well).
         this.minimumCrossedBeamDifferenceMargin = 0.0001;
 
         // xSpacing Variables
@@ -457,6 +457,8 @@ export class EngravingRules {
         this.renderLyrics = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
+        this.fingeringLabelFontHeight = 1.7;
+        this.fingeringOffsetX = 0.0;
         this.newSystemAtXMLNewSystemAttribute = false;
         this.newPageAtXMLNewPageAttribute = false;
         this.restoreCursorAfterRerender = true;
@@ -951,12 +953,6 @@ export class EngravingRules {
     }
     public set ChordSymbolYOffset(value: number) {
         this.chordSymbolYOffset = value;
-    }
-    public get FingeringLabelFontHeight(): number {
-        return this.fingeringLabelFontHeight;
-    }
-    public set FingeringLabelFontHeight(value: number) {
-        this.fingeringLabelFontHeight = value;
     }
     public get MeasureNumberLabelHeight(): number {
         return this.measureNumberLabelHeight;
@@ -1579,6 +1575,9 @@ export class EngravingRules {
     }
     public set RenderPartNames(value: boolean) {
         this.renderPartNames = value;
+        if (!this.renderPartNames) {
+            this.renderPartAbbreviations = false;
+        }
     }
     public get RenderPartAbbreviations(): boolean {
         return this.renderPartAbbreviations;
@@ -1615,6 +1614,18 @@ export class EngravingRules {
     }
     public set FingeringInsideStafflines(value: boolean) {
         this.fingeringInsideStafflines = value;
+    }
+    public get FingeringLabelFontHeight(): number {
+        return this.fingeringLabelFontHeight;
+    }
+    public set FingeringLabelFontHeight(value: number) {
+        this.fingeringLabelFontHeight = value;
+    }
+    public get FingeringOffsetX(): number {
+        return this.fingeringOffsetX;
+    }
+    public set FingeringOffsetX(value: number) {
+        this.fingeringOffsetX = value;
     }
     public get NewSystemAtXMLNewSystemAttribute(): boolean {
         return this.newSystemAtXMLNewSystemAttribute;

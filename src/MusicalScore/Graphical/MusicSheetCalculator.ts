@@ -21,7 +21,7 @@ import { Tuplet } from "../VoiceData/Tuplet";
 import { MusicSystem } from "./MusicSystem";
 import { GraphicalTie } from "./GraphicalTie";
 import { RepetitionInstruction } from "../VoiceData/Instructions/RepetitionInstruction";
-import { MultiExpression } from "../VoiceData/Expressions/MultiExpression";
+import { MultiExpression, MultiExpressionEntry } from "../VoiceData/Expressions/MultiExpression";
 import { StaffEntryLink } from "../VoiceData/StaffEntryLink";
 import { MusicSystemBuilder } from "./MusicSystemBuilder";
 import { MultiTempoExpression } from "../VoiceData/Expressions/MultiTempoExpression";
@@ -68,6 +68,7 @@ import { ContDynamicEnum } from "../VoiceData/Expressions/ContinuousExpressions/
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
+import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -545,7 +546,46 @@ export abstract class MusicSheetCalculator {
      * @param staffIndex
      */
     protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-        throw new Error("abstract, not implemented");
+        // calculate absolute Timestamp
+        const absoluteTimestamp: Fraction = multiExpression.AbsoluteTimestamp;
+        const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[measureIndex];
+        let relative: PointF2D = new PointF2D();
+
+        if ((multiExpression.MoodList.length > 0) || (multiExpression.UnknownList.length > 0)) {
+        let combinedExprString: string  = "";
+        for (let idx: number = 0, len: number = multiExpression.EntriesList.length; idx < len; ++idx) {
+            const entry: MultiExpressionEntry = multiExpression.EntriesList[idx];
+            if (entry.prefix !== "") {
+                if (combinedExprString === "") {
+                    combinedExprString += entry.prefix;
+                } else {
+                    combinedExprString += " " + entry.prefix;
+                }
+            }
+            if (combinedExprString === "") {
+                combinedExprString += entry.label;
+            } else {
+                combinedExprString += " " + entry.label;
+            }
+        }
+        const staffLine: StaffLine = measures[staffIndex].ParentStaffLine;
+        relative = this.getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp, staffIndex, staffLine, staffLine.isPartOfMultiStaffInstrument());
+
+        if (Math.abs(relative.x - 0) < 0.0001) {
+            relative.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
+        }
+
+        const fontHeight: number = this.rules.UnknownTextHeight;
+
+        const graphLabel: GraphicalLabel  = this.calculateLabel(staffLine,
+                                                                relative, combinedExprString,
+                                                                multiExpression.getFontstyleOfFirstEntry(),
+                                                                multiExpression.getPlacementOfFirstEntry(),
+                                                                fontHeight);
+
+        const gue: GraphicalUnknownExpression = new GraphicalUnknownExpression(staffLine, graphLabel);
+        staffLine.AbstractExpressions.push(gue);
+        }
     }
 
     /**

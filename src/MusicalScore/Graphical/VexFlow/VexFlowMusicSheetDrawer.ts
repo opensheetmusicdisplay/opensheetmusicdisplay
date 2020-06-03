@@ -27,6 +27,7 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { DrawingParameters } from "../DrawingParameters";
 import { GraphicalMusicPage } from "../GraphicalMusicPage";
 import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
+import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -222,7 +223,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private drawSampledLine(line: number[], startPosition: PointF2D, width: number, color: string = "#FF0000FF"): void {
         const indices: number[] = [];
         let currentValue: number = 0;
-
+        //Loops through bottom line, grabs all indices that don't equal the previously grabbed index
+        //Starting with 0 (gets index of all line changes)
         for (let i: number = 0; i < line.length; i++) {
             if (line[i] !== currentValue) {
                 indices.push(i);
@@ -355,13 +357,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 // // Draw Mood
                 // } else if (abstractGraphicalExpression instanceof GraphicalMoodExpression) {
                 //     GraphicalMoodExpression; graphicalMood = (GraphicalMoodExpression); abstractGraphicalExpression;
-                //     drawLabel(graphicalMood.GetGraphicalLabel, (int)GraphicalLayers.Notes);
-                // // Draw Unknown
-                // } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
-                //     GraphicalUnknownExpression; graphicalUnknown =
-                //         (GraphicalUnknownExpression); abstractGraphicalExpression;
-                //     drawLabel(graphicalUnknown.GetGraphicalLabel, (int)GraphicalLayers.Notes);
-                // }
+                //     drawLabel(graphicalMood.GetGraphicalLabel, <number>GraphicalLayers.Notes);
+            // Draw Unknown
+            } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
+                this.drawLabel(abstractGraphicalExpression.Label, <number>GraphicalLayers.Notes);
             } else {
                 log.warn("Unkown type of expression!");
             }
