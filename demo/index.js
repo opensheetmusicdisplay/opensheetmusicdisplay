@@ -29,6 +29,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
             "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
             "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
+            "OSMD Function Test - Drums on one Line": "OSMD_Function_Test_Drums_one_line_snare_plus_piano.musicxml", 
             "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
             "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
@@ -47,7 +48,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "Schumann, R. - Dichterliebe": "Dichterliebe01.xml",
             "Telemann, G.P. - Sonate-Nr.1.1-Dolce": "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
             "Telemann, G.P. - Sonate-Nr.1.2-Allegro": "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
-            "Snare+Piano Drum Test": "Test_Drumline_Snare.musicxml",
         },
 
         zoom = 1.0,
