@@ -72,10 +72,14 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         switch (this.Placement) {
             case PlacementEnum.Above:
                 if (!this.IsVerbal) {
-                    if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+                    // for now there is only crescendo or decrescendo anyways, but let's check anyways, in case we add new types in the future
+                    if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+                        skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
+                    } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
                         skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].End, this.lines[0].Start);
                     } else {
-                        skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
+                        log.info("GraphicalContinuousDynamicExpression.updateSkyBottomLine(): " +
+                        "unhandled continuous dynamic type. start measure: " + this.startMeasure.MeasureNumber);
                     }
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginTop + this.label.PositionAndShape.RelativePosition.y;
