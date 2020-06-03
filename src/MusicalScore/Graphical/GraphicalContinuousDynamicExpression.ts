@@ -72,7 +72,11 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         switch (this.Placement) {
             case PlacementEnum.Above:
                 if (!this.IsVerbal) {
-                    skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
+                    if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+                        skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].End, this.lines[0].Start);
+                    } else {
+                        skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
+                    }
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginTop + this.label.PositionAndShape.RelativePosition.y;
                     skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
@@ -80,7 +84,11 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                 break;
             case PlacementEnum.Below:
                 if (!this.IsVerbal) {
-                    skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
+                    if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+                        skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].End, this.lines[1].Start);
+                    } else {
+                        skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
+                    }
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginBottom + this.label.PositionAndShape.RelativePosition.y;
                     skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
