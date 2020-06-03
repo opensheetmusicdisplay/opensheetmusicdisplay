@@ -309,7 +309,7 @@ export class ExpressionReader {
             }
             if (expressionText !== undefined) {
                 // // ToDo: add doublettes recognition again as a afterReadingModule, as we can't check here if there is a repetition:
-                // // Make here a comparisson with the active dynamic expression and only add it, if there is a change in dynamic
+                // // Make here a comparison with the active dynamic expression and only add it, if there is a change in dynamic
                 // // Exception is when there starts a repetition, where this might be different when repeating.
                 // // see PR #767 where this was removed
                 // let dynamicEnum: DynamicEnum;
