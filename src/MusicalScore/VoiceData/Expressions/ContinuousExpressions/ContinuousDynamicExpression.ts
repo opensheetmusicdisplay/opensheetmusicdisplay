@@ -1,10 +1,13 @@
 import {PlacementEnum, AbstractExpression} from "../AbstractExpression";
 import {MultiExpression} from "../MultiExpression";
 import {Fraction} from "../../../../Common/DataObjects/Fraction";
+import {SourceMeasure} from "../../SourceMeasure";
 
 export class ContinuousDynamicExpression extends AbstractExpression {
-    constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number, label: string = "") {
+    constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number, measure: SourceMeasure,
+                label: string = "") {
         super(placement);
+        super.parentMeasure = measure;
         this.dynamicType = dynamicType;
         this.label = label;
         this.staffNumber = staffNumber;

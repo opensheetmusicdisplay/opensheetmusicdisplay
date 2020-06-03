@@ -583,7 +583,9 @@ export abstract class MusicSheetCalculator {
                                                                 multiExpression.getPlacementOfFirstEntry(),
                                                                 fontHeight);
 
-        const gue: GraphicalUnknownExpression = new GraphicalUnknownExpression(staffLine, graphLabel);
+        const gue: GraphicalUnknownExpression = new GraphicalUnknownExpression(staffLine, graphLabel, measures[staffIndex]?.parentSourceMeasure);
+        //    multiExpression); // TODO would be nice to hand over and save reference to original expression,
+        //                         but MultiExpression is not an AbstractExpression.
         staffLine.AbstractExpressions.push(gue);
         }
     }
@@ -921,7 +923,7 @@ export abstract class MusicSheetCalculator {
         const endMeasure: GraphicalMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(
             graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.SourceMeasureParent, staffIndex);
         if (!endMeasure) {
-            log.warn("Not working");
+            log.warn("MusicSheetCalculator.calculateGraphicalContinuousDynamic: No endMeasure found");
             return;
         }
 
@@ -973,7 +975,8 @@ export abstract class MusicSheetCalculator {
             lowerEndX = endPosInStaffLine.x;
 
             // must create a new Wedge
-            secondGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(graphicalContinuousDynamic.ContinuousDynamic, endStaffLine);
+            secondGraphicalContinuousDynamic = new GraphicalContinuousDynamicExpression(
+                graphicalContinuousDynamic.ContinuousDynamic, endStaffLine, endMeasure.parentSourceMeasure);
             secondGraphicalContinuousDynamic.IsSplittedPart = true;
             graphicalContinuousDynamic.IsSplittedPart = true;
         } else {

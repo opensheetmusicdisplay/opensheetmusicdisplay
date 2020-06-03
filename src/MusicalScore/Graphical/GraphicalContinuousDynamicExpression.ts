@@ -8,6 +8,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
 import log from "loglevel";
+import { SourceMeasure } from "../VoiceData";
 
 /**
  * This class prepares the graphical elements for a continuous expression. It calculates the wedges and
@@ -26,10 +27,10 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     /**
      * Create a new instance of the GraphicalContinuousDynamicExpression
      * @param continuousDynamic The continuous dynamic instruction read via ExpressionReader
-     * @param staffLine The staffline where the exoression is attached
+     * @param staffLine The staffline where the expression is attached
      */
-    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine) {
-        super(staffLine, continuousDynamic);
+    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine, measure: SourceMeasure) {
+        super(staffLine, continuousDynamic, measure);
 
         this.isSplittedPart = false;
         this.notToBeRemoved = false;
@@ -92,6 +93,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                 break;
             case PlacementEnum.Below:
                 if (!this.IsVerbal) {
+                    // console.log(`id: ${this.parentStaffLine.ParentStaff.Id}`);
                     if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
                         skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
                     } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
@@ -263,6 +265,10 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         this.PositionAndShape.RelativePosition = this.lines[0].Start;
         this.PositionAndShape.BorderMarginTop = this.lines[0].End.y - this.lines[0].Start.y;
         this.PositionAndShape.BorderMarginBottom = this.lines[1].End.y - this.lines[1].Start.y;
+        this.PositionAndShape.Center.y = (this.PositionAndShape.BorderMarginTop + this.PositionAndShape.BorderMarginBottom) / 2;
+        // TODO is the center position correct? it wasn't set before, important for AlignmentManager.alignDynamicExpressions()
+        // console.log(`relative y, center y: ${this.PositionAndShape.RelativePosition.y},${this.PositionAndShape.Center.y})`);
+
 
         if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
             this.PositionAndShape.BorderMarginLeft = 0;

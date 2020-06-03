@@ -7,7 +7,7 @@ import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 export class GraphicalInstantaneousTempoExpression extends AbstractGraphicalExpression {
 
     constructor(tempoExpresssion: AbstractTempoExpression, label: GraphicalLabel) {
-        super((label.PositionAndShape.Parent.DataObject as StaffLine), tempoExpresssion);
+        super((label.PositionAndShape.Parent.DataObject as StaffLine), tempoExpresssion, tempoExpresssion.parentMeasure);
         this.label = label;
     }
 
