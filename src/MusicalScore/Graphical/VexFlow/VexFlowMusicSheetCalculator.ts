@@ -705,7 +705,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
           staffLine.AbstractExpressions.forEach(ae => {
             ae.updateSkyBottomLine();
-            console.log(`id: ${staffLine.ParentStaff.Id}`);
           });
         } catch (e) {
           // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
