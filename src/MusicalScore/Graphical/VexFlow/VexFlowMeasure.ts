@@ -1179,6 +1179,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(fingeringInstruction.value);
             fretFinger.setPosition(modifierPosition);
+            fretFinger.setOffsetX(this.rules.FingeringOffsetX);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
                 const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
                 const ordering: number = fingeringPosition === PlacementEnum.Above ? fingeringIndex :
@@ -1188,7 +1189,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // set y-shift. vexflow fretfinger simply places directly above/below note
                     const perFingeringShift: number = fretFinger.getWidth() / 2;
                     const shiftCount: number = fingeringsCount * 2.5;
-                    (<any>fretFinger).setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
+                    fretFinger.setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(fingeringInstruction.value);
                     (<any>stringNumber).radius = 0; // hack to remove the circle around the number
