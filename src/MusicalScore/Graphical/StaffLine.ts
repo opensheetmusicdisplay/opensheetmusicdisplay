@@ -30,6 +30,8 @@ export abstract class StaffLine extends GraphicalObject {
     protected abstractExpressions: AbstractGraphicalExpression[] = [];
     /** The staff height in units */
     private staffHeight: number;
+    private topLineOffset: number;
+    private bottomLineOffset: number;
 
     // For displaying Slurs
     protected graphicalSlurs: GraphicalSlur[] = [];
@@ -41,8 +43,48 @@ export abstract class StaffLine extends GraphicalObject {
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
         this.skyBottomLine = new SkyBottomLineCalculator(this);
         this.staffHeight = this.parentMusicSystem.rules.StaffHeight;
-        if (this.parentStaff.isTab) {
-            this.staffHeight = this.parentMusicSystem.rules.TabStaffHeight;
+        this.topLineOffset = 0;
+        this.bottomLineOffset = 4;
+
+        this.calculateStaffLineOffsets();
+    }
+
+    /**
+     * If the musicXML sets different numbers of stafflines, we need to have different offsets
+     * to accomodate this - primarily for the sky and bottom lines and cursor.
+     */
+    private calculateStaffLineOffsets(): void {
+        if (this.ParentStaff.isTab) {
+            switch (this.ParentStaff.StafflineCount) {
+                case 5:
+                    this.staffHeight = this.bottomLineOffset =
+                        this.ParentStaff.ParentInstrument.GetMusicSheet.Rules.TabStaffInterlineHeight * 6;
+                    break;
+                default:
+                    this.staffHeight = this.bottomLineOffset =
+                        this.ParentStaff.ParentInstrument.GetMusicSheet.Rules.TabStaffInterlineHeight * this.ParentStaff.StafflineCount;
+                    break;
+            }
+        } else {
+            switch (this.ParentStaff.StafflineCount) {
+                case 4:
+                    this.bottomLineOffset = 1;
+                    break;
+                case 3:
+                    this.topLineOffset = 1;
+                    this.bottomLineOffset = 1;
+                    break;
+                case 2:
+                    this.topLineOffset = 2;
+                    this.bottomLineOffset = 1;
+                    break;
+                case 1:
+                    this.topLineOffset = 2;
+                    this.bottomLineOffset = 2;
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -129,6 +171,13 @@ export abstract class StaffLine extends GraphicalObject {
 
     public get StaffHeight(): number {
         return this.staffHeight;
+    }
+
+    public get TopLineOffset(): number {
+        return this.topLineOffset;
+    }
+    public get BottomLineOffset(): number {
+        return this.bottomLineOffset;
     }
 
     // get all Graphical Slurs of a staffline

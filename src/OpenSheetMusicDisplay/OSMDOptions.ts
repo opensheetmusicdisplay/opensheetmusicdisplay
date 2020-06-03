@@ -143,6 +143,51 @@ export interface IOSMDOptions {
      *  at different measures. So this option may result in a page break after a single measure on a page.
      */
     newPageFromXML?: boolean;
+    /** The cutoff number for rendering percussion clef stafflines as a single line. Default is 4.
+     *  This is number of instruments specified, e.g. a drumset:
+     *     <score-part id="P1">
+     *       <part-name>Drumset</part-name>
+     *       <part-abbreviation>D. Set</part-abbreviation>
+     *       <score-instrument id="P1-I36">
+     *           <instrument-name>Acoustic Bass Drum</instrument-name>
+     *           </score-instrument>
+     *       <score-instrument id="P1-I37">
+     *           <instrument-name>Bass Drum 1</instrument-name>
+     *           </score-instrument>
+     *       <score-instrument id="P1-I38">
+     *           <instrument-name>Side Stick</instrument-name>
+     *           </score-instrument>
+     *       <score-instrument id="P1-I39">
+     *           <instrument-name>Acoustic Snare</instrument-name>
+     *           </score-instrument>
+     *           ...
+     *   Would still render as 5 stafflines by default, since we have 4 (or greater) instruments in this part.
+     *   While a snare:
+     *   <score-part id="P2">
+     *   <part-name>Concert Snare Drum</part-name>
+     *   <part-abbreviation>Con. Sn.</part-abbreviation>
+     *   <score-instrument id="P2-I38">
+     *       <instrument-name>Side Stick</instrument-name>
+     *       </score-instrument>
+     *   <score-instrument id="P2-I39">
+     *       <instrument-name>Acoustic Snare</instrument-name>
+     *       </score-instrument>
+     *       ...
+     *   Would render with 1 line on the staff, since we only have 2 voices.
+     *   If this value is 0, the feature is turned off.
+     *   If this value is -1, it will render all percussion clefs as a single line.
+     */
+    percussionOneLineCutoff?: number;
+    /** This property is only active if the above property is active (percussionOneLineCutoff)
+     *  This is the cutoff for forcing all voices to the single line, instead of rendering them at different
+     *  positions above/below the line.
+     *  The default is 3, so if a part has less than voices, all of them will be rendered on the line.
+     *  This is for cases like a Concert snare, which has multiple 'instruments' available (snare, side stick)
+     *  should still render only on the line since there is no ambiguity.
+     *  If this value is 0, the feature is turned off.
+     *  IF this value is -1, it will render all percussion clef voices on the single line.
+     */
+    percussionForceVoicesOneLineCutoff?: number;
 }
 
 export enum AlignRestOption {

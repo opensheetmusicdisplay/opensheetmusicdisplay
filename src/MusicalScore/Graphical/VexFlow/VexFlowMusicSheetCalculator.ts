@@ -48,6 +48,7 @@ import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "..";
+import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -59,10 +60,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     this.rules = rules;
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
+    MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
   }
 
   protected clearRecreatedObjects(): void {
     super.clearRecreatedObjects();
+    MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
         (<VexFlowMeasure>graphicalMeasure).clean();
