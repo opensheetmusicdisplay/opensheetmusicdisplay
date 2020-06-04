@@ -2,16 +2,21 @@
 import { StaffLine } from "./StaffLine";
 import { GraphicalLabel } from "./GraphicalLabel";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
-import { PlacementEnum, AbstractExpression } from "../VoiceData/Expressions";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { MultiExpression } from "../VoiceData/Expressions/MultiExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import log from "loglevel";
 import { SourceMeasure } from "../VoiceData/SourceMeasure";
 
 export class GraphicalUnknownExpression extends AbstractGraphicalExpression {
+    public sourceMultiExpression: MultiExpression;
+    public placement: PlacementEnum;
+
     constructor(staffLine: StaffLine, label: GraphicalLabel, measure: SourceMeasure,
-                sourceMultiExpression: AbstractExpression = undefined) {
-        super(staffLine, sourceMultiExpression, measure);
+                sourceMultiExpression: MultiExpression = undefined) {
+        super(staffLine, undefined, measure);
         this.label = label;
+        this.sourceMultiExpression = sourceMultiExpression;
     }
 
     public updateSkyBottomLine(): void {

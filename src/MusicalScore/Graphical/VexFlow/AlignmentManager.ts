@@ -4,7 +4,8 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { AbstractGraphicalExpression } from "../AbstractGraphicalExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { EngravingRules } from "../EngravingRules";
-import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
+import { PlacementEnum } from "../../VoiceData/Expressions";
+import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 
 export class AlignmentManager {
     private parentStaffline: StaffLine;
@@ -23,19 +24,37 @@ export class AlignmentManager {
             const currentExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx];
             const nextExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx + 1];
 
-            if (currentExpression?.SourceExpression === undefined ||
-                nextExpression?.SourceExpression === undefined) {
-                continue;
-                // TODO: this doesn't work yet for GraphicalUnknownExpression, because it doesn't have an AbstractExpression,
-                //   so it doesn't have a .Placement.
-                //   this lead to if (currentExpression.Placement...) crashing.
-
-                // same result:
-                // if (currentExpression instanceof GraphicalUnknownExpression ||
-                //     nextExpression instanceof GraphicalUnknownExpression) {
-                //         continue;
-                // }
+            let currentExpressionPlacement: PlacementEnum = undefined;
+            if (currentExpression?.SourceExpression) {
+                currentExpressionPlacement = currentExpression.Placement;
+            } else if (currentExpression instanceof GraphicalUnknownExpression) {
+                currentExpressionPlacement = (currentExpression as GraphicalUnknownExpression).
+                    sourceMultiExpression?.getPlacementOfFirstEntry();
             }
+            // same for nextExpression:
+            let nextExpressionPlacement: PlacementEnum = undefined;
+            if (nextExpression?.SourceExpression) {
+                nextExpressionPlacement = nextExpression.Placement;
+            } else if (nextExpression instanceof GraphicalUnknownExpression) {
+                nextExpressionPlacement = (nextExpression as GraphicalUnknownExpression).
+                    sourceMultiExpression?.getPlacementOfFirstEntry();
+            }
+
+            // if (currentExpression?.SourceExpression === undefined ||
+            //     nextExpression?.SourceExpression === undefined) {
+            //     continue;
+            //     // TODO: this doesn't work yet for GraphicalUnknownExpression, because it doesn't have an AbstractExpression,
+            //     //   so it doesn't have a .Placement.
+            //     //   this lead to if (currentExpression.Placement...) crashing.
+
+            //     // same result:
+            //     // if (currentExpression instanceof GraphicalUnknownExpression ||
+            //     //     nextExpression instanceof GraphicalUnknownExpression) {
+            //     //         continue;
+            //     // }
+            // } else {
+            //     samePlacement = currentExpression.Placement === nextExpression.Placement;
+            // }
 
             // TODO this shifts dynamics in An die Ferne Geliebte, showing that there's something wrong with the RelativePositions etc with wedges
             // if (currentExpression instanceof GraphicalContinuousDynamicExpression) {
@@ -45,9 +64,13 @@ export class AlignmentManager {
             //     nextExpression.calcPsi();
             // }
 
-            if (currentExpression.Placement === nextExpression.Placement) {
+            if (currentExpressionPlacement === nextExpressionPlacement) {
+                // if ((currentExpression as any).label?.label?.text?.startsWith("dim") ||
+                //     (nextExpression as any).label?.label?.text?.startsWith("dim")) {
+                //         console.log("here");
+                //     }
                 const dist: PointF2D = this.getDistance(currentExpression.PositionAndShape, nextExpression.PositionAndShape);
-                if (dist.x < this.rules.DynamicExpressionMaxDistance) {
+                if (Math.abs(dist.x) < this.rules.DynamicExpressionMaxDistance) {
                     // Prevent last found expression to be added twice. e.g. p<f as three close expressions
                     if (tmpList.indexOf(currentExpression) === -1) {
                         tmpList.push(currentExpression);
@@ -63,19 +86,6 @@ export class AlignmentManager {
         groups.push(tmpList);
 
         for (const aes of groups) {
-            // only align if there are wedges
-            //   fixes placement in Clementi Op. 36 No. 1 Pt 2
-            let hasWedges: boolean = false;
-            for (const ae of aes) {
-                if (ae instanceof GraphicalContinuousDynamicExpression && !(ae as GraphicalContinuousDynamicExpression).IsVerbal) {
-                    hasWedges = true;
-                    break;
-                }
-            }
-            if (!hasWedges) {
-                continue;
-            }
-
             if (aes.length > 0) {
                 // Get the median y position and shift all group members to that position
                 const centerYs: number[] = aes.map(expr => expr.PositionAndShape.Center.y);
@@ -98,7 +108,7 @@ export class AlignmentManager {
                         (expr as VexFlowContinuousDynamicExpression).shiftYPosition(-centerOffset);
                         (expr as VexFlowContinuousDynamicExpression).calcPsi();
                     } else {
-                        // TODO: The 0.8 are because the letters are a bit to far done
+                        // TODO: The 0.8 are because the letters are a bit too far done
                         expr.PositionAndShape.RelativePosition.y -= centerOffset * 0.8;
                         // note: verbal GraphicalContinuousDynamicExpressions have a label, nonverbal ones don't.
                         // take care to update and take the right bounding box for skyline.
@@ -134,6 +144,7 @@ export class AlignmentManager {
         const topBorderB: number = b.RelativePosition.y + b.BorderMarginTop;
         return new PointF2D(leftBorderB - rightBorderA,
                             topBorderB - bottomBorderA);
+                            // note: this is a distance vector, not absolute distance, otherwise we need Math.abs
     }
 
     /**

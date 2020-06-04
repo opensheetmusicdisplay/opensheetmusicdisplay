@@ -583,7 +583,8 @@ export abstract class MusicSheetCalculator {
                                                                 multiExpression.getPlacementOfFirstEntry(),
                                                                 fontHeight);
 
-        const gue: GraphicalUnknownExpression = new GraphicalUnknownExpression(staffLine, graphLabel, measures[staffIndex]?.parentSourceMeasure);
+        const gue: GraphicalUnknownExpression = new GraphicalUnknownExpression(
+            staffLine, graphLabel, measures[staffIndex]?.parentSourceMeasure, multiExpression);
         //    multiExpression); // TODO would be nice to hand over and save reference to original expression,
         //                         but MultiExpression is not an AbstractExpression.
         staffLine.AbstractExpressions.push(gue);
