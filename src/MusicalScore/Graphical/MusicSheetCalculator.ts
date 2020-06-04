@@ -569,7 +569,11 @@ export abstract class MusicSheetCalculator {
             }
         }
         const staffLine: StaffLine = measures[staffIndex].ParentStaffLine;
-        relative = this.getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp, staffIndex, staffLine, staffLine.isPartOfMultiStaffInstrument());
+        if (!staffLine) {
+            log.debug("MusicSheetCalculator.calculateMoodAndUnknownExpression: staffLine undefined. Returning.");
+            return;
+        }
+        relative = this.getRelativePositionInStaffLineFromTimestamp(absoluteTimestamp, staffIndex, staffLine, staffLine?.isPartOfMultiStaffInstrument());
 
         if (Math.abs(relative.x - 0) < 0.0001) {
             relative.x = measures[staffIndex].beginInstructionsWidth + this.rules.RhythmRightMargin;
@@ -937,9 +941,9 @@ export abstract class MusicSheetCalculator {
 
         let isPartOfMultiStaffInstrument: boolean = false;
         if (endStaffLine) { // unfortunately we can't do something like (endStaffLine?.check() || staffLine?.check()) in this typescript version
-            isPartOfMultiStaffInstrument = endStaffLine.isPartOfMultiStaffInstrument();
+            isPartOfMultiStaffInstrument = endStaffLine?.isPartOfMultiStaffInstrument();
         } else if (staffLine) {
-            isPartOfMultiStaffInstrument = staffLine.isPartOfMultiStaffInstrument();
+            isPartOfMultiStaffInstrument = staffLine?.isPartOfMultiStaffInstrument();
         }
 
         const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.AbsoluteTimestamp);
@@ -1205,6 +1209,9 @@ export abstract class MusicSheetCalculator {
                                                                startPosInStaffline: PointF2D): void {
         // get Margin Dimensions
         const staffLine: StaffLine = graphicalInstantaneousDynamic.ParentStaffLine;
+        if (!staffLine) {
+            return; // TODO can happen when drawing range modified (osmd.setOptions({drawFromMeasureNumber...}))
+        }
         const left: number = startPosInStaffline.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginLeft;
         const right: number = startPosInStaffline.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginRight;
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;

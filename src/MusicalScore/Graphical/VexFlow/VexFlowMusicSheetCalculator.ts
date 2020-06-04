@@ -504,7 +504,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       absoluteTimestamp,
       staffIndex,
       staffLine,
-      staffLine.isPartOfMultiStaffInstrument());
+      staffLine?.isPartOfMultiStaffInstrument());
 
     const dynamicStartPosition: PointF2D = startPosInStaffline;
     if (startPosInStaffline.x <= 0) {
