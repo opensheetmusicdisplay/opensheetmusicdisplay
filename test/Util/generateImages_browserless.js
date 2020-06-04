@@ -22,18 +22,27 @@ function sleep (ms) {
     })
 }
 
+// global variables
+//   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
+let [osmdBuildDir, sampleDir, imageDir, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString] = process.argv.slice(2, 10)
+if (!osmdBuildDir || !sampleDir || !imageDir) {
+    console.log('usage: ' +
+        'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]')
+    console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)')
+    console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export 210 297 allSmall --debug 5000')
+    console.log('Error: need osmdBuildDir, sampleDir and imageDir. Exiting.')
+    process.exit(1)
+}
+
+if (!mode) {
+    mode = ''
+}
+
+let OSMD // can only be required once window was simulated
+const FS = require('fs')
+
 async function init () {
     console.log('[OSMD.generateImages] init')
-
-    let [osmdBuildDir, sampleDir, imageDir, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString] = process.argv.slice(2, 10)
-    if (!osmdBuildDir || !sampleDir || !imageDir) {
-        console.log('usage: ' +
-            'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]')
-        console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)')
-        console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export 210 297 allSmall --debug 5000')
-        console.log('Error: need osmdBuildDir, sampleDir and imageDir. Exiting.')
-        process.exit(1)
-    }
 
     const osmdTestingMode = mode.includes('osmdtesting') // can also be --debugosmdtesting
     const DEBUG = mode.startsWith('--debug')
@@ -131,13 +140,13 @@ async function init () {
     debug('div.height: ' + div.height, DEBUG)
     // ---- end browser hacks (hopefully) ----
 
-    const OSMD = require(`${osmdBuildDir}/opensheetmusicdisplay.min.js`)
+    // load globally
+    OSMD = require(`${osmdBuildDir}/opensheetmusicdisplay.min.js`) // window needs to be available before we can require OSMD
 
-    const fs = require('fs')
     // Create the image directory if it doesn't exist.
-    fs.mkdirSync(imageDir, { recursive: true })
+    FS.mkdirSync(imageDir, { recursive: true })
 
-    const sampleDirFilenames = fs.readdirSync(sampleDir)
+    const sampleDirFilenames = FS.readdirSync(sampleDir)
     let samplesToProcess = [] // samples we want to process/generate pngs of, excluding the filtered out files/filenames
     for (const sampleFilename of sampleDirFilenames) {
         if (osmdTestingMode && filterRegex === 'allSmall') {
@@ -201,81 +210,96 @@ async function init () {
         var sampleFilename = samplesToProcess[i]
         debug('sampleFilename: ' + sampleFilename, DEBUG)
 
-        let loadParameter = fs.readFileSync(sampleDir + '/' + sampleFilename)
-        if (sampleFilename.endsWith('.mxl')) {
-            loadParameter = await OSMD.MXLHelper.MXLtoXMLstring(loadParameter)
-        } else {
-            loadParameter = loadParameter.toString()
+        await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, false)
+
+        if (osmdTestingMode && sampleFilename.startsWith('Beethoven') && sampleFilename.includes('Geliebte')) {
+            // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
+            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, true, DEBUG)
         }
-        // console.log('loadParameter: ' + loadParameter)
-        // console.log('typeof loadParameter: ' + typeof loadParameter)
-
-        // set sample-specific options for OSMD visual regression testing
-        if (osmdTestingMode) {
-            const isFunctionTestAutobeam = sampleFilename.startsWith('OSMD_function_test_autobeam')
-            const isFunctionTestAutoColoring = sampleFilename.startsWith('OSMD_function_test_auto-custom-coloring')
-            const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
-            const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
-            osmdInstance.setOptions({
-                autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
-                coloringMode: isFunctionTestAutoColoring ? 2 : 0,
-                coloringSetCustom: isFunctionTestAutoColoring ? ['#d82c6b', '#F89D15', '#FFE21A', '#4dbd5c', '#009D96', '#43469d', '#76429c', '#ff0000'] : undefined,
-                colorStemsLikeNoteheads: isFunctionTestAutoColoring,
-                drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
-                drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
-                newSystemFromXML: isFunctionTestSystemAndPageBreaks,
-                newPageFromXML: isFunctionTestSystemAndPageBreaks
-            })
-        }
-
-        await osmdInstance.load(loadParameter).then(function () {
-            debug('xml loaded', DEBUG)
-            try {
-                osmdInstance.render()
-            } catch (ex) {
-                console.log('renderError: ' + ex)
-            }
-            debug('rendered', DEBUG)
-
-            const dataUrls = []
-            let canvasImage
-
-            for (let pageNumber = 1; pageNumber < 999; pageNumber++) {
-                canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
-                if (!canvasImage) {
-                    break
-                }
-                if (!canvasImage.toDataURL) {
-                    console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
-                    break
-                }
-                dataUrls.push(canvasImage.toDataURL())
-            }
-            for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
-                const pageNumberingString = `_${urlIndex + 1}`
-                // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-                var pageFilename = `${imageDir}/${sampleFilename}${pageNumberingString}.png`
-
-                const dataUrl = dataUrls[urlIndex]
-                if (!dataUrl || !dataUrl.split) {
-                    console.log(`error: could not get dataUrl (imageData) for page ${urlIndex + 1} of sample: ${sampleFilename}`)
-                    continue
-                }
-                const imageData = dataUrl.split(';base64,').pop()
-                const imageBuffer = Buffer.from(imageData, 'base64')
-
-                debug('got image data, saving to: ' + pageFilename, DEBUG)
-                fs.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
-            }
-        }) // end render then
-        //     },
-        //     function (e) {
-        //         console.log('error while rendering: ' + e)
-        //     }) // end load then
-        // }) // end read file
     }
 
     console.log('[OSMD.generateImages] done, exiting.')
+}
+
+async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
+    includeSkyBottomLine = false, DEBUG = false) {
+    var samplePath = directory + '/' + sampleFilename
+    let loadParameter = FS.readFileSync(samplePath)
+
+    if (sampleFilename.endsWith('.mxl')) {
+        loadParameter = await OSMD.MXLHelper.MXLtoXMLstring(loadParameter)
+    } else {
+        loadParameter = loadParameter.toString()
+    }
+    // console.log('loadParameter: ' + loadParameter)
+    // console.log('typeof loadParameter: ' + typeof loadParameter)
+
+    // set sample-specific options for OSMD visual regression testing
+    if (osmdTestingMode) {
+        const isFunctionTestAutobeam = sampleFilename.startsWith('OSMD_function_test_autobeam')
+        const isFunctionTestAutoColoring = sampleFilename.startsWith('OSMD_function_test_auto-custom-coloring')
+        const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
+        const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
+        osmdInstance.setOptions({
+            autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
+            coloringMode: isFunctionTestAutoColoring ? 2 : 0,
+            coloringSetCustom: isFunctionTestAutoColoring ? ['#d82c6b', '#F89D15', '#FFE21A', '#4dbd5c', '#009D96', '#43469d', '#76429c', '#ff0000'] : undefined,
+            colorStemsLikeNoteheads: isFunctionTestAutoColoring,
+            drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
+            drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
+            newSystemFromXML: isFunctionTestSystemAndPageBreaks,
+            newPageFromXML: isFunctionTestSystemAndPageBreaks
+        })
+        osmdInstance.drawSkyLine = includeSkyBottomLine // if includeSkyBottomLine, draw skyline and bottomline, else not
+        osmdInstance.drawBottomLine = includeSkyBottomLine
+    }
+
+    osmdInstance.load(loadParameter).then(function () {
+        debug('xml loaded', DEBUG)
+        try {
+            osmdInstance.render()
+        } catch (ex) {
+            console.log('renderError: ' + ex)
+        }
+        debug('rendered', DEBUG)
+
+        const dataUrls = []
+        let canvasImage
+
+        for (let pageNumber = 1; pageNumber < 999; pageNumber++) {
+            canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
+            if (!canvasImage) {
+                break
+            }
+            if (!canvasImage.toDataURL) {
+                console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
+                break
+            }
+            dataUrls.push(canvasImage.toDataURL())
+        }
+        for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
+            const pageNumberingString = `${urlIndex + 1}`
+            const skybottomlineString = includeSkyBottomLine ? 'skybottomline_' : ''
+            // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
+            var pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.png`
+
+            const dataUrl = dataUrls[urlIndex]
+            if (!dataUrl || !dataUrl.split) {
+                console.log(`error: could not get dataUrl (imageData) for page ${urlIndex + 1} of sample: ${sampleFilename}`)
+                continue
+            }
+            const imageData = dataUrl.split(';base64,').pop()
+            const imageBuffer = Buffer.from(imageData, 'base64')
+
+            debug('got image data, saving to: ' + pageFilename, DEBUG)
+            FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
+        }
+    }) // end render then
+    //     },
+    //     function (e) {
+    //         console.log('error while rendering: ' + e)
+    //     }) // end load then
+    // }) // end read file
 }
 
 function debug (msg, debugEnabled) {
