@@ -37,6 +37,7 @@ export class EngravingRules {
     private systemComposerDistance: number;
     private instrumentLabelTextHeight: number;
     private minimumDistanceBetweenSystems: number;
+    private minSkyBottomDistBetweenSystems: number;
     private lastSystemMaxScalingFactor: number;
     private staffDistance: number;
     private betweenStaffDistance: number;
@@ -168,7 +169,7 @@ export class EngravingRules {
     private octaveShiftVerticalLineLength: number;
     private graceLineWidth: number;
     private minimumStaffLineDistance: number;
-    private minimumSkyBottomLineDistance: number;
+    private minSkyBottomDistBetweenStaves: number;
     private minimumCrossedBeamDifferenceMargin: number;
     private displacedNoteMargin: number;
     private minNoteDistance: number;
@@ -254,6 +255,8 @@ export class EngravingRules {
         this.titleBottomDistance = 1.0;
         this.staffDistance = 7.0;
         this.betweenStaffDistance = 5.0;
+        this.minimumStaffLineDistance = 4.0;
+        this.minSkyBottomDistBetweenStaves = 1.0; // default. compacttight mode sets it to 1.0 (as well).
 
         // System Sizing and Label Variables
         this.staffHeight = 4.0;
@@ -265,7 +268,8 @@ export class EngravingRules {
         this.systemLabelsRightMargin = 2.0;
         this.systemComposerDistance = 2.0;
         this.instrumentLabelTextHeight = 2;
-        this.minimumDistanceBetweenSystems = 4.0;
+        this.minimumDistanceBetweenSystems = 7.0;
+        this.minSkyBottomDistBetweenSystems = 5.0;
         this.lastSystemMaxScalingFactor = 1.4;
 
         // autoBeam options
@@ -412,8 +416,6 @@ export class EngravingRules {
         this.graceLineWidth = this.staffLineWidth * this.GraceNoteScalingFactor;
 
         // Line Widths
-        this.minimumStaffLineDistance = 4.0;
-        this.minimumSkyBottomLineDistance = 1.0; // default. compacttight mode sets it to 1.0 (as well).
         this.minimumCrossedBeamDifferenceMargin = 0.0001;
 
         // xSpacing Variables
@@ -623,6 +625,12 @@ export class EngravingRules {
     }
     public set MinimumDistanceBetweenSystems(value: number) {
         this.minimumDistanceBetweenSystems = value;
+    }
+    public get MinSkyBottomDistBetweenSystems(): number {
+        return this.minSkyBottomDistBetweenSystems;
+    }
+    public set MinSkyBottomDistBetweenSystems(value: number) {
+        this.minSkyBottomDistBetweenSystems = value;
     }
     public get LastSystemMaxScalingFactor(): number {
         return this.lastSystemMaxScalingFactor;
@@ -1341,11 +1349,11 @@ export class EngravingRules {
     public set MinimumStaffLineDistance(value: number) {
         this.minimumStaffLineDistance = value;
     }
-    public get MinimumSkyBottomLineDistance(): number {
-        return this.minimumSkyBottomLineDistance;
+    public get MinSkyBottomDistBetweenStaves(): number {
+        return this.minSkyBottomDistBetweenStaves;
     }
-    public set MinimumSkyBottomLineDistance(value: number) {
-        this.minimumSkyBottomLineDistance = value;
+    public set MinSkyBottomDistBetweenStaves(value: number) {
+        this.minSkyBottomDistBetweenStaves = value;
     }
     public get MinimumCrossedBeamDifferenceMargin(): number {
         return this.minimumCrossedBeamDifferenceMargin;
