@@ -47,7 +47,7 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
-import { EngravingRules } from "..";
+import { EngravingRules } from "../EngravingRules";
 import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
@@ -522,7 +522,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
       const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(
         multiExpression.StartingContinuousDynamic,
-        staffLine);
+        staffLine,
+        startMeasure.parentSourceMeasure);
       graphicalContinuousDynamic.StartMeasure = startMeasure;
 
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
@@ -702,7 +703,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       for (const staffLine of musicSystem.StaffLines) {
         try {
           (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
-          staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
+          staffLine.AbstractExpressions.forEach(ae => {
+            ae.updateSkyBottomLine();
+          });
         } catch (e) {
           // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
           //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
