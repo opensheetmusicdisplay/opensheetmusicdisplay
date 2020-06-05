@@ -383,12 +383,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (skylineDebug) {
             skylineDebug.onclick = function () {
                 openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+                openSheetMusicDisplay.render();
             }
         }
 
         if (bottomlineDebug) {
             bottomlineDebug.onclick = function () {
                 openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+                openSheetMusicDisplay.render();
             }
         }
 
