@@ -362,7 +362,6 @@ export abstract class MusicSheetDrawer {
                 this.drawDashes(staffLine.LyricsDashes);
             }
         }
-
         this.drawOctaveShifts(staffLine);
 
         this.drawExpressions(staffLine);
