@@ -57,6 +57,7 @@ export class EngravingRules {
     private betweenKeySymbolsDistance: number;
     private keyRightMargin: number;
     private rhythmRightMargin: number;
+    private showRhythmAgainAfterPartEndOrFinalBarline: boolean;
     private inStaffClefScalingFactor: number;
     private distanceBetweenNaturalAndSymbolWhenCancelling: number;
     private noteHelperLinesOffset: number;
@@ -289,6 +290,7 @@ export class EngravingRules {
         this.betweenKeySymbolsDistance = 0.2;
         this.keyRightMargin = 0.75;
         this.rhythmRightMargin = 1.25;
+        this.showRhythmAgainAfterPartEndOrFinalBarline = true;
         this.inStaffClefScalingFactor = 0.8;
         this.distanceBetweenNaturalAndSymbolWhenCancelling = 0.4;
 
@@ -731,6 +733,12 @@ export class EngravingRules {
     }
     public set RhythmRightMargin(value: number) {
         this.rhythmRightMargin = value;
+    }
+    public get ShowRhythmAgainAfterPartEndOrFinalBarline(): boolean {
+        return this.showRhythmAgainAfterPartEndOrFinalBarline;
+    }
+    public set ShowRhythmAgainAfterPartEndOrFinalBarline(value: boolean) {
+        this.showRhythmAgainAfterPartEndOrFinalBarline = value;
     }
     public get InStaffClefScalingFactor(): number {
         return this.inStaffClefScalingFactor;

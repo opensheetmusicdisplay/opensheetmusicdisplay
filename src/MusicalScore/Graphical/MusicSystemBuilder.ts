@@ -90,9 +90,14 @@ export class MusicSystemBuilder {
             const measureStartLine: SystemLinesEnum = this.getMeasureStartLine();
             currentMeasureBeginInstructionsWidth += this.getLineWidth(graphicalMeasures[0], measureStartLine, isSystemStartMeasure);
             if (!this.leadSheet) {
+                let forceShowRhythm: boolean = false;
+                if (prevMeasureEndsPart && this.rules.ShowRhythmAgainAfterPartEndOrFinalBarline) {
+                    forceShowRhythm = true;
+                }
                 currentMeasureBeginInstructionsWidth += this.addBeginInstructions(  graphicalMeasures,
                                                                                     isSystemStartMeasure,
-                                                                                    isFirstSourceMeasure || prevMeasureEndsPart);
+                                                                                    isFirstSourceMeasure || forceShowRhythm);
+                // forceShowRhythm could be a fourth parameter instead in addBeginInstructions, but only affects RhythmInstruction for now.
                 currentMeasureEndInstructionsWidth += this.addEndInstructions(graphicalMeasures);
             }
             let currentMeasureVarWidth: number = 0;
@@ -129,12 +134,13 @@ export class MusicSystemBuilder {
                 if (sourceMeasureEndsPart) {
                     this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, true);
                 }
+                prevMeasureEndsPart = sourceMeasureEndsPart;
             } else {
                 // finalize current system and prepare a new one
                 this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, false, doXmlPageBreak);
                 // don't increase measure index to check this measure now again
+                // don't set prevMeasureEndsPart in this case! because we will loop with the same measure again.
             }
-            prevMeasureEndsPart = sourceMeasureEndsPart;
         }
         if (this.currentSystemParams.systemMeasures.length > 0) {
             this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true);
