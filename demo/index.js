@@ -29,6 +29,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
             "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
             "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
+            "OSMD Function Test - Drums on one Line": "OSMD_Function_Test_Drums_one_line_snare_plus_piano.musicxml", 
             "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
             "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
@@ -382,12 +383,14 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         if (skylineDebug) {
             skylineDebug.onclick = function () {
                 openSheetMusicDisplay.DrawSkyLine = !openSheetMusicDisplay.DrawSkyLine;
+                openSheetMusicDisplay.render();
             }
         }
 
         if (bottomlineDebug) {
             bottomlineDebug.onclick = function () {
                 openSheetMusicDisplay.DrawBottomLine = !openSheetMusicDisplay.DrawBottomLine;
+                openSheetMusicDisplay.render();
             }
         }
 
@@ -436,7 +439,6 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 //groups: [[3,4], [1,1]],
                 maintain_stem_directions: false
             },
-
             pageFormat: pageFormat,
             pageBackgroundColor: pageBackgroundColor,
             renderSingleHorizontalStaffline: singleHorizontalStaffline

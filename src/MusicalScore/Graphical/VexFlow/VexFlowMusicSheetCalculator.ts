@@ -47,7 +47,8 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
-import { EngravingRules } from "..";
+import { EngravingRules } from "../EngravingRules";
+import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -59,10 +60,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     this.rules = rules;
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
+    MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
   }
 
   protected clearRecreatedObjects(): void {
     super.clearRecreatedObjects();
+    MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
         (<VexFlowMeasure>graphicalMeasure).clean();
@@ -501,7 +504,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       absoluteTimestamp,
       staffIndex,
       staffLine,
-      staffLine.isPartOfMultiStaffInstrument());
+      staffLine?.isPartOfMultiStaffInstrument());
 
     const dynamicStartPosition: PointF2D = startPosInStaffline;
     if (startPosInStaffline.x <= 0) {
@@ -519,7 +522,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
       const graphicalContinuousDynamic: VexFlowContinuousDynamicExpression = new VexFlowContinuousDynamicExpression(
         multiExpression.StartingContinuousDynamic,
-        staffLine);
+        staffLine,
+        startMeasure.parentSourceMeasure);
       graphicalContinuousDynamic.StartMeasure = startMeasure;
 
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
@@ -720,26 +724,25 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
   }
 
-  protected calculateMoodAndUnknownExpression(multiExpression: MultiExpression, measureIndex: number, staffIndex: number): void {
-    return;
-  }
-
   /**
    * Re-adjust the x positioning of expressions. Update the skyline afterwards
    */
   protected calculateExpressionAlignements(): void {
     for (const musicSystem of this.musicSystems) {
-            for (const staffLine of musicSystem.StaffLines) {
-              try {
-                (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
-                staffLine.AbstractExpressions.forEach(ae => ae.updateSkyBottomLine());
-              } catch (e) {
-                // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
-                //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
+      for (const staffLine of musicSystem.StaffLines) {
+        try {
+          (<VexFlowStaffLine>staffLine).AlignmentManager.alignDynamicExpressions();
+          staffLine.AbstractExpressions.forEach(ae => {
+            ae.updateSkyBottomLine();
+          });
+        } catch (e) {
+          // TODO still necessary when calculation of expression fails, see calculateDynamicExpressionsForMultiExpression()
+          //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
         }
+      }
     }
   }
-  }
+
 
   /**
    * Check if the tied graphical note belongs to any beams or tuplets and react accordingly.

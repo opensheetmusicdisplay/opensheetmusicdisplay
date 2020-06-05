@@ -107,6 +107,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
         });
+
+        if (this.ParentStaff !== undefined) {
+            this.setLineNumber(this.ParentStaff.StafflineCount);
+        }
         // constructor sets beginning and end bar type to standard
 
         this.stave.setBegBarType(Vex.Flow.Barline.type.NONE); // technically not correct, but we'd need to set the next measure's beginning bar type
@@ -165,6 +169,64 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.stave.addClef(vfclef.type, vfclef.size, vfclef.annotation, Vex.Flow.StaveModifier.Position.BEGIN);
         }
         this.updateInstructionWidth();
+    }
+
+    /**
+     * Sets the number of stafflines that are rendered, so that they are centered properly
+     * @param lineNumber
+     */
+    public setLineNumber(lineNumber: number): void {
+        if (lineNumber !== 5) {
+            if (lineNumber === 0) {
+                (this.stave as any).setNumLines(0);
+                this.stave.getBottomLineY = function(): number {
+                    return this.getYForLine(this.options.num_lines);
+                };
+            } else if (lineNumber === 1) {
+                // Vex.Flow.Stave.setNumLines hides all but the top line.
+                // this is better
+                (this.stave.options as any).line_config = [
+                    { visible: false },
+                    { visible: false },
+                    { visible: true }, // show middle
+                    { visible: false },
+                    { visible: false },
+                ];
+                //quick fix to see if this matters for calculation. Doesn't seem to
+                this.stave.getBottomLineY = function(): number {
+                    return this.getYForLine(2);
+                };
+                //lines (which isn't this case here)
+                //this.stave.options.num_lines = parseInt(lines, 10);
+            } else if (lineNumber === 2) {
+                (this.stave.options as any).line_config = [
+                    { visible: false },
+                    { visible: false },
+                    { visible: true }, // show middle
+                    { visible: true },
+                    { visible: false },
+                ];
+                this.stave.getBottomLineY = function(): number {
+                    return this.getYForLine(3);
+                };
+            } else if (lineNumber === 3) {
+                (this.stave.options as any).line_config = [
+                    { visible: false },
+                    { visible: true },
+                    { visible: true }, // show middle
+                    { visible: true },
+                    { visible: false },
+                ];
+                this.stave.getBottomLineY = function(): number {
+                    return this.getYForLine(2);
+                };
+            } else {
+                (this.stave as any).setNumLines(lineNumber);
+                this.stave.getBottomLineY = function(): number {
+                    return this.getYForLine(this.options.num_lines);
+                };
+            }
+        }
     }
 
     /**
@@ -1179,6 +1241,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(fingeringInstruction.value);
             fretFinger.setPosition(modifierPosition);
+            fretFinger.setOffsetX(this.rules.FingeringOffsetX);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
                 const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
                 const ordering: number = fingeringPosition === PlacementEnum.Above ? fingeringIndex :
@@ -1188,7 +1251,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // set y-shift. vexflow fretfinger simply places directly above/below note
                     const perFingeringShift: number = fretFinger.getWidth() / 2;
                     const shiftCount: number = fingeringsCount * 2.5;
-                    (<any>fretFinger).setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
+                    fretFinger.setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(fingeringInstruction.value);
                     (<any>stringNumber).radius = 0; // hack to remove the circle around the number

@@ -366,7 +366,13 @@ export class OpenSheetMusicDisplay {
                 }
             }
         }
-
+        if (options.percussionOneLineCutoff !== undefined) {
+            this.rules.PercussionOneLineCutoff = options.percussionOneLineCutoff;
+        }
+        if (this.rules.PercussionOneLineCutoff !== 0 &&
+            options.percussionForceVoicesOneLineCutoff !== undefined) {
+            this.rules.PercussionForceVoicesOneLineCutoff = options.percussionForceVoicesOneLineCutoff;
+        }
         if (options.alignRests !== undefined) {
             this.rules.AlignRests = options.alignRests;
         }
@@ -831,7 +837,8 @@ export class OpenSheetMusicDisplay {
         this.drawSkyLine = value;
         if (this.drawer) {
             this.drawer.skyLineVisible = value;
-            this.render();
+            // this.render(); // note: we probably shouldn't automatically render when someone sets the setter
+            //   this can cause a lot of rendering time.
         }
     }
     public get DrawSkyLine(): boolean {
@@ -842,7 +849,8 @@ export class OpenSheetMusicDisplay {
         this.drawBottomLine = value;
         if (this.drawer) {
             this.drawer.bottomLineVisible = value;
-            this.render();
+            // this.render(); // note: we probably shouldn't automatically render when someone sets the setter
+            //   this can cause a lot of rendering time.
         }
     }
     public get DrawBottomLine(): boolean {

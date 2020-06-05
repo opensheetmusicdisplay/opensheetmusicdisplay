@@ -146,8 +146,8 @@ export class SkyBottomLineCalculator {
             log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
         }
         // Remap the values from 0 to +/- height in units
-        this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels);
-        this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + this.StaffLineParent.StaffHeight);
+        this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels + this.StaffLineParent.TopLineOffset);
+        this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + this.StaffLineParent.BottomLineOffset);
     }
 
     /**
@@ -166,8 +166,8 @@ export class SkyBottomLineCalculator {
 
     /**
      * This method updates the SkyLine for a given Wedge.
-     * @param start Start point of the wedge
-     * @param end End point of the wedge
+     * @param start Start point of the wedge (the point where both lines meet)
+     * @param end End point of the wedge (the end of the most extreme line: upper line for skyline, lower line for bottomline)
      */
     public updateSkyLineWithWedge(start: PointF2D, end: PointF2D): void {
         // FIXME: Refactor if wedges will be added. Current status is that vexflow will be used for this

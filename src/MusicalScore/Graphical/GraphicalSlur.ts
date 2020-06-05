@@ -566,32 +566,35 @@ export class GraphicalSlur extends GraphicalCurve {
         const startStaffEntry: GraphicalStaffEntry = this.staffEntries[0];
         const endStaffEntry: GraphicalStaffEntry = this.staffEntries[this.staffEntries.length - 1];
 
-        // Deactivated: single Voice, opposite to StemDirection
-        // if (startStaffEntry.hasStem() && endStaffEntry.hasStem() && startStaffEntry.getStemDirection() === endStaffEntry.getStemDirection()) {
-        //     this.placement = (startStaffEntry.getStemDirection() === StemDirectionType.Up) ? PlacementEnum.Below : PlacementEnum.Above;
-        // } else {
+        // single Voice, opposite to StemDirection
+        // here should only be one voiceEntry, so we can take graphicalVoiceEntries[0]:
+        const startStemDirection: StemDirectionType = startStaffEntry.graphicalVoiceEntries[0].parentVoiceEntry.StemDirection;
+        const endStemDirection: StemDirectionType = endStaffEntry.graphicalVoiceEntries[0].parentVoiceEntry.StemDirection;
+        if (startStemDirection  ===
+            endStemDirection) {
+            this.placement = (startStemDirection === StemDirectionType.Up) ? PlacementEnum.Below : PlacementEnum.Above;
+        } else {
+            // Placement at the side with the minimum border
+            let sX: number = startStaffEntry.PositionAndShape.BorderLeft + startStaffEntry.PositionAndShape.RelativePosition.x
+                        + startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+            let eX: number = endStaffEntry.PositionAndShape.BorderRight + endStaffEntry.PositionAndShape.RelativePosition.x
+                        + endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
 
-        // Placement at the side with the minimum border
-        let sX: number = startStaffEntry.PositionAndShape.BorderLeft + startStaffEntry.PositionAndShape.RelativePosition.x
-                    + startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
-        let eX: number = endStaffEntry.PositionAndShape.BorderRight + endStaffEntry.PositionAndShape.RelativePosition.x
-                    + endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
+            if (this.graceStart) {
+                sX += endStaffEntry.PositionAndShape.RelativePosition.x;
+            }
+            if (this.graceEnd) {
+                eX += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
+            }
 
-        if (this.graceStart) {
-            sX += endStaffEntry.PositionAndShape.RelativePosition.x;
+            // get SkyBottomLine borders
+            const minAbove: number = skyBottomLineCalculator.getSkyLineMinInRange(sX, eX) * -1;
+            const maxBelow: number = skyBottomLineCalculator.getBottomLineMaxInRange(sX, eX) - staffLine.StaffHeight;
+
+            if (maxBelow > minAbove) {
+                this.placement = PlacementEnum.Above;
+            } else { this.placement = PlacementEnum.Below; }
         }
-        if (this.graceEnd) {
-            eX += endStaffEntry.staffEntryParent.PositionAndShape.RelativePosition.x;
-        }
-
-        // get SkyBottomLine borders
-        const minAbove: number = skyBottomLineCalculator.getSkyLineMinInRange(sX, eX) * -1;
-        const maxBelow: number = skyBottomLineCalculator.getBottomLineMaxInRange(sX, eX) - staffLine.StaffHeight;
-
-        if (maxBelow > minAbove) {
-            this.placement = PlacementEnum.Above;
-        } else { this.placement = PlacementEnum.Below; }
-        //}
     }
 
     /**

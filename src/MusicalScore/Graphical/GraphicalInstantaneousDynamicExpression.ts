@@ -11,7 +11,7 @@ export class GraphicalInstantaneousDynamicExpression extends AbstractGraphicalEx
     protected mMeasure: GraphicalMeasure;
 
     constructor(instantaneousDynamic: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
-        super(staffLine, instantaneousDynamic);
+        super(staffLine, instantaneousDynamic, measure.parentSourceMeasure);
         this.mInstantaneousDynamicExpression = instantaneousDynamic;
         this.mMeasure = measure;
     }

@@ -41,7 +41,7 @@ export class EngravingRules {
     private staffDistance: number;
     private betweenStaffDistance: number;
     private staffHeight: number;
-    private tabStaffHeight: number;
+    private tabStaffInterlineHeight: number;
     private betweenStaffLinesDistance: number;
     /** Whether to automatically beam notes that don't already have beams in XML. */
     private autoBeamNotes: boolean;
@@ -52,6 +52,8 @@ export class EngravingRules {
     private beamForwardLength: number;
     private clefLeftMargin: number;
     private clefRightMargin: number;
+    private percussionOneLineCutoff: number;
+    private percussionForceVoicesOneLineCutoff: number;
     private betweenKeySymbolsDistance: number;
     private keyRightMargin: number;
     private rhythmRightMargin: number;
@@ -91,7 +93,6 @@ export class EngravingRules {
     private chordSymbolTextHeight: number;
     private chordSymbolXSpacing: number;
     private chordSymbolYOffset: number;
-    private fingeringLabelFontHeight: number;
     private measureNumberLabelHeight: number;
     private measureNumberLabelOffset: number;
     /** Whether tuplets should display ratio (3:2 instead of 3 for triplet). Default false. */
@@ -218,6 +219,8 @@ export class EngravingRules {
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     private fingeringPosition: PlacementEnum;
     private fingeringInsideStafflines: boolean;
+    private fingeringLabelFontHeight: number;
+    private fingeringOffsetX: number;
     private newSystemAtXMLNewSystemAttribute: boolean;
     private newPageAtXMLNewPageAttribute: boolean;
     private pageFormat: PageFormat;
@@ -254,7 +257,7 @@ export class EngravingRules {
 
         // System Sizing and Label Variables
         this.staffHeight = 4.0;
-        this.tabStaffHeight = 6.67;
+        this.tabStaffInterlineHeight = 1.1111;
         this.betweenStaffLinesDistance = EngravingRules.unit;
         this.systemLeftMargin = 0.0;
         this.systemRightMargin = 0.0;
@@ -281,6 +284,8 @@ export class EngravingRules {
         // Beam Sizing Variables
         this.clefLeftMargin = 0.5;
         this.clefRightMargin = 0.75;
+        this.percussionOneLineCutoff = 4;
+        this.percussionForceVoicesOneLineCutoff = 3;
         this.betweenKeySymbolsDistance = 0.2;
         this.keyRightMargin = 0.75;
         this.rhythmRightMargin = 1.25;
@@ -333,7 +338,6 @@ export class EngravingRules {
         this.chordSymbolTextHeight = 2.0;
         this.chordSymbolXSpacing = 1.0;
         this.chordSymbolYOffset = 2.0;
-        this.fingeringLabelFontHeight = 1.7;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.measureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -453,6 +457,8 @@ export class EngravingRules {
         this.renderLyrics = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
+        this.fingeringLabelFontHeight = 1.7;
+        this.fingeringOffsetX = 0.0;
         this.newSystemAtXMLNewSystemAttribute = false;
         this.newPageAtXMLNewPageAttribute = false;
         this.restoreCursorAfterRerender = true;
@@ -642,11 +648,11 @@ export class EngravingRules {
     public set StaffHeight(value: number) {
         this.staffHeight = value;
     }
-    public get TabStaffHeight(): number {
-        return this.tabStaffHeight;
+    public get TabStaffInterlineHeight(): number {
+        return this.tabStaffInterlineHeight;
     }
-    public set TabStaffHeight(value: number) {
-        this.tabStaffHeight = value;
+    public set TabStaffInterlineHeight(value: number) {
+        this.tabStaffInterlineHeight = value;
     }
     public get BetweenStaffLinesDistance(): number {
         return this.betweenStaffLinesDistance;
@@ -701,6 +707,18 @@ export class EngravingRules {
     }
     public set ClefRightMargin(value: number) {
         this.clefRightMargin = value;
+    }
+    public get PercussionOneLineCutoff(): number {
+        return this.percussionOneLineCutoff;
+    }
+    public set PercussionOneLineCutoff(value: number) {
+        this.percussionOneLineCutoff = value;
+    }
+    public get PercussionForceVoicesOneLineCutoff(): number {
+        return this.percussionForceVoicesOneLineCutoff;
+    }
+    public set PercussionForceVoicesOneLineCutoff(value: number) {
+        this.percussionForceVoicesOneLineCutoff = value;
     }
     public get KeyRightMargin(): number {
         return this.keyRightMargin;
@@ -935,12 +953,6 @@ export class EngravingRules {
     }
     public set ChordSymbolYOffset(value: number) {
         this.chordSymbolYOffset = value;
-    }
-    public get FingeringLabelFontHeight(): number {
-        return this.fingeringLabelFontHeight;
-    }
-    public set FingeringLabelFontHeight(value: number) {
-        this.fingeringLabelFontHeight = value;
     }
     public get MeasureNumberLabelHeight(): number {
         return this.measureNumberLabelHeight;
@@ -1602,6 +1614,18 @@ export class EngravingRules {
     }
     public set FingeringInsideStafflines(value: boolean) {
         this.fingeringInsideStafflines = value;
+    }
+    public get FingeringLabelFontHeight(): number {
+        return this.fingeringLabelFontHeight;
+    }
+    public set FingeringLabelFontHeight(value: number) {
+        this.fingeringLabelFontHeight = value;
+    }
+    public get FingeringOffsetX(): number {
+        return this.fingeringOffsetX;
+    }
+    public set FingeringOffsetX(value: number) {
+        this.fingeringOffsetX = value;
     }
     public get NewSystemAtXMLNewSystemAttribute(): boolean {
         return this.newSystemAtXMLNewSystemAttribute;

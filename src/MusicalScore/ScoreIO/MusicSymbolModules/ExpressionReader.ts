@@ -3,7 +3,7 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {MultiTempoExpression} from "../../VoiceData/Expressions/MultiTempoExpression";
 import {ContDynamicEnum, ContinuousDynamicExpression} from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import {ContinuousTempoExpression} from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousTempoExpression";
-import {DynamicEnum, InstantaneousDynamicExpression} from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
+import {InstantaneousDynamicExpression} from "../../VoiceData/Expressions/InstantaneousDynamicExpression";
 import {OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import {Instrument} from "../../Instrument";
 import {MultiExpression} from "../../VoiceData/Expressions/MultiExpression";
@@ -308,34 +308,42 @@ export class ExpressionReader {
                 expressionText = dynamicsNode.elements()[0].value;
             }
             if (expressionText !== undefined) {
-                let dynamicEnum: DynamicEnum;
-                try {
-                    dynamicEnum = DynamicEnum[expressionText];
-                } catch (err) {
-                    const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DynamicError", "Error while reading dynamic.");
-                    this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
-                    return;
+                // // ToDo: add doublettes recognition again as a afterReadingModule, as we can't check here if there is a repetition:
+                // // Make here a comparison with the active dynamic expression and only add it, if there is a change in dynamic
+                // // Exception is when there starts a repetition, where this might be different when repeating.
+                // // see PR #767 where this was removed
+                // let dynamicEnum: DynamicEnum;
+                // try {
+                //     dynamicEnum = DynamicEnum[expressionText];
+                // } catch (err) {
+                //     const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/DynamicError", "Error while reading dynamic.");
+                //     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+                //     return;
+                // }
+                // if (this.activeInstantaneousDynamic === undefined ||
+                //     (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.DynEnum !== dynamicEnum)) {
+                if (!fromNotation) {
+                    this.createNewMultiExpressionIfNeeded(currentMeasure);
+                } else { this.createNewMultiExpressionIfNeeded(currentMeasure, Fraction.createFromFraction(inSourceMeasureCurrentFraction)); }
+                if (this.openContinuousDynamicExpression !== undefined &&
+                    this.openContinuousDynamicExpression.StartMultiExpression !== this.getMultiExpression) {
+                    this.closeOpenContinuousDynamic();
                 }
-
-                if (this.activeInstantaneousDynamic === undefined ||
-                    (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.DynEnum !== dynamicEnum)) {
-                    if (!fromNotation) {
-                        this.createNewMultiExpressionIfNeeded(currentMeasure);
-                    } else { this.createNewMultiExpressionIfNeeded(currentMeasure, Fraction.createFromFraction(inSourceMeasureCurrentFraction)); }
-                    if (this.openContinuousDynamicExpression !== undefined &&
-                        this.openContinuousDynamicExpression.StartMultiExpression !== this.getMultiExpression) {
-                        this.closeOpenContinuousDynamic();
-                    }
-                    const instantaneousDynamicExpression: InstantaneousDynamicExpression = new InstantaneousDynamicExpression(expressionText,
-                                                                                                                              this.soundDynamic,
-                                                                                                                              this.placement,
-                                                                                                                              this.staffNumber);
-                    this.getMultiExpression.addExpression(instantaneousDynamicExpression, "");
-                    this.initialize();
-                    if (this.activeInstantaneousDynamic !== undefined) {
-                        this.activeInstantaneousDynamic.DynEnum = instantaneousDynamicExpression.DynEnum;
-                    } else { this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(expressionText, 0, PlacementEnum.NotYetDefined, 1); }
+                const instantaneousDynamicExpression: InstantaneousDynamicExpression =
+                    new InstantaneousDynamicExpression(
+                        expressionText,
+                        this.soundDynamic,
+                        this.placement,
+                        this.staffNumber,
+                        currentMeasure);
+                this.getMultiExpression.addExpression(instantaneousDynamicExpression, "");
+                this.initialize();
+                if (this.activeInstantaneousDynamic !== undefined) {
+                    this.activeInstantaneousDynamic.DynEnum = instantaneousDynamicExpression.DynEnum;
+                } else {
+                    this.activeInstantaneousDynamic = new InstantaneousDynamicExpression(expressionText, 0, PlacementEnum.NotYetDefined, 1, currentMeasure);
                 }
+                //}
             }
         }
     }
@@ -357,7 +365,7 @@ export class ExpressionReader {
             this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
         }
         this.createNewMultiExpressionIfNeeded(currentMeasure);
-        this.addWedge(wedgeNode, currentMeasureIndex);
+        this.addWedge(wedgeNode, currentMeasure);
         this.initialize();
     }
     private createNewMultiExpressionIfNeeded(currentMeasure: SourceMeasure, timestamp: Fraction = undefined): void {
@@ -381,13 +389,17 @@ export class ExpressionReader {
             currentMeasure.TempoExpressions.push(this.currentMultiTempoExpression);
         }
     }
-    private addWedge(wedgeNode: IXmlElement, currentMeasureIndex: number): void {
+    private addWedge(wedgeNode: IXmlElement, currentMeasure: SourceMeasure): void {
         if (wedgeNode !== undefined && wedgeNode.hasAttributes) {
             const type: string = wedgeNode.attribute("type").value.toLowerCase();
             try {
                 if (type === "crescendo" || type === "diminuendo") {
-                    const continuousDynamicExpression: ContinuousDynamicExpression = new ContinuousDynamicExpression(ContDynamicEnum[type],
-                                                                                                                     this.placement, this.staffNumber);
+                    const continuousDynamicExpression: ContinuousDynamicExpression =
+                        new ContinuousDynamicExpression(
+                            ContDynamicEnum[type],
+                            this.placement,
+                            this.staffNumber,
+                            currentMeasure);
                     if (this.openContinuousDynamicExpression !== undefined) {
                         this.closeOpenContinuousDynamic();
                     }
@@ -416,11 +428,11 @@ export class ExpressionReader {
         }
         const tmpInputString: string = inputString.trim();
         // split string at enumerating words or signs
-        const splitStrings: string[] = tmpInputString.split(/([\s,\r\n]and[\s,\r\n]|[\s,\r\n]und[\s,\r\n]|[\s,\r\n]e[\s,\r\n]|[\s,\r\n])+/g);
+        //const splitStrings: string[] = tmpInputString.split(/([\s,\r\n]and[\s,\r\n]|[\s,\r\n]und[\s,\r\n]|[\s,\r\n]e[\s,\r\n]|[\s,\r\n])+/g);
 
-        for (const splitStr of splitStrings) {
-            this.createExpressionFromString("", splitStr, currentMeasure, inputString);
-        }
+        //for (const splitStr of splitStrings) {
+        this.createExpressionFromString("", tmpInputString, currentMeasure, inputString);
+        //}
     }
     /*
     private splitStringRecursive(input: [string, string], stringSeparators: string[]): [string, string][] {
@@ -492,18 +504,24 @@ export class ExpressionReader {
                 if (this.openContinuousDynamicExpression !== undefined && this.openContinuousDynamicExpression.EndMultiExpression === undefined) {
                     this.closeOpenContinuousDynamic();
                 }
-                const instantaneousDynamicExpression: InstantaneousDynamicExpression = new InstantaneousDynamicExpression(stringTrimmed,
-                                                                                                                          this.soundDynamic,
-                                                                                                                          this.placement,
-                                                                                                                          this.staffNumber);
+                const instantaneousDynamicExpression: InstantaneousDynamicExpression =
+                    new InstantaneousDynamicExpression(
+                        stringTrimmed,
+                        this.soundDynamic,
+                        this.placement,
+                        this.staffNumber,
+                        currentMeasure);
                 this.getMultiExpression.addExpression(instantaneousDynamicExpression, prefix);
                 return true;
             }
             if (ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
-                const continuousDynamicExpression: ContinuousDynamicExpression = new ContinuousDynamicExpression( undefined,
-                                                                                                                  this.placement,
-                                                                                                                  this.staffNumber,
-                                                                                                                  stringTrimmed);
+                const continuousDynamicExpression: ContinuousDynamicExpression =
+                    new ContinuousDynamicExpression(
+                        undefined,
+                        this.placement,
+                        this.staffNumber,
+                        currentMeasure,
+                        stringTrimmed);
                 if (this.openContinuousDynamicExpression !== undefined && this.openContinuousDynamicExpression.EndMultiExpression === undefined) {
                     this.closeOpenContinuousDynamic();
                 }
@@ -525,6 +543,7 @@ export class ExpressionReader {
 
         // create unknown:
         this.createNewMultiExpressionIfNeeded(currentMeasure);
+        // check here first if there might be a tempo expression doublette:
         if (currentMeasure.TempoExpressions.length > 0) {
             for (let idx: number = 0, len: number = currentMeasure.TempoExpressions.length; idx < len; ++idx) {
                 const multiTempoExpression: MultiTempoExpression = currentMeasure.TempoExpressions[idx];
@@ -532,9 +551,11 @@ export class ExpressionReader {
                     multiTempoExpression.InstantaneousTempo !== undefined &&
                     multiTempoExpression.EntriesList.length > 0 &&
                     !this.hasDigit(stringTrimmed)) {
-                    if (this.globalStaffIndex > 0) {
-                        if (multiTempoExpression.EntriesList[0].label.indexOf(stringTrimmed) >= 0) {
-                            return false;
+                        // if at other parts of the score
+                        if (this.globalStaffIndex > 0) {
+                            // don't add duplicate TempoExpression
+                            if (multiTempoExpression.EntriesList[0].label.indexOf(stringTrimmed) >= 0) {
+                                return false;
                         } else {
                             break;
                         }

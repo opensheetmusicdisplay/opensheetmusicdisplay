@@ -442,7 +442,7 @@ export class MusicSystemBuilder {
                 if (abstractNotationInstruction instanceof ClefInstruction) {
                     currentClef = <ClefInstruction>abstractNotationInstruction;
                 } else if (abstractNotationInstruction instanceof KeyInstruction) {
-                    currentKey = KeyInstruction.copy(<KeyInstruction>abstractNotationInstruction);
+                    currentKey = <KeyInstruction>abstractNotationInstruction;
                 } else if (abstractNotationInstruction instanceof RhythmInstruction) {
                     currentRhythm = <RhythmInstruction>abstractNotationInstruction;
                 }
@@ -453,7 +453,7 @@ export class MusicSystemBuilder {
                 currentClef = this.activeClefs[visibleStaffIdx];
             }
             if (currentKey === undefined) {
-                currentKey = KeyInstruction.copy(this.activeKeys[visibleStaffIdx]);
+                currentKey = this.activeKeys[visibleStaffIdx];
             }
             if (isFirstSourceMeasure && currentRhythm === undefined) {
                 currentRhythm = this.activeRhythm[visibleStaffIdx];

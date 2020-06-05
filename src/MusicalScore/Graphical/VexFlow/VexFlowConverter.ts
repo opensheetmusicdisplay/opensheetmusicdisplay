@@ -207,6 +207,28 @@ export class VexFlowConverter {
                     xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
                     // affects VexFlowStaffEntry.calculateXPosition()
                 }
+                if (note.sourceNote.ParentStaff.Voices.length > 1) {
+                    let visibleVoiceEntries: number = 0;
+                    //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
+                    for (let idx: number = 0; idx < note.sourceNote.ParentStaffEntry.VoiceEntries.length ; idx++) {
+                        if (note.sourceNote.ParentStaffEntry.VoiceEntries[idx].Notes[0].PrintObject) {
+                            visibleVoiceEntries++;
+                        }
+                    }
+                    //If we have more than one visible voice entry, shift the rests so no collision occurs
+                    if (visibleVoiceEntries > 1) {
+                        switch (note.sourceNote.ParentVoiceEntry?.ParentVoice?.VoiceId) {
+                            case 1:
+                                keys = ["e/5"];
+                                break;
+                            case 2:
+                                keys = ["f/4"];
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
                 break;
             }
 

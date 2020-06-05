@@ -4,6 +4,7 @@ import { StaffLine } from "./StaffLine";
 import { BoundingBox } from "./BoundingBox";
 import { AbstractExpression, PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { EngravingRules } from "./EngravingRules";
+import { SourceMeasure } from "../VoiceData";
 
 export abstract class AbstractGraphicalExpression extends GraphicalObject {
     protected label: GraphicalLabel;
@@ -12,10 +13,12 @@ export abstract class AbstractGraphicalExpression extends GraphicalObject {
     protected expression: AbstractExpression;
     /** EngravingRules for positioning */
     protected rules: EngravingRules;
+    protected parentMeasure: SourceMeasure;
 
-    constructor(parentStaffline: StaffLine, expression: AbstractExpression) {
+    constructor(parentStaffline: StaffLine, expression: AbstractExpression, measure: SourceMeasure) {
         super();
         this.expression = expression;
+        this.parentMeasure = measure; // could be undefined!
         this.boundingBox = new BoundingBox(this, parentStaffline.PositionAndShape);
         this.parentStaffLine = parentStaffline;
         this.parentStaffLine.AbstractExpressions.push(this);
