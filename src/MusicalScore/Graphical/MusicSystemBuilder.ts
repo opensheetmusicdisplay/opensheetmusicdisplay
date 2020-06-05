@@ -915,38 +915,6 @@ export class MusicSystemBuilder {
     }
 
     /**
-     * This method checks the distances between any two consecutive StaffLines of a System and if needed, shifts the lower one down.
-     * @param musicSystem
-     */
-    protected optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
-        // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
-        if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
-            for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
-                const upperBottomLine: number[] = musicSystem.StaffLines[i].BottomLine;
-                const lowerSkyline: number[] = musicSystem.StaffLines[i + 1].SkyLine;
-                // 1. Find maximum required space for sky bottom line touching each other
-                let maxDistance: number = 0;
-                for (let j: number = 0; j < upperBottomLine.length; j++) {
-                    const bottomLineValue: number = upperBottomLine[j];
-                    const skylineValue: number = lowerSkyline[j];
-                    const distance: number = bottomLineValue - skylineValue;
-                    maxDistance = Math.max(distance, maxDistance);
-                }
-                // 2. Add user defined distance between sky bottom line
-                maxDistance += this.rules.MinimumSkyBottomLineDistance;
-                // 3. Take the maximum between previous value and user defined value for staff line minimum distance
-                maxDistance = Math.max(maxDistance, this.rules.StaffHeight + this.rules.MinimumStaffLineDistance);
-                const lowerStafflineYPos: number = maxDistance + musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y;
-                this.updateStaffLinesRelativePosition(musicSystem, i + 1, lowerStafflineYPos);
-            }
-        }
-        const firstStaffLine: StaffLine = musicSystem.StaffLines[0];
-        musicSystem.PositionAndShape.BorderTop = firstStaffLine.PositionAndShape.RelativePosition.y + firstStaffLine.PositionAndShape.BorderTop;
-        const lastStaffLine: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
-        musicSystem.PositionAndShape.BorderBottom = lastStaffLine.PositionAndShape.RelativePosition.y + lastStaffLine.PositionAndShape.BorderBottom;
-    }
-
-    /**
      * This method updates the System's StaffLine's RelativePosition (starting from the given index).
      * @param musicSystem
      * @param index
@@ -982,6 +950,46 @@ export class MusicSystemBuilder {
         system.Parent = page;
     }
 
+    /**
+     * This method checks the distances between any two consecutive StaffLines of a System and if needed, shifts the lower one down.
+     * @param musicSystem
+     */
+    protected optimizeDistanceBetweenStaffLines(musicSystem: MusicSystem): void {
+        // don't perform any y-spacing in case of a StaffEntryLink (in both StaffLines)
+        if (!musicSystem.checkStaffEntriesForStaffEntryLink()) {
+            for (let i: number = 0; i < musicSystem.StaffLines.length - 1; i++) {
+                const upperBottomLine: number[] = musicSystem.StaffLines[i].BottomLine;
+                const lowerSkyLine: number[] = musicSystem.StaffLines[i + 1].SkyLine;
+                // 1. Find maximum required space for sky bottom line touching each other
+                let maxDistance: number = 0;
+                for (let j: number = 0; j < upperBottomLine.length; j++) {
+                    const bottomLineValue: number = upperBottomLine[j];
+
+                    // look at a range of +/- 2 Units to also ensure that objects are also not too close in x-direction:
+                    const startIdx: number = Math.max(0, j - 6);
+                    const endIdx: number = Math.min(lowerSkyLine.length - 1, j + 6);
+                    let skylineValue: number = 0;
+                    for (let lowerIdx: number = startIdx; lowerIdx <= endIdx; lowerIdx++) {
+                        skylineValue = Math.min(skylineValue, lowerSkyLine[lowerIdx]);
+                    }
+
+                    const distance: number = bottomLineValue - skylineValue;
+                    maxDistance = Math.max(distance, maxDistance);
+                }
+                // 2. Add user defined distance between sky bottom line
+                maxDistance += this.rules.MinSkyBottomDistBetweenStaves;
+                // 3. Take the maximum between previous value and user defined value for staff line minimum distance
+                maxDistance = Math.max(maxDistance, this.rules.StaffHeight + this.rules.MinimumStaffLineDistance);
+                const lowerStafflineYPos: number = maxDistance + musicSystem.StaffLines[i].PositionAndShape.RelativePosition.y;
+                this.updateStaffLinesRelativePosition(musicSystem, i + 1, lowerStafflineYPos);
+            }
+        }
+        const firstStaffLine: StaffLine = musicSystem.StaffLines[0];
+        musicSystem.PositionAndShape.BorderTop = firstStaffLine.PositionAndShape.RelativePosition.y + firstStaffLine.PositionAndShape.BorderTop;
+        const lastStaffLine: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
+        musicSystem.PositionAndShape.BorderBottom = lastStaffLine.PositionAndShape.RelativePosition.y + lastStaffLine.PositionAndShape.BorderBottom;
+    }
+
     /** Calculates the relative Positions of all MusicSystems.
      *
      */
@@ -995,7 +1003,8 @@ export class MusicSystemBuilder {
         for (let i: number = 0; i < this.musicSystems.length; i++) {
             currentSystem = this.musicSystems[i];
             if (currentPage.MusicSystems.length === 0) {
-                // first system on the page:
+                // if this is the first system on the current page:
+                // take top margins into account
                 this.addSystemToPage(currentPage, currentSystem);
                 if (this.rules.CompactMode) {
                     currentYPosition = this.rules.PageTopMarginNarrow;
@@ -1003,18 +1012,20 @@ export class MusicSystemBuilder {
                     currentYPosition = this.rules.PageTopMargin;
                 }
 
-                // Handle Title for first System on the first page
+                // if it is the first System on the FIRST page: Add Title height and gap-distance
                 if (this.graphicalMusicSheet.MusicPages.length === 1 &&
                     this.rules.RenderTitle) {
                     currentYPosition +=   this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
                                             this.rules.TitleBottomDistance;
                 }
+                // now add the border-top: everything that stands out above the staffline:
                 currentYPosition += -currentSystem.PositionAndShape.BorderTop;
                 const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
                                                                 currentYPosition);
                 currentSystem.PositionAndShape.RelativePosition = relativePosition;
-                currentYPosition += currentSystem.PositionAndShape.BorderBottom;
-                if (currentYPosition > this.rules.PageHeight - this.rules.PageBottomMargin) { // can't fit single system on page, maybe PageFormat too small
+                // check if the first system doesn't even fit on the page -> would lead to truncation at bottom end:
+                if (currentYPosition + currentSystem.PositionAndShape.BorderBottom > this.rules.PageHeight - this.rules.PageBottomMargin) {
+                    // can't fit single system on page, maybe PageFormat too small
                     timesPageCouldntFitSingleSystem++;
                     if (timesPageCouldntFitSingleSystem <= 4) { // only warn once with detailed info
                         console.log(`warning: could not fit a single system on page ${currentPage.PageNumber}` +
@@ -1028,21 +1039,31 @@ export class MusicSystemBuilder {
                 // if this is not the first system on the page:
                 // find optimum distance between Systems
                 const previousSystem: MusicSystem = this.musicSystems[i - 1];
-                const previousStaffLineBB: BoundingBox = previousSystem.StaffLines[previousSystem.StaffLines.length - 1].PositionAndShape;
-                const currentStaffLineBB: BoundingBox = currentSystem.StaffLines[0].PositionAndShape;
-                let distance: number =  currentStaffLineBB.RelativePosition.y + previousStaffLineBB.BorderTop -
-                                        (previousStaffLineBB.RelativePosition.y + previousStaffLineBB.BorderBottom);
-                distance = Math.max(this.rules.MinimumDistanceBetweenSystems, distance);
-                const neededHeight: number = distance - currentSystem.PositionAndShape.BorderTop + currentSystem.PositionAndShape.BorderBottom;
+                const prevSystemLastStaffline: StaffLine = previousSystem.StaffLines[previousSystem.StaffLines.length - 1];
+                const prevSystemLastStaffLineBB: BoundingBox = prevSystemLastStaffline.PositionAndShape;
+                let distance: number =  this.findReqiredDistanceWithSkyBottomLine(previousSystem, currentSystem);
+
+                // make sure the optical distance is the user-defined min distance:
+                distance += this.rules.MinSkyBottomDistBetweenSystems;
+
+                distance = Math.max(distance, this.rules.MinimumDistanceBetweenSystems + prevSystemLastStaffline.StaffHeight);
+                const newYPosition: number =    currentYPosition +
+                                                prevSystemLastStaffLineBB.RelativePosition.y +
+                                                distance;
+
+                // calculate the needed height for placing the current system on the page,
+                // to see if it still fits:
+                const currSystemBottomYPos: number =    newYPosition +
+                                                        currentSystem.PositionAndShape.BorderMarginBottom;
                 const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && previousSystem.breaksPage;
                 if (!doXmlPageBreak &&
-                    (currentYPosition + neededHeight < this.rules.PageHeight - this.rules.PageBottomMargin)) {
+                    (currSystemBottomYPos < this.rules.PageHeight - this.rules.PageBottomMargin)) {
                     // enough space on this page:
                     this.addSystemToPage(currentPage, currentSystem);
+                    currentYPosition = newYPosition;
                     const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
-                                                                    currentYPosition + distance - currentSystem.PositionAndShape.BorderTop);
+                                                                    currentYPosition);
                     currentSystem.PositionAndShape.RelativePosition = relativePosition;
-                    currentYPosition += neededHeight;
                 } else {
                     // new page needed:
                     currentPage = this.createMusicPage();
@@ -1055,6 +1076,57 @@ export class MusicSystemBuilder {
         if (timesPageCouldntFitSingleSystem > 0) {
             console.log(`total amount of pages that couldn't fit a single music system: ${timesPageCouldntFitSingleSystem} of ${currentPage.PageNumber}`);
         }
+    }
+
+    /**
+     * Finds the minimum required distance between two systems
+     * with the help of the sky- and bottom lines
+     * @param upperSystem
+     * @param lowerSystem
+     */
+    private findReqiredDistanceWithSkyBottomLine(upperSystem: MusicSystem, lowerSystem: MusicSystem): number {
+        const upperSystemLastStaffLine: StaffLine = upperSystem.StaffLines[upperSystem.StaffLines.length - 1];
+        const lowerSystemFirstStaffLine: StaffLine = lowerSystem.StaffLines[0];
+        const upperBottomLineArray: number[] = upperSystemLastStaffLine.BottomLine;
+        const lowerSkyLineArray: number[] = lowerSystemFirstStaffLine.SkyLine;
+        const upperStaffLineBB: BoundingBox = upperSystemLastStaffLine.PositionAndShape;
+        const lowerStaffLineBB: BoundingBox = lowerSystemFirstStaffLine.PositionAndShape;
+        const skylinePixelWidth: number = 1 / this.rules.SamplingUnit;
+        // Find maximum required space for sky and bottom line touching each other
+        let maxDistance: number = 0;
+        for (let upperIdx: number = 0; upperIdx < upperBottomLineArray.length; upperIdx++) {
+            const bottomLineValue: number = upperBottomLineArray[upperIdx];
+            // find index of the same x-position in lower skyline:
+            const lowerCenterIdx: number =  upperIdx +
+                                            Math.round((upperStaffLineBB.RelativePosition.x - lowerStaffLineBB.RelativePosition.x) * skylinePixelWidth);
+            if (lowerCenterIdx < 0) {
+                // should actually not happen..
+                continue;
+            }
+            if (lowerCenterIdx >= lowerSkyLineArray.length) {
+                // lower system ends earlier x-wise than upper system (e.g. at last system, if it is not stretched)
+                break;
+            }
+
+            // look at a range of +/- 2 Units to also ensure that objects are also not too close in x-direction:
+            const startIdx: number = Math.max(0, lowerCenterIdx - 6);
+            const endIdx: number = Math.min(lowerSkyLineArray.length - 1, lowerCenterIdx + 6);
+            let skylineValue: number = 0;
+            for (let lowerIdx: number = startIdx; lowerIdx <= endIdx; lowerIdx++) {
+                skylineValue = Math.min(skylineValue, lowerSkyLineArray[lowerIdx]);
+            }
+
+            const distance: number = bottomLineValue - skylineValue;
+            maxDistance = Math.max(distance, maxDistance);
+        }
+
+        if (maxDistance === 0) {
+            // can only happen when the bottom- and skyline have no x-overlap at all:
+            // fall back to borders:
+            maxDistance = upperStaffLineBB.BorderBottom - lowerStaffLineBB.BorderTop;
+        }
+
+        return maxDistance;
     }
 }
 
