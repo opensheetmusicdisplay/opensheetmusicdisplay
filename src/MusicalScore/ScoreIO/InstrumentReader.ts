@@ -495,8 +495,7 @@ export class InstrumentReader {
           if (this.repetitionInstructionReader !== undefined) {
            const measureEndsSystem: boolean = this.repetitionInstructionReader.handleLineRepetitionInstructions(xmlNode);
            if (measureEndsSystem) {
-             this.currentMeasure.BreakSystemAfter = true;
-             this.currentMeasure.endsPiece = true;
+             this.currentMeasure.HasEndLine = true;
            }
           }
           const location: IXmlAttribute = xmlNode.attribute("location");
