@@ -55,6 +55,7 @@ export class MusicSystemBuilder {
 
     public buildMusicSystems(): MusicSystem[] {
         const systemMaxWidth: number = this.getFullPageSystemWidth();
+        let prevMeasureEndsPart: boolean = false;
         this.measureListIndex = 0;
         this.currentSystemParams = new SystemBuildParameters();
 
@@ -75,7 +76,7 @@ export class MusicSystemBuilder {
                 graphicalMeasures[idx].resetLayout();
             }
             const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
-            const sourceMeasureEndsSystem: boolean = sourceMeasure.BreakSystemAfter;
+            const sourceMeasureEndsPart: boolean = sourceMeasure.HasEndLine;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             const isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
             let currentMeasureBeginInstructionsWidth: number = this.rules.MeasureLeftMargin;
@@ -89,7 +90,14 @@ export class MusicSystemBuilder {
             const measureStartLine: SystemLinesEnum = this.getMeasureStartLine();
             currentMeasureBeginInstructionsWidth += this.getLineWidth(graphicalMeasures[0], measureStartLine, isSystemStartMeasure);
             if (!this.leadSheet) {
-                currentMeasureBeginInstructionsWidth += this.addBeginInstructions(graphicalMeasures, isSystemStartMeasure, isFirstSourceMeasure);
+                let forceShowRhythm: boolean = false;
+                if (prevMeasureEndsPart && this.rules.ShowRhythmAgainAfterPartEndOrFinalBarline) {
+                    forceShowRhythm = true;
+                }
+                currentMeasureBeginInstructionsWidth += this.addBeginInstructions(  graphicalMeasures,
+                                                                                    isSystemStartMeasure,
+                                                                                    isFirstSourceMeasure || forceShowRhythm);
+                // forceShowRhythm could be a fourth parameter instead in addBeginInstructions, but only affects RhythmInstruction for now.
                 currentMeasureEndInstructionsWidth += this.addEndInstructions(graphicalMeasures);
             }
             let currentMeasureVarWidth: number = 0;
@@ -123,13 +131,15 @@ export class MusicSystemBuilder {
                 );
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
-                if (sourceMeasureEndsSystem) {
+                if (sourceMeasureEndsPart) {
                     this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, true);
                 }
+                prevMeasureEndsPart = sourceMeasureEndsPart;
             } else {
                 // finalize current system and prepare a new one
                 this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, false, doXmlPageBreak);
                 // don't increase measure index to check this measure now again
+                // don't set prevMeasureEndsPart in this case! because we will loop with the same measure again.
             }
         }
         if (this.currentSystemParams.systemMeasures.length > 0) {

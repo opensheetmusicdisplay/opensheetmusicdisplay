@@ -27,8 +27,7 @@ export class SourceMeasure {
     constructor(completeNumberOfStaves: number, rules: EngravingRules) {
         this.completeNumberOfStaves = completeNumberOfStaves;
         this.implicitMeasure = false;
-        this.breakSystemAfter = false;
-        this.endsPiece = false;
+        this.hasEndLine = false;
         this.endingBarStyleXml = "";
         this.endingBarStyleEnum = SystemLinesEnum.SingleThin;
         this.firstInstructionsStaffEntries = new Array(completeNumberOfStaves);
@@ -45,10 +44,6 @@ export class SourceMeasure {
      * The unique measure list index starting with 0.
      */
     public measureListIndex: number;
-    /**
-     * The measure number for showing on the music sheet. Typically starts with 1.
-     */
-    public endsPiece: boolean;
     /**
      * The style of the ending bar line.
      */
@@ -68,7 +63,7 @@ export class SourceMeasure {
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
     private implicitMeasure: boolean;
-    private breakSystemAfter: boolean;
+    private hasEndLine: boolean;
     private graphicalMeasureErrors: boolean[] = [];
     private firstInstructionsStaffEntries: SourceStaffEntry[];
     private lastInstructionsStaffEntries: SourceStaffEntry[];
@@ -122,12 +117,12 @@ export class SourceMeasure {
         this.implicitMeasure = value;
     }
 
-    public get BreakSystemAfter(): boolean {
-        return this.breakSystemAfter;
+    public get HasEndLine(): boolean {
+        return this.hasEndLine;
     }
 
-    public set BreakSystemAfter(value: boolean) {
-        this.breakSystemAfter = value;
+    public set HasEndLine(value: boolean) {
+        this.hasEndLine = value;
     }
 
     public get StaffLinkedExpressions(): MultiExpression[][] {
