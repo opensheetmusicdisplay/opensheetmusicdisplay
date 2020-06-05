@@ -57,7 +57,11 @@ export interface IOSMDOptions {
     disableCursor?: boolean;
     /** Follow Cursor: Scroll the page when cursor.next() is called and the cursor moves into a new system outside of the current view frame. */
     followCursor?: boolean;
-    /** Broad Parameters like compact or preview mode. Also try "compacttight", which is like compact but also reduces margins. */
+    /** Broad Parameters like compact or preview mode.
+     * Also try "compacttight", which is like compact but also reduces margins.
+     * To see what this mode does and maybe adjust the spacing parameters yourself instead of using the mode,
+     * see DrawingParameters.ts:setForCompactTightMode().
+     */
     drawingParameters?: string | DrawingParametersEnum;
     /** Whether to draw credits (title, subtitle, composer, lyricist) (in future: copyright etc., see <credit>). */
     drawCredits?: boolean;
