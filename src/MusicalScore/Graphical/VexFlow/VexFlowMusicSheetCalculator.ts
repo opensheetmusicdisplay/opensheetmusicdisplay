@@ -663,11 +663,41 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
         remainingOctaveShift.setStartNote(firstNote);
         remainingOctaveShift.setEndNote(endStaffEntry);
+        this.calculateOctaveShiftSkyBottomLine(startStaffEntry, lastNote, graphicalOctaveShift, startStaffLine);
+        this.calculateOctaveShiftSkyBottomLine(firstNote, endStaffEntry, remainingOctaveShift, endStaffLine);
       } else {
         graphicalOctaveShift.setEndNote(endStaffEntry);
+        this.calculateOctaveShiftSkyBottomLine(startStaffEntry, endStaffEntry, graphicalOctaveShift, startStaffLine);
       }
     } else {
       log.warn("End measure or staffLines for octave shift are undefined! This should not happen!");
+    }
+  }
+
+  private calculateOctaveShiftSkyBottomLine(startStaffEntry: GraphicalStaffEntry, endStaffEntry: GraphicalStaffEntry,
+                                            vfOctaveShift: VexFlowOctaveShift, parentStaffline: StaffLine): void {
+
+    const startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startStaffEntry.PositionAndShape.Size.width / 2;
+    const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endStaffEntry.PositionAndShape.Size.width / 2;
+    vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
+    const textBracket: Vex.Flow.TextBracket = vfOctaveShift.getTextBracket();
+    const fontSize: number = (textBracket as any).font.size / 10;
+
+    if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
+      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
+      if (headroom === Infinity) { // will cause Vexflow error
+          return;
+      }
+      (textBracket.start.getStave().options as any).top_text_position = Math.abs(headroom);
+      parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
+    } else {
+        const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
+        if (footroom === Infinity) { // will cause Vexflow error
+            return;
+        }
+        (textBracket.start.getStave().options as any).bottom_text_position = footroom;
+        //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
+        parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
     }
   }
 
