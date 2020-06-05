@@ -28,8 +28,8 @@ export class RepetitionInstructionReader {
     this.currentMeasureIndex = currentMeasureIndex;
   }
 
-  public handleLineRepetitionInstructions(barlineNode: IXmlElement, pieceEndingDetected: boolean): void {
-    pieceEndingDetected = false;
+  public handleLineRepetitionInstructions(barlineNode: IXmlElement): boolean {
+    let pieceEndingDetected: boolean = false;
     if (barlineNode.elements().length > 0) {
       let location: string = "";
       let hasRepeat: boolean = false;
@@ -116,6 +116,7 @@ export class RepetitionInstructionReader {
         }
       }
     }
+    return pieceEndingDetected;
   }
 
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {

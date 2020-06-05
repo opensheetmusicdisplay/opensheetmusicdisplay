@@ -54,7 +54,6 @@ export class MusicSystemBuilder {
     }
 
     public buildMusicSystems(): MusicSystem[] {
-        let previousMeasureEndsSystem: boolean = false;
         const systemMaxWidth: number = this.getFullPageSystemWidth();
         this.measureListIndex = 0;
         this.currentSystemParams = new SystemBuildParameters();
@@ -124,14 +123,18 @@ export class MusicSystemBuilder {
                 );
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
+                if (sourceMeasureEndsSystem) {
+                    this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, true);
+                }
             } else {
                 // finalize current system and prepare a new one
-                this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, previousMeasureEndsSystem, doXmlPageBreak);
+                this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, false, doXmlPageBreak);
                 // don't increase measure index to check this measure now again
             }
-            previousMeasureEndsSystem = sourceMeasureEndsSystem;
         }
-        this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true, false);
+        if (this.currentSystemParams.systemMeasures.length > 0) {
+            this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true);
+        }
         return this.musicSystems;
     }
 

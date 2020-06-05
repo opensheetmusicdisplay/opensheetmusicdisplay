@@ -493,8 +493,7 @@ export class InstrumentReader {
           }
         } else if (xmlNode.name === "barline") {
           if (this.repetitionInstructionReader !== undefined) {
-           const measureEndsSystem: boolean = false;
-           this.repetitionInstructionReader.handleLineRepetitionInstructions(xmlNode, measureEndsSystem);
+           const measureEndsSystem: boolean = this.repetitionInstructionReader.handleLineRepetitionInstructions(xmlNode);
            if (measureEndsSystem) {
              this.currentMeasure.BreakSystemAfter = true;
              this.currentMeasure.endsPiece = true;
