@@ -372,11 +372,8 @@ export abstract class MusicSheetCalculator {
         let start: number = relativeX;
         let end: number = relativeX - graphicalLabel.PositionAndShape.BorderLeft + graphicalLabel.PositionAndShape.BorderMarginRight;
 
-        // take into account the InstrumentNameLabel's at the beginning of the first MusicSystem
-        if (staffLine === musicSystem.StaffLines[0] && musicSystem === this.musicSystems[0]) {
-            start -= staffLine.PositionAndShape.RelativePosition.x;
-            end -= staffLine.PositionAndShape.RelativePosition.x;
-        }
+        start -= staffLine.PositionAndShape.RelativePosition.x;
+        end -= staffLine.PositionAndShape.RelativePosition.x;
 
         // get the minimum corresponding SkyLine value
         const skyLineMinValue: number = skyBottomLineCalculator.getSkyLineMinInRange(start, end);
