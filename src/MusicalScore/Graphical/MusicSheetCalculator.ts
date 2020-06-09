@@ -577,15 +577,15 @@ export abstract class MusicSheetCalculator {
         }
 
         const fontHeight: number = this.rules.UnknownTextHeight;
-
+        const placement: PlacementEnum = multiExpression.getPlacementOfFirstEntry();
         const graphLabel: GraphicalLabel  = this.calculateLabel(staffLine,
                                                                 relative, combinedExprString,
                                                                 multiExpression.getFontstyleOfFirstEntry(),
-                                                                multiExpression.getPlacementOfFirstEntry(),
+                                                                placement,
                                                                 fontHeight);
 
         const gue: GraphicalUnknownExpression = new GraphicalUnknownExpression(
-            staffLine, graphLabel, measures[staffIndex]?.parentSourceMeasure, multiExpression);
+            staffLine, graphLabel, placement, measures[staffIndex]?.parentSourceMeasure, multiExpression);
         //    multiExpression); // TODO would be nice to hand over and save reference to original expression,
         //                         but MultiExpression is not an AbstractExpression.
         staffLine.AbstractExpressions.push(gue);
