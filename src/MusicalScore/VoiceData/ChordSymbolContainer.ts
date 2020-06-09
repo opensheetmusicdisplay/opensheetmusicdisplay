@@ -53,9 +53,6 @@ export class ChordSymbolContainer {
         }
         // chord kind text
         text += chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
-        // if (chordSymbol.ChordKind === ChordSymbolEnum.major) {
-        console.log("string used: " + chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind));
-        // }
         // degree
         if (chordSymbol.ChordDegree !== undefined) {
             switch (chordSymbol.ChordDegree.text) {
