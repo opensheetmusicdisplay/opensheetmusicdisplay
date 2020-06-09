@@ -141,7 +141,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       formatter.joinVoices(voices);
     }
 
-    let minStaffEntriesWidth: number = 200;
+    let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
     if (allVoices.length > 0) {
       // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
       // FIXME: a more relaxed formatting of voices
