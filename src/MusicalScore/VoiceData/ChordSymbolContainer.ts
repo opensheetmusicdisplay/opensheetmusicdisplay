@@ -141,7 +141,7 @@ export class ChordSymbolContainer {
                 text += "m7b5";
                 break;
             case ChordSymbolEnum.majorminor:
-                text += "";
+                text += "m(maj7)";
                 break;
             case ChordSymbolEnum.majorsixth:
                 text += "maj6";
