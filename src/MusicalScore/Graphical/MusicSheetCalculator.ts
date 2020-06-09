@@ -378,7 +378,7 @@ export abstract class MusicSheetCalculator {
 
         // and the corresponding SkyLine indices
         let start: number = relativeX;
-        let end: number = relativeX - graphicalLabel.PositionAndShape.BorderLeft + graphicalLabel.PositionAndShape.BorderMarginRight;
+        let end: number = relativeX - graphicalLabel.PositionAndShape.BorderLeft + graphicalLabel.PositionAndShape.BorderRight;
 
         start -= staffLine.PositionAndShape.RelativePosition.x;
         end -= staffLine.PositionAndShape.RelativePosition.x;
