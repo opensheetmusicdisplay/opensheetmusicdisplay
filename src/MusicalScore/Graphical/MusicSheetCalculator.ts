@@ -327,9 +327,15 @@ export abstract class MusicSheetCalculator {
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
         const staffLine: StaffLine = musicSystem.StaffLines[0];
         let currentMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
+        let labelOffsetX: number = 0;
         for (const measure of staffLine.Measures) {
             if (measure.MeasureNumber === 0 || measure.MeasureNumber === 1) {
                 currentMeasureNumber = measure.MeasureNumber;
+            }
+            if (measure !== staffLine.Measures[0] && this.rules.MeasureNumberLabelXOffset) {
+                labelOffsetX = this.rules.MeasureNumberLabelXOffset;
+            } else {
+                labelOffsetX = 0; // don't offset label for first measure in staffline
             }
 
             if ((measure.MeasureNumber === currentMeasureNumber ||
@@ -337,7 +343,7 @@ export abstract class MusicSheetCalculator {
                 !measure.parentSourceMeasure.ImplicitMeasure) {
                 if (measure.MeasureNumber !== 1 ||
                     (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0])) {
-                    this.calculateSingleMeasureNumberPlacement(measure, staffLine, musicSystem);
+                    this.calculateSingleMeasureNumberPlacement(measure, staffLine, musicSystem, labelOffsetX);
                 }
                 currentMeasureNumber = measure.MeasureNumber;
             }
@@ -350,7 +356,8 @@ export abstract class MusicSheetCalculator {
     /// <param name="measure"></param>
     /// <param name="staffLine"></param>
     /// <param name="musicSystem"></param>
-    private calculateSingleMeasureNumberPlacement(measure: GraphicalMeasure, staffLine: StaffLine, musicSystem: MusicSystem): void {
+    private calculateSingleMeasureNumberPlacement(measure: GraphicalMeasure, staffLine: StaffLine, musicSystem: MusicSystem,
+                                                  labelOffsetX: number = 0): void {
         const labelNumber: string = measure.MeasureNumber.toString();
         const label: Label = new Label(labelNumber);
         // maybe give rules as argument instead of just setting fontStyle and maybe other settings manually afterwards
@@ -365,7 +372,8 @@ export abstract class MusicSheetCalculator {
 
         // calculate relative Position
         const relativeX: number = staffLine.PositionAndShape.RelativePosition.x +
-            measure.PositionAndShape.RelativePosition.x - graphicalLabel.PositionAndShape.BorderMarginLeft;
+            measure.PositionAndShape.RelativePosition.x - graphicalLabel.PositionAndShape.BorderMarginLeft +
+            labelOffsetX;
         let relativeY: number;
 
         // and the corresponding SkyLine indices
@@ -375,11 +383,15 @@ export abstract class MusicSheetCalculator {
         start -= staffLine.PositionAndShape.RelativePosition.x;
         end -= staffLine.PositionAndShape.RelativePosition.x;
 
+        // correct for hypersensitive collision checks, notes having skyline extend too far to left and right
+        const startCollisionCheck: number = start + 0.5;
+        const endCollisionCheck: number = end - 0.5;
+
         // get the minimum corresponding SkyLine value
-        const skyLineMinValue: number = skyBottomLineCalculator.getSkyLineMinInRange(start, end);
+        const skyLineMinValue: number = skyBottomLineCalculator.getSkyLineMinInRange(startCollisionCheck, endCollisionCheck);
 
         if (measure === staffLine.Measures[0]) {
-            // must take into account possible MusicSystem Bracket's
+            // must take into account possible MusicSystem Brackets
             let minBracketTopBorder: number = 0;
             if (musicSystem.GroupBrackets.length > 0) {
                 for (const groupBracket of musicSystem.GroupBrackets) {

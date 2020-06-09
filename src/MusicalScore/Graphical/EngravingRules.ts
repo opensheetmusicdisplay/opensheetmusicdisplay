@@ -97,6 +97,7 @@ export class EngravingRules {
     private chordSymbolYOffset: number;
     private measureNumberLabelHeight: number;
     private measureNumberLabelOffset: number;
+    private measureNumberLabelXOffset: number;
     /** Whether tuplets should display ratio (3:2 instead of 3 for triplet). Default false. */
     private tupletsRatioed: boolean;
     /** Whether all tuplets should be bracketed (e.g. |--5--| instead of 5). Default false.
@@ -349,6 +350,7 @@ export class EngravingRules {
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.measureNumberLabelHeight = 1.5 * EngravingRules.unit;
         this.measureNumberLabelOffset = 2;
+        this.measureNumberLabelXOffset = -0.5;
         this.tupletsRatioed = false;
         this.tupletsBracketed = false;
         this.tripletsBracketed = false; // special setting for triplets, overrides tuplet setting (for triplets only)
@@ -983,6 +985,12 @@ export class EngravingRules {
     }
     public set MeasureNumberLabelOffset(value: number) {
         this.measureNumberLabelOffset = value;
+    }
+    public get MeasureNumberLabelXOffset(): number {
+        return this.measureNumberLabelXOffset;
+    }
+    public set MeasureNumberLabelXOffset(value: number) {
+        this.measureNumberLabelXOffset = value;
     }
     public get TupletsRatioed(): boolean {
         return this.tupletsRatioed;
