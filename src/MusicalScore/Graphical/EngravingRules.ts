@@ -8,6 +8,7 @@ import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum } from "../../Common/DataObjects/Pitch";
+import { ChordSymbolEnum } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
 
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
@@ -95,6 +96,7 @@ export class EngravingRules {
     private chordSymbolTextHeight: number;
     private chordSymbolXSpacing: number;
     private chordSymbolYOffset: number;
+    private chordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     private measureNumberLabelHeight: number;
     private measureNumberLabelOffset: number;
     private measureNumberLabelXOffset: number;
@@ -346,6 +348,9 @@ export class EngravingRules {
         this.chordSymbolTextHeight = 2.0;
         this.chordSymbolXSpacing = 1.0;
         this.chordSymbolYOffset = 2.0;
+        this.chordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
+        this.resetChordSymbolLabelTexts(this.chordSymbolLabelTexts);
+
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.measureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -973,6 +978,15 @@ export class EngravingRules {
     }
     public set ChordSymbolYOffset(value: number) {
         this.chordSymbolYOffset = value;
+    }
+    public setChordSymbolLabelText(key: ChordSymbolEnum, value: string): void {
+        this.chordSymbolLabelTexts.setValue(key, value);
+    }
+    public get ChordSymbolLabelTexts(): Dictionary<ChordSymbolEnum, string> {
+        return this.chordSymbolLabelTexts;
+    }
+    public set ChordSymbolLabelTexts(value: Dictionary<ChordSymbolEnum, string>) {
+        this.chordSymbolLabelTexts = value;
     }
     public get MeasureNumberLabelHeight(): number {
         return this.measureNumberLabelHeight;
@@ -1694,6 +1708,35 @@ export class EngravingRules {
     }
     public set RestoreCursorAfterRerender(value: boolean) {
         this.restoreCursorAfterRerender = value;
+    }
+
+    public resetChordSymbolLabelTexts(chordtexts: Dictionary<ChordSymbolEnum, string>): Dictionary<ChordSymbolEnum, string> {
+        chordtexts.setValue(ChordSymbolEnum.minor, "m");
+        chordtexts.setValue(ChordSymbolEnum.augmented, "aug");
+        chordtexts.setValue(ChordSymbolEnum.diminished, "dim");
+        chordtexts.setValue(ChordSymbolEnum.dominant, "7");
+        chordtexts.setValue(ChordSymbolEnum.majorseventh, "maj7");
+        chordtexts.setValue(ChordSymbolEnum.minorseventh, "m7");
+        chordtexts.setValue(ChordSymbolEnum.diminishedseventh, "dim7");
+        chordtexts.setValue(ChordSymbolEnum.augmentedseventh, "aug7");
+        chordtexts.setValue(ChordSymbolEnum.halfdiminished, "m7b5");
+        chordtexts.setValue(ChordSymbolEnum.majorminor, "m(maj7)");
+        chordtexts.setValue(ChordSymbolEnum.majorsixth, "maj6");
+        chordtexts.setValue(ChordSymbolEnum.minorsixth, "m6");
+        chordtexts.setValue(ChordSymbolEnum.dominantninth, "9");
+        chordtexts.setValue(ChordSymbolEnum.majorninth, "maj9");
+        chordtexts.setValue(ChordSymbolEnum.minorninth, "m9");
+        chordtexts.setValue(ChordSymbolEnum.dominant11th, "11");
+        chordtexts.setValue(ChordSymbolEnum.major11th, "maj11");
+        chordtexts.setValue(ChordSymbolEnum.minor11th, "m11");
+        chordtexts.setValue(ChordSymbolEnum.dominant13th, "13");
+        chordtexts.setValue(ChordSymbolEnum.major13th, "maj13");
+        chordtexts.setValue(ChordSymbolEnum.minor13th, "m13");
+        chordtexts.setValue(ChordSymbolEnum.suspendedsecond, "sus2");
+        chordtexts.setValue(ChordSymbolEnum.suspendedfourth, "sus4");
+        chordtexts.setValue(ChordSymbolEnum.power, "5");
+
+        return chordtexts;
     }
 
     /**

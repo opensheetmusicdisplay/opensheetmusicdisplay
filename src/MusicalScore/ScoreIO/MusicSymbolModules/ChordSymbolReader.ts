@@ -151,6 +151,6 @@ export class ChordSymbolReader {
 
             degree = new Degree(value, alter, text);
         }
-        return new ChordSymbolContainer(rootPitch, chordKind, bassPitch, degree);
+        return new ChordSymbolContainer(rootPitch, chordKind, bassPitch, degree, musicSheet.Rules);
     }
 }
