@@ -22,7 +22,7 @@ export class Note {
         this.parentStaffEntry = parentStaffEntry;
         this.length = length;
         this.pitch = pitch;
-        if (pitch !== undefined) {
+        if (pitch) {
             this.halfTone = pitch.getHalfTone();
         } else {
           this.halfTone = 0;
@@ -229,7 +229,7 @@ export class Note {
     }
 
     public ToString(): string {
-        if (this.pitch !== undefined) {
+        if (this.pitch) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
         } else {
           return "rest note, length: " + this.length.toString();

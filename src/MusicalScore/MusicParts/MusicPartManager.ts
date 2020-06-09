@@ -89,7 +89,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
                     curTimestampTransform.curRepetition = jumpRep;
                     curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;
                     for (let i: number = this.timestamps.length - 2; i >= 0; i--) {
-                        if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition !== undefined) {
+                        if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition) {
                             break;
                         }
                         timestamps[i].nextBackJump = curTimestampTransform.nextBackJump;

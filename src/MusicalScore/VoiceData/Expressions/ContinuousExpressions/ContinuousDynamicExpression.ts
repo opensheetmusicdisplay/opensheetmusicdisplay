@@ -88,7 +88,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     public getInterpolatedDynamic(currentAbsoluteTimestamp: Fraction): number {
         const continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsoluteTimestamp;
         let continuousAbsoluteEndTimestamp: Fraction;
-        if (this.EndMultiExpression !== undefined) {
+        if (this.EndMultiExpression) {
             continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsoluteTimestamp;
         } else {
             continuousAbsoluteEndTimestamp = Fraction.plus(

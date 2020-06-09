@@ -180,7 +180,7 @@ export class VoiceEntry {
     public hasTie(): boolean {
         for (let idx: number = 0, len: number = this.Notes.length; idx < len; ++idx) {
             const note: Note = this.Notes[idx];
-            if (note.NoteTie !== undefined) { return true; }
+            if (note.NoteTie) { return true; }
         }
         return false;
     }

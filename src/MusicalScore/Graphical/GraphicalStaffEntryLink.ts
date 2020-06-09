@@ -24,7 +24,7 @@ export class GraphicalStaffEntryLink {
     }
     public isFilled(): boolean {
         for (let i: number = 0; i < this.graphicalLinkedStaffEntries.length; i++) {
-            if (this.graphicalLinkedStaffEntries[i] === undefined) {
+            if (!this.graphicalLinkedStaffEntries[i]) {
                 return false;
             }
         }
@@ -43,7 +43,7 @@ export class GraphicalStaffEntryLink {
                 const graphicalLinkedStaffEntry: GraphicalStaffEntry = this.graphicalLinkedStaffEntries[idx];
                 for (const gve of graphicalLinkedStaffEntry.graphicalVoiceEntries) {
                     for (const graphicalNote of gve.notes) {
-                        if (graphicalNote.sourceNote.ParentStaffEntry.Link !== undefined
+                        if (graphicalNote.sourceNote.ParentStaffEntry.Link
                             && graphicalNote.sourceNote.ParentVoiceEntry === this.staffEntryLink.GetVoiceEntry) {
                             notes.push(graphicalNote);
                         }

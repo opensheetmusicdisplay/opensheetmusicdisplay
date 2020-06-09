@@ -136,19 +136,19 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         showHeader = (paramShowHeader !== '0');
         showControls = false;
-        if (paramEmbedded !== undefined) {
+        if (paramEmbedded) {
             showControls = paramShowControls !== '0';
             showZoomControl = paramShowZoomControl !== '0';
             showPageFormatControl = paramShowPageFormatControl !== '0';
             showExportPdfControl = paramShowExportPdfControl !== '0';
         }
 
-        if (paramZoom !== undefined) {
+        if (paramZoom) {
             if (paramZoom > 0.1 && paramZoom < 5.0) {
                 zoom = paramZoom;
             }
         }
-        if (paramOverflow !== undefined && typeof paramOverflow === 'string') {
+        if (paramOverflow && typeof paramOverflow === 'string') {
             if (paramOverflow === 'hidden' || paramOverflow === 'auto' || paramOverflow === 'scroll' || paramOverflow === 'visible') {
                 document.body.style.overflow = paramOverflow;
             }
@@ -500,7 +500,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             // selectSampleOnChange();
         });
 
-        if (paramOpenUrl !== undefined) {
+        if (paramOpenUrl) {
             if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange with " + paramOpenUrl);
             }

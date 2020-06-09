@@ -46,7 +46,7 @@ export class MappingSourceMusicPart /* implements IComparable, IComparable<Mappi
     }
     public CompareTo(comp: MappingSourceMusicPart): number {
         //let comp: MappingSourceMusicPart = <MappingSourceMusicPart>(obj, MappingSourceMusicPart);
-        if (comp !== undefined) {
+        if (comp) {
             return this.startTimestamp.CompareTo(comp.startTimestamp);
         } else { return 1; }
     }

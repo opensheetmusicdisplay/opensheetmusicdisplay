@@ -352,7 +352,7 @@ export class Pitch {
         // if (ReferenceEquals(p1, p2)) {
         //     return true;
         // }
-        if ((<Object>p1 === undefined) || (<Object>p2 === undefined)) {
+        if (!p1 || !p2) {
             return false;
         }
         return (p1.FundamentalNote === p2.FundamentalNote && p1.Octave === p2.Octave && p1.Accidental === p2.Accidental);

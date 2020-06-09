@@ -13,7 +13,7 @@ export class SlurReader {
     }
     public addSlur(slurNodes: IXmlElement[], currentNote: Note): void {
         try {
-            if (slurNodes !== undefined) {
+            if (slurNodes) {
                 for (const slurNode of slurNodes) {
                     if (slurNode.attributes().length > 0) {
                         const type: string = slurNode.attribute("type").value;
@@ -36,7 +36,7 @@ export class SlurReader {
                             slur.StartNote = currentNote;
                         } else if (type === "stop") {
                             const slur: Slur = this.openSlurDict[slurNumber];
-                            if (slur !== undefined) {
+                            if (slur) {
                                 slur.EndNote = currentNote;
                                 // check if not already a slur with same notes has been given:
                                 if (!currentNote.checkForDoubleSlur(slur)) {

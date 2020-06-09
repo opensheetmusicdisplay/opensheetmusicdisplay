@@ -297,7 +297,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
           const lyricsXPosition: number = staffEntryXPosition + lyricsBbox.BorderMarginLeft;
 
-          if (lastLyricEntryDict[j] !== undefined) {
+          if (lastLyricEntryDict[j]) {
             if (lastLyricEntryDict[j].extend) {
               // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
               // only necessary for center alignment
@@ -441,14 +441,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     let vfStartNote: Vex.Flow.StaveNote = undefined;
     let startNoteIndexInTie: number = 0;
-    if (startNote !== undefined && startNote.vfnote !== undefined && startNote.vfnote.length >= 2) {
+    if (startNote && startNote.vfnote && startNote.vfnote.length >= 2) {
       vfStartNote = startNote.vfnote[0];
       startNoteIndexInTie = startNote.vfnote[1];
     }
 
     let vfEndNote: Vex.Flow.StaveNote = undefined;
     let endNoteIndexInTie: number = 0;
-    if (endNote !== undefined && endNote.vfnote !== undefined && endNote.vfnote.length >= 2) {
+    if (endNote && endNote.vfnote && endNote.vfnote.length >= 2) {
       vfEndNote = endNote.vfnote[0];
       endNoteIndexInTie = endNote.vfnote[1];
     }
@@ -583,12 +583,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
 
     let startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
-    if (startStaffLine === undefined) { // fix for rendering range set. all of these can probably done cleaner.
+    if (!startStaffLine) { // fix for rendering range set. all of these can probably done cleaner.
       startStaffLine = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex].ParentStaffLine;
     }
 
     let endMeasure: GraphicalMeasure = undefined;
-    if (octaveShift.ParentEndMultiExpression !== undefined) {
+    if (octaveShift.ParentEndMultiExpression) {
       endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
                                                                                          staffIndex);
     } else {
@@ -598,7 +598,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
     let startMeasure: GraphicalMeasure = undefined;
-    if (octaveShift.ParentEndMultiExpression !== undefined) {
+    if (octaveShift.ParentEndMultiExpression) {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
                                                                                            staffIndex);
     } else {
@@ -617,11 +617,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     let endStaffLine: StaffLine = endMeasure.ParentStaffLine;
-    if (endStaffLine === undefined) {
+    if (!endStaffLine) {
       endStaffLine = startStaffLine;
     }
 
-    if (endMeasure !== undefined && startStaffLine !== undefined && endStaffLine !== undefined) {
+    if (endMeasure && startStaffLine && endStaffLine) {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
       if (graphicalOctaveShift.getStartNote() === undefined) { // fix for rendering range set
@@ -712,7 +712,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
     for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
       const graphicalMeasure: VexFlowMeasure = measures[idx];
-      if (graphicalMeasure.ParentStaffLine !== undefined && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
+      if (graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
         uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
         break;
       }
@@ -720,7 +720,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // ToDo: feature/Repetitions
     // now create corresponding graphical symbol or Text in VexFlow:
     // use top measure and staffline for positioning.
-    if (uppermostMeasure !== undefined) {
+    if (uppermostMeasure) {
       uppermostMeasure.addWordRepetition(repetitionInstruction);
     }
   }
@@ -785,7 +785,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const graphicalLabel: GraphicalLabel = graphicalLyricEntry.GraphicalLabel;
       graphicalLabel.setLabelPositionAndShapeBorders();
 
-      if (lyricsEntry.Word !== undefined) {
+      if (lyricsEntry.Word) {
         const lyricsEntryIndex: number = lyricsEntry.Word.Syllables.indexOf(lyricsEntry);
         let index: number = lyricWords.indexOf(lyricsEntry.Word);
         if (index === -1) {
@@ -933,7 +933,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     }
                     // add new VexFlowSlur to List
                     if (slur.StartNote === graphicalNote.sourceNote) {
-                      if (graphicalNote.sourceNote.NoteTie !== undefined) {
+                      if (graphicalNote.sourceNote.NoteTie) {
                         if (graphicalNote.parentVoiceEntry.parentStaffEntry.getAbsoluteTimestamp() !==
                           graphicalNote.sourceNote.NoteTie.StartNote.getAbsoluteTimestamp()) {
                           break;

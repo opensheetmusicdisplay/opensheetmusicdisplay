@@ -38,7 +38,7 @@ export class ChordSymbolContainer {
     public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction): string {
         let transposedRootPitch: Pitch = chordSymbol.RootPitch;
 
-        if (MusicSheetCalculator.transposeCalculator !== undefined) {
+        if (MusicSheetCalculator.transposeCalculator) {
             transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                 chordSymbol.RootPitch,
                 keyInstruction,
@@ -54,7 +54,7 @@ export class ChordSymbolContainer {
         // chord kind text
         text += chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
         // degree
-        if (chordSymbol.ChordDegree !== undefined) {
+        if (chordSymbol.ChordDegree) {
             switch (chordSymbol.ChordDegree.text) {
                 case ChordDegreeText.add:
                     text += "add";
@@ -75,9 +75,9 @@ export class ChordSymbolContainer {
             }
         }
         // bass
-        if (chordSymbol.BassPitch !== undefined) {
+        if (chordSymbol.BassPitch) {
             let transposedBassPitch: Pitch = chordSymbol.BassPitch;
-            if (MusicSheetCalculator.transposeCalculator !== undefined) {
+            if (MusicSheetCalculator.transposeCalculator) {
                 transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                     chordSymbol.BassPitch,
                     keyInstruction,

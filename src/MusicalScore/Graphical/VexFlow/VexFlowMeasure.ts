@@ -108,7 +108,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_below_staff_ln: 0,
         });
 
-        if (this.ParentStaff !== undefined) {
+        if (this.ParentStaff) {
             this.setLineNumber(this.ParentStaff.StafflineCount);
         }
         // constructor sets beginning and end bar type to standard
@@ -367,7 +367,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
           default:
             break;
         }
-        if (instruction !== undefined) {
+        if (instruction) {
             this.stave.addModifier(new Vex.Flow.Repetition(instruction, 0, 0), position);
             return;
         }
@@ -440,14 +440,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if(measures !== undefined && measures.length > 0){
                     for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
                         const graphicalMeasure: VexFlowMeasure = measures[idx];
-                        if (graphicalMeasure.ParentStaffLine !== undefined && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
+                        if (graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
                             prevMeasure = <VexFlowMeasure>graphicalMeasure;
                         break;
                         }
                     }
                 }
 
-                if(prevMeasure !== undefined){
+                if(prevMeasure){
                     let prevStaveModifiers = prevMeasure.stave.getModifiers();
                     for(let i = 0; i < prevStaveModifiers.length; i++){
                         let nextStaveModifier = prevStaveModifiers[i];
@@ -765,7 +765,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const stemColors: string[] = [];
                     for (const entry of voiceEntries) {
                         const note: Vex.Flow.StaveNote = ((<VexFlowVoiceEntry>entry).vfStaveNote as StaveNote);
-                        if (note !== undefined) {
+                        if (note) {
                           notes.push(note);
                           beamedNotes.push(note);
                         }
@@ -1081,7 +1081,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // only add clefs in main voice (to not add them twice)
                 if (isMainVoice) {
                     const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
-                    if (vfse && vfse.vfClefBefore !== undefined) {
+                    if (vfse && vfse.vfClefBefore) {
                         // add clef as NoteSubGroup so that we get modifier layouting
                         const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
                         // The cast is necesary because...vexflow -> see types
@@ -1098,7 +1098,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
 
                 // add Arpeggio
-                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
+                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio) {
                     const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
                     // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
                     // see VoiceGenerator. Doesn't matter for Vexflow for now though
@@ -1184,7 +1184,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (gvoices.hasOwnProperty(voiceID)) {
                     const vfStaveNote: StemmableNote = (gvoices[voiceID] as VexFlowVoiceEntry).vfStaveNote;
                     const ornamentContainer: OrnamentContainer = gvoices[voiceID].notes[0].sourceNote.ParentVoiceEntry.OrnamentContainer;
-                    if (ornamentContainer !== undefined) {
+                    if (ornamentContainer) {
                         VexFlowConverter.generateOrnaments(vfStaveNote, ornamentContainer);
                     }
                 }

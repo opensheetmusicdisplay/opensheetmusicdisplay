@@ -485,7 +485,7 @@ export class EngravingRules {
         this.populateDictionaries();
         try {
             this.maxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
-            //if (FontInfo.Info !== undefined) {
+            //if (FontInfo.Info) {
             //    this.maxInstructionsConstValue += FontInfo.Info.getBoundingBox(MusicSymbol.G_CLEF).width
             //        + FontInfo.Info.getBoundingBox(MusicSymbol.FOUR).width
             //        + 7 * FontInfo.Info.getBoundingBox(MusicSymbol.SHARP).width;

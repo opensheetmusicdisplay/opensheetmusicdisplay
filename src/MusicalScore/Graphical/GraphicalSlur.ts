@@ -68,14 +68,14 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // where the Slur (not the graphicalObject) starts and ends (could belong to another StaffLine)
         let slurStartNote: GraphicalNote = startStaffEntry.findGraphicalNoteFromNote(this.slur.StartNote);
-        if (slurStartNote === undefined && this.graceStart) {
+        if (!slurStartNote && this.graceStart) {
             slurStartNote = startStaffEntry.findGraphicalNoteFromGraceNote(this.slur.StartNote);
         }
-        if (slurStartNote === undefined) {
+        if (!slurStartNote) {
             slurStartNote = startStaffEntry.findEndTieGraphicalNoteFromNoteWithStartingSlur(this.slur.StartNote, this.slur);
         }
         let slurEndNote: GraphicalNote = endStaffEntry.findGraphicalNoteFromNote(this.slur.EndNote);
-        if (slurEndNote === undefined && this.graceEnd) {
+        if (!slurEndNote && this.graceEnd) {
             slurEndNote = endStaffEntry.findGraphicalNoteFromGraceNote(this.slur.EndNote);
         }
 
@@ -105,7 +105,7 @@ export class GraphicalSlur extends GraphicalCurve {
             const startUpperRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
                                                            + this.staffEntries[0].PositionAndShape.RelativePosition.x,
                                                            startY);
-            if (slurStartNote !== undefined) {
+            if (slurStartNote) {
                     startUpperRight.x += this.staffEntries[0].PositionAndShape.BorderRight;
             } else  {
                     // continuing Slur from previous StaffLine - must start after last Instruction of first Measure
@@ -120,7 +120,7 @@ export class GraphicalSlur extends GraphicalCurve {
             const endUpperLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
-            if (slurEndNote !== undefined) {
+            if (slurEndNote) {
                     endUpperLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
             } else {
                     // Slur continues to next StaffLine - must reach the end of current StaffLine
@@ -248,7 +248,7 @@ export class GraphicalSlur extends GraphicalCurve {
             const startLowerRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
                                                            + this.staffEntries[0].PositionAndShape.RelativePosition.x,
                                                            startY);
-            if (slurStartNote !== undefined) {
+            if (slurStartNote) {
                 startLowerRight.x += this.staffEntries[0].PositionAndShape.BorderRight;
             } else {
                 // continuing Slur from previous StaffLine - must start after last Instruction of first Measure
@@ -262,7 +262,7 @@ export class GraphicalSlur extends GraphicalCurve {
             const endLowerLeft: PointF2D = new PointF2D(this.staffEntries[this.staffEntries.length - 1].parentMeasure.PositionAndShape.RelativePosition.x
                                                         + this.staffEntries[this.staffEntries.length - 1].PositionAndShape.RelativePosition.x,
                                                         endY);
-            if (slurEndNote !== undefined) {
+            if (slurEndNote) {
                 endLowerLeft.x += this.staffEntries[this.staffEntries.length - 1].PositionAndShape.BorderLeft;
             } else {
                 // Slur continues to next StaffLine - must reach the end of current StaffLine
@@ -404,7 +404,7 @@ export class GraphicalSlur extends GraphicalCurve {
         let endX: number = 0;
         let endY: number = 0;
 
-        if (slurStartNote !== undefined) {
+        if (slurStartNote) {
             // must be relative to StaffLine
             startX = slurStartNote.PositionAndShape.RelativePosition.x + slurStartNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
                                             + slurStartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
@@ -433,12 +433,12 @@ export class GraphicalSlur extends GraphicalCurve {
             if (slurStartVE.parentVoiceEntry.StemDirection === StemDirectionType.Up && this.placement === PlacementEnum.Above) {
                 startX += 0.5;
             }
-            // if (first.NoteStem !== undefined && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
+            // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
             //     startX += first.NoteStem.PositionAndShape.RelativePosition.x;
             //     startY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, startX);
             // } else {
             //     const last: GraphicalNote = <GraphicalNote>slurStartNote[slurEndNote.parentVoiceEntry.notes.length - 1];
-            //     if (last.NoteStem !== undefined && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
+            //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
             //         startX += last.NoteStem.PositionAndShape.RelativePosition.x;
             //         startY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, startX);
             //     } else {
@@ -448,7 +448,7 @@ export class GraphicalSlur extends GraphicalCurve {
             startX = staffLine.Measures[0].beginInstructionsWidth;
         }
 
-        if (slurEndNote !== undefined) {
+        if (slurEndNote) {
             endX = slurEndNote.PositionAndShape.RelativePosition.x + slurEndNote.parentVoiceEntry.parentStaffEntry.PositionAndShape.RelativePosition.x
                 + slurEndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x;
 
@@ -473,26 +473,26 @@ export class GraphicalSlur extends GraphicalCurve {
                 endX += 0.5;
             }
             // const first: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[0];
-            // if (first.NoteStem !== undefined && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
+            // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
             //     endX += first.NoteStem.PositionAndShape.RelativePosition.x;
             //     endY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, endX);
             // } else {
             //     const last: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[slurEndNote.parentVoiceEntry.notes.length - 1];
-            //     if (last.NoteStem !== undefined && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
+            //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
             //         endX += last.NoteStem.PositionAndShape.RelativePosition.x;
             //         endY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, endX);
             //     } else {
             //         if (this.placement === PlacementEnum.Above) {
             //             const highestNote: GraphicalNote = last;
             //             endY = highestNote.PositionAndShape.RelativePosition.y;
-            //             if (highestNote.NoteHead !== undefined) {
+            //             if (highestNote.NoteHead) {
             //                 endY += highestNote.NoteHead.PositionAndShape.BorderMarginTop;
             //             } else { endY += highestNote.PositionAndShape.BorderTop; }
             //         } else {
             //             const lowestNote: GraphicalNote = first;
             //             endY = lowestNote.parentVoiceEntry
             //             lowestNote.PositionAndShape.RelativePosition.y;
-            //             if (lowestNote.NoteHead !== undefined) {
+            //             if (lowestNote.NoteHead) {
             //                 endY += lowestNote.NoteHead.PositionAndShape.BorderMarginBottom;
             //             } else { endY += lowestNote.PositionAndShape.BorderBottom; }
             //         }
@@ -503,14 +503,14 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         // if GraphicalSlur breaks over System, then the end/start of the curve is at the corresponding height with the known start/end
-        if (slurStartNote === undefined && slurEndNote === undefined) {
+        if (!slurStartNote && !slurEndNote) {
             startY = 0;
             endY = 0;
         }
-        if (slurStartNote === undefined) {
+        if (!slurStartNote) {
             startY = endY;
         }
-        if (slurEndNote === undefined) {
+        if (!slurEndNote) {
             endY = startY;
         }
 
@@ -536,7 +536,7 @@ export class GraphicalSlur extends GraphicalCurve {
      */
     private calculatePlacement(skyBottomLineCalculator: SkyBottomLineCalculator, staffLine: StaffLine): void {
         // old version: when lyrics are given place above:
-        // if ( !this.slur.StartNote.ParentVoiceEntry.LyricsEntries.isEmpty || (this.slur.EndNote !== undefined
+        // if ( !this.slur.StartNote.ParentVoiceEntry.LyricsEntries.isEmpty || (this.slur.EndNote
         //                                     && !this.slur.EndNote.ParentVoiceEntry.LyricsEntries.isEmpty) ) {
         //     this.placement = PlacementEnum.Above;
         //     return;
