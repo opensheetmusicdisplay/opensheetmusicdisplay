@@ -20,7 +20,7 @@ export class SlurReader {
                         let slurNumber: number = 1;
                         try {
                             const slurNumberAttribute: IXmlAttribute = slurNode.attribute("number");
-                            if (slurNumberAttribute !== undefined) {
+                            if (slurNumberAttribute) {
                                 slurNumber = parseInt(slurNode.attribute("number").value, 10);
                             }
                         } catch (ex) {
