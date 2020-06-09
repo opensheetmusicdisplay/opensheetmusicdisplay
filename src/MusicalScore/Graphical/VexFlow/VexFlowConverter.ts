@@ -282,6 +282,17 @@ export class VexFlowConverter {
         } else {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
+        if (rules.LedgerLineWidth || rules.LedgerLineStrokeStyle) {
+            if (!((vfnote as any).ledgerLineStyle)) {
+                (vfnote as any).ledgerLineStyle = {};
+            }
+            if (rules.LedgerLineWidth) {
+                (vfnote as any).ledgerLineStyle.lineWidth = rules.LedgerLineWidth;
+            }
+            if (rules.LedgerLineStrokeStyle) {
+                (vfnote as any).ledgerLineStyle.strokeStyle = rules.LedgerLineStrokeStyle;
+            }
+        }
 
         if (rules.ColoringEnabled) {
             const defaultColorStem: string = rules.DefaultColorStem;

@@ -157,6 +157,7 @@ export class EngravingRules {
     private continuousTempoTextHeight: number;
     private staffLineWidth: number;
     private ledgerLineWidth: number;
+    private ledgerLineStrokeStyle: string;
     private wedgeLineWidth: number;
     private tupletLineWidth: number;
     private lyricUnderscoreLineWidth: number;
@@ -403,7 +404,8 @@ export class EngravingRules {
 
         // Line Widths
         this.staffLineWidth = 0.12;
-        this.ledgerLineWidth = 0.12;
+        this.ledgerLineWidth = undefined; // if not undefined, the vexflow default will be overwritten
+        this.ledgerLineStrokeStyle = undefined; // if not undefined, the vexflow default will be overwritten
         this.wedgeLineWidth = 0.12;
         this.tupletLineWidth = 0.12;
         this.lyricUnderscoreLineWidth = 0.12;
@@ -1278,6 +1280,12 @@ export class EngravingRules {
     }
     public set LedgerLineWidth(value: number) {
         this.ledgerLineWidth = value;
+    }
+    public get LedgerLineStrokeStyle(): string {
+        return this.ledgerLineStrokeStyle;
+    }
+    public set LedgerLineStrokeStyle(value: string) {
+        this.ledgerLineStrokeStyle = value;
     }
     public get WedgeLineWidth(): number {
         return this.wedgeLineWidth;
