@@ -577,7 +577,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const octaveShift: OctaveShift = multiExpression.OctaveShiftStart;
 
     const startTimeStamp: Fraction = octaveShift.ParentStartMultiExpression.Timestamp;
-    const endTimeStamp: Fraction = octaveShift.ParentEndMultiExpression.Timestamp;
+    const endTimeStamp: Fraction = octaveShift.ParentEndMultiExpression?.Timestamp;
 
     const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
     const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;

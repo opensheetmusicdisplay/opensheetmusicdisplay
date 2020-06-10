@@ -2032,10 +2032,17 @@ export abstract class MusicSheetCalculator {
             const multiExpression: MultiExpression = sourceMeasure.StaffLinkedExpressions[staffIndex][idx];
             if (multiExpression.OctaveShiftStart) {
                 const openOctaveShift: OctaveShift = multiExpression.OctaveShiftStart;
-                openOctaveShifts[staffIndex] = new OctaveShiftParams(
-                    openOctaveShift, multiExpression.AbsoluteTimestamp,
-                    openOctaveShift.ParentEndMultiExpression.AbsoluteTimestamp
+                let absoluteEnd: Fraction = openOctaveShift?.ParentEndMultiExpression?.AbsoluteTimestamp;
+                if (!openOctaveShift?.ParentEndMultiExpression) {
+                    const measureEndTimestamp: Fraction = Fraction.plus(sourceMeasure.AbsoluteTimestamp, sourceMeasure.Duration);
+                    absoluteEnd = measureEndTimestamp;
+                    // TODO better handling if end expression missing
+                    // old comment:
                     // TODO check if octaveshift end exists, otherwise set to last measure end. only necessary if xml was cut manually and is incomplete
+                }
+                openOctaveShifts[staffIndex] = new OctaveShiftParams(
+                    openOctaveShift, multiExpression?.AbsoluteTimestamp,
+                    absoluteEnd
                 );
             }
         }

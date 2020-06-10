@@ -239,7 +239,7 @@ export class Fraction {
   }
 
   public Equals(obj: Fraction): boolean {
-    return this.realValue === obj.realValue;
+    return this.realValue === obj?.realValue;
   }
 
   public CompareTo(obj: Fraction): number {

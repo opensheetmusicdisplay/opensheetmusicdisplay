@@ -462,7 +462,7 @@ export class GraphicalMusicSheet {
     public getLastGraphicalMeasureFromIndex(staffIndex: number, lastRendered: boolean = true): GraphicalMeasure {
         let measureIndex: number = this.measureList.length - 1;
         if (lastRendered) {
-            measureIndex = this.musicSheet.Rules.MaxMeasureToDrawIndex;
+            measureIndex = Math.min(measureIndex, this.musicSheet.Rules.MaxMeasureToDrawIndex);
         }
         return this.measureList[measureIndex][staffIndex];
     }

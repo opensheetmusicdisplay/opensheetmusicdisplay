@@ -190,7 +190,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.relInMeasureTimestamp.Equals(relativeTimestamp)) {
+            if (graphicalStaffEntry.relInMeasureTimestamp?.Equals(relativeTimestamp)) {
                 return graphicalStaffEntry;
             }
         }
