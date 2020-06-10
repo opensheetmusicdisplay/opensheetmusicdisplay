@@ -272,7 +272,7 @@ export class SourceMeasure {
                 break;
             }
         }
-        if (ve === undefined) {
+        if (!ve) {
             ve = new VoiceEntry(sse.Timestamp, voice, sse);
             sse.VoiceEntries.push(ve);
             createdNewVoiceEntry = true;
@@ -333,7 +333,7 @@ export class SourceMeasure {
     public checkForEmptyVerticalContainer(index: number): void {
         let undefinedCounter: number = 0;
         for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
-            if (this.verticalSourceStaffEntryContainers[index][i] === undefined) {
+            if (!this.verticalSourceStaffEntryContainers[index][i]) {
                 undefinedCounter++;
             }
         }
@@ -460,7 +460,7 @@ export class SourceMeasure {
             }
 
             const rep: Repetition = instruction.parentRepetition;
-            if (rep === undefined) {
+            if (!rep) {
                 continue;
             }
             if (rep.FromWords) {
@@ -499,7 +499,7 @@ export class SourceMeasure {
         for (let idx: number = 0, len: number = this.LastRepetitionInstructions.length; idx < len; ++idx) {
             const instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
             const rep: Repetition = instruction.parentRepetition;
-            if (rep === undefined) {
+            if (!rep) {
                 continue;
             }
             if (!rep.FromWords) {

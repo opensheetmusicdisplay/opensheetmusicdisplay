@@ -152,7 +152,7 @@ export class ExpressionReader {
             }
         }
         const dirNode: IXmlElement = directionNode.element("direction-type");
-        if (dirNode === undefined) {
+        if (!dirNode) {
             return;
         }
         let dirContentNode: IXmlElement = dirNode.element("metronome");
@@ -320,8 +320,8 @@ export class ExpressionReader {
                 //     this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
                 //     return;
                 // }
-                // if (this.activeInstantaneousDynamic === undefined ||
-                //     (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.DynEnum !== dynamicEnum)) {
+                // if (!this.activeInstantaneousDynamic ||
+                //     (this.activeInstantaneousDynamic && this.activeInstantaneousDynamic.DynEnum !== dynamicEnum)) {
                 if (!fromNotation) {
                     this.createNewMultiExpressionIfNeeded(currentMeasure);
                 } else { this.createNewMultiExpressionIfNeeded(currentMeasure, Fraction.createFromFraction(inSourceMeasureCurrentFraction)); }
@@ -369,11 +369,11 @@ export class ExpressionReader {
         this.initialize();
     }
     private createNewMultiExpressionIfNeeded(currentMeasure: SourceMeasure, timestamp: Fraction = undefined): void {
-        if (timestamp === undefined) {
+        if (!timestamp) {
             timestamp = this.directionTimestamp;
         }
-        if (this.getMultiExpression === undefined ||
-            this.getMultiExpression !== undefined &&
+        if (!this.getMultiExpression ||
+            this.getMultiExpression &&
             (this.getMultiExpression.SourceMeasureParent !== currentMeasure ||
                 (this.getMultiExpression.SourceMeasureParent === currentMeasure && this.getMultiExpression.Timestamp !== timestamp))) {
             this.getMultiExpression = new MultiExpression(currentMeasure, Fraction.createFromFraction(timestamp));
@@ -382,7 +382,7 @@ export class ExpressionReader {
     }
 
     private createNewTempoExpressionIfNeeded(currentMeasure: SourceMeasure): void {
-        if (this.currentMultiTempoExpression === undefined ||
+        if (!this.currentMultiTempoExpression ||
             this.currentMultiTempoExpression.SourceMeasureParent !== currentMeasure ||
             this.currentMultiTempoExpression.Timestamp !== this.directionTimestamp) {
             this.currentMultiTempoExpression = new MultiTempoExpression(currentMeasure, Fraction.createFromFraction(this.directionTimestamp));
@@ -423,7 +423,7 @@ export class ExpressionReader {
         }
     }
     private fillMultiOrTempoExpression(inputString: string, currentMeasure: SourceMeasure): void {
-        if (inputString === undefined) {
+        if (!inputString) {
             return;
         }
         const tmpInputString: string = inputString.trim();
@@ -501,7 +501,7 @@ export class ExpressionReader {
             ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
             this.createNewMultiExpressionIfNeeded(currentMeasure);
             if (InstantaneousDynamicExpression.isInputStringInstantaneousDynamic(stringTrimmed)) {
-                if (this.openContinuousDynamicExpression !== undefined && this.openContinuousDynamicExpression.EndMultiExpression === undefined) {
+                if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
                     this.closeOpenContinuousDynamic();
                 }
                 const instantaneousDynamicExpression: InstantaneousDynamicExpression =
@@ -522,7 +522,7 @@ export class ExpressionReader {
                         this.staffNumber,
                         currentMeasure,
                         stringTrimmed);
-                if (this.openContinuousDynamicExpression !== undefined && this.openContinuousDynamicExpression.EndMultiExpression === undefined) {
+                if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
                     this.closeOpenContinuousDynamic();
                 }
                 if (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.StaffNumber === continuousDynamicExpression.StaffNumber) {

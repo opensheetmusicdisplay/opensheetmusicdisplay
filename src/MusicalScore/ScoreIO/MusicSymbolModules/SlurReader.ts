@@ -29,7 +29,7 @@ export class SlurReader {
 
                         if (type === "start") {
                             let slur: Slur = this.openSlurDict[slurNumber];
-                            if (slur === undefined) {
+                            if (!slur) {
                                 slur = new Slur();
                                 this.openSlurDict[slurNumber] = slur;
                             }

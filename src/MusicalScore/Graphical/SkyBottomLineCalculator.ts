@@ -488,7 +488,7 @@ export class SkyBottomLineCalculator {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
         endIndex = Math.ceil(endIndex * this.SamplingUnit);
 
-        if (skyBottomArray === undefined) {
+        if (!skyBottomArray) {
             // Highly questionable
             return Number.MAX_VALUE;
         }
@@ -521,7 +521,7 @@ export class SkyBottomLineCalculator {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
         endIndex = Math.ceil(endIndex * this.SamplingUnit);
 
-        if (skyBottomArray === undefined) {
+        if (!skyBottomArray) {
             // Highly questionable
             return Number.MIN_VALUE;
         }

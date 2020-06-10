@@ -216,7 +216,7 @@ export class Note {
     }
 
     public isRest(): boolean {
-        return this.Pitch === undefined;
+        return this.Pitch === undefined || this.Pitch === null;
     }
 
     /** Note: May be dangerous to use if ParentStaffEntry.VerticalContainerParent etc is not set.

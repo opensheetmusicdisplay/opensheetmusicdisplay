@@ -281,7 +281,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (syllables.length > 1) {
               if (lyricsEntry.LyricsEntry.SyllableIndex < syllables.length - 1) {
                 // if a middle syllable of a word, give less measure overlap into next measure, to give room for dash
-                if (this.dashSpace === undefined) {
+                if (this.dashSpace === undefined) { // don't replace undefined check
                   this.dashSpace = 1.5;
                   // better method, doesn't work:
                   // this.dashLength = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom)
@@ -624,21 +624,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (endMeasure && startStaffLine && endStaffLine) {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
-      if (graphicalOctaveShift.getStartNote() === undefined) { // fix for rendering range set
+      if (!graphicalOctaveShift.getStartNote()) { // fix for rendering range set
         graphicalOctaveShift.setStartNote(startMeasure.staffEntries[0]);
       }
-      if (graphicalOctaveShift.getStartNote() === undefined) { // fix for rendering range set
+      if (!graphicalOctaveShift.getStartNote()) { // fix for rendering range set
         graphicalOctaveShift.setEndNote(endMeasure.staffEntries.last());
       }
       startStaffLine.OctaveShifts.push(graphicalOctaveShift);
 
       // calculate RelativePosition and Dashes
       let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
-      if (startStaffEntry === undefined) { // fix for rendering range set
+      if (!startStaffEntry) { // fix for rendering range set
         startStaffEntry = startMeasure.staffEntries[0];
       }
       let endStaffEntry: GraphicalStaffEntry = endMeasure.findGraphicalStaffEntryFromTimestamp(endTimeStamp);
-      if (endStaffEntry === undefined) { // fix for rendering range set
+      if (!endStaffEntry) { // fix for rendering range set
         endStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
       }
 
@@ -647,7 +647,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (endStaffLine !== startStaffLine) {
         graphicalOctaveShift.endsOnDifferentStaffLine = true;
         let lastMeasure: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
-        if (lastMeasure === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+        if (!lastMeasure) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
           lastMeasure = endMeasure;
         }
         const lastNote: GraphicalStaffEntry = lastMeasure.staffEntries[lastMeasure.staffEntries.length - 1];
@@ -657,7 +657,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const remainingOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, endMeasure.PositionAndShape);
         endStaffLine.OctaveShifts.push(remainingOctaveShift);
         let firstMeasure: GraphicalMeasure = endStaffLine.Measures[0];
-        if (firstMeasure === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+        if (!firstMeasure) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
           firstMeasure = startMeasure;
         }
         const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
@@ -928,7 +928,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 for (const graphicalNote of graphicalVoiceEntry.notes) {
                   for (const slur of graphicalNote.sourceNote.NoteSlurs) {
                     // extra check for some MusicSheets that have openSlurs (because only the first Page is available -> Recordare files)
-                    if (slur.EndNote === undefined || slur.StartNote === undefined) {
+                    if (!slur.EndNote || !slur.StartNote) {
                       continue;
                     }
                     // add new VexFlowSlur to List

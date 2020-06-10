@@ -464,13 +464,13 @@ export class MusicSystemBuilder {
             }
         }
         if (isSystemStartMeasure) {
-            if (currentClef === undefined) {
+            if (!currentClef) {
                 currentClef = this.activeClefs[visibleStaffIdx];
             }
-            if (currentKey === undefined) {
+            if (!currentKey) {
                 currentKey = this.activeKeys[visibleStaffIdx];
             }
-            if (isFirstSourceMeasure && currentRhythm === undefined) {
+            if (isFirstSourceMeasure && !currentRhythm) {
                 currentRhythm = this.activeRhythm[visibleStaffIdx];
             }
         }
@@ -503,7 +503,7 @@ export class MusicSystemBuilder {
     }
 
     protected addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: GraphicalMeasure): number {
-        if (lastEntry === undefined || lastEntry.Instructions === undefined || lastEntry.Instructions.length === 0) {
+        if (!lastEntry || !lastEntry.Instructions || lastEntry.Instructions.length === 0) {
             return 0;
         }
         for (let idx: number = 0, len: number = lastEntry.Instructions.length; idx < len; ++idx) {
@@ -578,7 +578,7 @@ export class MusicSystemBuilder {
         let maxMeasureWidth: number = 0;
         for (let visStaffIdx: number = 0, len: number = visibleInstructionEntries.length; visStaffIdx < len; ++visStaffIdx) {
             const sse: SourceStaffEntry = visibleInstructionEntries[visStaffIdx];
-            if (sse === undefined) {
+            if (!sse) {
                 continue;
             }
             const instructions: AbstractNotationInstruction[] = sse.Instructions;
@@ -823,7 +823,7 @@ export class MusicSystemBuilder {
         if (this.measureListIndex < this.measureList.length - 1) {
             for (let visIndex: number = 0; visIndex < this.measureList[this.measureListIndex].length; visIndex++) {
                 const sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex + 1][visIndex].parentSourceMeasure;
-                if (sourceMeasure === undefined) {
+                if (!sourceMeasure) {
                     return undefined;
                 }
                 return sourceMeasure.getKeyInstruction(this.visibleStaffIndices[visIndex]);

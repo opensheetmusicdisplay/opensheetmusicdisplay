@@ -13,7 +13,7 @@ export class ChordSymbolReader {
         const kindText: IXmlAttribute = kind.attribute("text");
 
         // must be always present
-        if (root === undefined || kind === undefined) {
+        if (!root || !kind) {
           return undefined;
         }
 
@@ -21,7 +21,7 @@ export class ChordSymbolReader {
         const rootAlter: IXmlElement = root.element("root-alter");
 
         // a valid NoteEnum value should be present
-        if (rootStep === undefined) {
+        if (!rootStep) {
             return undefined;
         }
         let rootNote: NoteEnum;
@@ -112,7 +112,7 @@ export class ChordSymbolReader {
             const degreeValue: IXmlElement = degreeNode.element("degree-value");
             const degreeAlter: IXmlElement = degreeNode.element("degree-alter");
             const degreeType: IXmlElement = degreeNode.element("degree-type");
-            if (degreeValue === undefined || degreeAlter === undefined || degreeType === undefined) {
+            if (!degreeValue || !degreeAlter || !degreeType) {
               return undefined;
             }
 

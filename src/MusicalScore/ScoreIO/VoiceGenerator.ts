@@ -234,7 +234,7 @@ export class VoiceGenerator {
     const linkMusicTimestamp: Fraction = this.currentVoiceEntry.Timestamp.clone();
     const verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = currentMeasure.getVerticalContainerByTimestamp(linkMusicTimestamp);
     currentStaffEntry = verticalSourceStaffEntryContainer.StaffEntries[index];
-    if (currentStaffEntry === undefined) {
+    if (!currentStaffEntry) {
       currentStaffEntry = new SourceStaffEntry(verticalSourceStaffEntryContainer, currentStaff);
       verticalSourceStaffEntryContainer.StaffEntries[index] = currentStaffEntry;
     }
@@ -369,7 +369,7 @@ export class VoiceGenerator {
             try {
               if (pitchElement.name === "step") {
                 noteStep = NoteEnum[pitchElement.value];
-                if (noteStep === undefined) {
+                if (noteStep === undefined) { // don't replace undefined check
                   const errorMsg: string = ITextTranslation.translateText(
                     "ReaderErrorMessages/NotePitchError",
                     "Invalid pitch while reading note."
@@ -537,7 +537,7 @@ export class VoiceGenerator {
           this.lastBeamTag = currentBeamTag;
         }
         let sameVoiceEntry: boolean = false;
-        if (this.openBeam === undefined) {
+        if (!this.openBeam) {
             return;
           }
         for (let idx: number = 0, len: number = this.openBeam.Notes.length; idx < len; ++idx) {
@@ -718,7 +718,7 @@ export class VoiceGenerator {
             tupletnumber = this.openTupletNumber;
           }
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
-          if (tuplet === undefined) {
+          if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
           }
           const subnotelist: Note[] = [];

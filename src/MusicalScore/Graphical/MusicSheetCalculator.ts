@@ -1536,7 +1536,7 @@ export abstract class MusicSheetCalculator {
 
         for (let idx: number = 0, len: number = voiceEntry.Notes.length; idx < len; ++idx) {
             const note: Note = voiceEntry.Notes[idx];
-            if (note === undefined) {
+            if (!note) {
                 continue;
             }
             if (sourceStaffEntry !== undefined && sourceStaffEntry.Link !== undefined && linkedNotes !== undefined && linkedNotes.indexOf(note) > -1) {
@@ -1690,7 +1690,7 @@ export abstract class MusicSheetCalculator {
                         const gse: GraphicalStaffEntry = measure.staffEntries[0];
                         if (gse.graphicalVoiceEntries.length > 0 && gse.graphicalVoiceEntries[0].notes.length === 1) {
                             const graphicalNote: GraphicalNote = gse.graphicalVoiceEntries[0].notes[0];
-                            if (graphicalNote.sourceNote.Pitch === undefined && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.Length)) {
+                            if (!graphicalNote.sourceNote.Pitch && (new Fraction(1, 2)).lt(graphicalNote.sourceNote.Length)) {
                                 this.layoutMeasureWithWholeRest(graphicalNote, gse, measure);
                             }
                         }
@@ -1709,13 +1709,13 @@ export abstract class MusicSheetCalculator {
             return;
         }
         const voice1Note1: GraphicalNote = voice1Notes[0];
-        const voice1Note1IsRest: boolean = voice1Note1.sourceNote.Pitch === undefined;
+        const voice1Note1IsRest: boolean = voice1Note1.sourceNote.isRest();
         if (graphicalStaffEntry.graphicalVoiceEntries.length === 2) {
             let voice2Note1IsRest: boolean = false;
             const voice2Notes: GraphicalNote[] = graphicalStaffEntry.graphicalVoiceEntries[1].notes;
             if (voice2Notes.length > 0) {
                 const voice2Note1: GraphicalNote = voice2Notes[0];
-                voice2Note1IsRest = voice2Note1.sourceNote.Pitch === undefined;
+                voice2Note1IsRest = voice2Note1.sourceNote.isRest();
             }
             if (voice1Note1IsRest && voice2Note1IsRest) {
                 this.calculateTwoRestNotesPlacementWithCollisionDetection(graphicalStaffEntry);
@@ -2561,7 +2561,7 @@ export abstract class MusicSheetCalculator {
             index < this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers.length;
             ++index) {
             const gse: GraphicalStaffEntry = this.graphicalMusicSheet.VerticalGraphicalStaffEntryContainers[index].StaffEntries[staffIndex];
-            if (gse === undefined) {
+            if (!gse) {
                 continue;
             }
             if (gse.hasOnlyRests()) {
@@ -2573,7 +2573,7 @@ export abstract class MusicSheetCalculator {
             endStaffEntry = gse;
             endStaffLine = <StaffLine>endStaffEntry.parentMeasure.ParentStaffLine;
         }
-        if (endStaffEntry === undefined) {
+        if (!endStaffEntry) {
             return;
         }
         // if on the same StaffLine
@@ -2606,7 +2606,7 @@ export abstract class MusicSheetCalculator {
             startY -= lyricEntry.GraphicalLabel.PositionAndShape.Size.height / 4;
             // first Underscore until the StaffLine's End
             this.calculateSingleLyricWordWithUnderscore(startStaffLine, startX, endX, startY);
-            if (endStaffEntry === undefined) {
+            if (!endStaffEntry) {
                 return;
             }
             // second Underscore in the endStaffLine until endStaffEntry (if endStaffEntry isn't the first StaffEntry of the StaffLine))

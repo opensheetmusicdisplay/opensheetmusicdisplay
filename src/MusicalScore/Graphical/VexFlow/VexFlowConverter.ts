@@ -369,7 +369,7 @@ export class VexFlowConverter {
     }
 
     public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
-        if (vfnote === undefined || vfnote.getAttribute("type") === "GhostNote") {
+        if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
         // Articulations:
@@ -683,7 +683,7 @@ export class VexFlowConverter {
      * @returns {string}
      */
     public static keySignature(key: KeyInstruction): string {
-        if (key === undefined) {
+        if (!key) {
             return undefined;
         }
         let ret: string;

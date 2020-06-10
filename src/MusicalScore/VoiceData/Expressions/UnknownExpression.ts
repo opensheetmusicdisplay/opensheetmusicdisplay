@@ -6,7 +6,7 @@ export class UnknownExpression extends AbstractExpression {
         super(placement);
         this.label = label;
         this.staffNumber = staffNumber;
-        if (textAlignment === undefined) {
+        if (textAlignment === undefined) { // don't replace undefined check
             textAlignment = TextAlignmentEnum.LeftBottom;
         }
         this.textAlignment = textAlignment;

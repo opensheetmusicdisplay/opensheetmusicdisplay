@@ -96,7 +96,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
         if (key1 === key2) {
             return true;
         }
-        if ((key1 === undefined) || (key2 === undefined)) {
+        if (!key1 || !key2) {
             return false;
         }
         return (key1.Key === key2.Key && key1.Mode === key2.Mode);

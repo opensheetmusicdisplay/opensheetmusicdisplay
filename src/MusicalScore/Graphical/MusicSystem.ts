@@ -257,7 +257,7 @@ export abstract class MusicSystem extends GraphicalObject {
             }
             const instrument1: Instrument = this.findFirstVisibleInstrumentInInstrumentalGroup(instrumentGroup);
             const instrument2: Instrument = this.findLastVisibleInstrumentInInstrumentalGroup(instrumentGroup);
-            if (instrument1 === undefined || instrument2 === undefined) {
+            if (!instrument1 || !instrument2) {
                 continue;
             }
             let firstStaffLine: StaffLine = undefined;

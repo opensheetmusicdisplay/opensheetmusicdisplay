@@ -31,7 +31,7 @@ export class MusicPartManagerIterator {
             if (!startTimestamp) { return; }
             do {
                 this.moveToNext();
-            } while ((this.currentVoiceEntries === undefined || this.currentTimeStamp.lt(startTimestamp)) && !this.endReached);
+            } while ((!this.currentVoiceEntries || this.currentTimeStamp.lt(startTimestamp)) && !this.endReached);
             for (let staffIndex: number = 0; staffIndex < this.activeDynamicExpressions.length; staffIndex++) {
                 if (this.activeDynamicExpressions[staffIndex]) {
                     if (this.activeDynamicExpressions[staffIndex] instanceof ContinuousDynamicExpression) {
@@ -153,7 +153,7 @@ export class MusicPartManagerIterator {
      */
     public CurrentVisibleVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         const voiceEntries: VoiceEntry[] = [];
-        if (this.currentVoiceEntries === undefined) {
+        if (!this.currentVoiceEntries) {
             return voiceEntries;
         }
         if (instrument) {
@@ -178,7 +178,7 @@ export class MusicPartManagerIterator {
      */
     public CurrentAudibleVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         const voiceEntries: VoiceEntry[] = [];
-        if (this.currentVoiceEntries === undefined) {
+        if (!this.currentVoiceEntries) {
             return voiceEntries;
         }
         if (instrument) {
@@ -212,7 +212,7 @@ export class MusicPartManagerIterator {
      */
     public CurrentScoreFollowingVoiceEntries(instrument?: Instrument): VoiceEntry[] {
         const voiceEntries: VoiceEntry[] = [];
-        if (this.currentVoiceEntries === undefined) {
+        if (!this.currentVoiceEntries) {
             return voiceEntries;
         }
         if (instrument) {
@@ -240,7 +240,7 @@ export class MusicPartManagerIterator {
             this.currentVoiceEntries = [];
         }
         this.recursiveMove();
-        if (this.currentMeasure === undefined) {
+        if (!this.currentMeasure) {
             this.currentTimeStamp = new Fraction(99999, 1);
         }
     }
@@ -324,7 +324,7 @@ export class MusicPartManagerIterator {
     private handleRepetitionsAtMeasureBegin(): void {
         for (let idx: number = 0, len: number = this.currentMeasure.FirstRepetitionInstructions.length; idx < len; ++idx) {
             const repetitionInstruction: RepetitionInstruction = this.currentMeasure.FirstRepetitionInstructions[idx];
-            if (repetitionInstruction.parentRepetition === undefined) { continue; }
+            if (!repetitionInstruction.parentRepetition) { continue; }
             const currentRepetition: Repetition = repetitionInstruction.parentRepetition;
             this.currentRepetition = currentRepetition;
             if (currentRepetition.StartIndex === this.currentMeasureIndex) {
@@ -344,7 +344,7 @@ export class MusicPartManagerIterator {
         for (let idx: number = 0, len: number = this.currentMeasure.LastRepetitionInstructions.length; idx < len; ++idx) {
             const repetitionInstruction: RepetitionInstruction = this.currentMeasure.LastRepetitionInstructions[idx];
             const currentRepetition: Repetition = repetitionInstruction.parentRepetition;
-            if (currentRepetition === undefined) { continue; }
+            if (!currentRepetition) { continue; }
             if (currentRepetition.BackwardJumpInstructions.indexOf(repetitionInstruction) > -1) {
                 if (this.getRepetitionIterationCount(currentRepetition) < currentRepetition.UserNumberOfRepetitions) {
                     this.doBackJump(currentRepetition);
@@ -562,7 +562,7 @@ export class MusicPartManagerIterator {
     private getVoiceEntries(container: VerticalSourceStaffEntryContainer): VoiceEntry[] {
         const entries: VoiceEntry[] = [];
         for (const sourceStaffEntry of container.StaffEntries) {
-            if (sourceStaffEntry === undefined) { continue; }
+            if (!sourceStaffEntry) { continue; }
             for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
                 entries.push(voiceEntry);
             }

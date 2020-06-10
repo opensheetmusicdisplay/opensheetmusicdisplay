@@ -220,11 +220,11 @@ export class VoiceEntry {
     //    return this.createVoiceEntriesForOrnament(this, activeKey);
     //}
     public createVoiceEntriesForOrnament(voiceEntryWithOrnament: VoiceEntry, activeKey: KeyInstruction): VoiceEntry[] {
-        if (voiceEntryWithOrnament === undefined) {
+        if (!voiceEntryWithOrnament) {
             voiceEntryWithOrnament = this;
         }
         const voiceEntries: VoiceEntry[] = [];
-        if (voiceEntryWithOrnament.ornamentContainer === undefined) {
+        if (!voiceEntryWithOrnament.ornamentContainer) {
             return;
         }
         const baseNote: Note = this.notes[0];

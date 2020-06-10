@@ -623,7 +623,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
 
             // check if this voice has just been found the first time:
-            if (latestVoiceTimestamp === undefined) {
+            if (!latestVoiceTimestamp) {
                 // if this voice is new, check for a gap from measure start to the start of the current voice entry:
                 const gapFromMeasureStart: Fraction = Fraction.minus(gNotesStartTimestamp, this.parentSourceMeasure.AbsoluteTimestamp);
                 if (gapFromMeasureStart.RealValue > 0) {
@@ -677,7 +677,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public handleBeam(graphicalNote: GraphicalNote, beam: Beam): void {
         const voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
         let beams: [Beam, VexFlowVoiceEntry[]][] = this.beams[voiceID];
-        if (beams === undefined) {
+        if (!beams) {
             beams = this.beams[voiceID] = [];
         }
         let data: [Beam, VexFlowVoiceEntry[]];
@@ -686,7 +686,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 data = mybeam;
             }
         }
-        if (data === undefined) {
+        if (!data) {
             data = [beam, []];
             beams.push(data);
         }
@@ -700,7 +700,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const voiceID: number = graphicalNote.sourceNote.ParentVoiceEntry.ParentVoice.VoiceId;
         tuplet = graphicalNote.sourceNote.NoteTuplet;
         let tuplets: [Tuplet, VexFlowVoiceEntry[]][] = this.tuplets[voiceID];
-        if (tuplets === undefined) {
+        if (!tuplets) {
             tuplets = this.tuplets[voiceID] = [];
         }
         let currentTupletBuilder: [Tuplet, VexFlowVoiceEntry[]];
@@ -709,7 +709,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 currentTupletBuilder = t;
             }
         }
-        if (currentTupletBuilder === undefined) {
+        if (!currentTupletBuilder) {
             currentTupletBuilder = [tuplet, []];
             tuplets.push(currentTupletBuilder);
         }
@@ -731,7 +731,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
                 let vfbeams: Vex.Flow.Beam[] = this.vfbeams[voiceID];
-                if (vfbeams === undefined) {
+                if (!vfbeams) {
                     vfbeams = this.vfbeams[voiceID] = [];
                 }
                 for (const beam of this.beams[voiceID]) {
@@ -739,7 +739,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (const note of beam[0].Notes) {
                         if (note.Length.RealValue >= new Fraction(1, 4).RealValue
                             // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eigth)
-                            && (note.TypeLength === undefined || note.TypeLength.RealValue > 0.125)) {
+                            && (!note.TypeLength || note.TypeLength.RealValue > 0.125)) {
                             beamHasQuarterNoteOrLonger = true;
                             break;
                         }
@@ -818,7 +818,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const separateAutoBeams: StemmableNote[][] = []; // a set of separate beams, each having a set of notes (StemmableNote[]).
         this.autoVfBeams = []; // final Vex.Flow.Beams will be pushed/collected into this
         let timeSignature: Fraction = this.parentSourceMeasure.ActiveTimeSignature;
-        if (timeSignature === undefined) { // this doesn't happen in OSMD, but maybe in a SourceGenerator
+        if (!timeSignature) { // this doesn't happen in OSMD, but maybe in a SourceGenerator
             timeSignature = this.parentSourceMeasure.Duration; // suboptimal, can be 1/1 in a 4/4 time signature
         }
         /*if (this.parentSourceMeasure.FirstInstructionsStaffEntries[0]) {
@@ -885,7 +885,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
 
-                    if (currentTuplet === undefined) {
+                    if (!currentTuplet) {
                         currentTuplet = noteTuplet;
                     } else {
                         if (currentTuplet !== noteTuplet) { // new tuplet, finish old one
@@ -951,7 +951,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const voiceID in this.tuplets) {
             if (this.tuplets.hasOwnProperty(voiceID)) {
                 let vftuplets: Vex.Flow.Tuplet[] = this.vftuplets[voiceID];
-                if (vftuplets === undefined) {
+                if (!vftuplets) {
                     vftuplets = this.vftuplets[voiceID] = [];
                 }
                 for (const tupletBuilder of this.tuplets[voiceID]) {
@@ -1049,7 +1049,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
         for (const voice of voices) {
-            if (voice === undefined) {
+            if (!voice) {
                 continue;
             }
             const isMainVoice: boolean = !(voice instanceof LinkedVoice);
@@ -1137,7 +1137,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             for ( const gVoiceEntry of vfStaffEntry.graphicalVoiceEntries) {
                 for ( const gnote of gVoiceEntry.notes) {
                     const vfnote: [StaveNote, number] = (gnote as VexFlowGraphicalNote).vfnote;
-                    if (vfnote === undefined || vfnote[0] === undefined) {
+                    if (!vfnote || !vfnote[0]) {
                         continue;
                     }
 

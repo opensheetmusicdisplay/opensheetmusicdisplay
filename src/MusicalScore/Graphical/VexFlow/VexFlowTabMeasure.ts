@@ -51,7 +51,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
         for (const voice of voices) {
-            if (voice === undefined) {
+            if (!voice) {
                 continue;
             }
 
