@@ -1,6 +1,7 @@
 import { GraphicalNote } from "../Graphical/GraphicalNote";
-import { ClefInstruction } from "../VoiceData";
 
 export interface IStafflineNoteCalculator {
-    positionNote(graphicalNote: GraphicalNote, currentClef: ClefInstruction, stafflineCount: number): GraphicalNote;
+    trackNote(graphicalNote: GraphicalNote, staffIndex: number): void;
+    positionNote(graphicalNote: GraphicalNote, staffIndex: number): GraphicalNote;
+    getStafflineUniquePositionCount(staffIndex: number): number;
 }

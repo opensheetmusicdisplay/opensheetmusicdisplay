@@ -290,8 +290,8 @@ export class EngravingRules {
         // Beam Sizing Variables
         this.clefLeftMargin = 0.5;
         this.clefRightMargin = 0.75;
-        this.percussionOneLineCutoff = 4;
-        this.percussionForceVoicesOneLineCutoff = 3;
+        this.percussionOneLineCutoff = 3;
+        this.percussionForceVoicesOneLineCutoff = 1;
         this.betweenKeySymbolsDistance = 0.2;
         this.keyRightMargin = 0.75;
         this.rhythmRightMargin = 1.25;
