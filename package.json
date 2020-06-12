@@ -18,6 +18,7 @@
     "build:webpack-dev": "webpack --progress --colors --config webpack.dev.js",
     "build:webpack-sourcemap": "webpack --progress --colors --config webpack.sourcemap.js",
     "start": "webpack-dev-server --progress --colors --config webpack.dev.js",
+    "start:local": "webpack-dev-server --progress --colors --config webpack.local.js",
     "generatePNG": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./export 1000 1600 allSmall --debug",
     "generatePNG:single": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./export 0 0 ^Beethoven",
     "generatePNG:legacyslow": "node ./test/Util/generateDiffImagesPuppeteerLocalhost.js ./test/data ./export 0 0 all",
