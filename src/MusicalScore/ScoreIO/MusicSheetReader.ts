@@ -26,7 +26,7 @@ import {EngravingRules} from "../Graphical";
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
     constructor(afterSheetReadingModules: IAfterSheetReadingModule[] = undefined, rules: EngravingRules = new EngravingRules()) {
-     if (afterSheetReadingModules === undefined) {
+     if (!afterSheetReadingModules) {
        this.afterSheetReadingModules = [];
      } else {
        this.afterSheetReadingModules = afterSheetReadingModules;
@@ -92,15 +92,15 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     //}
     //public ReadMusicSheetParameters(sheetObject: MusicSheetParameterObject, root: IXmlElement, path: string): MusicSheetParameterObject {
     //  this.musicSheet = new MusicSheet();
-    //  if (root !== undefined) {
+    //  if (root) {
     //    this.pushSheetLabels(root, path);
-    //    if (this.musicSheet.Title !== undefined) {
+    //    if (this.musicSheet.Title) {
     //      sheetObject.Title = this.musicSheet.Title.text;
     //    }
-    //    if (this.musicSheet.Composer !== undefined) {
+    //    if (this.musicSheet.Composer) {
     //      sheetObject.Composer = this.musicSheet.Composer.text;
     //    }
-    //    if (this.musicSheet.Lyricist !== undefined) {
+    //    if (this.musicSheet.Lyricist) {
     //      sheetObject.Lyricist = this.musicSheet.Lyricist.text;
     //    }
     //    let partlistNode: IXmlElement = root.element("part-list");
@@ -120,12 +120,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.musicSheet = new MusicSheet();
         this.musicSheet.Path = path;
         this.musicSheet.Rules = this.rules;
-        if (root === undefined) {
+        if (!root) {
             throw new MusicSheetReadingException("Undefined root element");
         }
         this.pushSheetLabels(root, path);
         const partlistNode: IXmlElement = root.element("part-list");
-        if (partlistNode === undefined) {
+        if (!partlistNode) {
             throw new MusicSheetReadingException("Undefined partListNode");
         }
 
@@ -136,10 +136,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.currentFraction = new Fraction(0, 1);
         let guitarPro: boolean = false;
         let encoding: IXmlElement = root.element("identification");
-        if (encoding !== undefined) {
+        if (encoding) {
             encoding = encoding.element("encoding");
         }
-        if (encoding !== undefined) {
+        if (encoding) {
             encoding = encoding.element("software");
         }
         if (encoding !== undefined && encoding.value === "Guitar Pro 5") {
@@ -173,9 +173,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             }
         }
 
-        if (this.repetitionInstructionReader !== undefined) {
+        if (this.repetitionInstructionReader) {
             this.repetitionInstructionReader.removeRedundantInstructions();
-            if (this.repetitionCalculator !== undefined) {
+            if (this.repetitionCalculator) {
                 this.repetitionCalculator.calculateRepetitions(this.musicSheet, this.repetitionInstructionReader.repetitionInstructions);
             }
         }
@@ -222,7 +222,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
                 currentInstrument.createStaves(instrumentNumberOfStaves);
                 instrumentReaders.push(new InstrumentReader(this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
-                if (this.repetitionInstructionReader !== undefined) {
+                if (this.repetitionInstructionReader) {
                     this.repetitionInstructionReader.xmlMeasureList[counter] = xmlMeasureList;
                 }
                 counter++;
@@ -240,7 +240,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private checkIfRhythmInstructionsAreSetAndEqual(instrumentReaders: InstrumentReader[]): void {
         const rhythmInstructions: RhythmInstruction[] = [];
         for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
-            if (this.currentMeasure.FirstInstructionsStaffEntries[i] !== undefined) {
+            if (this.currentMeasure.FirstInstructionsStaffEntries[i]) {
                 const last: AbstractNotationInstruction = this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions[
                 this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions.length - 1
                     ];
@@ -271,7 +271,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     this.currentMeasure.FirstInstructionsStaffEntries[i].removeAllInstructionsOfTypeRhythmInstruction();
                     this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions.push(rhythmInstruction.clone());
                 }
-                if (this.currentMeasure.FirstInstructionsStaffEntries[i] === undefined) {
+                if (!this.currentMeasure.FirstInstructionsStaffEntries[i]) {
                     this.currentMeasure.FirstInstructionsStaffEntries[i] = new SourceStaffEntry(undefined, undefined);
                     this.currentMeasure.FirstInstructionsStaffEntries[i].Instructions.push(rhythmInstruction.clone());
                 }
@@ -284,7 +284,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (rhythmInstructions.length === 0 && this.currentMeasure === this.musicSheet.SourceMeasures[0]) {
             const rhythmInstruction: RhythmInstruction = new RhythmInstruction(new Fraction(4, 4, 0, false), RhythmSymbolEnum.NONE);
             for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
-                if (this.currentMeasure.FirstInstructionsStaffEntries[i] === undefined) {
+                if (!this.currentMeasure.FirstInstructionsStaffEntries[i]) {
                     this.currentMeasure.FirstInstructionsStaffEntries[i] = new SourceStaffEntry(undefined, undefined);
                 } else {
                     this.currentMeasure.FirstInstructionsStaffEntries[i].removeAllInstructionsOfTypeRhythmInstruction();
@@ -415,10 +415,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * @returns {boolean}
      */
     private checkIfMeasureIsImplicit(maxInstrumentDuration: Fraction, activeRhythm: Fraction): boolean {
-        if (this.previousMeasure === undefined && maxInstrumentDuration.lt(activeRhythm)) {
+        if (!this.previousMeasure && maxInstrumentDuration.lt(activeRhythm)) {
             return true;
         }
-        if (this.previousMeasure !== undefined) {
+        if (this.previousMeasure) {
             return Fraction.plus(this.previousMeasure.Duration, maxInstrumentDuration).Equals(activeRhythm);
         }
         return false;
@@ -444,7 +444,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private graphicalMeasureIsEmpty(index: number): boolean {
         let counter: number = 0;
         for (let i: number = 0; i < this.currentMeasure.VerticalSourceStaffEntryContainers.length; i++) {
-            if (this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries[index] === undefined) {
+            if (!this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries[index]) {
                 counter++;
             }
         }
@@ -459,7 +459,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         for (let i: number = this.currentMeasure.VerticalSourceStaffEntryContainers.length - 1; i >= 0; i--) {
             for (let j: number = this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries.length - 1; j >= 0; j--) {
                 const sourceStaffEntry: SourceStaffEntry = this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries[j];
-                if (sourceStaffEntry !== undefined) {
+                if (sourceStaffEntry) {
                     for (let k: number = sourceStaffEntry.VoiceEntries.length - 1; k >= 0; k--) {
                         const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[k];
                         if (voiceEntry.Notes.length === 0) {
@@ -477,7 +477,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             let counter: number = 0;
             for (let idx: number = 0, len: number = this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries.length; idx < len; ++idx) {
                 const sourceStaffEntry: SourceStaffEntry = this.currentMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries[idx];
-                if (sourceStaffEntry === undefined) {
+                if (!sourceStaffEntry) {
                     counter++;
                 }
             }
@@ -496,14 +496,14 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.readComposer(root);
         this.readTitle(root);
         try {
-            if (this.musicSheet.Title === undefined || this.musicSheet.Composer === undefined) {
+            if (!this.musicSheet.Title || !this.musicSheet.Composer) {
                 this.readTitleAndComposerFromCredits(root); // this can also throw an error
             }
         } catch (ex) {
             log.info("MusicSheetReader.pushSheetLabels", "readTitleAndComposerFromCredits", ex);
         }
         try {
-            if (this.musicSheet.Title === undefined) {
+            if (!this.musicSheet.Title) {
                 const barI: number = Math.max(
                     0, filePath.lastIndexOf("/"), filePath.lastIndexOf("\\")
                 );
@@ -528,7 +528,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
     private readComposer(root: IXmlElement): void {
         const identificationNode: IXmlElement = root.element("identification");
-        if (identificationNode !== undefined) {
+        if (identificationNode) {
             const creators: IXmlElement[] = identificationNode.elements("creator");
             for (let idx: number = 0, len: number = creators.length; idx < len; ++idx) {
                 const creator: IXmlElement = creators[idx];
@@ -563,7 +563,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             }
             if (credit.attribute("page").value === "1") {
                 let creditChild: IXmlElement = undefined;
-                if (credit !== undefined) {
+                if (credit) {
                     creditChild = credit.element("credit-words");
                     if (!creditChild.attribute("justify")) {
                         break;
@@ -572,7 +572,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     const creditY: string = creditChild.attribute("default-y").value;
                     const creditYInfo: number = parseFloat(creditY);
                     if (creditYInfo > systemYCoordinates) {
-                        if (this.musicSheet.Title === undefined) {
+                        if (!this.musicSheet.Title) {
                             const creditSize: string = creditChild.attribute("font-size").value;
                             const titleCreditSizeInt: number = parseFloat(creditSize);
                             if (largestTitleCreditSize < titleCreditSizeInt) {
@@ -580,7 +580,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                 finalTitle = creditChild.value;
                             }
                         }
-                        if (this.musicSheet.Subtitle === undefined) {
+                        if (!this.musicSheet.Subtitle) {
                             if (creditJustify !== "right" && creditJustify !== "left") {
                                 if (largestCreditYInfo < creditYInfo) {
                                     largestCreditYInfo = creditYInfo;
@@ -593,7 +593,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                 }
                             }
                         }
-                        if (!(this.musicSheet.Composer !== undefined && this.musicSheet.Lyricist !== undefined)) {
+                        if (!(this.musicSheet.Composer !== undefined && this.musicSheet.Lyricist)) {
                             switch (creditJustify) {
                                 case "right":
                                     this.musicSheet.Composer = new Label(this.trimString(creditChild.value));
@@ -609,16 +609,16 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 }
             }
         }
-        if (this.musicSheet.Title === undefined && finalTitle) {
+        if (!this.musicSheet.Title && finalTitle) {
             this.musicSheet.Title = new Label(this.trimString(finalTitle));
         }
-        if (this.musicSheet.Subtitle === undefined && finalSubtitle) {
+        if (!this.musicSheet.Subtitle && finalSubtitle) {
             this.musicSheet.Subtitle = new Label(this.trimString(finalSubtitle));
         }
     }
 
     private computeSystemYCoordinates(root: IXmlElement): number {
-        if (root.element("defaults") === undefined) {
+        if (!root.element("defaults")) {
             return 0;
         }
         let paperHeight: number = 0;
@@ -636,11 +636,11 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             const measures: IXmlElement[] = parts[idx].elements("measure");
             for (let idx2: number = 0, len2: number = measures.length; idx2 < len2; ++idx2) {
                 const measure: IXmlElement = measures[idx2];
-                if (measure.element("print") !== undefined) {
+                if (measure.element("print")) {
                     const systemLayouts: IXmlElement[] = measure.element("print").elements("system-layout");
                     for (let idx3: number = 0, len3: number = systemLayouts.length; idx3 < len3; ++idx3) {
                         const syslab: IXmlElement = systemLayouts[idx3];
-                        if (syslab.element("top-system-distance") !== undefined) {
+                        if (syslab.element("top-system-distance")) {
                             const topSystemDistanceString: string = syslab.element("top-system-distance").value;
                             topSystemDistance = parseFloat(topSystemDistanceString);
                             found = true;
@@ -654,9 +654,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 break;
             }
         }
-        if (root.element("defaults").element("system-layout") !== undefined) {
+        if (root.element("defaults").element("system-layout")) {
             const syslay: IXmlElement = root.element("defaults").element("system-layout");
-            if (syslay.element("top-system-distance") !== undefined) {
+            if (syslay.element("top-system-distance")) {
                 const topSystemDistanceString: string = root.element("defaults").element("system-layout").element("top-system-distance").value;
                 topSystemDistance = parseFloat(topSystemDistanceString);
             }
@@ -670,24 +670,24 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private readTitle(root: IXmlElement): void {
         const titleNode: IXmlElement = root.element("work");
         let titleNodeChild: IXmlElement = undefined;
-        if (titleNode !== undefined) {
+        if (titleNode) {
             titleNodeChild = titleNode.element("work-title");
-            if (titleNodeChild !== undefined && titleNodeChild.value) {
+            if (titleNodeChild && titleNodeChild.value) {
                 this.musicSheet.Title = new Label(this.trimString(titleNodeChild.value));
             }
         }
         const movementNode: IXmlElement = root.element("movement-title");
         let finalSubTitle: string = "";
-        if (movementNode !== undefined) {
-            if (this.musicSheet.Title === undefined) {
+        if (movementNode) {
+            if (!this.musicSheet.Title) {
                 this.musicSheet.Title = new Label(this.trimString(movementNode.value));
             } else {
                 finalSubTitle = this.trimString(movementNode.value);
             }
         }
-        if (titleNode !== undefined) {
+        if (titleNode) {
             const subtitleNodeChild: IXmlElement = titleNode.element("work-number");
-            if (subtitleNodeChild !== undefined) {
+            if (subtitleNodeChild) {
                 const workNumber: string = subtitleNodeChild.value;
                 if (workNumber) {
                     if (finalSubTitle === "") {
@@ -734,7 +734,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                 subInstrument.idString = partElement.firstAttribute.value;
                                 instrument.SubInstruments.push(subInstrument);
                                 const subElement: IXmlElement = partElement.element("instrument-name");
-                                if (subElement !== undefined) {
+                                if (subElement) {
                                     subInstrument.name = subElement.value;
                                     subInstrument.setMidiInstrument(subElement.value);
                                 }
@@ -794,7 +794,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         instrument.SubInstruments.push(subInstrument);
                     }
                     instrumentDict[instrIdString] = instrument;
-                    if (currentGroup !== undefined) {
+                    if (currentGroup) {
                         currentGroup.InstrumentalGroups.push(instrument);
                         this.musicSheet.Instruments.push(instrument);
                     } else {
@@ -804,7 +804,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 } else {
                     if ((node.name === "part-group") && (node.attribute("type").value === "start")) {
                         const iG: InstrumentalGroup = new InstrumentalGroup("group", this.musicSheet, currentGroup);
-                        if (currentGroup !== undefined) {
+                        if (currentGroup) {
                             currentGroup.InstrumentalGroups.push(iG);
                         } else {
                             this.musicSheet.InstrumentalGroups.push(iG);
@@ -812,10 +812,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         currentGroup = iG;
                     } else {
                         if ((node.name === "part-group") && (node.attribute("type").value === "stop")) {
-                            if (currentGroup !== undefined) {
+                            if (currentGroup) {
                                 if (currentGroup.InstrumentalGroups.length === 1) {
                                     const instr: InstrumentalGroup = currentGroup.InstrumentalGroups[0];
-                                    if (currentGroup.Parent !== undefined) {
+                                    if (currentGroup.Parent) {
                                         currentGroup.Parent.InstrumentalGroups.push(instr);
                                         this._removeFromArray(currentGroup.Parent.InstrumentalGroups, currentGroup);
                                     } else {
@@ -856,12 +856,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             const xmlMeasureList: IXmlElement[] = partNode.elements("measure");
             if (xmlMeasureList.length > 0) {
                 const xmlMeasure: IXmlElement = xmlMeasureList[0];
-                if (xmlMeasure !== undefined) {
+                if (xmlMeasure) {
                     let stavesNode: IXmlElement = xmlMeasure.element("attributes");
-                    if (stavesNode !== undefined) {
+                    if (stavesNode) {
                         stavesNode = stavesNode.element("staves");
                     }
-                    if (stavesNode === undefined) {
+                    if (!stavesNode) {
                         num++;
                     } else {
                         num += parseInt(stavesNode.value, 10);
@@ -886,13 +886,13 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private getInstrumentNumberOfStavesFromXml(partNode: IXmlElement): number {
         let num: number = 0;
         const xmlMeasure: IXmlElement = partNode.element("measure");
-        if (xmlMeasure !== undefined) {
+        if (xmlMeasure) {
             const attributes: IXmlElement = xmlMeasure.element("attributes");
             let staves: IXmlElement = undefined;
-            if (attributes !== undefined) {
+            if (attributes) {
                 staves = attributes.element("staves");
             }
-            if (attributes === undefined || staves === undefined) {
+            if (!attributes || !staves) {
                 num = 1;
             } else {
                 num = parseInt(staves.value, 10);

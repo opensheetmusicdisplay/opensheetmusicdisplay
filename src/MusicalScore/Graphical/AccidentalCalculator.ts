@@ -37,7 +37,7 @@ export class AccidentalCalculator {
     }
 
     public checkAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void {
-        if (pitch === undefined) {
+        if (!pitch) {
             return;
         }
         const pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;

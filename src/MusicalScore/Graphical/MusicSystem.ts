@@ -59,7 +59,7 @@ export abstract class MusicSystem extends GraphicalObject {
 
     public set Parent(value: GraphicalMusicPage) {
         // remove from old page
-        if (this.parent !== undefined) {
+        if (this.parent) {
             const index: number = this.parent.MusicSystems.indexOf(this, 0);
             if (index > -1) {
                 this.parent.MusicSystems.splice(index, 1);
@@ -236,7 +236,7 @@ export abstract class MusicSystem extends GraphicalObject {
                         lastStaffLine = staffLine;
                     }
                 }
-                if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
+                if (firstStaffLine && lastStaffLine) {
                     this.createInstrumentBracket(firstStaffLine, lastStaffLine);
                 }
             }
@@ -257,7 +257,7 @@ export abstract class MusicSystem extends GraphicalObject {
             }
             const instrument1: Instrument = this.findFirstVisibleInstrumentInInstrumentalGroup(instrumentGroup);
             const instrument2: Instrument = this.findLastVisibleInstrumentInInstrumentalGroup(instrumentGroup);
-            if (instrument1 === undefined || instrument2 === undefined) {
+            if (!instrument1 || !instrument2) {
                 continue;
             }
             let firstStaffLine: StaffLine = undefined;
@@ -271,7 +271,7 @@ export abstract class MusicSystem extends GraphicalObject {
                     lastStaffLine = staffLine;
                 }
             }
-            if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
+            if (firstStaffLine && lastStaffLine) {
                 this.createGroupBracket(firstStaffLine, lastStaffLine, recursionDepth);
             }
             if (instrumentGroup.InstrumentalGroups.length < 1) {
@@ -371,7 +371,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const measure: GraphicalMeasure = this.staffLines[i].Measures[idx];
                 for (let idx2: number = 0, len2: number = measure.staffEntries.length; idx2 < len2; ++idx2) {
                     const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
-                    if (staffEntry.sourceStaffEntry.Link !== undefined) {
+                    if (staffEntry.sourceStaffEntry.Link) {
                         first = true;
                     }
                 }
@@ -380,7 +380,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const measure: GraphicalMeasure = this.staffLines[i + 1].Measures[idx];
                 for (let idx2: number = 0, len2: number = measure.staffEntries.length; idx2 < len2; ++idx2) {
                     const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
-                    if (staffEntry.sourceStaffEntry.Link !== undefined) {
+                    if (staffEntry.sourceStaffEntry.Link) {
                         second = true;
                     }
                 }

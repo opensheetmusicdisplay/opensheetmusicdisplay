@@ -101,7 +101,7 @@ export class Cursor {
 
   public update(): void {
     // Warning! This should NEVER call this.openSheetMusicDisplay.render()
-    if (this.hidden || this.hidden === undefined) {
+    if (this.hidden || this.hidden === undefined || this.hidden === null) {
       return;
     }
     // this.graphic?.Cursors?.length = 0;
@@ -109,7 +109,7 @@ export class Cursor {
     // TODO when measure draw range (drawUpToMeasureNumber) was changed, next/update can fail to move cursor. but of course it can be reset before.
 
     const voiceEntries: VoiceEntry[] = iterator.CurrentVisibleVoiceEntries();
-    if (iterator.EndReached || iterator.CurrentVoiceEntries === undefined || voiceEntries.length === 0) {
+    if (iterator.EndReached || !iterator.CurrentVoiceEntries || voiceEntries.length === 0) {
       return;
     }
     let x: number = 0, y: number = 0, height: number = 0;
@@ -121,7 +121,7 @@ export class Cursor {
           gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
     x = gse.PositionAndShape.AbsolutePosition.x;
     const musicSystem: MusicSystem = gse.parentMeasure.ParentMusicSystem;
-    if (musicSystem === undefined) {
+    if (!musicSystem) {
       return;
     }
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;

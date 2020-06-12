@@ -117,7 +117,7 @@ export class VexFlowConverter {
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
         const notehead: Notehead = note.sourceNote.Notehead;
         let noteheadCode: string = "";
-        if (notehead !== undefined) {
+        if (notehead) {
             noteheadCode = this.NoteHeadCode(notehead);
         }
         return [fund + "n/" + octave + noteheadCode, acc, note.Clef()];
@@ -318,7 +318,7 @@ export class VexFlowConverter {
             // when the stem is connected to a beamed main note (e.g. Haydn Concertante bar 57)
             gve.parentVoiceEntry.WantedStemDirection = gve.notes[0].sourceNote.NoteBeam.Notes[0].ParentVoiceEntry.WantedStemDirection;
         }
-        if (gve.parentVoiceEntry !== undefined) {
+        if (gve.parentVoiceEntry) {
             const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
@@ -369,7 +369,7 @@ export class VexFlowConverter {
     }
 
     public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
-        if (vfnote === undefined || vfnote.getAttribute("type") === "GhostNote") {
+        if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
         // Articulations:
@@ -433,7 +433,7 @@ export class VexFlowConverter {
                     break;
                 }
             }
-            if (vfArt !== undefined) {
+            if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
                 (vfnote as StaveNote).addModifier(0, vfArt);
             }
@@ -488,7 +488,7 @@ export class VexFlowConverter {
                 return;
             }
         }
-        if (vfOrna !== undefined) {
+        if (vfOrna) {
             if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
                 vfOrna.setLowerAccidental(Pitch.accidentalVexflow(oContainer.AccidentalBelow));
             }
@@ -683,7 +683,7 @@ export class VexFlowConverter {
      * @returns {string}
      */
     public static keySignature(key: KeyInstruction): string {
-        if (key === undefined) {
+        if (!key) {
             return undefined;
         }
         let ret: string;

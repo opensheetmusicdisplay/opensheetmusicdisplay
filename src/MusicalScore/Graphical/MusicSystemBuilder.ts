@@ -327,7 +327,7 @@ export class MusicSystemBuilder {
      * @param staff
      */
     protected addStaffLineToMusicSystem(musicSystem: MusicSystem, relativeYPosition: number, staff: Staff): void {
-        if (musicSystem !== undefined) {
+        if (musicSystem) {
             const staffLine: StaffLine = MusicSheetCalculator.symbolFactory.createStaffLine(musicSystem, staff);
             musicSystem.StaffLines.push(staffLine);
             const boundingBox: BoundingBox = staffLine.PositionAndShape;
@@ -366,7 +366,7 @@ export class MusicSystemBuilder {
      */
     protected initializeActiveInstructions(measureList: GraphicalMeasure[]): void {
         const firstSourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
-        if (firstSourceMeasure !== undefined) {
+        if (firstSourceMeasure) {
             this.visibleStaffIndices = this.graphicalMusicSheet.getVisibleStavesIndicesFromSourceMeasure(measureList);
             for (let i: number = 0, len: number = this.visibleStaffIndices.length; i < len; i++) {
                 const staffIndex: number = this.visibleStaffIndices[i];
@@ -451,7 +451,7 @@ export class MusicSystemBuilder {
         let currentClef: ClefInstruction = undefined;
         let currentKey: KeyInstruction = undefined;
         let currentRhythm: RhythmInstruction = undefined;
-        if (firstEntry !== undefined) {
+        if (firstEntry) {
             for (let idx: number = 0, len: number = firstEntry.Instructions.length; idx < len; ++idx) {
                 const abstractNotationInstruction: AbstractNotationInstruction = firstEntry.Instructions[idx];
                 if (abstractNotationInstruction instanceof ClefInstruction) {
@@ -464,26 +464,26 @@ export class MusicSystemBuilder {
             }
         }
         if (isSystemStartMeasure) {
-            if (currentClef === undefined) {
+            if (!currentClef) {
                 currentClef = this.activeClefs[visibleStaffIdx];
             }
-            if (currentKey === undefined) {
+            if (!currentKey) {
                 currentKey = this.activeKeys[visibleStaffIdx];
             }
-            if (isFirstSourceMeasure && currentRhythm === undefined) {
+            if (isFirstSourceMeasure && !currentRhythm) {
                 currentRhythm = this.activeRhythm[visibleStaffIdx];
             }
         }
         let clefAdded: boolean = false;
         let keyAdded: boolean = false;
         let rhythmAdded: boolean = false;
-        if (currentClef !== undefined) {
+        if (currentClef) {
             measure.addClefAtBegin(currentClef);
             clefAdded = true;
         } else {
             currentClef = this.activeClefs[visibleStaffIdx];
         }
-        if (currentKey !== undefined) {
+        if (currentKey) {
             currentKey = this.transposeKeyInstruction(currentKey, measure);
             const previousKey: KeyInstruction = isSystemStartMeasure ? undefined : this.activeKeys[visibleStaffIdx];
             measure.addKeyAtBegin(currentKey, previousKey, currentClef);
@@ -503,7 +503,7 @@ export class MusicSystemBuilder {
     }
 
     protected addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: GraphicalMeasure): number {
-        if (lastEntry === undefined || lastEntry.Instructions === undefined || lastEntry.Instructions.length === 0) {
+        if (!lastEntry || !lastEntry.Instructions || lastEntry.Instructions.length === 0) {
             return 0;
         }
         for (let idx: number = 0, len: number = lastEntry.Instructions.length; idx < len; ++idx) {
@@ -527,7 +527,7 @@ export class MusicSystemBuilder {
         for (let visStaffIdx: number = 0, len: number = graphicalMeasures.length; visStaffIdx < len; visStaffIdx++) {
             const staffIndex: number = this.visibleStaffIndices[visStaffIdx];
             const firstEntry: SourceStaffEntry = measure.FirstInstructionsStaffEntries[staffIndex];
-            if (firstEntry !== undefined) {
+            if (firstEntry) {
                 for (let idx: number = 0, len2: number = firstEntry.Instructions.length; idx < len2; ++idx) {
                     const abstractNotationInstruction: AbstractNotationInstruction = firstEntry.Instructions[idx];
                     if (abstractNotationInstruction instanceof ClefInstruction) {
@@ -542,7 +542,7 @@ export class MusicSystemBuilder {
             const entries: SourceStaffEntry[] = measure.getEntriesPerStaff(staffIndex);
             for (let idx: number = 0, len2: number = entries.length; idx < len2; ++idx) {
                 const staffEntry: SourceStaffEntry = entries[idx];
-                if (staffEntry.Instructions !== undefined) {
+                if (staffEntry.Instructions) {
                     for (let idx2: number = 0, len3: number = staffEntry.Instructions.length; idx2 < len3; ++idx2) {
                         const abstractNotationInstruction: AbstractNotationInstruction = staffEntry.Instructions[idx2];
                         if (abstractNotationInstruction instanceof ClefInstruction) {
@@ -552,7 +552,7 @@ export class MusicSystemBuilder {
                 }
             }
             const lastEntry: SourceStaffEntry = measure.LastInstructionsStaffEntries[staffIndex];
-            if (lastEntry !== undefined) {
+            if (lastEntry) {
                 const instructions: AbstractNotationInstruction[] = lastEntry.Instructions;
                 for (let idx: number = 0, len3: number = instructions.length; idx < len3; ++idx) {
                     const abstractNotationInstruction: AbstractNotationInstruction = instructions[idx];
@@ -578,7 +578,7 @@ export class MusicSystemBuilder {
         let maxMeasureWidth: number = 0;
         for (let visStaffIdx: number = 0, len: number = visibleInstructionEntries.length; visStaffIdx < len; ++visStaffIdx) {
             const sse: SourceStaffEntry = visibleInstructionEntries[visStaffIdx];
-            if (sse === undefined) {
+            if (!sse) {
                 continue;
             }
             const instructions: AbstractNotationInstruction[] = sse.Instructions;
@@ -593,7 +593,7 @@ export class MusicSystemBuilder {
                     rhythmInstruction = <RhythmInstruction>instruction;
                 }
             }
-            if (keyInstruction !== undefined || rhythmInstruction !== undefined) {
+            if (keyInstruction !== undefined || rhythmInstruction) {
                 const measureWidth: number = this.addExtraInstructionMeasure(visStaffIdx, keyInstruction, rhythmInstruction);
                 maxMeasureWidth = Math.max(maxMeasureWidth, measureWidth);
             }
@@ -613,7 +613,7 @@ export class MusicSystemBuilder {
         const measures: GraphicalMeasure[] = [];
         const measure: GraphicalMeasure = MusicSheetCalculator.symbolFactory.createExtraGraphicalMeasure(currentSystem.StaffLines[visStaffIdx]);
         measures.push(measure);
-        if (keyInstruction !== undefined) {
+        if (keyInstruction) {
             measure.addKeyAtBegin(keyInstruction, this.activeKeys[visStaffIdx], this.activeClefs[visStaffIdx]);
         }
         if (rhythmInstruction !== undefined && rhythmInstruction.PrintObject) {
@@ -633,7 +633,7 @@ export class MusicSystemBuilder {
      * @param graphicalMeasures
      */
     protected addStaveMeasuresToSystem(graphicalMeasures: GraphicalMeasure[]): void {
-        if (graphicalMeasures[0] !== undefined) {
+        if (graphicalMeasures[0]) {
             const gmeasures: GraphicalMeasure[] = [];
             for (let i: number = 0; i < graphicalMeasures.length; i++) {
                 gmeasures.push(graphicalMeasures[i]);
@@ -823,7 +823,7 @@ export class MusicSystemBuilder {
         if (this.measureListIndex < this.measureList.length - 1) {
             for (let visIndex: number = 0; visIndex < this.measureList[this.measureListIndex].length; visIndex++) {
                 const sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex + 1][visIndex].parentSourceMeasure;
-                if (sourceMeasure === undefined) {
+                if (!sourceMeasure) {
                     return undefined;
                 }
                 return sourceMeasure.getKeyInstruction(this.visibleStaffIndices[visIndex]);

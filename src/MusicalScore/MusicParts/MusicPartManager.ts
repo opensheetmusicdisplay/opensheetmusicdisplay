@@ -54,7 +54,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         return this.musicSheet;
     }
     public getIterator(start?: Fraction): MusicPartManagerIterator {
-        if (start === undefined) {
+        if (!start) {
           return new MusicPartManagerIterator(this, this.musicSheet.SelectionStart, this.musicSheet.SelectionEnd);
         }
         return new MusicPartManagerIterator(this, start, undefined);
@@ -64,8 +64,8 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         this.musicSheet.SelectionEnd = undefined;
     }
     public setSelectionRange(start: Fraction, end: Fraction): void {
-        this.musicSheet.SelectionStart = start === undefined ? this.sheetStart : start;
-        this.musicSheet.SelectionEnd = end === undefined ? this.sheetEnd : end;
+        this.musicSheet.SelectionStart = start ?? this.sheetStart;
+        this.musicSheet.SelectionEnd = end ?? this.sheetEnd;
     }
     private calcMapping(): void {
         const timestamps: TimestampTransform[] = [];
@@ -89,7 +89,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
                     curTimestampTransform.curRepetition = jumpRep;
                     curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;
                     for (let i: number = this.timestamps.length - 2; i >= 0; i--) {
-                        if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition !== undefined) {
+                        if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition) {
                             break;
                         }
                         timestamps[i].nextBackJump = curTimestampTransform.nextBackJump;

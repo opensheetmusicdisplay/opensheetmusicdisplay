@@ -43,7 +43,7 @@ export class RhythmInstruction extends AbstractNotationInstruction {
         if (rhythm1 === rhythm2) {
             return true;
         }
-        if ((<Object>rhythm1 === undefined) || (<Object>rhythm2 === undefined)) {
+        if (!rhythm1 || !rhythm2) {
             return false;
         }
         return (rhythm1.numerator === rhythm2.numerator && rhythm1.denominator === rhythm2.denominator);

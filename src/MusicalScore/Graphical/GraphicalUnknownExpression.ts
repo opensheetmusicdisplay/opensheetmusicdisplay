@@ -2,7 +2,7 @@
 import { StaffLine } from "./StaffLine";
 import { GraphicalLabel } from "./GraphicalLabel";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
-import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { PlacementEnum, AbstractExpression } from "../VoiceData/Expressions/AbstractExpression";
 import { MultiExpression } from "../VoiceData/Expressions/MultiExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import log from "loglevel";
@@ -10,11 +10,10 @@ import { SourceMeasure } from "../VoiceData/SourceMeasure";
 
 export class GraphicalUnknownExpression extends AbstractGraphicalExpression {
     public sourceMultiExpression: MultiExpression;
-    public placement: PlacementEnum;
 
-    constructor(staffLine: StaffLine, label: GraphicalLabel, measure: SourceMeasure,
+    constructor(staffLine: StaffLine, label: GraphicalLabel, placement: PlacementEnum, measure: SourceMeasure,
                 sourceMultiExpression: MultiExpression = undefined) {
-        super(staffLine, undefined, measure);
+        super(staffLine, new AbstractExpression(placement), measure);
         this.label = label;
         this.sourceMultiExpression = sourceMultiExpression;
     }

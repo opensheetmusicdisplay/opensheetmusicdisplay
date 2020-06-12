@@ -5,7 +5,6 @@ import { AbstractGraphicalExpression } from "../AbstractGraphicalExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { EngravingRules } from "../EngravingRules";
 import { PlacementEnum } from "../../VoiceData/Expressions";
-import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 
 export class AlignmentManager {
     private parentStaffline: StaffLine;
@@ -24,37 +23,8 @@ export class AlignmentManager {
             const currentExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx];
             const nextExpression: AbstractGraphicalExpression = this.parentStaffline.AbstractExpressions[aeIdx + 1];
 
-            let currentExpressionPlacement: PlacementEnum = undefined;
-            if (currentExpression?.SourceExpression) {
-                currentExpressionPlacement = currentExpression.Placement;
-            } else if (currentExpression instanceof GraphicalUnknownExpression) {
-                currentExpressionPlacement = (currentExpression as GraphicalUnknownExpression).
-                    sourceMultiExpression?.getPlacementOfFirstEntry();
-            }
-            // same for nextExpression:
-            let nextExpressionPlacement: PlacementEnum = undefined;
-            if (nextExpression?.SourceExpression) {
-                nextExpressionPlacement = nextExpression.Placement;
-            } else if (nextExpression instanceof GraphicalUnknownExpression) {
-                nextExpressionPlacement = (nextExpression as GraphicalUnknownExpression).
-                    sourceMultiExpression?.getPlacementOfFirstEntry();
-            }
-
-            // if (currentExpression?.SourceExpression === undefined ||
-            //     nextExpression?.SourceExpression === undefined) {
-            //     continue;
-            //     // TODO: this doesn't work yet for GraphicalUnknownExpression, because it doesn't have an AbstractExpression,
-            //     //   so it doesn't have a .Placement.
-            //     //   this lead to if (currentExpression.Placement...) crashing.
-
-            //     // same result:
-            //     // if (currentExpression instanceof GraphicalUnknownExpression ||
-            //     //     nextExpression instanceof GraphicalUnknownExpression) {
-            //     //         continue;
-            //     // }
-            // } else {
-            //     samePlacement = currentExpression.Placement === nextExpression.Placement;
-            // }
+            const currentExpressionPlacement: PlacementEnum = currentExpression?.SourceExpression?.Placement;
+            const nextExpressionPlacement: PlacementEnum = nextExpression?.SourceExpression?.Placement;
 
             // TODO this shifts dynamics in An die Ferne Geliebte, showing that there's something wrong with the RelativePositions etc with wedges
             // if (currentExpression instanceof GraphicalContinuousDynamicExpression) {

@@ -34,7 +34,7 @@ export class VoiceGenerator {
   constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
     this.musicSheet = instrument.GetMusicSheet;
     this.slurReader = slurReader;
-    if (mainVoice !== undefined) {
+    if (mainVoice) {
       this.voice = new LinkedVoice(instrument, voiceId, mainVoice);
     } else {
       this.voice = new Voice(instrument, voiceId);
@@ -120,15 +120,15 @@ export class VoiceGenerator {
                              printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
-      if (this.lyricsReader !== undefined && lyricElements !== undefined) {
+      if (this.lyricsReader !== undefined && lyricElements) {
         this.lyricsReader.addLyricEntry(lyricElements, this.currentVoiceEntry);
         this.voice.Parent.HasLyrics = true;
       }
       let hasTupletCommand: boolean = false;
       const notationNode: IXmlElement = noteNode.element("notations");
-      if (notationNode !== undefined) {
+      if (notationNode) {
         // read articulations
-        if (this.articulationReader !== undefined) {
+        if (this.articulationReader) {
           this.readArticulations(notationNode, this.currentVoiceEntry);
         }
         // read slurs
@@ -148,12 +148,12 @@ export class VoiceGenerator {
         const arpeggioNode: IXmlElement = notationNode.element("arpeggiate");
         if (arpeggioNode !== undefined && !this.currentVoiceEntry.IsGrace) {
           let currentArpeggio: Arpeggio;
-          if (this.currentVoiceEntry.Arpeggio !== undefined) { // add note to existing Arpeggio
+          if (this.currentVoiceEntry.Arpeggio) { // add note to existing Arpeggio
             currentArpeggio = this.currentVoiceEntry.Arpeggio;
           } else { // create new Arpeggio
             let arpeggioAlreadyExists: boolean = false;
             for (const voiceEntry of this.currentStaffEntry.VoiceEntries) {
-              if (voiceEntry.Arpeggio !== undefined) {
+              if (voiceEntry.Arpeggio) {
                 arpeggioAlreadyExists = true;
                 currentArpeggio = voiceEntry.Arpeggio;
                 // TODO handle multiple arpeggios across multiple voices at same timestamp
@@ -234,7 +234,7 @@ export class VoiceGenerator {
     const linkMusicTimestamp: Fraction = this.currentVoiceEntry.Timestamp.clone();
     const verticalSourceStaffEntryContainer: VerticalSourceStaffEntryContainer = currentMeasure.getVerticalContainerByTimestamp(linkMusicTimestamp);
     currentStaffEntry = verticalSourceStaffEntryContainer.StaffEntries[index];
-    if (currentStaffEntry === undefined) {
+    if (!currentStaffEntry) {
       currentStaffEntry = new SourceStaffEntry(verticalSourceStaffEntryContainer, currentStaff);
       verticalSourceStaffEntryContainer.StaffEntries[index] = currentStaffEntry;
     }
@@ -245,7 +245,7 @@ export class VoiceGenerator {
   }
 
   public checkForOpenBeam(): void {
-    if (this.openBeam !== undefined && this.currentNote !== undefined) {
+    if (this.openBeam !== undefined && this.currentNote) {
       this.handleOpenBeam();
     }
   }
@@ -314,19 +314,19 @@ export class VoiceGenerator {
 
   private readArticulations(notationNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
     const articNode: IXmlElement = notationNode.element("articulations");
-    if (articNode !== undefined) {
+    if (articNode) {
       this.articulationReader.addArticulationExpression(articNode, currentVoiceEntry);
     }
     const fermaNode: IXmlElement = notationNode.element("fermata");
-    if (fermaNode !== undefined) {
+    if (fermaNode) {
       this.articulationReader.addFermata(fermaNode, currentVoiceEntry);
     }
     const tecNode: IXmlElement = notationNode.element("technical");
-    if (tecNode !== undefined) {
+    if (tecNode) {
       this.articulationReader.addTechnicalArticulations(tecNode, currentVoiceEntry);
     }
     const ornaNode: IXmlElement = notationNode.element("ornaments");
-    if (ornaNode !== undefined) {
+    if (ornaNode) {
       this.articulationReader.addOrnament(ornaNode, currentVoiceEntry);
       // const tremoloNode: IXmlElement = ornaNode.element("tremolo");
       // tremolo should be and is added per note, not per VoiceEntry. see addSingleNote()
@@ -369,7 +369,7 @@ export class VoiceGenerator {
             try {
               if (pitchElement.name === "step") {
                 noteStep = NoteEnum[pitchElement.value];
-                if (noteStep === undefined) {
+                if (noteStep === undefined) { // don't replace undefined check
                   const errorMsg: string = ITextTranslation.translateText(
                     "ReaderErrorMessages/NotePitchError",
                     "Invalid pitch while reading note."
@@ -409,18 +409,18 @@ export class VoiceGenerator {
           }
         } else if (noteElement.name === "unpitched") {
           const displayStep: IXmlElement = noteElement.element("display-step");
-          if (displayStep !== undefined) {
+          if (displayStep) {
             noteStep = NoteEnum[displayStep.value.toUpperCase()];
           }
           const octave: IXmlElement = noteElement.element("display-octave");
-          if (octave !== undefined) {
+          if (octave) {
             noteOctave = parseInt(octave.value, 10);
             if (guitarPro) {
               noteOctave += 1;
             }
           }
         } else if (noteElement.name === "instrument") {
-          if (noteElement.firstAttribute !== undefined) {
+          if (noteElement.firstAttribute) {
             playbackInstrumentId = noteElement.firstAttribute.value;
           }
         } else if (noteElement.name === "notehead") {
@@ -442,15 +442,15 @@ export class VoiceGenerator {
     let fretNumber: number = -1;
     // check for guitar tabs:
     const notationNode: IXmlElement = node.element("notations");
-    if (notationNode !== undefined) {
+    if (notationNode) {
       const technicalNode: IXmlElement = notationNode.element("technical");
-      if (technicalNode !== undefined) {
+      if (technicalNode) {
         const stringNode: IXmlElement = technicalNode.element("string");
-        if (stringNode !== undefined) {
+        if (stringNode) {
           stringNumber = parseInt(stringNode.value, 10);
         }
         const fretNode: IXmlElement = technicalNode.element("fret");
-        if (fretNode !== undefined) {
+        if (fretNode) {
           fretNumber = parseInt(fretNode.value, 10);
         }
       }
@@ -505,7 +505,7 @@ export class VoiceGenerator {
     restNote.NoteheadColorXml = noteheadColorXml;
     restNote.NoteheadColor = noteheadColorXml;
     this.currentVoiceEntry.Notes.push(restNote);
-    if (this.openBeam !== undefined) {
+    if (this.openBeam) {
       this.openBeam.ExtendedNoteList.push(restNote);
     }
     return restNote;
@@ -523,13 +523,13 @@ export class VoiceGenerator {
       if (beamNode !== undefined && beamNode.hasAttributes) {
         beamAttr = beamNode.attribute("number");
       }
-      if (beamAttr !== undefined) {
+      if (beamAttr) {
         const beamNumber: number = parseInt(beamAttr.value, 10);
         const mainBeamNode: IXmlElement[] = node.elements("beam");
         const currentBeamTag: string = mainBeamNode[0].value;
-        if (beamNumber === 1 && mainBeamNode !== undefined) {
+        if (beamNumber === 1 && mainBeamNode) {
           if (currentBeamTag === "begin" && this.lastBeamTag !== currentBeamTag) {
-              if (this.openBeam !== undefined) {
+              if (this.openBeam) {
                 this.handleOpenBeam();
               }
               this.openBeam = new Beam();
@@ -537,7 +537,7 @@ export class VoiceGenerator {
           this.lastBeamTag = currentBeamTag;
         }
         let sameVoiceEntry: boolean = false;
-        if (this.openBeam === undefined) {
+        if (!this.openBeam) {
             return;
           }
         for (let idx: number = 0, len: number = this.openBeam.Notes.length; idx < len; ++idx) {
@@ -584,7 +584,7 @@ export class VoiceGenerator {
         const nextStaffEntry: SourceStaffEntry = this.currentMeasure
           .VerticalSourceStaffEntryContainers[horizontalIndex + 1]
           .StaffEntries[verticalIndex];
-        if (nextStaffEntry !== undefined) {
+        if (nextStaffEntry) {
           for (let idx: number = 0, len: number = nextStaffEntry.VoiceEntries.length; idx < len; ++idx) {
             const voiceEntry: VoiceEntry = nextStaffEntry.VoiceEntries[idx];
             if (voiceEntry.ParentVoice === this.voice) {
@@ -614,7 +614,7 @@ export class VoiceGenerator {
     let bracketed: boolean = false; // xml bracket attribute value
     if (tupletNodeList !== undefined && tupletNodeList.length > 1) {
       let timeModNode: IXmlElement = node.element("time-modification");
-      if (timeModNode !== undefined) {
+      if (timeModNode) {
         timeModNode = timeModNode.element("actual-notes");
       }
       const tupletNodeListArr: IXmlElement[] = tupletNodeList;
@@ -632,7 +632,7 @@ export class VoiceGenerator {
               tupletNumber = parseInt(tupletNode.attribute("number").value, 10);
             }
             let tupletLabelNumber: number = 0;
-            if (timeModNode !== undefined) {
+            if (timeModNode) {
               tupletLabelNumber = parseInt(timeModNode.value, 10);
               if (isNaN(tupletLabelNumber)) {
                 const errorMsg: string = ITextTranslation.translateText(
@@ -644,7 +644,7 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
-            if (this.tupletDict[tupletNumber] !== undefined) {
+            if (this.tupletDict[tupletNumber]) {
               delete this.tupletDict[tupletNumber];
               if (Object.keys(this.tupletDict).length === 0) {
                 this.openTupletNumber = 0;
@@ -665,7 +665,7 @@ export class VoiceGenerator {
               tupletNumber = parseInt(tupletNode.attribute("number").value, 10);
             }
             const tuplet: Tuplet = this.tupletDict[tupletNumber];
-            if (tuplet !== undefined) {
+            if (tuplet) {
               const subnotelist: Note[] = [];
               subnotelist.push(this.currentNote);
               tuplet.Notes.push(subnotelist);
@@ -681,7 +681,7 @@ export class VoiceGenerator {
           }
         }
       }
-    } else if (tupletNodeList[0] !== undefined) {
+    } else if (tupletNodeList[0]) {
       const n: IXmlElement = tupletNodeList[0];
       if (n.hasAttributes) {
         const type: string = n.attribute("type").value;
@@ -699,10 +699,10 @@ export class VoiceGenerator {
         if (type === "start") {
           let tupletLabelNumber: number = 0;
           let timeModNode: IXmlElement = node.element("time-modification");
-          if (timeModNode !== undefined) {
+          if (timeModNode) {
             timeModNode = timeModNode.element("actual-notes");
           }
-          if (timeModNode !== undefined) {
+          if (timeModNode) {
             tupletLabelNumber = parseInt(timeModNode.value, 10);
             if (isNaN(tupletLabelNumber)) {
               const errorMsg: string = ITextTranslation.translateText(
@@ -718,7 +718,7 @@ export class VoiceGenerator {
             tupletnumber = this.openTupletNumber;
           }
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
-          if (tuplet === undefined) {
+          if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
           }
           const subnotelist: Note[] = [];
@@ -732,7 +732,7 @@ export class VoiceGenerator {
             tupletnumber = this.openTupletNumber;
           }
           const tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
-          if (tuplet !== undefined) {
+          if (tuplet) {
             const subnotelist: Note[] = [];
             subnotelist.push(this.currentNote);
             tuplet.Notes.push(subnotelist);
@@ -756,7 +756,7 @@ export class VoiceGenerator {
    * @param noteNode
    */
   private handleTimeModificationNode(noteNode: IXmlElement): void {
-    if (this.tupletDict[this.openTupletNumber] !== undefined) {
+    if (this.tupletDict[this.openTupletNumber]) {
       try {
         // Tuplet should already be created
         const tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
@@ -782,7 +782,7 @@ export class VoiceGenerator {
 
     } else if (this.currentVoiceEntry.Notes.length > 0) {
       const firstNote: Note = this.currentVoiceEntry.Notes[0];
-      if (firstNote.NoteTuplet !== undefined) {
+      if (firstNote.NoteTuplet) {
         const tuplet: Tuplet = firstNote.NoteTuplet;
         const notes: Note[] = CollectionUtil.last(tuplet.Notes);
         notes.push(this.currentNote);
@@ -792,7 +792,7 @@ export class VoiceGenerator {
   }
 
   private addTie(tieNodeList: IXmlElement[], measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction): void {
-    if (tieNodeList !== undefined) {
+    if (tieNodeList) {
       if (tieNodeList.length === 1) {
         const tieNode: IXmlElement = tieNodeList[0];
         if (tieNode !== undefined && tieNode.attributes()) {
@@ -809,7 +809,7 @@ export class VoiceGenerator {
             } else if (type === "stop") {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
               const tie: Tie = this.openTieDict[tieNumber];
-              if (tie !== undefined) {
+              if (tie) {
                 tie.AddNote(this.currentNote);
                 if (maxTieNoteFraction.lt(Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length))) {
                   maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
@@ -878,9 +878,9 @@ export class VoiceGenerator {
    * @returns {any}
    */
   private getTupletNoteDurationFromType(xmlNode: IXmlElement): Fraction {
-    if (xmlNode.element("type") !== undefined) {
+    if (xmlNode.element("type")) {
       const typeNode: IXmlElement = xmlNode.element("type");
-      if (typeNode !== undefined) {
+      if (typeNode) {
         const type: string = typeNode.value;
         try {
           return this.getNoteDurationFromType(type);

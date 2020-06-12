@@ -42,10 +42,10 @@ export class RepetitionInstructionReader {
       const styleNode: IXmlElement = barlineNode.element("bar-style");
 
       // if location is ommited in Xml, right is implied (from documentation)
-      if (styleNode !== undefined) {
+      if (styleNode) {
         style = styleNode.value;
       }
-      if (barlineNode.attributes().length > 0 && barlineNode.attribute("location") !== undefined) {
+      if (barlineNode.attributes().length > 0 && barlineNode.attribute("location")) {
         location = barlineNode.attribute("location").value;
       } else {
         location = "right";
@@ -59,7 +59,7 @@ export class RepetitionInstructionReader {
           hasRepeat = true;
           direction = childNode.attribute("direction").value;
         } else if ( "ending" === childNode.name && childNode.hasAttributes &&
-                    childNode.attribute("type") !== undefined && childNode.attribute("number") !== undefined) {
+                    childNode.attribute("type") !== undefined && childNode.attribute("number")) {
           type = childNode.attribute("type").value;
           const num: string = childNode.attribute("number").value;
 
@@ -121,7 +121,7 @@ export class RepetitionInstructionReader {
 
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
-    if (wordsNode !== undefined) {
+    if (wordsNode) {
       const dsRegEx: string = "d\\s?\\.s\\."; // Input for new RegExp(). TS eliminates the first \
       // must Trim string and ToLower before compare
       const innerText: string = wordsNode.value.trim().toLowerCase();
@@ -219,7 +219,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-    } else if (directionTypeNode.element("segno") !== undefined) {
+    } else if (directionTypeNode.element("segno")) {
       let measureIndex: number = this.currentMeasureIndex;
       if (relativeMeasurePosition > 0.5) {
         measureIndex++;
@@ -227,7 +227,7 @@ export class RepetitionInstructionReader {
       const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
       this.addInstruction(this.repetitionInstructions, newInstruction);
       return true;
-    } else if (directionTypeNode.element("coda") !== undefined) {
+    } else if (directionTypeNode.element("coda")) {
       let measureIndex: number = this.currentMeasureIndex;
       if (relativeMeasurePosition > 0.5) {
         measureIndex++;

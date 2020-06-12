@@ -205,7 +205,7 @@ export class InstantaneousTempoExpression extends AbstractTempoExpression {
         }
     }
     public static isInputStringInstantaneousTempo(inputString: string): boolean {
-        if (inputString === undefined) { return false; }
+        if (!inputString) { return false; }
         return (
             (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoLarghissimo, inputString))
             || (InstantaneousTempoExpression.isStringInStringList(InstantaneousTempoExpression.listInstantaneousTempoGrave, inputString))

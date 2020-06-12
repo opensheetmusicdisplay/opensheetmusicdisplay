@@ -27,14 +27,14 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
         this.parentMeasure = parentMeasure;
         this.graphicalVoiceEntries = [];
         this.sourceStaffEntry = sourceStaffEntry;
-        if (staffEntryParent !== undefined) {
+        if (staffEntryParent) {
             this.staffEntryParent = staffEntryParent;
             this.parentVerticalContainer = staffEntryParent.parentVerticalContainer;
             this.PositionAndShape = new BoundingBox(this, staffEntryParent.PositionAndShape);
         } else {
             this.PositionAndShape = new BoundingBox(this, parentMeasure.PositionAndShape);
         }
-        if (sourceStaffEntry !== undefined) {
+        if (sourceStaffEntry) {
             this.relInMeasureTimestamp = sourceStaffEntry.Timestamp;
         }
     }
@@ -77,7 +77,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      */
     public getAbsoluteTimestamp(): Fraction {
         const result: Fraction = this.parentMeasure.parentSourceMeasure.AbsoluteTimestamp.clone();
-        if (this.relInMeasureTimestamp !== undefined) {
+        if (this.relInMeasureTimestamp) {
             result.Add(this.relInMeasureTimestamp);
         }
         return result;
@@ -110,7 +110,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      * @returns {any}
      */
     public findEndTieGraphicalNoteFromNoteWithStartingSlur(tieNote: Note, slur: Slur): GraphicalNote {
-        if (tieNote === undefined) {
+        if (!tieNote) {
             return undefined;
         }
         for (const gve of this.graphicalVoiceEntries) {
@@ -119,7 +119,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
             }
             for (const graphicalNote of gve.notes) {
                 const note: Note = graphicalNote.sourceNote;
-                if (note.NoteTie !== undefined && note.NoteSlurs.indexOf(slur) !== -1) {
+                if (note.NoteTie && note.NoteSlurs.indexOf(slur) !== -1) {
                     return graphicalNote;
                 }
             }
@@ -128,7 +128,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public findGraphicalNoteFromGraceNote(graceNote: Note): GraphicalNote {
-        if (graceNote === undefined) {
+        if (!graceNote) {
             return undefined;
         }
         for (const gve of this.graphicalVoiceEntries) {
@@ -145,7 +145,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     }
 
     public findGraphicalNoteFromNote(note: Note): GraphicalNote {
-        if (note === undefined) {
+        if (!note) {
             return undefined;
         }
         for (const gve of this.graphicalVoiceEntries) {
@@ -191,7 +191,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      * @returns {boolean}
      */
     public isVoiceEntryPartOfLinkedVoiceEntry(voiceEntry: VoiceEntry): boolean {
-        if (this.sourceStaffEntry.Link !== undefined) {
+        if (this.sourceStaffEntry.Link) {
             for (let idx: number = 0, len: number = this.sourceStaffEntry.Link.LinkStaffEntries.length; idx < len; ++idx) {
                 const sEntry: SourceStaffEntry = this.sourceStaffEntry.Link.LinkStaffEntries[idx];
                 if (sEntry.VoiceEntries.indexOf(voiceEntry) !== -1 && sEntry !== this.sourceStaffEntry) {

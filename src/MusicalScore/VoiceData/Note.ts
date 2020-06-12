@@ -22,7 +22,7 @@ export class Note {
         this.parentStaffEntry = parentStaffEntry;
         this.length = length;
         this.pitch = pitch;
-        if (pitch !== undefined) {
+        if (pitch) {
             this.halfTone = pitch.getHalfTone();
         } else {
           this.halfTone = 0;
@@ -216,7 +216,7 @@ export class Note {
     }
 
     public isRest(): boolean {
-        return this.Pitch === undefined;
+        return this.Pitch === undefined || this.Pitch === null;
     }
 
     /** Note: May be dangerous to use if ParentStaffEntry.VerticalContainerParent etc is not set.
@@ -229,7 +229,7 @@ export class Note {
     }
 
     public ToString(): string {
-        if (this.pitch !== undefined) {
+        if (this.pitch) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
         } else {
           return "rest note, length: " + this.length.toString();

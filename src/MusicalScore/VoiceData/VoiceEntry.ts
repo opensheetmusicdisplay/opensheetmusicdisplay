@@ -180,7 +180,7 @@ export class VoiceEntry {
     public hasTie(): boolean {
         for (let idx: number = 0, len: number = this.Notes.length; idx < len; ++idx) {
             const note: Note = this.Notes[idx];
-            if (note.NoteTie !== undefined) { return true; }
+            if (note.NoteTie) { return true; }
         }
         return false;
     }
@@ -220,11 +220,11 @@ export class VoiceEntry {
     //    return this.createVoiceEntriesForOrnament(this, activeKey);
     //}
     public createVoiceEntriesForOrnament(voiceEntryWithOrnament: VoiceEntry, activeKey: KeyInstruction): VoiceEntry[] {
-        if (voiceEntryWithOrnament === undefined) {
+        if (!voiceEntryWithOrnament) {
             voiceEntryWithOrnament = this;
         }
         const voiceEntries: VoiceEntry[] = [];
-        if (voiceEntryWithOrnament.ornamentContainer === undefined) {
+        if (!voiceEntryWithOrnament.ornamentContainer) {
             return;
         }
         const baseNote: Note = this.notes[0];

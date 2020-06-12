@@ -58,7 +58,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         }
 
         // set background color if not transparent
-        if (this.rules.PageBackgroundColor !== undefined) {
+        if (this.rules.PageBackgroundColor) {
             this.ctx.save();
             // note that this will hide the cursor
             this.ctx.setFillStyle(this.rules.PageBackgroundColor);

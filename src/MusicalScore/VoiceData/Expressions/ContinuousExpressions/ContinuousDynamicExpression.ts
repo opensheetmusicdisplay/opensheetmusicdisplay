@@ -79,7 +79,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         this.setType();
     }
     public static isInputStringContinuousDynamic(inputString: string): boolean {
-        if (inputString === undefined) { return false; }
+        if (!inputString) { return false; }
         return (
             ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicIncreasing, inputString)
             || ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicDecreasing, inputString)
@@ -88,7 +88,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     public getInterpolatedDynamic(currentAbsoluteTimestamp: Fraction): number {
         const continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsoluteTimestamp;
         let continuousAbsoluteEndTimestamp: Fraction;
-        if (this.EndMultiExpression !== undefined) {
+        if (this.EndMultiExpression) {
             continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsoluteTimestamp;
         } else {
             continuousAbsoluteEndTimestamp = Fraction.plus(
@@ -104,7 +104,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         return interpolatedVolume;
     }
     public isWedge(): boolean {
-        return this.label === undefined;
+        return !this.label;
     }
     private setType(): void {
         if (ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicIncreasing, this.label)) {
