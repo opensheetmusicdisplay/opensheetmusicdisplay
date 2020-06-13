@@ -112,21 +112,25 @@ export class OpenSheetMusicDisplay {
                 // UTF with BOM detected, truncate first three bytes and pass along
                 return self.load(str.substr(3));
             }
-            if (str.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
-                log.debug("[OSMD] Finally parsing XML content, length: " + str.length);
+            let trimmedStr: string = str;
+            if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
+                trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc
+            }
+            if (trimmedStr.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
+                log.debug("[OSMD] Finally parsing XML content, length: " + trimmedStr.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
-                content = parser.parseFromString(str, "application/xml");
-            } else if (str.length < 2083) { // TODO do proper URL format check
-                log.debug("[OSMD] Retrieve the file at the given URL: " + str);
+                content = parser.parseFromString(trimmedStr, "application/xml");
+            } else if (trimmedStr.length < 2083) { // TODO do proper URL format check
+                log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
-                return AJAX.ajax(str).then(
+                return AJAX.ajax(trimmedStr).then(
                     (s: string) => { return self.load(s); },
                     (exc: Error) => { throw exc; }
                 );
             } else {
-                console.error("[OSMD] osmd.load(string): Could not process string. Missing else branch?");
+                console.error("[OSMD] osmd.load(string): Could not process string. Did not find <?xml at beginning.");
             }
         }
 
