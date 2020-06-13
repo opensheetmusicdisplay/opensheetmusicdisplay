@@ -19,8 +19,6 @@ import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/Abstra
 import { Dictionary } from "typescript-collections";
 import { NoteEnum } from "..";
 import { AutoColorSet, GraphicalMusicPage } from "../MusicalScore";
-import jspdf = require("jspdf-yworks/dist/jspdf.min");
-import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces";
 /**
@@ -781,59 +779,6 @@ export class OpenSheetMusicDisplay {
             const f: PageFormat = new PageFormat(width, height);
             this.rules.PageFormat = f;
         }
-    }
-
-    /**
-     * Creates a Pdf of the currently rendered MusicXML
-     * @param pdfName if no name is given, the composer and title of the piece will be used
-     */
-    public createPdf(pdfName: string = undefined): void {
-        if (this.backendType !== BackendType.SVG) {
-            console.log("[OSMD] osmd.createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
-                " Please use osmd.setOptions({backendType: SVG}).");
-            return;
-        }
-
-        if (pdfName === undefined) {
-            pdfName = this.sheet.FullNameString + ".pdf";
-        }
-
-        const backends: VexFlowBackend[] = this.drawer.Backends;
-        let svgElement: SVGElement = (<SvgVexFlowBackend>backends[0]).getSvgElement();
-
-        let pageWidth: number = 210;
-        let pageHeight: number = 297;
-        const engravingRulesPageFormat: PageFormat = this.rules.PageFormat;
-        if (engravingRulesPageFormat && !engravingRulesPageFormat.IsUndefined) {
-            pageWidth = engravingRulesPageFormat.width;
-            pageHeight = engravingRulesPageFormat.height;
-        } else {
-            pageHeight = pageWidth * svgElement.clientHeight / svgElement.clientWidth;
-        }
-
-        const orientation: string = pageHeight > pageWidth ? "p" : "l";
-        // create a new jsPDF instance
-        const pdf: any = new jspdf(orientation, "mm", [pageWidth, pageHeight]);
-        const scale: number = pageWidth / svgElement.clientWidth;
-        for (let idx: number = 0, len: number = backends.length; idx < len; ++idx) {
-            if (idx > 0) {
-                pdf.addPage();
-            }
-            svgElement = (<SvgVexFlowBackend>backends[idx]).getSvgElement();
-
-            // render the svg element
-            svg2pdf(svgElement, pdf, {
-                scale: scale,
-                xOffset: 0,
-                yOffset: 0
-            });
-        }
-
-        // simply save the created pdf
-        pdf.save(pdfName);
-
-        // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
-        // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32
     }
 
     //#region GETTER / SETTER
