@@ -1,4 +1,6 @@
-import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
+import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay';
+import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min'
+import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
 /*jslint browser:true */
 (function () {
@@ -354,7 +356,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         for (const printPdfBtn of printPdfBtns) {
             if (printPdfBtn) {
                 printPdfBtn.onclick = function () {
-                    openSheetMusicDisplay.createPdf();
+                    createPdf();
                 }
             }
         }
@@ -767,6 +769,59 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 zoomOut.disabled = disabledValue;
             }
         }
+    }
+
+    /**
+     * Creates a Pdf of the currently rendered MusicXML
+     * @param pdfName if no name is given, the composer and title of the piece will be used
+     */
+    function createPdf(pdfName) {
+        if (openSheetMusicDisplay.backendType !== BackendType.SVG) {
+            console.log("[OSMD] createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
+                " Please use osmd.setOptions({backendType: SVG}).");
+            return;
+        }
+
+        if (pdfName === undefined) {
+            pdfName = openSheetMusicDisplay.sheet.FullNameString + ".pdf";
+        }
+
+        const backends = openSheetMusicDisplay.drawer.Backends;
+        let svgElement = backends[0].getSvgElement();
+
+        let pageWidth = 210;
+        let pageHeight = 297;
+        const engravingRulesPageFormat = openSheetMusicDisplay.rules.PageFormat;
+        if (engravingRulesPageFormat && !engravingRulesPageFormat.IsUndefined) {
+            pageWidth = engravingRulesPageFormat.width;
+            pageHeight = engravingRulesPageFormat.height;
+        } else {
+            pageHeight = pageWidth * svgElement.clientHeight / svgElement.clientWidth;
+        }
+
+        const orientation = pageHeight > pageWidth ? "p" : "l";
+        // create a new jsPDF instance
+        const pdf = new jsPDF(orientation, "mm", [pageWidth, pageHeight]);
+        const scale = pageWidth / svgElement.clientWidth;
+        for (let idx = 0, len = backends.length; idx < len; ++idx) {
+            if (idx > 0) {
+                pdf.addPage();
+            }
+            svgElement = backends[idx].getSvgElement();
+
+            // render the svg element
+            svg2pdf(svgElement, pdf, {
+                scale: scale,
+                xOffset: 0,
+                yOffset: 0
+            });
+        }
+
+        // simply save the created pdf
+        pdf.save(pdfName);
+
+        // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
+        // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32
     }
 
     // Register events: load, drag&drop
