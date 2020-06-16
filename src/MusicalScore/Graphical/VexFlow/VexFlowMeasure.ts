@@ -426,19 +426,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
             //if we already have a volta in the prev measure, should match it's height, or if we are higher, it should match ours
             //find previous sibling measure that may have volta
             const currentMeasureNumber: number = this.parentSourceMeasure.MeasureNumber;
-            for (let i: number = 0; i < this.ParentMusicSystem.GraphicalMeasures.length; i++) {
-                const nextMeasureList: GraphicalMeasure[] = this.ParentMusicSystem.GraphicalMeasures[i];
-                if (nextMeasureList === undefined || nextMeasureList.length < 1) {
-                    continue;
-                }
-                const nextMeasure: GraphicalMeasure = this.ParentMusicSystem.GraphicalMeasures[i][0];
-                if (!(nextMeasure instanceof VexFlowMeasure)) {
+            for (let i: number = 0; i < this.ParentStaffLine.Measures.length; i++) {
+                const tempMeasure: GraphicalMeasure = this.ParentStaffLine.Measures[i];
+                if (!(tempMeasure instanceof VexFlowMeasure)) {
                     //should never be the case... But check just to be sure
                     continue;
                 }
-                if (nextMeasure.MeasureNumber === currentMeasureNumber - 1) {
+                if (tempMeasure.MeasureNumber === currentMeasureNumber - 1) {
                     //We found the previous top measure
-                    prevMeasure = nextMeasure as VexFlowMeasure;
+                    prevMeasure = tempMeasure as VexFlowMeasure;
                 }
             }
 
