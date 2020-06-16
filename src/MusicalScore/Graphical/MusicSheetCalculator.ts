@@ -168,7 +168,7 @@ export abstract class MusicSheetCalculator {
         }
 
         const staffIsPercussionArray: Array<boolean> =
-                        activeClefs.map(clef => (clef.ClefType === ClefEnum.percussion) ? true : false);
+                        activeClefs.map(clef => (clef.ClefType === ClefEnum.percussion));
 
         this.handleStaffEntries(staffIsPercussionArray);
         this.calculateVerticalContainersList();
