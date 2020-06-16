@@ -422,59 +422,48 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 newSkylineValueForMeasure = skylineMinForMeasure;
             }
 
-            /*
-                Code here that is commented out is for finding the previous measure volta height
-                and matching it or resetting it to ours.
-                Still needs work. When we get to higher measure numbers, prev measures don't seem to be available?
-
+            let prevMeasure: VexFlowMeasure = undefined;
             //if we already have a volta in the prev measure, should match it's height, or if we are higher, it should match ours
             //find previous sibling measure that may have volta
-            let measureIndex = this.parentSourceMeasure.measureListIndex;
-            //this.parentSourceMeasure.getPreviousMeasure();
-            if(measureIndex > 0){
-                let prevMeasureIndex = measureIndex-1;
-                let prevMeasure : VexFlowMeasure = undefined;
-                // find first visible StaffLine
-                //Need to find the uppermost, where the volta would go
-                const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.ParentMusicSystem.GraphicalMeasures[prevMeasureIndex];
-                if(measures !== undefined && measures.length > 0){
-                    for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
-                        const graphicalMeasure: VexFlowMeasure = measures[idx];
-                        if (graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
-                            prevMeasure = <VexFlowMeasure>graphicalMeasure;
-                        break;
-                        }
-                    }
+            const currentMeasureNumber: number = this.parentSourceMeasure.MeasureNumber;
+            for (let i: number = 0; i < this.ParentStaffLine.Measures.length; i++) {
+                const tempMeasure: GraphicalMeasure = this.ParentStaffLine.Measures[i];
+                if (!(tempMeasure instanceof VexFlowMeasure)) {
+                    //should never be the case... But check just to be sure
+                    continue;
                 }
+                if (tempMeasure.MeasureNumber === currentMeasureNumber - 1) {
+                    //We found the previous top measure
+                    prevMeasure = tempMeasure as VexFlowMeasure;
+                }
+            }
 
-                if(prevMeasure){
-                    let prevStaveModifiers = prevMeasure.stave.getModifiers();
-                    for(let i = 0; i < prevStaveModifiers.length; i++){
-                        let nextStaveModifier = prevStaveModifiers[i];
-                        if(nextStaveModifier.hasOwnProperty("volta")){
-                            const prevskyBottomLineCalculator: SkyBottomLineCalculator = prevMeasure.ParentStaffLine.SkyBottomLineCalculator;
-                            const prevStart: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginLeft + 0.4;
-                            const prevEnd: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginRight;
-                            let prevMeasureSkyline: number = prevskyBottomLineCalculator.getSkyLineMinInRange(prevStart, prevEnd);
-                            //if prev skyline is higher, use it
-                            if(prevMeasureSkyline <= newSkylineValueForMeasure){
-                                let skylineDifference = prevMeasureSkyline - newSkylineValueForMeasure;
-                                vexFlowVoltaHeight += skylineDifference;
-                                newSkylineValueForMeasure = prevMeasureSkyline;
-                            } else { //otherwise, we are higher. Need to adjust prev
-                                (nextStaveModifier as any).y_shift = vexFlowVoltaHeight*10;
-                                prevMeasure.ParentStaffLine.SkyBottomLineCalculator.updateSkyLineInRange(prevStart, prevEnd, newSkylineValueForMeasure);
-                            }
+            if (prevMeasure) {
+                const prevStaveModifiers: Vex.Flow.StaveModifier[] = prevMeasure.stave.getModifiers();
+                for (let i: number = 0; i < prevStaveModifiers.length; i++) {
+                    const nextStaveModifier: Vex.Flow.StaveModifier = prevStaveModifiers[i];
+                    if (nextStaveModifier.hasOwnProperty("volta")) {
+                        const prevskyBottomLineCalculator: SkyBottomLineCalculator = prevMeasure.ParentStaffLine.SkyBottomLineCalculator;
+                        const prevStart: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginLeft + 0.4;
+                        const prevEnd: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginRight;
+                        const prevMeasureSkyline: number = prevskyBottomLineCalculator.getSkyLineMinInRange(prevStart, prevEnd);
+                        //if prev skyline is higher, use it
+                        if (prevMeasureSkyline <= newSkylineValueForMeasure) {
+                            const skylineDifference: number = prevMeasureSkyline - newSkylineValueForMeasure;
+                            vexFlowVoltaHeight += skylineDifference;
+                            newSkylineValueForMeasure = prevMeasureSkyline;
+                        } else { //otherwise, we are higher. Need to adjust prev
+                            (nextStaveModifier as any).y_shift = vexFlowVoltaHeight * 10;
+                            prevMeasure.ParentStaffLine.SkyBottomLineCalculator.updateSkyLineInRange(prevStart, prevEnd, newSkylineValueForMeasure);
                         }
                     }
                 }
-            }*/
+            }
 
             //convert to VF units (pixels)
             vexFlowVoltaHeight *= 10;
             this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], vexFlowVoltaHeight);
             skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
-           //this.ParentStaffLine.SkyBottomLineCalculator.calculateLines();
         }
     }
 
