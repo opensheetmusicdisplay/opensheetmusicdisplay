@@ -1,7 +1,7 @@
 import { GraphicalNote } from "../Graphical/GraphicalNote";
 
 export interface IStafflineNoteCalculator {
-    trackNote(graphicalNote: GraphicalNote, staffIndex: number): void;
-    positionNote(graphicalNote: GraphicalNote, staffIndex: number): GraphicalNote;
+    trackNote(graphicalNote: GraphicalNote): void;
+    positionNote(graphicalNote: GraphicalNote): GraphicalNote;
     getStafflineUniquePositionCount(staffIndex: number): number;
 }

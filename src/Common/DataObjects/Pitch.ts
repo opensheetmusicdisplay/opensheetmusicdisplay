@@ -347,20 +347,6 @@ export class Pitch {
         ", Note: " + this.fundamentalNote + ", octave: " + this.octave.toString();
     }
 
-    public IndexOf(array: Array<Pitch>, start: number = 0): number {
-        if (start > array.length - 1) {
-            return -1;
-        }
-
-        for (let i: number = start; i < array.length; i++) {
-            const p2: Pitch = array[i];
-            if (this.OperatorEquals(p2)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
     public OperatorEquals(p2: Pitch): boolean {
         const p1: Pitch = this;
         // if (ReferenceEquals(p1, p2)) {
@@ -378,7 +364,7 @@ export class Pitch {
     }
 
     //These don't take into account accidentals! which isn't needed for our current purpose
-    public OperatorGreaterThan(p2: Pitch): boolean {
+    public OperatorFundamentalGreaterThan(p2: Pitch): boolean {
         const p1: Pitch = this;
         if (p1.Octave === p2.Octave) {
             return p1.FundamentalNote > p2.FundamentalNote;
@@ -387,7 +373,7 @@ export class Pitch {
         }
     }
 
-    public OperatorLessThan(p2: Pitch): boolean {
+    public OperatorFundamentalLessThan(p2: Pitch): boolean {
         const p1: Pitch = this;
         if (p1.Octave === p2.Octave) {
             return p1.FundamentalNote < p2.FundamentalNote;

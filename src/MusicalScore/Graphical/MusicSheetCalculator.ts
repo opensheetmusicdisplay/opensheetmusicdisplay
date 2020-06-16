@@ -303,7 +303,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
-                               graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean, staffIndex: number): void {
+                               graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -1548,7 +1548,7 @@ export abstract class MusicSheetCalculator {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, octaveShiftValue);
             } else {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, undefined);
-                MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote, staffIndex);
+                MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
             }
             if (note.Pitch) {
                 this.checkNoteForAccidental(graphicalNote, accidentalCalculator, activeClef, octaveShiftValue);
@@ -1614,7 +1614,7 @@ export abstract class MusicSheetCalculator {
                 }
                 const voiceEntry: VoiceEntry = graphicalNotes[0].sourceNote.ParentVoiceEntry;
                 const hasPitchedNote: boolean = graphicalNotes[0].sourceNote.Pitch !== undefined;
-                this.layoutVoiceEntry(voiceEntry, graphicalNotes, graphicalStaffEntry, hasPitchedNote, staffIndex);
+                this.layoutVoiceEntry(voiceEntry, graphicalNotes, graphicalStaffEntry, hasPitchedNote);
             }
         }
     }
@@ -2144,7 +2144,7 @@ export abstract class MusicSheetCalculator {
                                                                                                    gve,
                                                                                                    new ClefInstruction(),
                                                                                                    OctaveEnum.NONE, undefined);
-                MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote, staffIndex);
+                MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
                 gve.notes.push(graphicalNote);
             }
         }

@@ -23,12 +23,14 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
      * @param graphicalNote The note to be checked/positioned
      * @param staffIndex The staffline the note is on
      */
-    public trackNote(graphicalNote: GraphicalNote, staffIndex: number): void {
+    public trackNote(graphicalNote: GraphicalNote): void {
         if (!(graphicalNote instanceof VexFlowGraphicalNote) || graphicalNote.Clef().ClefType !== ClefEnum.percussion ||
         graphicalNote.sourceNote.isRest() || this.rules.PercussionOneLineCutoff === 0 ||
         this.rules.PercussionForceVoicesOneLineCutoff === -1) {
             return;
         }
+        const staffIndex: number =
+                graphicalNote.parentVoiceEntry.parentStaffEntry.sourceStaffEntry.ParentStaff.idInMusicSheet;
 
         let currentPitchList: Array<Pitch> = undefined;
         if (!this.staffPitchListMapping.containsKey(staffIndex)) {
@@ -39,13 +41,27 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
         VexflowStafflineNoteCalculator.findOrInsert(currentPitchList, pitch);
     }
 
+    private static PitchIndexOf(array: Array<Pitch>, pitch: Pitch, start: number = 0): number {
+        if (start > array.length - 1) {
+            return -1;
+        }
+
+        for (let i: number = start; i < array.length; i++) {
+            const p2: Pitch = array[i];
+            if (pitch.OperatorEquals(p2)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private static findOrInsert(array: Array<Pitch>, pitch: Pitch): number {
         for (let i: number = 0; i < array.length; i++) {
             const p2: Pitch = array[i];
             if (pitch.OperatorEquals(p2)) {
                 return i;
             } else {
-                if (pitch.OperatorLessThan(p2)) {
+                if (pitch.OperatorFundamentalLessThan(p2)) {
                     array.splice(i, 0, pitch);
                     return i;
                 }
@@ -63,7 +79,10 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
      * @param staffIndex The staffline that this note exists on
      * @returns the newly positioned note
      */
-    public positionNote(graphicalNote: GraphicalNote, staffIndex: number): GraphicalNote {
+    public positionNote(graphicalNote: GraphicalNote): GraphicalNote {
+        const staffIndex: number =
+                graphicalNote.parentVoiceEntry.parentStaffEntry.sourceStaffEntry.ParentStaff.idInMusicSheet;
+
         if (!(graphicalNote instanceof VexFlowGraphicalNote) || graphicalNote.sourceNote.isRest()
             || !this.staffPitchListMapping.containsKey(staffIndex)) {
             return graphicalNote;
@@ -80,7 +99,7 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
         if (currentPitchList.length <= this.rules.PercussionForceVoicesOneLineCutoff) {
             vfGraphicalNote.setAccidental(new Pitch(this.baseLineNote, this.baseLineOctave, notePitch.Accidental));
         } else {
-            const pitchIndex: number = notePitch.IndexOf(currentPitchList);
+            const pitchIndex: number = VexflowStafflineNoteCalculator.PitchIndexOf(currentPitchList, notePitch);
             if (pitchIndex > -1) {
                 let fundamental: NoteEnum = this.baseLineNote;
                 let octave: number = this.baseLineOctave;
