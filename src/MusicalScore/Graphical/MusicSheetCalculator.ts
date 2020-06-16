@@ -166,7 +166,11 @@ export abstract class MusicSheetCalculator {
             );
             measureList.push(graphicalMeasures);
         }
-        this.handleStaffEntries(activeClefs);
+
+        const staffIsPercussionArray: Array<boolean> =
+                        activeClefs.map(clef => (clef.ClefType === ClefEnum.percussion) ? true : false);
+
+        this.handleStaffEntries(staffIsPercussionArray);
         this.calculateVerticalContainersList();
         this.setIndicesToVerticalGraphicalContainers();
     }
@@ -2177,7 +2181,7 @@ export abstract class MusicSheetCalculator {
     //     return graphicalStaffEntry;
     // }
 
-    private handleStaffEntries(activeClefs: ClefInstruction[]): void {
+    private handleStaffEntries(staffIsPercussionArray: Array<boolean>): void {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MeasureList.length; idx < len; ++idx) {
             const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[idx];
             for (let idx2: number = 0, len2: number = measures.length; idx2 < len2; ++idx2) {
@@ -2185,7 +2189,7 @@ export abstract class MusicSheetCalculator {
                 //This property is active...
                 if (this.rules.PercussionOneLineCutoff !== undefined && this.rules.PercussionOneLineCutoff !== 0) {
                     //We have a percussion clef, check to see if this property applies...
-                    if (activeClefs[idx2].ClefType === ClefEnum.percussion) {
+                    if (staffIsPercussionArray[idx2]) {
                         //-1 means always trigger, or we are under the cutoff number specified
                         if (this.rules.PercussionOneLineCutoff === -1 ||
                             MusicSheetCalculator.stafflineNoteCalculator.getStafflineUniquePositionCount(idx2) < this.rules.PercussionOneLineCutoff) {
