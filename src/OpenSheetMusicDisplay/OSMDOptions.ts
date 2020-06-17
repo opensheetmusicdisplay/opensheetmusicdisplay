@@ -86,6 +86,8 @@ export interface IOSMDOptions {
      * See the [measureNumberInterval] option, default is 2.
      */
     drawMeasureNumbers?: boolean;
+    /** Whether to draw time signatures (e.g. 4/4). Default true. */
+    drawTimeSignatures?: boolean;
     /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
     measureNumberInterval?: number;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */

@@ -489,7 +489,7 @@ export class MusicSystemBuilder {
             measure.addKeyAtBegin(currentKey, previousKey, currentClef);
             keyAdded = true;
         }
-        if (currentRhythm !== undefined && currentRhythm.PrintObject) {
+        if (currentRhythm !== undefined && currentRhythm.PrintObject && this.rules.RenderTimeSignatures) {
             measure.addRhythmAtBegin(currentRhythm);
             rhythmAdded = true;
         }
