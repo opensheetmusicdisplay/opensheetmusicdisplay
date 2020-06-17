@@ -166,7 +166,11 @@ export abstract class MusicSheetCalculator {
             );
             measureList.push(graphicalMeasures);
         }
-        this.handleStaffEntries();
+
+        const staffIsPercussionArray: Array<boolean> =
+                        activeClefs.map(clef => (clef.ClefType === ClefEnum.percussion));
+
+        this.handleStaffEntries(staffIsPercussionArray);
         this.calculateVerticalContainersList();
         this.setIndicesToVerticalGraphicalContainers();
     }
@@ -1515,7 +1519,8 @@ export abstract class MusicSheetCalculator {
                                accidentalCalculator: AccidentalCalculator, openLyricWords: LyricWord[],
                                activeClef: ClefInstruction,
                                openTuplets: Tuplet[], openBeams: Beam[],
-                               octaveShiftValue: OctaveEnum, linkedNotes: Note[] = undefined,
+                               octaveShiftValue: OctaveEnum, staffIndex: number,
+                               linkedNotes: Note[] = undefined,
                                sourceStaffEntry: SourceStaffEntry = undefined): OctaveEnum {
         if (voiceEntry.StemDirectionXml !== StemDirectionType.Undefined &&
             this.rules.SetWantedStemDirectionByXml &&
@@ -1547,8 +1552,7 @@ export abstract class MusicSheetCalculator {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, octaveShiftValue);
             } else {
                 graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, undefined);
-                const staffLineCount: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.StafflineCount;
-                graphicalNote = MusicSheetCalculator.stafflineNoteCalculator.positionNote(graphicalNote, activeClef, staffLineCount);
+                MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
             }
             if (note.Pitch) {
                 this.checkNoteForAccidental(graphicalNote, accidentalCalculator, activeClef, octaveShiftValue);
@@ -1604,7 +1608,7 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    protected layoutVoiceEntries(graphicalStaffEntry: GraphicalStaffEntry): void {
+    protected layoutVoiceEntries(graphicalStaffEntry: GraphicalStaffEntry, staffIndex: number): void {
         graphicalStaffEntry.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
         if (!this.leadSheet) {
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
@@ -1976,7 +1980,6 @@ export abstract class MusicSheetCalculator {
                 sourceMeasure, openTuplets, openBeams,
                 accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
             );
-            this.graphicalMeasureCreatedCalculations(measure);
             verticalMeasureList.push(measure);
         }
         sourceMeasure.VerticalMeasureList = verticalMeasureList; // much easier way to link sourceMeasure to graphicalMeasures than Dictionary
@@ -1992,17 +1995,6 @@ export abstract class MusicSheetCalculator {
                                    staffEntryLinks: StaffEntryLink[]): GraphicalMeasure {
         const staff: Staff = this.graphicalMusicSheet.ParentMusicSheet.getStaffFromIndex(staffIndex);
         let measure: GraphicalMeasure = undefined;
-        //This property is active...
-        if (this.rules.PercussionOneLineCutoff !== undefined && this.rules.PercussionOneLineCutoff !== 0) {
-            //We have a percussion clef, check to see if this property applies...
-            if (activeClefs[staffIndex].ClefType === ClefEnum.percussion) {
-                //-1 means always trigger, or we are under the cutoff number specified
-                if (this.rules.PercussionOneLineCutoff === -1 ||
-                    staff.ParentInstrument.SubInstruments.length < this.rules.PercussionOneLineCutoff) {
-                    staff.StafflineCount = 1;
-                }
-            }
-        }
         if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
             staff.isTab = true;
             measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
@@ -2089,8 +2081,8 @@ export abstract class MusicSheetCalculator {
                         voiceEntry, graphicalStaffEntry,
                         accidentalCalculator, openLyricWords,
                         activeClefs[staffIndex], openTuplets,
-                        openBeams, octaveShiftValue, linkedNotes,
-                        sourceStaffEntry
+                        openBeams, octaveShiftValue, staffIndex,
+                        linkedNotes, sourceStaffEntry
                     );
                 }
                 // SourceStaffEntry has inStaff ClefInstruction -> create graphical clef
@@ -2152,12 +2144,11 @@ export abstract class MusicSheetCalculator {
                 graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
                 const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
                 graphicalStaffEntry.graphicalVoiceEntries.push(gve);
-                let graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
-                                                                                                 gve,
-                                                                                                 new ClefInstruction(),
-                                                                                                 OctaveEnum.NONE, undefined);
-                const staffLineCount: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.StafflineCount;
-                graphicalNote = MusicSheetCalculator.stafflineNoteCalculator.positionNote(graphicalNote, activeClefs[staffIndex], staffLineCount);
+                const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
+                                                                                                   gve,
+                                                                                                   new ClefInstruction(),
+                                                                                                   OctaveEnum.NONE, undefined);
+                MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
                 gve.notes.push(graphicalNote);
             }
         }
@@ -2190,19 +2181,31 @@ export abstract class MusicSheetCalculator {
     //     return graphicalStaffEntry;
     // }
 
-    private handleStaffEntries(): void {
+    private handleStaffEntries(staffIsPercussionArray: Array<boolean>): void {
         for (let idx: number = 0, len: number = this.graphicalMusicSheet.MeasureList.length; idx < len; ++idx) {
             const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[idx];
             for (let idx2: number = 0, len2: number = measures.length; idx2 < len2; ++idx2) {
                 const measure: GraphicalMeasure = measures[idx2];
+                //This property is active...
+                if (this.rules.PercussionOneLineCutoff !== undefined && this.rules.PercussionOneLineCutoff !== 0) {
+                    //We have a percussion clef, check to see if this property applies...
+                    if (staffIsPercussionArray[idx2]) {
+                        //-1 means always trigger, or we are under the cutoff number specified
+                        if (this.rules.PercussionOneLineCutoff === -1 ||
+                            MusicSheetCalculator.stafflineNoteCalculator.getStafflineUniquePositionCount(idx2) < this.rules.PercussionOneLineCutoff) {
+                            measure.ParentStaff.StafflineCount = 1;
+                        }
+                    }
+                }
                 for (const graphicalStaffEntry of measure.staffEntries) {
                     if (graphicalStaffEntry.parentMeasure !== undefined
                         && graphicalStaffEntry.graphicalVoiceEntries.length > 0
                         && graphicalStaffEntry.graphicalVoiceEntries[0].notes.length > 0) {
-                        this.layoutVoiceEntries(graphicalStaffEntry);
+                        this.layoutVoiceEntries(graphicalStaffEntry, idx2);
                         this.layoutStaffEntry(graphicalStaffEntry);
                     }
                 }
+                this.graphicalMeasureCreatedCalculations(measure);
             }
         }
     }

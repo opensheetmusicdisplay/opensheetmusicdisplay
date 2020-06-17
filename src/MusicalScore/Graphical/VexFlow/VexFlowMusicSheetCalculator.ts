@@ -398,7 +398,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[], graphicalStaffEntry: GraphicalStaffEntry,
                              hasPitchedNote: boolean): void {
-    return;
+      for (let i: number = 0; i < graphicalNotes.length; i++) {
+        graphicalNotes[i] = MusicSheetCalculator.stafflineNoteCalculator.positionNote(graphicalNotes[i]);
+      }
   }
 
   /**
