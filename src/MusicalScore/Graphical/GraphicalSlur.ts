@@ -181,11 +181,14 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines Angles
                 // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
-            const leftAngle: number = minAngle;
-            const rightAngle: number = -minAngle;
+            let leftAngle: number = minAngle;
+            let rightAngle: number = -minAngle;
             // if the calculated Slopes (left and right) are equal, then Angles have fixed values
             if (!sameSlope) {
-                this.calculateAngles(leftAngle, rightAngle, leftLineSlope, rightLineSlope, maxAngle);
+                const result: {leftAngle: number, rightAngle: number} =
+                    this.calculateAngles(minAngle, leftLineSlope, rightLineSlope, maxAngle);
+                leftAngle = result.leftAngle;
+                rightAngle = result.rightAngle;
             }
 
             // calculate Curve's Control Points
@@ -322,11 +325,14 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines Angles
             // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
-            const leftAngle: number = minAngle;
-            const rightAngle: number = -minAngle;
+            let leftAngle: number = minAngle;
+            let rightAngle: number = -minAngle;
             // if the calculated Slopes (left and right) are equal, then Angles have fixed values
             if (!sameSlope) {
-                this.calculateAngles(leftAngle, rightAngle, leftLineSlope, rightLineSlope, maxAngle);
+                const result: {leftAngle: number, rightAngle: number} =
+                    this.calculateAngles(minAngle, leftLineSlope, rightLineSlope, maxAngle);
+                leftAngle = result.leftAngle;
+                rightAngle = result.rightAngle;
             }
 
             // calculate Curve's Control Points
@@ -814,7 +820,8 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param rightLineSlope
      * @param maxAngle
      */
-    private calculateAngles(leftAngle: number, rightAngle: number, leftLineSlope: number, rightLineSlope: number, maxAngle: number): void {
+    private calculateAngles(minAngle: number, leftLineSlope: number, rightLineSlope: number, maxAngle: number):
+    {leftAngle: number, rightAngle: number} {
         // calculate Angles from the calculated Slopes, adding also a given angle
         const angle: number = 20;
 
@@ -833,8 +840,9 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         // +/- 80 is the max/min allowed Angle
-        leftAngle = Math.min(Math.max(leftAngle, calculatedLeftAngle), maxAngle);
-        rightAngle = Math.max(Math.min(rightAngle, calculatedRightAngle), -maxAngle);
+        const leftAngle: number = Math.min(Math.max(minAngle, calculatedLeftAngle), maxAngle);
+        const rightAngle: number = Math.max(Math.min(-minAngle, calculatedRightAngle), -maxAngle);
+        return {"leftAngle": leftAngle, "rightAngle": rightAngle};
     }
 
     private static degreesToRadiansFactor: number = Math.PI / 180;
