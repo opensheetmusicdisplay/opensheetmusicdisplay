@@ -11,6 +11,7 @@ import { MusicSheetCalculator } from "./MusicSheetCalculator";
 export class GraphicalLabel extends Clickable {
     private label: Label;
     private rules: EngravingRules;
+    public TextLines: string[];
 
     /**
      * Creates a new GraphicalLabel from a Label
@@ -46,65 +47,73 @@ export class GraphicalLabel extends Clickable {
         }
         const labelMarginBorderFactor: number = this.rules?.LabelMarginBorderFactor ?? 0.1;
 
-        const widthToHeightRatio: number =
+        this.TextLines = this.Label.text.split(/[\n\r]+/g);
+        const numOfLines: number = this.TextLines.length;
+        let maxWidth: number = 0;
+        for (let i: number = 0; i < numOfLines; i++) {
+            const line: string = this.TextLines[i];
+            const widthToHeightRatio: number =
             MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
-                this.Label.text, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
-        const height: number = this.Label.fontHeight;
-        const width: number = height * widthToHeightRatio;
+               line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
+            const currWidth: number = this.Label.fontHeight * widthToHeightRatio;
+            maxWidth = Math.max(maxWidth, currWidth);
+        }
+
+        const height: number = this.Label.fontHeight * numOfLines;
         const bbox: BoundingBox = this.PositionAndShape;
 
         switch (this.Label.textAlignment) {
             case TextAlignmentEnum.CenterBottom:
                 bbox.BorderTop = -height;
-                bbox.BorderLeft = -width / 2;
+                bbox.BorderLeft = -maxWidth / 2;
                 bbox.BorderBottom = 0;
-                bbox.BorderRight = width / 2;
+                bbox.BorderRight = maxWidth / 2;
                 break;
             case TextAlignmentEnum.CenterCenter:
                 bbox.BorderTop = -height / 2;
-                bbox.BorderLeft = -width / 2;
+                bbox.BorderLeft = -maxWidth / 2;
                 bbox.BorderBottom = height / 2;
-                bbox.BorderRight = width / 2;
+                bbox.BorderRight = maxWidth / 2;
                 break;
             case TextAlignmentEnum.CenterTop:
                 bbox.BorderTop = 0;
-                bbox.BorderLeft = -width / 2;
+                bbox.BorderLeft = -maxWidth / 2;
                 bbox.BorderBottom = height;
-                bbox.BorderRight = width / 2;
+                bbox.BorderRight = maxWidth / 2;
                 break;
             case TextAlignmentEnum.LeftBottom:
                 bbox.BorderTop = -height;
                 bbox.BorderLeft = 0;
                 bbox.BorderBottom = 0;
-                bbox.BorderRight = width;
+                bbox.BorderRight = maxWidth;
                 break;
             case TextAlignmentEnum.LeftCenter:
                 bbox.BorderTop = -height / 2;
                 bbox.BorderLeft = 0;
                 bbox.BorderBottom = height / 2;
-                bbox.BorderRight = width;
+                bbox.BorderRight = maxWidth;
                 break;
             case TextAlignmentEnum.LeftTop:
                 bbox.BorderTop = 0;
                 bbox.BorderLeft = 0;
                 bbox.BorderBottom = height;
-                bbox.BorderRight = width;
+                bbox.BorderRight = maxWidth;
                 break;
             case TextAlignmentEnum.RightBottom:
                 bbox.BorderTop = -height;
-                bbox.BorderLeft = -width;
+                bbox.BorderLeft = -maxWidth;
                 bbox.BorderBottom = 0;
                 bbox.BorderRight = 0;
                 break;
             case TextAlignmentEnum.RightCenter:
                 bbox.BorderTop = -height / 2;
-                bbox.BorderLeft = -width;
+                bbox.BorderLeft = -maxWidth;
                 bbox.BorderBottom = height / 2;
                 bbox.BorderRight = 0;
                 break;
             case TextAlignmentEnum.RightTop:
                 bbox.BorderTop = 0;
-                bbox.BorderLeft = -width;
+                bbox.BorderLeft = -maxWidth;
                 bbox.BorderBottom = height;
                 bbox.BorderRight = 0;
                 break;
