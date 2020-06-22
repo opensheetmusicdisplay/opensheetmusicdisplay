@@ -527,10 +527,19 @@ export class VexFlowConverter {
             const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumber, fret: tabNote.FretNumber};
             tabPositions.push(tabPosition);
             tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
-                if (bend.direction === "up") {
-                    tabPhrases.push({type: Vex.Flow.Bend.UP, text: "Up", width: 10});
+                let phraseText: string;
+                const phraseStep: number = bend.bendalter - tabPosition.fret;
+                if (phraseStep > 1) {
+                    phraseText = "Full";
+                } else if (phraseStep === 1) {
+                    phraseText = "1/2";
                 } else {
-                    tabPhrases.push({type: Vex.Flow.Bend.DOWN, text: "Down", width: 10});
+                    phraseText = "1/4";
+                }
+                if (bend.direction === "up") {
+                    tabPhrases.push({type: Vex.Flow.Bend.UP, text: phraseText, width: 10});
+                } else {
+                    tabPhrases.push({type: Vex.Flow.Bend.DOWN, text: phraseText, width: 10});
                 }
             });
             if (numDots < note.numberOfDots) {
