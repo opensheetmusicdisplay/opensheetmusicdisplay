@@ -51,6 +51,7 @@ export class GraphicalLabel extends Clickable {
         const numOfLines: number = this.TextLines.length;
         let maxWidth: number = 0;
         for (let i: number = 0; i < numOfLines; i++) {
+            this.TextLines[i] = this.TextLines[i].trim();
             const line: string = this.TextLines[i];
             const widthToHeightRatio: number =
             MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(

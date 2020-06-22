@@ -1045,7 +1045,7 @@ export class MusicSystemBuilder {
                     }
 
                     currentYPosition += this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
-                                            this.rules.TitleBottomDistance + maxHeight;
+                                            this.rules.TitleBottomDistance;
                     if (maxLineCount > 2) {
                         currentYPosition += maxFontHeight * (maxLineCount - 2);
                     }
