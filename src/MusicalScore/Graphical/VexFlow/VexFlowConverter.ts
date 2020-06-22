@@ -517,7 +517,7 @@ export class VexFlowConverter {
      */
     public static CreateTabNote(gve: GraphicalVoiceEntry): Vex.Flow.TabNote {
         const tabPositions: {str: number, fret: number}[] = [];
-        const tabBends: {alterpos: number}[] = [];
+        const tabPhrases: { type: number, text: string, width: number }[] = [];
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
@@ -526,10 +526,13 @@ export class VexFlowConverter {
             const tabNote: TabNote = note.sourceNote as TabNote;
             const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumber, fret: tabNote.FretNumber};
             tabPositions.push(tabPosition);
-            if (tabNote.BendNumber >= 0) {
-                const tabBend: {alterpos: number} = {alterpos: tabNote.BendNumber};
-                tabBends.push(tabBend);
-            }
+            tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
+                if (bend.direction === "up") {
+                    tabPhrases.push({type: Vex.Flow.Bend.UP, text: "Up", width: 10});
+                } else {
+                    tabPhrases.push({type: Vex.Flow.Bend.DOWN, text: "Down", width: 10});
+                }
+            });
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
             }
@@ -541,10 +544,9 @@ export class VexFlowConverter {
             duration: duration,
             positions: tabPositions,
         });
-        if (tabBends.length > 0) {
-            const phrase: {type: number, text: string, width: number}[] = [];
-            phrase.push({type: Vex.Flow.Bend.UP, text: "Full", width: 10});
-            vfnote.addModifier(new Vex.Flow.Bend("Gregg", false), 1);
+        if (tabPhrases.length > 0) {
+
+            vfnote.addModifier (new Vex.Flow.Bend(undefined, undefined, tabPhrases), 1);
         }
 
         return vfnote;

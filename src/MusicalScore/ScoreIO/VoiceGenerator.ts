@@ -440,7 +440,7 @@ export class VoiceGenerator {
     let note: Note = undefined;
     let stringNumber: number = -1;
     let fretNumber: number = -1;
-    let bendNumber: number = -1;
+    const bends: {bendalter: number, direction: string}[] = [];
     // check for guitar tabs:
     const notationNode: IXmlElement = node.element("notations");
     if (notationNode !== undefined) {
@@ -454,11 +454,17 @@ export class VoiceGenerator {
         if (fretNode !== undefined) {
           fretNumber = parseInt(fretNode.value, 10);
         }
-        const bendNote: IXmlElement = technicalNode.element("bend");
-        if (bendNote !== undefined) {
-          const bendalterNote: IXmlElement = bendNote.element("bend-alter");
-          bendNumber = parseInt(bendalterNote.value, 10);
-        }
+        const bendElementsArr: IXmlElement[] = technicalNode.elements("bend");
+        bendElementsArr.forEach(function (bend: IXmlElement): void {
+            console.log(bend);
+            const bendalterNote: IXmlElement = bend.element("bend-alter");
+            const releaseNode: IXmlElement = bend.element("release");
+            if (releaseNode !== undefined) {
+              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "down"});
+            } else {
+              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "up"});
+            }
+          });
       }
     }
 
@@ -467,7 +473,7 @@ export class VoiceGenerator {
       note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     } else {
       // create TabNote
-      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber, bendNumber);
+      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber, bends);
     }
 
     note.TypeLength = typeDuration;

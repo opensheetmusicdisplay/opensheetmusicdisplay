@@ -6,16 +6,16 @@ import { Pitch } from "../../Common/DataObjects/Pitch";
 
 export class TabNote extends Note {
     constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch,
-                stringNumber: number, fretNumber: number, bendNumber: number) {
+                stringNumber: number, fretNumber: number, bendArray: { bendalter: number, direction: string }[]) {
         super(voiceEntry, parentStaffEntry, length, pitch);
         this.stringNumber = stringNumber;
         this.fretNumber = fretNumber;
-        this.bendNumber = bendNumber;
+        this.bendArray = bendArray;
     }
 
     private stringNumber: number;
     private fretNumber: number;
-    private bendNumber: number;
+    private bendArray: { bendalter: number, direction: string }[];
 
     public get StringNumber(): number {
         return this.stringNumber;
@@ -25,7 +25,7 @@ export class TabNote extends Note {
         return this.fretNumber;
     }
 
-    public get BendNumber(): number {
-        return this.bendNumber;
+    public get BendArray(): { bendalter: number, direction: string }[] {
+        return this.bendArray;
     }
 }
