@@ -44,6 +44,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Tabulature": "OSMD_Function_Test_Tabulature_hayden_study_1.mxl",
             "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
             "OSMD Function Test - Labels": "OSMD_Function_Test_Labels.musicxml",
+            "OSMD Function Test - High Slur Test": "Slurtest_highNotes.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
             "Anonymous - Saltarello": "Saltarello.mxl",
