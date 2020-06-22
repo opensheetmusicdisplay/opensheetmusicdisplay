@@ -5,14 +5,16 @@ import { SourceStaffEntry } from "./SourceStaffEntry";
 import { Pitch } from "../../Common/DataObjects/Pitch";
 
 export class TabNote extends Note {
-    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch, stringNumber: number, fretNumber: number) {
+    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch, stringNumber: number, fretNumber: number,bendNumber: number) {
         super(voiceEntry, parentStaffEntry, length, pitch);
         this.stringNumber = stringNumber;
         this.fretNumber = fretNumber;
+        this.bendNumber = bendNumber;
     }
 
     private stringNumber: number;
     private fretNumber: number;
+    private bendNumber: number;
 
     public get StringNumber(): number {
         return this.stringNumber;
@@ -20,5 +22,9 @@ export class TabNote extends Note {
 
     public get FretNumber(): number {
         return this.fretNumber;
+    }
+
+    public get BendNumber(): number {
+        return this.bendNumber;
     }
 }
