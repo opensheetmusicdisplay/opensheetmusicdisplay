@@ -455,9 +455,9 @@ export class VoiceGenerator {
           fretNumber = parseInt(fretNode.value, 10);
         }
         const bendNote: IXmlElement = technicalNode.element("bend");
-        if(bendNote !== undefined){
+        if (bendNote !== undefined) {
           const bendalterNote: IXmlElement = bendNote.element("bend-alter");
-          bendNumber = parseInt(bendalterNote.value,10);
+          bendNumber = parseInt(bendalterNote.value, 10);
         }
       }
     }
@@ -467,7 +467,7 @@ export class VoiceGenerator {
       note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     } else {
       // create TabNote
-      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber,bendNumber);
+      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber, bendNumber);
     }
 
     note.TypeLength = typeDuration;

@@ -526,7 +526,7 @@ export class VexFlowConverter {
             const tabNote: TabNote = note.sourceNote as TabNote;
             const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumber, fret: tabNote.FretNumber};
             tabPositions.push(tabPosition);
-            if(tabNote.BendNumber >= 0){
+            if (tabNote.BendNumber >= 0) {
                 const tabBend: {alterpos: number} = {alterpos: tabNote.BendNumber};
                 tabBends.push(tabBend);
             }
@@ -541,12 +541,11 @@ export class VexFlowConverter {
             duration: duration,
             positions: tabPositions,
         });
-        if(tabBends.length > 0){
-            const phrase: {type:number, text: string,width:number}[] =  [];
-            phrase.push({ type: Vex.Flow.Bend.UP, text: 'Full',width:10 });
-            vfnote.addModifier(new Vex.Flow.Bend("Gregg",false), 1);
+        if (tabBends.length > 0) {
+            const phrase: {type: number, text: string, width: number}[] = [];
+            phrase.push({type: Vex.Flow.Bend.UP, text: "Full", width: 10});
+            vfnote.addModifier(new Vex.Flow.Bend("Gregg", false), 1);
         }
-        
 
         return vfnote;
     }
