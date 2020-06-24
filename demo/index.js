@@ -46,6 +46,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - High Slur Test": "Slurtest_highNotes.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
+            "Actor, L. - Prelude (Large, No Print Part Names)": "ActorPreludeSample_PartName.xml",
             "Anonymous - Saltarello": "Saltarello.mxl",
             "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
             "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",

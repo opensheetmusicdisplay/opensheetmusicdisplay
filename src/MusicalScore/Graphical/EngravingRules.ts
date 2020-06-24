@@ -33,7 +33,6 @@ export class EngravingRules {
     private titleBottomDistance: number;
     private systemLeftMargin: number;
     private systemRightMargin: number;
-    private firstSystemMargin: number;
     private systemLabelsRightMargin: number;
     private systemComposerDistance: number;
     private instrumentLabelTextHeight: number;
@@ -270,7 +269,6 @@ export class EngravingRules {
         this.betweenStaffLinesDistance = EngravingRules.unit;
         this.systemLeftMargin = 0.0;
         this.systemRightMargin = 0.0;
-        this.firstSystemMargin = 15.0;
         this.systemLabelsRightMargin = 2.0;
         this.systemComposerDistance = 2.0;
         this.instrumentLabelTextHeight = 2;
@@ -620,12 +618,6 @@ export class EngravingRules {
     }
     public set SystemRightMargin(value: number) {
         this.systemRightMargin = value;
-    }
-    public get FirstSystemMargin(): number {
-        return this.firstSystemMargin;
-    }
-    public set FirstSystemMargin(value: number) {
-        this.firstSystemMargin = value;
     }
     public get SystemLabelsRightMargin(): number {
         return this.systemLabelsRightMargin;
