@@ -387,6 +387,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
                           bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
+        if (!graphicalLabel.Label.print) {
+            return;
+        }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { font, text } = graphicalLabel.Label;
         let color: string;
