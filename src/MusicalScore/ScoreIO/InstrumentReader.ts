@@ -285,8 +285,8 @@ export class InstrumentReader {
 
           // check Tremolo
           let tremoloStrokes: number = 0;
+          let vibratoStrokes: boolean = false;
           if (notationsNode) {
-            let vibratoStrokes: boolean = false;
             const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
             if (ornamentsNode) {
               const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
