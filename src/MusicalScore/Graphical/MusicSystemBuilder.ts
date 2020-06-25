@@ -1044,30 +1044,31 @@ export class MusicSystemBuilder {
                         maxHeight = totalLyricist;
                     }
 
+                    if (this.rules.RenderTitle) {
+                    // if it is the first System on the FIRST page: Add Title height and gap-distance
                     currentYPosition += this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
                                             this.rules.TitleBottomDistance;
+                    }
+
                     if (maxLineCount > 2) {
                         currentYPosition += maxFontHeight * (maxLineCount - 2);
                     }
-                    // if it is the first System on the FIRST page: Add Title height and gap-distance
-                    if (this.rules.RenderTitle) {
-                        // now add the border-top: everything that stands out above the staffline:
-                        currentYPosition += -currentSystem.PositionAndShape.BorderTop;
-                        const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
-                                                                        currentYPosition);
-                        currentSystem.PositionAndShape.RelativePosition = relativePosition;
-                        // check if the first system doesn't even fit on the page -> would lead to truncation at bottom end:
-                        if (currentYPosition + currentSystem.PositionAndShape.BorderBottom > this.rules.PageHeight - this.rules.PageBottomMargin) {
-                            // can't fit single system on page, maybe PageFormat too small
-                            timesPageCouldntFitSingleSystem++;
-                            if (timesPageCouldntFitSingleSystem <= 4) { // only warn once with detailed info
-                                console.log(`warning: could not fit a single system on page ${currentPage.PageNumber}` +
-                                    ` and measure number ${currentSystem.GraphicalMeasures[0][0].MeasureNumber}.
-                                    The PageFormat may be too small for this sheet."
-                                    Will not give further warnings for all pages, only total.`
-                                );
-                            }
-                        }
+                }
+                // now add the border-top: everything that stands out above the staffline:
+                currentYPosition += -currentSystem.PositionAndShape.BorderTop;
+                const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
+                                                                currentYPosition);
+                currentSystem.PositionAndShape.RelativePosition = relativePosition;
+                // check if the first system doesn't even fit on the page -> would lead to truncation at bottom end:
+                if (currentYPosition + currentSystem.PositionAndShape.BorderBottom > this.rules.PageHeight - this.rules.PageBottomMargin) {
+                    // can't fit single system on page, maybe PageFormat too small
+                    timesPageCouldntFitSingleSystem++;
+                    if (timesPageCouldntFitSingleSystem <= 4) { // only warn once with detailed info
+                        console.log(`warning: could not fit a single system on page ${currentPage.PageNumber}` +
+                            ` and measure number ${currentSystem.GraphicalMeasures[0][0].MeasureNumber}.
+                            The PageFormat may be too small for this sheet."
+                            Will not give further warnings for all pages, only total.`
+                        );
                     }
                 }
             } else {
