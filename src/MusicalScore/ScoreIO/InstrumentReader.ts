@@ -286,6 +286,7 @@ export class InstrumentReader {
           // check Tremolo
           let tremoloStrokes: number = 0;
           if (notationsNode) {
+            let vibratoStrokes: boolean = false;
             const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
             if (ornamentsNode) {
               const tremoloNode: IXmlElement = ornamentsNode.element("tremolo");
@@ -298,6 +299,13 @@ export class InstrumentReader {
                   }
                 }
                 // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
+              }
+              const vibratoNode: IXmlElement = ornamentsNode.element("wavy-line");
+              if (vibratoNode !== undefined) {
+                const vibratoType: Attr = vibratoNode.attribute("type");
+                if (vibratoType && vibratoType.value === "start") {
+                  vibratoStrokes = true;
+                }
               }
             }
           }
@@ -379,7 +387,8 @@ export class InstrumentReader {
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
-            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml
+            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
+            vibratoStrokes
           );
 
           // notationsNode created further up for multiple checks

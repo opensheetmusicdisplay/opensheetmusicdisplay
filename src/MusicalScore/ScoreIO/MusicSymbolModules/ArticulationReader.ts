@@ -99,6 +99,7 @@ export class ArticulationReader {
       [xmlElement: string]: ArticulationEnum;
     }
     const xmlElementToArticulationEnum: XMLElementToArticulationEnum = {
+      "bend": ArticulationEnum.bend,
       "down-bow": ArticulationEnum.downbow,
       "open-string": ArticulationEnum.naturalharmonic,
       "snap-pizzicato": ArticulationEnum.snappizzicato,
