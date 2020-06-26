@@ -387,6 +387,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
                           bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): void {
+        if (!graphicalLabel.Label.print) {
+            return;
+        }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { font } = graphicalLabel.Label;
         let color: string;
@@ -409,12 +412,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             this.backend.renderText(height, fontStyle, font, currLine, fontHeightInPixel, screenPosition, color, graphicalLabel.Label.fontFamily);
             screenPosition.y = screenPosition.y + fontHeightInPixel;
         }
-        /*for (let i: number = graphicalLabel.TextLines?.length - 1; i > -1; i--) {
-            const currLine: string = graphicalLabel.TextLines[i];
-            this.backend.renderText(height, fontStyle, font, currLine, fontHeightInPixel, screenPosition, color, graphicalLabel.Label.fontFamily);
-            //Update where we render the next line
-            screenPosition.y = screenPosition.y - fontHeightInPixel;
-        }*/
         // font currently unused, replaced by fontFamily
     }
 
