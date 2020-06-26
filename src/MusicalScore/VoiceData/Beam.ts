@@ -26,7 +26,7 @@ export class Beam {
      * @param note
      */
     public addNoteToBeam(note: Note): void {
-        if (note !== undefined) {
+        if (note) {
             note.NoteBeam = this;
             this.notes.push(note);
             this.extendedNoteList.push(note);

@@ -142,7 +142,7 @@ export class MultiExpression {
     //}
     public addExpression(abstractExpression: AbstractExpression, prefix: string): void {
         if (abstractExpression instanceof InstantaneousDynamicExpression) {
-            if (this.instantaneousDynamic !== undefined) {
+            if (this.instantaneousDynamic) {
                 this.removeExpressionFromEntryList(this.InstantaneousDynamic);
             }
             this.instantaneousDynamic = <InstantaneousDynamicExpression>abstractExpression;

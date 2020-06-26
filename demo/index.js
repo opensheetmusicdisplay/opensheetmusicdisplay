@@ -1,4 +1,6 @@
-import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
+import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay';
+import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min'
+import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
 /*jslint browser:true */
 (function () {
@@ -27,6 +29,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - Autobeam": "OSMD_function_test_autobeam.musicxml",
             "OSMD Function Test - Auto-/Custom-Coloring": "OSMD_function_test_auto-custom-coloring-entchen.musicxml",
             "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
+            "OSMD Function Test - Chord Symbols": "OSMD_function_test_chord_symbols.musicxml",
             "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
             "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
             "OSMD Function Test - Drums on one Line": "OSMD_Function_Test_Drums_one_line_snare_plus_piano.musicxml", 
@@ -40,8 +43,10 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             "OSMD Function Test - System and Page Breaks": "OSMD_Function_Test_System_and_Page_Breaks_4_pages.mxl",
             "OSMD Function Test - Tabulature": "OSMD_Function_Test_Tabulature_hayden_study_1.mxl",
             "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
+            "OSMD Function Test - High Slur Test": "Slurtest_highNotes.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
+            "Actor, L. - Prelude (Large, No Print Part Names)": "ActorPreludeSample_PartName.xml",
             "Anonymous - Saltarello": "Saltarello.mxl",
             "Debussy, C. - Mandoline": "Debussy_Mandoline.xml",
             "Levasseur, F. - Parlez Mois": "Parlez-moi.mxl",
@@ -135,19 +140,19 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 
         showHeader = (paramShowHeader !== '0');
         showControls = false;
-        if (paramEmbedded !== undefined) {
+        if (paramEmbedded) {
             showControls = paramShowControls !== '0';
             showZoomControl = paramShowZoomControl !== '0';
             showPageFormatControl = paramShowPageFormatControl !== '0';
             showExportPdfControl = paramShowExportPdfControl !== '0';
         }
 
-        if (paramZoom !== undefined) {
+        if (paramZoom) {
             if (paramZoom > 0.1 && paramZoom < 5.0) {
                 zoom = paramZoom;
             }
         }
-        if (paramOverflow !== undefined && typeof paramOverflow === 'string') {
+        if (paramOverflow && typeof paramOverflow === 'string') {
             if (paramOverflow === 'hidden' || paramOverflow === 'auto' || paramOverflow === 'scroll' || paramOverflow === 'visible') {
                 document.body.style.overflow = paramOverflow;
             }
@@ -353,7 +358,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
         for (const printPdfBtn of printPdfBtns) {
             if (printPdfBtn) {
                 printPdfBtn.onclick = function () {
-                    openSheetMusicDisplay.createPdf();
+                    createPdf();
                 }
             }
         }
@@ -499,7 +504,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
             // selectSampleOnChange();
         });
 
-        if (paramOpenUrl !== undefined) {
+        if (paramOpenUrl) {
             if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange with " + paramOpenUrl);
             }
@@ -766,6 +771,59 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
                 zoomOut.disabled = disabledValue;
             }
         }
+    }
+
+    /**
+     * Creates a Pdf of the currently rendered MusicXML
+     * @param pdfName if no name is given, the composer and title of the piece will be used
+     */
+    function createPdf(pdfName) {
+        if (openSheetMusicDisplay.backendType !== BackendType.SVG) {
+            console.log("[OSMD] createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
+                " Please use osmd.setOptions({backendType: SVG}).");
+            return;
+        }
+
+        if (pdfName === undefined) {
+            pdfName = openSheetMusicDisplay.sheet.FullNameString + ".pdf";
+        }
+
+        const backends = openSheetMusicDisplay.drawer.Backends;
+        let svgElement = backends[0].getSvgElement();
+
+        let pageWidth = 210;
+        let pageHeight = 297;
+        const engravingRulesPageFormat = openSheetMusicDisplay.rules.PageFormat;
+        if (engravingRulesPageFormat && !engravingRulesPageFormat.IsUndefined) {
+            pageWidth = engravingRulesPageFormat.width;
+            pageHeight = engravingRulesPageFormat.height;
+        } else {
+            pageHeight = pageWidth * svgElement.clientHeight / svgElement.clientWidth;
+        }
+
+        const orientation = pageHeight > pageWidth ? "p" : "l";
+        // create a new jsPDF instance
+        const pdf = new jsPDF(orientation, "mm", [pageWidth, pageHeight]);
+        const scale = pageWidth / svgElement.clientWidth;
+        for (let idx = 0, len = backends.length; idx < len; ++idx) {
+            if (idx > 0) {
+                pdf.addPage();
+            }
+            svgElement = backends[idx].getSvgElement();
+
+            // render the svg element
+            svg2pdf(svgElement, pdf, {
+                scale: scale,
+                xOffset: 0,
+                yOffset: 0
+            });
+        }
+
+        // simply save the created pdf
+        pdf.save(pdfName);
+
+        // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
+        // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32
     }
 
     // Register events: load, drag&drop

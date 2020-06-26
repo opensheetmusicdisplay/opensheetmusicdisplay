@@ -150,7 +150,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
-        measure.draw(this.backend.getContext());
+        try {
+            measure.draw(this.backend.getContext());
+            // Vexflow errors can happen here. If we don't catch errors, rendering will stop after this measure.
+        } catch (ex) {
+            log.warn("VexFlowMusicSheetDrawer.drawMeasure", ex);
+        }
 
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
@@ -382,6 +387,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
                           bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
+        if (!graphicalLabel.Label.print) {
+            return;
+        }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { font, text } = graphicalLabel.Label;
         let color: string;

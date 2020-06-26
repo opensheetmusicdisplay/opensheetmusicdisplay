@@ -1,3 +1,56 @@
+## [0.8.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.8.1...0.8.2) (2020-06-13)
+
+
+### Features
+
+* **PDF:** Remove createPDF from OSMD object (move to demo), reducing bundle size (from 1.5MB to 1.1MB). Fix FileReader pollution ([64c8ccf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/64c8ccff943bbbedbfb85306f516d16ad7dfa0b8))
+
+
+## [0.8.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.8.0...0.8.1) (2020-06-10)
+
+### Bug Fixes
+
+* **OctaveShift:** avoid some errors when end of octaveshift not found ([#778](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/778)) ([86e6726](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/86e6726f4b3cf7f1ebde4deb7e33de5c57237167)), closes [#777](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/777) [#591](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/591)
+
+# [0.8.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.6...0.8.0) (2020-06-10)
+
+
+### Bug Fixes
+
+* **Beams:** Recalculate beams on resize, so they fit to stem ([#724](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/724)) ([50b0864](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/50b08643c1c980f709bda1cb8134a0f995a40c0f))
+* **ChordSymbols:** add 5 for power chord (e.g. C5, C plus fifth) ([#760](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/760)) ([6e1558d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6e1558d031452338a5cf0a0479f971337c6abbaf))
+* **ChordSymbols:** read augmented and dim in abbreviated form (aug, dim) ([a291f6f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a291f6f7c1fa023aaf0926fdfd05d4b97cd8fabe))
+* **ChordSymbols:** write Cm(maj7) for C kind 'major-minor' ([#784](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/784)) ([d00f29e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d00f29ed32b2496ce06d6955a481de2d8bcfc626))
+* **Cursor:** fix cursor undefined for canvas backend, improve cursor creation ([#736](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/736)) ([cb193d2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cb193d2270d4aec4e7847615b1c811e7ef4ba25a))
+* **Layout:** more lenient Measure Number Label collision checks, place them slightly to left ([#782](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/782)) ([616de17](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/616de1738b9e6466b0474bb1caa5985b11ae3bb1))
+* **Rendering:** catch Vexflow errors while rendering a measure, prevent render loop stopping. ([#773](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/773)) ([e2079a3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e2079a3f9de1183c3c9bb4593f5badbc4da50783))
+* Refactor undefined checks to also check null (#783) ([12766fb](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/12766fbf635ea3ec3e7c7b71fc05640354d726e2))
+* **Options:** drawPartNames: false now also disables drawPartAbbreviations, unless set explicitly ([#388](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/388)) ([cd50b68](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cd50b68c4430ccbc05300aa1a231ec65dbe987c0))
+* **Skyline:** Fix Measure number skyline offset ([b97439e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b97439e3e5d8c3845e4e55c3b30fc0c92c726a11))
+* fixed breaking the system if the last measure has an endline (thin-bold line) ([9d98357](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9d9835703ae2c7d4e6f18d6781294ff22a6b8c5b))
+* implemented always showing the current rhythm if there was an end line given in the last system. ([b2b31bf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b2b31bff84291672a3e8395d15799dc501a2a14d))
+* **Expressions:** don't align expressions when there are no edges involved. manual merge of [#768](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/768) ([ff77b46](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ff77b467c76695fb419957c191bfdbf753d68cce))
+* **Expressions:** fix alignment in most cases, fix distance calculation ([#758](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/758), [#768](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/768)) ([6d5e752](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6d5e75222d67f867d13c1273483c8019f6d32182))
+* improved chord symbol text output and fixed transposing code. ([de2ef57](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/de2ef57c278a220e1b0a985520b41fc1fe354bdd))
+* improved slur fix - removed magic number. Should work now for tabs as well. ([f67428c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f67428ca4103d1dce9d5d41126fe4a08c541e2bf))
+* removed doublettes check for dynamic expressions, as they might make sense for e.g. a repetition start, where another dynamic was used at the end of the repetition. ([9ea9814](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9ea9814d6e61d0e1500959f02745814e4d27d137))
+* **Layout:** update Vexflow to 1.2.91 (now 1.2.93), fixing time signature yPos. adapt vexflow import. [#706](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/706) ([7de0f7d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7de0f7deaff462abf45a17e86db2d5bbb85ba697))
+* **Subtitle:** don't add comma before work number if subtitle is otherwise empty ([36e4e2a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/36e4e2add7f3a7c4dbb0977ba0f3376623d4a6e4))
+
+
+### Features
+
+* **Cursor:** restore cursor state after resize and re-render ([#734](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/734)) if option set (default true) ([a08e957](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a08e9578c24d6ef66917617dcf71e3dc2d5b72e7))
+* **Cursor:** unique HTMLElement id (cursor.cursorElementId) ([d8a15b2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d8a15b26762248711443c0115306f085dc29d091))
+* **Font:** can set fontFamily per label ([#737](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/737)), refactor: don't set defaultFontStyle per label ([a7af16b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a7af16bb49c09862a68f92350597d088d41a2204))
+* **Iterator:** clone() optionally starts from a given startTimeStamp (not fully tested) ([5d52d18](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5d52d186ad9b165a08b8adcc51b26247aa3e6f94))
+* **Options:** able to set ledger line width and style (color) in EngravingRules. ([f4c2fc3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f4c2fc306d329a64bb14d0fbfd1d753fd3536dac))
+* **Options:** add option to not draw metronome marks ([#680](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/680)) ([42a1ebe](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/42a1ebe32034239aab82f377e308d2e373cc5b7b))
+* **Options:** can modify chord symbol text for all chords (except major). ([#784](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/784)) ([6f53f1c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6f53f1c1bf05d9af23f0392eb41d28249f66bde9))
+* **Text:** can set the fontStyle of a label, e.g. Bold (1) or BoldItalic (3). new option defaultFontStyle ([#739](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/739)) ([894868b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/894868b051fa7d0eefd07a29d49d2f7065b357e9))
+
+
+
 ## [0.7.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.5...0.7.6) (2020-04-17)
 
 ### Features

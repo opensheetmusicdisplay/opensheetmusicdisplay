@@ -239,7 +239,7 @@ export class Fraction {
   }
 
   public Equals(obj: Fraction): boolean {
-    return this.realValue === obj.realValue;
+    return this.realValue === obj?.realValue;
   }
 
   public CompareTo(obj: Fraction): number {
@@ -418,7 +418,7 @@ export class Fraction {
   //public static bool operator === (Fraction f1, Fraction f2)
   //{
   //    // code enhanced for performance
-  //    // System.Object.ReferenceEquals(f1, undefined) is better than if (f1 === undefined)
+  //    // System.Object.ReferenceEquals(f1, undefined) is better than if (f1)
   //    // and comparisons between booleans are quick
   //    bool f1IsNull = System.Object.ReferenceEquals(f1, undefined);
   //    bool f2IsNull = System.Object.ReferenceEquals(f2, undefined);

@@ -80,7 +80,7 @@ export class ArticulationReader {
   public addFermata(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
     // fermata appears as separate tag in XML
     let articulationEnum: ArticulationEnum = ArticulationEnum.fermata;
-    if (xmlNode.attributes().length > 0 && xmlNode.attribute("type") !== undefined) {
+    if (xmlNode.attributes().length > 0 && xmlNode.attribute("type")) {
       if (xmlNode.attribute("type").value === "inverted") {
         articulationEnum = ArticulationEnum.invertedfermata;
       }
@@ -114,7 +114,7 @@ export class ArticulationReader {
       }
       const articulationEnum: ArticulationEnum = xmlElementToArticulationEnum[xmlArticulation];
       const node: IXmlElement = xmlNode.element(xmlArticulation);
-      if (node !== undefined) {
+      if (node) {
         if (currentVoiceEntry.Articulations.indexOf(articulationEnum) === -1) {
           currentVoiceEntry.Articulations.push(articulationEnum);
         }
@@ -122,7 +122,7 @@ export class ArticulationReader {
     }
 
     const nodeFingering: IXmlElement = xmlNode.element("fingering");
-    if (nodeFingering !== undefined) {
+    if (nodeFingering) {
       const currentTechnicalInstruction: TechnicalInstruction = new TechnicalInstruction();
       currentTechnicalInstruction.type = TechnicalInstructionType.Fingering;
       currentTechnicalInstruction.value = nodeFingering.value;
@@ -156,7 +156,7 @@ export class ArticulationReader {
    * @param currentVoiceEntry
    */
   public addOrnament(ornamentsNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
-    if (ornamentsNode !== undefined) {
+    if (ornamentsNode) {
       let ornament: OrnamentContainer = undefined;
 
       interface XMLElementToOrnamentEnum {
@@ -178,13 +178,13 @@ export class ArticulationReader {
           continue;
         }
         const node: IXmlElement = ornamentsNode.element(ornamentElement);
-        if (node !== undefined) {
+        if (node) {
           ornament = new OrnamentContainer(elementToOrnamentEnum[ornamentElement]);
         }
       }
-      if (ornament !== undefined) {
+      if (ornament) {
         const accidentalsList: IXmlElement[] = ornamentsNode.elements("accidental-mark");
-        if (accidentalsList !== undefined) {
+        if (accidentalsList) {
           let placement: PlacementEnum = PlacementEnum.Below;
           let accidental: AccidentalEnum = AccidentalEnum.NONE;
           const accidentalsListArr: IXmlElement[] = accidentalsList;
@@ -193,7 +193,7 @@ export class ArticulationReader {
             let text: string = accidentalNode.value;
             accidental = this.getAccEnumFromString(text);
             const placementAttr: IXmlAttribute = accidentalNode.attribute("placement");
-            if (accidentalNode.hasAttributes && placementAttr !== undefined) {
+            if (accidentalNode.hasAttributes && placementAttr) {
               text = placementAttr.value;
               if (text === "above") {
                 placement = PlacementEnum.Above;

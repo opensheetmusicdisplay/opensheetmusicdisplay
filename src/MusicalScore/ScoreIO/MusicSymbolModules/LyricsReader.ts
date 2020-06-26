@@ -19,18 +19,18 @@ export class LyricsReader {
      * @param {VoiceEntry} currentVoiceEntry
      */
     public addLyricEntry(lyricNodeList: IXmlElement[], currentVoiceEntry: VoiceEntry): void {
-        if (lyricNodeList !== undefined) {
+        if (lyricNodeList) {
             const lyricNodeListArr: IXmlElement[] = lyricNodeList;
             for (let idx: number = 0, len: number = lyricNodeListArr.length; idx < len; ++idx) {
                 const lyricNode: IXmlElement = lyricNodeListArr[idx];
                 try {
                     let syllabic: string = "single"; // Single as default
-                    if (lyricNode.element("text") !== undefined) {
+                    if (lyricNode.element("text")) {
                         let textNode: IXmlElement = lyricNode.element("text");
-                        if (lyricNode.element("syllabic") !== undefined) {
+                        if (lyricNode.element("syllabic")) {
                             syllabic = lyricNode.element("syllabic").value;
                         }
-                        if (textNode !== undefined) {
+                        if (textNode) {
                             const text: string = textNode.value;
                             // <elision> separates Multiple syllabels on a single LyricNote
                             // "-" text indicating separated syllabel should be ignored
@@ -59,14 +59,14 @@ export class LyricsReader {
                                         }
                                     }
                                 }
-                                if (nextText !== undefined && nextSyllabic !== undefined) {
+                                if (nextText !== undefined && nextSyllabic) {
                                     textNode = nextText;
                                     syllabic = "middle";
                                 }
                             }
                             let currentLyricVerseNumber: number = 1;
                             let errorNumberParse1: boolean = false;
-                            if (lyricNode.attributes() !== undefined && lyricNode.attribute("number") !== undefined) {
+                            if (lyricNode.attributes() !== undefined && lyricNode.attribute("number")) {
                                 try {
                                     currentLyricVerseNumber = parseInt(lyricNode.attribute("number").value, 10); // usually doesn't throw error, but returns NaN
                                 } catch (err) {
@@ -89,7 +89,7 @@ export class LyricsReader {
                             }
                             let lyricsEntry: LyricsEntry = undefined;
                             if (syllabic === "single" || syllabic === "end") {
-                                if (this.openLyricWords[currentLyricVerseNumber] !== undefined) { // word end given or some word still open
+                                if (this.openLyricWords[currentLyricVerseNumber]) { // word end given or some word still open
                                     this.currentLyricWord = this.openLyricWords[currentLyricVerseNumber];
                                     const syllableNumber: number = this.currentLyricWord.Syllables.length;
                                     lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, syllableNumber);
@@ -101,7 +101,7 @@ export class LyricsReader {
                                 }
                                 lyricsEntry.extend = lyricNode.element("extend") !== undefined;
                             } else if (syllabic === "begin") { // first finishing, if a word already is open (can only happen, when wrongly given)
-                                if (this.openLyricWords[currentLyricVerseNumber] !== undefined) {
+                                if (this.openLyricWords[currentLyricVerseNumber]) {
                                     delete this.openLyricWords[currentLyricVerseNumber];
                                     this.currentLyricWord = undefined;
                                 }
@@ -110,7 +110,7 @@ export class LyricsReader {
                                 lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, 0);
                                 this.currentLyricWord.Syllables.push(lyricsEntry);
                             } else if (syllabic === "middle") {
-                                if (this.openLyricWords[currentLyricVerseNumber] !== undefined) {
+                                if (this.openLyricWords[currentLyricVerseNumber]) {
                                     this.currentLyricWord = this.openLyricWords[currentLyricVerseNumber];
                                     const syllableNumber: number = this.currentLyricWord.Syllables.length;
                                     lyricsEntry = new LyricsEntry(text, currentLyricVerseNumber, this.currentLyricWord, currentVoiceEntry, syllableNumber);
@@ -121,13 +121,13 @@ export class LyricsReader {
                                 }
                             }
                             // add each LyricEntry to currentVoiceEntry
-                            if (lyricsEntry !== undefined) {
+                            if (lyricsEntry) {
                                 // only add the lyric entry if not another entry has already been given:
-                                if (!currentVoiceEntry.LyricsEntries[currentLyricVerseNumber] !== undefined) {
+                                if (!currentVoiceEntry.LyricsEntries[currentLyricVerseNumber]) {
                                     currentVoiceEntry.LyricsEntries.setValue(currentLyricVerseNumber, lyricsEntry);
                                 }
                                 // save in currentInstrument the verseNumber (only once)
-                                if (!currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers[currentLyricVerseNumber] !== undefined) {
+                                if (!currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers[currentLyricVerseNumber]) {
                                     currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers.push(currentLyricVerseNumber);
                                 }
                             }

@@ -2,7 +2,7 @@ export class ITextTranslation {
     public static defaultTextTranslation: ITextTranslation;
 
     public static translateText(tag: string, text: string): string {
-        if (this.defaultTextTranslation === undefined) {
+        if (!this.defaultTextTranslation) {
             return text;
         }
 

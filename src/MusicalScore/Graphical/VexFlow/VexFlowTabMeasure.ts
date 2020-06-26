@@ -51,7 +51,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
         for (const voice of voices) {
-            if (voice === undefined) {
+            if (!voice) {
                 continue;
             }
 
@@ -84,7 +84,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                 }
 
                 // add Arpeggio
-                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
+                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio) {
                     const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
                     // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
                     // see VoiceGenerator. Doesn't matter for Vexflow for now though

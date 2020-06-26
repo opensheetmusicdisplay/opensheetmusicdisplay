@@ -288,10 +288,10 @@ export class GraphicalMusicSheet {
     public initializeActiveClefs(): ClefInstruction[] {
         const activeClefs: ClefInstruction[] = [];
         const firstSourceMeasure: SourceMeasure = this.musicSheet.getFirstSourceMeasure();
-        if (firstSourceMeasure !== undefined) {
+        if (firstSourceMeasure) {
             for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
                 let clef: ClefInstruction = new ClefInstruction();
-                if (firstSourceMeasure.FirstInstructionsStaffEntries[i] !== undefined) {
+                if (firstSourceMeasure.FirstInstructionsStaffEntries[i]) {
                     for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
                         const abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
                         if (abstractNotationInstruction instanceof ClefInstruction) {
@@ -308,7 +308,7 @@ export class GraphicalMusicSheet {
 
     public GetMainKey(): KeyInstruction {
         const firstSourceMeasure: SourceMeasure = this.musicSheet.getFirstSourceMeasure();
-        if (firstSourceMeasure !== undefined) {
+        if (firstSourceMeasure) {
             for (let i: number = 0; i < firstSourceMeasure.CompleteNumberOfStaves; i++) {
                 for (let idx: number = 0, len: number = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions.length; idx < len; ++idx) {
                     const abstractNotationInstruction: AbstractNotationInstruction = firstSourceMeasure.FirstInstructionsStaffEntries[i].Instructions[idx];
@@ -462,7 +462,7 @@ export class GraphicalMusicSheet {
     public getLastGraphicalMeasureFromIndex(staffIndex: number, lastRendered: boolean = true): GraphicalMeasure {
         let measureIndex: number = this.measureList.length - 1;
         if (lastRendered) {
-            measureIndex = this.musicSheet.Rules.MaxMeasureToDrawIndex;
+            measureIndex = Math.min(measureIndex, this.musicSheet.Rules.MaxMeasureToDrawIndex);
         }
         return this.measureList[measureIndex][staffIndex];
     }
@@ -498,7 +498,7 @@ export class GraphicalMusicSheet {
             const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
             const entries: GraphicalNote[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalNote>(region);
             //let entriesArr: GraphicalNote[] = __as__<GraphicalNote[]>(entries, GraphicalNote[]) ? ? entries;
-            if (entries === undefined) {
+            if (!entries) {
                 continue;
             } else {
                 for (let idx2: number = 0, len2: number = entries.length; idx2 < len2; ++idx2) {
@@ -518,7 +518,7 @@ export class GraphicalMusicSheet {
             if (closest === undefined) {
                 closest = note;
             } else {
-                if (note.parentVoiceEntry.parentStaffEntry.relInMeasureTimestamp === undefined) {
+                if (!note.parentVoiceEntry.parentStaffEntry.relInMeasureTimestamp) {
                     continue;
                 }
                 const deltaNew: number = this.CalculateDistance(note.PositionAndShape.AbsolutePosition, clickPosition);
@@ -528,7 +528,7 @@ export class GraphicalMusicSheet {
                 }
             }
         }
-        if (closest !== undefined) {
+        if (closest) {
             return closest;
         }
         // TODO No staff entry was found. Feedback?
@@ -575,7 +575,7 @@ export class GraphicalMusicSheet {
         for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
             const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
             const entries: GraphicalStaffEntry[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalStaffEntry>(region, false);
-            if (entries === undefined || entries.length === 0) {
+            if (!entries || entries.length === 0) {
                 continue;
             } else {
                 for (let idx2: number = 0, len2: number = entries.length; idx2 < len2; ++idx2) {
@@ -591,7 +591,7 @@ export class GraphicalMusicSheet {
             if (closest === undefined) {
                 closest = gse;
             } else {
-                if (gse.relInMeasureTimestamp === undefined) {
+                if (!gse.relInMeasureTimestamp) {
                     continue;
                 }
                 const deltaNew: number = this.CalculateDistance(gse.PositionAndShape.AbsolutePosition, clickPosition);
@@ -601,7 +601,7 @@ export class GraphicalMusicSheet {
                 }
             }
         }
-        if (closest !== undefined) {
+        if (closest) {
             return closest;
         }
         // TODO No staff entry was found. Feedback?
@@ -611,7 +611,7 @@ export class GraphicalMusicSheet {
 
     public GetPossibleCommentAnchor(clickPosition: PointF2D): SourceStaffEntry {
         const entry: GraphicalStaffEntry = this.GetNearestStaffEntry(clickPosition);
-        if (entry === undefined) {
+        if (!entry) {
             return undefined;
         }
         return entry.sourceStaffEntry;
@@ -621,7 +621,7 @@ export class GraphicalMusicSheet {
         for (let idx: number = 0, len: number = this.musicPages.length; idx < len; ++idx) {
             const page: GraphicalMusicPage = this.musicPages[idx];
             const o: Object = page.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
-            if (o !== undefined) {
+            if (o) {
                 return (o as T);
             }
         }
@@ -630,7 +630,7 @@ export class GraphicalMusicSheet {
 
     public tryGetTimestampFromPosition(positionOnMusicSheet: PointF2D): Fraction {
         const entry: GraphicalStaffEntry = this.getClickedObjectOfType<GraphicalStaffEntry>(positionOnMusicSheet);
-        if (entry === undefined) {
+        if (!entry) {
             return undefined;
         }
         return entry.getAbsoluteTimestamp();
@@ -649,7 +649,7 @@ export class GraphicalMusicSheet {
     public tryGetTimeStampFromPosition(positionOnMusicSheet: PointF2D): Fraction {
         try {
             const entry: GraphicalStaffEntry = this.GetNearestStaffEntry(positionOnMusicSheet);
-            if (entry === undefined) {
+            if (!entry) {
                 return undefined;
             }
             return entry.getAbsoluteTimestamp();
@@ -674,12 +674,12 @@ export class GraphicalMusicSheet {
         try {
             for (let idx: number = 0, len: number = container.StaffEntries.length; idx < len; ++idx) {
                 const entry: GraphicalStaffEntry = container.StaffEntries[idx];
-                if (entry === undefined || !entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
+                if (!entry || !entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                     continue;
                 }
-                if (staffEntry === undefined) {
+                if (!staffEntry) {
                     staffEntry = entry;
-                } else if (entry.PositionAndShape !== undefined && staffEntry.PositionAndShape !== undefined) {
+                } else if (entry.PositionAndShape && staffEntry.PositionAndShape) {
                     if (staffEntry.PositionAndShape.RelativePosition.x > entry.PositionAndShape.RelativePosition.x) {
                         staffEntry = entry;
                     }
@@ -703,7 +703,7 @@ export class GraphicalMusicSheet {
             const entries: GraphicalStaffEntry[] = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
             for (let idx: number = 0, len: number = entries.length; idx < len; ++idx) {
                 const entry: GraphicalStaffEntry = entries[idx];
-                if (entry !== undefined && entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
+                if (entry && entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                     return i;
                 }
             }
@@ -722,7 +722,7 @@ export class GraphicalMusicSheet {
             const entries: GraphicalStaffEntry[] = this.verticalGraphicalStaffEntryContainers[i].StaffEntries;
             for (let idx: number = 0, len: number = entries.length; idx < len; ++idx) {
                 const entry: GraphicalStaffEntry = entries[idx];
-                if (entry !== undefined && entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
+                if (entry && entry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                     return i;
                 }
             }
@@ -736,7 +736,7 @@ export class GraphicalMusicSheet {
         leftIndex = Math.min(this.VerticalGraphicalStaffEntryContainers.length - 1, leftIndex);
         for (let i: number = leftIndex; i >= 0; i--) {
             foundEntry = this.getStaffEntry(i);
-            if (foundEntry !== undefined) {
+            if (foundEntry) {
                 if (searchOnlyVisibleEntries) {
                     if (foundEntry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                         return foundEntry;
@@ -754,7 +754,7 @@ export class GraphicalMusicSheet {
         const rightIndex: number = Math.max(0, Math.ceil(fractionalIndex));
         for (let i: number = rightIndex; i < this.VerticalGraphicalStaffEntryContainers.length; i++) {
             foundEntry = this.getStaffEntry(i);
-            if (foundEntry !== undefined) {
+            if (foundEntry) {
                 if (returnOnlyVisibleEntries) {
                     if (foundEntry.sourceStaffEntry.ParentStaff.ParentInstrument.Visible) {
                         return foundEntry;
@@ -771,7 +771,7 @@ export class GraphicalMusicSheet {
         const result: [number, MusicSystem] = this.calculateXPositionFromTimestamp(musicTimestamp);
         const xPos: number = result[0];
         const correspondingMusicSystem: MusicSystem = result[1];
-        if (correspondingMusicSystem === undefined || correspondingMusicSystem.StaffLines.length === 0) {
+        if (!correspondingMusicSystem || correspondingMusicSystem.StaffLines.length === 0) {
             return undefined;
         }
         const yCoordinate: number = correspondingMusicSystem.PositionAndShape.AbsolutePosition.y;
@@ -785,18 +785,18 @@ export class GraphicalMusicSheet {
         const previousStaffEntry: GraphicalStaffEntry = this.findClosestLeftStaffEntry(fractionalIndex, true);
         const nextStaffEntry: GraphicalStaffEntry = this.findClosestRightStaffEntry(fractionalIndex, true);
         const currentTimeStamp: number = timeStamp.RealValue;
-        if (previousStaffEntry === undefined && nextStaffEntry === undefined) {
+        if (!previousStaffEntry && !nextStaffEntry) {
             return [0, undefined];
         }
         let previousStaffEntryMusicSystem: MusicSystem = undefined;
-        if (previousStaffEntry !== undefined) {
+        if (previousStaffEntry) {
             // TODO sometimes one of these ParentStaffLine is undefined, either fix this or handle it here
             previousStaffEntryMusicSystem = previousStaffEntry.parentMeasure.ParentStaffLine?.ParentMusicSystem;
         } else {
             previousStaffEntryMusicSystem = nextStaffEntry.parentMeasure.ParentStaffLine?.ParentMusicSystem;
         }
         let nextStaffEntryMusicSystem: MusicSystem = undefined;
-        if (nextStaffEntry !== undefined) {
+        if (nextStaffEntry) {
             nextStaffEntryMusicSystem = nextStaffEntry.parentMeasure.ParentStaffLine?.ParentMusicSystem;
         } else {
             nextStaffEntryMusicSystem = previousStaffEntry.parentMeasure.ParentStaffLine?.ParentMusicSystem;
@@ -806,10 +806,10 @@ export class GraphicalMusicSheet {
             let fraction: number;
             let previousStaffEntryPositionX: number;
             let nextStaffEntryPositionX: number;
-            if (previousStaffEntry === undefined) {
+            if (!previousStaffEntry) {
                 previousStaffEntryPositionX = nextStaffEntryPositionX = nextStaffEntry.PositionAndShape.AbsolutePosition.x;
                 fraction = 0;
-            } else if (nextStaffEntry === undefined) {
+            } else if (!nextStaffEntry) {
                 previousStaffEntryPositionX = previousStaffEntry.PositionAndShape.AbsolutePosition.x;
                 nextStaffEntryPositionX = currentMusicSystem.GetRightBorderAbsoluteXPosition();
                 const sm: SourceMeasure = previousStaffEntry.parentMeasure.parentSourceMeasure;
@@ -899,7 +899,7 @@ export class GraphicalMusicSheet {
     private getLongestStaffEntryDuration(index: number): Fraction {
         let maxLength: Fraction = new Fraction(0, 1);
         for (const graphicalStaffEntry of this.verticalGraphicalStaffEntryContainers[index].StaffEntries) {
-            if (graphicalStaffEntry === undefined) {
+            if (!graphicalStaffEntry) {
                 continue;
             }
             const maxLengthInStaffEntry: Fraction = graphicalStaffEntry.findStaffEntryMaxNoteLength();

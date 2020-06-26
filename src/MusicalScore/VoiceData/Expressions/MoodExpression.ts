@@ -48,7 +48,7 @@ export class MoodExpression extends AbstractExpression {
     private staffNumber: number;
 
     public static isInputStringMood(inputString: string): boolean {
-        if (inputString === undefined) {
+        if (!inputString) {
             return false;
         }
         return (

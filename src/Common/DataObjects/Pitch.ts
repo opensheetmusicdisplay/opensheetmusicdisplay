@@ -352,7 +352,7 @@ export class Pitch {
         // if (ReferenceEquals(p1, p2)) {
         //     return true;
         // }
-        if ((<Object>p1 === undefined) || (<Object>p2 === undefined)) {
+        if (!p1 || !p2) {
             return false;
         }
         return (p1.FundamentalNote === p2.FundamentalNote && p1.Octave === p2.Octave && p1.Accidental === p2.Accidental);
@@ -361,6 +361,25 @@ export class Pitch {
     public OperatorNotEqual(p2: Pitch): boolean {
         const p1: Pitch = this;
         return !(p1 === p2);
+    }
+
+    //These don't take into account accidentals! which isn't needed for our current purpose
+    public OperatorFundamentalGreaterThan(p2: Pitch): boolean {
+        const p1: Pitch = this;
+        if (p1.Octave === p2.Octave) {
+            return p1.FundamentalNote > p2.FundamentalNote;
+        } else {
+            return p1.Octave > p2.Octave;
+        }
+    }
+
+    public OperatorFundamentalLessThan(p2: Pitch): boolean {
+        const p1: Pitch = this;
+        if (p1.Octave === p2.Octave) {
+            return p1.FundamentalNote < p2.FundamentalNote;
+        } else {
+            return p1.Octave < p2.Octave;
+        }
     }
 
     // This method returns a new Pitch factor-Halftones higher than the current Pitch

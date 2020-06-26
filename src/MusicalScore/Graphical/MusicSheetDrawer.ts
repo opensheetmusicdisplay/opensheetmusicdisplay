@@ -423,7 +423,7 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawStaffLines(staffLine: StaffLine): void {
-        if (staffLine.StaffLines !== undefined) {
+        if (staffLine.StaffLines) {
             const position: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
             for (let i: number = 0; i < 5; i++) {
                 this.drawLineAsHorizontalRectangleWithOffset(staffLine.StaffLines[i], position, <number>GraphicalLayers.Notes);
@@ -530,17 +530,17 @@ export abstract class MusicSheetDrawer {
 
     private drawMarkedAreas(system: MusicSystem): void {
         for (const markedArea of system.GraphicalMarkedAreas) {
-            if (markedArea !== undefined) {
-                if (markedArea.systemRectangle !== undefined) {
+            if (markedArea) {
+                if (markedArea.systemRectangle) {
                     this.drawRectangle(markedArea.systemRectangle, <number>GraphicalLayers.Background);
                 }
-                if (markedArea.settings !== undefined) {
+                if (markedArea.settings) {
                     this.drawLabel(markedArea.settings, <number>GraphicalLayers.Comment);
                 }
-                if (markedArea.labelRectangle !== undefined) {
+                if (markedArea.labelRectangle) {
                     this.drawRectangle(markedArea.labelRectangle, <number>GraphicalLayers.Background);
                 }
-                if (markedArea.label !== undefined) {
+                if (markedArea.label) {
                     this.drawLabel(markedArea.label, <number>GraphicalLayers.Comment);
                 }
             }
@@ -549,11 +549,11 @@ export abstract class MusicSheetDrawer {
 
     private drawComment(system: MusicSystem): void {
         for (const comment of system.GraphicalComments) {
-            if (comment !== undefined) {
-                if (comment.settings !== undefined) {
+            if (comment) {
+                if (comment.settings) {
                     this.drawLabel(comment.settings, <number>GraphicalLayers.Comment);
                 }
-                if (comment.label !== undefined) {
+                if (comment.label) {
                     this.drawLabel(comment.label, <number>GraphicalLayers.Comment);
                 }
             }

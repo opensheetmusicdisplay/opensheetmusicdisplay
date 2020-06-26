@@ -117,7 +117,7 @@ export class ClefInstruction extends AbstractNotationInstruction {
         if (this === other) {
             return true;
         }
-        if (this === undefined || other === undefined) {
+        if (!this || !other) {
             return false;
         }
         return (this.clefPitch === other.clefPitch && this.Line === other.Line);
