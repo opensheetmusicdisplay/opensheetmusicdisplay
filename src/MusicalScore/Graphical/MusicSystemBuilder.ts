@@ -1025,6 +1025,12 @@ export class MusicSystemBuilder {
                 }
 
                 if (this.graphicalMusicSheet.MusicPages.length === 1) {
+                    /*
+                    Only need this in the event that lyricist or composer text intersects with title,
+                    which seems exceedingly rare.
+                    Leaving here just in case for future needs.
+                    Prefer to use skyline calculator in MusicSheetCalculator.calculatePageLabels
+
                     let maxLineCount: number = this.graphicalMusicSheet.Composer?.TextLines?.length;
                     let maxFontHeight: number = this.graphicalMusicSheet.Composer?.Label?.fontHeight;
                     let lyricistLineCount: number = this.graphicalMusicSheet.Lyricist?.TextLines?.length;
@@ -1042,7 +1048,7 @@ export class MusicSystemBuilder {
                         maxLineCount = lyricistLineCount;
                         maxFontHeight = lyricistFontHeight;
                         maxHeight = totalLyricist;
-                    }
+                    } */
 
                     if (this.rules.RenderTitle) {
                     // if it is the first System on the FIRST page: Add Title height and gap-distance
@@ -1050,9 +1056,12 @@ export class MusicSystemBuilder {
                                             this.rules.TitleBottomDistance;
                     }
 
+                    /*
+                    see comment above - only needed for rare case of composer/lyricist being
+                    wide enough to be below the title (or title wide enough to be above)
                     if (maxLineCount > 2) {
                         currentYPosition += maxFontHeight * (maxLineCount - 2);
-                    }
+                    }*/
                 }
                 // now add the border-top: everything that stands out above the staffline:
                 currentYPosition += -currentSystem.PositionAndShape.BorderTop;

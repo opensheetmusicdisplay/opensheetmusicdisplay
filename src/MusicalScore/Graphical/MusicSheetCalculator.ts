@@ -1859,10 +1859,12 @@ export abstract class MusicSheetCalculator {
             // TODO only add measure label height if rendering labels and composer measure has label
             // TODO y-align with lyricist? which is harder if they have different bbox parents (page and firstStaffLine).
             // when the pageWidth gets fixed, we could use page as parent again.
-            if (composer.TextLines.length === 1) {
+            if (!composer.TextLines || composer.TextLines?.length === 1) {
                 //Don't want to affect existing behavior
                 relative.y -= this.rules.SystemComposerDistance;
             } else {
+                //Sufficient for now to just use the longest composer entry instead of bottom.
+                //Otherwise we need to construct a 'bottom line' for the text block
                 const endX: number = topStaffline.PositionAndShape.BorderMarginRight;
                 const startX: number = endX - composer.PositionAndShape.Size.width;
 
@@ -1880,7 +1882,7 @@ export abstract class MusicSheetCalculator {
             const relative: PointF2D = new PointF2D();
             relative.x = this.rules.PageLeftMargin;
             relative.y = firstSystemAbsoluteTopMargin;
-            if (lyricist.TextLines.length === 1) {
+            if (!lyricist.TextLines || lyricist.TextLines?.length === 1) {
                 relative.y -= this.rules.SystemComposerDistance;
             } else {
                 const startX: number = topStaffline.PositionAndShape.BorderMarginLeft - relative.x;
