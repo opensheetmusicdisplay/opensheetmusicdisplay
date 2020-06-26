@@ -1077,7 +1077,7 @@ export class MusicSystemBuilder {
                 const previousSystem: MusicSystem = this.musicSystems[i - 1];
                 const prevSystemLastStaffline: StaffLine = previousSystem.StaffLines[previousSystem.StaffLines.length - 1];
                 const prevSystemLastStaffLineBB: BoundingBox = prevSystemLastStaffline.PositionAndShape;
-                let distance: number =  this.findReqiredDistanceWithSkyBottomLine(previousSystem, currentSystem);
+                let distance: number =  this.findRequiredDistanceWithSkyBottomLine(previousSystem, currentSystem);
 
                 // make sure the optical distance is the user-defined min distance:
                 distance += this.rules.MinSkyBottomDistBetweenSystems;
@@ -1120,7 +1120,7 @@ export class MusicSystemBuilder {
      * @param upperSystem
      * @param lowerSystem
      */
-    private findReqiredDistanceWithSkyBottomLine(upperSystem: MusicSystem, lowerSystem: MusicSystem): number {
+    private findRequiredDistanceWithSkyBottomLine(upperSystem: MusicSystem, lowerSystem: MusicSystem): number {
         const upperSystemLastStaffLine: StaffLine = upperSystem.StaffLines[upperSystem.StaffLines.length - 1];
         const lowerSystemFirstStaffLine: StaffLine = lowerSystem.StaffLines[0];
         const upperBottomLineArray: number[] = upperSystemLastStaffLine.BottomLine;

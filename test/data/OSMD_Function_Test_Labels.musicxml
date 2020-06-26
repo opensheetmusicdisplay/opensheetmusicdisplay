@@ -8,9 +8,12 @@
   <identification>
     <creator type="composer">Composer 1
     Composer 2
-    Composer 3</creator>
+    Composer Longer Name Test
+    Composer 4
+    Composer 5</creator>
     <creator type="lyricist">Lyricist 1
-    Lyricist 2</creator>
+    Lyricist Longer Name Test
+    Lyricist 3</creator>
     <rights>2020
     2021</rights>
     <encoding>

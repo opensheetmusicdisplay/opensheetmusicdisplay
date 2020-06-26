@@ -404,12 +404,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             fontFamily = this.rules.DefaultFontFamily;
         }
 
-        for (let i: number = graphicalLabel.TextLines.length - 1; i > -1; i--) {
+        for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
+            const currLine: string = graphicalLabel.TextLines[i];
+            this.backend.renderText(height, fontStyle, font, currLine, fontHeightInPixel, screenPosition, color, graphicalLabel.Label.fontFamily);
+            screenPosition.y = screenPosition.y + fontHeightInPixel;
+        }
+        /*for (let i: number = graphicalLabel.TextLines?.length - 1; i > -1; i--) {
             const currLine: string = graphicalLabel.TextLines[i];
             this.backend.renderText(height, fontStyle, font, currLine, fontHeightInPixel, screenPosition, color, graphicalLabel.Label.fontFamily);
             //Update where we render the next line
             screenPosition.y = screenPosition.y - fontHeightInPixel;
-        }
+        }*/
         // font currently unused, replaced by fontFamily
     }
 
