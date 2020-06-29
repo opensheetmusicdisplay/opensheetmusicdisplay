@@ -6,9 +6,11 @@
 
   This can be used to generate PNGs from OSMD without a browser.
   It's also used with the visual regression test system in
-  `tools/visual_regression.sh`.
+  `tools/visual_regression.sh`
+  (see package.json, used with npm run generate:blessed and generate:current, then test:visual).
 
-  Note: this script needs to "fake" quite a few browser elements, like window, document, and a Canvas HTMLElement.
+  Note: this script needs to "fake" quite a few browser elements, like window, document, and a Canvas HTMLElement,
+  which otherwise are missing in pure nodejs, causing errors in OSMD.
   For that it needs the canvas package installed.
   There are also some hacks needed to set the container size (offsetWidth) correctly.
 

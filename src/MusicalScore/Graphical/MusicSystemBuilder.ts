@@ -332,14 +332,8 @@ export class MusicSystemBuilder {
             musicSystem.StaffLines.push(staffLine);
             const boundingBox: BoundingBox = staffLine.PositionAndShape;
             const relativePosition: PointF2D = new PointF2D();
-            if (musicSystem === this.musicSystems[0] &&
-                !this.rules.CompactMode) {
-                relativePosition.x = this.rules.FirstSystemMargin;
-                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width - this.rules.FirstSystemMargin;
-            } else {
-                relativePosition.x = 0.0;
-                boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width;
-            }
+            relativePosition.x = 0.0;
+            boundingBox.BorderRight = musicSystem.PositionAndShape.Size.width;
             relativePosition.y = relativeYPosition;
             boundingBox.RelativePosition = relativePosition;
             boundingBox.BorderLeft = 0.0;
