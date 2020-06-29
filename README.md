@@ -1,4 +1,4 @@
-<img alt="OSMD logo" src="https://osmd.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg" width="200"/>
+<img alt="OSMD logo" src="https://opensheetmusicdisplay.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg" width="200"/>
 <!--img alt="Brought to you by PhonicScore" src="https://phonicscore.com/neu/wp-content/uploads/2018/06/phonicscore_brown.svg"/-->
 
 # OpenSheetMusicDisplay
