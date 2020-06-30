@@ -329,8 +329,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in BottomLine
             // and tangent Lines characteristica
-            let startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            let endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
+            const startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            const endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
             const startLineD: number = start2.y - start2.x * startLineSlope;
             const endLineD: number = end2.y - end2.x * endLineSlope;
 
@@ -356,23 +356,22 @@ export class GraphicalSlur extends GraphicalCurve {
             // idea is to compare the half heightWidthRatio of the bounding box of the skyline points with the slope (which is also a ratio: k/1)
             // if the slope is greater than the half heightWidthRatio (which will 99% be the case),
             // then add a y-offset to reduce the slope to the same value as the half heightWidthRatio of the bounding box
-            let startYOffset: number = 0;
-            let endYOffset: number = 0;
-            if (Math.abs(heightWidthRatio) > 0.001) {
+            const startYOffset: number = 0;
+            const endYOffset: number = 0;
+            /*if (Math.abs(heightWidthRatio) > 0.001) {
                 // 1. start side:
                 const startSlopeRatio: number = Math.abs(startLineSlope / (heightWidthRatio * 2));
                 const maxLeftYOffset: number = Math.abs(startLineSlope);
                 startYOffset = Math.max(0, maxLeftYOffset * (Math.min(10, startSlopeRatio - 1) / 10));
                 // slope has to be adapted now due to the y-offset:
                 startLineSlope -= startYOffset;
-
                 // 2. end side:
                 const endSlopeRatio: number = Math.abs(endLineSlope / (heightWidthRatio * 2));
                 const maxRightYOffset: number = Math.abs(endLineSlope);
                 endYOffset = Math.max(0, maxRightYOffset * (Math.min(10, endSlopeRatio - 1) / 10));
                 // slope has to be adapted now due to the y-offset:
                 endLineSlope += endYOffset;
-            }
+            } */
 
             // calculate tangent Lines Angles
             // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
@@ -583,6 +582,14 @@ export class GraphicalSlur extends GraphicalCurve {
             } else { endY += rules.SlursStartingAtSameStaffEntryYOffset; }
         }
 
+        if (this.placement === PlacementEnum.Above) {
+            startY = Math.min(startY, 1.5);
+            endY = Math.min(endY, 1.5);
+        } else {
+            startY = Math.max(startY, staffLine.StaffHeight - 1.5);
+            endY = Math.max(endY, staffLine.StaffHeight - 1.5);
+        }
+
         return {startX, startY, endX, endY};
     }
 
@@ -738,6 +745,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // in case all Points don't have a meaningful value or the slope between Start- and EndPoint is just bigger
         slope = Math.max(slope, Math.abs(end.y - y) / (end.x - x));
+        //limit to 80 degrees
+        slope = Math.min(slope, 5.6713);
 
         return slope;
     }
@@ -762,6 +771,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // in case no Point has a meaningful value or the slope between Start- and EndPoint is just smaller
         slope = Math.min(slope, (y - start.y) / (x - start.x));
+        //limit to 80 degrees
+        slope = Math.max(slope, -5.6713);
 
         return slope;
     }
@@ -858,17 +869,17 @@ export class GraphicalSlur extends GraphicalCurve {
         // use this HeightWidthRatio to get a "normalized" Factor (based on tested parameters)
         // this Factor denotes the Length of the TangentLine of the Curve (a proportion of the X-distance from StartPoint to EndPoint)
         // finally from this Length and the calculated Angles we get the coordinates of the Control Points
-        const factor: number = GraphicalSlur.k * heightWidthRatio + GraphicalSlur.d;
+        const factorStart: number = Math.min(0.5, Math.max(0.1, 1.7 * (startAngle / 80) * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
+        const factorEnd: number = Math.min(0.5, Math.max(0.1, 1.7 * (-endAngle / 80) * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
 
-        const relativeLength: number = endX * factor;
-        const leftControlPoint: PointF2D = new PointF2D();
-        leftControlPoint.x = relativeLength * Math.cos(startAngle * GraphicalSlur.degreesToRadiansFactor);
-        leftControlPoint.y = relativeLength * Math.sin(startAngle * GraphicalSlur.degreesToRadiansFactor);
+        const startControlPoint: PointF2D = new PointF2D();
+        startControlPoint.x = endX * factorStart * Math.cos(startAngle * GraphicalSlur.degreesToRadiansFactor);
+        startControlPoint.y = endX * factorStart * Math.sin(startAngle * GraphicalSlur.degreesToRadiansFactor);
 
-        const rightControlPoint: PointF2D = new PointF2D();
-        rightControlPoint.x = endX - (relativeLength * Math.cos(endAngle * GraphicalSlur.degreesToRadiansFactor));
-        rightControlPoint.y = -(relativeLength * Math.sin(endAngle * GraphicalSlur.degreesToRadiansFactor));
-        return {startControlPoint: leftControlPoint, endControlPoint: rightControlPoint};
+        const endControlPoint: PointF2D = new PointF2D();
+        endControlPoint.x = endX - (endX * factorEnd * Math.cos(endAngle * GraphicalSlur.degreesToRadiansFactor));
+        endControlPoint.y = -(endX * factorEnd * Math.sin(endAngle * GraphicalSlur.degreesToRadiansFactor));
+        return {startControlPoint: startControlPoint, endControlPoint: endControlPoint};
     }
 
     /**
@@ -905,6 +916,4 @@ export class GraphicalSlur extends GraphicalCurve {
     }
 
     private static degreesToRadiansFactor: number = Math.PI / 180;
-    private static k: number = 0.9;
-    private static d: number = 0.2;
 }
