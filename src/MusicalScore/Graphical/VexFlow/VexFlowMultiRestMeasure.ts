@@ -37,7 +37,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
         this.resetLayout();
 
         // type note: Vex.Flow.MultiMeasureRest is not in the DefinitelyTyped definitions yet.
-        this.multiRestElement = new (Vex.Flow as any).MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
+        this.multiRestElement = new Vex.Flow.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
             // number_line: 3
         });
     }
