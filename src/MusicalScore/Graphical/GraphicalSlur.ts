@@ -158,8 +158,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in SkyLine
                 // and tangent Lines characteristica
-            let startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            let endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
+            const startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            const endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
             const startLineD: number = start2.y - start2.x * startLineSlope;
             const endLineD: number = end2.y - end2.x * endLineSlope;
 
@@ -185,9 +185,9 @@ export class GraphicalSlur extends GraphicalCurve {
             // idea is to compare the half heightWidthRatio of the bounding box of the skyline points with the slope (which is also a ratio: k/1)
             // if the slope is greater than the half heightWidthRatio (which will 99% be the case),
             // then add a y-offset to reduce the slope to the same value as the half heightWidthRatio of the bounding box
-            let startYOffset: number = 0;
-            let endYOffset: number = 0;
-            if (Math.abs(heightWidthRatio) > 0.001) {
+            const startYOffset: number = 0;
+            const endYOffset: number = 0;
+            /*if (Math.abs(heightWidthRatio) > 0.001) {
                 // 1. start side:
                 const startSlopeRatio: number = Math.abs(startLineSlope / (heightWidthRatio * 2));
                 const maxLeftYOffset: number = Math.abs(startLineSlope);
@@ -201,7 +201,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 endYOffset = Math.max(0, maxRightYOffset * (Math.min(10, endSlopeRatio - 1) / 10));
                 // slope has to be adapted now due to the y-offset:
                 endLineSlope += endYOffset;
-            }
+            }*/
 
 
 
