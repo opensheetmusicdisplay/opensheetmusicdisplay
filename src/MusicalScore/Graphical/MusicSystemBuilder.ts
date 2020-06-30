@@ -1018,11 +1018,44 @@ export class MusicSystemBuilder {
                     currentYPosition = this.rules.PageTopMargin;
                 }
 
-                // if it is the first System on the FIRST page: Add Title height and gap-distance
-                if (this.graphicalMusicSheet.MusicPages.length === 1 &&
-                    this.rules.RenderTitle) {
-                    currentYPosition +=   this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
+                if (this.graphicalMusicSheet.MusicPages.length === 1) {
+                    /*
+                    Only need this in the event that lyricist or composer text intersects with title,
+                    which seems exceedingly rare.
+                    Leaving here just in case for future needs.
+                    Prefer to use skyline calculator in MusicSheetCalculator.calculatePageLabels
+
+                    let maxLineCount: number = this.graphicalMusicSheet.Composer?.TextLines?.length;
+                    let maxFontHeight: number = this.graphicalMusicSheet.Composer?.Label?.fontHeight;
+                    let lyricistLineCount: number = this.graphicalMusicSheet.Lyricist?.TextLines?.length;
+                    let lyricistFontHeight: number = this.graphicalMusicSheet.Lyricist?.Label?.fontHeight;
+
+                    maxLineCount = maxLineCount ? maxLineCount : 0;
+                    maxFontHeight = maxFontHeight ? maxFontHeight : 0;
+                    lyricistLineCount = lyricistLineCount ? lyricistLineCount : 0;
+                    lyricistFontHeight = lyricistFontHeight ? lyricistFontHeight : 0;
+
+                    let maxHeight: number = maxLineCount * maxFontHeight;
+                    const totalLyricist: number = lyricistLineCount * lyricistFontHeight;
+
+                    if (totalLyricist > maxHeight) {
+                        maxLineCount = lyricistLineCount;
+                        maxFontHeight = lyricistFontHeight;
+                        maxHeight = totalLyricist;
+                    } */
+
+                    if (this.rules.RenderTitle) {
+                    // if it is the first System on the FIRST page: Add Title height and gap-distance
+                    currentYPosition += this.rules.TitleTopDistance + this.rules.SheetTitleHeight +
                                             this.rules.TitleBottomDistance;
+                    }
+
+                    /*
+                    see comment above - only needed for rare case of composer/lyricist being
+                    wide enough to be below the title (or title wide enough to be above)
+                    if (maxLineCount > 2) {
+                        currentYPosition += maxFontHeight * (maxLineCount - 2);
+                    }*/
                 }
                 // now add the border-top: everything that stands out above the staffline:
                 currentYPosition += -currentSystem.PositionAndShape.BorderTop;
@@ -1047,7 +1080,7 @@ export class MusicSystemBuilder {
                 const previousSystem: MusicSystem = this.musicSystems[i - 1];
                 const prevSystemLastStaffline: StaffLine = previousSystem.StaffLines[previousSystem.StaffLines.length - 1];
                 const prevSystemLastStaffLineBB: BoundingBox = prevSystemLastStaffline.PositionAndShape;
-                let distance: number =  this.findReqiredDistanceWithSkyBottomLine(previousSystem, currentSystem);
+                let distance: number =  this.findRequiredDistanceWithSkyBottomLine(previousSystem, currentSystem);
 
                 // make sure the optical distance is the user-defined min distance:
                 distance += this.rules.MinSkyBottomDistBetweenSystems;
@@ -1090,7 +1123,7 @@ export class MusicSystemBuilder {
      * @param upperSystem
      * @param lowerSystem
      */
-    private findReqiredDistanceWithSkyBottomLine(upperSystem: MusicSystem, lowerSystem: MusicSystem): number {
+    private findRequiredDistanceWithSkyBottomLine(upperSystem: MusicSystem, lowerSystem: MusicSystem): number {
         const upperSystemLastStaffLine: StaffLine = upperSystem.StaffLines[upperSystem.StaffLines.length - 1];
         const lowerSystemFirstStaffLine: StaffLine = lowerSystem.StaffLines[0];
         const upperBottomLineArray: number[] = upperSystemLastStaffLine.BottomLine;

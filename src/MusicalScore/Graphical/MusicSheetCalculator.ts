@@ -1835,6 +1835,9 @@ export abstract class MusicSheetCalculator {
             subtitle.PositionAndShape.RelativePosition = relative;
             page.Labels.push(subtitle);
         }
+        //Get the first system, first staffline skybottomcalculator
+        const topStaffline: StaffLine = page.MusicSystems[0].StaffLines[0];
+        const skyBottomLineCalculator: SkyBottomLineCalculator = topStaffline.SkyBottomLineCalculator;
         const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
         if (composer) {
             composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
@@ -1848,12 +1851,27 @@ export abstract class MusicSheetCalculator {
             //  firstStaffLineEndX); // awkward with 2-bar score
             relative.x = this.graphicalMusicSheet.ParentMusicSheet.pageWidth - this.rules.PageRightMargin;
             //relative.x = firstStaffLine.PositionAndShape.Size.width;
-            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
+            //when this is less, goes higher.
+            //So 0 is top of the sheet, 22 or so is touching the music system margin
+            relative.y = firstSystemAbsoluteTopMargin;
             //relative.y = - this.rules.SystemComposerDistance;
             //relative.y = -firstStaffLine.PositionAndShape.Size.height;
             // TODO only add measure label height if rendering labels and composer measure has label
             // TODO y-align with lyricist? which is harder if they have different bbox parents (page and firstStaffLine).
             // when the pageWidth gets fixed, we could use page as parent again.
+            if (!composer.TextLines || composer.TextLines?.length === 1) {
+                //Don't want to affect existing behavior
+                relative.y -= this.rules.SystemComposerDistance;
+            } else {
+                //Sufficient for now to just use the longest composer entry instead of bottom.
+                //Otherwise we need to construct a 'bottom line' for the text block
+                const endX: number = topStaffline.PositionAndShape.BorderMarginRight;
+                const startX: number = endX - composer.PositionAndShape.Size.width;
+
+                const currentMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
+                relative.y += currentMin - composer.PositionAndShape.BorderBottom;
+                skyBottomLineCalculator.updateSkyLineInRange(startX, endX, currentMin - composer.PositionAndShape.MarginSize.height);
+            }
             composer.PositionAndShape.RelativePosition = relative;
             page.Labels.push(composer);
         }
@@ -1863,7 +1881,17 @@ export abstract class MusicSheetCalculator {
             lyricist.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
             relative.x = this.rules.PageLeftMargin;
-            relative.y = firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance;
+            relative.y = firstSystemAbsoluteTopMargin;
+            if (!lyricist.TextLines || lyricist.TextLines?.length === 1) {
+                relative.y -= this.rules.SystemComposerDistance;
+            } else {
+                const startX: number = topStaffline.PositionAndShape.BorderMarginLeft - relative.x;
+                const endX: number = startX + lyricist.PositionAndShape.Size.width;
+
+                const currentMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
+                relative.y += currentMin - lyricist.PositionAndShape.BorderBottom;
+                skyBottomLineCalculator.updateSkyLineInRange(startX, endX, currentMin - lyricist.PositionAndShape.MarginSize.height);
+            }
             //relative.y = Math.max(relative.y, composer.PositionAndShape.RelativePosition.y);
             lyricist.PositionAndShape.RelativePosition = relative;
             page.Labels.push(lyricist);
