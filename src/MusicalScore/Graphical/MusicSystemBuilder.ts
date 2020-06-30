@@ -674,6 +674,16 @@ export class MusicSystemBuilder {
         let sourceMeasure: SourceMeasure = undefined;
         try {
             sourceMeasure = this.measureList[this.measureListIndex][0].parentSourceMeasure;
+            if (this.rules.RenderMultipleRestMeasures && sourceMeasure.multipleRestMeasures > 1) {
+                const newIndex: number = Math.min(
+                    this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, // safety check
+                    sourceMeasure.measureListIndex + sourceMeasure.multipleRestMeasures - 1
+                    // check the bar line of the last sourcemeasure in the multiple measure rest sequence
+                );
+                sourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[newIndex];
+                // sourceMeasure = this.measureList[this.measureListIndex + sourceMeasure.multipleRestMeasures - 1][0].parentSourceMeasure;
+                //    this will be possible when the other GraphicalMeasures in the measureList aren't undefined anymore
+            }
         } finally {
             // do nothing
         }
