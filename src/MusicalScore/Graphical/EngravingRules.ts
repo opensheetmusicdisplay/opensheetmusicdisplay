@@ -167,6 +167,7 @@ export class EngravingRules {
     private systemBoldLineWidth: number;
     private systemRepetitionEndingLineWidth: number;
     private systemDotWidth: number;
+    private multipleRestMeasureDefaultWidth: number;
     private distanceBetweenVerticalSystemLines: number;
     private distanceBetweenDotAndLine: number;
     private octaveShiftLineWidth: number;
@@ -219,6 +220,7 @@ export class EngravingRules {
     private renderFingerings: boolean;
     private renderMeasureNumbers: boolean;
     private renderLyrics: boolean;
+    private renderMultipleRestMeasures: boolean;
     private renderTimeSignatures: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
@@ -425,6 +427,8 @@ export class EngravingRules {
         this.octaveShiftVerticalLineLength = EngravingRules.unit;
         this.graceLineWidth = this.staffLineWidth * this.GraceNoteScalingFactor;
 
+        this.multipleRestMeasureDefaultWidth = 4;
+
         // Line Widths
         this.minimumCrossedBeamDifferenceMargin = 0.0001;
 
@@ -467,6 +471,7 @@ export class EngravingRules {
         this.renderFingerings = true;
         this.renderMeasureNumbers = true;
         this.renderLyrics = true;
+        this.renderMultipleRestMeasures = true;
         this.renderTimeSignatures = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
@@ -1345,6 +1350,12 @@ export class EngravingRules {
     public set SystemDotWidth(value: number) {
         this.systemDotWidth = value;
     }
+    public get MultipleRestMeasureDefaultWidth(): number {
+        return this.multipleRestMeasureDefaultWidth;
+    }
+    public set MultipleRestMeasureDefaultWidth(value: number) {
+        this.multipleRestMeasureDefaultWidth = value;
+    }
     public get DistanceBetweenVerticalSystemLines(): number {
         return this.distanceBetweenVerticalSystemLines;
     }
@@ -1642,6 +1653,12 @@ export class EngravingRules {
     }
     public set RenderLyrics(value: boolean) {
         this.renderLyrics = value;
+    }
+    public get RenderMultipleRestMeasures(): boolean {
+        return this.renderMultipleRestMeasures;
+    }
+    public set RenderMultipleRestMeasures(value: boolean) {
+        this.renderMultipleRestMeasures = value;
     }
     public get RenderTimeSignatures(): boolean {
         return this.renderTimeSignatures;

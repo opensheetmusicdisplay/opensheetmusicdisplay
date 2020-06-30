@@ -62,16 +62,21 @@ export class MusicSystemBuilder {
         // the first System - create also its Labels
         this.currentSystemParams.currentSystem = this.initMusicSystem();
 
-        let numberOfMeasures: number = 0;
-        for (let idx: number = 0, len: number = this.measureList.length; idx < len; ++idx) {
-            if (this.measureList[idx].length > 0) {
-                numberOfMeasures++;
-            }
-        }
+        // let numberOfMeasures: number = 0;
+        // for (let idx: number = 0, len: number = this.measureList.length; idx < len; ++idx) {
+        //     if (this.measureList[idx].length > 0) {
+        //         numberOfMeasures++;
+        //     }
+        // }
+        // console.log(`numberOfMeasures: ${numberOfMeasures}`);
 
         // go through measures and add to system until system gets too long -> finish system and start next system [line break, new system].
-        while (this.measureListIndex < numberOfMeasures) {
+        while (this.measureListIndex < this.measureList.length) {
             const graphicalMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex];
+            if (!graphicalMeasures || !graphicalMeasures[0]) {
+                this.measureListIndex++;
+                continue; // previous measure was probably multi-rest, skip this one
+            }
             for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
                 graphicalMeasures[idx].resetLayout();
             }
@@ -114,12 +119,16 @@ export class MusicSystemBuilder {
             let nextSourceMeasure: SourceMeasure = undefined;
             if (this.measureListIndex + 1 < this.measureList.length) {
                 const nextGraphicalMeasures: GraphicalMeasure[] = this.measureList[this.measureListIndex + 1];
-                nextSourceMeasure = nextGraphicalMeasures[0].parentSourceMeasure;
-                if (nextSourceMeasure.hasBeginInstructions()) {
+                // TODO: consider multirest. then the next graphical measure may not exist. but there shouldn't be hidden changes here.
+                nextSourceMeasure = nextGraphicalMeasures[0]?.parentSourceMeasure;
+                if (nextSourceMeasure?.hasBeginInstructions()) {
                     nextMeasureBeginInstructionWidth += this.addBeginInstructions(nextGraphicalMeasures, false, false);
                 }
             }
-            const totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
+            let totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
+            if (graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasures) {
+                totalMeasureWidth = this.rules.MultipleRestMeasureDefaultWidth; // default 4 (12 seems too large)
+            }
             const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
             const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;
             const doXmlLineBreak: boolean = doXmlPageBreak || // also create new system if doing page break
@@ -816,7 +825,7 @@ export class MusicSystemBuilder {
     protected getNextMeasureKeyInstruction(): KeyInstruction {
         if (this.measureListIndex < this.measureList.length - 1) {
             for (let visIndex: number = 0; visIndex < this.measureList[this.measureListIndex].length; visIndex++) {
-                const sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex + 1][visIndex].parentSourceMeasure;
+                const sourceMeasure: SourceMeasure = this.measureList[this.measureListIndex + 1][visIndex]?.parentSourceMeasure;
                 if (!sourceMeasure) {
                     return undefined;
                 }
