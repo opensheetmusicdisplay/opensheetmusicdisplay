@@ -51,6 +51,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        // vexflow 3.x: change default font
+        if (this.rules.DefaultVexFlowNoteFont === "gonville") {
+            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+        } // else keep new vexflow default Bravura (more cursive, bold).
+
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
             const backend: VexFlowBackend = this.backends[this.pageIdx];

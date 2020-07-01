@@ -27,10 +27,10 @@
     "generatePNG:paged:single": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./export 0 0 ^Beethoven",
     "generate:current": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 allSmall --osmdtesting",
     "generate:current:debug": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 allSmall --debugosmdtesting",
-    "generate:current:singletest": "node test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 .*function_test_all.* --osmdtesting",
+    "generate:current:singletest": "node test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current 0 0 ^Beethoven --osmdtesting",
     "generate:blessed": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/blessed 0 0 allSmall --osmdtesting",
     "test:visual": "sh ./test/Util/visual_regression.sh ./visual_regression",
-    "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression OSMD_function_test_all",
+    "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven",
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
   "pre-commit": [

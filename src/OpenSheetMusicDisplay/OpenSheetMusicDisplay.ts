@@ -518,6 +518,9 @@ export class OpenSheetMusicDisplay {
         if (options.renderSingleHorizontalStaffline !== undefined) {
             this.rules.RenderSingleHorizontalStaffline = options.renderSingleHorizontalStaffline;
         }
+        if (options.spacingFactorSoftmax !== undefined) {
+            this.rules.SoftmaxFactorVexFlow = options.spacingFactorSoftmax;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {

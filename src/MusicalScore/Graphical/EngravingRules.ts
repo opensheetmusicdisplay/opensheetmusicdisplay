@@ -184,6 +184,7 @@ export class EngravingRules {
     private metronomeMarksDrawn: boolean;
     private metronomeMarkXShift: number;
     private metronomeMarkYShift: number;
+    private softmaxFactorVexFlow: number;
     private maxInstructionsConstValue: number;
     private noteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
@@ -208,6 +209,7 @@ export class EngravingRules {
     private defaultColorTitle: string;
     private defaultFontFamily: string;
     private defaultFontStyle: FontStyles;
+    private defaultVexFlowNoteFont: string;
     private maxMeasureToDrawIndex: number;
     private minMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
@@ -441,6 +443,7 @@ export class EngravingRules {
         this.metronomeMarksDrawn = true;
         this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.metronomeMarkYShift = -0.5;
+        this.softmaxFactorVexFlow = 5;
 
         // Render options (whether to render specific or invisible elements)
         this.alignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
@@ -460,6 +463,7 @@ export class EngravingRules {
         this.defaultColorTitle = this.defaultColorNotehead;
         this.defaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.defaultFontStyle = FontStyles.Regular;
+        this.defaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
         this.minMeasureToDrawIndex = 0;
         this.renderComposer = true;
@@ -1452,6 +1456,12 @@ export class EngravingRules {
     public set MetronomeMarkYShift(value: number) {
         this.metronomeMarkYShift = value;
     }
+    public get SoftmaxFactorVexFlow(): number {
+        return this.softmaxFactorVexFlow;
+    }
+    public set SoftmaxFactorVexFlow(value: number) {
+        this.softmaxFactorVexFlow = value;
+    }
     public get MaxInstructionsConstValue(): number {
         return this.maxInstructionsConstValue;
     }
@@ -1584,6 +1594,12 @@ export class EngravingRules {
     }
     public set DefaultFontStyle(value: FontStyles) {
         this.defaultFontStyle = value;
+    }
+    public get DefaultVexFlowNoteFont(): string {
+        return this.defaultVexFlowNoteFont;
+    }
+    public set DefaultVexFlowNoteFont(value: string) {
+        this.defaultVexFlowNoteFont = value;
     }
     public get MaxMeasureToDrawIndex(): number {
         return this.maxMeasureToDrawIndex;

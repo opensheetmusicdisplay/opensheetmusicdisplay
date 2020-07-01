@@ -58,6 +58,7 @@ export abstract class MusicSheetDrawer {
         this.textMeasurer = textMeasurer;
         this.splitScreenLineColor = -1;
         this.drawingParameters = drawingParameters;
+        this.rules = drawingParameters.Rules;
     }
 
     public set Mode(value: PhonicScoreModes) {

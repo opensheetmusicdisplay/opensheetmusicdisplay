@@ -61,6 +61,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
+
+    // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
+    //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
+    if (this.rules.DefaultVexFlowNoteFont === "gonville") {
+      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+    } // else keep new vexflow default Bravura (more cursive, bold)
   }
 
   protected clearRecreatedObjects(): void {
@@ -123,7 +129,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // Format the voices
     const allVoices: Vex.Flow.Voice[] = [];
-    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
+    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({softmaxFactor: this.rules.SoftmaxFactorVexFlow});
 
     for (const measure of measures) {
       if (!measure) {
