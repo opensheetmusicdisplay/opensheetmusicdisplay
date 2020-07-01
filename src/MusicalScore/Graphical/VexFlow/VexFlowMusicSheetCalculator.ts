@@ -130,7 +130,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // Format the voices
     const allVoices: Vex.Flow.Voice[] = [];
     // TODO: remove the any when the new DefinitelyTyped PR is through and update released
-    const formatter: Vex.Flow.Formatter = new (Vex.Flow as any).Formatter({softmaxFactor: this.rules.SoftmaxFactorVexFlow});
+    const formatter: Vex.Flow.Formatter = new (Vex.Flow as any).Formatter({
+      // maxIterations: 2,
+      softmaxFactor: this.rules.SoftmaxFactorVexFlow
+    });
 
     for (const measure of measures) {
       if (!measure) {
@@ -156,9 +159,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
     if (allVoices.length > 0) {
-      // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
-      // FIXME: a more relaxed formatting of voices
-      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+      // the voicing space bonus addition makes the voicing more relaxed. With a bonus of 0 the notes are basically completely squeezed together.
+      // let voicingWidthBonus: number = this.rules.VoicingSpaceBonusVexflow;
+      // if (measures[0].staffEntries?.length === 2) {
+      //   voicingWidthBonus = 3;
+      // }
+      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
+        * this.rules.VoiceSpacingMultiplierVexflow
+        + this.rules.VoicingSpaceAddendVexflow;
+        // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
       // firstMeasure.formatVoices = (w: number) => {
       //     formatter.format(allVoices, w);
       // };

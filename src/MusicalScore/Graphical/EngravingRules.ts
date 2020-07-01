@@ -176,6 +176,9 @@ export class EngravingRules {
     private minimumStaffLineDistance: number;
     private minSkyBottomDistBetweenStaves: number;
     private minimumCrossedBeamDifferenceMargin: number;
+
+    private voiceSpacingMultiplierVexflow: number;
+    private voicingSpaceAddendVexflow: number;
     private displacedNoteMargin: number;
     private minNoteDistance: number;
     private subMeasureXSpacingThreshold: number;
@@ -435,15 +438,19 @@ export class EngravingRules {
         this.minimumCrossedBeamDifferenceMargin = 0.0001;
 
         // xSpacing Variables
+        this.voiceSpacingMultiplierVexflow = 1.0;
+        this.voicingSpaceAddendVexflow = 3.0;
         this.displacedNoteMargin = 0.1;
         this.minNoteDistance = 2.0;
         this.subMeasureXSpacingThreshold = 35;
         this.measureDynamicsMaxScalingFactor = 2.5;
-        this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
+        this.wholeRestXShiftVexflow = -1.5; // VexFlow draws rest notes too far to the right
         this.metronomeMarksDrawn = true;
         this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.metronomeMarkYShift = -0.5;
-        this.softmaxFactorVexFlow = 5;
+        this.softmaxFactorVexFlow = 15; // seems like the sweet spot. Vexflow default is 100.
+        // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
+        // if too low, smaller notes aren't positioned correctly.
 
         // Render options (whether to render specific or invisible elements)
         this.alignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
@@ -1407,6 +1414,18 @@ export class EngravingRules {
     }
     public set MinimumCrossedBeamDifferenceMargin(value: number) {
         this.minimumCrossedBeamDifferenceMargin = value;
+    }
+    public get VoiceSpacingMultiplierVexflow(): number {
+        return this.voiceSpacingMultiplierVexflow;
+    }
+    public set VoiceSpacingMultiplierVexflow(value: number) {
+        this.voiceSpacingMultiplierVexflow = value;
+    }
+    public get VoicingSpaceAddendVexflow(): number {
+        return this.voicingSpaceAddendVexflow;
+    }
+    public set VoicingSpaceAddendVexflow(value: number) {
+        this.voicingSpaceAddendVexflow = value;
     }
     public get DisplacedNoteMargin(): number {
         return this.displacedNoteMargin;

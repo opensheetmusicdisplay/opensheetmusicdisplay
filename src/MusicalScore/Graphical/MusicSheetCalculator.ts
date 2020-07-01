@@ -221,24 +221,25 @@ export abstract class MusicSheetCalculator {
         // for each inner List in big Measure List calculate new Positions for the StaffEntries
         // and adjust Measures sizes
         // calculate max measure length for maximum zoom in.
-        let minLength: number = 0;
-        const maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
+
+        // let minLength: number = 0; // currently unused
+        // const maxInstructionsLength: number = this.rules.MaxInstructionsConstValue;
         if (this.graphicalMusicSheet.MeasureList.length > 0) {
             /** list of vertically ordered measures belonging to one bar */
             let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
             let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
             minimumStaffEntriesWidth = this.calculateMeasureWidthFromLyrics(measures, minimumStaffEntriesWidth);
             MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
-            minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
+            // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
                 minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
                 minimumStaffEntriesWidth = this.calculateMeasureWidthFromLyrics(measures, minimumStaffEntriesWidth);
                 MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
-                minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
+                // minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
             }
         }
-        this.graphicalMusicSheet.MinAllowedSystemWidth = minLength;
+        // this.graphicalMusicSheet.MinAllowedSystemWidth = minLength; // currently unused
     }
 
     public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
