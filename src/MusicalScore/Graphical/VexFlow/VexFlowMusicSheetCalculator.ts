@@ -61,6 +61,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
+
+    // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
+    //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
+    if (this.rules.DefaultVexFlowNoteFont === "gonville") {
+      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+    } // else keep new vexflow default Bravura (more cursive, bold)
   }
 
   protected clearRecreatedObjects(): void {
@@ -68,7 +74,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
-        (<VexFlowMeasure>graphicalMeasure).clean();
+        (<VexFlowMeasure>graphicalMeasure)?.clean();
       }
     }
   }
@@ -76,6 +82,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected formatMeasures(): void {
     // let totalFinalizeBeamsTime: number = 0;
     for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
+      if (!verticalMeasureList || !verticalMeasureList[0]) {
+        continue;
+      }
       const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
       firstMeasure.format();
@@ -120,9 +129,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // Format the voices
     const allVoices: Vex.Flow.Voice[] = [];
-    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
+    // TODO: remove the any when the new DefinitelyTyped PR is through and update released
+    const formatter: Vex.Flow.Formatter = new (Vex.Flow as any).Formatter({softmaxFactor: this.rules.SoftmaxFactorVexFlow});
 
     for (const measure of measures) {
+      if (!measure) {
+        continue;
+      }
       const mvoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
       const voices: Vex.Flow.Voice[] = [];
       for (const voiceID in mvoices) {
@@ -220,6 +233,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     for (const graphicalMeasure of measures) {
+      if (!graphicalMeasure) {
+        continue;
+      }
       for (const staffEntry of graphicalMeasure.staffEntries) {
         // here the measure modifiers are not yet set, therefore the begin instruction width will be empty
         (<VexFlowStaffEntry>staffEntry).calculateXPosition();
@@ -247,6 +263,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     for (const measure of measuresVertical) {
+      if (!measure) {
+        continue;
+      }
       const lastLyricEntryDict: LyricEntryDict = {}; // holds info about last lyrics entries for all verses j
 
       // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
