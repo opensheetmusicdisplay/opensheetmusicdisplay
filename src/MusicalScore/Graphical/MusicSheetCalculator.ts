@@ -342,11 +342,12 @@ export abstract class MusicSheetCalculator {
      */
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
         const staffLine: StaffLine = musicSystem.StaffLines[0];
-        let currentMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
+        let previousLabelMeasureNumber: number;
         let labelOffsetX: number = 0;
         for (const measure of staffLine.Measures) {
             if (measure.MeasureNumber === 0 || measure.MeasureNumber === 1) {
-                currentMeasureNumber = measure.MeasureNumber;
+                previousLabelMeasureNumber = measure.MeasureNumber;
+                // for the first measure, this label still needs to be created. Afterwards, this variable will hold the previous label's measure number.
             }
             if (measure !== staffLine.Measures[0] && this.rules.MeasureNumberLabelXOffset) {
                 labelOffsetX = this.rules.MeasureNumberLabelXOffset;
@@ -354,14 +355,14 @@ export abstract class MusicSheetCalculator {
                 labelOffsetX = 0; // don't offset label for first measure in staffline
             }
 
-            if ((measure.MeasureNumber === currentMeasureNumber ||
-                measure.MeasureNumber === currentMeasureNumber + this.rules.MeasureNumberLabelOffset) &&
+            if ((measure.MeasureNumber === previousLabelMeasureNumber ||
+                measure.MeasureNumber >= previousLabelMeasureNumber + this.rules.MeasureNumberLabelOffset) &&
                 !measure.parentSourceMeasure.ImplicitMeasure) {
                 if (measure.MeasureNumber !== 1 ||
                     (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0])) {
                     this.calculateSingleMeasureNumberPlacement(measure, staffLine, musicSystem, labelOffsetX);
                 }
-                currentMeasureNumber = measure.MeasureNumber;
+                previousLabelMeasureNumber = measure.MeasureNumber;
             }
         }
     }
