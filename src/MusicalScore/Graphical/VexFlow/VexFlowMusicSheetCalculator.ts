@@ -129,7 +129,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // Format the voices
     const allVoices: Vex.Flow.Voice[] = [];
-    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({softmaxFactor: this.rules.SoftmaxFactorVexFlow});
+    // TODO: remove the any when the new DefinitelyTyped PR is through and update released
+    const formatter: Vex.Flow.Formatter = new (Vex.Flow as any).Formatter({softmaxFactor: this.rules.SoftmaxFactorVexFlow});
 
     for (const measure of measures) {
       if (!measure) {
