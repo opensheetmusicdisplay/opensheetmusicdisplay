@@ -397,6 +397,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
     }
+    elongationFactorForMeasureWidth = Math.min(elongationFactorForMeasureWidth, this.rules.MaximumLyricsElongationFactor);
+    // TODO check when this is > 2.0. there seems to be an error here where this is unnecessarily > 2 in Beethoven Geliebte.
     return oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
   }
 

@@ -134,6 +134,8 @@ export class EngravingRules {
     private betweenSyllableMinimumDistance: number;
     private lyricOverlapAllowedIntoNextMeasure: number;
     private minimumDistanceBetweenDashes: number;
+    private maximumLyricsElongationFactor: number;
+
     private bezierCurveStepSize: number;
     private tPower3: number[];
     private oneMinusTPower3: number[];
@@ -405,6 +407,7 @@ export class EngravingRules {
         this.betweenSyllableMinimumDistance = 0.5; // + 1.0 for CenterAlignment added in lyrics spacing
         this.lyricOverlapAllowedIntoNextMeasure = 3.4; // optimal for dashed last lyric, see Land der Berge
         this.minimumDistanceBetweenDashes = 10;
+        this.maximumLyricsElongationFactor = 2.5;
 
         // expressions variables
         this.instantaneousTempoTextHeight = 2.3;
@@ -1147,6 +1150,12 @@ export class EngravingRules {
     }
     public set MinimumDistanceBetweenDashes(value: number) {
         this.minimumDistanceBetweenDashes = value;
+    }
+    public get MaximumLyricsElongationFactor(): number {
+        return this.maximumLyricsElongationFactor;
+    }
+    public set MaximumLyricsElongationFactor(value: number) {
+        this.maximumLyricsElongationFactor = value;
     }
     public get BezierCurveStepSize(): number {
         return this.bezierCurveStepSize;
