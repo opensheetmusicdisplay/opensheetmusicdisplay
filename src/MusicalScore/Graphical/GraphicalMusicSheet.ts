@@ -213,6 +213,9 @@ export class GraphicalMusicSheet {
     public findGraphicalStaffEntryFromMeasureList(staffIndex: number, measureIndex: number, sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
         for (let i: number = measureIndex; i < this.measureList.length; i++) {
             const graphicalMeasure: GraphicalMeasure = this.measureList[i][staffIndex];
+            if (!graphicalMeasure) {
+                continue;
+            }
             for (let idx: number = 0, len: number = graphicalMeasure.staffEntries.length; idx < len; ++idx) {
                 const graphicalStaffEntry: GraphicalStaffEntry = graphicalMeasure.staffEntries[idx];
                 if (graphicalStaffEntry.sourceStaffEntry === sourceStaffEntry) {

@@ -125,6 +125,9 @@ export class LyricsReader {
                                 // only add the lyric entry if not another entry has already been given:
                                 if (!currentVoiceEntry.LyricsEntries[currentLyricVerseNumber]) {
                                     currentVoiceEntry.LyricsEntries.setValue(currentLyricVerseNumber, lyricsEntry);
+                                    if (currentVoiceEntry.ParentSourceStaffEntry?.VerticalContainerParent?.ParentMeasure) {
+                                        currentVoiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.hasLyrics = true;
+                                    }
                                 }
                                 // save in currentInstrument the verseNumber (only once)
                                 if (!currentVoiceEntry.ParentVoice.Parent.LyricVersesNumbers[currentLyricVerseNumber]) {
