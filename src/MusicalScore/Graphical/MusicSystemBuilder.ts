@@ -1120,7 +1120,6 @@ export class MusicSystemBuilder {
                 const currSystemBottomYPos: number =    newYPosition +
                                                         currentSystem.PositionAndShape.BorderMarginBottom;
                 const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && previousSystem.breaksPage;
-                console.log(`rules.pageheight: ` + this.rules.PageHeight);
                 if (!doXmlPageBreak &&
                     (currSystemBottomYPos < this.rules.PageHeight - this.rules.PageBottomMargin)) {
                     // enough space on this page:
@@ -1131,13 +1130,6 @@ export class MusicSystemBuilder {
                     currentSystem.PositionAndShape.RelativePosition = relativePosition;
                 } else {
                     // new page needed:
-                    // currentPage.PositionAndShape.calculateBoundingBox();
-                    // const bottomMargin: BoundingBox = new BoundingBox(currentPage, currentPage.PositionAndShape, false);
-                    // // bottomMargin.RelativePosition.x = 0;
-                    // bottomMargin.RelativePosition.y = currentPage.PositionAndShape.BorderMarginBottom;
-                    // // bottomMargin.Size = new SizeF2D(currentPage.PositionAndShape.Size.width, this.rules.PageBottomMargin);
-                    // bottomMargin.BorderBottom = this.rules.PageBottomMargin;
-                    // currentPage.PositionAndShape.calculateBoundingBox();
 
                     currentPage = this.createMusicPage();
                     // re-check this system again:
@@ -1149,19 +1141,25 @@ export class MusicSystemBuilder {
         if (timesPageCouldntFitSingleSystem > 0) {
             console.log(`total amount of pages that couldn't fit a single music system: ${timesPageCouldntFitSingleSystem} of ${currentPage.PageNumber}`);
         }
-        // calculate last page's bounding box, otherwise it uses this.rules.PageHeight which is 10001
-        currentPage.PositionAndShape.calculateBoundingBox();
-        // TODO currently bugged. this squeezes lyrics and notes when used with PageFormat A3 Landscape. why?
+        if (this.rules.PageBottomExtraWhiteSpace > 0 && this.graphicalMusicSheet.MusicPages.length === 1) {
+            // experimental, not used unless the EngravingRule is set to > 0 (default 0)
 
-        // add this.rules.PageBottomMargin
-        const pageBottomMarginBB: BoundingBox = new BoundingBox(currentPage, currentPage.PositionAndShape, false);
-        // pageBottomMarginBB.RelativePosition.x = 0;
-        pageBottomMarginBB.RelativePosition.y = currentPage.PositionAndShape.BorderMarginBottom;
-        // pageBottomMarginBB.BorderBottom = this.rules.PageBottomMargin;
-        pageBottomMarginBB.BorderBottom = this.rules.PageBottomMargin;
-        currentPage.PositionAndShape.calculateBoundingBox();
-        console.log("last page bounding box:");
-        console.dir(currentPage.PositionAndShape);
+            // calculate last page's bounding box, otherwise it uses this.rules.PageHeight which is 10001
+            currentPage.PositionAndShape.calculateBoundingBox();
+            // TODO currently bugged with PageFormat A3. this squeezes lyrics and notes (with A3 Landscape). why?
+            //   for this reason, the extra white space should currently only be used with the Endless PageFormat,
+            //   and using EngravingRules.PageBottomExtraWhiteSpace should be considered experimental.
+
+            // add this.rules.PageBottomMargin
+            const pageBottomMarginBB: BoundingBox = new BoundingBox(currentPage, currentPage.PositionAndShape, false);
+            // pageBottomMarginBB.RelativePosition.x = 0;
+            pageBottomMarginBB.RelativePosition.y = currentPage.PositionAndShape.BorderMarginBottom;
+            // pageBottomMarginBB.BorderBottom = this.rules.PageBottomMargin;
+            pageBottomMarginBB.BorderBottom = this.rules.PageBottomExtraWhiteSpace;
+            pageBottomMarginBB.calculateBoundingBox();
+            currentPage.PositionAndShape.calculateBoundingBox();
+        }
+
     }
 
     /**
