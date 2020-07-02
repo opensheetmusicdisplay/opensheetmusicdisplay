@@ -451,7 +451,7 @@ export class EngravingRules {
         this.metronomeMarksDrawn = true;
         this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.metronomeMarkYShift = -0.5;
-        this.softmaxFactorVexFlow = 15; // seems like the sweet spot. Vexflow default is 100.
+        this.softmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
 
