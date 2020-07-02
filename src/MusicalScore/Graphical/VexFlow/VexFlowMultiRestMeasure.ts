@@ -36,20 +36,9 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
         this.resetLayout();
 
-        // type note: Vex.Flow.MultiMeasureRest is not in the DefinitelyTyped definitions yet.
         this.multiRestElement = new Vex.Flow.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
             // number_line: 3
         });
-    }
-
-
-    /**
-     * This method is called after the StaffEntriesScaleFactor has been set.
-     * Here the final x-positions of the staff entries have to be set.
-     * (multiply the minimal positions with the scaling factor, considering the BeginInstructionsWidth)
-     */
-    public layoutSymbols(): void {
-        // vexflow does the x-layout
     }
 
     /**
@@ -71,14 +60,14 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
     }
 
     public format(): void {
-        // return
+        // like most of the following methods, not necessary / can be simplified for MultiRestMeasure.
     }
 
     /**
      * Returns all the voices that are present in this measure
      */
     public getVoicesWithinMeasure(): Voice[] {
-        return [];
+        return []; // we should still return a list here, not undefined, i guess.
     }
 
     /**
