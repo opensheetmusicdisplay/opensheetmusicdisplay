@@ -94,14 +94,11 @@ export class GraphicalSlur extends GraphicalCurve {
         let endY: number = startEndPoints.endY;
         const minAngle: number = rules.SlurTangentMinAngle;
         const maxAngle: number = rules.SlurTangentMaxAngle;
-        let start: PointF2D, end: PointF2D;
         let points: PointF2D[];
 
         if (this.placement === PlacementEnum.Above) {
             startY -= rules.SlurNoteHeadYOffset;
             endY -= rules.SlurNoteHeadYOffset;
-            start = new PointF2D(startX, startY);
-            end = new PointF2D(endX, endY);
             const startUpperRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
                                                            + this.staffEntries[0].PositionAndShape.RelativePosition.x,
                                                            startY);
@@ -161,48 +158,80 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in SkyLine
                 // and tangent Lines characteristica
-            const leftLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            const rightLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
-            const leftLineD: number = start2.y - start2.x * leftLineSlope;
-            const rightLineD: number = end2.y - end2.x * rightLineSlope;
+            const startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            const endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
+            const startLineD: number = start2.y - start2.x * startLineSlope;
+            const endLineD: number = end2.y - end2.x * endLineSlope;
 
             // calculate IntersectionPoint of the 2 Lines
                 // if same Slope, then Point.X between Start and End and Point.Y fixed
             const intersectionPoint: PointF2D = new PointF2D();
             let sameSlope: boolean = false;
-            if (Math.abs(Math.abs(leftLineSlope) - Math.abs(rightLineSlope)) < 0.0001) {
+            if (Math.abs(Math.abs(startLineSlope) - Math.abs(endLineSlope)) < 0.0001) {
                 intersectionPoint.x = end2.x / 2;
                 intersectionPoint.y = 0;
                 sameSlope = true;
             } else {
-                intersectionPoint.x = (rightLineD - leftLineD) / (leftLineSlope - rightLineSlope);
-                intersectionPoint.y = leftLineSlope * intersectionPoint.x + leftLineD;
+                intersectionPoint.x = (endLineD - startLineD) / (startLineSlope - endLineSlope);
+                intersectionPoint.y = startLineSlope * intersectionPoint.x + startLineD;
             }
+
+            // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
+            // and the X-distance from StartPoint to EndPoint
+            const heightWidthRatio: number = this.calculateHeightWidthRatio(end2.x, transformedPoints);
+
+            // Shift start- or endPoint and corresponding controlPoint away from note, if needed:
+            // e.g. if there is a close object creating a high slope, better shift it away to reduce the slope:
+            // idea is to compare the half heightWidthRatio of the bounding box of the skyline points with the slope (which is also a ratio: k/1)
+            // if the slope is greater than the half heightWidthRatio (which will 99% be the case),
+            // then add a y-offset to reduce the slope to the same value as the half heightWidthRatio of the bounding box
+            const startYOffset: number = 0;
+            const endYOffset: number = 0;
+            /*if (Math.abs(heightWidthRatio) > 0.001) {
+                // 1. start side:
+                const startSlopeRatio: number = Math.abs(startLineSlope / (heightWidthRatio * 2));
+                const maxLeftYOffset: number = Math.abs(startLineSlope);
+                startYOffset = Math.max(0, maxLeftYOffset * (Math.min(10, startSlopeRatio - 1) / 10));
+                // slope has to be adapted now due to the y-offset:
+                startLineSlope -= startYOffset;
+
+                // 2. end side:
+                const endSlopeRatio: number = Math.abs(endLineSlope / (heightWidthRatio * 2));
+                const maxRightYOffset: number = Math.abs(endLineSlope);
+                endYOffset = Math.max(0, maxRightYOffset * (Math.min(10, endSlopeRatio - 1) / 10));
+                // slope has to be adapted now due to the y-offset:
+                endLineSlope += endYOffset;
+            }*/
+
+
 
             // calculate tangent Lines Angles
                 // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
-            const leftAngle: number = minAngle;
-            const rightAngle: number = -minAngle;
-            // if the calculated Slopes (left and right) are equal, then Angles have fixed values
+            let startAngle: number = minAngle;
+            let endAngle: number = -minAngle;
+            // if the calculated Slopes (start and end) are equal, then Angles have fixed values
             if (!sameSlope) {
-                this.calculateAngles(leftAngle, rightAngle, leftLineSlope, rightLineSlope, maxAngle);
+                const result: {startAngle: number, endAngle: number} =
+                    this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
+                startAngle = result.startAngle;
+                endAngle = result.endAngle;
             }
 
             // calculate Curve's Control Points
-            const controlPoints: {leftControlPoint: PointF2D, rightControlPoint: PointF2D} =
-                this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints);
+            const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
+                this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio);
 
-            let leftControlPoint: PointF2D = controlPoints.leftControlPoint;
-            let rightControlPoint: PointF2D = controlPoints.rightControlPoint;
+            let startControlPoint: PointF2D = controlPoints.startControlPoint;
+            let endControlPoint: PointF2D = controlPoints.endControlPoint;
 
             // transform ControlPoints to original Coordinate System
                 // (rotate back and translate back)
-            leftControlPoint = transposeMatrix.vectorMultiplication(leftControlPoint);
-            leftControlPoint.x += startX;
-            leftControlPoint.y = -leftControlPoint.y + startY;
-            rightControlPoint = transposeMatrix.vectorMultiplication(rightControlPoint);
-            rightControlPoint.x += startX;
-            rightControlPoint.y = -rightControlPoint.y + startY;
+            startControlPoint = transposeMatrix.vectorMultiplication(startControlPoint);
+            startControlPoint.x += startX;
+            startControlPoint.y = -startControlPoint.y + startY;
+            endControlPoint = transposeMatrix.vectorMultiplication(endControlPoint);
+            endControlPoint.x += startX;
+            endControlPoint.y = -endControlPoint.y + startY;
 
             /* for DEBUG only */
             // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
@@ -211,12 +240,12 @@ export class GraphicalSlur extends GraphicalCurve {
             /* for DEBUG only */
 
             // set private members
-            this.bezierStartPt = start;
-            this.bezierStartControlPt = leftControlPoint;
-            this.bezierEndControlPt = rightControlPoint;
-            this.bezierEndPt = end;
+            this.bezierStartPt = new PointF2D(startX, startY - startYOffset);
+            this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y - startYOffset);
+            this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y - endYOffset);
+            this.bezierEndPt = new PointF2D(endX, endY - endYOffset);
 
-            // calculate CurvePoints
+            // calculate slur Curvepoints and update Skyline
             const length: number = staffLine.SkyLine.length;
             const startIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierStartPt.x, length);
             const endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierEndPt.x, length);
@@ -241,8 +270,6 @@ export class GraphicalSlur extends GraphicalCurve {
         } else {
             startY += rules.SlurNoteHeadYOffset;
             endY += rules.SlurNoteHeadYOffset;
-            start = new PointF2D(startX, startY);
-            end = new PointF2D(endX, endY);
 
             // firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
             const startLowerRight: PointF2D = new PointF2D(this.staffEntries[0].parentMeasure.PositionAndShape.RelativePosition.x
@@ -302,53 +329,82 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate tangent Lines maximum Slopes between StartPoint and EndPoint to all Points in BottomLine
             // and tangent Lines characteristica
-            const leftLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
-            const rightLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
-            const leftLineD: number = start2.y - start2.x * leftLineSlope;
-            const rightLineD: number = end2.y - end2.x * rightLineSlope;
+            const startLineSlope: number = this.calculateMaxLeftSlope(transformedPoints, start2, end2);
+            const endLineSlope: number = this.calculateMaxRightSlope(transformedPoints, start2, end2);
+            const startLineD: number = start2.y - start2.x * startLineSlope;
+            const endLineD: number = end2.y - end2.x * endLineSlope;
 
             // calculate IntersectionPoint of the 2 Lines
             // if same Slope, then Point.X between Start and End and Point.Y fixed
             const intersectionPoint: PointF2D = new PointF2D();
             let sameSlope: boolean = false;
-            if (Math.abs(Math.abs(leftLineSlope) - Math.abs(rightLineSlope)) < 0.0001) {
+            if (Math.abs(Math.abs(startLineSlope) - Math.abs(endLineSlope)) < 0.0001) {
                 intersectionPoint.x = end2.x / 2;
                 intersectionPoint.y = 0;
                 sameSlope = true;
             } else {
-                intersectionPoint.x = (rightLineD - leftLineD) / (leftLineSlope - rightLineSlope);
-                intersectionPoint.y = leftLineSlope * intersectionPoint.x + leftLineD;
+                intersectionPoint.x = (endLineD - startLineD) / (startLineSlope - endLineSlope);
+                intersectionPoint.y = startLineSlope * intersectionPoint.x + startLineD;
             }
+
+            // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
+            // and the X-distance from StartPoint to EndPoint
+            const heightWidthRatio: number = this.calculateHeightWidthRatio(end2.x, transformedPoints);
+
+            // Shift start- or endPoint and corresponding controlPoint away from note, if needed:
+            // e.g. if there is a close object creating a high slope, better shift it away to reduce the slope:
+            // idea is to compare the half heightWidthRatio of the bounding box of the skyline points with the slope (which is also a ratio: k/1)
+            // if the slope is greater than the half heightWidthRatio (which will 99% be the case),
+            // then add a y-offset to reduce the slope to the same value as the half heightWidthRatio of the bounding box
+            const startYOffset: number = 0;
+            const endYOffset: number = 0;
+            /*if (Math.abs(heightWidthRatio) > 0.001) {
+                // 1. start side:
+                const startSlopeRatio: number = Math.abs(startLineSlope / (heightWidthRatio * 2));
+                const maxLeftYOffset: number = Math.abs(startLineSlope);
+                startYOffset = Math.max(0, maxLeftYOffset * (Math.min(10, startSlopeRatio - 1) / 10));
+                // slope has to be adapted now due to the y-offset:
+                startLineSlope -= startYOffset;
+                // 2. end side:
+                const endSlopeRatio: number = Math.abs(endLineSlope / (heightWidthRatio * 2));
+                const maxRightYOffset: number = Math.abs(endLineSlope);
+                endYOffset = Math.max(0, maxRightYOffset * (Math.min(10, endSlopeRatio - 1) / 10));
+                // slope has to be adapted now due to the y-offset:
+                endLineSlope += endYOffset;
+            } */
 
             // calculate tangent Lines Angles
             // (using the calculated Slopes and the Ratio from the IntersectionPoint's distance to the MaxPoint in the SkyLine)
-            const leftAngle: number = minAngle;
-            const rightAngle: number = -minAngle;
-            // if the calculated Slopes (left and right) are equal, then Angles have fixed values
+            let startAngle: number = minAngle;
+            let endAngle: number = -minAngle;
+            // if the calculated Slopes (start and end) are equal, then Angles have fixed values
             if (!sameSlope) {
-                this.calculateAngles(leftAngle, rightAngle, leftLineSlope, rightLineSlope, maxAngle);
+                const result: {startAngle: number, endAngle: number} =
+                    this.calculateAngles(minAngle, startLineSlope, endLineSlope, maxAngle);
+                startAngle = result.startAngle;
+                endAngle = result.endAngle;
             }
 
             // calculate Curve's Control Points
-            const controlPoints: {leftControlPoint: PointF2D, rightControlPoint: PointF2D} =
-                this.calculateControlPoints(end2.x, leftAngle, rightAngle, transformedPoints);
-            let leftControlPoint: PointF2D = controlPoints.leftControlPoint;
-            let rightControlPoint: PointF2D = controlPoints.rightControlPoint;
+            const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
+                this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio);
+            let startControlPoint: PointF2D = controlPoints.startControlPoint;
+            let endControlPoint: PointF2D = controlPoints.endControlPoint;
 
             // transform ControlPoints to original Coordinate System
             // (rotate back and translate back)
-            leftControlPoint = transposeMatrix.vectorMultiplication(leftControlPoint);
-            leftControlPoint.x += startX;
-            leftControlPoint.y += startY;
-            rightControlPoint = transposeMatrix.vectorMultiplication(rightControlPoint);
-            rightControlPoint.x += startX;
-            rightControlPoint.y += startY;
+            startControlPoint = transposeMatrix.vectorMultiplication(startControlPoint);
+            startControlPoint.x += startX;
+            startControlPoint.y += startY;
+            endControlPoint = transposeMatrix.vectorMultiplication(endControlPoint);
+            endControlPoint.x += startX;
+            endControlPoint.y += startY;
 
             // set private members
-            this.bezierStartPt = start;
-            this.bezierStartControlPt = leftControlPoint;
-            this.bezierEndControlPt = rightControlPoint;
-            this.bezierEndPt = end;
+            this.bezierStartPt = new PointF2D(startX, startY + startYOffset);
+            this.bezierStartControlPt = new PointF2D(startControlPoint.x, startControlPoint.y + startYOffset);
+            this.bezierEndControlPt = new PointF2D(endControlPoint.x, endControlPoint.y + endYOffset);
+            this.bezierEndPt = new PointF2D(endX, endY + endYOffset);
 
             /* for DEBUG only */
             // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
@@ -367,7 +423,7 @@ export class GraphicalSlur extends GraphicalCurve {
                 const diff: number = i / samplingUnit - this.bezierStartPt.x;
                 const curvePoint: PointF2D = this.calculateCurvePointAtIndex(Math.abs(diff) / distance);
 
-                // update left- and rightIndex for better accuracy
+                // update start- and endIndex for better accuracy
                 let index: number = skyBottomLineCalculator.getLeftIndexForPointX(curvePoint.x, length);
                 // update BottomLine with final slur curve:
                 if (index >= startIndex) {
@@ -526,6 +582,14 @@ export class GraphicalSlur extends GraphicalCurve {
             } else { endY += rules.SlursStartingAtSameStaffEntryYOffset; }
         }
 
+        if (this.placement === PlacementEnum.Above) {
+            startY = Math.min(startY, 1.5);
+            endY = Math.min(endY, 1.5);
+        } else {
+            startY = Math.max(startY, staffLine.StaffHeight - 1.5);
+            endY = Math.max(endY, staffLine.StaffHeight - 1.5);
+        }
+
         return {startX, startY, endX, endY};
     }
 
@@ -617,8 +681,12 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         for (let i: number = startIndex; i < endIndex; i++) {
-            const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLineCalculator.SamplingUnit, staffLine.SkyLine[i]);
-            points.push(point);
+            const skylineValue: number = staffLine.SkyLine[i];
+            // ignore default value (= 0) which is upper border of staffline
+            if (skylineValue !== 0) {
+                const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLineCalculator.SamplingUnit, skylineValue);
+                points.push(point);
+            }
         }
 
         return points;
@@ -645,8 +713,13 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         for (let i: number = startIndex; i < endIndex; i++) {
-            const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLineCalculator.SamplingUnit, staffLine.BottomLine[i]);
-            points.push(point);
+            const bottomLineValue: number = staffLine.BottomLine[i];
+
+            // ignore default value (= 4) which is lower border of staffline
+            if (bottomLineValue !== 0) {
+                const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLineCalculator.SamplingUnit, bottomLineValue);
+                points.push(point);
+            }
         }
 
         return points;
@@ -672,6 +745,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // in case all Points don't have a meaningful value or the slope between Start- and EndPoint is just bigger
         slope = Math.max(slope, Math.abs(end.y - y) / (end.x - x));
+        //limit to 80 degrees
+        slope = Math.min(slope, 5.6713);
 
         return slope;
     }
@@ -696,6 +771,8 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // in case no Point has a meaningful value or the slope between Start- and EndPoint is just smaller
         slope = Math.min(slope, (y - start.y) / (x - start.x));
+        //limit to 80 degrees
+        slope = Math.max(slope, -5.6713);
 
         return slope;
     }
@@ -781,63 +858,62 @@ export class GraphicalSlur extends GraphicalCurve {
     /**
      * This method calculates the 2 ControlPoints of the SlurCurve.
      * @param endX
-     * @param leftAngle
-     * @param rightAngle
+     * @param startAngle
+     * @param endAngle
      * @param points
      */
-    private calculateControlPoints(endX: number,
-                                   leftAngle: number, rightAngle: number, points: PointF2D[]): { leftControlPoint: PointF2D, rightControlPoint: PointF2D } {
+    private calculateControlPoints(endX: number, startAngle: number, endAngle: number,
+                                   points: PointF2D[], heightWidthRatio: number): { startControlPoint: PointF2D, endControlPoint: PointF2D } {
         // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
-            // and the X-distance from StartPoint to EndPoint
-            // use this HeightWidthRatio to get a "normalized" Factor (based on tested parameters)
-            // this Factor denotes the Length of the TangentLine of the Curve (a proportion of the X-distance from StartPoint to EndPoint)
-            // finally from this Length and the calculated Angles we get the coordinates of the Control Points
-        const heightWidthRatio: number = this.calculateHeightWidthRatio(endX, points);
-        const factor: number = GraphicalSlur.k * heightWidthRatio + GraphicalSlur.d;
+        // and the X-distance from StartPoint to EndPoint
+        // use this HeightWidthRatio to get a "normalized" Factor (based on tested parameters)
+        // this Factor denotes the Length of the TangentLine of the Curve (a proportion of the X-distance from StartPoint to EndPoint)
+        // finally from this Length and the calculated Angles we get the coordinates of the Control Points
+        const factorStart: number = Math.min(0.5, Math.max(0.1, 1.7 * (startAngle / 80) * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
+        const factorEnd: number = Math.min(0.5, Math.max(0.1, 1.7 * (-endAngle / 80) * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
 
-        const relativeLength: number = endX * factor;
-        const leftControlPoint: PointF2D = new PointF2D();
-        leftControlPoint.x = relativeLength * Math.cos(leftAngle * GraphicalSlur.degreesToRadiansFactor);
-        leftControlPoint.y = relativeLength * Math.sin(leftAngle * GraphicalSlur.degreesToRadiansFactor);
+        const startControlPoint: PointF2D = new PointF2D();
+        startControlPoint.x = endX * factorStart * Math.cos(startAngle * GraphicalSlur.degreesToRadiansFactor);
+        startControlPoint.y = endX * factorStart * Math.sin(startAngle * GraphicalSlur.degreesToRadiansFactor);
 
-        const rightControlPoint: PointF2D = new PointF2D();
-        rightControlPoint.x = endX - (relativeLength * Math.cos(rightAngle * GraphicalSlur.degreesToRadiansFactor));
-        rightControlPoint.y = -(relativeLength * Math.sin(rightAngle * GraphicalSlur.degreesToRadiansFactor));
-        return {leftControlPoint, rightControlPoint};
+        const endControlPoint: PointF2D = new PointF2D();
+        endControlPoint.x = endX - (endX * factorEnd * Math.cos(endAngle * GraphicalSlur.degreesToRadiansFactor));
+        endControlPoint.y = -(endX * factorEnd * Math.sin(endAngle * GraphicalSlur.degreesToRadiansFactor));
+        return {startControlPoint: startControlPoint, endControlPoint: endControlPoint};
     }
 
     /**
      * This method calculates the angles for the Curve's Tangent Lines.
      * @param leftAngle
      * @param rightAngle
-     * @param leftLineSlope
-     * @param rightLineSlope
+     * @param startLineSlope
+     * @param endLineSlope
      * @param maxAngle
      */
-    private calculateAngles(leftAngle: number, rightAngle: number, leftLineSlope: number, rightLineSlope: number, maxAngle: number): void {
+    private calculateAngles(minAngle: number, startLineSlope: number, endLineSlope: number, maxAngle: number):
+    {startAngle: number, endAngle: number} {
         // calculate Angles from the calculated Slopes, adding also a given angle
         const angle: number = 20;
 
-        let calculatedLeftAngle: number = Math.atan(leftLineSlope) / GraphicalSlur.degreesToRadiansFactor;
-        if (leftLineSlope > 0) {
-            calculatedLeftAngle += angle;
+        let calculatedStartAngle: number = Math.atan(startLineSlope) / GraphicalSlur.degreesToRadiansFactor;
+        if (startLineSlope > 0) {
+            calculatedStartAngle += angle;
         } else {
-            calculatedLeftAngle -= angle;
+            calculatedStartAngle -= angle;
         }
 
-        let calculatedRightAngle: number = Math.atan(rightLineSlope) / GraphicalSlur.degreesToRadiansFactor;
-        if (rightLineSlope < 0) {
-            calculatedRightAngle -= angle;
+        let calculatedEndAngle: number = Math.atan(endLineSlope) / GraphicalSlur.degreesToRadiansFactor;
+        if (endLineSlope < 0) {
+            calculatedEndAngle -= angle;
         } else {
-            calculatedRightAngle += angle;
+            calculatedEndAngle += angle;
         }
 
         // +/- 80 is the max/min allowed Angle
-        leftAngle = Math.min(Math.max(leftAngle, calculatedLeftAngle), maxAngle);
-        rightAngle = Math.max(Math.min(rightAngle, calculatedRightAngle), -maxAngle);
+        const leftAngle: number = Math.min(Math.max(minAngle, calculatedStartAngle), maxAngle);
+        const rightAngle: number = Math.max(Math.min(-minAngle, calculatedEndAngle), -maxAngle);
+        return {"startAngle": leftAngle, "endAngle": rightAngle};
     }
 
     private static degreesToRadiansFactor: number = Math.PI / 180;
-    private static k: number = 0.9;
-    private static d: number = 0.2;
 }

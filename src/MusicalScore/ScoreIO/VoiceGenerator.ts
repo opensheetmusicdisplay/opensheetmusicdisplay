@@ -109,7 +109,7 @@ export class VoiceGenerator {
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
               printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
-              stemColorXml: string, noteheadColorXml: string): Note {
+              stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
     //log.debug("read called:", restNote);
@@ -117,7 +117,7 @@ export class VoiceGenerator {
       this.currentNote = restNote
         ? this.addRestNote(noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, guitarPro,
-                             printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml);
+                             printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
       if (this.lyricsReader !== undefined && lyricElements) {
@@ -346,7 +346,7 @@ export class VoiceGenerator {
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
                         normalNotes: number, chord: boolean, guitarPro: boolean,
                         printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
-                        stemColorXml: string, noteheadColorXml: string): Note {
+                        stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
@@ -440,6 +440,7 @@ export class VoiceGenerator {
     let note: Note = undefined;
     let stringNumber: number = -1;
     let fretNumber: number = -1;
+    const bends: {bendalter: number, direction: string}[] = [];
     // check for guitar tabs:
     const notationNode: IXmlElement = node.element("notations");
     if (notationNode) {
@@ -453,6 +454,16 @@ export class VoiceGenerator {
         if (fretNode) {
           fretNumber = parseInt(fretNode.value, 10);
         }
+        const bendElementsArr: IXmlElement[] = technicalNode.elements("bend");
+        bendElementsArr.forEach(function (bend: IXmlElement): void {
+            const bendalterNote: IXmlElement = bend.element("bend-alter");
+            const releaseNode: IXmlElement = bend.element("release");
+            if (releaseNode !== undefined) {
+              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "down"});
+            } else {
+              bends.push({bendalter: parseInt (bendalterNote.value, 10), direction: "up"});
+            }
+          });
       }
     }
 
@@ -461,7 +472,7 @@ export class VoiceGenerator {
       note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
     } else {
       // create TabNote
-      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber);
+      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber, bends, vibratoStrokes);
     }
 
     note.TypeLength = typeDuration;

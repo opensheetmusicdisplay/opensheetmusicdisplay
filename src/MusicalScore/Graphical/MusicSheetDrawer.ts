@@ -58,6 +58,7 @@ export abstract class MusicSheetDrawer {
         this.textMeasurer = textMeasurer;
         this.splitScreenLineColor = -1;
         this.drawingParameters = drawingParameters;
+        this.rules = drawingParameters.Rules;
     }
 
     public set Mode(value: PhonicScoreModes) {
@@ -147,10 +148,11 @@ export abstract class MusicSheetDrawer {
             return;
         }
         const screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
-        const heightInPixel: number = this.calculatePixelDistance(label.fontHeight);
-        const widthInPixel: number = heightInPixel * this.textMeasurer.computeTextWidthToHeightRatio(label.text, label.font, label.fontStyle);
+        const fontHeightInPixel: number = this.calculatePixelDistance(label.fontHeight);
+        const widthInPixel: number = this.calculatePixelDistance(graphicalLabel.PositionAndShape.Size.width);
         const bitmapWidth: number = Math.ceil(widthInPixel);
-        const bitmapHeight: number = Math.ceil(heightInPixel * 1.2);
+        const bitmapHeight: number = Math.ceil(fontHeightInPixel * (0.2 + graphicalLabel.TextLines.length));
+
         switch (label.textAlignment) {
             // Adjust the OSMD-calculated positions to rendering coordinates
             // These have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
@@ -188,7 +190,8 @@ export abstract class MusicSheetDrawer {
             default:
                 throw new ArgumentOutOfRangeException("");
         }
-        this.renderLabel(graphicalLabel, layer, bitmapWidth, bitmapHeight, heightInPixel, screenPosition);
+
+        this.renderLabel(graphicalLabel, layer, bitmapWidth, bitmapHeight, fontHeightInPixel, screenPosition);
     }
 
     protected applyScreenTransformation(point: PointF2D): PointF2D {

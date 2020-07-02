@@ -727,6 +727,10 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                         try {
                             if (partElement.name === "part-name") {
                                 instrument.Name = partElement.value;
+                                if (partElement.attribute("print-object") &&
+                                   partElement.attribute("print-object").value === "no") {
+                                    instrument.NameLabel.print = false;
+                                }
                             } else if (partElement.name === "part-abbreviation") {
                                 instrument.PartAbbreviation = partElement.value;
                             } else if (partElement.name === "score-instrument") {

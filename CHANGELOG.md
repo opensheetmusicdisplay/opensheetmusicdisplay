@@ -3,7 +3,7 @@
 
 ### Features
 
-* **PDF:** Remove createPDF from OSMD object (move to demo), reducing bundle size. Fix FileReader pollution ([64c8ccf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/64c8ccff943bbbedbfb85306f516d16ad7dfa0b8))
+* **PDF:** Remove createPDF from OSMD object (move to demo), reducing bundle size (from 1.5MB to 1.1MB). Fix FileReader pollution ([64c8ccf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/64c8ccff943bbbedbfb85306f516d16ad7dfa0b8))
 
 
 ## [0.8.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.8.0...0.8.1) (2020-06-10)

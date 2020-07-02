@@ -434,6 +434,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawLyrics !== undefined) {
             this.rules.RenderLyrics = options.drawLyrics;
         }
+        if (options.drawTimeSignatures !== undefined) {
+            this.rules.RenderTimeSignatures = options.drawTimeSignatures;
+        }
         if (options.drawSlurs !== undefined) {
             this.rules.RenderSlurs = options.drawSlurs;
         }
@@ -514,6 +517,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.renderSingleHorizontalStaffline !== undefined) {
             this.rules.RenderSingleHorizontalStaffline = options.renderSingleHorizontalStaffline;
+        }
+        if (options.spacingFactorSoftmax !== undefined) {
+            this.rules.SoftmaxFactorVexFlow = options.spacingFactorSoftmax;
         }
     }
 

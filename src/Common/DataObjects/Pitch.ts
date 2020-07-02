@@ -363,6 +363,25 @@ export class Pitch {
         return !(p1 === p2);
     }
 
+    //These don't take into account accidentals! which isn't needed for our current purpose
+    public OperatorFundamentalGreaterThan(p2: Pitch): boolean {
+        const p1: Pitch = this;
+        if (p1.Octave === p2.Octave) {
+            return p1.FundamentalNote > p2.FundamentalNote;
+        } else {
+            return p1.Octave > p2.Octave;
+        }
+    }
+
+    public OperatorFundamentalLessThan(p2: Pitch): boolean {
+        const p1: Pitch = this;
+        if (p1.Octave === p2.Octave) {
+            return p1.FundamentalNote < p2.FundamentalNote;
+        } else {
+            return p1.Octave < p2.Octave;
+        }
+    }
+
     // This method returns a new Pitch factor-Halftones higher than the current Pitch
     private getHigherPitchByTransposeFactor(factor: number): Pitch {
         const noteEnumIndex: number = Pitch.pitchEnumValues.indexOf(this.fundamentalNote);
