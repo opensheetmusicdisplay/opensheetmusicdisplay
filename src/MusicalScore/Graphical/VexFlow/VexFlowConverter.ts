@@ -58,7 +58,10 @@ export class VexFlowConverter {
     public static duration(fraction: Fraction, isTuplet: boolean): string {
       const dur: number = fraction.RealValue;
 
-      if (dur >= 1) {
+      if (dur === 2) { // Breve
+        return "1/4";
+      }
+      if (dur >= 1) { // TODO consider long (4) and maxima (8)
           return "w";
       } else if (dur < 1 && dur >= 0.5) {
         // change to the next higher straight note to get the correct note display type
