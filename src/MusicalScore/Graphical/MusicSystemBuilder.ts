@@ -1130,7 +1130,6 @@ export class MusicSystemBuilder {
                     currentSystem.PositionAndShape.RelativePosition = relativePosition;
                 } else {
                     // new page needed:
-
                     currentPage = this.createMusicPage();
                     // re-check this system again:
                     i -= 1;
