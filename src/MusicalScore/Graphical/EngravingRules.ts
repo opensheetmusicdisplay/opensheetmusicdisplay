@@ -180,7 +180,7 @@ export class EngravingRules {
     private minimumCrossedBeamDifferenceMargin: number;
 
     private voiceSpacingMultiplierVexflow: number;
-    private voicingSpaceAddendVexflow: number;
+    private voiceSpacingAddendVexflow: number;
     private displacedNoteMargin: number;
     private minNoteDistance: number;
     private subMeasureXSpacingThreshold: number;
@@ -442,7 +442,7 @@ export class EngravingRules {
 
         // xSpacing Variables
         this.voiceSpacingMultiplierVexflow = 1.0;
-        this.voicingSpaceAddendVexflow = 3.0;
+        this.voiceSpacingAddendVexflow = 3.0;
         this.displacedNoteMargin = 0.1;
         this.minNoteDistance = 2.0;
         this.subMeasureXSpacingThreshold = 35;
@@ -1430,11 +1430,11 @@ export class EngravingRules {
     public set VoiceSpacingMultiplierVexflow(value: number) {
         this.voiceSpacingMultiplierVexflow = value;
     }
-    public get VoicingSpaceAddendVexflow(): number {
-        return this.voicingSpaceAddendVexflow;
+    public get VoiceSpacingAddendVexflow(): number {
+        return this.voiceSpacingAddendVexflow;
     }
-    public set VoicingSpaceAddendVexflow(value: number) {
-        this.voicingSpaceAddendVexflow = value;
+    public set VoiceSpacingAddendVexflow(value: number) {
+        this.voiceSpacingAddendVexflow = value;
     }
     public get DisplacedNoteMargin(): number {
         return this.displacedNoteMargin;
