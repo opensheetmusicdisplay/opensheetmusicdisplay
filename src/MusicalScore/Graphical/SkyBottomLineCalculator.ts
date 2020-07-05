@@ -1,6 +1,3 @@
-/* tslint:disable no-unused-variable */
-//FIXME: Enble tslint again when all functions are implemented and in use!
-
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";

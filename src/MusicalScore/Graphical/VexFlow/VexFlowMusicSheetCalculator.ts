@@ -166,7 +166,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // }
       minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
         * this.rules.VoiceSpacingMultiplierVexflow
-        + this.rules.VoicingSpaceAddendVexflow;
+        + this.rules.VoiceSpacingAddendVexflow;
         // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
       // firstMeasure.formatVoices = (w: number) => {
       //     formatter.format(allVoices, w);

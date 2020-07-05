@@ -27,6 +27,7 @@ export class EngravingRules {
     private pageTopMargin: number;
     private pageTopMarginNarrow: number;
     private pageBottomMargin: number;
+    private pageBottomExtraWhiteSpace: number; // experimental. extra white space that wil be added below the sheet
     private pageLeftMargin: number;
     private pageRightMargin: number;
     private titleTopDistance: number;
@@ -180,7 +181,7 @@ export class EngravingRules {
     private minimumCrossedBeamDifferenceMargin: number;
 
     private voiceSpacingMultiplierVexflow: number;
-    private voicingSpaceAddendVexflow: number;
+    private voiceSpacingAddendVexflow: number;
     private displacedNoteMargin: number;
     private minNoteDistance: number;
     private subMeasureXSpacingThreshold: number;
@@ -263,6 +264,7 @@ export class EngravingRules {
         this.pageTopMargin = 5.0;
         this.pageTopMarginNarrow = 0.0; // for compact mode
         this.pageBottomMargin = 5.0;
+        this.pageBottomExtraWhiteSpace = 0.0; // experimental.
         this.pageLeftMargin = 5.0;
         this.pageRightMargin = 5.0;
         this.titleTopDistance = 9.0;
@@ -442,7 +444,7 @@ export class EngravingRules {
 
         // xSpacing Variables
         this.voiceSpacingMultiplierVexflow = 1.0;
-        this.voicingSpaceAddendVexflow = 3.0;
+        this.voiceSpacingAddendVexflow = 3.0;
         this.displacedNoteMargin = 0.1;
         this.minNoteDistance = 2.0;
         this.subMeasureXSpacingThreshold = 35;
@@ -451,7 +453,7 @@ export class EngravingRules {
         this.metronomeMarksDrawn = true;
         this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.metronomeMarkYShift = -0.5;
-        this.softmaxFactorVexFlow = 15; // seems like the sweet spot. Vexflow default is 100.
+        this.softmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
 
@@ -589,6 +591,12 @@ export class EngravingRules {
     }
     public set PageBottomMargin(value: number) {
         this.pageBottomMargin = value;
+    }
+    public get PageBottomExtraWhiteSpace(): number {
+        return this.pageBottomExtraWhiteSpace;
+    }
+    public set PageBottomExtraWhiteSpace(value: number) {
+        this.pageBottomExtraWhiteSpace = value;
     }
     public get PageLeftMargin(): number {
         return this.pageLeftMargin;
@@ -1430,11 +1438,11 @@ export class EngravingRules {
     public set VoiceSpacingMultiplierVexflow(value: number) {
         this.voiceSpacingMultiplierVexflow = value;
     }
-    public get VoicingSpaceAddendVexflow(): number {
-        return this.voicingSpaceAddendVexflow;
+    public get VoiceSpacingAddendVexflow(): number {
+        return this.voiceSpacingAddendVexflow;
     }
-    public set VoicingSpaceAddendVexflow(value: number) {
-        this.voicingSpaceAddendVexflow = value;
+    public set VoiceSpacingAddendVexflow(value: number) {
+        this.voiceSpacingAddendVexflow = value;
     }
     public get DisplacedNoteMargin(): number {
         return this.displacedNoteMargin;
