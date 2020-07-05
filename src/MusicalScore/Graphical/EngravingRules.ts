@@ -27,6 +27,7 @@ export class EngravingRules {
     private pageTopMargin: number;
     private pageTopMarginNarrow: number;
     private pageBottomMargin: number;
+    private pageBottomExtraWhiteSpace: number; // experimental. extra white space that wil be added below the sheet
     private pageLeftMargin: number;
     private pageRightMargin: number;
     private titleTopDistance: number;
@@ -134,6 +135,8 @@ export class EngravingRules {
     private betweenSyllableMinimumDistance: number;
     private lyricOverlapAllowedIntoNextMeasure: number;
     private minimumDistanceBetweenDashes: number;
+    private maximumLyricsElongationFactor: number;
+
     private bezierCurveStepSize: number;
     private tPower3: number[];
     private oneMinusTPower3: number[];
@@ -167,6 +170,7 @@ export class EngravingRules {
     private systemBoldLineWidth: number;
     private systemRepetitionEndingLineWidth: number;
     private systemDotWidth: number;
+    private multipleRestMeasureDefaultWidth: number;
     private distanceBetweenVerticalSystemLines: number;
     private distanceBetweenDotAndLine: number;
     private octaveShiftLineWidth: number;
@@ -175,6 +179,9 @@ export class EngravingRules {
     private minimumStaffLineDistance: number;
     private minSkyBottomDistBetweenStaves: number;
     private minimumCrossedBeamDifferenceMargin: number;
+
+    private voiceSpacingMultiplierVexflow: number;
+    private voiceSpacingAddendVexflow: number;
     private displacedNoteMargin: number;
     private minNoteDistance: number;
     private subMeasureXSpacingThreshold: number;
@@ -183,6 +190,7 @@ export class EngravingRules {
     private metronomeMarksDrawn: boolean;
     private metronomeMarkXShift: number;
     private metronomeMarkYShift: number;
+    private softmaxFactorVexFlow: number;
     private maxInstructionsConstValue: number;
     private noteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     private noteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
@@ -207,6 +215,7 @@ export class EngravingRules {
     private defaultColorTitle: string;
     private defaultFontFamily: string;
     private defaultFontStyle: FontStyles;
+    private defaultVexFlowNoteFont: string;
     private maxMeasureToDrawIndex: number;
     private minMeasureToDrawIndex: number;
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
@@ -219,6 +228,7 @@ export class EngravingRules {
     private renderFingerings: boolean;
     private renderMeasureNumbers: boolean;
     private renderLyrics: boolean;
+    private renderMultipleRestMeasures: boolean;
     private renderTimeSignatures: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
@@ -254,6 +264,7 @@ export class EngravingRules {
         this.pageTopMargin = 5.0;
         this.pageTopMarginNarrow = 0.0; // for compact mode
         this.pageBottomMargin = 5.0;
+        this.pageBottomExtraWhiteSpace = 0.0; // experimental.
         this.pageLeftMargin = 5.0;
         this.pageRightMargin = 5.0;
         this.titleTopDistance = 9.0;
@@ -398,6 +409,7 @@ export class EngravingRules {
         this.betweenSyllableMinimumDistance = 0.5; // + 1.0 for CenterAlignment added in lyrics spacing
         this.lyricOverlapAllowedIntoNextMeasure = 3.4; // optimal for dashed last lyric, see Land der Berge
         this.minimumDistanceBetweenDashes = 10;
+        this.maximumLyricsElongationFactor = 2.5;
 
         // expressions variables
         this.instantaneousTempoTextHeight = 2.3;
@@ -425,18 +437,25 @@ export class EngravingRules {
         this.octaveShiftVerticalLineLength = EngravingRules.unit;
         this.graceLineWidth = this.staffLineWidth * this.GraceNoteScalingFactor;
 
+        this.multipleRestMeasureDefaultWidth = 4;
+
         // Line Widths
         this.minimumCrossedBeamDifferenceMargin = 0.0001;
 
         // xSpacing Variables
+        this.voiceSpacingMultiplierVexflow = 1.0;
+        this.voiceSpacingAddendVexflow = 3.0;
         this.displacedNoteMargin = 0.1;
         this.minNoteDistance = 2.0;
         this.subMeasureXSpacingThreshold = 35;
         this.measureDynamicsMaxScalingFactor = 2.5;
-        this.wholeRestXShiftVexflow = -2.5; // VexFlow draws rest notes too far to the right
+        this.wholeRestXShiftVexflow = -1.5; // VexFlow draws rest notes too far to the right
         this.metronomeMarksDrawn = true;
         this.metronomeMarkXShift = -6; // our unit, is taken * unitInPixels
         this.metronomeMarkYShift = -0.5;
+        this.softmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
+        // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
+        // if too low, smaller notes aren't positioned correctly.
 
         // Render options (whether to render specific or invisible elements)
         this.alignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
@@ -456,6 +475,7 @@ export class EngravingRules {
         this.defaultColorTitle = this.defaultColorNotehead;
         this.defaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.defaultFontStyle = FontStyles.Regular;
+        this.defaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
         this.maxMeasureToDrawIndex = Number.MAX_VALUE;
         this.minMeasureToDrawIndex = 0;
         this.renderComposer = true;
@@ -467,6 +487,7 @@ export class EngravingRules {
         this.renderFingerings = true;
         this.renderMeasureNumbers = true;
         this.renderLyrics = true;
+        this.renderMultipleRestMeasures = true;
         this.renderTimeSignatures = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;
@@ -570,6 +591,12 @@ export class EngravingRules {
     }
     public set PageBottomMargin(value: number) {
         this.pageBottomMargin = value;
+    }
+    public get PageBottomExtraWhiteSpace(): number {
+        return this.pageBottomExtraWhiteSpace;
+    }
+    public set PageBottomExtraWhiteSpace(value: number) {
+        this.pageBottomExtraWhiteSpace = value;
     }
     public get PageLeftMargin(): number {
         return this.pageLeftMargin;
@@ -1132,6 +1159,12 @@ export class EngravingRules {
     public set MinimumDistanceBetweenDashes(value: number) {
         this.minimumDistanceBetweenDashes = value;
     }
+    public get MaximumLyricsElongationFactor(): number {
+        return this.maximumLyricsElongationFactor;
+    }
+    public set MaximumLyricsElongationFactor(value: number) {
+        this.maximumLyricsElongationFactor = value;
+    }
     public get BezierCurveStepSize(): number {
         return this.bezierCurveStepSize;
     }
@@ -1345,6 +1378,12 @@ export class EngravingRules {
     public set SystemDotWidth(value: number) {
         this.systemDotWidth = value;
     }
+    public get MultipleRestMeasureDefaultWidth(): number {
+        return this.multipleRestMeasureDefaultWidth;
+    }
+    public set MultipleRestMeasureDefaultWidth(value: number) {
+        this.multipleRestMeasureDefaultWidth = value;
+    }
     public get DistanceBetweenVerticalSystemLines(): number {
         return this.distanceBetweenVerticalSystemLines;
     }
@@ -1393,6 +1432,18 @@ export class EngravingRules {
     public set MinimumCrossedBeamDifferenceMargin(value: number) {
         this.minimumCrossedBeamDifferenceMargin = value;
     }
+    public get VoiceSpacingMultiplierVexflow(): number {
+        return this.voiceSpacingMultiplierVexflow;
+    }
+    public set VoiceSpacingMultiplierVexflow(value: number) {
+        this.voiceSpacingMultiplierVexflow = value;
+    }
+    public get VoiceSpacingAddendVexflow(): number {
+        return this.voiceSpacingAddendVexflow;
+    }
+    public set VoiceSpacingAddendVexflow(value: number) {
+        this.voiceSpacingAddendVexflow = value;
+    }
     public get DisplacedNoteMargin(): number {
         return this.displacedNoteMargin;
     }
@@ -1440,6 +1491,12 @@ export class EngravingRules {
     }
     public set MetronomeMarkYShift(value: number) {
         this.metronomeMarkYShift = value;
+    }
+    public get SoftmaxFactorVexFlow(): number {
+        return this.softmaxFactorVexFlow;
+    }
+    public set SoftmaxFactorVexFlow(value: number) {
+        this.softmaxFactorVexFlow = value;
     }
     public get MaxInstructionsConstValue(): number {
         return this.maxInstructionsConstValue;
@@ -1574,6 +1631,12 @@ export class EngravingRules {
     public set DefaultFontStyle(value: FontStyles) {
         this.defaultFontStyle = value;
     }
+    public get DefaultVexFlowNoteFont(): string {
+        return this.defaultVexFlowNoteFont;
+    }
+    public set DefaultVexFlowNoteFont(value: string) {
+        this.defaultVexFlowNoteFont = value;
+    }
     public get MaxMeasureToDrawIndex(): number {
         return this.maxMeasureToDrawIndex;
     }
@@ -1642,6 +1705,12 @@ export class EngravingRules {
     }
     public set RenderLyrics(value: boolean) {
         this.renderLyrics = value;
+    }
+    public get RenderMultipleRestMeasures(): boolean {
+        return this.renderMultipleRestMeasures;
+    }
+    public set RenderMultipleRestMeasures(value: boolean) {
+        this.renderMultipleRestMeasures = value;
     }
     public get RenderTimeSignatures(): boolean {
         return this.renderTimeSignatures;

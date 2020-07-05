@@ -58,6 +58,10 @@ export class VexFlowConverter {
     public static duration(fraction: Fraction, isTuplet: boolean): string {
       const dur: number = fraction.RealValue;
 
+      if (dur === 2) { // Breve
+        return "1/2";
+      }
+      // TODO consider long (dur=4) and maxima (dur=8), though Vexflow doesn't seem to support them
       if (dur >= 1) {
           return "w";
       } else if (dur < 1 && dur >= 0.5) {

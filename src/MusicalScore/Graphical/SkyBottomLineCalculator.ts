@@ -1,6 +1,3 @@
-/* tslint:disable no-unused-variable */
-//FIXME: Enble tslint again when all functions are implemented and in use!
-
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
@@ -64,7 +61,7 @@ export class SkyBottomLineCalculator {
             const oldMeasureWidth: number = vsStaff.getWidth();
             // We need to tell the VexFlow stave about the canvas width. This looks
             // redundant because it should know the canvas but somehow it doesn't.
-            // Maybe I am overlooking something but for no this does the trick
+            // Maybe I am overlooking something but for now this does the trick
             vsStaff.setWidth(width);
             measure.format();
             vsStaff.setWidth(oldMeasureWidth);

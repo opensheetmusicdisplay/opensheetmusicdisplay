@@ -194,6 +194,13 @@ export interface IOSMDOptions {
      *  IF this value is -1, it will render all percussion clef voices on the single line.
      */
     percussionForceVoicesOneLineCutoff?: number;
+    /** The softmaxFactor for Vexflow's formatter. Default is 5, default in Vexflow is 100 (voice.js).
+     *  Lowering this factor makes the spacing between individual notes smaller (especially from one half note to the next).
+     *  So, to get more compact scores, try lowering this value (or set osmd.zoom, which simply scales),
+     *  or try 100 for a more expansive layout.
+     *  Setting this is the same as setting osmd.EngravingRules.SoftmaxFactorVexFlow.
+     */
+    spacingFactorSoftmax?: number;
 }
 
 export enum AlignRestOption {

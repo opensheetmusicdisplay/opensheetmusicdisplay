@@ -375,7 +375,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.addVolta(repetitionInstruction);
     }
 
-    private addVolta(repetitionInstruction: RepetitionInstruction): void {
+    protected addVolta(repetitionInstruction: RepetitionInstruction): void {
         let voltaType: number = Vex.Flow.Volta.type.BEGIN;
         if (repetitionInstruction.type === RepetitionInstructionEnum.Ending) {
             switch (repetitionInstruction.alignment) {
