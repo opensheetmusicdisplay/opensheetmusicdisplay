@@ -160,24 +160,23 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
     if (allVoices.length > 0) {
       // the voicing space bonus addition makes the voicing more relaxed. With a bonus of 0 the notes are basically completely squeezed together.
-      // let voicingWidthBonus: number = this.rules.VoicingSpaceBonusVexflow;
-      // if (measures[0].staffEntries?.length === 2) {
-      //   voicingWidthBonus = 3;
-      // }
+      const staffEntryFactor: number = 0.3;
+
       minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
         * this.rules.VoiceSpacingMultiplierVexflow
-        + this.rules.VoicingSpaceAddendVexflow;
+        + this.rules.VoiceSpacingAddendVexflow
+        + measures[0].staffEntries.length * staffEntryFactor;
         // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
       // firstMeasure.formatVoices = (w: number) => {
       //     formatter.format(allVoices, w);
       // };
       MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
 
-      const formatVoicesDefault: (w: number) => void = (w) => {
-        formatter.format(allVoices, w);
+      const formatVoicesDefault: (w: number, p: VexFlowMeasure) => void = (w, p) => {
+        formatter.formatToStave(allVoices, p.getVFStave());
       };
-      const formatVoicesAlignRests: (w: number) => void = (w) => {
-        formatter.format(allVoices, w, {
+      const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => void = (w, p) => {
+        formatter.formatToStave(allVoices, p.getVFStave(), {
           align_rests: true,
           context: undefined
         });
@@ -233,7 +232,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           //vexflowMeasure.formatVoices = formatVoicesDefault;
 
           // format now for minimum width, calculateMeasureWidthFromLyrics later
-          vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
+          vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels, vexflowMeasure);
         } else {
           //(measure as VexFlowMeasure).formatVoices = undefined;
           // TODO why was the formatVoices function disabled for other measures? would now disable the new align rests option.

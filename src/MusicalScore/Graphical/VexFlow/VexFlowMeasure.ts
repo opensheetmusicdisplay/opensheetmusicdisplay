@@ -62,7 +62,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** The VexFlow Voices in the measure */
     public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
     /** Call this function (if present) to x-format all the voices in the measure */
-    public formatVoices: (width: number) => void;
+    public formatVoices: (width: number, parent: VexFlowMeasure) => void;
     /** The VexFlow Ties in the measure */
     public vfTies: Vex.Flow.StaveTie[] = [];
     /** The repetition instructions given as words or symbols (coda, dal segno..) */
@@ -105,7 +105,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         this.stave = new Vex.Flow.Stave(0, 0, 0, {
             space_above_staff_ln: 0,
-            space_below_staff_ln: 0,
+            space_below_staff_ln: 0
         });
 
         if (this.ParentStaff) {
@@ -553,7 +553,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (this.formatVoices) {
             // set the width of the voices to the current measure width:
             // (The width of the voices does not include the instructions (StaveModifiers))
-            this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels);
+            this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
         }
     }
 
