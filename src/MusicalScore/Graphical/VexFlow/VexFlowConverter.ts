@@ -27,6 +27,7 @@ import { Note } from "../..";
 import StaveNote = Vex.Flow.StaveNote;
 import { ArpeggioType } from "../../VoiceData";
 import { TabNote } from "../../VoiceData/TabNote";
+import { Tie } from "../../VoiceData/Tie";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -532,7 +533,9 @@ export class VexFlowConverter {
      */
     public static CreateTabNote(gve: GraphicalVoiceEntry): Vex.Flow.TabNote {
         const tabPositions: {str: number, fret: number}[] = [];
+        const notes: GraphicalNote[] = gve.notes.reverse();
         const tabPhrases: { type: number, text: string, width: number }[] = [];
+        let tabTies: Tie;
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
@@ -542,26 +545,33 @@ export class VexFlowConverter {
             const tabNote: TabNote = note.sourceNote as TabNote;
             const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumber, fret: tabNote.FretNumber};
             tabPositions.push(tabPosition);
-            tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
-                let phraseText: string;
-                const phraseStep: number = bend.bendalter - tabPosition.fret;
-                if (phraseStep > 1) {
-                    phraseText = "Full";
-                } else if (phraseStep === 1) {
-                    phraseText = "1/2";
-                } else {
-                    phraseText = "1/4";
-                }
-                if (bend.direction === "up") {
-                    tabPhrases.push({type: Vex.Flow.Bend.UP, text: phraseText, width: 10});
-                } else {
-                    tabPhrases.push({type: Vex.Flow.Bend.DOWN, text: phraseText, width: 10});
-                }
-            });
+            if (tabNote.BendArray) {
+                tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
+                    let phraseText: string;
+                    const phraseStep: number = bend.bendalter - tabPosition.fret;
+                    if (phraseStep > 1) {
+                        phraseText = "Full";
+                    } else if (phraseStep === 1) {
+                        phraseText = "1/2";
+                    } else {
+                        phraseText = "1/4";
+                    }
+                    if (bend.direction === "up") {
+                        tabPhrases.push({type: Vex.Flow.Bend.UP, text: phraseText, width: 10});
+                    } else {
+                        tabPhrases.push({type: Vex.Flow.Bend.DOWN, text: phraseText, width: 10});
+                    }
+                });
+            }
+
+            if (tabNote.NoteTie) {
+                tabTies = tabNote.NoteTie;
+            }
 
             if (tabNote.VibratoStroke) {
                 tabVibrato = true;
             }
+
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
             }
@@ -569,10 +579,16 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             duration += "d";
         }
+
         const vfnote: Vex.Flow.TabNote = new Vex.Flow.TabNote({
             duration: duration,
             positions: tabPositions,
         });
+
+        for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
+            (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
+        }
+
         tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
             if (phrase.type === Vex.Flow.Bend.UP) {
                 vfnote.addModifier (new Vex.Flow.Bend(phrase.text, false));
