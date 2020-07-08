@@ -27,7 +27,6 @@ import { Note } from "../..";
 import StaveNote = Vex.Flow.StaveNote;
 import { ArpeggioType } from "../../VoiceData";
 import { TabNote } from "../../VoiceData/TabNote";
-import { Tie } from "../../VoiceData/Tie";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -535,7 +534,6 @@ export class VexFlowConverter {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
         const tabPhrases: { type: number, text: string, width: number }[] = [];
-        let tabTies: Tie;
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.duration(frac, isTuplet);
@@ -564,9 +562,9 @@ export class VexFlowConverter {
                 });
             }
 
-            if (tabNote.NoteTie) {
+          /*  if (tabNote.NoteTie) {
                 tabTies = tabNote.NoteTie;
-            }
+            } */
 
             if (tabNote.VibratoStroke) {
                 tabVibrato = true;
@@ -597,11 +595,6 @@ export class VexFlowConverter {
             }
         });
         // does not work well to add phrases as array
-        /*
-        if (tabPhrases.length > 0) {
-           vfnote.addModifier (new Vex.Flow.Bend(undefined, undefined, tabPhrases), 1);
-        }
-        */
         if (tabVibrato) {
             vfnote.addModifier(new Vex.Flow.Vibrato());
         }
