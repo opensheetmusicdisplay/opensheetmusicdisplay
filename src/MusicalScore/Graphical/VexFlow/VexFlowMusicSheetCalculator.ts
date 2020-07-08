@@ -510,21 +510,25 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         let vfTie: any;
         if (isTab) {
           if (tie.Tie.Type === "S") {
-            vfTie = new Vex.Flow.TabSlide({
-              first_indices: [startNoteIndexInTie],
-              first_note: vfStartNote,
-              last_indices: [endNoteIndexInTie],
-              last_note: vfEndNote
-            },
-              1);
+            vfTie = new Vex.Flow.TabSlide(
+              {
+                first_indices: [startNoteIndexInTie],
+                first_note: vfStartNote,
+                last_indices: [endNoteIndexInTie],
+                last_note: vfEndNote,
+              },
+              1
+            );
           } else {
-            vfTie = new Vex.Flow.TabTie({
-              first_indices: [startNoteIndexInTie],
-              first_note: vfStartNote,
-              last_indices: [endNoteIndexInTie],
-              last_note: vfEndNote
-            },
-              tie.Tie.Type);
+            vfTie = new Vex.Flow.TabTie(
+              {
+                first_indices: [startNoteIndexInTie],
+                first_note: vfStartNote,
+                last_indices: [endNoteIndexInTie],
+                last_note: vfEndNote,
+              },
+              tie.Tie.Type
+            );
           }
 
         } else {
