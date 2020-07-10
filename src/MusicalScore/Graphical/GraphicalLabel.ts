@@ -11,7 +11,7 @@ import { MusicSheetCalculator } from "./MusicSheetCalculator";
 export class GraphicalLabel extends Clickable {
     private label: Label;
     private rules: EngravingRules;
-    public TextLines: string[];
+    public TextLines: {text: string, xOffset: number, width: number}[];
 
     /**
      * Creates a new GraphicalLabel from a Label
@@ -40,24 +40,47 @@ export class GraphicalLabel extends Clickable {
 
     /**
      * Calculate GraphicalLabel's Borders according to its Alignment
+     * Create also the text-lines and their offsets here
      */
     public setLabelPositionAndShapeBorders(): void {
         if (this.Label.text.trim() === "") {
             return;
         }
+        this.TextLines = [];
         const labelMarginBorderFactor: number = this.rules?.LabelMarginBorderFactor ?? 0.1;
-
-        this.TextLines = this.Label.text.split(/[\n\r]+/g);
-        const numOfLines: number = this.TextLines.length;
+        const lines: string[] = this.Label.text.split(/[\n\r]+/g);
+        const numOfLines: number = lines.length;
         let maxWidth: number = 0;
         for (let i: number = 0; i < numOfLines; i++) {
-            this.TextLines[i] = this.TextLines[i].trim();
-            const line: string = this.TextLines[i];
+            const line: string = lines[i].trim();
             const widthToHeightRatio: number =
             MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
                line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
             const currWidth: number = this.Label.fontHeight * widthToHeightRatio;
             maxWidth = Math.max(maxWidth, currWidth);
+            // here push only text and width of the text:
+            this.TextLines.push({text: line, xOffset: 0, width: currWidth});
+        }
+
+        // maxWidth is calculated ->
+        // now also set the x-offsets:
+        for (const line of this.TextLines) {
+            let xOffset: number = 0;
+            switch (this.Label.textAlignment) {
+                case TextAlignmentEnum.RightBottom:
+                case TextAlignmentEnum.RightCenter:
+                case TextAlignmentEnum.RightTop:
+                    xOffset = maxWidth - line.width;
+                    break;
+                case TextAlignmentEnum.CenterBottom:
+                case TextAlignmentEnum.CenterCenter:
+                case TextAlignmentEnum.CenterTop:
+                    xOffset = (maxWidth - line.width) / 2;
+                    break;
+                default:
+                    break;
+            }
+            line.xOffset = xOffset;
         }
 
         const height: number = this.Label.fontHeight * numOfLines;
