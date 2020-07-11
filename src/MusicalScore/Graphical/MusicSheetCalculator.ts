@@ -434,7 +434,7 @@ export abstract class MusicSheetCalculator {
      * @param tie
      * @param tieIsAtSystemBreak
      */
-    protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean): void {
+    protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean, isTab: boolean): void {
         throw new Error("abstract, not implemented");
     }
 
@@ -2432,7 +2432,7 @@ export abstract class MusicSheetCalculator {
                                     graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine !==
                                     graphicalTie.EndNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine
                                 );
-                                this.layoutGraphicalTie(graphicalTie, tieIsAtSystemBreak);
+                                this.layoutGraphicalTie(graphicalTie, tieIsAtSystemBreak, measure.ParentStaff.isTab);
                             }
                         }
                     }
