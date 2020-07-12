@@ -514,7 +514,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             //calculate direction
             const startTieNote: TabNote = <TabNote> tie.StartNote.sourceNote;
             const endTieNote: TabNote = <TabNote> tie.EndNote.sourceNote;
-            let slideDirection: Number = 1;
+            let slideDirection: number = 1;
             if (startTieNote.FretNumber > endTieNote.FretNumber) {
               slideDirection = -1;
             }
