@@ -49,6 +49,7 @@ import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
 import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
+import { TabNote } from "../../VoiceData/TabNote";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -510,6 +511,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         let vfTie: any;
         if (isTab) {
           if (tie.Tie.Type === "S") {
+            //calculate direction
+            const startTieNote: TabNote = <TabNote> tie.StartNote.sourceNote;
+            const endTieNote: TabNote = <TabNote> tie.EndNote.sourceNote;
+            let slideDirection: Number = 1;
+            if (startTieNote.FretNumber > endTieNote.FretNumber) {
+              slideDirection = -1;
+            }
             vfTie = new Vex.Flow.TabSlide(
               {
                 first_indices: [startNoteIndexInTie],
@@ -517,7 +525,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                 last_indices: [endNoteIndexInTie],
                 last_note: vfEndNote,
               },
-              1
+              slideDirection
             );
           } else {
             vfTie = new Vex.Flow.TabTie(
