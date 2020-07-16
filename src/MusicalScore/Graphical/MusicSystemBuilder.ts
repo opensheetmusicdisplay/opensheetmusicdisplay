@@ -1140,6 +1140,25 @@ export class MusicSystemBuilder {
         if (timesPageCouldntFitSingleSystem > 0) {
             console.log(`total amount of pages that couldn't fit a single music system: ${timesPageCouldntFitSingleSystem} of ${currentPage.PageNumber}`);
         }
+        if (this.rules.PageBottomExtraWhiteSpace > 0 && this.graphicalMusicSheet.MusicPages.length === 1) {
+            // experimental, not used unless the EngravingRule is set to > 0 (default 0)
+
+            // calculate last page's bounding box, otherwise it uses this.rules.PageHeight which is 10001
+            currentPage.PositionAndShape.calculateBoundingBox();
+            // TODO currently bugged with PageFormat A3. this squeezes lyrics and notes (with A3 Landscape). why?
+            //   for this reason, the extra white space should currently only be used with the Endless PageFormat,
+            //   and using EngravingRules.PageBottomExtraWhiteSpace should be considered experimental.
+
+            // add this.rules.PageBottomMargin
+            const pageBottomMarginBB: BoundingBox = new BoundingBox(currentPage, currentPage.PositionAndShape, false);
+            // pageBottomMarginBB.RelativePosition.x = 0;
+            pageBottomMarginBB.RelativePosition.y = currentPage.PositionAndShape.BorderMarginBottom;
+            // pageBottomMarginBB.BorderBottom = this.rules.PageBottomMargin;
+            pageBottomMarginBB.BorderBottom = this.rules.PageBottomExtraWhiteSpace;
+            pageBottomMarginBB.calculateBoundingBox();
+            currentPage.PositionAndShape.calculateBoundingBox();
+        }
+
     }
 
     /**

@@ -343,7 +343,7 @@ export abstract class MusicSheetCalculator {
      */
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
         const staffLine: StaffLine = musicSystem.StaffLines[0];
-        let previousLabelMeasureNumber: number;
+        let previousLabelMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
         let labelOffsetX: number = 0;
         for (const measure of staffLine.Measures) {
             if (measure.MeasureNumber === 0 || measure.MeasureNumber === 1) {
