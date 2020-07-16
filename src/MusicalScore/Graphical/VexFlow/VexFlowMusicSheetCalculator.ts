@@ -49,6 +49,8 @@ import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
 import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
+import { NoteTypeHandler } from "../../VoiceData/NoteType";
+import { VexFlowConverter } from "./VexFlowConverter";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -576,12 +578,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
     const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[0][0] as VexFlowMeasure).getVFStave();
     //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
+    let vexflowDuration: string = "q";
+    if (metronomeExpression.beatUnit) {
+      const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
+      vexflowDuration = VexFlowConverter.duration(duration, false);
+    }
+    // const noteType: NoteType = NoteTypeHandler.StringToNoteType(metronomeExpression.beatUnit);
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
           dots: metronomeExpression.dotted,
-          //duration: metronomeExpression.beatUnit
-          duration: "q"
+          duration: vexflowDuration
       },
       this.rules.MetronomeMarkYShift * unitInPixels);
        // -50, -30), 0); //needs Vexflow PR

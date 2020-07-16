@@ -27,7 +27,7 @@ import { ArticulationReader } from "./MusicSymbolModules/ArticulationReader";
 import { SlurReader } from "./MusicSymbolModules/SlurReader";
 import { Notehead } from "../VoiceData/Notehead";
 import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
-import { NoteType } from "../VoiceData/NoteType";
+import { NoteType, NoteTypeHandler } from "../VoiceData/NoteType";
 import { TabNote } from "../VoiceData/TabNote";
 
 export class VoiceGenerator {
@@ -265,51 +265,6 @@ export class VoiceGenerator {
 
   public hasVoiceEntry(): boolean {
     return this.currentVoiceEntry !== undefined;
-  }
-
-  /**
-   *
-   * @param type
-   * @returns {Fraction} - a Note's Duration from a given type (type must be valid).
-   */
-  public getNoteDurationFromType(type: string): Fraction {
-    switch (type) {
-      case "1024th":
-        return new Fraction(1, 1024);
-      case "512th":
-        return new Fraction(1, 512);
-      case "256th":
-        return new Fraction(1, 256);
-      case "128th":
-        return new Fraction(1, 128);
-      case "64th":
-        return new Fraction(1, 64);
-      case "32th":
-      case "32nd":
-        return new Fraction(1, 32);
-      case "16th":
-        return new Fraction(1, 16);
-      case "eighth":
-        return new Fraction(1, 8);
-      case "quarter":
-        return new Fraction(1, 4);
-      case "half":
-        return new Fraction(1, 2);
-      case "whole":
-        return new Fraction(1, 1);
-      case "breve":
-        return new Fraction(2, 1);
-      case "long":
-        return new Fraction(4, 1);
-      case "maxima":
-        return new Fraction(8, 1);
-      default: {
-        const errorMsg: string = ITextTranslation.translateText(
-          "ReaderErrorMessages/NoteDurationError", "Invalid note duration."
-        );
-        throw new MusicSheetReadingException(errorMsg);
-      }
-    }
   }
 
   private readArticulations(notationNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
@@ -894,7 +849,7 @@ export class VoiceGenerator {
       if (typeNode) {
         const type: string = typeNode.value;
         try {
-          return this.getNoteDurationFromType(type);
+          return NoteTypeHandler.getNoteDurationFromType(type);
         } catch (e) {
           const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/NoteDurationError", "Invalid note duration.");
           this.musicSheet.SheetErrors.pushMeasureError(errorMsg);

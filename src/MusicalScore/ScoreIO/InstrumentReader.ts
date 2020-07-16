@@ -768,7 +768,7 @@ export class InstrumentReader {
     const typeNode: IXmlElement = xmlNode.element("type");
     if (typeNode) {
       const type: string = typeNode.value;
-      return this.currentVoiceGenerator.getNoteDurationFromType(type);
+      return NoteTypeHandler.getNoteDurationFromType(type);
     }
     return new Fraction(0, 4 * this.divisions);
   }

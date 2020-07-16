@@ -158,6 +158,7 @@ export class ExpressionReader {
         let dirContentNode: IXmlElement = dirNode.element("metronome");
         if (dirContentNode) {
             const beatUnit: IXmlElement = dirContentNode.element("beat-unit");
+            // TODO check second "beat-unit", e.g. quarter = half
             const dotted: boolean = dirContentNode.element("beat-unit-dot") !== undefined;
             const bpm: IXmlElement = dirContentNode.element("per-minute");
             // TODO check print-object = false -> don't render invisible metronome mark
