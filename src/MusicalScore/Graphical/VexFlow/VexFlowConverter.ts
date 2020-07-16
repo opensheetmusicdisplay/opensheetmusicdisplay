@@ -400,6 +400,16 @@ export class VexFlowConverter {
                     vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
                     break;
                 }
+                case ArticulationEnum.marcatodown: {
+                    vfArt = new Vex.Flow.Articulation("a|"); // Vexflow only knows marcato up, so we use a down stroke here.
+                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE; // TODO take position from xml? can be below
+                    break;
+                }
+                case ArticulationEnum.marcatoup: {
+                    vfArt = new Vex.Flow.Articulation("a^");
+                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    break;
+                }
                 case ArticulationEnum.invertedfermata: {
                     vfArt = new Vex.Flow.Articulation("a@u");
                     vfArtPosition = Vex.Flow.Modifier.Position.BELOW;

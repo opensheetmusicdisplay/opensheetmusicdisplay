@@ -41,20 +41,28 @@ export class ArticulationReader {
    */
   public addArticulationExpression(node: IXmlElement, currentVoiceEntry: VoiceEntry): void {
     if (node !== undefined && node.elements().length > 0) {
-      const childNotes: IXmlElement[] = node.elements();
-      for (let idx: number = 0, len: number = childNotes.length; idx < len; ++idx) {
-        const childNote: IXmlElement = childNotes[idx];
-        const name: string = childNote.name;
+      const childNodes: IXmlElement[] = node.elements();
+      for (let idx: number = 0, len: number = childNodes.length; idx < len; ++idx) {
+        const childNode: IXmlElement = childNodes[idx];
+        let name: string = childNode.name;
         try {
           // some Articulations appear in Xml separated with a "-" (eg strong-accent), we remove it for enum parsing
-          name.replace("-", "");
-          const articulationEnum: ArticulationEnum = ArticulationEnum[name];
+          name = name.replace("-", "");
+          let articulationEnum: ArticulationEnum = ArticulationEnum[name];
           if (VoiceEntry.isSupportedArticulation(articulationEnum)) {
-            // staccato should be first
+            // staccato should be first // necessary?
             if (name === "staccato") {
               if (currentVoiceEntry.Articulations.length > 0 &&
                 currentVoiceEntry.Articulations[0] !== ArticulationEnum.staccato) {
-                currentVoiceEntry.Articulations.splice(0, 0, articulationEnum);
+                currentVoiceEntry.Articulations.splice(0, 0, articulationEnum); // TODO can't this overwrite another articulation?
+              }
+            }
+            if (name === "strongaccent") { // see name.replace("-", "") above
+              const marcatoType: string = childNode?.attribute("type")?.value;
+              if (marcatoType === "up") {
+                articulationEnum = ArticulationEnum.marcatoup;
+              } else if (marcatoType === "down") {
+                articulationEnum = ArticulationEnum.marcatodown;
               }
             }
 

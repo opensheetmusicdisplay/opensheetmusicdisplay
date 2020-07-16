@@ -401,7 +401,7 @@ export class InstrumentReader {
              expressionReader.read(
                xmlNode, this.currentMeasure, previousFraction
              );
-          }
+            }
           }
           lastNoteWasGrace = isGraceNote;
         } else if (xmlNode.name === "attributes") {

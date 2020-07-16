@@ -380,6 +380,8 @@ export class VoiceEntry {
 export enum ArticulationEnum {
     accent,
     strongaccent,
+    marcatoup,
+    marcatodown,
     invertedstrongaccent,
     staccato,
     staccatissimo,
