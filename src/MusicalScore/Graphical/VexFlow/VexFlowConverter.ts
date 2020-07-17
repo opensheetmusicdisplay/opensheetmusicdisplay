@@ -287,6 +287,8 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
         if (rules.LedgerLineWidth || rules.LedgerLineStrokeStyle) {
+            // FIXME should probably use vfnote.setLedgerLineStyle. this doesn't seem to do anything.
+            // however, this is also set in VexFlowVoiceEntry.color() anyways.
             if (!((vfnote as any).ledgerLineStyle)) {
                 (vfnote as any).ledgerLineStyle = {};
             }

@@ -422,7 +422,7 @@ export class EngravingRules {
 
         // Line Widths
         this.staffLineWidth = 0.12;
-        this.ledgerLineWidth = undefined; // if not undefined, the vexflow default will be overwritten
+        this.ledgerLineWidth = 1; // vexflow units (pixels). if not undefined, the vexflow default will be overwritten
         this.ledgerLineStrokeStyle = undefined; // if not undefined, the vexflow default will be overwritten
         this.wedgeLineWidth = 0.12;
         this.tupletLineWidth = 0.12;
