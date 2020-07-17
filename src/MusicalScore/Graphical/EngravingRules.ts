@@ -163,6 +163,7 @@ export class EngravingRules {
     private staffLineWidth: number;
     private ledgerLineWidth: number;
     private ledgerLineStrokeStyle: string;
+    private ledgerLineColorDefault: string;
     private wedgeLineWidth: number;
     private tupletLineWidth: number;
     private lyricUnderscoreLineWidth: number;
@@ -424,6 +425,7 @@ export class EngravingRules {
         this.staffLineWidth = 0.12;
         this.ledgerLineWidth = 1; // vexflow units (pixels). if not undefined, the vexflow default will be overwritten
         this.ledgerLineStrokeStyle = undefined; // if not undefined, the vexflow default will be overwritten
+        this.ledgerLineColorDefault = "#000000"; // black, previously grey by default
         this.wedgeLineWidth = 0.12;
         this.tupletLineWidth = 0.12;
         this.lyricUnderscoreLineWidth = 0.12;
@@ -1335,6 +1337,12 @@ export class EngravingRules {
     }
     public set LedgerLineStrokeStyle(value: string) {
         this.ledgerLineStrokeStyle = value;
+    }
+    public get LedgerLineColorDefault(): string {
+        return this.ledgerLineColorDefault;
+    }
+    public set LedgerLineColorDefault(value: string) {
+        this.ledgerLineColorDefault = value;
     }
     public get WedgeLineWidth(): number {
         return this.wedgeLineWidth;
