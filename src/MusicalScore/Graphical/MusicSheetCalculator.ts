@@ -345,7 +345,11 @@ export abstract class MusicSheetCalculator {
         const staffLine: StaffLine = musicSystem.StaffLines[0];
         let previousLabelMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
         let labelOffsetX: number = 0;
-        for (const measure of staffLine.Measures) {
+        for (let i: number = 0; i < staffLine.Measures.length; i++) {
+            if (this.rules.RenderMeasureNumbersOnlyAtSystemStart && i > 0) {
+                return; // no more measures number labels need to be rendered for this system, so we can just return instead of continue.
+            }
+            const measure: GraphicalMeasure = staffLine.Measures[i];
             if (measure.MeasureNumber === 0 || measure.MeasureNumber === 1) {
                 previousLabelMeasureNumber = measure.MeasureNumber;
                 // for the first measure, this label still needs to be created. Afterwards, this variable will hold the previous label's measure number.

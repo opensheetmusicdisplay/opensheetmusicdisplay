@@ -228,6 +228,7 @@ export class EngravingRules {
     private renderPartAbbreviations: boolean;
     private renderFingerings: boolean;
     private renderMeasureNumbers: boolean;
+    private renderMeasureNumbersOnlyAtSystemStart: boolean;
     private renderLyrics: boolean;
     private renderMultipleRestMeasures: boolean;
     private renderTimeSignatures: boolean;
@@ -488,6 +489,7 @@ export class EngravingRules {
         this.renderPartAbbreviations = true;
         this.renderFingerings = true;
         this.renderMeasureNumbers = true;
+        this.renderMeasureNumbersOnlyAtSystemStart = false;
         this.renderLyrics = true;
         this.renderMultipleRestMeasures = true;
         this.renderTimeSignatures = true;
@@ -1707,6 +1709,12 @@ export class EngravingRules {
     }
     public set RenderMeasureNumbers(value: boolean) {
         this.renderMeasureNumbers = value;
+    }
+    public get RenderMeasureNumbersOnlyAtSystemStart(): boolean {
+        return this.renderMeasureNumbersOnlyAtSystemStart;
+    }
+    public set RenderMeasureNumbersOnlyAtSystemStart(value: boolean) {
+        this.renderMeasureNumbersOnlyAtSystemStart = value;
     }
     public get RenderLyrics(): boolean {
         return this.renderLyrics;

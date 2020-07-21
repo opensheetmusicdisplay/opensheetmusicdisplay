@@ -431,6 +431,9 @@ export class OpenSheetMusicDisplay {
         if (options.drawMeasureNumbers !== undefined) {
             this.rules.RenderMeasureNumbers = options.drawMeasureNumbers;
         }
+        if (options.drawMeasureNumbersOnlyAtSystemStart) {
+            this.rules.RenderMeasureNumbersOnlyAtSystemStart = options.drawMeasureNumbersOnlyAtSystemStart;
+        }
         if (options.drawLyrics !== undefined) {
             this.rules.RenderLyrics = options.drawLyrics;
         }
