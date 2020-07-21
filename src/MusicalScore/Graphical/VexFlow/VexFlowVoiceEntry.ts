@@ -123,7 +123,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 }
                 // set ledger line color. TODO coordinate this with VexFlowConverter.StaveNote(), where there's also still code for this, maybe unnecessarily.
                 if (!(note.sourceNote instanceof TabNote)) { // setLedgerLineStyle doesn't exist on TabNote, would throw error.
-                    if (noteheadColor === transparentColor && !(note instanceof TabNote)) {
+                    if (noteheadColor === transparentColor) {
                         (vfStaveNote as any).setLedgerLineStyle(
                             { fillStyle: noteheadColor, strokeStyle: noteheadColor, lineWidth: this.rules.LedgerLineWidth });
                     } else {
