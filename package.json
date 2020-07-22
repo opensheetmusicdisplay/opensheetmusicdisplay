@@ -61,7 +61,7 @@
   },
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
-    "@types/vexflow": "^1.2.36",
+    "@types/vexflow": "^3.0.0",
     "jszip": "3.4.0",
     "loglevel": "^1.6.8",
     "typescript-collections": "^1.3.3",
