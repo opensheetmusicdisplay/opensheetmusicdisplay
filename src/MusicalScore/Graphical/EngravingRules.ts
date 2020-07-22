@@ -160,7 +160,10 @@ export class EngravingRules {
     private moodTextHeight: number;
     private unknownTextHeight: number;
     private continuousTempoTextHeight: number;
+    private vexFlowDefaultNotationFontScale: number;
+    private vexFlowDefaultTabFontScale: number;
     private staffLineWidth: number;
+    private staffLineColor: string;
     private ledgerLineWidth: number;
     private ledgerLineStrokeStyle: string;
     private ledgerLineColorDefault: string;
@@ -325,13 +328,13 @@ export class EngravingRules {
         this.staccatoShorteningFactor = 2;
         this.idealStemLength = 3.0;
         this.stemNoteHeadBorderYOffset = 0.2;
-        this.stemWidth = 0.13;
         this.stemMargin = 0.2;
         this.stemMinLength = 2.5;
         this.stemMaxLength = 4.5;
         this.beamSlopeMaxAngle = 10.0;
         this.stemMinAllowedDistanceBetweenNoteHeadAndBeamLine = 1.0;
         this.setWantedStemDirectionByXml = true;
+        // also see stemwidth further below
 
         // GraceNote Variables
         this.graceNoteScalingFactor = 0.6;
@@ -423,7 +426,11 @@ export class EngravingRules {
         this.dynamicExpressionSpacer = 0.5;
 
         // Line Widths
-        this.staffLineWidth = 0.12;
+        this.vexFlowDefaultNotationFontScale = 39; // scales notes, including rests. default value 39 in Vexflow.
+        this.vexFlowDefaultTabFontScale = 39;
+        this.stemWidth = 0.15; // originally 0.13. vexflow default 0.15. should probably be adjusted when increasing vexFlowDefaultNotationFontScale,
+        this.staffLineWidth = 0.10; // originally 0.12, but this will be pixels in Vexflow (*10).
+        this.staffLineColor = undefined; // if undefined, vexflow default (grey). not a width, but affects visual line clarity.
         this.ledgerLineWidth = 1; // vexflow units (pixels). if not undefined, the vexflow default will be overwritten
         this.ledgerLineStrokeStyle = undefined; // if not undefined, the vexflow default will be overwritten
         this.ledgerLineColorDefault = "#000000"; // black, previously grey by default
@@ -1322,11 +1329,29 @@ export class EngravingRules {
     public set UnknownTextHeight(value: number) {
         this.unknownTextHeight = value;
     }
+    public get VexFlowDefaultNotationFontScale(): number {
+        return this.vexFlowDefaultNotationFontScale;
+    }
+    public set VexFlowDefaultNotationFontScale(value: number) {
+        this.vexFlowDefaultNotationFontScale = value;
+    }
+    public get VexFlowDefaultTabFontScale(): number {
+        return this.vexFlowDefaultTabFontScale;
+    }
+    public set VexFlowDefaultTabFontScale(value: number) {
+        this.vexFlowDefaultTabFontScale = value;
+    }
     public get StaffLineWidth(): number {
         return this.staffLineWidth;
     }
     public set StaffLineWidth(value: number) {
         this.staffLineWidth = value;
+    }
+    public get StaffLineColor(): string {
+        return this.staffLineColor;
+    }
+    public set StaffLineColor(value: string) {
+        this.staffLineColor = value;
     }
     public get LedgerLineWidth(): number {
         return this.ledgerLineWidth;
