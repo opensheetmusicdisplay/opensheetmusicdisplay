@@ -125,10 +125,13 @@ export class DrawingParameters {
         this.setForCompactMode(); // also sets CompactMode = true
         this.DrawPartNames = false;
 
+        this.rules.VoiceSpacingMultiplierVexflow = 0.65;
+        this.rules.VoiceSpacingAddendVexflow = 2.0;
+
         // tight rendering mode, lower margins and safety distances between systems, staffs etc. may cause overlap.
         // these options can afterwards be finetuned by setting osmd.rules.BetweenStaffDistance for example
         this.rules.MinSkyBottomDistBetweenStaves = 1.0; // default 1.0. this can cause collisions with slurs and dynamics sometimes
-        this.rules.MinSkyBottomDistBetweenSystems = 2.0; // default 5.0
+        this.rules.MinSkyBottomDistBetweenSystems = 1.0; // default 5.0
         // note that this.rules === osmd.rules, since it's passed as a reference
 
         this.rules.BetweenStaffDistance = 2.5;

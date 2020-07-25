@@ -29,6 +29,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
         });
+        // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
         this.updateInstructionWidth();
     }
 

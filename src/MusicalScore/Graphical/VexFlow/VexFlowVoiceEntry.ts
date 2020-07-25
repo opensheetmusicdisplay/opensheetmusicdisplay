@@ -7,6 +7,7 @@ import { GraphicalNote } from "..";
 import { NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { Note } from "../../VoiceData/Note";
 import { ColoringModes } from "./../DrawingParameters";
+import { TabNote } from "../../VoiceData/TabNote";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: Vex.Flow.StemmableNote;
@@ -118,6 +119,21 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     const notehead: any = vfStaveNote.note_heads[i];
                     if (notehead) {
                         notehead.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
+                    }
+                }
+                // set ledger line color. TODO coordinate this with VexFlowConverter.StaveNote(), where there's also still code for this, maybe unnecessarily.
+                if (!(note.sourceNote instanceof TabNote)) { // setLedgerLineStyle doesn't exist on TabNote, would throw error.
+                    if (noteheadColor === transparentColor) {
+                        (vfStaveNote as any).setLedgerLineStyle(
+                            { fillStyle: noteheadColor, strokeStyle: noteheadColor, lineWidth: this.rules.LedgerLineWidth });
+                    } else {
+                        (vfStaveNote as any).setLedgerLineStyle({
+                            fillStyle: this.rules.LedgerLineColorDefault,
+                            lineWidth: this.rules.LedgerLineWidth,
+                            strokeStyle: this.rules.LedgerLineColorDefault
+                        });
+                        // we could give the color (style) as noteheadColor, but then we need to figure out which note has the ledger line.
+                        // otherwise ledger lines get the color of the top note, see Function Test Color.
                     }
                 }
             }

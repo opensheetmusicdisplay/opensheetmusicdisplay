@@ -49,6 +49,8 @@ import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
 import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
+import { NoteTypeHandler } from "../../VoiceData/NoteType";
+import { VexFlowConverter } from "./VexFlowConverter";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -61,6 +63,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     MusicSheetCalculator.symbolFactory = new VexFlowGraphicalSymbolFactory();
     MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(this.rules);
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
+
+    // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
+    //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
+    if (this.rules.DefaultVexFlowNoteFont === "gonville") {
+      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+    } // else keep new vexflow default Bravura (more cursive, bold)
   }
 
   protected clearRecreatedObjects(): void {
@@ -68,7 +76,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     MusicSheetCalculator.stafflineNoteCalculator = new VexflowStafflineNoteCalculator(this.rules);
     for (const graphicalMeasures of this.graphicalMusicSheet.MeasureList) {
       for (const graphicalMeasure of graphicalMeasures) {
-        (<VexFlowMeasure>graphicalMeasure).clean();
+        (<VexFlowMeasure>graphicalMeasure)?.clean();
       }
     }
   }
@@ -76,6 +84,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected formatMeasures(): void {
     // let totalFinalizeBeamsTime: number = 0;
     for (const verticalMeasureList of this.graphicalMusicSheet.MeasureList) {
+      if (!verticalMeasureList || !verticalMeasureList[0]) {
+        continue;
+      }
       const firstMeasure: VexFlowMeasure = verticalMeasureList[0] as VexFlowMeasure;
       // first measure has formatting method as lambda function object, but formats all measures. TODO this could be refactored
       firstMeasure.format();
@@ -120,9 +131,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // Format the voices
     const allVoices: Vex.Flow.Voice[] = [];
-    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter();
+    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
+      // maxIterations: 2,
+      softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
+    });
 
     for (const measure of measures) {
+      if (!measure) {
+        continue;
+      }
       const mvoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
       const voices: Vex.Flow.Voice[] = [];
       for (const voiceID in mvoices) {
@@ -143,19 +160,24 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
     if (allVoices.length > 0) {
-      // FIXME: The following ``+ 5.0'' is temporary: it was added as a workaround for
-      // FIXME: a more relaxed formatting of voices
-      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels + 5.0;
+      // the voicing space bonus addition makes the voicing more relaxed. With a bonus of 0 the notes are basically completely squeezed together.
+      const staffEntryFactor: number = 0.3;
+
+      minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
+        * this.rules.VoiceSpacingMultiplierVexflow
+        + this.rules.VoiceSpacingAddendVexflow
+        + measures[0].staffEntries.length * staffEntryFactor;
+        // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
       // firstMeasure.formatVoices = (w: number) => {
       //     formatter.format(allVoices, w);
       // };
       MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minStaffEntriesWidth);
 
-      const formatVoicesDefault: (w: number) => void = (w) => {
-        formatter.format(allVoices, w);
+      const formatVoicesDefault: (w: number, p: VexFlowMeasure) => void = (w, p) => {
+        formatter.formatToStave(allVoices, p.getVFStave());
       };
-      const formatVoicesAlignRests: (w: number) => void = (w) => {
-        formatter.format(allVoices, w, {
+      const formatVoicesAlignRests: (w: number,  p: VexFlowMeasure) => void = (w, p) => {
+        formatter.formatToStave(allVoices, p.getVFStave(), {
           align_rests: true,
           context: undefined
         });
@@ -211,7 +233,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           //vexflowMeasure.formatVoices = formatVoicesDefault;
 
           // format now for minimum width, calculateMeasureWidthFromLyrics later
-          vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels);
+          vexflowMeasure.formatVoices(minStaffEntriesWidth * unitInPixels, vexflowMeasure);
         } else {
           //(measure as VexFlowMeasure).formatVoices = undefined;
           // TODO why was the formatVoices function disabled for other measures? would now disable the new align rests option.
@@ -220,6 +242,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     for (const graphicalMeasure of measures) {
+      if (!graphicalMeasure) {
+        continue;
+      }
       for (const staffEntry of graphicalMeasure.staffEntries) {
         // here the measure modifiers are not yet set, therefore the begin instruction width will be empty
         (<VexFlowStaffEntry>staffEntry).calculateXPosition();
@@ -247,6 +272,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     for (const measure of measuresVertical) {
+      if (!measure) {
+        continue;
+      }
       const lastLyricEntryDict: LyricEntryDict = {}; // holds info about last lyrics entries for all verses j
 
       // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
@@ -369,6 +397,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
     }
+    elongationFactorForMeasureWidth = Math.min(elongationFactorForMeasureWidth, this.rules.MaximumLyricsElongationFactor);
+    // TODO check when this is > 2.0. there seems to be an error here where this is unnecessarily > 2 in Beethoven Geliebte.
     return oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
   }
 
@@ -547,12 +577,17 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
     const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[0][0] as VexFlowMeasure).getVFStave();
     //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
+    let vexflowDuration: string = "q";
+    if (metronomeExpression.beatUnit) {
+      const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
+      vexflowDuration = VexFlowConverter.duration(duration, false);
+    }
+    // const noteType: NoteType = NoteTypeHandler.StringToNoteType(metronomeExpression.beatUnit);
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
           dots: metronomeExpression.dotted,
-          //duration: metronomeExpression.beatUnit
-          duration: "q"
+          duration: vexflowDuration
       },
       this.rules.MetronomeMarkYShift * unitInPixels);
        // -50, -30), 0); //needs Vexflow PR

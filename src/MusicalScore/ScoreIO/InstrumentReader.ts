@@ -26,7 +26,7 @@ import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
 import {NoteType, NoteTypeHandler} from "../VoiceData";
 import {SystemLinesEnumHelper} from "../Graphical";
-//import Dictionary from "typescript-collections/dist/lib/Dictionary";
+// import {Dictionary} from "typescript-collections";
 
 // FIXME: The following classes are missing
 //type ChordSymbolContainer = any;
@@ -285,6 +285,7 @@ export class InstrumentReader {
 
           // check Tremolo
           let tremoloStrokes: number = 0;
+          let vibratoStrokes: boolean = false;
           if (notationsNode) {
             const ornamentsNode: IXmlElement = notationsNode.element("ornaments");
             if (ornamentsNode) {
@@ -298,6 +299,13 @@ export class InstrumentReader {
                   }
                 }
                 // TODO implement type "start". Vexflow doesn't have tremolo beams yet though (shorter than normal beams)
+              }
+              const vibratoNode: IXmlElement = ornamentsNode.element("wavy-line");
+              if (vibratoNode !== undefined) {
+                const vibratoType: Attr = vibratoNode.attribute("type");
+                if (vibratoType && vibratoType.value === "start") {
+                  vibratoStrokes = true;
+                }
               }
             }
           }
@@ -379,7 +387,8 @@ export class InstrumentReader {
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
-            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml
+            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
+            vibratoStrokes
           );
 
           // notationsNode created further up for multiple checks
@@ -392,7 +401,7 @@ export class InstrumentReader {
              expressionReader.read(
                xmlNode, this.currentMeasure, previousFraction
              );
-          }
+            }
           }
           lastNoteWasGrace = isGraceNote;
         } else if (xmlNode.name === "attributes") {
@@ -411,7 +420,6 @@ export class InstrumentReader {
                 throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
               }
             }
-
           }
           if (
             !xmlNode.element("divisions") &&
@@ -447,6 +455,34 @@ export class InstrumentReader {
               this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);
             }
           }
+          // check multi measure rest
+          const measureStyle: IXmlElement = xmlNode.element("measure-style");
+          if (measureStyle) {
+            const multipleRest: IXmlElement = measureStyle.element("multiple-rest");
+            if (multipleRest) {
+              // TODO: save multirest per staff info a dictionary, to display a partial multirest if multirest values across staffs differ.
+              //   this makes the code bulkier though, and for now we only draw multirests if the staffs have the same multirest lengths.
+              // if (!currentMeasure.multipleRestMeasuresPerStaff) {
+              //   currentMeasure.multipleRestMeasuresPerStaff = new Dictionary<number, number>();
+              // }
+              const multipleRestValueXml: string = multipleRest.value;
+              let multipleRestNumber: number = 0;
+              try {
+                multipleRestNumber = Number.parseInt(multipleRestValueXml, 10);
+                if (currentMeasure.multipleRestMeasures !== undefined && multipleRestNumber !== currentMeasure.multipleRestMeasures) {
+                  // different multi-rest values in same measure for different staffs
+                  currentMeasure.multipleRestMeasures = 0; // for now, ignore multirest here. TODO: take minimum
+                  // currentMeasure.multipleRestMeasuresPerStaff.setValue(this.currentStaff?.Id, multipleRestNumber);
+                  //   issue: currentStaff can be undefined for first measure
+                } else {
+                  currentMeasure.multipleRestMeasures = multipleRestNumber;
+                }
+              } catch (e) {
+                console.log("multirest parse error: " + e);
+              }
+            }
+          }
+
         } else if (xmlNode.name === "forward") {
           const forFraction: number = parseInt(xmlNode.element("duration").value, 10);
           currentFraction.Add(new Fraction(forFraction, 4 * this.divisions));
@@ -732,7 +768,7 @@ export class InstrumentReader {
     const typeNode: IXmlElement = xmlNode.element("type");
     if (typeNode) {
       const type: string = typeNode.value;
-      return this.currentVoiceGenerator.getNoteDurationFromType(type);
+      return NoteTypeHandler.getNoteDurationFromType(type);
     }
     return new Fraction(0, 4 * this.divisions);
   }

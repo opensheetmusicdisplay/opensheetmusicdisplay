@@ -172,6 +172,7 @@ export class VoiceEntry {
             case ArticulationEnum.snappizzicato:
             case ArticulationEnum.upbow:
             case ArticulationEnum.downbow:
+            case ArticulationEnum.bend:
                 return true;
             default:
                 return false;
@@ -379,6 +380,8 @@ export class VoiceEntry {
 export enum ArticulationEnum {
     accent,
     strongaccent,
+    marcatoup,
+    marcatodown,
     invertedstrongaccent,
     staccato,
     staccatissimo,
@@ -400,7 +403,8 @@ export enum ArticulationEnum {
     stress,
     unstress,
     detachedlegato,
-    otherarticulation
+    otherarticulation,
+    bend
 }
 
 export enum StemDirectionType {

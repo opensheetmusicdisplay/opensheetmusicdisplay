@@ -51,6 +51,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        // vexflow 3.x: change default font
+        if (this.rules.DefaultVexFlowNoteFont === "gonville") {
+            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+        } // else keep new vexflow default Bravura (more cursive, bold).
+
+        // sizing defaults in Vexflow
+        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        // sets scale/size of notes/rest notes:
+        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
             const backend: VexFlowBackend = this.backends[this.pageIdx];
@@ -386,12 +398,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param screenPosition the position of the lower left corner of the text in screen coordinates
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
+                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): void {
         if (!graphicalLabel.Label.print) {
             return;
         }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
-        const { font, text } = graphicalLabel.Label;
+        const { font } = graphicalLabel.Label;
         let color: string;
         if (this.rules.ColoringEnabled) {
             color = graphicalLabel.Label.colorDefault;
@@ -406,7 +418,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (!fontFamily) {
             fontFamily = this.rules.DefaultFontFamily;
         }
-        this.backend.renderText(height, fontStyle, font, text, heightInPixel, screenPosition, color, graphicalLabel.Label.fontFamily);
+
+        for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
+            const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
+            const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
+            const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
+            this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+            screenPosition.y = screenPosition.y + fontHeightInPixel;
+        }
         // font currently unused, replaced by fontFamily
     }
 
