@@ -116,6 +116,8 @@ export class EngravingRules {
     private tupletNumberYOffset: number;
     private labelMarginBorderFactor: number;
     private tupletVerticalLineLength: number;
+    private tupletNumbersInTabs: boolean;
+
     private repetitionEndingLabelHeight: number;
     private repetitionEndingLabelXOffset: number;
     private repetitionEndingLabelYOffset: number;
@@ -378,6 +380,7 @@ export class EngravingRules {
         this.tupletNumberYOffset = 0.5;
         this.labelMarginBorderFactor = 0.1;
         this.tupletVerticalLineLength = 0.5;
+        this.tupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
 
         // Slur and Tie variables
         this.bezierCurveStepSize = 1000;
@@ -1079,6 +1082,12 @@ export class EngravingRules {
     }
     public set TupletVerticalLineLength(value: number) {
         this.tupletVerticalLineLength = value;
+    }
+    public get TupletNumbersInTabs(): boolean {
+        return this.tupletNumbersInTabs;
+    }
+    public set TupletNumbersInTabs(value: boolean) {
+        this.tupletNumbersInTabs = value;
     }
     public get RepetitionEndingLabelHeight(): number {
         return this.repetitionEndingLabelHeight;
