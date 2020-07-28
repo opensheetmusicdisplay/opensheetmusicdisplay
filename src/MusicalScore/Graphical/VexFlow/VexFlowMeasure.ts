@@ -1161,7 +1161,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for ( const vfStaffEntry of this.staffEntries ) {
             for ( const gVoiceEntry of vfStaffEntry.graphicalVoiceEntries) {
                 for ( const gnote of gVoiceEntry.notes) {
-                    const vfnote: [StaveNote, number] = (gnote as VexFlowGraphicalNote).vfnote;
+                    const vfnote: [StemmableNote , number] = (gnote as VexFlowGraphicalNote).vfnote;
                     if (!vfnote || !vfnote[0]) {
                         continue;
                     }
