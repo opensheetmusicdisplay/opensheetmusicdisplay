@@ -137,13 +137,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
     });
 
-    /*
-    {
-      // maxIterations: 2,
-      softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
-    }
-    */
-
     for (const measure of measures) {
       if (!measure) {
         continue;
@@ -474,6 +467,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * Calculate the shape (Bezier curve) for this tie.
    * @param tie
    * @param tieIsAtSystemBreak
+   * @param isTab Whether this tie is for a tab note (guitar tabulature)
    */
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean, isTab: boolean): void {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
@@ -546,7 +540,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             );
           }
 
-        } else {
+        } else { // not Tab (guitar), normal StaveTie
           vfTie = new Vex.Flow.StaveTie({
             first_indices: [startNoteIndexInTie],
             first_note: vfStartNote,

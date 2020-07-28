@@ -574,10 +574,6 @@ export class VexFlowConverter {
                 });
             }
 
-          /*  if (tabNote.NoteTie) {
-                tabTies = tabNote.NoteTie;
-            } */
-
             if (tabNote.VibratoStroke) {
                 tabVibrato = true;
             }
@@ -606,7 +602,6 @@ export class VexFlowConverter {
                 vfnote.addModifier (new Vex.Flow.Bend(phrase.text, true));
             }
         });
-        // does not work well to add phrases as array
         if (tabVibrato) {
             vfnote.addModifier(new Vex.Flow.Vibrato());
         }
