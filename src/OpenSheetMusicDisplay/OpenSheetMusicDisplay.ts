@@ -524,6 +524,9 @@ export class OpenSheetMusicDisplay {
         if (options.spacingFactorSoftmax !== undefined) {
             this.rules.SoftmaxFactorVexFlow = options.spacingFactorSoftmax;
         }
+        if (options.spacingBetweenTextLines !== undefined) {
+            this.rules.SpacingBetweenTextLines = options.spacingBetweenTextLines;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {

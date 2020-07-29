@@ -248,6 +248,7 @@ export class EngravingRules {
     private pageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
     private renderSingleHorizontalStaffline: boolean;
     private restoreCursorAfterRerender: boolean;
+    private spacingBetweenTextLines: number;
 
     private static fixStafflineBoundingBox: boolean; // TODO temporary workaround
 
@@ -513,6 +514,7 @@ export class EngravingRules {
         this.pageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.pageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
         this.renderSingleHorizontalStaffline = false;
+        this.spacingBetweenTextLines = 0;
 
         this.populateDictionaries();
         try {
@@ -1818,6 +1820,12 @@ export class EngravingRules {
     }
     public set RestoreCursorAfterRerender(value: boolean) {
         this.restoreCursorAfterRerender = value;
+    }
+    public get SpacingBetweenTextLines(): number {
+        return this.spacingBetweenTextLines;
+    }
+    public set SpacingBetweenTextLines(value: number) {
+        this.spacingBetweenTextLines = value;
     }
 
     public resetChordSymbolLabelTexts(chordtexts: Dictionary<ChordSymbolEnum, string>): Dictionary<ChordSymbolEnum, string> {

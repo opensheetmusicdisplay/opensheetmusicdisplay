@@ -203,6 +203,11 @@ export interface IOSMDOptions {
      *  Setting this is the same as setting osmd.EngravingRules.SoftmaxFactorVexFlow.
      */
     spacingFactorSoftmax?: number;
+
+    /**
+     * Number in pixels, of spacing between multi-line labels
+     */
+    spacingBetweenTextLines?: number;
 }
 
 export enum AlignRestOption {
