@@ -2,7 +2,7 @@ import {Pitch} from "../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
-import { EngravingRules } from "../Graphical";
+import { EngravingRules } from "../Graphical/EngravingRules";
 
 export class ChordSymbolContainer {
     private rootPitch: Pitch;

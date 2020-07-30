@@ -1,5 +1,5 @@
 // import * as Collections from "typescript-collections";
-import Collections = require("typescript-collections");
+import Collections from "typescript-collections";
 
 /**
  * The supported styles to draw a rectangle on the music sheet

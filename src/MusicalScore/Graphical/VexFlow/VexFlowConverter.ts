@@ -25,7 +25,7 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 import { Note } from "../..";
 import StaveNote = Vex.Flow.StaveNote;
-import { ArpeggioType } from "../../VoiceData";
+import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
 
 /**
