@@ -250,6 +250,7 @@ export class EngravingRules {
     private pageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
     private renderSingleHorizontalStaffline: boolean;
     private restoreCursorAfterRerender: boolean;
+    private stretchLastSystemLine: boolean;
 
     private static fixStafflineBoundingBox: boolean; // TODO temporary workaround
 
@@ -510,6 +511,7 @@ export class EngravingRules {
         this.newSystemAtXMLNewSystemAttribute = false;
         this.newPageAtXMLNewPageAttribute = false;
         this.restoreCursorAfterRerender = true;
+        this.stretchLastSystemLine = false;
 
         EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
 
@@ -1827,6 +1829,12 @@ export class EngravingRules {
     }
     public set RestoreCursorAfterRerender(value: boolean) {
         this.restoreCursorAfterRerender = value;
+    }
+    public get StretchLastSystemLine(): boolean {
+        return this.stretchLastSystemLine;
+    }
+    public set StretchLastSystemLine(value: boolean) {
+        this.stretchLastSystemLine = value;
     }
 
     public resetChordSymbolLabelTexts(chordtexts: Dictionary<ChordSymbolEnum, string>): Dictionary<ChordSymbolEnum, string> {
