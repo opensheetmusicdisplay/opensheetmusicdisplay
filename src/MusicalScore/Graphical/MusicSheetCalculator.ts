@@ -2420,16 +2420,11 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateTieCurves(): void {
-        for(const musicSystem of this.musicSystems)
-        {
-            for(const staffLine of musicSystem.StaffLines)
-            {
-                for(const measure of staffLine.Measures)
-                {
-                    for(const staffEntry of measure.staffEntries)
-                    {
-                        for(const graphicalTie of staffEntry.GraphicalTies)
-                        {
+        for (const musicSystem of this.musicSystems) {
+            for (const staffLine of musicSystem.StaffLines) {
+                for (const measure of staffLine.Measures) {
+                    for (const staffEntry of measure.staffEntries) {
+                        for (const graphicalTie of staffEntry.GraphicalTies) {
                             if (graphicalTie.StartNote !== undefined && graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry === staffEntry) {
                                 const tieIsAtSystemBreak: boolean = (
                                     graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine !==
