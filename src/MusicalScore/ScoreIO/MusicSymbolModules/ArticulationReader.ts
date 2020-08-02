@@ -1,6 +1,6 @@
 ﻿import {ArticulationEnum, VoiceEntry} from "../../VoiceData/VoiceEntry";
 import {IXmlAttribute, IXmlElement} from "../../../Common/FileIO/Xml";
-import * as log from "loglevel";
+import log from "loglevel";
 import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {OrnamentContainer, OrnamentEnum} from "../../VoiceData/OrnamentContainer";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
@@ -41,20 +41,28 @@ export class ArticulationReader {
    */
   public addArticulationExpression(node: IXmlElement, currentVoiceEntry: VoiceEntry): void {
     if (node !== undefined && node.elements().length > 0) {
-      const childNotes: IXmlElement[] = node.elements();
-      for (let idx: number = 0, len: number = childNotes.length; idx < len; ++idx) {
-        const childNote: IXmlElement = childNotes[idx];
-        const name: string = childNote.name;
+      const childNodes: IXmlElement[] = node.elements();
+      for (let idx: number = 0, len: number = childNodes.length; idx < len; ++idx) {
+        const childNode: IXmlElement = childNodes[idx];
+        let name: string = childNode.name;
         try {
           // some Articulations appear in Xml separated with a "-" (eg strong-accent), we remove it for enum parsing
-          name.replace("-", "");
-          const articulationEnum: ArticulationEnum = ArticulationEnum[name];
+          name = name.replace("-", "");
+          let articulationEnum: ArticulationEnum = ArticulationEnum[name];
           if (VoiceEntry.isSupportedArticulation(articulationEnum)) {
-            // staccato should be first
+            // staccato should be first // necessary?
             if (name === "staccato") {
               if (currentVoiceEntry.Articulations.length > 0 &&
                 currentVoiceEntry.Articulations[0] !== ArticulationEnum.staccato) {
-                currentVoiceEntry.Articulations.splice(0, 0, articulationEnum);
+                currentVoiceEntry.Articulations.splice(0, 0, articulationEnum); // TODO can't this overwrite another articulation?
+              }
+            }
+            if (name === "strongaccent") { // see name.replace("-", "") above
+              const marcatoType: string = childNode?.attribute("type")?.value;
+              if (marcatoType === "up") {
+                articulationEnum = ArticulationEnum.marcatoup;
+              } else if (marcatoType === "down") {
+                articulationEnum = ArticulationEnum.marcatodown;
               }
             }
 
@@ -80,7 +88,7 @@ export class ArticulationReader {
   public addFermata(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
     // fermata appears as separate tag in XML
     let articulationEnum: ArticulationEnum = ArticulationEnum.fermata;
-    if (xmlNode.attributes().length > 0 && xmlNode.attribute("type") !== undefined) {
+    if (xmlNode.attributes().length > 0 && xmlNode.attribute("type")) {
       if (xmlNode.attribute("type").value === "inverted") {
         articulationEnum = ArticulationEnum.invertedfermata;
       }
@@ -99,6 +107,7 @@ export class ArticulationReader {
       [xmlElement: string]: ArticulationEnum;
     }
     const xmlElementToArticulationEnum: XMLElementToArticulationEnum = {
+      "bend": ArticulationEnum.bend,
       "down-bow": ArticulationEnum.downbow,
       "open-string": ArticulationEnum.naturalharmonic,
       "snap-pizzicato": ArticulationEnum.snappizzicato,
@@ -113,7 +122,7 @@ export class ArticulationReader {
       }
       const articulationEnum: ArticulationEnum = xmlElementToArticulationEnum[xmlArticulation];
       const node: IXmlElement = xmlNode.element(xmlArticulation);
-      if (node !== undefined) {
+      if (node) {
         if (currentVoiceEntry.Articulations.indexOf(articulationEnum) === -1) {
           currentVoiceEntry.Articulations.push(articulationEnum);
         }
@@ -121,7 +130,7 @@ export class ArticulationReader {
     }
 
     const nodeFingering: IXmlElement = xmlNode.element("fingering");
-    if (nodeFingering !== undefined) {
+    if (nodeFingering) {
       const currentTechnicalInstruction: TechnicalInstruction = new TechnicalInstruction();
       currentTechnicalInstruction.type = TechnicalInstructionType.Fingering;
       currentTechnicalInstruction.value = nodeFingering.value;
@@ -155,7 +164,7 @@ export class ArticulationReader {
    * @param currentVoiceEntry
    */
   public addOrnament(ornamentsNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
-    if (ornamentsNode !== undefined) {
+    if (ornamentsNode) {
       let ornament: OrnamentContainer = undefined;
 
       interface XMLElementToOrnamentEnum {
@@ -177,13 +186,13 @@ export class ArticulationReader {
           continue;
         }
         const node: IXmlElement = ornamentsNode.element(ornamentElement);
-        if (node !== undefined) {
+        if (node) {
           ornament = new OrnamentContainer(elementToOrnamentEnum[ornamentElement]);
         }
       }
-      if (ornament !== undefined) {
+      if (ornament) {
         const accidentalsList: IXmlElement[] = ornamentsNode.elements("accidental-mark");
-        if (accidentalsList !== undefined) {
+        if (accidentalsList) {
           let placement: PlacementEnum = PlacementEnum.Below;
           let accidental: AccidentalEnum = AccidentalEnum.NONE;
           const accidentalsListArr: IXmlElement[] = accidentalsList;
@@ -192,7 +201,7 @@ export class ArticulationReader {
             let text: string = accidentalNode.value;
             accidental = this.getAccEnumFromString(text);
             const placementAttr: IXmlAttribute = accidentalNode.attribute("placement");
-            if (accidentalNode.hasAttributes && placementAttr !== undefined) {
+            if (accidentalNode.hasAttributes && placementAttr) {
               text = placementAttr.value;
               if (text === "above") {
                 placement = PlacementEnum.Above;

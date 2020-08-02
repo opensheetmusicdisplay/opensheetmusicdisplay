@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -13,6 +13,11 @@ export class SvgVexFlowBackend extends VexFlowBackend {
 
     private ctx: Vex.Flow.SVGContext;
 
+    constructor(rules: EngravingRules) {
+        super();
+        this.rules = rules;
+    }
+
     public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
         return Vex.Flow.Renderer.Backends.SVG;
     }
@@ -23,6 +28,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
 
     public initialize(container: HTMLElement): void {
         this.canvas = document.createElement("div");
+        // this.canvas.id = uniqueID // TODO create unique tagName like with cursor now?
         this.inner = this.canvas;
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
@@ -52,10 +58,10 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         }
 
         // set background color if not transparent
-        if (EngravingRules.Rules.PageBackgroundColor !== undefined) {
+        if (this.rules.PageBackgroundColor) {
             this.ctx.save();
             // note that this will hide the cursor
-            this.ctx.setFillStyle(EngravingRules.Rules.PageBackgroundColor);
+            this.ctx.setFillStyle(this.rules.PageBackgroundColor);
 
             this.ctx.fillRect(0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
             this.ctx.restore();
@@ -70,17 +76,42 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         // TODO: implement this
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
-                      heightInPixel: number, screenPosition: PointF2D, color: string = undefined): void {
+                      heightInPixel: number, screenPosition: PointF2D,
+                      color: string = undefined, fontFamily: string = undefined): void {
         this.ctx.save();
 
         if (color) {
             this.ctx.attributes.fill = color;
             this.ctx.attributes.stroke = color;
         }
-        this.ctx.setFont(EngravingRules.Rules.DefaultFontFamily, fontHeight, VexFlowConverter.fontStyle(fontStyle));
+        let fontFamilyVexFlow: string = fontFamily;
+        if (!fontFamily || fontFamily === "default") {
+            fontFamilyVexFlow = this.rules.DefaultFontFamily;
+        }
+        this.ctx.setFont(fontFamilyVexFlow, fontHeight, VexFlowConverter.fontStyle(fontStyle));
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
         this.ctx.attributes["font-size"] = `${fontHeight}px`;
         this.ctx.state["font-size"] = `${fontHeight}px`;
+        let fontWeightVexflow: string = "normal";
+        let fontStyleVexflow: string = "normal";
+        switch (fontStyle) {
+            case FontStyles.Bold:
+                fontWeightVexflow = "bold";
+                break;
+            case FontStyles.Italic:
+                fontStyleVexflow = "italic";
+                break;
+            case FontStyles.BoldItalic:
+                fontWeightVexflow = "bold";
+                fontStyleVexflow = "italic";
+                break;
+            default:
+                fontWeightVexflow = "normal";
+        }
+        this.ctx.attributes["font-weight"] = fontWeightVexflow;
+        this.ctx.state["font-weight"] = fontWeightVexflow;
+        this.ctx.attributes["font-style"] = fontStyleVexflow;
+        this.ctx.state["font-style"] = fontStyleVexflow;
         this.ctx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
         this.ctx.restore();
     }

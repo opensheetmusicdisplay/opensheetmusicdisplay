@@ -9,16 +9,21 @@ import {FontStyles} from "../Common/Enums/FontStyles";
  */
 export class Label {
 
-    constructor(text: string = "", alignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom, font: Fonts = Fonts.TimesNewRoman) {
+    constructor(text: string = "", alignment: TextAlignmentEnum = TextAlignmentEnum.CenterBottom,
+                font: Fonts = undefined, print: boolean = true) {
         this.text = text;
+        this.print = print;
         this.textAlignment = alignment;
         this.font = font;
+        this.fontFamily = undefined; // default value, will use EngravingRules.DefaultFontFamily at rendering
     }
 
     public text: string;
+    public print: boolean;
     public color: OSMDColor;
     public colorDefault: string; // TODO this is Vexflow format, convert to OSMDColor. for now convenient for default colors.
     public font: Fonts;
+    public fontFamily: string; // default undefined: will use EngravingRules.DefaultFontFamily at rendering
     public fontStyle: FontStyles;
     public fontHeight: number;
     public textAlignment: TextAlignmentEnum;
@@ -26,5 +31,4 @@ export class Label {
     public ToString(): string {
         return this.text;
     }
-
 }

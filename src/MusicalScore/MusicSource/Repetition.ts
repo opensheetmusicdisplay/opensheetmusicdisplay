@@ -4,7 +4,7 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
 import {MusicSheet} from "../MusicSheet";
 import {RepetitionInstruction} from "../VoiceData/Instructions/RepetitionInstruction";
 import {PartListEntry} from "./PartListEntry";
-import * as log from "loglevel";
+import log from "loglevel";
 
 export class Repetition extends PartListEntry /*implements IRepetition*/ {
     constructor(musicSheet: MusicSheet, virtualOverallRepetition: boolean) {
@@ -65,7 +65,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     }
     public getForwardJumpTargetForIteration(iteration: number): number {
         const endingIndex: number = this.repetitonIterationOrder[iteration - 1];
-        if (this.endingIndexDict[endingIndex] !== undefined) {
+        if (this.endingIndexDict[endingIndex]) {
             return this.endingIndexDict[endingIndex].part.StartIndex;
         }
         return -1;
@@ -99,7 +99,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     //    }
     //}
     public setEndingEndIndex(endingNumber: number, endIndex: number): void {
-        if (this.endingIndexDict[endingNumber] !== undefined) {
+        if (this.endingIndexDict[endingNumber]) {
             this.endingIndexDict[endingNumber].part.setEndIndex(endIndex);
         }
     }
@@ -123,7 +123,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
             return this.StartIndex;
         }
         let result: number = this.backwardJumpInstructions[this.backwardJumpInstructions.length - 1].measureIndex;
-        if (this.endingIndexDict[this.NumberOfEndings] !== undefined) {
+        if (this.endingIndexDict[this.NumberOfEndings]) {
             result = Math.max(this.endingIndexDict[this.NumberOfEndings].part.EndIndex, result);
         }
         return result;
@@ -136,7 +136,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
             const sourceMeasure: SourceMeasure = this.musicSheet2.SourceMeasures[measureIndex];
             for (let i: number = 0; i < sourceMeasure.CompleteNumberOfStaves; i++) {
                 for (const sourceStaffEntry of sourceMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries) {
-                    if (sourceStaffEntry !== undefined) {
+                    if (sourceStaffEntry) {
                         let verses: number = 0;
                         for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
                             verses += Object.keys(voiceEntry.LyricsEntries).length;

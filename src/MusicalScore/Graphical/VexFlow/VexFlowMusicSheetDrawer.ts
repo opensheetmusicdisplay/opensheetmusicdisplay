@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -17,7 +17,6 @@ import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { GraphicalLyricEntry } from "../GraphicalLyricEntry";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { StaffLine } from "../StaffLine";
-import { EngravingRules } from "../EngravingRules";
 import { GraphicalSlur } from "../GraphicalSlur";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalInstantaneousTempoExpression } from "../GraphicalInstantaneousTempoExpression";
@@ -28,6 +27,7 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { DrawingParameters } from "../DrawingParameters";
 import { GraphicalMusicPage } from "../GraphicalMusicPage";
 import { GraphicalMusicSheet } from "../GraphicalMusicSheet";
+import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 
 /**
  * This is a global constant which denotes the height in pixels of the space between two lines of the stave
@@ -43,7 +43,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private pageIdx: number = 0; // this is a bad solution, should use MusicPage.PageNumber instead.
 
     constructor(drawingParameters: DrawingParameters = new DrawingParameters()) {
-        super(new VexFlowTextMeasurer(), drawingParameters);
+        super(new VexFlowTextMeasurer(drawingParameters.Rules), drawingParameters);
     }
 
     public get Backends(): VexFlowBackend[] {
@@ -51,6 +51,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        // vexflow 3.x: change default font
+        if (this.rules.DefaultVexFlowNoteFont === "gonville") {
+            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+        } // else keep new vexflow default Bravura (more cursive, bold).
+
+        // sizing defaults in Vexflow
+        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        // sets scale/size of notes/rest notes:
+        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
             const backend: VexFlowBackend = this.backends[this.pageIdx];
@@ -95,7 +107,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawStaffLine(staffLine: StaffLine): void {
         super.drawStaffLine(staffLine);
         const absolutePos: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
-        if (EngravingRules.Rules.RenderSlurs) {
+        if (this.rules.RenderSlurs) {
             this.drawSlurs(staffLine as VexFlowStaffLine, absolutePos);
         }
     }
@@ -150,7 +162,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
-        measure.draw(this.backend.getContext());
+        try {
+            measure.draw(this.backend.getContext());
+            // Vexflow errors can happen here. If we don't catch errors, rendering will stop after this measure.
+        } catch (ex) {
+            log.warn("VexFlowMusicSheetDrawer.drawMeasure", ex);
+        }
 
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
@@ -223,7 +240,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     private drawSampledLine(line: number[], startPosition: PointF2D, width: number, color: string = "#FF0000FF"): void {
         const indices: number[] = [];
         let currentValue: number = 0;
-
+        //Loops through bottom line, grabs all indices that don't equal the previously grabbed index
+        //Starting with 0 (gets index of all line changes)
         for (let i: number = 0; i < line.length; i++) {
             if (line[i] !== currentValue) {
                 indices.push(i);
@@ -233,7 +251,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         const absolute: PointF2D = startPosition;
         if (indices.length > 0) {
-            const samplingUnit: number = EngravingRules.Rules.SamplingUnit;
+            const samplingUnit: number = this.rules.SamplingUnit;
 
             let horizontalStart: PointF2D = new PointF2D(absolute.x, absolute.y);
             let horizontalEnd: PointF2D = new PointF2D(indices[0] / samplingUnit + absolute.x, absolute.y);
@@ -284,7 +302,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 this.drawLabel(graphicalChordContainer.GetGraphicalLabel, <number>GraphicalLayers.Notes);
             }
         }
-        if (EngravingRules.Rules.RenderLyrics) {
+        if (this.rules.RenderLyrics) {
             if (staffEntry.LyricsEntries.length > 0) {
                 this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
             }
@@ -315,24 +333,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     protected drawOctaveShifts(staffLine: StaffLine): void {
         for (const graphicalOctaveShift of staffLine.OctaveShifts) {
             if (graphicalOctaveShift) {
+                const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
                 const ctx: Vex.IRenderContext = this.backend.getContext();
-                const textBracket: Vex.Flow.TextBracket = (graphicalOctaveShift as VexFlowOctaveShift).getTextBracket();
+                const textBracket: Vex.Flow.TextBracket = vexFlowOctaveShift.getTextBracket();
                 textBracket.setContext(ctx);
-                const startX: number = staffLine.PositionAndShape.AbsolutePosition.x + textBracket.start.getX() / 10;
-                const stopX: number = staffLine.PositionAndShape.AbsolutePosition.x + textBracket.stop.getX() / 10;
-                if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
-                    const headroom: number = staffLine.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX);
-                    if (headroom === Infinity) { // will cause Vexflow error
-                        return;
-                    }
-                    textBracket.start.getStave().options.space_above_staff_ln = headroom;
-                } else {
-                    const footroom: number = staffLine.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
-                    if (footroom === Infinity) { // will cause Vexflow error
-                        return;
-                    }
-                    textBracket.start.getStave().options.space_below_staff_ln = footroom;
-                }
                 textBracket.draw();
             }
         }
@@ -356,13 +360,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 // // Draw Mood
                 // } else if (abstractGraphicalExpression instanceof GraphicalMoodExpression) {
                 //     GraphicalMoodExpression; graphicalMood = (GraphicalMoodExpression); abstractGraphicalExpression;
-                //     drawLabel(graphicalMood.GetGraphicalLabel, (int)GraphicalLayers.Notes);
-                // // Draw Unknown
-                // } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
-                //     GraphicalUnknownExpression; graphicalUnknown =
-                //         (GraphicalUnknownExpression); abstractGraphicalExpression;
-                //     drawLabel(graphicalUnknown.GetGraphicalLabel, (int)GraphicalLayers.Notes);
-                // }
+                //     drawLabel(graphicalMood.GetGraphicalLabel, <number>GraphicalLayers.Notes);
+            // Draw Unknown
+            } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
+                this.drawLabel(abstractGraphicalExpression.Label, <number>GraphicalLayers.Notes);
             } else {
                 log.warn("Unkown type of expression!");
             }
@@ -397,17 +398,35 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param screenPosition the position of the lower left corner of the text in screen coordinates
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
+                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): void {
+        if (!graphicalLabel.Label.print) {
+            return;
+        }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
-        const { fontStyle, font, text } = graphicalLabel.Label;
+        const { font } = graphicalLabel.Label;
         let color: string;
-        if (EngravingRules.Rules.ColoringEnabled) {
+        if (this.rules.ColoringEnabled) {
             color = graphicalLabel.Label.colorDefault;
             if (!color) {
-                color = EngravingRules.Rules.DefaultColorLabel;
+                color = this.rules.DefaultColorLabel;
             }
         }
-        this.backend.renderText(height, fontStyle, font, text, heightInPixel, screenPosition, color);
+        let { fontStyle, fontFamily } = graphicalLabel.Label;
+        if (!fontStyle) {
+            fontStyle = this.rules.DefaultFontStyle;
+        }
+        if (!fontFamily) {
+            fontFamily = this.rules.DefaultFontFamily;
+        }
+
+        for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
+            const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
+            const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
+            const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
+            this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+            screenPosition.y = screenPosition.y + fontHeightInPixel;
+        }
+        // font currently unused, replaced by fontFamily
     }
 
     /**

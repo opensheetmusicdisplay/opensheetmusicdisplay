@@ -1,6 +1,5 @@
 import { IXmlElement } from "./Xml";
-import { Promise } from "es6-promise";
-import JSZip = require("jszip");
+import JSZip from "jszip";
 
 /**
  * Some helper methods to handle MXL files.
@@ -13,21 +12,25 @@ export class MXLHelper {
      * @constructor
      */
     public static MXLtoIXmlElement(data: string): Promise<IXmlElement> {
-        const zip: JSZip.JSZip = new JSZip();
+        // starting with jszip 3.4.0, JSZip.JSZip is not found,
+        //    probably because of new possibly conflicting TypeScript definitions
+        const zip: JSZip = new JSZip();
         // asynchronously load zip file and process it - with Promises
-        return zip.loadAsync(data).then(
-            (_: any) => {
-                return zip.file("META-INF/container.xml").async("string");
+        const zipLoadedAsync: Promise<JSZip> = zip.loadAsync(data);
+        const text: Promise<string> = zipLoadedAsync.then(
+            (_: JSZip) => {
+                return zip.file("META-INF/container.xml").async("text");
             },
             (err: any) => {
                 throw err;
             }
-        ).then(
+        );
+        return text.then(
             (content: string) => {
                 const parser: DOMParser = new DOMParser();
                 const doc: Document = parser.parseFromString(content, "text/xml");
                 const rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
-                return zip.file(rootFile).async("string");
+                return zip.file(rootFile).async("text");
             },
             (err: any) => {
                 throw err;
@@ -53,11 +56,11 @@ export class MXLHelper {
     }
 
     public static MXLtoXMLstring(data: string): Promise<string> {
-        const zip:  JSZip.JSZip = new JSZip();
+        const zip:  JSZip = new JSZip();
         // asynchronously load zip file and process it - with Promises
         return zip.loadAsync(data).then(
             (_: any) => {
-                return zip.file("META-INF/container.xml").async("string");
+                return zip.file("META-INF/container.xml").async("text");
             },
             (err: any) => {
                 throw err;
@@ -67,7 +70,7 @@ export class MXLHelper {
                 const parser: DOMParser = new DOMParser();
                 const doc: Document = parser.parseFromString(content, "text/xml");
                 const rootFile: string = doc.getElementsByTagName("rootfile")[0].getAttribute("full-path");
-                return zip.file(rootFile).async("string");
+                return zip.file(rootFile).async("text");
             },
             (err: any) => {
                 throw err;

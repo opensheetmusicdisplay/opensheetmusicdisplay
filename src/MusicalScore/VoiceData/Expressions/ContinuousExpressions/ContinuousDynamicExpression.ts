@@ -1,10 +1,13 @@
 import {PlacementEnum, AbstractExpression} from "../AbstractExpression";
 import {MultiExpression} from "../MultiExpression";
 import {Fraction} from "../../../../Common/DataObjects/Fraction";
+import {SourceMeasure} from "../../SourceMeasure";
 
 export class ContinuousDynamicExpression extends AbstractExpression {
-    constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number, label: string = "") {
+    constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number, measure: SourceMeasure,
+                label: string = "") {
         super(placement);
+        super.parentMeasure = measure;
         this.dynamicType = dynamicType;
         this.label = label;
         this.staffNumber = staffNumber;
@@ -76,7 +79,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         this.setType();
     }
     public static isInputStringContinuousDynamic(inputString: string): boolean {
-        if (inputString === undefined) { return false; }
+        if (!inputString) { return false; }
         return (
             ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicIncreasing, inputString)
             || ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicDecreasing, inputString)
@@ -85,7 +88,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     public getInterpolatedDynamic(currentAbsoluteTimestamp: Fraction): number {
         const continuousAbsoluteStartTimestamp: Fraction = this.StartMultiExpression.AbsoluteTimestamp;
         let continuousAbsoluteEndTimestamp: Fraction;
-        if (this.EndMultiExpression !== undefined) {
+        if (this.EndMultiExpression) {
             continuousAbsoluteEndTimestamp = this.EndMultiExpression.AbsoluteTimestamp;
         } else {
             continuousAbsoluteEndTimestamp = Fraction.plus(
@@ -101,7 +104,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
         return interpolatedVolume;
     }
     public isWedge(): boolean {
-        return this.label === undefined;
+        return !this.label;
     }
     private setType(): void {
         if (ContinuousDynamicExpression.isStringInStringList(ContinuousDynamicExpression.listContinuousDynamicIncreasing, this.label)) {
@@ -114,5 +117,6 @@ export class ContinuousDynamicExpression extends AbstractExpression {
 
 export enum ContDynamicEnum {
     crescendo = 0,
+    /** Diminuendo/Decrescendo. These terms are apparently sometimes synonyms, and a falling wedge is given in MusicXML as type="diminuendo". */
     diminuendo = 1
 }

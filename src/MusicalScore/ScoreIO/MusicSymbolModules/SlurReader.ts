@@ -2,7 +2,7 @@
 import { IXmlElement, IXmlAttribute } from "../../../Common/FileIO/Xml";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { Note } from "../../VoiceData/Note";
-import * as log from "loglevel";
+import log from "loglevel";
 import { ITextTranslation } from "../../Interfaces/ITextTranslation";
 
 export class SlurReader {
@@ -13,14 +13,14 @@ export class SlurReader {
     }
     public addSlur(slurNodes: IXmlElement[], currentNote: Note): void {
         try {
-            if (slurNodes !== undefined) {
+            if (slurNodes) {
                 for (const slurNode of slurNodes) {
                     if (slurNode.attributes().length > 0) {
                         const type: string = slurNode.attribute("type").value;
                         let slurNumber: number = 1;
                         try {
                             const slurNumberAttribute: IXmlAttribute = slurNode.attribute("number");
-                            if (slurNumberAttribute !== undefined) {
+                            if (slurNumberAttribute) {
                                 slurNumber = parseInt(slurNode.attribute("number").value, 10);
                             }
                         } catch (ex) {
@@ -29,14 +29,14 @@ export class SlurReader {
 
                         if (type === "start") {
                             let slur: Slur = this.openSlurDict[slurNumber];
-                            if (slur === undefined) {
+                            if (!slur) {
                                 slur = new Slur();
                                 this.openSlurDict[slurNumber] = slur;
                             }
                             slur.StartNote = currentNote;
                         } else if (type === "stop") {
                             const slur: Slur = this.openSlurDict[slurNumber];
-                            if (slur !== undefined) {
+                            if (slur) {
                                 slur.EndNote = currentNote;
                                 // check if not already a slur with same notes has been given:
                                 if (!currentNote.checkForDoubleSlur(slur)) {

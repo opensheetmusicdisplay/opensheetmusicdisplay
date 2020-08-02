@@ -6,18 +6,19 @@ import {VexFlowMusicSheetCalculator} from "../../../src/MusicalScore/Graphical/V
 import {GraphicalMusicSheet} from "../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {VexFlowTextMeasurer} from "../../../src/MusicalScore/Graphical/VexFlow/VexFlowTextMeasurer";
 import {TestUtils} from "../../Util/TestUtils";
+import {EngravingRules} from "../../../src";
 
 /* tslint:disable:no-unused-expression */
 describe("Music Sheet Calculator", () => {
     const filename: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
     const reader: MusicSheetReader = new MusicSheetReader();
-    const calculator: MusicSheetCalculator = new VexFlowMusicSheetCalculator();
+    const calculator: MusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
     let score: IXmlElement;
     let sheet: MusicSheet;
 
     it("calculates music sheet", (done: MochaDone) => {
         this.timeout = 10000;
-        MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer();
+        MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
         // Load the XML file
         const xml: Document = TestUtils.getScore(filename);
         chai.expect(xml).to.not.be.undefined;

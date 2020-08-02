@@ -3,11 +3,14 @@ import {MultiExpression} from "./MultiExpression";
 import {DynamicExpressionSymbolEnum} from "./DynamicExpressionSymbolEnum";
 //import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {InvalidEnumArgumentException} from "../../Exceptions";
-import * as log from "loglevel";
+import log from "loglevel";
+import { SourceMeasure } from "../SourceMeasure";
 
 export class InstantaneousDynamicExpression extends AbstractExpression {
-    constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number) {
+    constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number,
+                measure: SourceMeasure) {
         super(placement);
+        super.parentMeasure = measure;
         this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
         this.soundDynamic = soundDynamics;
         this.staffNumber = staffNumber;
@@ -92,7 +95,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         return InstantaneousDynamicExpression.dynamicToRelativeVolumeDict[this.dynamicEnum] * 127;
     }
     public static isInputStringInstantaneousDynamic(inputString: string): boolean {
-        if (inputString === undefined) { return false; }
+        if (!inputString) { return false; }
         return InstantaneousDynamicExpression.isStringInStringList(InstantaneousDynamicExpression.listInstantaneousDynamics, inputString);
     }
 

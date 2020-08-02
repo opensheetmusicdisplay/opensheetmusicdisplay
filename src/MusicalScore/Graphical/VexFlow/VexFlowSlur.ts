@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 
 export interface ICurveOptions {
@@ -55,7 +55,7 @@ export class VexFlowSlur {
     }
 
     // public createVexFlowCurve(): void {
-    //     if (this.voiceentrySlurStart !== undefined || this.voiceentrySlurEnd !== undefined) {
+    //     if (this.voiceentrySlurStart || this.voiceentrySlurEnd) {
     //         this.vfCurve = new Vex.Flow.Curve( (this.voiceentrySlurStart as VexFlowVoiceEntry).vfStaveNote,
     //                                            (this.voiceentrySlurEnd as VexFlowVoiceEntry).vfStaveNote,
     //                                            this.curve_Options()

@@ -7,6 +7,7 @@ import {MoodExpression} from "./MoodExpression";
 import {UnknownExpression} from "./UnknownExpression";
 import {AbstractExpression} from "./AbstractExpression";
 import {PlacementEnum} from "./AbstractExpression";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 export class MultiExpression {
 
@@ -109,19 +110,20 @@ export class MultiExpression {
         }
         return placement;
     }
-    // (*)
-    //public getFontstyleOfFirstEntry(): PSFontStyles {
-    //    let fontStyle: PSFontStyles = PSFontStyles.Regular;
-    //    if (this.expressions.length > 0) {
-    //        if (this.expressions[0].expression instanceof ContinuousDynamicExpression)
-    //            fontStyle = PSFontStyles.Italic;
-    //        else if (this.expressions[0].expression instanceof MoodExpression)
-    //            fontStyle = PSFontStyles.Italic;
-    //        else if (this.expressions[0].expression instanceof UnknownExpression)
-    //            fontStyle = PSFontStyles.Regular;
-    //    }
-    //    return fontStyle;
-    //}
+
+    public getFontstyleOfFirstEntry(): FontStyles {
+       let fontStyle: FontStyles = FontStyles.Regular;
+       if (this.expressions.length > 0) {
+           if (this.expressions[0].expression instanceof ContinuousDynamicExpression) {
+            fontStyle = FontStyles.Italic;
+           } else if (this.expressions[0].expression instanceof MoodExpression) {
+            fontStyle = FontStyles.Italic;
+           } else if (this.expressions[0].expression instanceof UnknownExpression) {
+            fontStyle = FontStyles.Regular;
+           }
+       }
+       return fontStyle;
+    }
     //public getFirstEntry(staffLine: StaffLine, graphLabel: GraphicalLabel): AbstractGraphicalExpression {
     //    let indexOfFirstNotInstDynExpr: number = 0;
     //    if (this.expressions[0].expression instanceof InstantaneousDynamicExpression)
@@ -140,7 +142,7 @@ export class MultiExpression {
     //}
     public addExpression(abstractExpression: AbstractExpression, prefix: string): void {
         if (abstractExpression instanceof InstantaneousDynamicExpression) {
-            if (this.instantaneousDynamic !== undefined) {
+            if (this.instantaneousDynamic) {
                 this.removeExpressionFromEntryList(this.InstantaneousDynamic);
             }
             this.instantaneousDynamic = <InstantaneousDynamicExpression>abstractExpression;

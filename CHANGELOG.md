@@ -1,3 +1,147 @@
+## [0.8.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.8.2...0.8.3) (2020-07-28)
+
+
+### Bug Fixes
+
+* **MetronomeMark:** render correct beat unit (e.g. half instead of quarter). fix [#828](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/828) ([b2fb539](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b2fb539f800e83c1adbb9bcdee76acc3d1e78f2c))
+* **Parsing:** fix missing default-y value for credit-words causing parse error ([4773487](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/47734879482a89068286cbd79f63b00db46ebff4)), closes [#62](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/62)
+* **Repeat:** don't draw vertical line at the beginning of a system for single staff systems ([#834](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/834)) ([e556978](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e55697812581e1f1b60f391cdaadfdca38fca2d5))
+* **Slur:** Slurs avoid note collision ([c114296](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c114296369e2705ac7e528d00129c58d4d7a5b39))
+* **Slur:** Slurs avoid note collision ([#802](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/802)) ([18397f2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/18397f2be60f1ea4f134d807c437bcbdc5eb5090))
+* **Slur:** Tweaks to slur rendering from matt-uib ([b6d628f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b6d628f0b02296979632e1ac3a5fe5491f4c865a))
+* **Tabs:** by default, don't draw tuplet numbers in tabs ([#805](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/805)) ([89a9f0f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/89a9f0f5ab970dc88c02438c078b786f5b83aee4))
+* **Transparency:** ledger lines of invisible notes are now invisible as well. ([#799](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/799)) ([d73e8ac](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d73e8acddfeddb1d68f8e927d541d8ed3819ce40))
+* fixed right alignment (and also x-center alingment) of text lines in multi-line-label (e.g. for Composer on the right side) ([3988fde](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3988fdec09bf698f62cb7c39a0b07d324f05a705))
+
+
+### Features
+
+* **Articulation:** render marcato, up and down ([8104dfa](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8104dfa415a1b8abc915bac2cfd761402819fb79))
+* **Label:** Add support for no-print on part names ([c3e6c8d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c3e6c8d878ab2ed64afbcc562ef6cc2cb7af61a1))
+* **Label:** Add support for multiline labels ([#801](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/801)) ([eda4cbf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/eda4cbf40b17f8781f45bb1abf40730dc80a2640))
+* **Lyrics:** Spacing: add maximum measure elongation factor in EngravingRules. ([b575746](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b575746af1318916984b5a2be307ca99aaf1ac02))
+* **MultipleRest:** Render multiple measure rests. add option to not render them. ([#506](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/506)) ([7a04814](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7a04814e7f77a3c59006116a95ba7d3010f489f6))
+* **Noteheads:** support breve type (brevis) ([#803](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/803)) ([09fc5e7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/09fc5e74e46edb4dbc37349638fe1003e99190ec))
+* **Options:** add EngravingRules.PageBottomExtraWhiteSpace ([#788](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/788)). merge [#822](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/822) ([6e5ae88](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6e5ae88b4b84dbd6c0296deccbd5969f6c4ebc9e))
+* **Options:** add new EngravingRules for notationFontScale, stemWidth, staffLineColor ([#836](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/836)) ([2e1ab25](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2e1ab25fe02cc88af06e334098eae5aef090c3df))
+* **Options:** add option to draw measure numbers only at the start of a system (line) ([ca9b88e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ca9b88ee7d135f0ff830e65320cce0e4a993d5d6)), closes [#59](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/59)
+* **Options:** add option to not render time signatures (drawTimeSignatures: false). ([#793](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/793)) ([21b089b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/21b089b4841c648ec22f7c34c685dbaa945972d6))
+* **Options:** set default ledger line color to black (instead of grey). set in EngravingRules.LedgerLineColorDefault ([cb31c98](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cb31c9817b91c72ed1758659b02939168d269ffe)), closes [#799](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/799)
+* **Spacing:** Tweaks to compress spacing more ([#820](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/820)) ([682f77c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/682f77c613d764882a0d449d864a30417b6a7368))
+* **Spacing:** optimize vexflow voice spacing/scaling, refactor ([817762a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/817762a593aeb8bd13b49e550203b28ece698843))
+* **Tabs:** Add Slides, Bends, Hammer-on and Pull-offs (PR [#839](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/839)) ([8de1400](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8de1400ce0b51c55050d9961d1d2db16a0cb2d37))
+
+
+
+## [0.8.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.8.1...0.8.2) (2020-06-13)
+
+
+### Features
+
+* **PDF:** Remove createPDF from OSMD object (move to demo), reducing bundle size (from 1.5MB to 1.1MB). Fix FileReader pollution ([64c8ccf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/64c8ccff943bbbedbfb85306f516d16ad7dfa0b8))
+
+
+## [0.8.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.8.0...0.8.1) (2020-06-10)
+
+### Bug Fixes
+
+* **OctaveShift:** avoid some errors when end of octaveshift not found ([#778](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/778)) ([86e6726](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/86e6726f4b3cf7f1ebde4deb7e33de5c57237167)), closes [#777](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/777) [#591](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/591)
+
+# [0.8.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.6...0.8.0) (2020-06-10)
+
+
+### Bug Fixes
+
+* **Beams:** Recalculate beams on resize, so they fit to stem ([#724](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/724)) ([50b0864](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/50b08643c1c980f709bda1cb8134a0f995a40c0f))
+* **ChordSymbols:** add 5 for power chord (e.g. C5, C plus fifth) ([#760](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/760)) ([6e1558d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6e1558d031452338a5cf0a0479f971337c6abbaf))
+* **ChordSymbols:** read augmented and dim in abbreviated form (aug, dim) ([a291f6f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a291f6f7c1fa023aaf0926fdfd05d4b97cd8fabe))
+* **ChordSymbols:** write Cm(maj7) for C kind 'major-minor' ([#784](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/784)) ([d00f29e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d00f29ed32b2496ce06d6955a481de2d8bcfc626))
+* **Cursor:** fix cursor undefined for canvas backend, improve cursor creation ([#736](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/736)) ([cb193d2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cb193d2270d4aec4e7847615b1c811e7ef4ba25a))
+* **Layout:** more lenient Measure Number Label collision checks, place them slightly to left ([#782](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/782)) ([616de17](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/616de1738b9e6466b0474bb1caa5985b11ae3bb1))
+* **Rendering:** catch Vexflow errors while rendering a measure, prevent render loop stopping. ([#773](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/773)) ([e2079a3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e2079a3f9de1183c3c9bb4593f5badbc4da50783))
+* Refactor undefined checks to also check null (#783) ([12766fb](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/12766fbf635ea3ec3e7c7b71fc05640354d726e2))
+* **Options:** drawPartNames: false now also disables drawPartAbbreviations, unless set explicitly ([#388](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/388)) ([cd50b68](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/cd50b68c4430ccbc05300aa1a231ec65dbe987c0))
+* **Skyline:** Fix Measure number skyline offset ([b97439e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b97439e3e5d8c3845e4e55c3b30fc0c92c726a11))
+* fixed breaking the system if the last measure has an endline (thin-bold line) ([9d98357](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9d9835703ae2c7d4e6f18d6781294ff22a6b8c5b))
+* implemented always showing the current rhythm if there was an end line given in the last system. ([b2b31bf](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b2b31bff84291672a3e8395d15799dc501a2a14d))
+* **Expressions:** don't align expressions when there are no edges involved. manual merge of [#768](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/768) ([ff77b46](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ff77b467c76695fb419957c191bfdbf753d68cce))
+* **Expressions:** fix alignment in most cases, fix distance calculation ([#758](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/758), [#768](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/768)) ([6d5e752](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6d5e75222d67f867d13c1273483c8019f6d32182))
+* improved chord symbol text output and fixed transposing code. ([de2ef57](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/de2ef57c278a220e1b0a985520b41fc1fe354bdd))
+* improved slur fix - removed magic number. Should work now for tabs as well. ([f67428c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f67428ca4103d1dce9d5d41126fe4a08c541e2bf))
+* removed doublettes check for dynamic expressions, as they might make sense for e.g. a repetition start, where another dynamic was used at the end of the repetition. ([9ea9814](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9ea9814d6e61d0e1500959f02745814e4d27d137))
+* **Layout:** update Vexflow to 1.2.91 (now 1.2.93), fixing time signature yPos. adapt vexflow import. [#706](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/706) ([7de0f7d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7de0f7deaff462abf45a17e86db2d5bbb85ba697))
+* **Subtitle:** don't add comma before work number if subtitle is otherwise empty ([36e4e2a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/36e4e2add7f3a7c4dbb0977ba0f3376623d4a6e4))
+
+
+### Features
+
+* **Cursor:** restore cursor state after resize and re-render ([#734](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/734)) if option set (default true) ([a08e957](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a08e9578c24d6ef66917617dcf71e3dc2d5b72e7))
+* **Cursor:** unique HTMLElement id (cursor.cursorElementId) ([d8a15b2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d8a15b26762248711443c0115306f085dc29d091))
+* **Font:** can set fontFamily per label ([#737](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/737)), refactor: don't set defaultFontStyle per label ([a7af16b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a7af16bb49c09862a68f92350597d088d41a2204))
+* **Iterator:** clone() optionally starts from a given startTimeStamp (not fully tested) ([5d52d18](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5d52d186ad9b165a08b8adcc51b26247aa3e6f94))
+* **Options:** able to set ledger line width and style (color) in EngravingRules. ([f4c2fc3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f4c2fc306d329a64bb14d0fbfd1d753fd3536dac))
+* **Options:** add option to not draw metronome marks ([#680](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/680)) ([42a1ebe](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/42a1ebe32034239aab82f377e308d2e373cc5b7b))
+* **Options:** can modify chord symbol text for all chords (except major). ([#784](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/784)) ([6f53f1c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6f53f1c1bf05d9af23f0392eb41d28249f66bde9))
+* **Text:** can set the fontStyle of a label, e.g. Bold (1) or BoldItalic (3). new option defaultFontStyle ([#739](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/739)) ([894868b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/894868b051fa7d0eefd07a29d49d2f7065b357e9))
+
+
+
+## [0.7.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.5...0.7.6) (2020-04-17)
+
+### Features
+
+* **Layout:** support XML page breaks optionally. new option newPageFromXML. [#702](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/702) ([2bcec40](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2bcec40e70c6209675a1d521630ef268eeb6d3a1))
+* **Options:** start new system ("line break") when given in XML and OSMDOptions.newSystemFromXML set ([#702](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/702)) ([5284aaa](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5284aaa5e0a400731182d5ff36afc6e725465f55))
+* **Options:** add drawingparameter "compacttight" for reduced margins and tighter spacing ([085ff1a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/085ff1a91beb080376f769070382554e3bc298af))
+
+
+## [0.7.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.4...0.7.5) (2020-04-15)
+
+
+### Bug Fixes
+
+* **Slurs:** fix undefined slur error in beethoven moonlight sonata ([#679](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/679)) ([d23581f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d23581fa6f80ad2da9fcbfef248cb19d2f0f9932))
+* **Beams:** fix beams retaining old slope after zooming ([#655](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/655))  ([447c4f9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/447c4f9a22be4348356761498c50a1f0a916894b))
+* **Tuplets:** fix rendering for half note tuplets (were displayed as whole notes) ([#700](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/700) ([9512c3a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9512c3aaf013034370545f47748c4d156e144b58))
+
+### Features
+* **Options:** Instances of osmd don't share static options/EngravingRules anymore. Can have multiple independently on one page ([#559](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/559)) ([fc095ad](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/fc095ad4b5c2fbc68a220ccd518c70fbbf26a477))
+* **Tabs/Testing:** Add function test and testing/demo sample for guitar tabs ([e18f133](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/e18f1331facae39cd47e3ffb383448af8752a764))
+
+## [0.7.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.3...0.7.4) (2020-04-14)
+
+### Bug Fixes
+
+* **BackendSelection:** can now create and remove canvas backend (again), backend option only changed when given, improve backend creation code ([#662](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/662)) ([c0a522c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c0a522cf68398c8e346fd204d6f4d1a43fa59733))
+* **CanvasBackend:** limit canvas dimensions to browser limitation of 32767, for now ([#678](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/678)) ([55ef164](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/55ef164e33166dde865d97724ffe7ea352378f46))
+* **Clefs:** fix clef not detected when exported with invalid clef number (Sibelius) ([#635](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/635)) ([3250842](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/325084285373c3b0203d5eee031d3689853e5538))
+* **Color:** fix defaultColorRest and defaultColorNotehead not applied ([7f5e1c9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7f5e1c9872733e2f2fd9fe3c1d81c1dd0f5f4c65))
+* **Color:** fix EngravingRules.ColorStemsLikeNoteheads, ColorBeams not respected for false ([9a6ac74](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9a6ac74bae7b3d8fdc55db4af5d218a03ce38010))
+* **Demo:** fix optional zoom controls not shown, improve hiding/unhiding of control elements ([#661](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/661)) ([9783204](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/97832042f462b5b890711ea4d4a78fd8a59dcaf1))
+* **Demo/Embedding:** hide debug controls before rendering, always check showHeader option, only show debug controls by default on dev server ([#661](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/661)) ([8b60397](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8b6039794ccf0617c1446f633cd2367a55e3b15b))
+* **Fingering:** fix all TechnicalInstructions counted as fingering, fix fingering for tabs (don't display on tab clef) ([ee80e91](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ee80e911c85e33bb1c96daf14be9af4420e59c22)), closes [#711](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/711)
+* **Lyrics:** fix null reference for lyrics dashes when drawing range set ([a19b3cd](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a19b3cd6b8f74859d534a685343c45776bcea42f))
+* **Repetition:** don't render a downward jog at type 'discontinue' ([#656](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/656)) ([996847d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/996847db098859b6934dc74b3610eb1a3e40b594))
+* **Ties:** prevent undefined tieNotes from creating a Vexflow error and crashing rendering ([6209cd3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6209cd32257fb0639e3801e2a87e9f47cf0f9efa))
+* **Vexflow:** update vexflow to 1.2.90, fixing rests displayed twice (see OSMD function test invisible notes) ([a713d20](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a713d20f44f3bb8314e2b9d417dd6cf4808f6817))
+
+
+### Features
+
+* **Tabs:** OSMD can now render guitar tabulature from MusicXML, see [PR #716](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/pull/716) and [issue #126](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/126#issuecomment-613615380)
+* **Color:** new option pageBackgroundColor. can set canvas color e.g. to white instead of transparent. ([#670](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/670)) ([4e5043c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4e5043c3440db6eb25fb9c85ab28ed62b703c3a9))
+* **Demo:** add showPageFormatControl, showExportPdfControl parameter, fix showZoomControl, hide header/controls before loading ([#661](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/661)) ([126d88e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/126d88e1f0b4c6d86b24cce58912cf7deb56352e))
+* **Embedding:** add parameters for compact mode, measure range, page format. Revise PageFormat argument handling. ([#661](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/661)) ([5dc780e](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5dc780edf0356a91a77a686a8509b9f9e81e753b))
+* **Embedding:** create backend option ([#661](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/661)), also, give warning when PDF is created on Canvas background. ([49dd902](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/49dd902f4196c9f978a1b1c8eb08c634e7c692ec))
+* **ExportPNG:** generate pngs for multiple pages when PageFormat given. add pageWidth/Height parameters ([#670](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/670), [#676](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/676)) ([0353fac](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/0353facfbe2e1ebcfb14bfc14f46ca83ab3c1301))
+* **GeneratePNGs:** can generate PNGs browserless by node script, improved speed ([#670](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/670)) ([4089a59](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/4089a59c555750866487e147dfb6a20a95711cf4))
+* **PageFormat:** warn if a page can't fit a single MusicSystem. ([1483403](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/148340303f2589d96bbdad16f52d406c3655b579))
+* **Rendering:** add option renderSingleHorizontalStaffline ([#681](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/681)) ([b1c298d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b1c298d55e56b6a0a1509d349dec4ca1205046fd))
+* **Rendering:** add osmd.Drawer.DrawOverlayLine, which allows the user to render colored lines on any MusicPage ([#651](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/651)) ([6d8b9fc](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6d8b9fc03e1d11f2cc622d1e30f43629d63a14f6))
+* **Testing:** add visual regression testing script, generating diffs for all OSMD samples ([c17a3c7](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c17a3c72847dce0e8aef3caf49a9f9a9e8d52bc9))
+
+
+
 ## [0.7.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.7.2...0.7.3) (2020-01-15)
 
 

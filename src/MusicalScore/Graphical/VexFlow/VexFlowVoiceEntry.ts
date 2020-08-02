@@ -1,13 +1,13 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
-import { EngravingRules } from "../EngravingRules";
 import { GraphicalNote } from "..";
 import { NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { Note } from "../../VoiceData/Note";
 import { ColoringModes } from "./../DrawingParameters";
+import { TabNote } from "../../VoiceData/TabNote";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: Vex.Flow.StemmableNote;
@@ -44,9 +44,9 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
      * See VexFlowConverter.StaveNote()
      */
     public color(): void {
-        const defaultColorNotehead: string = EngravingRules.Rules.DefaultColorNotehead;
-        const defaultColorRest: string = EngravingRules.Rules.DefaultColorRest;
-        const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
+        const defaultColorNotehead: string = this.rules.DefaultColorNotehead;
+        const defaultColorRest: string = this.rules.DefaultColorRest;
+        const defaultColorStem: string = this.rules.DefaultColorStem;
         const transparentColor: string = "#00000000"; // transparent color in vexflow
         let noteheadColor: string; // if null: no noteheadcolor to set (stays black)
         let sourceNoteNoteheadColor: string;
@@ -58,13 +58,13 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             sourceNoteNoteheadColor = note.sourceNote.NoteheadColor;
             noteheadColor = sourceNoteNoteheadColor;
             // Switch between XML colors and automatic coloring
-            if (EngravingRules.Rules.ColoringMode === ColoringModes.AutoColoring ||
-                EngravingRules.Rules.ColoringMode === ColoringModes.CustomColorSet) {
+            if (this.rules.ColoringMode === ColoringModes.AutoColoring ||
+                this.rules.ColoringMode === ColoringModes.CustomColorSet) {
                 if (note.sourceNote.isRest()) {
-                    noteheadColor = EngravingRules.Rules.ColoringSetCurrent.getValue(-1);
+                    noteheadColor = this.rules.ColoringSetCurrent.getValue(-1);
                 } else {
                     const fundamentalNote: NoteEnum = note.sourceNote.Pitch.FundamentalNote;
-                    noteheadColor = EngravingRules.Rules.ColoringSetCurrent.getValue(fundamentalNote);
+                    noteheadColor = this.rules.ColoringSetCurrent.getValue(fundamentalNote);
                 }
             }
             if (!note.sourceNote.PrintObject) {
@@ -73,7 +73,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 || noteheadColor === "#000000" // questionable, because you might want to set specific notes to black,
                                                // but unfortunately some programs export everything explicitly as black
                 ) {
-                noteheadColor = EngravingRules.Rules.DefaultColorNotehead;
+                noteheadColor = this.rules.DefaultColorNotehead;
             }
 
             // DEBUG runtime coloring test
@@ -85,7 +85,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     ", in measure #" + measureNumber);
             }*/
 
-            if (!sourceNoteNoteheadColor && EngravingRules.Rules.ColoringMode === ColoringModes.XML && note.sourceNote.PrintObject) {
+            if (!sourceNoteNoteheadColor && this.rules.ColoringMode === ColoringModes.XML && note.sourceNote.PrintObject) {
                 if (!note.sourceNote.isRest() && defaultColorNotehead) {
                     noteheadColor = defaultColorNotehead;
                 } else if (note.sourceNote.isRest() && defaultColorRest) {
@@ -99,7 +99,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             }
 
             // color notebeam if all noteheads have same color and stem coloring enabled
-            if (EngravingRules.Rules.ColoringEnabled && note.sourceNote.NoteBeam && EngravingRules.Rules.ColorBeams) {
+            if (this.rules.ColoringEnabled && note.sourceNote.NoteBeam && this.rules.ColorBeams) {
                 const beamNotes: Note[] = note.sourceNote.NoteBeam.Notes;
                 let colorBeam: boolean = true;
                 for (let j: number = 0; j < beamNotes.length; j++) {
@@ -121,18 +121,33 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                         notehead.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
                     }
                 }
+                // set ledger line color. TODO coordinate this with VexFlowConverter.StaveNote(), where there's also still code for this, maybe unnecessarily.
+                if (!(note.sourceNote instanceof TabNote)) { // setLedgerLineStyle doesn't exist on TabNote, would throw error.
+                    if (noteheadColor === transparentColor) {
+                        (vfStaveNote as any).setLedgerLineStyle(
+                            { fillStyle: noteheadColor, strokeStyle: noteheadColor, lineWidth: this.rules.LedgerLineWidth });
+                    } else {
+                        (vfStaveNote as any).setLedgerLineStyle({
+                            fillStyle: this.rules.LedgerLineColorDefault,
+                            lineWidth: this.rules.LedgerLineWidth,
+                            strokeStyle: this.rules.LedgerLineColorDefault
+                        });
+                        // we could give the color (style) as noteheadColor, but then we need to figure out which note has the ledger line.
+                        // otherwise ledger lines get the color of the top note, see Function Test Color.
+                    }
+                }
             }
         }
 
         // color stems
         let stemColor: string = defaultColorStem; // reset to black/default when coloring was disabled. maybe needed elsewhere too
-        if (EngravingRules.Rules.ColoringEnabled) {
+        if (this.rules.ColoringEnabled) {
             stemColor = this.parentVoiceEntry.StemColor; // TODO: once coloringSetCustom gets stem color, respect it
             if (!stemColor
                 || stemColor === "#000000") { // see above, noteheadColor === "#000000"
                 stemColor = defaultColorStem;
             }
-            if (EngravingRules.Rules.ColorStemsLikeNoteheads && noteheadColor) {
+            if (this.rules.ColorStemsLikeNoteheads && noteheadColor) {
                 // condition could be even more fine-grained by only recoloring if there was no custom StemColor set. will be more complex though
                 stemColor = noteheadColor;
             }
@@ -154,7 +169,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                 this.parentVoiceEntry.StemColor = stemColor;
             }
             vfStaveNote.setStemStyle(stemStyle);
-            if (vfStaveNote.flag && vfStaveNote.setFlagStyle && EngravingRules.Rules.ColorFlags) {
+            if (vfStaveNote.flag && vfStaveNote.setFlagStyle && this.rules.ColorFlags) {
                 vfStaveNote.setFlagStyle(stemStyle);
             }
         }

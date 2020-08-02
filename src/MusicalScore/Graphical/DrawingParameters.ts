@@ -10,6 +10,7 @@ export enum ColoringModes {
 export enum DrawingParametersEnum {
     allon = "allon",
     compact = "compact",
+    compacttight = "compacttight",
     default = "default",
     leadsheet = "leadsheet",
     preview = "preview",
@@ -20,6 +21,7 @@ export enum DrawingParametersEnum {
 export class DrawingParameters {
     /** will set other settings if changed with set method */
     private drawingParametersEnum: DrawingParametersEnum;
+    private rules: EngravingRules = new EngravingRules();
     public drawHighlights: boolean;
     public drawErrors: boolean;
     public drawSelectionStartSymbol: boolean;
@@ -60,6 +62,9 @@ export class DrawingParameters {
             case DrawingParametersEnum.compact:
                 this.setForCompactMode();
                 break;
+            case DrawingParametersEnum.compacttight:
+                this.setForCompactTightMode();
+                break;
             case DrawingParametersEnum.default:
             default:
                 this.setForDefault();
@@ -87,7 +92,7 @@ export class DrawingParameters {
         this.drawCredits = true;
         this.DrawPartNames = true;
         this.drawHiddenNotes = true;
-        EngravingRules.Rules.CompactMode = false;
+        this.rules.CompactMode = false;
     }
 
     public setForDefault(): void {
@@ -110,10 +115,35 @@ export class DrawingParameters {
 
     public setForCompactMode(): void {
         this.setForDefault();
-        EngravingRules.Rules.CompactMode = true;
+        this.rules.CompactMode = true;
         this.DrawCredits = false; // sets DrawComposer, DrawTitle, DrawLyricist to false
         // this.DrawPartNames = true; // unnecessary
         this.drawHiddenNotes = false;
+    }
+
+    public setForCompactTightMode(): void {
+        this.setForCompactMode(); // also sets CompactMode = true
+        this.DrawPartNames = false;
+
+        this.rules.VoiceSpacingMultiplierVexflow = 0.65;
+        this.rules.VoiceSpacingAddendVexflow = 2.0;
+
+        // tight rendering mode, lower margins and safety distances between systems, staffs etc. may cause overlap.
+        // these options can afterwards be finetuned by setting osmd.rules.BetweenStaffDistance for example
+        this.rules.MinSkyBottomDistBetweenStaves = 1.0; // default 1.0. this can cause collisions with slurs and dynamics sometimes
+        this.rules.MinSkyBottomDistBetweenSystems = 1.0; // default 5.0
+        // note that this.rules === osmd.rules, since it's passed as a reference
+
+        this.rules.BetweenStaffDistance = 2.5;
+        this.rules.StaffDistance = 3.5;
+        this.rules.MinimumDistanceBetweenSystems = 1;
+        // this.rules.PageTopMargin = 0.0; // see this.rules.PageTopMarginNarrow used in compact mode
+        this.rules.PageBottomMargin = 1.0;
+        this.rules.PageLeftMargin = 2.0;
+        this.rules.PageRightMargin = 2.0;
+        // this.BetweenStaffDistance = 2.5 // etc needs to be set in OSMD.rules
+        // this.StaffDistance = 3.5
+        // this.MinimumDistanceBetweenSystems = 1
     }
 
     public setForLeadsheet(): void {
@@ -152,7 +182,7 @@ export class DrawingParameters {
     /** Enable or disable drawing the Title of the piece. If disabled, will disable drawing Subtitle as well. */
     public set DrawTitle(value: boolean) {
         this.drawTitle = value;
-        EngravingRules.Rules.RenderTitle = value;
+        this.rules.RenderTitle = value;
         if (!value) { // don't draw subtitle if title isn't drawn
             this.DrawSubtitle = false;
         }
@@ -165,7 +195,7 @@ export class DrawingParameters {
     /** Enable or disable drawing the Subtitle of the piece. If enabled, will enable drawing Title as well. */
     public set DrawSubtitle(value: boolean) {
         this.drawSubtitle = value;
-        EngravingRules.Rules.RenderSubtitle = value;
+        this.rules.RenderSubtitle = value;
         if (value) {
             this.DrawTitle = true; // if subtitle is drawn, title needs to be drawn as well
         }
@@ -178,7 +208,7 @@ export class DrawingParameters {
     /** Enable or disable drawing a label for the Composer of the piece. */
     public set DrawComposer(value: boolean) {
         this.drawComposer = value;
-        EngravingRules.Rules.RenderComposer = value;
+        this.rules.RenderComposer = value;
     }
 
     public get DrawLyricist(): boolean {
@@ -187,7 +217,7 @@ export class DrawingParameters {
 
     public set DrawLyricist(value: boolean) {
         this.drawLyricist = value;
-        EngravingRules.Rules.RenderLyricist = value;
+        this.rules.RenderLyricist = value;
     }
 
     public get DrawPartNames(): boolean {
@@ -196,7 +226,10 @@ export class DrawingParameters {
 
     public set DrawPartNames(value: boolean) {
         this.drawPartNames = value;
-        EngravingRules.Rules.RenderPartNames = value;
+        this.rules.RenderPartNames = value;
+        if (!this.rules.RenderPartNames) {
+            this.rules.RenderPartAbbreviations = false;
+        }
     }
 
     public get FingeringPosition(): PlacementEnum {
@@ -205,6 +238,14 @@ export class DrawingParameters {
 
     public set FingeringPosition(value: PlacementEnum) {
         this.fingeringPosition = value;
-        EngravingRules.Rules.FingeringPosition = value;
+        this.rules.FingeringPosition = value;
+    }
+
+    public get Rules(): EngravingRules {
+        return this.rules;
+    }
+
+    public set Rules(value: EngravingRules) {
+        this.rules = value;
     }
 }

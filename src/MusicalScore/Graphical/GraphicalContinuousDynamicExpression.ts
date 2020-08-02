@@ -7,7 +7,8 @@ import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
-import * as log from "loglevel";
+import log from "loglevel";
+import { SourceMeasure } from "../VoiceData";
 
 /**
  * This class prepares the graphical elements for a continuous expression. It calculates the wedges and
@@ -26,10 +27,10 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     /**
      * Create a new instance of the GraphicalContinuousDynamicExpression
      * @param continuousDynamic The continuous dynamic instruction read via ExpressionReader
-     * @param staffLine The staffline where the exoression is attached
+     * @param staffLine The staffline where the expression is attached
      */
-    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine) {
-        super(staffLine, continuousDynamic);
+    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine, measure: SourceMeasure) {
+        super(staffLine, continuousDynamic, measure);
 
         this.isSplittedPart = false;
         this.notToBeRemoved = false;
@@ -49,7 +50,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     public get IsSplittedPart(): boolean { return this.isSplittedPart; }
     public set IsSplittedPart(value: boolean) { this.isSplittedPart = value; }
     /**  Is true if the dynamic is not a symbol but a text instruction. E.g. "decrescendo" */
-    public get IsVerbal(): boolean { return this.ContinuousDynamic.Label !== undefined && this.ContinuousDynamic.Label.length > 0; }
+    public get IsVerbal(): boolean { return this.ContinuousDynamic.Label && this.ContinuousDynamic.Label.length > 0; }
     /** True if this expression should not be removed if re-rendered */
     public get NotToBeRemoved(): boolean { return this.notToBeRemoved; }
     public set NotToBeRemoved(value: boolean) { this.notToBeRemoved = value; }
@@ -69,10 +70,22 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         if (!this.IsVerbal && this.lines.length < 2) {
             log.warn("Not enough lines for SkyBottomLine calculation");
         }
+        if (!this.IsVerbal) {
+            if (this.ContinuousDynamic.DynamicType !== ContDynamicEnum.crescendo &&
+                this.ContinuousDynamic.DynamicType !== ContDynamicEnum.diminuendo) {
+                // for now there is only crescendo or decrescendo anyways, but this will catch errors when we add new types in the future
+                log.warn("GraphicalContinuousDynamicExpression.updateSkyBottomLine(): " +
+                    "unhandled continuous dynamic type. start measure: " + this.startMeasure?.MeasureNumber);
+            }
+        }
         switch (this.Placement) {
             case PlacementEnum.Above:
                 if (!this.IsVerbal) {
-                    skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
+                    if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+                        skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].Start, this.lines[0].End);
+                    } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+                        skyBottomLineCalculator.updateSkyLineWithWedge(this.lines[0].End, this.lines[0].Start);
+                    } // else covered with the log.warn above
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginTop + this.label.PositionAndShape.RelativePosition.y;
                     skyBottomLineCalculator.updateSkyLineInRange(left, right, yValue);
@@ -80,7 +93,12 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
                 break;
             case PlacementEnum.Below:
                 if (!this.IsVerbal) {
-                    skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
+                    // console.log(`id: ${this.parentStaffLine.ParentStaff.Id}`);
+                    if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
+                        skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].Start, this.lines[1].End);
+                    } else if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.diminuendo) {
+                        skyBottomLineCalculator.updateBottomLineWithWedge(this.lines[1].End, this.lines[1].Start);
+                    } // else covered with the log.warn above
                 } else {
                     const yValue: number = this.label.PositionAndShape.BorderMarginBottom + this.label.PositionAndShape.RelativePosition.y;
                     skyBottomLineCalculator.updateBottomLineInRange(left, right, yValue);
@@ -247,6 +265,10 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
         this.PositionAndShape.RelativePosition = this.lines[0].Start;
         this.PositionAndShape.BorderMarginTop = this.lines[0].End.y - this.lines[0].Start.y;
         this.PositionAndShape.BorderMarginBottom = this.lines[1].End.y - this.lines[1].Start.y;
+        this.PositionAndShape.Center.y = (this.PositionAndShape.BorderMarginTop + this.PositionAndShape.BorderMarginBottom) / 2;
+        // TODO is the center position correct? it wasn't set before, important for AlignmentManager.alignDynamicExpressions()
+        // console.log(`relative y, center y: ${this.PositionAndShape.RelativePosition.y},${this.PositionAndShape.Center.y})`);
+
 
         if (this.ContinuousDynamic.DynamicType === ContDynamicEnum.crescendo) {
             this.PositionAndShape.BorderMarginLeft = 0;

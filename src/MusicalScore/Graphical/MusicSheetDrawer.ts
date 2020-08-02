@@ -25,6 +25,7 @@ import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
+// import { FontStyles } from "../../Common/Enums/FontStyles";
 
 /**
  * Draw a [[GraphicalMusicSheet]] (through the .drawSheet method)
@@ -57,6 +58,7 @@ export abstract class MusicSheetDrawer {
         this.textMeasurer = textMeasurer;
         this.splitScreenLineColor = -1;
         this.drawingParameters = drawingParameters;
+        this.rules = drawingParameters.Rules;
     }
 
     public set Mode(value: PhonicScoreModes) {
@@ -69,6 +71,11 @@ export abstract class MusicSheetDrawer {
         this.drawSplitScreenLine();
         if (this.drawingParameters.drawCursors) {
             for (const line of graphicalMusicSheet.Cursors) {
+                if (!line) {
+                    // TODO GraphicalMusicSheet.calculateCursorLineAtTimestamp() can return undefined.
+                    // why does this happen in the VexFlowMusicSheetDrawer_Test? (it("draws cursor..."))
+                    continue;
+                }
                 const psi: BoundingBox = new BoundingBox(line);
                 psi.AbsolutePosition = line.Start;
                 psi.BorderBottom = line.End.y - line.Start.y;
@@ -141,10 +148,11 @@ export abstract class MusicSheetDrawer {
             return;
         }
         const screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
-        const heightInPixel: number = this.calculatePixelDistance(label.fontHeight);
-        const widthInPixel: number = heightInPixel * this.textMeasurer.computeTextWidthToHeightRatio(label.text, label.font, label.fontStyle);
+        const fontHeightInPixel: number = this.calculatePixelDistance(label.fontHeight);
+        const widthInPixel: number = this.calculatePixelDistance(graphicalLabel.PositionAndShape.Size.width);
         const bitmapWidth: number = Math.ceil(widthInPixel);
-        const bitmapHeight: number = Math.ceil(heightInPixel * 1.2);
+        const bitmapHeight: number = Math.ceil(fontHeightInPixel * (0.2 + graphicalLabel.TextLines.length));
+
         switch (label.textAlignment) {
             // Adjust the OSMD-calculated positions to rendering coordinates
             // These have to match the Border settings in GraphicalLabel.setLabelPositionAndShapeBorders()
@@ -182,7 +190,8 @@ export abstract class MusicSheetDrawer {
             default:
                 throw new ArgumentOutOfRangeException("");
         }
-        this.renderLabel(graphicalLabel, layer, bitmapWidth, bitmapHeight, heightInPixel, screenPosition);
+
+        this.renderLabel(graphicalLabel, layer, bitmapWidth, bitmapHeight, fontHeightInPixel, screenPosition);
     }
 
     protected applyScreenTransformation(point: PointF2D): PointF2D {
@@ -295,7 +304,7 @@ export abstract class MusicSheetDrawer {
         for (const staffLine of musicSystem.StaffLines) {
             this.drawStaffLine(staffLine);
 
-            if (EngravingRules.Rules.RenderLyrics) {
+            if (this.rules.RenderLyrics) {
                 // draw lyric dashes
                 if (staffLine.LyricsDashes.length > 0) {
                     this.drawDashes(staffLine.LyricsDashes);
@@ -351,12 +360,11 @@ export abstract class MusicSheetDrawer {
             this.drawMeasure(measure);
         }
 
-        if (EngravingRules.Rules.RenderLyrics) {
+        if (this.rules.RenderLyrics) {
             if (staffLine.LyricsDashes.length > 0) {
                 this.drawDashes(staffLine.LyricsDashes);
             }
         }
-
         this.drawOctaveShifts(staffLine);
 
         this.drawExpressions(staffLine);
@@ -379,7 +387,7 @@ export abstract class MusicSheetDrawer {
             lyricLine.End.y += staffLine.PositionAndShape.AbsolutePosition.y;
             lyricLine.Start.x += staffLine.PositionAndShape.AbsolutePosition.x;
             lyricLine.End.x += staffLine.PositionAndShape.AbsolutePosition.x;
-            this.drawGraphicalLine(lyricLine, EngravingRules.Rules.LyricUnderscoreLineWidth);
+            this.drawGraphicalLine(lyricLine, this.rules.LyricUnderscoreLineWidth);
         });
     }
 
@@ -418,7 +426,7 @@ export abstract class MusicSheetDrawer {
     }
 
     protected drawStaffLines(staffLine: StaffLine): void {
-        if (staffLine.StaffLines !== undefined) {
+        if (staffLine.StaffLines) {
             const position: PointF2D = staffLine.PositionAndShape.AbsolutePosition;
             for (let i: number = 0; i < 5; i++) {
                 this.drawLineAsHorizontalRectangleWithOffset(staffLine.StaffLines[i], position, <number>GraphicalLayers.Notes);
@@ -515,7 +523,8 @@ export abstract class MusicSheetDrawer {
 
             tmpRect = this.applyScreenTransformationForRect(tmpRect);
             this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            this.renderLabel(new GraphicalLabel(new Label(dataObjectString), 0.8, TextAlignmentEnum.CenterCenter),
+            const label: Label = new Label(dataObjectString);
+            this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
                              layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
         layer++;
@@ -524,17 +533,17 @@ export abstract class MusicSheetDrawer {
 
     private drawMarkedAreas(system: MusicSystem): void {
         for (const markedArea of system.GraphicalMarkedAreas) {
-            if (markedArea !== undefined) {
-                if (markedArea.systemRectangle !== undefined) {
+            if (markedArea) {
+                if (markedArea.systemRectangle) {
                     this.drawRectangle(markedArea.systemRectangle, <number>GraphicalLayers.Background);
                 }
-                if (markedArea.settings !== undefined) {
+                if (markedArea.settings) {
                     this.drawLabel(markedArea.settings, <number>GraphicalLayers.Comment);
                 }
-                if (markedArea.labelRectangle !== undefined) {
+                if (markedArea.labelRectangle) {
                     this.drawRectangle(markedArea.labelRectangle, <number>GraphicalLayers.Background);
                 }
-                if (markedArea.label !== undefined) {
+                if (markedArea.label) {
                     this.drawLabel(markedArea.label, <number>GraphicalLayers.Comment);
                 }
             }
@@ -543,11 +552,11 @@ export abstract class MusicSheetDrawer {
 
     private drawComment(system: MusicSystem): void {
         for (const comment of system.GraphicalComments) {
-            if (comment !== undefined) {
-                if (comment.settings !== undefined) {
+            if (comment) {
+                if (comment.settings) {
                     this.drawLabel(comment.settings, <number>GraphicalLayers.Comment);
                 }
-                if (comment.label !== undefined) {
+                if (comment.label) {
                     this.drawLabel(comment.label, <number>GraphicalLayers.Comment);
                 }
             }

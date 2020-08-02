@@ -17,10 +17,10 @@ export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
     public staffNumber: number;
 
     public parMultiExpression(): MultiExpression {
-        if (this.continuousDynamicExpression !== undefined) {
+        if (this.continuousDynamicExpression) {
             return this.continuousDynamicExpression.StartMultiExpression;
         }
-        if (this.instantaneousDynamicExpression !== undefined) {
+        if (this.instantaneousDynamicExpression) {
             return this.instantaneousDynamicExpression.ParentMultiExpression;
         }
         return undefined;

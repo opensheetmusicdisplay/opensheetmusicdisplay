@@ -12,6 +12,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
         super(sourceStaffEntry);
         this.Key = key;
         this.mode = mode;
+        this.alteratedNotes = this.calcAlteratedNotes();
     }
 
     private static sharpPositionList: NoteEnum[] = [NoteEnum.F, NoteEnum.C, NoteEnum.G, NoteEnum.D, NoteEnum.A, NoteEnum.E, NoteEnum.B];
@@ -19,25 +20,11 @@ export class KeyInstruction extends AbstractNotationInstruction {
 
     private keyType: number;
     private mode: KeyEnum;
+    private alteratedNotes: NoteEnum[];
 
     public static copy(keyInstruction: KeyInstruction): KeyInstruction {
         const newKeyInstruction: KeyInstruction = new KeyInstruction(keyInstruction.parent, keyInstruction.Key, keyInstruction.Mode);
         return newKeyInstruction;
-    }
-
-    public static getNoteEnumList(instruction: KeyInstruction): NoteEnum[] {
-        const enums: NoteEnum[] = [];
-        if (instruction.keyType > 0) {
-            for (let i: number = 0; i < instruction.keyType; i++) {
-                enums.push(KeyInstruction.sharpPositionList[i]);
-            }
-        }
-        if (instruction.keyType < 0) {
-            for (let i: number = 0; i < Math.abs(instruction.keyType); i++) {
-                enums.push(KeyInstruction.flatPositionList[i]);
-            }
-        }
-        return enums;
     }
 
     public static getAllPossibleMajorKeyInstructions(): KeyInstruction[] {
@@ -55,6 +42,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
 
     public set Key(value: number) {
         this.keyType = value;
+        this.alteratedNotes = this.calcAlteratedNotes();
     }
 
     public get Mode(): KeyEnum {
@@ -65,7 +53,11 @@ export class KeyInstruction extends AbstractNotationInstruction {
         this.mode = value;
     }
 
-    public getFundamentalNotesOfAccidentals(): NoteEnum[] {
+    public get AlteratedNotes(): NoteEnum[] {
+        return this.alteratedNotes;
+    }
+
+    private calcAlteratedNotes(): NoteEnum[] {
         const noteList: NoteEnum[] = [];
         if (this.keyType > 0) {
             for (let i: number = 0; i < this.keyType; i++) {
@@ -79,10 +71,17 @@ export class KeyInstruction extends AbstractNotationInstruction {
         return noteList;
     }
 
+    public willAlterateNote(note: NoteEnum): boolean {
+        if (this.alteratedNotes.indexOf(note) >= 0) {
+            return true;
+        }
+        return false;
+    }
+
     public getAlterationForPitch(pitch: Pitch): AccidentalEnum {
-        if (this.keyType > 0 && KeyInstruction.sharpPositionList.indexOf(pitch.FundamentalNote) <= this.keyType) {
+        if (this.keyType > 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) <= this.keyType) {
             return AccidentalEnum.SHARP;
-        } else if (this.keyType < 0 && KeyInstruction.flatPositionList.indexOf(pitch.FundamentalNote) <= Math.abs(this.keyType)) {
+        } else if (this.keyType < 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) <= Math.abs(this.keyType)) {
             return AccidentalEnum.FLAT;
         }
         return AccidentalEnum.NONE;
@@ -97,7 +96,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
         if (key1 === key2) {
             return true;
         }
-        if ((key1 === undefined) || (key2 === undefined)) {
+        if (!key1 || !key2) {
             return false;
         }
         return (key1.Key === key2.Key && key1.Mode === key2.Mode);

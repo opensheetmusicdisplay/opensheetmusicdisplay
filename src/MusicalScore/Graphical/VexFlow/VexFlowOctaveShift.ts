@@ -1,10 +1,10 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import * as log from "loglevel";
+import log from "loglevel";
 
 /**
  * The vexflow adaptation of a graphical shift.

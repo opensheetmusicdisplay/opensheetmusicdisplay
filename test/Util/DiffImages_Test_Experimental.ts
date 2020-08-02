@@ -1,6 +1,6 @@
 import { OpenSheetMusicDisplay, CanvasVexFlowBackend } from "../../src";
 import { TestUtils } from "./TestUtils";
-//import * as fs from "fs";
+//import fs from "fs";
 
 // experimental code, shouldn't be included in Karma test suite
 

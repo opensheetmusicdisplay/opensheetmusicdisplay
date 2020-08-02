@@ -22,7 +22,7 @@ export class IXmlElement {
      * @param elem
      */
     constructor(elem: Element) {
-        if (elem === undefined) {
+        if (!elem) {
             throw new Error("IXmlElement: expected Element, got undefined");
         }
         this.elem = elem;
@@ -89,7 +89,7 @@ export class IXmlElement {
     public elements(nodeName?: string): IXmlElement[] {
         const nodes: NodeList = this.elem.childNodes;
         const ret: IXmlElement[] = [];
-        const nameUnset: boolean = nodeName === undefined;
+        const nameUnset: boolean = !nodeName;
         if (!nameUnset) {
             nodeName = nodeName.toLowerCase();
         }

@@ -1,7 +1,8 @@
 import chai = require("chai");
 import { OpenSheetMusicDisplay } from "../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 import { TestUtils } from "../../Util/TestUtils";
-import { VoiceEntry, Instrument, Note, Staff, Voice, GraphicalStaffEntry, GraphicalNote, Fraction, Pitch, AccidentalEnum } from "../../../src";
+import { VoiceEntry, Instrument, Note, Staff, Voice, GraphicalStaffEntry, GraphicalNote,
+            Fraction, Pitch, AccidentalEnum, DrawingParametersEnum, IOSMDOptions } from "../../../src";
 
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
@@ -19,6 +20,67 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             return new OpenSheetMusicDisplay(div);
         }).to.not.throw(Error);
         done();
+    });
+
+    it("multiple instances", () => {
+        const musicSheetFragmentContainer: HTMLElement = TestUtils.getDivElement(document);
+        const fullMusicSheetContainer: HTMLElement = TestUtils.getDivElement(document);
+
+        const musicSheetFragmentOptions: IOSMDOptions = {
+            drawComposer: false,
+            drawCredits: false,
+            drawFingerings: false,
+            drawHiddenNotes: false,
+            drawLyricist: false,
+            drawPartAbbreviations: false,
+            drawPartNames: false,
+            drawSubtitle: false,
+            drawTitle: false,
+            drawUpToMeasureNumber: 1,
+            drawingParameters: DrawingParametersEnum.compact
+        };
+        const fullMusicSheetOptions: IOSMDOptions = {
+            drawUpToMeasureNumber: 10
+        };
+
+        const musicSheetFragment: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(
+            musicSheetFragmentContainer,
+            musicSheetFragmentOptions
+        );
+        const fullMusicSheet: OpenSheetMusicDisplay = new OpenSheetMusicDisplay(fullMusicSheetContainer, fullMusicSheetOptions);
+
+        const musicSheet: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
+        const musicSheetXML: string = new XMLSerializer().serializeToString(musicSheet);
+
+        return musicSheetFragment.load(musicSheetXML)
+                            .then(() => {
+                                musicSheetFragment.render();
+
+                                return fullMusicSheet.load(musicSheetXML);
+                            })
+                            .then(() => {
+                                fullMusicSheet.render();
+
+                                // Verify that the music sheet fragment has its options set correctly.
+                                chai.expect(musicSheetFragment.Sheet.Rules.RenderComposer).to.equal(musicSheetFragmentOptions.drawComposer);
+                                chai.expect(musicSheetFragment.Sheet.Rules.RenderFingerings).to.equal(musicSheetFragmentOptions.drawFingerings);
+                                chai.expect(musicSheetFragment.Sheet.Rules.RenderLyricist).to.equal(musicSheetFragmentOptions.drawLyricist);
+                                chai.expect(musicSheetFragment.Sheet.Rules.RenderPartAbbreviations).to.equal(musicSheetFragmentOptions.drawPartAbbreviations);
+                                chai.expect(musicSheetFragment.Sheet.Rules.RenderPartNames).to.equal(musicSheetFragmentOptions.drawPartNames);
+                                chai.expect(musicSheetFragment.Sheet.Rules.RenderSubtitle).to.equal(musicSheetFragmentOptions.drawSubtitle);
+                                chai.expect(musicSheetFragment.Sheet.Rules.RenderTitle).to.equal(musicSheetFragmentOptions.drawTitle);
+                                chai.expect(musicSheetFragment.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(musicSheetFragmentOptions.drawUpToMeasureNumber - 1);
+
+                                // Verify that the full music sheet has its options set correctly.
+                                chai.expect(fullMusicSheet.Sheet.Rules.RenderComposer).to.not.equal(musicSheetFragmentOptions.drawComposer);
+                                chai.expect(fullMusicSheet.Sheet.Rules.RenderFingerings).to.not.equal(musicSheetFragmentOptions.drawFingerings);
+                                chai.expect(fullMusicSheet.Sheet.Rules.RenderLyricist).to.not.equal(musicSheetFragmentOptions.drawLyricist);
+                                chai.expect(fullMusicSheet.Sheet.Rules.RenderPartAbbreviations).to.not.equal(musicSheetFragmentOptions.drawPartAbbreviations);
+                                chai.expect(fullMusicSheet.Sheet.Rules.RenderPartNames).to.not.equal(musicSheetFragmentOptions.drawPartNames);
+                                chai.expect(fullMusicSheet.Sheet.Rules.RenderSubtitle).to.not.equal(musicSheetFragmentOptions.drawSubtitle);
+                                chai.expect(fullMusicSheet.Sheet.Rules.RenderTitle).to.not.equal(musicSheetFragmentOptions.drawTitle);
+                                chai.expect(fullMusicSheet.Sheet.Rules.MaxMeasureToDrawIndex).to.equal(fullMusicSheetOptions.drawUpToMeasureNumber - 1);
+                            });
     });
 
     it("load MXL from string", (done: MochaDone) => {
@@ -297,8 +359,12 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                     voiceEntry,
                     voiceEntry.ParentSourceStaffEntry,
                     new Fraction(1),
-                    new Pitch(11, 1, AccidentalEnum.NATURAL));
+                    new Pitch(11, 2, AccidentalEnum.NATURAL));
+                    // note: if the pitch is such that the voice entry frequencies aren't ordered correctly,
+                    // Vexflow will complain about unsorted pitches. see below
                 voiceEntry.Notes.push(newNote);
+                // we could do something like voiceEntry.sort() here to prevent the Vexflow warning about unsorted pitches,
+                // but for now sort() only exists on GraphicalVoiceEntry.
 
                 opensheetmusicdisplay.updateGraphic();
 

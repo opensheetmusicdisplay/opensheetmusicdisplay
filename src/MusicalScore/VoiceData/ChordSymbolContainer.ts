@@ -2,20 +2,21 @@ import {Pitch} from "../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
+import { EngravingRules } from "../Graphical";
 
 export class ChordSymbolContainer {
     private rootPitch: Pitch;
     private chordKind: ChordSymbolEnum;
     private bassPitch: Pitch;
     private degree: Degree;
-    private keyInstruction: KeyInstruction;
+    private rules: EngravingRules;
 
-    constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree, keyInstruction: KeyInstruction) {
+    constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree, rules: EngravingRules) {
         this.rootPitch = rootPitch;
         this.chordKind = chordKind;
-        this.keyInstruction = keyInstruction;
         this.bassPitch = bassPitch;
         this.degree = chordDegree;
+        this.rules = rules;
     }
 
     public get RootPitch(): Pitch {
@@ -34,54 +35,58 @@ export class ChordSymbolContainer {
         return this.degree;
     }
 
-    public get KeyInstruction(): KeyInstruction {
-        return this.keyInstruction;
-    }
-
-    public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number): string {
+    public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction): string {
         let transposedRootPitch: Pitch = chordSymbol.RootPitch;
-        if (MusicSheetCalculator.transposeCalculator !== undefined) {
+
+        if (MusicSheetCalculator.transposeCalculator) {
             transposedRootPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                 chordSymbol.RootPitch,
-                chordSymbol.KeyInstruction,
+                keyInstruction,
                 transposeHalftones
             );
         }
+        // main Note
         let text: string = Pitch.getNoteEnumString(transposedRootPitch.FundamentalNote);
+        // main alteration
         if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
             text += this.getTextForAccidental(transposedRootPitch.Accidental);
         }
-        text += ChordSymbolContainer.getTextFromChordKindEnum(chordSymbol.ChordKind);
-        if (chordSymbol.BassPitch !== undefined) {
+        // chord kind text
+        text += chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        // degree
+        if (chordSymbol.ChordDegree) {
+            switch (chordSymbol.ChordDegree.text) {
+                case ChordDegreeText.add:
+                    text += "add";
+                    text += chordSymbol.ChordDegree.value.toString();
+                    break;
+                case ChordDegreeText.alter:
+                    if (chordSymbol.ChordDegree.alteration !== AccidentalEnum.NONE) {
+                        text += this.getTextForAccidental(chordSymbol.ChordDegree.alteration);
+                    }
+                    text += chordSymbol.ChordDegree.value.toString();
+                    break;
+                case ChordDegreeText.subtract:
+                    text += "(omit";
+                    text += chordSymbol.ChordDegree.value.toString();
+                    text += ")";
+                    break;
+                default:
+            }
+        }
+        // bass
+        if (chordSymbol.BassPitch) {
             let transposedBassPitch: Pitch = chordSymbol.BassPitch;
-            if (MusicSheetCalculator.transposeCalculator !== undefined) {
+            if (MusicSheetCalculator.transposeCalculator) {
                 transposedBassPitch = MusicSheetCalculator.transposeCalculator.transposePitch(
                     chordSymbol.BassPitch,
-                    chordSymbol.KeyInstruction,
+                    keyInstruction,
                     transposeHalftones
                 );
             }
             text += "/";
             text += Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote);
             text += this.getTextForAccidental(transposedBassPitch.Accidental);
-        }
-        if (chordSymbol.ChordDegree !== undefined) {
-            switch (chordSymbol.ChordDegree.text) {
-                case ChordDegreeText.add:
-                    text += "add";
-                    break;
-                case ChordDegreeText.alter:
-                    text += "alt";
-                    break;
-                case ChordDegreeText.subtract:
-                    text += "sub";
-                    break;
-                default:
-            }
-            text += chordSymbol.ChordDegree.value;
-            if (chordSymbol.ChordDegree.alteration !== AccidentalEnum.NONE) {
-                text += ChordSymbolContainer.getTextForAccidental(chordSymbol.ChordDegree.alteration);
-            }
         }
         return text;
     }
@@ -106,92 +111,8 @@ export class ChordSymbolContainer {
         return text;
     }
 
-    private static getTextFromChordKindEnum(kind: ChordSymbolEnum): string {
-        let text: string = "";
-        switch (kind) {
-            case ChordSymbolEnum.major:
-                break;
-            case ChordSymbolEnum.minor:
-                text += "m";
-                break;
-            case ChordSymbolEnum.augmented:
-                text += "aug";
-                break;
-            case ChordSymbolEnum.diminished:
-                text += "dim";
-                break;
-            case ChordSymbolEnum.dominant:
-                text += "7";
-                break;
-            case ChordSymbolEnum.majorseventh:
-                text += "maj7";
-                break;
-            case ChordSymbolEnum.minorseventh:
-                text += "m7";
-                break;
-            case ChordSymbolEnum.diminishedseventh:
-                text += "dim7";
-                break;
-            case ChordSymbolEnum.augmentedseventh:
-                text += "aug7";
-                break;
-            case ChordSymbolEnum.halfdiminished:
-                text += "m7b5";
-                break;
-            case ChordSymbolEnum.majorminor:
-                text += "";
-                break;
-            case ChordSymbolEnum.majorsixth:
-                text += "maj6";
-                break;
-            case ChordSymbolEnum.minorsixth:
-                text += "m6";
-                break;
-            case ChordSymbolEnum.dominantninth:
-                text += "9";
-                break;
-            case ChordSymbolEnum.majorninth:
-                text += "maj9";
-                break;
-            case ChordSymbolEnum.minorninth:
-                text += "m9";
-                break;
-            case ChordSymbolEnum.dominant11th:
-                text += "11";
-                break;
-            case ChordSymbolEnum.major11th:
-                text += "maj11";
-                break;
-            case ChordSymbolEnum.minor11th:
-                text += "m11";
-                break;
-            case ChordSymbolEnum.dominant13th:
-                text += "13";
-                break;
-            case ChordSymbolEnum.major13th:
-                text += "maj13";
-                break;
-            case ChordSymbolEnum.minor13th:
-                text += "m13";
-                break;
-            case ChordSymbolEnum.suspendedsecond:
-                text += "sus2";
-                break;
-            case ChordSymbolEnum.suspendedfourth:
-                text += "sus4";
-                break;
-            case ChordSymbolEnum.Neapolitan:
-            case ChordSymbolEnum.Italian:
-            case ChordSymbolEnum.French:
-            case ChordSymbolEnum.German:
-            case ChordSymbolEnum.pedal:
-            case ChordSymbolEnum.power:
-            case ChordSymbolEnum.Tristan:
-                break;
-            default:
-                break;
-        }
-        return text;
+    private getTextFromChordKindEnum(kind: ChordSymbolEnum): string {
+        return this.rules.ChordSymbolLabelTexts.getValue(kind) ?? "";
     }
 
 }
