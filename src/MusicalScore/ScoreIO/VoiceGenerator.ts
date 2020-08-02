@@ -792,9 +792,6 @@ export class VoiceGenerator {
               const tie: Tie = this.openTieDict[tieNumber];
               if (tie) {
                 tie.AddNote(this.currentNote);
-                if (maxTieNoteFraction.lt(Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length))) {
-                  maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
-                }
                 delete this.openTieDict[tieNumber];
               }
             }
@@ -809,9 +806,6 @@ export class VoiceGenerator {
         if (tieNumber >= 0) {
           const tie: Tie = this.openTieDict[tieNumber];
           tie.AddNote(this.currentNote);
-          if (maxTieNoteFraction.lt(Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length))) {
-            maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
-          }
         }
       }
     }
@@ -848,10 +842,10 @@ export class VoiceGenerator {
         const tieTabNote: TabNote = tie.Notes[0] as TabNote;
         const tieCandidateNote: TabNote = candidateNote as TabNote;
         if (tie.Pitch.FundamentalNote === candidateNote.Pitch.FundamentalNote && tie.Pitch.Octave === candidateNote.Pitch.Octave) {
-          return +key;
-        } else {
+          return parseInt(key, 10);
+        } else if (tieTabNote.StringNumber !== undefined) {
           if (tieTabNote.StringNumber === tieCandidateNote.StringNumber) {
-            return +key;
+            return parseInt(key, 10);
           }
         }
       }

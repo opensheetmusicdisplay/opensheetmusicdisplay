@@ -88,7 +88,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
      * @param tieNote
      * @returns {any}
      */
-    public findEndTieGraphicalNoteFromNote(tieNote: Note): GraphicalNote {
+    public findTieGraphicalNoteFromNote(tieNote: Note): GraphicalNote {
         for (const gve of this.graphicalVoiceEntries) {
             for (const graphicalNote of gve.notes) {
                 const note: Note = graphicalNote.sourceNote;
