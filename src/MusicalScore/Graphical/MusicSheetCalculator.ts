@@ -1944,16 +1944,16 @@ export abstract class MusicSheetCalculator {
 
     private handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number): void {
         let startGse: GraphicalStaffEntry = startGraphicalStaffEntry;
-        let startNote: GraphicalNote = startGse.findEndTieGraphicalNoteFromNote(tie.StartNote);
+        let startNote: GraphicalNote = undefined;
         let endGse: GraphicalStaffEntry = undefined;
         let endNote: GraphicalNote = undefined;
         for (let i: number = 1; i < tie.Notes.length; i++) {
-            startNote = startGse.findEndTieGraphicalNoteFromNote(tie.Notes[i - 1]);
+            startNote = startGse.findTieGraphicalNoteFromNote(tie.Notes[i - 1]);
             endGse = this.graphicalMusicSheet.GetGraphicalFromSourceStaffEntry(tie.Notes[i].ParentStaffEntry);
             if (!endGse) {
                 continue;
             }
-            endNote = endGse.findEndTieGraphicalNoteFromNote(tie.Notes[i]);
+            endNote = endGse.findTieGraphicalNoteFromNote(tie.Notes[i]);
             if (startNote !== undefined && endNote !== undefined && endGse) {
                 if (!startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
                     continue;
@@ -2420,17 +2420,16 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateTieCurves(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const musicSystem: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                for (let idx4: number = 0, len5: number = staffLine.Measures.length; idx4 < len5; ++idx4) {
-                    const measure: GraphicalMeasure = staffLine.Measures[idx4];
-                    for (let idx6: number = 0, len6: number = measure.staffEntries.length; idx6 < len6; ++idx6) {
-                        const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx6];
-                        const graphicalTies: GraphicalTie[] = staffEntry.GraphicalTies;
-                        for (let idx7: number = 0, len7: number = graphicalTies.length; idx7 < len7; ++idx7) {
-                            const graphicalTie: GraphicalTie = graphicalTies[idx7];
+        for(const musicSystem of this.musicSystems)
+        {
+            for(const staffLine of musicSystem.StaffLines)
+            {
+                for(const measure of staffLine.Measures)
+                {
+                    for(const staffEntry of measure.staffEntries)
+                    {
+                        for(const graphicalTie of staffEntry.GraphicalTies)
+                        {
                             if (graphicalTie.StartNote !== undefined && graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry === staffEntry) {
                                 const tieIsAtSystemBreak: boolean = (
                                     graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine !==
