@@ -115,8 +115,6 @@ export class VexFlowConverter {
      * @returns {string[]}
      */
     public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
-        const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
-        const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
         //FIXME: The octave seems to need a shift of three?
         //FIXME: Also rests seem to use different offsets depending on the clef.
         let fixmeOffset: number = 3;
@@ -128,7 +126,11 @@ export class VexFlowConverter {
             if (note.Clef().ClefType === ClefEnum.C) {
                 fixmeOffset = 2;
             }
+            // TODO the pitch for rests will be the start position, for eights rests it will be the bottom point
+            // maybe we want to center on the display position instead of having the bottom there?
         }
+        const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
+        const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + fixmeOffset;
         const notehead: Notehead = note.sourceNote.Notehead;
         let noteheadCode: string = "";
