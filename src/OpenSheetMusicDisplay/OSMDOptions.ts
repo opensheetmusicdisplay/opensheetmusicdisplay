@@ -203,6 +203,10 @@ export interface IOSMDOptions {
      *  Setting this is the same as setting osmd.EngravingRules.SoftmaxFactorVexFlow.
      */
     spacingFactorSoftmax?: number;
+    /**
+     * Set to true if the last system line should be streched across the whole page just as the other systems. Default is false
+     */
+    StretchLastSystemLine?: boolean;
 }
 
 export enum AlignRestOption {
