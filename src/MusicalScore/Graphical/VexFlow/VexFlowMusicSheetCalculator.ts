@@ -611,8 +611,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-    const measureNumber: number = metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1;
-    const staffNumber: number = metronomeExpression.StaffNumber - 1;
+    // note: sometimes MeasureNumber is 0 here, e.g. in Christbaum, maybe because of pickup measure (auftakt)
+    const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
+    const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
     const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
     const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
     //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
