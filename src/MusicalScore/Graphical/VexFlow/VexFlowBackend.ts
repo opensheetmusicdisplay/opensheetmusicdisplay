@@ -20,6 +20,8 @@ export abstract class VexFlowBackend {
   /** The GraphicalMusicPage the backend is drawing from. Each backend only renders one GraphicalMusicPage, to which the coordinates are relative. */
   public graphicalMusicPage: GraphicalMusicPage;
   protected rules: EngravingRules;
+  public width: number; // read-only
+  public height: number; // read-only
 
   public abstract initialize(container: HTMLElement): void;
 
@@ -74,8 +76,10 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract scale(k: number): void;
 
-  public resize(x: number, y: number): void {
-    this.renderer.resize(x, y);
+  public resize(width: number, height: number): void {
+    this.renderer.resize(width, height);
+    this.width = width;
+    this.height = height;
   }
 
   public abstract clear(): void;

@@ -96,7 +96,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
         // const t0: number = performance.now();
-        if (this.beamsNeedUpdate) { // finalizeBeams takes a few milliseconds, so we can save some performance here
+        if (true || this.beamsNeedUpdate) {
+          // finalizeBeams takes a few milliseconds, so we can save some performance here sometimes,
+          // but we'd have to check for every setting change that would affect beam rendering.
           (measure as VexFlowMeasure).finalizeBeams(); // without this, when zooming a lot (e.g. 250%), beams keep their old, now wrong slope.
           // totalFinalizeBeamsTime += performance.now() - t0;
           // console.log("Total calls to finalizeBeams in VexFlowMusicSheetCalculator took " + totalFinalizeBeamsTime + " milliseconds.");
