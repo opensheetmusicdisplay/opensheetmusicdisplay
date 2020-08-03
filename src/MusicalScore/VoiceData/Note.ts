@@ -17,11 +17,12 @@ import {NoteType} from "./NoteType";
  */
 export class Note {
 
-    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch) {
+    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch, isRest?: boolean) {
         this.voiceEntry = voiceEntry;
         this.parentStaffEntry = parentStaffEntry;
         this.length = length;
         this.pitch = pitch;
+        this.isRestFlag = isRest ?? false;
         if (pitch) {
             this.halfTone = pitch.getHalfTone();
         } else {
@@ -43,6 +44,7 @@ export class Note {
     private noteTypeXml: NoteType;
     /** The amount of notes the tuplet of this note (if there is one) replaces. */
     private normalNotes: number;
+    private isRestFlag: boolean;
     /**
      * The untransposed (!!!) source data.
      */
@@ -216,7 +218,7 @@ export class Note {
     }
 
     public isRest(): boolean {
-        return this.Pitch === undefined || this.Pitch === null;
+        return this.isRestFlag;
     }
 
     /** Note: May be dangerous to use if ParentStaffEntry.VerticalContainerParent etc is not set.

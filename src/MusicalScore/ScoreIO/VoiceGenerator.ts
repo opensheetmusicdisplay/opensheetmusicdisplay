@@ -114,9 +114,10 @@ export class VoiceGenerator {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
     //log.debug("read called:", restNote);
+
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
+        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, guitarPro,
                              printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
       // read lyrics
@@ -477,9 +478,17 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(noteDuration: Fraction, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
+  private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType,
+                      printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
-    const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
+    const displayStep: IXmlElement = node.element("display-step");
+    const octave: IXmlElement = node.element("display-octave");
+    let pitch: Pitch = undefined;
+    if (displayStep && octave) {
+        const noteStep: NoteEnum = NoteEnum[displayStep.value.toUpperCase()];
+        pitch = new Pitch(noteStep, parseInt(octave.value, 10), AccidentalEnum.NONE);
+    }
+    const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, true);
     restNote.NoteTypeXml = noteTypeXml;
     restNote.PrintObject = printObject;
     restNote.IsCueNote = isCueNote;

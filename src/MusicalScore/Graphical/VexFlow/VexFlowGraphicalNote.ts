@@ -20,7 +20,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         this.octaveShift = octaveShift;
         if (note.Pitch) {
             // TODO: Maybe shift to Transpose function when available
-            const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(note.Pitch, octaveShift);
+            const drawPitch: Pitch = note.isRest() ? note.Pitch : OctaveShift.getPitchFromOctaveShift(note.Pitch, octaveShift);
             this.vfpitch = VexFlowConverter.pitch(this, drawPitch);
             this.vfpitch[1] = undefined;
         }

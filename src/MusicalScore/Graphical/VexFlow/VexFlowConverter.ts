@@ -117,8 +117,19 @@ export class VexFlowConverter {
     public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
-        // The octave seems to need a shift of three FIXME?
-        const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
+        //FIXME: The octave seems to need a shift of three?
+        //FIXME: Also rests seem to use different offsets depending on the clef.
+        let fixmeOffset: number = 3;
+        if (note.sourceNote.isRest()) {
+            fixmeOffset = 0;
+            if (note.Clef().ClefType === ClefEnum.F) {
+                fixmeOffset = 2;
+            }
+            if (note.Clef().ClefType === ClefEnum.C) {
+                fixmeOffset = 2;
+            }
+        }
+        const octave: number = pitch.Octave - note.Clef().OctaveOffset + fixmeOffset;
         const notehead: Notehead = note.sourceNote.Notehead;
         let noteheadCode: string = "";
         if (notehead) {
@@ -197,7 +208,13 @@ export class VexFlowConverter {
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 isRest = true;
-                keys = ["b/4"];
+                if (note.sourceNote.Pitch) {
+                    const restPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
+                    keys = [restPitch[0]];
+                    break;
+                } else {
+                    keys = ["b/4"];
+                }
                 // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
                 // if it is a full measure rest:
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
