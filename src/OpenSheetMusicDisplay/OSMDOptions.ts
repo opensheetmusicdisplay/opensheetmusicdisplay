@@ -218,7 +218,7 @@ export enum AlignRestOption {
 export enum FillEmptyMeasuresWithWholeRests {
     No = 0,
     YesVisible = 1,
-    YesInvisible = 2
+    YesInvisible = 2 // fill with invisible whole rests
 }
 
 export enum BackendType {
