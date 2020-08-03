@@ -125,6 +125,9 @@ export class VexFlowConverter {
             if (note.Clef().ClefType === ClefEnum.F) {
                 fixmeOffset = 2;
             }
+            if (note.Clef().ClefType === ClefEnum.C) {
+                fixmeOffset = 2;
+            }
         }
         const octave: number = pitch.Octave - note.Clef().OctaveOffset + fixmeOffset;
         const notehead: Notehead = note.sourceNote.Notehead;
