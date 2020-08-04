@@ -17,9 +17,10 @@ import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType } from "./OSMDO
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
-import { AutoColorSet, GraphicalMusicPage } from "../MusicalScore";
-import { MusicPartManagerIterator } from "../MusicalScore/MusicParts";
-import { ITransposeCalculator } from "../MusicalScore/Interfaces";
+import { AutoColorSet } from "../MusicalScore/Graphical/DrawingEnums";
+import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage";
+import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
+import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>

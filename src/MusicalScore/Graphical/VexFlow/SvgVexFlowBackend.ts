@@ -6,7 +6,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
-import {BackendType} from "../../../OpenSheetMusicDisplay";
+import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {EngravingRules} from "../EngravingRules";
 
 export class SvgVexFlowBackend extends VexFlowBackend {

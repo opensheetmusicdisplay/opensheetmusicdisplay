@@ -23,7 +23,7 @@ import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContain
 import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
-import { Note } from "../..";
+import { Note } from "../../../MusicalScore/VoiceData/Note";
 import StaveNote = Vex.Flow.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";

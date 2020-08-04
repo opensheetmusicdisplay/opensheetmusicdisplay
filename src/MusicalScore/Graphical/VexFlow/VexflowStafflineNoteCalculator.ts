@@ -1,6 +1,6 @@
 import { IStafflineNoteCalculator } from "../../Interfaces/IStafflineNoteCalculator";
 import { GraphicalNote } from "../GraphicalNote";
-import { Pitch, NoteEnum } from "../../../Common";
+import { Pitch, NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { Dictionary } from "typescript-collections";
 import { EngravingRules } from "../EngravingRules";
