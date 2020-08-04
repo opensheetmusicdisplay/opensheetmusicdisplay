@@ -128,23 +128,11 @@ export class Cursor {
       return;
     }
 
-    // add the height of previous pages to the y position
-    //   this is unfortunately necessary right now, because MusicPages all have RelativePosition and AbsolutePosition y=0.
-    //   without this, the cursor wouldn't be y-positioned correctly at page numbers > 1.
-    let canvasHeight: number = 0;
-    for (let i: number = 1; i < this.currentPageNumber; i++) {
-      const canvasHeightHTML: number = this.openSheetMusicDisplay.Drawer.Backends[i - 1]?.getCanvasSize();
-      if (canvasHeightHTML > 0) {
-        canvasHeight += canvasHeightHTML / 10;
-      }
-    }
 
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
-    y += canvasHeight;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
-    let endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
+    const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
     bottomStaffline.PositionAndShape.RelativePosition.y + bottomStaffline.StaffHeight;
-    endY += canvasHeight;
     height = endY - y;
 
     // The following code is not necessary (for now, but it could come useful later):
@@ -262,7 +250,17 @@ export class Cursor {
     for (const page of this.graphic.MusicPages) {
       const lastSystemTimestamp: Fraction = page.MusicSystems.last().GetSystemsLastTimeStamp();
       if (lastSystemTimestamp.gt(timestamp)) {
-        return this.currentPageNumber = page.PageNumber;
+        // gt: the last timestamp of the last system is equal to the first of the next page,
+        //   so we do need to use gt, not gte here.
+        const newPageNumber: number = page.PageNumber;
+        if (newPageNumber !== this.currentPageNumber) {
+          this.container.removeChild(this.cursorElement);
+          this.container = document.getElementById("osmdCanvasPage" + newPageNumber);
+          this.container.appendChild(this.cursorElement);
+          // alternatively:
+          // this.openSheetMusicDisplay.enableOrDisableCursor(true);
+        }
+        return this.currentPageNumber = newPageNumber;
       }
     }
     return 1;

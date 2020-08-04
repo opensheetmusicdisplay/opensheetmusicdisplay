@@ -698,7 +698,7 @@ export class OpenSheetMusicDisplay {
     /** Enable or disable (hide) the cursor.
      * @param enable whether to enable (true) or disable (false) the cursor
      */
-    public enableOrDisableCursor(enable: boolean, switchedPage: boolean = false): void {
+    public enableOrDisableCursor(enable: boolean): void {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
             // save previous cursor state
@@ -706,6 +706,7 @@ export class OpenSheetMusicDisplay {
             const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
             this.cursor?.hide();
 
+            // check which page/backend to draw the cursor on (the pages may have changed since last cursor)
             let backendToDrawOn: VexFlowBackend = this.drawer?.Backends[0];
             if (backendToDrawOn && this.rules.RestoreCursorAfterRerender && this.cursor) {
                 const newPageNumber: number = this.cursor.updateCurrentPage();
@@ -720,14 +721,12 @@ export class OpenSheetMusicDisplay {
             }
 
             // restore old cursor state
-            if (this.rules.RestoreCursorAfterRerender || switchedPage) {
+            if (this.rules.RestoreCursorAfterRerender) {
                 this.cursor.hidden = hidden;
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
                     this.cursor.updateCurrentPage();
-                }
-                if (switchedPage && !hidden) {
-                    this.cursor.show();
+                    this.cursor.update();
                 }
             }
         } else { // disable cursor
