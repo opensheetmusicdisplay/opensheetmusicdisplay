@@ -704,12 +704,16 @@ export class OpenSheetMusicDisplay {
             // save previous cursor state
             const hidden: boolean = this.cursor?.Hidden;
             const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
-            const previousPageNumber: number = this.cursor?.currentPageNumber ?? 1;
-
             this.cursor?.hide();
+
+            let backendToDrawOn: VexFlowBackend = this.drawer?.Backends[0];
+            if (backendToDrawOn && this.rules.RestoreCursorAfterRerender && this.cursor) {
+                const newPageNumber: number = this.cursor.updateCurrentPage();
+                backendToDrawOn = this.drawer.Backends[newPageNumber - 1];
+            }
             // create new cursor
-            if (this.drawer?.Backends?.length >= 1 && this.drawer.Backends[0].getRenderElement()) {
-                this.cursor = new Cursor(this.drawer.Backends[previousPageNumber - 1].getRenderElement(), this);
+            if (backendToDrawOn && backendToDrawOn.getRenderElement()) {
+                this.cursor = new Cursor(backendToDrawOn.getRenderElement(), this);
             }
             if (this.sheet && this.graphic && this.cursor) { // else init is called in load()
                 this.cursor.init(this.sheet.MusicPartManager, this.graphic);
@@ -720,7 +724,7 @@ export class OpenSheetMusicDisplay {
                 this.cursor.hidden = hidden;
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
-                    this.cursor.currentPageNumber = previousPageNumber;
+                    this.cursor.updateCurrentPage();
                 }
                 if (switchedPage && !hidden) {
                     this.cursor.show();

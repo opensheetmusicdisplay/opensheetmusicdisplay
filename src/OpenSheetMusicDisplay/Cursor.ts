@@ -11,7 +11,6 @@ import {Fraction} from "../Common/DataObjects/Fraction";
 import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
 import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
 import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
-import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -54,13 +53,11 @@ export class Cursor {
   private graphic: GraphicalMusicSheet;
   public hidden: boolean = true;
   public currentPageNumber: number = 1;
-  public pageStartingGraphicalMeasures: GraphicalMeasure[] = [];
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
     this.manager = manager;
     this.graphic = graphic;
-    this.indexPages();
     this.reset();
     this.hidden = true;
     this.hide();
@@ -204,14 +201,7 @@ export class Cursor {
    */
   public next(): void {
     this.iterator.moveToNext();
-    for (let i: number = 0; i < this.pageStartingGraphicalMeasures.length; i++) {
-      const gMeasure: GraphicalMeasure = this.pageStartingGraphicalMeasures[i];
-      if (this.iterator.CurrentMeasure === gMeasure.parentSourceMeasure) {
-        this.currentPageNumber = i + 1;
-        // this.openSheetMusicDisplay.enableOrDisableCursor(true, true);
-        // break;
-      }
-    }
+    this.updateCurrentPage();
     this.update();
   }
 
@@ -220,6 +210,7 @@ export class Cursor {
    */
   public reset(): void {
     this.resetIterator();
+    this.updateCurrentPage();
     //this.iterator.moveToNext();
     this.update();
   }
@@ -266,10 +257,14 @@ export class Cursor {
     return notes;
   }
 
-  private indexPages(): void {
-    this.pageStartingGraphicalMeasures = [];
+  public updateCurrentPage(): number {
+    const timestamp: Fraction = this.iterator.currentTimeStamp;
     for (const page of this.graphic.MusicPages) {
-      this.pageStartingGraphicalMeasures.push(page.MusicSystems[0].GraphicalMeasures[0][0]);
+      const lastSystemTimestamp: Fraction = page.MusicSystems.last().GetSystemsLastTimeStamp();
+      if (lastSystemTimestamp.gt(timestamp)) {
+        return this.currentPageNumber = page.PageNumber;
+      }
     }
+    return 1;
   }
 }
