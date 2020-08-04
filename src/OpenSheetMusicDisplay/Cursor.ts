@@ -7,8 +7,11 @@ import {OpenSheetMusicDisplay} from "./OpenSheetMusicDisplay";
 import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet";
 import {Instrument} from "../MusicalScore/Instrument";
 import {Note} from "../MusicalScore/VoiceData/Note";
-import {EngravingRules, SourceMeasure, StaffLine} from "../MusicalScore";
 import {Fraction} from "../Common/DataObjects/Fraction";
+import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
+import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
+import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
+import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -50,11 +53,14 @@ export class Cursor {
   public iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
   public hidden: boolean = true;
+  public currentPageNumber: number = 1;
+  public pageStartingGraphicalMeasures: GraphicalMeasure[] = [];
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
     this.manager = manager;
     this.graphic = graphic;
+    this.indexPages();
     this.reset();
     this.hidden = true;
     this.hide();
@@ -66,6 +72,7 @@ export class Cursor {
   public show(): void {
     this.hidden = false;
     this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
+    this.currentPageNumber = 1;
     this.update();
   }
 
@@ -100,7 +107,6 @@ export class Cursor {
   }
 
   public update(): void {
-    // Warning! This should NEVER call this.openSheetMusicDisplay.render()
     if (this.hidden || this.hidden === undefined || this.hidden === null) {
       return;
     }
@@ -124,10 +130,24 @@ export class Cursor {
     if (!musicSystem) {
       return;
     }
+
+    // add the height of previous pages to the y position
+    //   this is unfortunately necessary right now, because MusicPages all have RelativePosition and AbsolutePosition y=0.
+    //   without this, the cursor wouldn't be y-positioned correctly at page numbers > 1.
+    let canvasHeight: number = 0;
+    for (let i: number = 1; i < this.currentPageNumber; i++) {
+      const canvasHeightHTML: number = this.openSheetMusicDisplay.Drawer.Backends[i - 1]?.getCanvasSize();
+      if (canvasHeightHTML > 0) {
+        canvasHeight += canvasHeightHTML / 10;
+      }
+    }
+
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
+    y += canvasHeight;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
-    const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
+    let endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
     bottomStaffline.PositionAndShape.RelativePosition.y + bottomStaffline.StaffHeight;
+    endY += canvasHeight;
     height = endY - y;
 
     // The following code is not necessary (for now, but it could come useful later):
@@ -184,6 +204,14 @@ export class Cursor {
    */
   public next(): void {
     this.iterator.moveToNext();
+    for (let i: number = 0; i < this.pageStartingGraphicalMeasures.length; i++) {
+      const gMeasure: GraphicalMeasure = this.pageStartingGraphicalMeasures[i];
+      if (this.iterator.CurrentMeasure === gMeasure.parentSourceMeasure) {
+        this.currentPageNumber = i + 1;
+        // this.openSheetMusicDisplay.enableOrDisableCursor(true, true);
+        // break;
+      }
+    }
     this.update();
   }
 
@@ -236,5 +264,12 @@ export class Cursor {
       notes.push.apply(notes, voiceEntry.Notes);
     });
     return notes;
+  }
+
+  private indexPages(): void {
+    this.pageStartingGraphicalMeasures = [];
+    for (const page of this.graphic.MusicPages) {
+      this.pageStartingGraphicalMeasures.push(page.MusicSystems[0].GraphicalMeasures[0][0]);
+    }
   }
 }

@@ -697,26 +697,33 @@ export class OpenSheetMusicDisplay {
     /** Enable or disable (hide) the cursor.
      * @param enable whether to enable (true) or disable (false) the cursor
      */
-    public enableOrDisableCursor(enable: boolean): void {
+    public enableOrDisableCursor(enable: boolean, switchedPage: boolean = false): void {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
             // save previous cursor state
             const hidden: boolean = this.cursor?.Hidden;
             const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
+            const previousPageNumber: number = this.cursor?.currentPageNumber ?? 1;
 
+            this.cursor?.hide();
             // create new cursor
             if (this.drawer?.Backends?.length >= 1 && this.drawer.Backends[0].getRenderElement()) {
-                this.cursor = new Cursor(this.drawer.Backends[0].getRenderElement(), this);
+                this.cursor = new Cursor(this.drawer.Backends[previousPageNumber - 1].getRenderElement(), this);
             }
             if (this.sheet && this.graphic && this.cursor) { // else init is called in load()
                 this.cursor.init(this.sheet.MusicPartManager, this.graphic);
             }
 
             // restore old cursor state
-            if (this.rules.RestoreCursorAfterRerender) {
+            if (this.rules.RestoreCursorAfterRerender || switchedPage) {
                 this.cursor.hidden = hidden;
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
+                    this.cursor.currentPageNumber = previousPageNumber;
+                    console.log("restore to " + previousPageNumber);
+                }
+                if (switchedPage && !hidden) {
+                    this.cursor.show();
                 }
             }
         } else { // disable cursor

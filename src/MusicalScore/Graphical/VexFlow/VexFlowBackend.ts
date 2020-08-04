@@ -34,6 +34,8 @@ export abstract class VexFlowBackend {
     return this.canvas;
   }
 
+  public abstract getCanvasSize(): number;
+
   public getRenderElement(): HTMLElement {
     //console.log("backend type: " + this.getVexflowBackendType());
     let renderingHtmlElement: HTMLElement = this.canvas; // for SVGBackend

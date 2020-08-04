@@ -965,6 +965,8 @@ export class MusicSystemBuilder {
      * @returns {GraphicalMusicPage}
      */
     protected createMusicPage(): GraphicalMusicPage {
+        // const previousPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages.last();
+        // const previousSizeY: number = previousPage ? previousPage.PositionAndShape.Size.height : 0;
         const page: GraphicalMusicPage = new GraphicalMusicPage(this.graphicalMusicSheet);
         this.graphicalMusicSheet.MusicPages.push(page);
         page.PageNumber = this.graphicalMusicSheet.MusicPages.length; // caution: page number = page index + 1

@@ -26,8 +26,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return BackendType.SVG;
     }
 
+    public getCanvasSize(): number {
+        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
+    }
+
     public initialize(container: HTMLElement): void {
         this.canvas = document.createElement("div");
+        this.canvas.id = "osmdCanvasPage" + this.graphicalMusicPage.PageNumber;
         // this.canvas.id = uniqueID // TODO create unique tagName like with cursor now?
         this.inner = this.canvas;
         this.inner.style.position = "relative";
