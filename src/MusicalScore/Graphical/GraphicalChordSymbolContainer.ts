@@ -18,8 +18,8 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         super();
         this.chordSymbolContainer = chordSymbolContainer;
         this.boundingBox = new BoundingBox(this, parent);
-        this.calculateLabel(textHeight, transposeHalftones, keyInstruction);
         this.rules = rules;
+        this.calculateLabel(textHeight, transposeHalftones, keyInstruction);
     }
     public get GetChordSymbolContainer(): ChordSymbolContainer {
         return this.chordSymbolContainer;
