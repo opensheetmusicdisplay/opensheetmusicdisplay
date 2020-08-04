@@ -721,7 +721,6 @@ export class OpenSheetMusicDisplay {
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
                     this.cursor.currentPageNumber = previousPageNumber;
-                    console.log("restore to " + previousPageNumber);
                 }
                 if (switchedPage && !hidden) {
                     this.cursor.show();
