@@ -17,10 +17,10 @@ import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType } from "./OSMDO
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
-import { NoteEnum } from "..";
 import { AutoColorSet, GraphicalMusicPage } from "../MusicalScore";
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces";
+import { NoteEnum } from "../Common/DataObjects/Pitch";
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>

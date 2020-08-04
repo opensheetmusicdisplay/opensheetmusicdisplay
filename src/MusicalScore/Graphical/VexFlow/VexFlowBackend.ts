@@ -3,8 +3,9 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
-import {GraphicalMusicPage, EngravingRules} from "..";
 import {BackendType} from "../../../OpenSheetMusicDisplay";
+import {GraphicalMusicPage} from "../GraphicalMusicPage";
+import {EngravingRules} from "../EngravingRules";
 
 export class VexFlowBackends {
   public static CANVAS: 0;

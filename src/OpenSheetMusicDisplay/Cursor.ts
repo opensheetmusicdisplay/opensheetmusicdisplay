@@ -7,8 +7,8 @@ import {OpenSheetMusicDisplay} from "./OpenSheetMusicDisplay";
 import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet";
 import {Instrument} from "../MusicalScore/Instrument";
 import {Note} from "../MusicalScore/VoiceData/Note";
-import {EngravingRules, Fraction} from "..";
-import {SourceMeasure, StaffLine} from "../MusicalScore";
+import {EngravingRules, SourceMeasure, StaffLine} from "../MusicalScore";
+import {Fraction} from "../Common/DataObjects/Fraction";
 
 /**
  * A cursor which can iterate through the music sheet.

@@ -24,8 +24,8 @@ import {ExpressionReader} from "./MusicSymbolModules/ExpressionReader";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
-import {NoteType, NoteTypeHandler} from "../VoiceData";
-import {SystemLinesEnumHelper} from "../Graphical";
+import {NoteType, NoteTypeHandler} from "../VoiceData/NoteType";
+import { SystemLinesEnumHelper } from "../Graphical/SystemLinesEnum";
 // import {Dictionary} from "typescript-collections";
 
 // FIXME: The following classes are missing

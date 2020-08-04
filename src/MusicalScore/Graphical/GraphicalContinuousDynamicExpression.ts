@@ -8,7 +8,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
 import log from "loglevel";
-import { SourceMeasure } from "../VoiceData";
+import { SourceMeasure } from "../VoiceData/SourceMeasure";
 
 /**
  * This class prepares the graphical elements for a continuous expression. It calculates the wedges and
