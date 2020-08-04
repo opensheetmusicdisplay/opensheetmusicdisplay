@@ -6,6 +6,7 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { Note } from "../../VoiceData/Note";
 import { ColoringModes } from "./../DrawingParameters";
+import { GraphicalNote } from "../GraphicalNote";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: Vex.Flow.StemmableNote;
