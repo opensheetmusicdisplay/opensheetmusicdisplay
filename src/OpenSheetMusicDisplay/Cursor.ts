@@ -128,7 +128,6 @@ export class Cursor {
       return;
     }
 
-
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
     const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
