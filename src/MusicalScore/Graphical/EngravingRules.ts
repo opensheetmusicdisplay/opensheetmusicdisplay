@@ -251,6 +251,7 @@ export class EngravingRules {
     private renderSingleHorizontalStaffline: boolean;
     private restoreCursorAfterRerender: boolean;
     private stretchLastSystemLine: boolean;
+    private spacingBetweenTextLines: number;
 
     private static fixStafflineBoundingBox: boolean; // TODO temporary workaround
 
@@ -518,6 +519,7 @@ export class EngravingRules {
         this.pageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.pageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
         this.renderSingleHorizontalStaffline = false;
+        this.spacingBetweenTextLines = 0;
 
         this.populateDictionaries();
         try {
@@ -1829,6 +1831,12 @@ export class EngravingRules {
     }
     public set RestoreCursorAfterRerender(value: boolean) {
         this.restoreCursorAfterRerender = value;
+    }
+    public get SpacingBetweenTextLines(): number {
+        return this.spacingBetweenTextLines;
+    }
+    public set SpacingBetweenTextLines(value: number) {
+        this.spacingBetweenTextLines = value;
     }
     public get StretchLastSystemLine(): boolean {
         return this.stretchLastSystemLine;

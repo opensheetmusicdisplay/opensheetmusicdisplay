@@ -94,7 +94,7 @@ export interface IOSMDOptions {
     measureNumberInterval?: number;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
-    /** Where to draw fingerings (left, right, above, below, auto).
+    /** Where to draw fingerings (left, right, above, below, or auto).
      * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
      */
     fingeringPosition?: string;
@@ -204,9 +204,13 @@ export interface IOSMDOptions {
      */
     spacingFactorSoftmax?: number;
     /**
+     * Number in pixels, of spacing between multi-line labels
+     */
+    spacingBetweenTextLines?: number;
+    /**
      * Set to true if the last system line should be streched across the whole page just as the other systems. Default is false
      */
-    StretchLastSystemLine?: boolean;
+    stretchLastSystemLine?: boolean;
 }
 
 export enum AlignRestOption {

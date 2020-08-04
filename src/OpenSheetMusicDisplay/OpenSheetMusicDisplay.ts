@@ -524,8 +524,11 @@ export class OpenSheetMusicDisplay {
         if (options.spacingFactorSoftmax !== undefined) {
             this.rules.SoftmaxFactorVexFlow = options.spacingFactorSoftmax;
         }
-        if (options.StretchLastSystemLine !== undefined) {
-            this.rules.StretchLastSystemLine = options.StretchLastSystemLine;
+        if (options.spacingBetweenTextLines !== undefined) {
+            this.rules.SpacingBetweenTextLines = options.spacingBetweenTextLines;
+        }
+        if (options.stretchLastSystemLine !== undefined) {
+            this.rules.StretchLastSystemLine = options.stretchLastSystemLine;
         }
     }
 

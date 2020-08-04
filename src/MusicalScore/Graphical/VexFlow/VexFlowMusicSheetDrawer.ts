@@ -425,6 +425,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
             this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
             screenPosition.y = screenPosition.y + fontHeightInPixel;
+            if (graphicalLabel.TextLines.length > 1) {
+             screenPosition.y += this.rules.SpacingBetweenTextLines;
+            }
         }
         // font currently unused, replaced by fontFamily
     }
