@@ -116,6 +116,8 @@ export class EngravingRules {
     private tupletNumberYOffset: number;
     private labelMarginBorderFactor: number;
     private tupletVerticalLineLength: number;
+    private tupletNumbersInTabs: boolean;
+
     private repetitionEndingLabelHeight: number;
     private repetitionEndingLabelXOffset: number;
     private repetitionEndingLabelYOffset: number;
@@ -248,6 +250,8 @@ export class EngravingRules {
     private pageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
     private renderSingleHorizontalStaffline: boolean;
     private restoreCursorAfterRerender: boolean;
+    private stretchLastSystemLine: boolean;
+    private spacingBetweenTextLines: number;
 
     private static fixStafflineBoundingBox: boolean; // TODO temporary workaround
 
@@ -378,6 +382,7 @@ export class EngravingRules {
         this.tupletNumberYOffset = 0.5;
         this.labelMarginBorderFactor = 0.1;
         this.tupletVerticalLineLength = 0.5;
+        this.tupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
 
         // Slur and Tie variables
         this.bezierCurveStepSize = 1000;
@@ -507,12 +512,14 @@ export class EngravingRules {
         this.newSystemAtXMLNewSystemAttribute = false;
         this.newPageAtXMLNewPageAttribute = false;
         this.restoreCursorAfterRerender = true;
+        this.stretchLastSystemLine = false;
 
         EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
 
         this.pageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.pageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
         this.renderSingleHorizontalStaffline = false;
+        this.spacingBetweenTextLines = 0;
 
         this.populateDictionaries();
         try {
@@ -1079,6 +1086,12 @@ export class EngravingRules {
     }
     public set TupletVerticalLineLength(value: number) {
         this.tupletVerticalLineLength = value;
+    }
+    public get TupletNumbersInTabs(): boolean {
+        return this.tupletNumbersInTabs;
+    }
+    public set TupletNumbersInTabs(value: boolean) {
+        this.tupletNumbersInTabs = value;
     }
     public get RepetitionEndingLabelHeight(): number {
         return this.repetitionEndingLabelHeight;
@@ -1818,6 +1831,18 @@ export class EngravingRules {
     }
     public set RestoreCursorAfterRerender(value: boolean) {
         this.restoreCursorAfterRerender = value;
+    }
+    public get SpacingBetweenTextLines(): number {
+        return this.spacingBetweenTextLines;
+    }
+    public set SpacingBetweenTextLines(value: number) {
+        this.spacingBetweenTextLines = value;
+    }
+    public get StretchLastSystemLine(): boolean {
+        return this.stretchLastSystemLine;
+    }
+    public set StretchLastSystemLine(value: boolean) {
+        this.stretchLastSystemLine = value;
     }
 
     public resetChordSymbolLabelTexts(chordtexts: Dictionary<ChordSymbolEnum, string>): Dictionary<ChordSymbolEnum, string> {

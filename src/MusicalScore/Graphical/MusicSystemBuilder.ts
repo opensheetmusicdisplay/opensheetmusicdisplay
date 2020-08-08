@@ -141,7 +141,7 @@ export class MusicSystemBuilder {
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
                 if (sourceMeasureEndsPart) {
-                    this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, true, false);
+                    this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
                 }
                 prevMeasureEndsPart = sourceMeasureEndsPart;
             } else {
@@ -152,7 +152,7 @@ export class MusicSystemBuilder {
             }
         }
         if (this.currentSystemParams.systemMeasures.length > 0) {
-            this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true, false);
+            this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
         }
         return this.musicSystems;
     }
@@ -965,6 +965,8 @@ export class MusicSystemBuilder {
      * @returns {GraphicalMusicPage}
      */
     protected createMusicPage(): GraphicalMusicPage {
+        // const previousPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages.last();
+        // const previousSizeY: number = previousPage ? previousPage.PositionAndShape.Size.height : 0;
         const page: GraphicalMusicPage = new GraphicalMusicPage(this.graphicalMusicSheet);
         this.graphicalMusicSheet.MusicPages.push(page);
         page.PageNumber = this.graphicalMusicSheet.MusicPages.length; // caution: page number = page index + 1

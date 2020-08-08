@@ -44,8 +44,8 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
-import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
-import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
+import { InstantaneousTempoExpression } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
 import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
@@ -96,7 +96,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
         // const t0: number = performance.now();
-        if (this.beamsNeedUpdate) { // finalizeBeams takes a few milliseconds, so we can save some performance here
+        if (true || this.beamsNeedUpdate) {
+          // finalizeBeams takes a few milliseconds, so we can save some performance here sometimes,
+          // but we'd have to check for every setting change that would affect beam rendering. See #843
           (measure as VexFlowMeasure).finalizeBeams(); // without this, when zooming a lot (e.g. 250%), beams keep their old, now wrong slope.
           // totalFinalizeBeamsTime += performance.now() - t0;
           // console.log("Total calls to finalizeBeams in VexFlowMusicSheetCalculator took " + totalFinalizeBeamsTime + " milliseconds.");
@@ -474,6 +476,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * Calculate the shape (Bezier curve) for this tie.
    * @param tie
    * @param tieIsAtSystemBreak
+   * @param isTab Whether this tie is for a tab note (guitar tabulature)
    */
   protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean, isTab: boolean): void {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
@@ -546,7 +549,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             );
           }
 
-        } else {
+        } else { // not Tab (guitar), normal StaveTie
           vfTie = new Vex.Flow.StaveTie({
             first_indices: [startNoteIndexInTie],
             first_note: vfStartNote,
@@ -617,14 +620,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[0][0] as VexFlowMeasure).getVFStave();
+    // note: sometimes MeasureNumber is 0 here, e.g. in Christbaum, maybe because of pickup measure (auftakt)
+    const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
+    const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
+    const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
+    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
     //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
     let vexflowDuration: string = "q";
     if (metronomeExpression.beatUnit) {
       const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
       vexflowDuration = VexFlowConverter.duration(duration, false);
     }
-    // const noteType: NoteType = NoteTypeHandler.StringToNoteType(metronomeExpression.beatUnit);
+
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
@@ -634,9 +641,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       this.rules.MetronomeMarkYShift * unitInPixels);
        // -50, -30), 0); //needs Vexflow PR
        //.setShiftX(-50);
-
+    const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
-      this.rules.MetronomeMarkXShift * unitInPixels
+      xShift
     );
     // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
     const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;

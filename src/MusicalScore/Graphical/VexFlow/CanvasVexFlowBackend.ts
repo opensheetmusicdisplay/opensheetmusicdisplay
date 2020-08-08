@@ -6,7 +6,7 @@ import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {VexFlowConverter} from "./VexFlowConverter";
-import {BackendType} from "../../../OpenSheetMusicDisplay";
+import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {EngravingRules} from "../EngravingRules";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 
@@ -24,6 +24,13 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         return BackendType.Canvas;
     }
 
+    public getCanvasSize(): number {
+        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
+        // smaller inner canvas:
+        // return Number.parseInt(
+        //     document.getElementById("osmdCanvasVexFlowBackendCanvas" + this.graphicalMusicPage.PageNumber)?.style.height, 10);
+    }
+
     public initialize(container: HTMLElement): void {
         this.canvas = document.createElement("canvas");
         if (!this.graphicalMusicPage) {
@@ -32,6 +39,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         }
         this.canvas.id = "osmdCanvasVexFlowBackendCanvas" + this.graphicalMusicPage.PageNumber; // needed to extract image buffer from js
         this.inner = document.createElement("div");
+        this.inner.id = "osmdCanvasPage" + this.graphicalMusicPage.PageNumber;
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
         this.inner.appendChild(this.canvas);

@@ -21,7 +21,7 @@ import {MusicSymbolModuleFactory} from "./MusicSymbolModuleFactory";
 import {IAfterSheetReadingModule} from "../Interfaces/IAfterSheetReadingModule";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
-import {EngravingRules} from "../Graphical";
+import {EngravingRules} from "../Graphical/EngravingRules";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 

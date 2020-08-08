@@ -7,8 +7,10 @@ import {OpenSheetMusicDisplay} from "./OpenSheetMusicDisplay";
 import {GraphicalMusicSheet} from "../MusicalScore/Graphical/GraphicalMusicSheet";
 import {Instrument} from "../MusicalScore/Instrument";
 import {Note} from "../MusicalScore/VoiceData/Note";
-import {EngravingRules, Fraction} from "..";
-import {SourceMeasure, StaffLine} from "../MusicalScore";
+import {Fraction} from "../Common/DataObjects/Fraction";
+import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
+import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
+import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -50,6 +52,7 @@ export class Cursor {
   public iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
   public hidden: boolean = true;
+  public currentPageNumber: number = 1;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
@@ -66,6 +69,7 @@ export class Cursor {
   public show(): void {
     this.hidden = false;
     this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
+    this.currentPageNumber = 1;
     this.update();
   }
 
@@ -100,7 +104,6 @@ export class Cursor {
   }
 
   public update(): void {
-    // Warning! This should NEVER call this.openSheetMusicDisplay.render()
     if (this.hidden || this.hidden === undefined || this.hidden === null) {
       return;
     }
@@ -124,6 +127,7 @@ export class Cursor {
     if (!musicSystem) {
       return;
     }
+
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
     const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
@@ -184,6 +188,7 @@ export class Cursor {
    */
   public next(): void {
     this.iterator.moveToNext();
+    this.updateCurrentPage();
     this.update();
   }
 
@@ -192,6 +197,7 @@ export class Cursor {
    */
   public reset(): void {
     this.resetIterator();
+    this.updateCurrentPage();
     //this.iterator.moveToNext();
     this.update();
   }
@@ -236,5 +242,26 @@ export class Cursor {
       notes.push.apply(notes, voiceEntry.Notes);
     });
     return notes;
+  }
+
+  public updateCurrentPage(): number {
+    const timestamp: Fraction = this.iterator.currentTimeStamp;
+    for (const page of this.graphic.MusicPages) {
+      const lastSystemTimestamp: Fraction = page.MusicSystems.last().GetSystemsLastTimeStamp();
+      if (lastSystemTimestamp.gt(timestamp)) {
+        // gt: the last timestamp of the last system is equal to the first of the next page,
+        //   so we do need to use gt, not gte here.
+        const newPageNumber: number = page.PageNumber;
+        if (newPageNumber !== this.currentPageNumber) {
+          this.container.removeChild(this.cursorElement);
+          this.container = document.getElementById("osmdCanvasPage" + newPageNumber);
+          this.container.appendChild(this.cursorElement);
+          // alternatively:
+          // this.openSheetMusicDisplay.enableOrDisableCursor(true);
+        }
+        return this.currentPageNumber = newPageNumber;
+      }
+    }
+    return 1;
   }
 }

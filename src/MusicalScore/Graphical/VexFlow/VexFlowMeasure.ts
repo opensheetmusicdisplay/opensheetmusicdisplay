@@ -33,8 +33,9 @@ import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/In
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
-import {NoteType, Arpeggio} from "../../VoiceData";
 import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
+import { NoteType } from "../../VoiceData/NoteType";
+import { Arpeggio } from "../../VoiceData/Arpeggio";
 
 // type StemmableNote = Vex.Flow.StemmableNote;
 
@@ -57,6 +58,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.resetLayout();
     }
 
+    public isTabMeasure: boolean = false;
     /** octaveOffset according to active clef */
     public octaveOffset: number = 3;
     /** The VexFlow Voices in the measure */
@@ -556,17 +558,18 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 beam.setContext(ctx).draw();
             }
         }
-        if (this.autoTupletVfBeams) {
-            for (const beam of this.autoTupletVfBeams) {
-                beam.setContext(ctx).draw();
+        if (!this.isTabMeasure || this.rules.TupletNumbersInTabs) {
+            if (this.autoTupletVfBeams) {
+                for (const beam of this.autoTupletVfBeams) {
+                    beam.setContext(ctx).draw();
+                }
             }
-        }
-
-        // Draw tuplets
-        for (const voiceID in this.vftuplets) {
-            if (this.vftuplets.hasOwnProperty(voiceID)) {
-                for (const tuplet of this.vftuplets[voiceID]) {
-                    tuplet.setContext(ctx).draw();
+            // Draw tuplets
+            for (const voiceID in this.vftuplets) {
+                if (this.vftuplets.hasOwnProperty(voiceID)) {
+                    for (const tuplet of this.vftuplets[voiceID]) {
+                        tuplet.setContext(ctx).draw();
+                    }
                 }
             }
         }

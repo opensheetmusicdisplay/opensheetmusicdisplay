@@ -13,7 +13,7 @@ import {EngravingRules} from "./EngravingRules";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SystemLinesEnum} from "./SystemLinesEnum";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import { Dictionary } from "typescript-collections";
 import {GraphicalComment} from "./GraphicalComment";
 import {GraphicalMarkedArea} from "./GraphicalMarkedArea";
 import {SystemLine} from "./SystemLine";
