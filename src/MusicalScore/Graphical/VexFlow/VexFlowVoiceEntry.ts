@@ -61,10 +61,10 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             if (this.rules.ColoringMode === ColoringModes.AutoColoring ||
                 this.rules.ColoringMode === ColoringModes.CustomColorSet) {
                 if (note.sourceNote.isRest()) {
-                    noteheadColor = this.rules.ColoringSetCurrent.getValue(-1);
+                    noteheadColor = this.rules.ColoringSetCustom.getValue(-1);
                 } else {
                     const fundamentalNote: NoteEnum = note.sourceNote.Pitch.FundamentalNote;
-                    noteheadColor = this.rules.ColoringSetCurrent.getValue(fundamentalNote);
+                    noteheadColor = this.rules.ColoringSetCustom.getValue(fundamentalNote);
                 }
             }
             if (!note.sourceNote.PrintObject) {

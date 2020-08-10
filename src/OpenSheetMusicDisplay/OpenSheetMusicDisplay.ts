@@ -267,14 +267,14 @@ export class OpenSheetMusicDisplay {
         this.drawer.skyLineVisible = this.drawSkyLine;
 
         // Set page width
-        let width: number = this.container.offsetWidth;
+        let Width: number = this.container.offsetWidth;
         if (this.rules.RenderSingleHorizontalStaffline) {
-            width = this.graphic.MusicPages[0].PositionAndShape.Size.width * 10 * this.zoom;
+            Width = this.graphic.MusicPages[0].PositionAndShape.Size.width * 10 * this.zoom;
             // this.container.style.width = width + "px";
             // console.log("width: " + width)
         }
         // TODO width may need to be coordinated with render() where width is also used
-        let height: number;
+        let Height: number;
         const canvasDimensionsLimit: number = 32767; // browser limitation. Chrome/Firefox (16 bit, 32768 causes an error).
         // Could be calculated by canvas-size module.
         // see #678 on Github and here: https://stackoverflow.com/a/11585939/10295942
@@ -283,24 +283,24 @@ export class OpenSheetMusicDisplay {
         for (const page of this.graphic.MusicPages) {
             const backend: VexFlowBackend = this.createBackend(this.backendType, page);
             const sizeWarningPartTwo: string = " exceeds CanvasBackend limit of 32767. Cutting off score.";
-            if (backend.getOSMDBackendType() === BackendType.Canvas && width > canvasDimensionsLimit) {
-                console.log("[OSMD] Warning: width of " + width + sizeWarningPartTwo);
-                width = canvasDimensionsLimit;
+            if (backend.getOSMDBackendType() === BackendType.Canvas && Width > canvasDimensionsLimit) {
+                console.log("[OSMD] Warning: width of " + Width + sizeWarningPartTwo);
+                Width = canvasDimensionsLimit;
             }
             if (this.rules.PageFormat && !this.rules.PageFormat.IsUndefined) {
-                height = width / this.rules.PageFormat.aspectRatio;
+                Height = Width / this.rules.PageFormat.aspectRatio;
                 // console.log("pageformat given. height: " + page.PositionAndShape.Size.height);
             } else {
-                height = (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0;
+                Height = (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0;
                 // console.log("pageformat not given. height: " + page.PositionAndShape.Size.height);
             }
-            if (backend.getOSMDBackendType() === BackendType.Canvas && height > canvasDimensionsLimit) {
-                console.log("[OSMD] Warning: height of " + height + sizeWarningPartTwo);
-                height = Math.min(height, canvasDimensionsLimit); // this cuts off the the score, but doesn't break rendering.
+            if (backend.getOSMDBackendType() === BackendType.Canvas && Height > canvasDimensionsLimit) {
+                console.log("[OSMD] Warning: height of " + Height + sizeWarningPartTwo);
+                Height = Math.min(Height, canvasDimensionsLimit); // this cuts off the the score, but doesn't break rendering.
                 // TODO optional: reduce zoom to fit the score within the limit.
             }
 
-            backend.resize(width, height);
+            backend.resize(Width, Height);
             backend.clear(); // set bgcolor if defined (this.rules.PageBackgroundColor, see OSMDOptions)
             this.drawer.Backends.push(backend);
         }

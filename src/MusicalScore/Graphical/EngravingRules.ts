@@ -252,7 +252,7 @@ export class EngravingRules {
     public RestoreCursorAfterRerender: boolean;
     public SpacingBetweenTextLines: number;
 
-    public static fixStafflineBoundingBox: boolean; // TODO temporary workaround
+    public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
     constructor() {
         // global variables
@@ -512,7 +512,7 @@ export class EngravingRules {
         this.NewPageAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;
 
-        EngravingRules.fixStafflineBoundingBox = false; // TODO temporary workaround
+        EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
 
         this.PageFormat = PageFormat.UndefinedPageFormat; // default: undefined / 'infinite' height page, using the canvas'/container's width and height
         this.PageBackgroundColor = undefined; // default: transparent. half-transparent white: #FFFFFF88"
