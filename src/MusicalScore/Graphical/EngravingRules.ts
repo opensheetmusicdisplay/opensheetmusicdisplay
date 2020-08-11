@@ -632,22 +632,22 @@ export class EngravingRules {
 export class PageFormat {
     constructor(Width: number, Height: number, IdString: string = "noIdStringGiven") {
         this.width = Width;
-        this.Height = Height;
+        this.height = Height;
         this.idString = IdString;
     }
     public width: number;
-    public Height: number;
+    public height: number;
     public idString: string;
     public get aspectRatio(): number {
         if (!this.IsUndefined) {
-            return this.width / this.Height;
+            return this.width / this.height;
         } else {
             return 0; // infinite page height
         }
     }
     /** Undefined page format: use default page format. */
     public get IsUndefined(): boolean {
-        return this.width === undefined || this.Height === undefined || this.Height === 0 || this.width === 0;
+        return this.width === undefined || this.height === undefined || this.height === 0 || this.width === 0;
     }
     public static get UndefinedPageFormat(): PageFormat {
         return new PageFormat(0, 0);
@@ -656,6 +656,6 @@ export class PageFormat {
         if (!otherPageFormat) {
             return false;
         }
-        return otherPageFormat.width === this.width && otherPageFormat.Height === this.Height;
+        return otherPageFormat.width === this.width && otherPageFormat.height === this.height;
     }
 }
