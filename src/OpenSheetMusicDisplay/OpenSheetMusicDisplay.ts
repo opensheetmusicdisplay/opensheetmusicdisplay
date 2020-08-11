@@ -206,7 +206,7 @@ export class OpenSheetMusicDisplay {
             this.rules.PageHeight = this.sheet.pageWidth / this.rules.PageFormat.aspectRatio;
             log.debug("[OSMD] PageHeight: " + this.rules.PageHeight);
         } else {
-            log.debug("[OSMD] endless/undefined pageformat, id: " + this.rules.PageFormat.IdString);
+            log.debug("[OSMD] endless/undefined pageformat, id: " + this.rules.PageFormat.idString);
             this.rules.PageHeight = 100001; // infinite page height // TODO maybe Number.MAX_VALUE or Math.pow(10, 20)?
         }
 

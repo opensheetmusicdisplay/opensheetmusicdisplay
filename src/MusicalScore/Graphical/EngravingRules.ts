@@ -631,25 +631,24 @@ export class EngravingRules {
 // TODO maybe this should be moved to OSMDOptions. Also see OpenSheetMusicDisplay.PageFormatStandards
 export class PageFormat {
     constructor(Width: number, Height: number, IdString: string = "noIdStringGiven") {
-        this.Width = Width;
+        this.width = Width;
         this.Height = Height;
-        this.IdString = IdString;
+        this.idString = IdString;
     }
-    public Width: number;
+    public width: number;
     public Height: number;
-    public IdString: string;
+    public idString: string;
     public get aspectRatio(): number {
         if (!this.IsUndefined) {
-            return this.Width / this.Height;
+            return this.width / this.Height;
         } else {
             return 0; // infinite page height
         }
     }
     /** Undefined page format: use default page format. */
     public get IsUndefined(): boolean {
-        return this.Width === undefined || this.Height === undefined || this.Height === 0 || this.Width === 0;
+        return this.width === undefined || this.Height === undefined || this.Height === 0 || this.width === 0;
     }
-
     public static get UndefinedPageFormat(): PageFormat {
         return new PageFormat(0, 0);
     }
@@ -657,8 +656,6 @@ export class PageFormat {
         if (!otherPageFormat) {
             return false;
         }
-        return otherPageFormat.Width === this.Width && otherPageFormat.Height === this.Height;
+        return otherPageFormat.width === this.width && otherPageFormat.Height === this.Height;
     }
 }
-
-
