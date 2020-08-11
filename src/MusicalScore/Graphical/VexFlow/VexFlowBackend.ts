@@ -3,8 +3,9 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
-import {GraphicalMusicPage, EngravingRules} from "..";
-import {BackendType} from "../../../OpenSheetMusicDisplay";
+import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
+import {GraphicalMusicPage} from "../GraphicalMusicPage";
+import {EngravingRules} from "../EngravingRules";
 
 export class VexFlowBackends {
   public static CANVAS: 0;
@@ -20,6 +21,8 @@ export abstract class VexFlowBackend {
   /** The GraphicalMusicPage the backend is drawing from. Each backend only renders one GraphicalMusicPage, to which the coordinates are relative. */
   public graphicalMusicPage: GraphicalMusicPage;
   protected rules: EngravingRules;
+  public width: number; // read-only
+  public height: number; // read-only
 
   public abstract initialize(container: HTMLElement): void;
 
@@ -30,6 +33,8 @@ export abstract class VexFlowBackend {
   public getCanvas(): HTMLElement {
     return this.canvas;
   }
+
+  public abstract getCanvasSize(): number;
 
   public getRenderElement(): HTMLElement {
     //console.log("backend type: " + this.getVexflowBackendType());
@@ -74,8 +79,10 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract scale(k: number): void;
 
-  public resize(x: number, y: number): void {
-    this.renderer.resize(x, y);
+  public resize(width: number, height: number): void {
+    this.renderer.resize(width, height);
+    this.width = width;
+    this.height = height;
   }
 
   public abstract clear(): void;

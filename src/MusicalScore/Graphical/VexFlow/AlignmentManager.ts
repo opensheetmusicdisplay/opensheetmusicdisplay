@@ -4,7 +4,7 @@ import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicEx
 import { AbstractGraphicalExpression } from "../AbstractGraphicalExpression";
 import { PointF2D } from "../../../Common/DataObjects/PointF2D";
 import { EngravingRules } from "../EngravingRules";
-import { PlacementEnum } from "../../VoiceData/Expressions";
+import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 
 export class AlignmentManager {
     private parentStaffline: StaffLine;

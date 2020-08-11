@@ -23,9 +23,9 @@ import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContain
 import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
-import { Note } from "../..";
+import { Note } from "../../../MusicalScore/VoiceData/Note";
 import StaveNote = Vex.Flow.StaveNote;
-import { ArpeggioType } from "../../VoiceData";
+import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
 
 /**
@@ -115,10 +115,23 @@ export class VexFlowConverter {
      * @returns {string[]}
      */
     public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
+        //FIXME: The octave seems to need a shift of three?
+        //FIXME: Also rests seem to use different offsets depending on the clef.
+        let fixmeOffset: number = 3;
+        if (note.sourceNote.isRest()) {
+            fixmeOffset = 0;
+            if (note.Clef().ClefType === ClefEnum.F) {
+                fixmeOffset = 2;
+            }
+            if (note.Clef().ClefType === ClefEnum.C) {
+                fixmeOffset = 2;
+            }
+            // TODO the pitch for rests will be the start position, for eights rests it will be the bottom point
+            // maybe we want to center on the display position instead of having the bottom there?
+        }
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
-        // The octave seems to need a shift of three FIXME?
-        const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
+        const octave: number = pitch.Octave - note.Clef().OctaveOffset + fixmeOffset;
         const notehead: Notehead = note.sourceNote.Notehead;
         let noteheadCode: string = "";
         if (notehead) {
@@ -197,7 +210,13 @@ export class VexFlowConverter {
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 isRest = true;
-                keys = ["b/4"];
+                if (note.sourceNote.Pitch) {
+                    const restPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
+                    keys = [restPitch[0]];
+                    break;
+                } else {
+                    keys = ["b/4"];
+                }
                 // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
                 // if it is a full measure rest:
                 if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {

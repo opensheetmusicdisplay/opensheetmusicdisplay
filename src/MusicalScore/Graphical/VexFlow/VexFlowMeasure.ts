@@ -33,8 +33,9 @@ import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/In
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
-import {NoteType, Arpeggio} from "../../VoiceData";
 import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
+import { NoteType } from "../../VoiceData/NoteType";
+import { Arpeggio } from "../../VoiceData/Arpeggio";
 
 // type StemmableNote = Vex.Flow.StemmableNote;
 

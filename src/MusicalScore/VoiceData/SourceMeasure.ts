@@ -11,7 +11,9 @@ import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {Repetition} from "../MusicSource/Repetition";
-import {GraphicalMeasure, SystemLinesEnum, EngravingRules} from "../Graphical";
+import {SystemLinesEnum} from "../Graphical/SystemLinesEnum";
+import {EngravingRules} from "../Graphical/EngravingRules";
+import {GraphicalMeasure} from "../Graphical/GraphicalMeasure";
 //import {BaseIdClass} from "../../Util/BaseIdClass"; // SourceMeasure originally extended BaseIdClass, but ids weren't used.
 
 /**
@@ -23,6 +25,7 @@ export class SourceMeasure {
      * The data entries and data lists will be filled with null values according to the total number of staves,
      * so that existing objects can be referred to by staff index.
      * @param completeNumberOfStaves
+     * @param rules
      */
     constructor(completeNumberOfStaves: number, rules: EngravingRules) {
         this.completeNumberOfStaves = completeNumberOfStaves;

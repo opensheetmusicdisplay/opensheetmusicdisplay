@@ -250,6 +250,7 @@ export class EngravingRules {
     public PageBackgroundColor: string; // vexflow-color-string (#FFFFFF). Default undefined/transparent.
     public RenderSingleHorizontalStaffline: boolean;
     public RestoreCursorAfterRerender: boolean;
+    public StretchLastSystemLine: boolean;
     public SpacingBetweenTextLines: number;
 
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
@@ -511,6 +512,7 @@ export class EngravingRules {
         this.NewSystemAtXMLNewSystemAttribute = false;
         this.NewPageAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;
+        this.StretchLastSystemLine = false;
 
         EngravingRules.FixStafflineBoundingBox = false; // TODO temporary workaround
 

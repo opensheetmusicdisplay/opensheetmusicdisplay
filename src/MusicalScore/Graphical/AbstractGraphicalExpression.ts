@@ -4,7 +4,7 @@ import { StaffLine } from "./StaffLine";
 import { BoundingBox } from "./BoundingBox";
 import { AbstractExpression, PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { EngravingRules } from "./EngravingRules";
-import { SourceMeasure } from "../VoiceData";
+import { SourceMeasure } from "../VoiceData/SourceMeasure";
 
 export abstract class AbstractGraphicalExpression extends GraphicalObject {
     protected label: GraphicalLabel;

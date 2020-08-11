@@ -203,11 +203,14 @@ export interface IOSMDOptions {
      *  Setting this is the same as setting osmd.EngravingRules.SoftmaxFactorVexFlow.
      */
     spacingFactorSoftmax?: number;
-
     /**
      * Number in pixels, of spacing between multi-line labels
      */
     spacingBetweenTextLines?: number;
+    /**
+     * Set to true if the last system line should be streched across the whole page just as the other systems. Default is false
+     */
+    stretchLastSystemLine?: boolean;
 }
 
 export enum AlignRestOption {
@@ -219,7 +222,7 @@ export enum AlignRestOption {
 export enum FillEmptyMeasuresWithWholeRests {
     No = 0,
     YesVisible = 1,
-    YesInvisible = 2
+    YesInvisible = 2 // fill with invisible whole rests
 }
 
 export enum BackendType {
