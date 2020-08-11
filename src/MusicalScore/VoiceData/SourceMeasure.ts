@@ -65,6 +65,7 @@ export class SourceMeasure {
     private duration: Fraction;
     private activeTimeSignature: Fraction;
     public hasLyrics: boolean = false;
+    public allRests: boolean = false;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];

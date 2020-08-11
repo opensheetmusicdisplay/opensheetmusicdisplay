@@ -179,6 +179,62 @@ export abstract class MusicSheetCalculator {
             }
         }
 
+        if (this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures) {
+            //track number of multirests
+            let beginMultiRestMeasure: SourceMeasure = undefined;
+            let multiRestCount: number = 0;
+            //go through all source measures again. Need to calc auto-multi-rests
+            for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
+                const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
+                if (sourceMeasure.allRests) {
+                    //we've already been initialized, we are in the midst of a multirest sequence
+                    if (multiRestCount > 0) {
+                        multiRestCount++;
+                        //clear out these measures. We know now that we are in multirest mode
+                        for (let idx2: number = 0; idx2 < measureList[idx].length; idx2++) {
+                            measureList[idx][idx2] = undefined;
+                        }
+                    } else { //else this is the (potential) beginning
+                        beginMultiRestMeasure = sourceMeasure;
+                        multiRestCount = 1;
+                    }
+                } else {//not multirest measure
+                    if (multiRestCount > 1) {//Actual multirest sequence just happened. Process
+                        beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
+                        //regen graphical measures for this source measure
+                        const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
+                            beginMultiRestMeasure,
+                            accidentalCalculators,
+                            lyricWords,
+                            openOctaveShifts,
+                            activeClefs
+                        );
+                        measureList[beginMultiRestMeasure.measureListIndex] = graphicalMeasures;
+                        multiRestCount = 0;
+                        beginMultiRestMeasure = undefined;
+                    } else { //had a potential multirest sequence, but didn't pan out. only one measure was rests
+                        multiRestCount = 0;
+                        beginMultiRestMeasure = undefined;
+                    }
+                }
+            }
+            //If we reached the end of the sheet and have pending multirest measure, process
+            if (multiRestCount > 1) {
+                beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
+                //regen graphical measures for this source measure
+                const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
+                    beginMultiRestMeasure,
+                    accidentalCalculators,
+                    lyricWords,
+                    openOctaveShifts,
+                    activeClefs
+                );
+                measureList[beginMultiRestMeasure.measureListIndex] = graphicalMeasures;
+                multiRestCount = 0;
+                beginMultiRestMeasure = undefined;
+            }
+        }
+
         const staffIsPercussionArray: Array<boolean> =
                         activeClefs.map(clef => (clef.ClefType === ClefEnum.percussion));
 
@@ -2024,13 +2080,18 @@ export abstract class MusicSheetCalculator {
         const openBeams: Beam[] = [];
         const openTuplets: Tuplet[] = [];
         const staffEntryLinks: StaffEntryLink[] = [];
+        let allHaveRests: boolean = true;
         for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
             const measure: GraphicalMeasure = this.createGraphicalMeasure( // (VexFlowMeasure)
                 sourceMeasure, openTuplets, openBeams,
                 accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
             );
+            if (allHaveRests) {
+                allHaveRests = measure.hasOnlyRests;
+            }
             verticalMeasureList.push(measure);
         }
+        sourceMeasure.allRests = allHaveRests;
         sourceMeasure.VerticalMeasureList = verticalMeasureList; // much easier way to link sourceMeasure to graphicalMeasures than Dictionary
         //this.graphicalMusicSheet.sourceToGraphicalMeasureLinks.setValue(sourceMeasure, verticalMeasureList); // overwrites entries because:
         //this.graphicalMusicSheet.sourceToGraphicalMeasureLinks[sourceMeasure] = verticalMeasureList; // can't use SourceMeasure as key.
@@ -2203,6 +2264,17 @@ export abstract class MusicSheetCalculator {
                 gve.notes.push(graphicalNote);
             }
         }
+
+        measure.hasOnlyRests = true;
+        //if staff entries empty, loop will not start. so true is valid
+        for (const graphicalStaffEntry of measure.staffEntries) {
+            //Loop until we get just one false
+            measure.hasOnlyRests = graphicalStaffEntry.hasOnlyRests();
+            if (!measure.hasOnlyRests) {
+                break;
+            }
+        }
+
         return measure;
     }
 
