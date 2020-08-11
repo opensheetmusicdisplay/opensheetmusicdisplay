@@ -186,7 +186,7 @@ export abstract class MusicSheetCalculator {
             //go through all source measures again. Need to calc auto-multi-rests
             for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
                 const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
-                if (sourceMeasure.allRests) {
+                if (sourceMeasure.canBeReducedToMultiRest()) {
                     //we've already been initialized, we are in the midst of a multirest sequence
                     if (multiRestCount > 0) {
                         multiRestCount++;
@@ -198,8 +198,8 @@ export abstract class MusicSheetCalculator {
                         beginMultiRestMeasure = sourceMeasure;
                         multiRestCount = 1;
                     }
-                } else {//not multirest measure
-                    if (multiRestCount > 1) {//Actual multirest sequence just happened. Process
+                } else { //not multirest measure
+                    if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
                         beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
                         //regen graphical measures for this source measure
                         const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
@@ -1435,6 +1435,9 @@ export abstract class MusicSheetCalculator {
             // TempoExpressions always on the first visible System's StaffLine // TODO is it though?
             if (this.rules.MinMeasureToDrawIndex > 0) {
                 return; // assuming that the tempo is always in measure 1 (idx 0), adding the expression causes issues when we don't draw measure 1
+            }
+            if (!measures[0]) {
+                return;
             }
             let staffLine: StaffLine = measures[0].ParentStaffLine;
             let firstVisibleMeasureX: number = measures[0].PositionAndShape.RelativePosition.x;

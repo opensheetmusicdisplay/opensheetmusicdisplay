@@ -8,8 +8,9 @@ import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
 import {MultiExpression} from "./Expressions/MultiExpression";
 import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
-import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
+import {ClefInstruction} from "./Instructions/ClefInstruction";
+import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {Repetition} from "../MusicSource/Repetition";
 import {SystemLinesEnum} from "../Graphical/SystemLinesEnum";
 import {EngravingRules} from "../Graphical/EngravingRules";
@@ -65,6 +66,7 @@ export class SourceMeasure {
     private duration: Fraction;
     private activeTimeSignature: Fraction;
     public hasLyrics: boolean = false;
+    public hasMoodExpressions: boolean = false;
     public allRests: boolean = false;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
@@ -572,5 +574,27 @@ export class SourceMeasure {
             }
         }
         return entry;
+    }
+
+    public canBeReducedToMultiRest(): boolean {
+        if (!this.allRests || this.hasLyrics || this.hasMoodExpressions || this.tempoExpressions.length > 0) {
+            return false;
+        }
+        // check for StaffLinkedExpressions (e.g. MultiExpression, StaffText) (per staff)
+        for (const multiExpressions of this.staffLinkedExpressions) {
+            if (multiExpressions.length > 0) {
+                return false;
+            }
+        }
+        // check for clef instruction for next measure
+        for (const lastStaffEntry of this.lastInstructionsStaffEntries) {
+            for (let idx: number = 0, len: number = lastStaffEntry?.Instructions.length; idx < len; ++idx) {
+                const abstractNotationInstruction: AbstractNotationInstruction = lastStaffEntry.Instructions[idx];
+                if (abstractNotationInstruction instanceof ClefInstruction) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

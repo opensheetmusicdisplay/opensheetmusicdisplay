@@ -537,6 +537,7 @@ export class ExpressionReader {
         }
         if (MoodExpression.isInputStringMood(stringTrimmed)) {
             this.createNewMultiExpressionIfNeeded(currentMeasure);
+            currentMeasure.hasMoodExpressions = true;
             const moodExpression: MoodExpression = new MoodExpression(stringTrimmed, this.placement, this.staffNumber);
             this.getMultiExpression.addExpression(moodExpression, prefix);
             return true;

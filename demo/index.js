@@ -36,6 +36,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
             "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
+            "OSMD Function Test - Metronome Marks": "OSMD_function_test_metronome_marks.mxl",
             "OSMD Function Test - Multiple Rest Measures": "OSMD_function_test_multiple_rest_measures.musicxml",
             "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
             "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
