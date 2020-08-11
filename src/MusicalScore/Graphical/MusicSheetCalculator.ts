@@ -2072,10 +2072,6 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    /*private processAutoMultiRestMeasure(createdMeasure: GraphicalMeasure): void {
-        createdMeasure.staffEntries;
-    }*/
-
     private createGraphicalMeasuresForSourceMeasure(sourceMeasure: SourceMeasure, accidentalCalculators: AccidentalCalculator[],
                                                     openLyricWords: LyricWord[],
                                                     openOctaveShifts: OctaveShiftParams[], activeClefs: ClefInstruction[]): GraphicalMeasure[] {
