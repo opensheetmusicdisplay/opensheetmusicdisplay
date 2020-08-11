@@ -167,29 +167,20 @@ export abstract class MusicSheetCalculator {
                 activeClefs
             );
             measureList.push(graphicalMeasures);
-            if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
-                if (sourceMeasure.canBeReducedToMultiRest()) {
-                    sourceMeasure.isReducedToMultiRest = true;
-                    sourceMeasure.multipleRestMeasureNumber = 1;
-                    const measuresToSkip: number = sourceMeasure.multipleRestMeasures - 1;
-                    // console.log(`skipping ${measuresToSkip} measures for measure #${sourceMeasure.MeasureNumber}.`);
-                    idx += measuresToSkip;
-                    for (let idx2: number = 1; idx2 <= measuresToSkip; idx2++) {
-                        const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber - 1 + idx2];
-                        // TODO handle the case that a measure after the first multiple rest measure can't be reduced
-                        nextSourceMeasure.multipleRestMeasureNumber = idx2 + 1;
-                        nextSourceMeasure.isReducedToMultiRest = true;
-                        measureList.push([undefined]);
-                        // TODO we could push an object here or push nothing entirely,
-                        //   but then the index doesn't correspond to measure numbers anymore.
-                    }
-                } else {
-                    // the original number of multiple rests given needs to be reduced,
-                    //   because the multirest needs to be "postponed" to the next possible location,
-                    //   because we could not do a multirest over all vertical measures
-                    sourceMeasure.multipleRestMeasures = 0;
-                    const nextMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber]; // MeasureNumber - 1 = index, + 1 = next
-                    nextMeasure.multipleRestMeasures = sourceMeasure.multipleRestMeasures - 1;
+            if (sourceMeasure.multipleRestMeasures > 0 && this.rules.RenderMultipleRestMeasures) {
+                sourceMeasure.isReducedToMultiRest = true;
+                sourceMeasure.multipleRestMeasureNumber = 1;
+                const measuresToSkip: number = sourceMeasure.multipleRestMeasures - 1;
+                // console.log(`skipping ${measuresToSkip} measures for measure #${sourceMeasure.MeasureNumber}.`);
+                idx += measuresToSkip;
+                for (let idx2: number = 1; idx2 <= measuresToSkip; idx2++) {
+                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber - 1 + idx2];
+                    // TODO handle the case that a measure after the first multiple rest measure can't be reduced
+                    nextSourceMeasure.multipleRestMeasureNumber = idx2 + 1;
+                    nextSourceMeasure.isReducedToMultiRest = true;
+                    measureList.push([undefined]);
+                    // TODO we could push an object here or push nothing entirely,
+                    //   but then the index doesn't correspond to measure numbers anymore.
                 }
             }
         }
@@ -201,7 +192,7 @@ export abstract class MusicSheetCalculator {
             //go through all source measures again. Need to calc auto-multi-rests
             for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
                 const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
-                if (sourceMeasure.canBeReducedToMultiRest() && !sourceMeasure.multipleRestMeasures) {
+                if (!sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest()) {
                     //we've already been initialized, we are in the midst of a multirest sequence
                     if (multiRestCount > 0) {
                         beginMultiRestMeasure.isReducedToMultiRest = true;
