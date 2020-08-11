@@ -213,7 +213,7 @@ export class EngravingRules {
     public ColorStemsLikeNoteheads: boolean;
     public ColorFlags: boolean;
     public ColorBeams: boolean;
-    public ColoringSetCustom: Dictionary<NoteEnum|number, string>;
+    public ColoringSetCurrent: Dictionary<NoteEnum|number, string>;
     public DefaultColorNotehead: string;
     public DefaultColorRest: string;
     public DefaultColorStem: string;
