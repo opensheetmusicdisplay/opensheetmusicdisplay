@@ -69,7 +69,6 @@ export class Cursor {
   public show(): void {
     this.hidden = false;
     this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
-    this.currentPageNumber = 1;
     this.update();
   }
 
@@ -107,6 +106,8 @@ export class Cursor {
     if (this.hidden || this.hidden === undefined || this.hidden === null) {
       return;
     }
+    this.updateCurrentPage(); // attach cursor to new page DOM if necessary
+
     // this.graphic?.Cursors?.length = 0;
     const iterator: MusicPartManagerIterator = this.iterator;
     // TODO when measure draw range (drawUpToMeasureNumber) was changed, next/update can fail to move cursor. but of course it can be reset before.
@@ -188,7 +189,6 @@ export class Cursor {
    */
   public next(): void {
     this.iterator.moveToNext();
-    this.updateCurrentPage();
     this.update();
   }
 
@@ -197,7 +197,6 @@ export class Cursor {
    */
   public reset(): void {
     this.resetIterator();
-    this.updateCurrentPage();
     //this.iterator.moveToNext();
     this.update();
   }
@@ -244,6 +243,9 @@ export class Cursor {
     return notes;
   }
 
+  /** Check if there was a change in current page, and attach cursor element to the corresponding HTMLElement (div).
+   *  This is only necessary if using PageFormat (multiple pages).
+   */
   public updateCurrentPage(): number {
     const timestamp: Fraction = this.iterator.currentTimeStamp;
     for (const page of this.graphic.MusicPages) {
@@ -256,7 +258,8 @@ export class Cursor {
           this.container.removeChild(this.cursorElement);
           this.container = document.getElementById("osmdCanvasPage" + newPageNumber);
           this.container.appendChild(this.cursorElement);
-          // alternatively:
+          // TODO maybe store this.pageCurrentlyAttachedTo, though right now it isn't necessary
+          // alternative to remove/append:
           // this.openSheetMusicDisplay.enableOrDisableCursor(true);
         }
         return this.currentPageNumber = newPageNumber;

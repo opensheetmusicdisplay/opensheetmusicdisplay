@@ -728,7 +728,6 @@ export class OpenSheetMusicDisplay {
                 this.cursor.hidden = hidden;
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
-                    this.cursor.updateCurrentPage();
                     this.cursor.update();
                 }
             }
