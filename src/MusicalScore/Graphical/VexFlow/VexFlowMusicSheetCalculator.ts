@@ -139,6 +139,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
     });
 
+    /*
+    {
+      // maxIterations: 2,
+      softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
+    }
+    */
+
     for (const measure of measures) {
       if (!measure) {
         continue;
