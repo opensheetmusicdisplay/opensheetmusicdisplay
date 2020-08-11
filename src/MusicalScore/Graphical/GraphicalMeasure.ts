@@ -60,7 +60,8 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public endInstructionsWidth: number;
     public hasError: boolean;
     /**
-     * Whether or not this measure is nothing but rest(s)
+     * Whether or not this measure is nothing but rest(s).
+     * Also see SourceMeasure.allRests, which is not the same, because a source measure can have multiple staffs/graphicalMeasures.
      */
     public hasOnlyRests: boolean = false;
 

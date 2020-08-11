@@ -168,13 +168,28 @@ export abstract class MusicSheetCalculator {
             );
             measureList.push(graphicalMeasures);
             if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
-                const measuresToSkip: number = sourceMeasure.multipleRestMeasures - 1;
-                // console.log(`skipping ${measuresToSkip} measures for measure #${sourceMeasure.MeasureNumber}.`);
-                idx += measuresToSkip;
-                for (let idx2: number = 0; idx2 < measuresToSkip; idx2++) {
-                    measureList.push([undefined]);
-                    // TODO we could push an object here or push nothing entirely,
-                    //   but then the index doesn't correspond to measure numbers anymore.
+                if (sourceMeasure.canBeReducedToMultiRest()) {
+                    sourceMeasure.isReducedToMultiRest = true;
+                    sourceMeasure.multipleRestMeasureNumber = 1;
+                    const measuresToSkip: number = sourceMeasure.multipleRestMeasures - 1;
+                    // console.log(`skipping ${measuresToSkip} measures for measure #${sourceMeasure.MeasureNumber}.`);
+                    idx += measuresToSkip;
+                    for (let idx2: number = 1; idx2 <= measuresToSkip; idx2++) {
+                        const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber - 1 + idx2];
+                        // TODO handle the case that a measure after the first multiple rest measure can't be reduced
+                        nextSourceMeasure.multipleRestMeasureNumber = idx2 + 1;
+                        nextSourceMeasure.isReducedToMultiRest = true;
+                        measureList.push([undefined]);
+                        // TODO we could push an object here or push nothing entirely,
+                        //   but then the index doesn't correspond to measure numbers anymore.
+                    }
+                } else {
+                    // the original number of multiple rests given needs to be reduced,
+                    //   because the multirest needs to be "postponed" to the next possible location,
+                    //   because we could not do a multirest over all vertical measures
+                    sourceMeasure.multipleRestMeasures = 0;
+                    const nextMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber]; // MeasureNumber - 1 = index, + 1 = next
+                    nextMeasure.multipleRestMeasures = sourceMeasure.multipleRestMeasures - 1;
                 }
             }
         }
@@ -186,10 +201,14 @@ export abstract class MusicSheetCalculator {
             //go through all source measures again. Need to calc auto-multi-rests
             for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
                 const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
-                if (sourceMeasure.canBeReducedToMultiRest()) {
+                if (sourceMeasure.canBeReducedToMultiRest() && !sourceMeasure.multipleRestMeasures) {
                     //we've already been initialized, we are in the midst of a multirest sequence
                     if (multiRestCount > 0) {
+                        beginMultiRestMeasure.isReducedToMultiRest = true;
+                        beginMultiRestMeasure.multipleRestMeasureNumber = 1;
                         multiRestCount++;
+                        sourceMeasure.multipleRestMeasureNumber = multiRestCount;
+                        sourceMeasure.isReducedToMultiRest = true;
                         //clear out these measures. We know now that we are in multirest mode
                         for (let idx2: number = 0; idx2 < measureList[idx].length; idx2++) {
                             measureList[idx][idx2] = undefined;
@@ -221,6 +240,7 @@ export abstract class MusicSheetCalculator {
             //If we reached the end of the sheet and have pending multirest measure, process
             if (multiRestCount > 1) {
                 beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
+                beginMultiRestMeasure.isReducedToMultiRest = true;
                 //regen graphical measures for this source measure
                 const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
                     beginMultiRestMeasure,
@@ -2083,18 +2103,16 @@ export abstract class MusicSheetCalculator {
         const openBeams: Beam[] = [];
         const openTuplets: Tuplet[] = [];
         const staffEntryLinks: StaffEntryLink[] = [];
-        let allHaveRests: boolean = true;
+        let restInAllGraphicalMeasures: boolean = true;
         for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
             const measure: GraphicalMeasure = this.createGraphicalMeasure( // (VexFlowMeasure)
                 sourceMeasure, openTuplets, openBeams,
                 accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
             );
-            if (allHaveRests) {
-                allHaveRests = measure.hasOnlyRests;
-            }
+            restInAllGraphicalMeasures = restInAllGraphicalMeasures && measure.hasOnlyRests;
             verticalMeasureList.push(measure);
         }
-        sourceMeasure.allRests = allHaveRests;
+        sourceMeasure.allRests = restInAllGraphicalMeasures;
         sourceMeasure.VerticalMeasureList = verticalMeasureList; // much easier way to link sourceMeasure to graphicalMeasures than Dictionary
         //this.graphicalMusicSheet.sourceToGraphicalMeasureLinks.setValue(sourceMeasure, verticalMeasureList); // overwrites entries because:
         //this.graphicalMusicSheet.sourceToGraphicalMeasureLinks[sourceMeasure] = verticalMeasureList; // can't use SourceMeasure as key.

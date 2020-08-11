@@ -67,7 +67,13 @@ export class SourceMeasure {
     private activeTimeSignature: Fraction;
     public hasLyrics: boolean = false;
     public hasMoodExpressions: boolean = false;
+    /** Whether the SourceMeasure only has rests, no other entries.
+     *  Not the same as GraphicalMeasure.hasOnlyRests, because one SourceMeasure can have many GraphicalMeasures (staffs).
+     */
     public allRests: boolean = false;
+    public isReducedToMultiRest: boolean = false;
+    /** If this measure is a MultipleRestMeasure, this is the number of the measure in that sequence of measures. */
+    public multipleRestMeasureNumber: number = 0;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
