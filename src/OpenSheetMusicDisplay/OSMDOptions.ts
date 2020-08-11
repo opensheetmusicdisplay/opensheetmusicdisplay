@@ -211,6 +211,11 @@ export interface IOSMDOptions {
      * Set to true if the last system line should be streched across the whole page just as the other systems. Default is false
      */
     stretchLastSystemLine?: boolean;
+    /**
+     * Set to true if subsequent measures full of rests should be auto-converted to multi-rest measure. Default is true
+     * This works across instruments- If all instruments have subsequent measures with nothing but rests, multirest measures are generated
+     */
+    autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
 }
 
 export enum AlignRestOption {

@@ -236,6 +236,7 @@ export class EngravingRules {
     private renderMeasureNumbersOnlyAtSystemStart: boolean;
     private renderLyrics: boolean;
     private renderMultipleRestMeasures: boolean;
+    public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
     private renderTimeSignatures: boolean;
     private dynamicExpressionMaxDistance: number;
     private dynamicExpressionSpacer: number;
@@ -504,6 +505,7 @@ export class EngravingRules {
         this.renderMeasureNumbersOnlyAtSystemStart = false;
         this.renderLyrics = true;
         this.renderMultipleRestMeasures = true;
+        this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
         this.renderTimeSignatures = true;
         this.fingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.fingeringInsideStafflines = false;

@@ -531,6 +531,9 @@ export class OpenSheetMusicDisplay {
         if (options.stretchLastSystemLine !== undefined) {
             this.rules.StretchLastSystemLine = options.stretchLastSystemLine;
         }
+        if (options.autoGenerateMutipleRestMeasuresFromRestMeasures !== undefined) {
+            this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures = options.autoGenerateMutipleRestMeasuresFromRestMeasures;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {

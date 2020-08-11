@@ -59,6 +59,10 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      */
     public endInstructionsWidth: number;
     public hasError: boolean;
+    /**
+     * Whether or not this measure is nothing but rest(s)
+     */
+    public hasOnlyRests: boolean = false;
 
     private parentStaff: Staff;
     private parentMusicSystem: MusicSystem;
