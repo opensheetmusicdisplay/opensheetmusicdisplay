@@ -571,7 +571,8 @@ export abstract class MusicSheetCalculator {
                 // eg verseNumbers: 2,3,4,6 => 1,2,3,4
                 const verseNumber: number = lyricEntry.LyricsEntry.VerseNumber;
                 const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
-                const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance;
+                const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance +
+                    this.rules.LyricsYOffsetToStaffHeight;
 
                 // Y-position calculated according to aforementioned mapping
                 let position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * sortedLyricVerseNumberIndex;
