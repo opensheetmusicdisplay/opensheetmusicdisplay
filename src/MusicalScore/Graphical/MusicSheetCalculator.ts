@@ -411,6 +411,10 @@ export abstract class MusicSheetCalculator {
      */
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
         const staffLine: StaffLine = musicSystem.StaffLines[0];
+        if (!staffLine || !staffLine.Measures[0]) {
+            log.warn("calculateMeasureNumberPlacement: measure undefined for system.Id " + musicSystem.Id);
+            return; // TODO apparently happens in script sometimes (mp #70)
+        }
         let previousLabelMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
         let labelOffsetX: number = 0;
         for (let i: number = 0; i < staffLine.Measures.length; i++) {
