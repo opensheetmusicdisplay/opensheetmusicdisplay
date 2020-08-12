@@ -467,7 +467,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             for (let i: number = 0; i < this.ParentStaffLine.Measures.length; i++) {
                 const tempMeasure: GraphicalMeasure = this.ParentStaffLine.Measures[i];
                 if (!(tempMeasure instanceof VexFlowMeasure)) {
-                    //should never be the case... But check just to be sure
+                    // can happen for MultipleRestMeasures
                     continue;
                 }
                 if (tempMeasure.MeasureNumber === currentMeasureNumber - 1 ||
