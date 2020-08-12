@@ -494,7 +494,7 @@ export class VexFlowConverter {
                 break;
             }
             case OrnamentEnum.InvertedMordent: {
-                vfOrna = new Vex.Flow.Ornament("mordent_inverted");
+                vfOrna = new Vex.Flow.Ornament("mordent"); // Vexflow uses baroque, not MusicXML definition
                 vfOrna.setDelayed(false);
                 break;
             }
@@ -504,7 +504,7 @@ export class VexFlowConverter {
                 break;
             }
             case OrnamentEnum.Mordent: {
-                vfOrna = new Vex.Flow.Ornament("mordent");
+                vfOrna = new Vex.Flow.Ornament("mordent_inverted");
                 vfOrna.setDelayed(false);
                 break;
             }
