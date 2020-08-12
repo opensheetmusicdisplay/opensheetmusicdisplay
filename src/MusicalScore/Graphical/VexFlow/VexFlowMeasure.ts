@@ -471,7 +471,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     continue;
                 }
                 if (tempMeasure.MeasureNumber === currentMeasureNumber - 1 ||
-                    tempMeasure.MeasureNumber + tempMeasure.parentSourceMeasure.multipleRestMeasures === currentMeasureNumber) {
+                    tempMeasure.MeasureNumber + tempMeasure.parentSourceMeasure?.multipleRestMeasures === currentMeasureNumber) {
                     //We found the previous top measure
                     prevMeasure = tempMeasure as VexFlowMeasure;
                 }
