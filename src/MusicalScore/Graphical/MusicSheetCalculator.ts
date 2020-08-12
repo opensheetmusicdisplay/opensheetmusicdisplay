@@ -168,6 +168,7 @@ export abstract class MusicSheetCalculator {
             );
             measureList.push(graphicalMeasures);
             if (sourceMeasure.multipleRestMeasures > 0 && this.rules.RenderMultipleRestMeasures) {
+                // multiRest given in XML, skip the next measures included
                 sourceMeasure.isReducedToMultiRest = true;
                 sourceMeasure.multipleRestMeasureNumber = 1;
                 const measuresToSkip: number = sourceMeasure.multipleRestMeasures - 1;
