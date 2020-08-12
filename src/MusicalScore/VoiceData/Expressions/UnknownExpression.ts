@@ -1,5 +1,6 @@
-import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
-import {TextAlignmentEnum} from "../../../Common/Enums/TextAlignment";
+import { PlacementEnum, AbstractExpression } from "./AbstractExpression";
+import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 export class UnknownExpression extends AbstractExpression {
     constructor(label: string, placement: PlacementEnum, textAlignment: TextAlignmentEnum, staffNumber: number) {
@@ -14,6 +15,7 @@ export class UnknownExpression extends AbstractExpression {
     private label: string;
     private textAlignment: TextAlignmentEnum;
     private staffNumber: number;
+    public fontStyle: FontStyles;
 
     public get Label(): string {
         return this.label;
