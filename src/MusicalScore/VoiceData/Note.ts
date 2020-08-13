@@ -11,17 +11,19 @@ import {NoteState} from "../Graphical/DrawingEnums";
 import {Notehead} from "./Notehead";
 import {Arpeggio} from "./Arpeggio";
 import {NoteType} from "./NoteType";
+import { SourceMeasure } from "./SourceMeasure";
 
 /**
  * Represents a single pitch with a duration (length)
  */
 export class Note {
 
-    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch, isRest?: boolean) {
+    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch, sourceMeasure: SourceMeasure, isRest?: boolean) {
         this.voiceEntry = voiceEntry;
         this.parentStaffEntry = parentStaffEntry;
         this.length = length;
         this.pitch = pitch;
+        this.sourceMeasure = sourceMeasure;
         this.isRestFlag = isRest ?? false;
         if (pitch) {
             this.halfTone = pitch.getHalfTone();
@@ -38,6 +40,7 @@ export class Note {
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;
+    private sourceMeasure: SourceMeasure;
     /** The length/duration given in the <type> tag. different from length for tuplets/tremolos. */
     private typeLength: Fraction;
     /** The NoteType given in the XML, e.g. quarter, which can be a normal quarter or tuplet quarter -> can have different length/fraction */
@@ -49,6 +52,9 @@ export class Note {
      * The untransposed (!!!) source data.
      */
     private pitch: Pitch;
+    public get NoteAsString(): string {
+        return this.pitch.toString();
+    }
     private beam: Beam;
     private tuplet: Tuplet;
     private tie: Tie;
@@ -103,6 +109,9 @@ export class Note {
     }
     public set Length(value: Fraction) {
         this.length = value;
+    }
+    public get SourceMeasure(): SourceMeasure {
+        return this.sourceMeasure;
     }
     public get TypeLength(): Fraction {
         return this.typeLength;
@@ -224,10 +233,9 @@ export class Note {
     /** Note: May be dangerous to use if ParentStaffEntry.VerticalContainerParent etc is not set.
      * better calculate this directly when you have access to the note's measure.
      * whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
-     * TODO give a Note a reference to its measure?
      */
     public isWholeRest(): boolean {
-        return this.isRest() && this.Length.RealValue === this.ParentStaffEntry.VerticalContainerParent.ParentMeasure.ActiveTimeSignature.RealValue;
+        return this.isRest() && this.Length.RealValue === this.sourceMeasure.ActiveTimeSignature.RealValue;
     }
 
     public ToString(): string {
@@ -240,7 +248,7 @@ export class Note {
     public getAbsoluteTimestamp(): Fraction {
         return Fraction.plus(
             this.voiceEntry.Timestamp,
-            this.parentStaffEntry.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp
+            this.sourceMeasure.AbsoluteTimestamp
         );
     }
     public checkForDoubleSlur(slur: Slur): boolean {

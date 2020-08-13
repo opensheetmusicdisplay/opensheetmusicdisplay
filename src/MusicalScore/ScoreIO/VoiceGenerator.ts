@@ -272,7 +272,7 @@ export class VoiceGenerator {
       if (openTieDict.hasOwnProperty(key)) {
         const tie: Tie = openTieDict[key];
         if (Fraction.plus(tie.StartNote.ParentStaffEntry.Timestamp, tie.Duration)
-          .lt(tie.StartNote.ParentStaffEntry.VerticalContainerParent.ParentMeasure.Duration)) {
+          .lt(tie.StartNote.SourceMeasure.Duration)) {
           delete openTieDict[key];
         }
       }
@@ -440,10 +440,11 @@ export class VoiceGenerator {
 
     if (stringNumber < 0 || fretNumber < 0) {
       // create normal Note
-      note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
+      note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, this.currentMeasure);
     } else {
       // create TabNote
-      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber, bends, vibratoStrokes);
+      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, this.currentMeasure,
+                         stringNumber, fretNumber, bends, vibratoStrokes);
     }
 
     note.TypeLength = typeDuration;
@@ -488,7 +489,7 @@ export class VoiceGenerator {
         const noteStep: NoteEnum = NoteEnum[displayStep.value.toUpperCase()];
         pitch = new Pitch(noteStep, parseInt(octave.value, 10), AccidentalEnum.NONE);
     }
-    const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, true);
+    const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
     restNote.NoteTypeXml = noteTypeXml;
     restNote.PrintObject = printObject;
     restNote.IsCueNote = isCueNote;

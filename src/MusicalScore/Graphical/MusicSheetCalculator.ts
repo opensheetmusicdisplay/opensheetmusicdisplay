@@ -2265,7 +2265,7 @@ export abstract class MusicSheetCalculator {
                                                           measure.parentSourceMeasure.CompleteNumberOfStaves),
                     staff);
                 const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
-                const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
+                const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined, sourceMeasure);
                 note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                   // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
