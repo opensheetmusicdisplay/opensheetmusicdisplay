@@ -705,11 +705,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
       if (!graphicalOctaveShift.startNote) { // fix for rendering range set
         let startGse: GraphicalStaffEntry;
-        for (const gve of startMeasure.staffEntries) {
-          if (gve) {
-            startGse = gve;
+        for (const gse of startMeasure.staffEntries) {
+          if (gse) {
+            startGse = gse;
             break;
-          }
+          } // sometimes the first graphical staff entry is undefined, not sure why.
         }
         if (!startGse) {
           return; // couldn't find a start staffentry, don't draw the octave shift
