@@ -147,7 +147,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
 
         while (couldReadMeasure) {
-            if (this.currentMeasure !== undefined && this.currentMeasure.HasEndLine) {
+            if (this.currentMeasure !== undefined && this.currentMeasure.HasEndLine && this.rules.NewSystemAndPartAfterFinalBarline) {
                 sourceMeasureCounter = 0;
             }
             this.currentMeasure = new SourceMeasure(this.completeNumberOfStaves, this.musicSheet.Rules);
