@@ -2719,13 +2719,16 @@ export abstract class MusicSheetCalculator {
                 break;
             }
             endStaffEntry = gse;
-            endStaffLine = <StaffLine>endStaffEntry.parentMeasure.ParentStaffLine;
+            endStaffLine = endStaffEntry.parentMeasure.ParentStaffLine;
+            if (!endStaffLine) {
+                endStaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
+            }
         }
-        if (!endStaffEntry) {
+        if (!endStaffEntry || !endStaffLine) {
             return;
         }
         // if on the same StaffLine
-        if (startStaffLine === endStaffLine) {
+        if (startStaffLine === endStaffLine && endStaffEntry.parentMeasure.ParentStaffLine) {
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
@@ -2758,7 +2761,8 @@ export abstract class MusicSheetCalculator {
                 return;
             }
             // second Underscore in the endStaffLine until endStaffEntry (if endStaffEntry isn't the first StaffEntry of the StaffLine))
-            if (!(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
+            if (endStaffEntry.parentMeasure.ParentStaffLine && endStaffEntry.parentMeasure.staffEntries &&
+                !(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
                 endStaffEntry.parentMeasure === endStaffEntry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = endStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
                 const secondEndX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
