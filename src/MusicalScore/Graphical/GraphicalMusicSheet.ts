@@ -466,7 +466,7 @@ export class GraphicalMusicSheet {
      */
     public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, staffIndex: number): GraphicalMeasure {
         for (let i: number = 0; i < this.measureList.length; i++) {
-            if (this.measureList[i][0].parentSourceMeasure === sourceMeasure) {
+            if (this.measureList[i][0]?.parentSourceMeasure === sourceMeasure) {
                 return this.measureList[i][staffIndex];
             }
         }
