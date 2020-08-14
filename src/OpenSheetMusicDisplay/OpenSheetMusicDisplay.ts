@@ -17,17 +17,18 @@ import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType } from "./OSMDO
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
-import { NoteEnum } from "..";
-import { AutoColorSet, GraphicalMusicPage } from "../MusicalScore";
-import { MusicPartManagerIterator } from "../MusicalScore/MusicParts";
-import { ITransposeCalculator } from "../MusicalScore/Interfaces";
+import { AutoColorSet } from "../MusicalScore/Graphical/DrawingEnums";
+import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage";
+import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
+import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
+import { NoteEnum } from "../Common/DataObjects/Pitch";
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.8.3-release"; // getter: this.Version
+    private version: string = "0.8.3-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -524,6 +525,15 @@ export class OpenSheetMusicDisplay {
         if (options.spacingFactorSoftmax !== undefined) {
             this.rules.SoftmaxFactorVexFlow = options.spacingFactorSoftmax;
         }
+        if (options.spacingBetweenTextLines !== undefined) {
+            this.rules.SpacingBetweenTextLines = options.spacingBetweenTextLines;
+        }
+        if (options.stretchLastSystemLine !== undefined) {
+            this.rules.StretchLastSystemLine = options.stretchLastSystemLine;
+        }
+        if (options.autoGenerateMutipleRestMeasuresFromRestMeasures !== undefined) {
+            this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures = options.autoGenerateMutipleRestMeasuresFromRestMeasures;
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {
@@ -697,10 +707,17 @@ export class OpenSheetMusicDisplay {
             // save previous cursor state
             const hidden: boolean = this.cursor?.Hidden;
             const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
+            this.cursor?.hide();
 
+            // check which page/backend to draw the cursor on (the pages may have changed since last cursor)
+            let backendToDrawOn: VexFlowBackend = this.drawer?.Backends[0];
+            if (backendToDrawOn && this.rules.RestoreCursorAfterRerender && this.cursor) {
+                const newPageNumber: number = this.cursor.updateCurrentPage();
+                backendToDrawOn = this.drawer.Backends[newPageNumber - 1];
+            }
             // create new cursor
-            if (this.drawer?.Backends?.length >= 1 && this.drawer.Backends[0].getRenderElement()) {
-                this.cursor = new Cursor(this.drawer.Backends[0].getRenderElement(), this);
+            if (backendToDrawOn && backendToDrawOn.getRenderElement()) {
+                this.cursor = new Cursor(backendToDrawOn.getRenderElement(), this);
             }
             if (this.sheet && this.graphic && this.cursor) { // else init is called in load()
                 this.cursor.init(this.sheet.MusicPartManager, this.graphic);
@@ -711,6 +728,7 @@ export class OpenSheetMusicDisplay {
                 this.cursor.hidden = hidden;
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
+                    this.cursor.update();
                 }
             }
         } else { // disable cursor

@@ -3,11 +3,10 @@ import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
-import { GraphicalNote } from "..";
 import { NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { Note } from "../../VoiceData/Note";
 import { ColoringModes } from "./../DrawingParameters";
-import { TabNote } from "../../VoiceData/TabNote";
+import { GraphicalNote } from "../GraphicalNote";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: Vex.Flow.StemmableNote;
@@ -122,7 +121,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     }
                 }
                 // set ledger line color. TODO coordinate this with VexFlowConverter.StaveNote(), where there's also still code for this, maybe unnecessarily.
-                if (!(note.sourceNote instanceof TabNote)) { // setLedgerLineStyle doesn't exist on TabNote, would throw error.
+                if ((vfStaveNote as any).setLedgerLineStyle) { // setLedgerLineStyle doesn't exist on TabNote or rest, would throw error.
                     if (noteheadColor === transparentColor) {
                         (vfStaveNote as any).setLedgerLineStyle(
                             { fillStyle: noteheadColor, strokeStyle: noteheadColor, lineWidth: this.rules.LedgerLineWidth });

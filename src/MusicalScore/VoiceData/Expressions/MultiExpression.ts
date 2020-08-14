@@ -119,7 +119,8 @@ export class MultiExpression {
            } else if (this.expressions[0].expression instanceof MoodExpression) {
             fontStyle = FontStyles.Italic;
            } else if (this.expressions[0].expression instanceof UnknownExpression) {
-            fontStyle = FontStyles.Regular;
+            const unknownExpression: UnknownExpression = (this.expressions[0].expression as UnknownExpression);
+            fontStyle = unknownExpression.fontStyle ?? FontStyles.Regular;
            }
        }
        return fontStyle;

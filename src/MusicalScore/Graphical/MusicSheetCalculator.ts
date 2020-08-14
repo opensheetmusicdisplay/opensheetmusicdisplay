@@ -48,7 +48,7 @@ import { MidiInstrument } from "../VoiceData/Instructions/ClefInstruction";
 import { Staff } from "../VoiceData/Staff";
 import { OctaveShift } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import log from "loglevel";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import { Dictionary } from "typescript-collections";
 import { GraphicalLyricEntry } from "./GraphicalLyricEntry";
 import { GraphicalLyricWord } from "./GraphicalLyricWord";
 import { GraphicalLine } from "./GraphicalLine";
@@ -167,15 +167,83 @@ export abstract class MusicSheetCalculator {
                 activeClefs
             );
             measureList.push(graphicalMeasures);
-            if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
+            if (sourceMeasure.multipleRestMeasures > 0 && this.rules.RenderMultipleRestMeasures) {
+                // multiRest given in XML, skip the next measures included
+                sourceMeasure.isReducedToMultiRest = true;
+                sourceMeasure.multipleRestMeasureNumber = 1;
                 const measuresToSkip: number = sourceMeasure.multipleRestMeasures - 1;
                 // console.log(`skipping ${measuresToSkip} measures for measure #${sourceMeasure.MeasureNumber}.`);
                 idx += measuresToSkip;
-                for (let idx2: number = 0; idx2 < measuresToSkip; idx2++) {
+                for (let idx2: number = 1; idx2 <= measuresToSkip; idx2++) {
+                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber - 1 + idx2];
+                    // TODO handle the case that a measure after the first multiple rest measure can't be reduced
+                    nextSourceMeasure.multipleRestMeasureNumber = idx2 + 1;
+                    nextSourceMeasure.isReducedToMultiRest = true;
                     measureList.push([undefined]);
                     // TODO we could push an object here or push nothing entirely,
                     //   but then the index doesn't correspond to measure numbers anymore.
                 }
+            }
+        }
+
+        if (this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures && this.rules.RenderMultipleRestMeasures) {
+            //track number of multirests
+            let beginMultiRestMeasure: SourceMeasure = undefined;
+            let multiRestCount: number = 0;
+            //go through all source measures again. Need to calc auto-multi-rests
+            for (let idx: number = 0, len: number = musicSheet.SourceMeasures.length; idx < len; ++idx) {
+                const sourceMeasure: SourceMeasure = musicSheet.SourceMeasures[idx];
+                if (!sourceMeasure.isReducedToMultiRest && sourceMeasure.canBeReducedToMultiRest()) {
+                    //we've already been initialized, we are in the midst of a multirest sequence
+                    if (multiRestCount > 0) {
+                        beginMultiRestMeasure.isReducedToMultiRest = true;
+                        beginMultiRestMeasure.multipleRestMeasureNumber = 1;
+                        multiRestCount++;
+                        sourceMeasure.multipleRestMeasureNumber = multiRestCount;
+                        sourceMeasure.isReducedToMultiRest = true;
+                        //clear out these measures. We know now that we are in multirest mode
+                        for (let idx2: number = 0; idx2 < measureList[idx].length; idx2++) {
+                            measureList[idx][idx2] = undefined;
+                        }
+                    } else { //else this is the (potential) beginning
+                        beginMultiRestMeasure = sourceMeasure;
+                        multiRestCount = 1;
+                    }
+                } else { //not multirest measure
+                    if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
+                        beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
+                        //regen graphical measures for this source measure
+                        const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
+                            beginMultiRestMeasure,
+                            accidentalCalculators,
+                            lyricWords,
+                            openOctaveShifts,
+                            activeClefs
+                        );
+                        measureList[beginMultiRestMeasure.measureListIndex] = graphicalMeasures;
+                        multiRestCount = 0;
+                        beginMultiRestMeasure = undefined;
+                    } else { //had a potential multirest sequence, but didn't pan out. only one measure was rests
+                        multiRestCount = 0;
+                        beginMultiRestMeasure = undefined;
+                    }
+                }
+            }
+            //If we reached the end of the sheet and have pending multirest measure, process
+            if (multiRestCount > 1) {
+                beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
+                beginMultiRestMeasure.isReducedToMultiRest = true;
+                //regen graphical measures for this source measure
+                const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
+                    beginMultiRestMeasure,
+                    accidentalCalculators,
+                    lyricWords,
+                    openOctaveShifts,
+                    activeClefs
+                );
+                measureList[beginMultiRestMeasure.measureListIndex] = graphicalMeasures;
+                multiRestCount = 0;
+                beginMultiRestMeasure = undefined;
             }
         }
 
@@ -343,6 +411,10 @@ export abstract class MusicSheetCalculator {
      */
     protected calculateMeasureNumberPlacement(musicSystem: MusicSystem): void {
         const staffLine: StaffLine = musicSystem.StaffLines[0];
+        if (!staffLine || !staffLine.Measures[0]) {
+            log.warn("calculateMeasureNumberPlacement: measure undefined for system.Id " + musicSystem.Id);
+            return; // TODO apparently happens in script sometimes (mp #70)
+        }
         let previousLabelMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
         let labelOffsetX: number = 0;
         for (let i: number = 0; i < staffLine.Measures.length; i++) {
@@ -499,7 +571,8 @@ export abstract class MusicSheetCalculator {
                 // eg verseNumbers: 2,3,4,6 => 1,2,3,4
                 const verseNumber: number = lyricEntry.LyricsEntry.VerseNumber;
                 const sortedLyricVerseNumberIndex: number = lyricVersesNumber.indexOf(verseNumber);
-                const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance;
+                const firstPosition: number = lyricsStartYPosition + this.rules.LyricsHeight + this.rules.VerticalBetweenLyricsDistance +
+                    this.rules.LyricsYOffsetToStaffHeight;
 
                 // Y-position calculated according to aforementioned mapping
                 let position: number = firstPosition + (this.rules.VerticalBetweenLyricsDistance + this.rules.LyricsHeight) * sortedLyricVerseNumberIndex;
@@ -1380,6 +1453,9 @@ export abstract class MusicSheetCalculator {
             if (this.rules.MinMeasureToDrawIndex > 0) {
                 return; // assuming that the tempo is always in measure 1 (idx 0), adding the expression causes issues when we don't draw measure 1
             }
+            if (!measures[0]) {
+                return;
+            }
             let staffLine: StaffLine = measures[0].ParentStaffLine;
             let firstVisibleMeasureX: number = measures[0].PositionAndShape.RelativePosition.x;
             let verticalIndex: number = 0;
@@ -1644,7 +1720,7 @@ export abstract class MusicSheetCalculator {
     protected maxInstrNameLabelLength(): number {
         let maxLabelLength: number = 0.0;
         for (const instrument of this.graphicalMusicSheet.ParentMusicSheet.Instruments) {
-            if (instrument.NameLabel.print && instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
+            if (instrument.NameLabel?.print && instrument.Voices.length > 0 && instrument.Voices[0].Visible) {
                 let renderedLabel: Label = instrument.NameLabel;
                 if (!this.rules.RenderPartNames) {
                     renderedLabel = new Label("", renderedLabel.textAlignment, renderedLabel.font);
@@ -1944,16 +2020,16 @@ export abstract class MusicSheetCalculator {
 
     private handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number): void {
         let startGse: GraphicalStaffEntry = startGraphicalStaffEntry;
-        let startNote: GraphicalNote = startGse.findEndTieGraphicalNoteFromNote(tie.StartNote);
+        let startNote: GraphicalNote = undefined;
         let endGse: GraphicalStaffEntry = undefined;
         let endNote: GraphicalNote = undefined;
         for (let i: number = 1; i < tie.Notes.length; i++) {
-            startNote = startGse.findEndTieGraphicalNoteFromNote(tie.Notes[i - 1]);
+            startNote = startGse.findTieGraphicalNoteFromNote(tie.Notes[i - 1]);
             endGse = this.graphicalMusicSheet.GetGraphicalFromSourceStaffEntry(tie.Notes[i].ParentStaffEntry);
             if (!endGse) {
                 continue;
             }
-            endNote = endGse.findEndTieGraphicalNoteFromNote(tie.Notes[i]);
+            endNote = endGse.findTieGraphicalNoteFromNote(tie.Notes[i]);
             if (startNote !== undefined && endNote !== undefined && endGse) {
                 if (!startNote.sourceNote.PrintObject || !endNote.sourceNote.PrintObject) {
                     continue;
@@ -2024,13 +2100,16 @@ export abstract class MusicSheetCalculator {
         const openBeams: Beam[] = [];
         const openTuplets: Tuplet[] = [];
         const staffEntryLinks: StaffEntryLink[] = [];
+        let restInAllGraphicalMeasures: boolean = true;
         for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
             const measure: GraphicalMeasure = this.createGraphicalMeasure( // (VexFlowMeasure)
                 sourceMeasure, openTuplets, openBeams,
                 accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
             );
+            restInAllGraphicalMeasures = restInAllGraphicalMeasures && measure.hasOnlyRests;
             verticalMeasureList.push(measure);
         }
+        sourceMeasure.allRests = restInAllGraphicalMeasures;
         sourceMeasure.VerticalMeasureList = verticalMeasureList; // much easier way to link sourceMeasure to graphicalMeasures than Dictionary
         //this.graphicalMusicSheet.sourceToGraphicalMeasureLinks.setValue(sourceMeasure, verticalMeasureList); // overwrites entries because:
         //this.graphicalMusicSheet.sourceToGraphicalMeasureLinks[sourceMeasure] = verticalMeasureList; // can't use SourceMeasure as key.
@@ -2186,7 +2265,7 @@ export abstract class MusicSheetCalculator {
                                                           measure.parentSourceMeasure.CompleteNumberOfStaves),
                     staff);
                 const voiceEntry: VoiceEntry = new VoiceEntry(new Fraction(0, 1), staff.Voices[0], sourceStaffEntry);
-                const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined);
+                const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined, sourceMeasure);
                 note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                   // don't display whole rest that wasn't given in XML, only for layout/voice completion
                 voiceEntry.Notes.push(note);
@@ -2203,6 +2282,17 @@ export abstract class MusicSheetCalculator {
                 gve.notes.push(graphicalNote);
             }
         }
+
+        measure.hasOnlyRests = true;
+        //if staff entries empty, loop will not start. so true is valid
+        for (const graphicalStaffEntry of measure.staffEntries) {
+            //Loop until we get just one false
+            measure.hasOnlyRests = graphicalStaffEntry.hasOnlyRests();
+            if (!measure.hasOnlyRests) {
+                break;
+            }
+        }
+
         return measure;
     }
 
@@ -2420,17 +2510,11 @@ export abstract class MusicSheetCalculator {
     }
 
     private calculateTieCurves(): void {
-        for (let idx2: number = 0, len2: number = this.musicSystems.length; idx2 < len2; ++idx2) {
-            const musicSystem: MusicSystem = this.musicSystems[idx2];
-            for (let idx3: number = 0, len3: number = musicSystem.StaffLines.length; idx3 < len3; ++idx3) {
-                const staffLine: StaffLine = musicSystem.StaffLines[idx3];
-                for (let idx4: number = 0, len5: number = staffLine.Measures.length; idx4 < len5; ++idx4) {
-                    const measure: GraphicalMeasure = staffLine.Measures[idx4];
-                    for (let idx6: number = 0, len6: number = measure.staffEntries.length; idx6 < len6; ++idx6) {
-                        const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx6];
-                        const graphicalTies: GraphicalTie[] = staffEntry.GraphicalTies;
-                        for (let idx7: number = 0, len7: number = graphicalTies.length; idx7 < len7; ++idx7) {
-                            const graphicalTie: GraphicalTie = graphicalTies[idx7];
+        for (const musicSystem of this.musicSystems) {
+            for (const staffLine of musicSystem.StaffLines) {
+                for (const measure of staffLine.Measures) {
+                    for (const staffEntry of measure.staffEntries) {
+                        for (const graphicalTie of staffEntry.GraphicalTies) {
                             if (graphicalTie.StartNote !== undefined && graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry === staffEntry) {
                                 const tieIsAtSystemBreak: boolean = (
                                     graphicalTie.StartNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaffLine !==
@@ -2635,13 +2719,16 @@ export abstract class MusicSheetCalculator {
                 break;
             }
             endStaffEntry = gse;
-            endStaffLine = <StaffLine>endStaffEntry.parentMeasure.ParentStaffLine;
+            endStaffLine = endStaffEntry.parentMeasure.ParentStaffLine;
+            if (!endStaffLine) {
+                endStaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
+            }
         }
-        if (!endStaffEntry) {
+        if (!endStaffEntry || !endStaffLine) {
             return;
         }
         // if on the same StaffLine
-        if (startStaffLine === endStaffLine) {
+        if (startStaffLine === endStaffLine && endStaffEntry.parentMeasure.ParentStaffLine) {
             // start- and End margins from the text Labels
             const startX: number = startStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +
                 startStaffEntry.PositionAndShape.RelativePosition.x +
@@ -2674,7 +2761,8 @@ export abstract class MusicSheetCalculator {
                 return;
             }
             // second Underscore in the endStaffLine until endStaffEntry (if endStaffEntry isn't the first StaffEntry of the StaffLine))
-            if (!(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
+            if (endStaffEntry.parentMeasure.ParentStaffLine && endStaffEntry.parentMeasure.staffEntries &&
+                !(endStaffEntry === endStaffEntry.parentMeasure.staffEntries[0] &&
                 endStaffEntry.parentMeasure === endStaffEntry.parentMeasure.ParentStaffLine.Measures[0])) {
                 const secondStartX: number = endStaffLine.Measures[0].staffEntries[0].PositionAndShape.RelativePosition.x;
                 const secondEndX: number = endStaffEntry.parentMeasure.PositionAndShape.RelativePosition.x +

@@ -30,6 +30,7 @@ import { Notehead } from "../VoiceData/Notehead";
 import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
 import { NoteType, NoteTypeHandler } from "../VoiceData/NoteType";
 import { TabNote } from "../VoiceData/TabNote";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 
 export class VoiceGenerator {
   constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
@@ -114,9 +115,10 @@ export class VoiceGenerator {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
     //log.debug("read called:", restNote);
+
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
+        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, guitarPro,
                              printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
       // read lyrics
@@ -271,7 +273,7 @@ export class VoiceGenerator {
       if (openTieDict.hasOwnProperty(key)) {
         const tie: Tie = openTieDict[key];
         if (Fraction.plus(tie.StartNote.ParentStaffEntry.Timestamp, tie.Duration)
-          .lt(tie.StartNote.ParentStaffEntry.VerticalContainerParent.ParentMeasure.Duration)) {
+          .lt(tie.StartNote.SourceMeasure.Duration)) {
           delete openTieDict[key];
         }
       }
@@ -439,10 +441,11 @@ export class VoiceGenerator {
 
     if (stringNumber < 0 || fretNumber < 0) {
       // create normal Note
-      note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch);
+      note = new Note(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, this.currentMeasure);
     } else {
       // create TabNote
-      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, stringNumber, fretNumber, bends, vibratoStrokes);
+      note = new TabNote(this.currentVoiceEntry, this.currentStaffEntry, noteLength, pitch, this.currentMeasure,
+                         stringNumber, fretNumber, bends, vibratoStrokes);
     }
 
     note.TypeLength = typeDuration;
@@ -477,9 +480,17 @@ export class VoiceGenerator {
    * @param divisions
    * @returns {Note}
    */
-  private addRestNote(noteDuration: Fraction, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
+  private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType,
+                      printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
-    const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, undefined);
+    const displayStep: IXmlElement = node.element("display-step");
+    const octave: IXmlElement = node.element("display-octave");
+    let pitch: Pitch = undefined;
+    if (displayStep && octave) {
+        const noteStep: NoteEnum = NoteEnum[displayStep.value.toUpperCase()];
+        pitch = new Pitch(noteStep, parseInt(octave.value, 10), AccidentalEnum.NONE);
+    }
+    const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
     restNote.NoteTypeXml = noteTypeXml;
     restNote.PrintObject = printObject;
     restNote.IsCueNote = isCueNote;
@@ -593,6 +604,7 @@ export class VoiceGenerator {
    */
   private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
     let bracketed: boolean = false; // xml bracket attribute value
+    // TODO refactor this to not duplicate lots of code for the cases tupletNodeList.length == 1 and > 1
     if (tupletNodeList !== undefined && tupletNodeList.length > 1) {
       let timeModNode: IXmlElement = node.element("time-modification");
       if (timeModNode) {
@@ -606,6 +618,8 @@ export class VoiceGenerator {
           if (bracketAttr && bracketAttr.value === "yes") {
             bracketed = true;
           }
+          const placementAttr: Attr = tupletNode.attribute("placement");
+          const placementBelow: boolean = placementAttr && placementAttr.value === "below";
           const type: Attr = tupletNode.attribute("type");
           if (type && type.value === "start") {
             let tupletNumber: number = 1;
@@ -625,6 +639,7 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
             if (this.tupletDict[tupletNumber]) {
               delete this.tupletDict[tupletNumber];
               if (Object.keys(this.tupletDict).length === 0) {
@@ -676,6 +691,8 @@ export class VoiceGenerator {
         if (bracketAttr && bracketAttr.value === "yes") {
           bracketed = true;
         }
+        const placementAttr: Attr = n.attribute("placement");
+        const placementBelow: boolean = placementAttr && placementAttr.value === "below";
 
         if (type === "start") {
           let tupletLabelNumber: number = 0;
@@ -701,6 +718,7 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
           }
           const subnotelist: Note[] = [];
           subnotelist.push(this.currentNote);
@@ -792,9 +810,6 @@ export class VoiceGenerator {
               const tie: Tie = this.openTieDict[tieNumber];
               if (tie) {
                 tie.AddNote(this.currentNote);
-                if (maxTieNoteFraction.lt(Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length))) {
-                  maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
-                }
                 delete this.openTieDict[tieNumber];
               }
             }
@@ -809,9 +824,6 @@ export class VoiceGenerator {
         if (tieNumber >= 0) {
           const tie: Tie = this.openTieDict[tieNumber];
           tie.AddNote(this.currentNote);
-          if (maxTieNoteFraction.lt(Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length))) {
-            maxTieNoteFraction = Fraction.plus(this.currentStaffEntry.Timestamp, this.currentNote.Length);
-          }
         }
       }
     }
@@ -848,10 +860,10 @@ export class VoiceGenerator {
         const tieTabNote: TabNote = tie.Notes[0] as TabNote;
         const tieCandidateNote: TabNote = candidateNote as TabNote;
         if (tie.Pitch.FundamentalNote === candidateNote.Pitch.FundamentalNote && tie.Pitch.Octave === candidateNote.Pitch.Octave) {
-          return +key;
-        } else {
+          return parseInt(key, 10);
+        } else if (tieTabNote.StringNumber !== undefined) {
           if (tieTabNote.StringNumber === tieCandidateNote.StringNumber) {
-            return +key;
+            return parseInt(key, 10);
           }
         }
       }

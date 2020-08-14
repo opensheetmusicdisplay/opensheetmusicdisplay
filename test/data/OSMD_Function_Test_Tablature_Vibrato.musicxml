@@ -1,17 +1,18 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="ISO-8859-1" ?>
 <score-partwise version="3.1">
     <work>
-        <work-title>OSMD Function Test Tablature - Bend, Release</work-title>
+        <work-title>OSMD Function Test Tablature - Vibrato</work-title>
     </work>
     <identification>
+        <creator type="composer">momo</creator>
         <encoding>
-            <software>www.guitartabcreator.com</software>
-            <encoding-date>2020-06-14</encoding-date>
-            <supports attribute="new-system" element="print" type="yes" value="yes" />
-            <supports attribute="new-page" element="print" type="yes" value="yes" />
-            <supports element="accidental" type="yes" />
-            <supports element="beam" type="yes" />
-            <supports element="stem" type="yes" />
+            <software>Guitartabcreator.com</software>
+            <encoding-date>2020-05-24</encoding-date>
+            <supports type="yes" value="yes" element="print" attribute="new-system" />
+            <supports type="yes" value="yes" element="print" attribute="new-page" />
+            <supports type="yes" element="accidental" />
+            <supports type="yes" element="beam" />
+            <supports type="yes" element="stem" />
         </encoding>
     </identification>
     <defaults>
@@ -56,8 +57,8 @@
             <distance type="hyphen">60</distance>
             <distance type="beam">8</distance>
         </appearance>
-        <music-font font-size="18" font-family="Maestro,engraved" />
-        <word-font font-size="9" font-family="Times New Roman" />
+        <music-font font-family="Maestro,engraved" font-size="18" />
+        <word-font font-family="Times New Roman" font-size="9" />
     </defaults>
     <part-list>
         <score-part id="P1">
@@ -76,7 +77,7 @@
         </score-part>
     </part-list>
     <part id="P1">
-        <measure number="1">
+        <measure width="485" number="1">
             <print>
                 <page-layout>
                     <page-height>1850</page-height>
@@ -148,6 +149,27 @@
             <sound tempo="120" />
             <note>
                 <pitch>
+                    <step>D</step>
+                    <octave>3</octave>
+                    <alter>1</alter>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>none</stem>
+                <staff>1</staff>
+                <notations>
+                    <technical>
+                        <string>4</string>
+                        <fret>1</fret>
+                    </technical>
+                    <ornaments>
+                        <wavy-line type="start" />
+                    </ornaments>
+                </notations>
+            </note>
+            <note>
+                <pitch>
                     <step>E</step>
                     <octave>3</octave>
                 </pitch>
@@ -160,66 +182,10 @@
                     <technical>
                         <string>4</string>
                         <fret>2</fret>
-                        <bend>
-                            <bend-alter>4</bend-alter>
-                        </bend>
-                        <bend>
-                            <bend-alter>2</bend-alter>
-                            <release></release>
-                        </bend>
                     </technical>
-                </notations>
-            </note>
-            <note>
-                <pitch>
-                    <step>F</step>
-                    <octave>3</octave>
-                </pitch>
-                <duration>2</duration>
-                <voice>1</voice>
-                <type>quarter</type>
-                <stem>none</stem>
-                <staff>1</staff>
-                <notations>
-                    <technical>
-                        <string>4</string>
-                        <fret>3</fret>
-                    </technical>
-                </notations>
-            </note>
-            <note>
-                <pitch>
-                    <step>F</step>
-                    <octave>3</octave>
-                    <alter>1</alter>
-                </pitch>
-                <duration>2</duration>
-                <voice>1</voice>
-                <type>quarter</type>
-                <stem>none</stem>
-                <staff>1</staff>
-                <notations>
-                    <technical>
-                        <string>4</string>
-                        <fret>4</fret>
-                    </technical>
-                </notations>
-            </note>
-            <note>
-                <pitch>
-                    <step>G</step>
-                    <octave>3</octave>
-                </pitch>
-                <duration>2</duration>
-                <voice>1</voice>
-                <type>quarter</type>
-                <stem>none</stem>
-                <staff>1</staff>
-                <notations>
-                    <technical>
-                        <string>4</string>
-                        <fret>5</fret>
-                    </technical>
+                    <ornaments>
+                        <wavy-line type="stop" />
+                    </ornaments>
                 </notations>
             </note>
         </measure>

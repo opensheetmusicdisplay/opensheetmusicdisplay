@@ -82,6 +82,7 @@ export class MusicSystemBuilder {
             }
             const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
             const sourceMeasureEndsPart: boolean = sourceMeasure.HasEndLine;
+            const sourceMeasureBreaksSystem: boolean = sourceMeasureEndsPart && this.rules.NewPartAndSystemAfterFinalBarline;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             const isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
             let currentMeasureBeginInstructionsWidth: number = this.rules.MeasureLeftMargin;
@@ -140,8 +141,8 @@ export class MusicSystemBuilder {
                 );
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
-                if (sourceMeasureEndsPart) {
-                    this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, true, false);
+                if (sourceMeasureBreaksSystem) {
+                    this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
                 }
                 prevMeasureEndsPart = sourceMeasureEndsPart;
             } else {
@@ -152,7 +153,7 @@ export class MusicSystemBuilder {
             }
         }
         if (this.currentSystemParams.systemMeasures.length > 0) {
-            this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], true, false);
+            this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
         }
         return this.musicSystems;
     }
@@ -290,7 +291,7 @@ export class MusicSystemBuilder {
         const instruments: Instrument[] = this.graphicalMusicSheet.ParentMusicSheet.Instruments;
         for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
             const instrument: Instrument = instruments[idx];
-            if (instrument.Voices.length === 0 || !instrument.Visible) {
+            if (!instrument.Visible || instrument.Voices.length === 0) {
                 continue;
             }
             for (let idx2: number = 0, len2: number = instrument.Staves.length; idx2 < len2; ++idx2) {
@@ -965,6 +966,8 @@ export class MusicSystemBuilder {
      * @returns {GraphicalMusicPage}
      */
     protected createMusicPage(): GraphicalMusicPage {
+        // const previousPage: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages.last();
+        // const previousSizeY: number = previousPage ? previousPage.PositionAndShape.Size.height : 0;
         const page: GraphicalMusicPage = new GraphicalMusicPage(this.graphicalMusicSheet);
         this.graphicalMusicSheet.MusicPages.push(page);
         page.PageNumber = this.graphicalMusicSheet.MusicPages.length; // caution: page number = page index + 1

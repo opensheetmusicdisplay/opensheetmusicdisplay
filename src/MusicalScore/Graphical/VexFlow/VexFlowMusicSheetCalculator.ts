@@ -44,8 +44,8 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
-import { InstantaneousTempoExpression } from "../../VoiceData/Expressions";
-import { AlignRestOption } from "../../../OpenSheetMusicDisplay";
+import { InstantaneousTempoExpression } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
 import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
@@ -96,7 +96,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           (<VexFlowStaffEntry>staffEntry).calculateXPosition();
         }
         // const t0: number = performance.now();
-        if (this.beamsNeedUpdate) { // finalizeBeams takes a few milliseconds, so we can save some performance here
+        if (true || this.beamsNeedUpdate) {
+          // finalizeBeams takes a few milliseconds, so we can save some performance here sometimes,
+          // but we'd have to check for every setting change that would affect beam rendering. See #843
           (measure as VexFlowMeasure).finalizeBeams(); // without this, when zooming a lot (e.g. 250%), beams keep their old, now wrong slope.
           // totalFinalizeBeamsTime += performance.now() - t0;
           // console.log("Total calls to finalizeBeams in VexFlowMusicSheetCalculator took " + totalFinalizeBeamsTime + " milliseconds.");
@@ -611,14 +613,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   }
 
   protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[0][0] as VexFlowMeasure).getVFStave();
+    // note: sometimes MeasureNumber is 0 here, e.g. in Christbaum, maybe because of pickup measure (auftakt)
+    const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
+    const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
+    const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
+    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
     //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
     let vexflowDuration: string = "q";
     if (metronomeExpression.beatUnit) {
       const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
       vexflowDuration = VexFlowConverter.duration(duration, false);
     }
-    // const noteType: NoteType = NoteTypeHandler.StringToNoteType(metronomeExpression.beatUnit);
+
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
@@ -628,9 +634,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       this.rules.MetronomeMarkYShift * unitInPixels);
        // -50, -30), 0); //needs Vexflow PR
        //.setShiftX(-50);
-
+    const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
-      this.rules.MetronomeMarkXShift * unitInPixels
+      xShift
     );
     // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
     const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
@@ -697,11 +703,35 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (endMeasure && startStaffLine && endStaffLine) {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
-      if (!graphicalOctaveShift.getStartNote()) { // fix for rendering range set
-        graphicalOctaveShift.setStartNote(startMeasure.staffEntries[0]);
+      if (!graphicalOctaveShift.startNote) { // fix for rendering range set
+        let startGse: GraphicalStaffEntry;
+        for (const gse of startMeasure.staffEntries) {
+          if (gse) {
+            startGse = gse;
+            break;
+          } // sometimes the first graphical staff entry is undefined, not sure why.
+        }
+        if (!startGse) {
+          return; // couldn't find a start staffentry, don't draw the octave shift
+        }
+        graphicalOctaveShift.setStartNote(startGse);
+        if (!graphicalOctaveShift.startNote) {
+          return; // couldn't find a start note, don't draw the octave shift
+        }
       }
-      if (!graphicalOctaveShift.getStartNote()) { // fix for rendering range set
-        graphicalOctaveShift.setEndNote(endMeasure.staffEntries.last());
+      if (!graphicalOctaveShift.endNote) { // fix for rendering range set
+        let endGse: GraphicalStaffEntry;
+        for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i++) {
+          // search backwards from end of measure
+          if (endMeasure.staffEntries[i]) {
+            endGse = endMeasure.staffEntries[i];
+            break;
+          }
+        }
+        graphicalOctaveShift.setEndNote(endGse);
+        if (!graphicalOctaveShift.endNote) {
+          return;
+        }
       }
       startStaffLine.OctaveShifts.push(graphicalOctaveShift);
 
@@ -785,7 +815,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
     for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
       const graphicalMeasure: VexFlowMeasure = measures[idx];
-      if (graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
+      if (graphicalMeasure && graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
         uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
         break;
       }

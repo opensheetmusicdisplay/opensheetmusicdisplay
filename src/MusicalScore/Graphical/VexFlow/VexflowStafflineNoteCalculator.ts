@@ -1,10 +1,11 @@
 import { IStafflineNoteCalculator } from "../../Interfaces/IStafflineNoteCalculator";
 import { GraphicalNote } from "../GraphicalNote";
-import { ClefEnum, StemDirectionType, VoiceEntry } from "../../VoiceData";
-import { Pitch, NoteEnum } from "../../../Common";
+import { Pitch, NoteEnum } from "../../../Common/DataObjects/Pitch";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
 import { Dictionary } from "typescript-collections";
 import { EngravingRules } from "../EngravingRules";
+import { ClefEnum } from "../../VoiceData/Instructions/ClefInstruction";
+import { StemDirectionType, VoiceEntry } from "../../VoiceData/VoiceEntry";
 
 export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator {
     private rules: EngravingRules;

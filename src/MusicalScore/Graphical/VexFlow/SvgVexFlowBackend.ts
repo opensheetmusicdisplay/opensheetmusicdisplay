@@ -6,8 +6,8 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
-import {EngravingRules} from "..";
-import {BackendType} from "../../../OpenSheetMusicDisplay";
+import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
+import {EngravingRules} from "../EngravingRules";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
@@ -26,8 +26,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return BackendType.SVG;
     }
 
+    public getCanvasSize(): number {
+        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
+    }
+
     public initialize(container: HTMLElement): void {
         this.canvas = document.createElement("div");
+        this.canvas.id = "osmdCanvasPage" + this.graphicalMusicPage.PageNumber;
         // this.canvas.id = uniqueID // TODO create unique tagName like with cursor now?
         this.inner = this.canvas;
         this.inner.style.position = "relative";

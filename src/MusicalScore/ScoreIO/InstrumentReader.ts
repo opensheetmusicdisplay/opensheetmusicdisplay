@@ -24,8 +24,8 @@ import {ExpressionReader} from "./MusicSymbolModules/ExpressionReader";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
-import {NoteType, NoteTypeHandler} from "../VoiceData";
-import {SystemLinesEnumHelper} from "../Graphical";
+import {NoteType, NoteTypeHandler} from "../VoiceData/NoteType";
+import { SystemLinesEnumHelper } from "../Graphical/SystemLinesEnum";
 // import {Dictionary} from "typescript-collections";
 
 // FIXME: The following classes are missing
@@ -134,7 +134,8 @@ export class InstrumentReader {
     let lastNoteWasGrace: boolean = false;
     try {
       const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
-      for (const xmlNode of xmlMeasureListArr) {
+      for (let xmlNodeIndex: number = 0; xmlNodeIndex < xmlMeasureListArr.length; xmlNodeIndex++) {
+        const xmlNode: IXmlElement = xmlMeasureListArr[xmlNodeIndex];
         if (xmlNode.name === "print") {
           const newSystemAttr: IXmlAttribute = xmlNode.attribute("new-system");
           if (newSystemAttr?.value === "yes") {
@@ -535,7 +536,8 @@ export class InstrumentReader {
            }
           }
           const location: IXmlAttribute = xmlNode.attribute("location");
-          if (location && location.value === "right") {
+          const isEndingBarline: boolean = (xmlNodeIndex === xmlMeasureListArr.length - 1);
+          if (isEndingBarline || (location && location.value === "right")) {
             const stringValue: string = xmlNode.element("bar-style")?.value;
             // TODO apparently we didn't anticipate bar-style not existing (the ? above was missing). how to handle?
             if (stringValue) {

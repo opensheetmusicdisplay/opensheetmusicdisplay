@@ -359,7 +359,8 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                     voiceEntry,
                     voiceEntry.ParentSourceStaffEntry,
                     new Fraction(1),
-                    new Pitch(11, 2, AccidentalEnum.NATURAL));
+                    new Pitch(11, 2, AccidentalEnum.NATURAL),
+                    voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure);
                     // note: if the pitch is such that the voice entry frequencies aren't ordered correctly,
                     // Vexflow will complain about unsorted pitches. see below
                 voiceEntry.Notes.push(newNote);

@@ -21,7 +21,7 @@ import {MusicSymbolModuleFactory} from "./MusicSymbolModuleFactory";
 import {IAfterSheetReadingModule} from "../Interfaces/IAfterSheetReadingModule";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
-import {EngravingRules} from "../Graphical";
+import {EngravingRules} from "../Graphical/EngravingRules";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
@@ -147,7 +147,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         }
 
         while (couldReadMeasure) {
-            if (this.currentMeasure !== undefined && this.currentMeasure.HasEndLine) {
+            // TODO changing this.rules.PartAndSystemAfterFinalBarline requires a reload of the piece for measure numbers to be updated
+            if (this.currentMeasure !== undefined && this.currentMeasure.HasEndLine && this.rules.NewPartAndSystemAfterFinalBarline) {
                 sourceMeasureCounter = 0;
             }
             this.currentMeasure = new SourceMeasure(this.completeNumberOfStaves, this.musicSheet.Rules);

@@ -15,7 +15,7 @@ import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruc
 import { GraphicalVoiceEntry } from "../Graphical/GraphicalVoiceEntry";
 import { VoiceEntry } from "../VoiceData/VoiceEntry";
 import { EngravingRules } from "../Graphical/EngravingRules";
-import { KeyInstruction } from "../VoiceData";
+import { KeyInstruction } from "../VoiceData/Instructions/KeyInstruction";
 
 export interface IGraphicalSymbolFactory {
 

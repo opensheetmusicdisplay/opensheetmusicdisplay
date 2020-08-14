@@ -188,6 +188,13 @@ export class ArticulationReader {
         const node: IXmlElement = ornamentsNode.element(ornamentElement);
         if (node) {
           ornament = new OrnamentContainer(elementToOrnamentEnum[ornamentElement]);
+          const placementAttr: Attr = node.attribute("placement");
+          if (placementAttr) {
+            const placementString: string = placementAttr.value;
+            if (placementString === "below") {
+              ornament.placement = PlacementEnum.Below;
+            }
+          }
         }
       }
       if (ornament) {

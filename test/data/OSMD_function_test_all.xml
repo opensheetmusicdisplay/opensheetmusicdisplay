@@ -83,6 +83,15 @@
           <line>2</line>
           </clef>
         </attributes>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>60</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="40"/>
+      </direction>
       <note default-x="114.16" default-y="-15.00">
         <pitch>
           <step>C</step>
@@ -354,6 +363,15 @@
           <system-distance>97.03</system-distance>
           </system-layout>
         </print>
+      <direction placement="above">
+        <direction-type>
+          <metronome>
+            <beat-unit>half</beat-unit>
+            <per-minute>110</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="40"/>
+      </direction>
       <note default-x="96.95" default-y="-15.00">
         <pitch>
           <step>C</step>

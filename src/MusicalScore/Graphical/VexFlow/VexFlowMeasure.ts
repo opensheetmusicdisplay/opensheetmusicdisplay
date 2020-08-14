@@ -33,8 +33,9 @@ import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/In
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
-import {NoteType, Arpeggio} from "../../VoiceData";
 import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
+import { NoteType } from "../../VoiceData/NoteType";
+import { Arpeggio } from "../../VoiceData/Arpeggio";
 
 // type StemmableNote = Vex.Flow.StemmableNote;
 
@@ -466,10 +467,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
             for (let i: number = 0; i < this.ParentStaffLine.Measures.length; i++) {
                 const tempMeasure: GraphicalMeasure = this.ParentStaffLine.Measures[i];
                 if (!(tempMeasure instanceof VexFlowMeasure)) {
-                    //should never be the case... But check just to be sure
+                    // can happen for MultipleRestMeasures
                     continue;
                 }
-                if (tempMeasure.MeasureNumber === currentMeasureNumber - 1) {
+                if (tempMeasure.MeasureNumber === currentMeasureNumber - 1 ||
+                    tempMeasure.MeasureNumber + tempMeasure.parentSourceMeasure?.multipleRestMeasures === currentMeasureNumber) {
                     //We found the previous top measure
                     prevMeasure = tempMeasure as VexFlowMeasure;
                 }
@@ -993,9 +995,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       const bracketed: boolean = tuplet.Bracket ||
                         (tuplet.TupletLabelNumber === 3 && this.rules.TripletsBracketed) ||
                         (tuplet.TupletLabelNumber !== 3 && this.rules.TupletsBracketed);
+                      let location: number = Vex.Flow.Tuplet.LOCATION_TOP;
+                      if (tuplet.tupletLabelNumberPlacement === PlacementEnum.Below) {
+                          location = Vex.Flow.Tuplet.LOCATION_BOTTOM;
+                      }
                       vftuplets.push(new Vex.Flow.Tuplet( tupletStaveNotes,
                                                           {
                                                             bracketed: bracketed,
+                                                            location: location,
                                                             notes_occupied: notesOccupied,
                                                             num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
                                                             ratioed: this.rules.TupletsRatioed,

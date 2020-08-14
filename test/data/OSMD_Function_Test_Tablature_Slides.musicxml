@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <score-partwise version="3.1">
     <work>
-        <work-title>OSMD Function Test Tablature - Bend, Release</work-title>
+        <work-title>OSMD Function Test Tablature - Slides</work-title>
     </work>
     <identification>
+        <creator type="composer">momo</creator>
         <encoding>
             <software>www.guitartabcreator.com</software>
-            <encoding-date>2020-06-14</encoding-date>
+            <encoding-date>2020-06-16</encoding-date>
             <supports attribute="new-system" element="print" type="yes" value="yes" />
             <supports attribute="new-page" element="print" type="yes" value="yes" />
             <supports element="accidental" type="yes" />
@@ -149,7 +150,7 @@
             <note>
                 <pitch>
                     <step>E</step>
-                    <octave>3</octave>
+                    <octave>4</octave>
                 </pitch>
                 <duration>2</duration>
                 <voice>1</voice>
@@ -158,22 +159,16 @@
                 <staff>1</staff>
                 <notations>
                     <technical>
-                        <string>4</string>
-                        <fret>2</fret>
-                        <bend>
-                            <bend-alter>4</bend-alter>
-                        </bend>
-                        <bend>
-                            <bend-alter>2</bend-alter>
-                            <release></release>
-                        </bend>
+                        <string>1</string>
+                        <fret>0</fret>
                     </technical>
+                    <slide type="start" number="1" />
                 </notations>
             </note>
             <note>
                 <pitch>
                     <step>F</step>
-                    <octave>3</octave>
+                    <octave>4</octave>
                 </pitch>
                 <duration>2</duration>
                 <voice>1</voice>
@@ -182,46 +177,13 @@
                 <staff>1</staff>
                 <notations>
                     <technical>
-                        <string>4</string>
-                        <fret>3</fret>
+                        <string>1</string>
+                        <fret>1</fret>
                     </technical>
+                    <slide type="stop" number="1" />
                 </notations>
             </note>
-            <note>
-                <pitch>
-                    <step>F</step>
-                    <octave>3</octave>
-                    <alter>1</alter>
-                </pitch>
-                <duration>2</duration>
-                <voice>1</voice>
-                <type>quarter</type>
-                <stem>none</stem>
-                <staff>1</staff>
-                <notations>
-                    <technical>
-                        <string>4</string>
-                        <fret>4</fret>
-                    </technical>
-                </notations>
-            </note>
-            <note>
-                <pitch>
-                    <step>G</step>
-                    <octave>3</octave>
-                </pitch>
-                <duration>2</duration>
-                <voice>1</voice>
-                <type>quarter</type>
-                <stem>none</stem>
-                <staff>1</staff>
-                <notations>
-                    <technical>
-                        <string>4</string>
-                        <fret>5</fret>
-                    </technical>
-                </notations>
-            </note>
+
         </measure>
     </part>
 </score-partwise>
