@@ -13,7 +13,6 @@
 #
 #
 #  First generate the known good or previous state PNG images you want to compare to, e.g. the develop branch or last release:
-#    (Server has to be running for this: npm start)
 #
 #    npm run generate:blessed
 #
