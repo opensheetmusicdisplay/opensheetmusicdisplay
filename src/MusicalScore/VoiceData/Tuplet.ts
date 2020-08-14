@@ -1,5 +1,6 @@
-import {Note} from "./Note";
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import { Note } from "./Note";
+import { Fraction } from "../../Common/DataObjects/Fraction";
+import { PlacementEnum } from "./Expressions/AbstractExpression";
 
 /**
  * Tuplets create irregular rhythms; e.g. triplets, quadruplets, quintuplets, etc.
@@ -12,6 +13,7 @@ export class Tuplet {
     }
 
     private tupletLabelNumber: number;
+    public tupletLabelNumberPlacement: PlacementEnum;
     /** Notes contained in the tuplet, per VoiceEntry (list of VoiceEntries, which has a list of notes). */
     private notes: Note[][] = []; // TODO should probably be VoiceEntry[], not Note[][].
     private fractions: Fraction[] = [];

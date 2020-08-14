@@ -995,9 +995,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       const bracketed: boolean = tuplet.Bracket ||
                         (tuplet.TupletLabelNumber === 3 && this.rules.TripletsBracketed) ||
                         (tuplet.TupletLabelNumber !== 3 && this.rules.TupletsBracketed);
+                      let location: number = Vex.Flow.Tuplet.LOCATION_TOP;
+                      if (tuplet.tupletLabelNumberPlacement === PlacementEnum.Below) {
+                          location = Vex.Flow.Tuplet.LOCATION_BOTTOM;
+                      }
                       vftuplets.push(new Vex.Flow.Tuplet( tupletStaveNotes,
                                                           {
                                                             bracketed: bracketed,
+                                                            location: location,
                                                             notes_occupied: notesOccupied,
                                                             num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
                                                             ratioed: this.rules.TupletsRatioed,

@@ -30,6 +30,7 @@ import { Notehead } from "../VoiceData/Notehead";
 import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
 import { NoteType, NoteTypeHandler } from "../VoiceData/NoteType";
 import { TabNote } from "../VoiceData/TabNote";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 
 export class VoiceGenerator {
   constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
@@ -603,6 +604,7 @@ export class VoiceGenerator {
    */
   private addTuplet(node: IXmlElement, tupletNodeList: IXmlElement[]): number {
     let bracketed: boolean = false; // xml bracket attribute value
+    // TODO refactor this to not duplicate lots of code for the cases tupletNodeList.length == 1 and > 1
     if (tupletNodeList !== undefined && tupletNodeList.length > 1) {
       let timeModNode: IXmlElement = node.element("time-modification");
       if (timeModNode) {
@@ -616,6 +618,8 @@ export class VoiceGenerator {
           if (bracketAttr && bracketAttr.value === "yes") {
             bracketed = true;
           }
+          const placementAttr: Attr = tupletNode.attribute("placement");
+          const placementBelow: boolean = placementAttr && placementAttr.value === "below";
           const type: Attr = tupletNode.attribute("type");
           if (type && type.value === "start") {
             let tupletNumber: number = 1;
@@ -635,6 +639,7 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
             if (this.tupletDict[tupletNumber]) {
               delete this.tupletDict[tupletNumber];
               if (Object.keys(this.tupletDict).length === 0) {
@@ -686,6 +691,8 @@ export class VoiceGenerator {
         if (bracketAttr && bracketAttr.value === "yes") {
           bracketed = true;
         }
+        const placementAttr: Attr = n.attribute("placement");
+        const placementBelow: boolean = placementAttr && placementAttr.value === "below";
 
         if (type === "start") {
           let tupletLabelNumber: number = 0;
@@ -711,6 +718,7 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
+            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
           }
           const subnotelist: Note[] = [];
           subnotelist.push(this.currentNote);
