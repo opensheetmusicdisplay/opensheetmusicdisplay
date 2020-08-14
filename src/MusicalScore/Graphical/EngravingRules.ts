@@ -60,6 +60,7 @@ export class EngravingRules {
     public KeyRightMargin: number;
     public RhythmRightMargin: number;
     public ShowRhythmAgainAfterPartEndOrFinalBarline: boolean;
+    public NewSystemAfterFinalBarline: boolean;
     public InStaffClefScalingFactor: number;
     public DistanceBetweenNaturalAndSymbolWhenCancelling: number;
     public NoteHelperLinesOffset: number;
@@ -319,6 +320,7 @@ export class EngravingRules {
         this.KeyRightMargin = 0.75;
         this.RhythmRightMargin = 1.25;
         this.ShowRhythmAgainAfterPartEndOrFinalBarline = true;
+        this.NewSystemAfterFinalBarline = false;
         this.InStaffClefScalingFactor = 0.8;
         this.DistanceBetweenNaturalAndSymbolWhenCancelling = 0.4;
 

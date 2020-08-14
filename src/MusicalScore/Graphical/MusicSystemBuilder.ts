@@ -140,7 +140,7 @@ export class MusicSystemBuilder {
                 );
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
-                if (sourceMeasureEndsPart) {
+                if (sourceMeasureEndsPart && this.rules.NewSystemAfterFinalBarline) {
                     this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
                 }
                 prevMeasureEndsPart = sourceMeasureEndsPart;
