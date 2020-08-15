@@ -28,11 +28,11 @@
 ### Features
 
 * **Fonts:** Read and apply fontStyle for UnknownExpressions like dolce ([#348](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/348)) ([28b313d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/28b313d73a2ea53869982d1b83bd8eb6d567ab75))
+* **Labels:** Add option for additional spacing between multiline text labels (EngravingRules.SpacingBetweenTextLines) ([b530316](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b5303169be0fea7f160cec62ae12abbe413a62c3))
 * **Multirest:** Auto-generate multirest measure from subsequent rest-only measures ([#861](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/861)) ([f7d6424](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/f7d642489bfe365d59ef27057f44aa31867db84b))
 * **Options:** Add option StretchLastSystemLine to stretch last system to full width ([#842](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/842)) ([88d1a5a](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/88d1a5a225765ea2447494775355043221c623cc)), closes [#847](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/847)
 * **Options:** Add osmd.EngravingRules.LyricsYOffsetToStaffHeight ([#865](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/865)) ([3ca5dd0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3ca5dd08a257e2aba70222c72cb6c2ca84da313b))
 * **Rests:** For rests encircled by beamed notes, if no display-step given, put the rest on the same y-height as previous note to avoid collisions. ([a74d77b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/a74d77b964c862dd92e28f0870018c1d675d6c1a)), closes [#66](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/66)
-* **Labels:** Add option for additional spacing between multiline text labels (EngravingRules.SpacingBetweenTextLines) ([b530316](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b5303169be0fea7f160cec62ae12abbe413a62c3))
 
 
 
