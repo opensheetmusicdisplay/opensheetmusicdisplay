@@ -1296,13 +1296,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     continue;
                 }
             }
-            if (vexFlowVoiceEntry.vfStaveNote.getCategory() === "tabnotes") {
-                // TODO this doesn't work yet. don't add fingering for tabs for now.
-                // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
-            } else {
-                // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-                vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (fretFinger as any));
-            }
+            // if (vexFlowVoiceEntry.vfStaveNote.getCategory() === "tabnotes") {
+              // TODO this doesn't work yet for tabnotes. don't add fingering for tabs for now.
+              // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
+
+            // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
+            vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (fretFinger as any));
         }
     }
 

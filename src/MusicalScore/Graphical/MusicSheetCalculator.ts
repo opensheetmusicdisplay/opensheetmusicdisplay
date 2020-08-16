@@ -2128,6 +2128,8 @@ export abstract class MusicSheetCalculator {
             measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
         } else if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
             measure = MusicSheetCalculator.symbolFactory.createMultiRestMeasure(sourceMeasure, staff);
+        } else if (sourceMeasure.multipleRestMeasureNumber > 1) {
+            return undefined; // don't need to create a graphical measure that is within a multiple rest measure
         } else {
             measure = MusicSheetCalculator.symbolFactory.createGraphicalMeasure(sourceMeasure, staff);
         }

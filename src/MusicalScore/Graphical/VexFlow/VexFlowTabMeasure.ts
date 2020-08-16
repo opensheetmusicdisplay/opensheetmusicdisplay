@@ -82,10 +82,10 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                     continue;
                 }
 
-                // add fingering
-                if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
-                    this.createFingerings(voiceEntry);
-                }
+                // don't add non-tab fingerings for tab measures (doesn't work yet for tabnotes in vexflow, see VexFlowMeasure.createFingerings())
+                // if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
+                //     this.createFingerings(voiceEntry);
+                // }
 
                 // add Arpeggio
                 if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio) {
