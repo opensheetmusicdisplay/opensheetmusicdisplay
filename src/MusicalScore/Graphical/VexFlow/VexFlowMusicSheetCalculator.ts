@@ -563,6 +563,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // we do already use the min/max in MusicSheetCalculator.calculateDynamicsExpressions,
       // but this may be necessary for StaffLinkedExpressions, not tested.
     }
+    if (measureIndex < this.rules.MinMeasureToDrawPage || measureIndex > this.rules.maxMeasureToDrawPage) {
+      return;
+      // ap
+      // ap.
+    }
+    if (measureIndex < this.rules.MinMeasureSystemNumber|| measureIndex > this.rules.MaxMeasureSystemNumber) {
+      return;
+      // we do already use the min/max in MusicSheetCalculator.calculateDynamicsExpressions,
+      // but this may be necessary for StaffLinkedExpressions, not tested.
+    }
 
     // calculate absolute Timestamp
     const absoluteTimestamp: Fraction = multiExpression.AbsoluteTimestamp;
@@ -660,6 +670,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     const minMeasureToDrawIndex: number = this.rules.MinMeasureToDrawIndex;
     const maxMeasureToDrawIndex: number = this.rules.MaxMeasureToDrawIndex;
+    const MaxMeasureToDrawPage: number = this.rules.maxMeasureToDrawPage;
+    const MaxMeasureSystemNumber: number = this.rules.MaxMeasureSystemNumber;
 
     let startStaffLine: StaffLine = this.graphicalMusicSheet.MeasureList[measureIndex][staffIndex].ParentStaffLine;
     if (!startStaffLine) { // fix for rendering range set. all of these can probably done cleaner.
@@ -674,6 +686,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true); // get last rendered measure
     }
     if (endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) { // octaveshift ends in measure not rendered
+      endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
+    }
+    if (endMeasure.MeasureNumber > MaxMeasureSystemNumber + 1) { // octaveshift ends in measure not rendered
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
     let startMeasure: GraphicalMeasure = undefined;
@@ -693,6 +708,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) {
       // octave shift completely out of drawing range, don't draw anything
       return;
+    }
+    if (startMeasure.MeasureNumber < MinMeasureToDrawPage + 1 ||
+      startMeasure.MeasureNumber > MaxMeasureToDrawPage + 1 ||
+      endMeasure.MeasureNumber < MinMeasureToDrawPage + 1 ||
+      endMeasure.MeasureNumber > MaxMeasureToDrawPage + 1) {
+        return;
     }
 
     let endStaffLine: StaffLine = endMeasure.ParentStaffLine;
@@ -791,7 +812,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
     for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
       const graphicalMeasure: VexFlowMeasure = measures[idx];
-      if (graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
         uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
         break;
       }

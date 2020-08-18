@@ -108,8 +108,11 @@ export interface IOSMDOptions {
     drawSlurs?: boolean;
     /** Only draw measure n to m, where m is the number you specify. */
     drawUpToMeasureNumber?: number;
-    /** Only draw measure n to m, where n is the number you specify. */
-    drawFromMeasureNumber?: number;
+    /** draw measure to system number */
+    drawUpToSystemNumber?: number;
+    drawUpToPageNumber?: number; // anita change temp
+            /** Only draw measure n to m, where n is the number you specify. */
+    drawFromMeasureNumber?: number; // anita change temp
     /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
     fillEmptyMeasuresWithWholeRest?: FillEmptyMeasuresWithWholeRests | number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */
