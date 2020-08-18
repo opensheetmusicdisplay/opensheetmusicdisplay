@@ -202,6 +202,17 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    public findGraphicalMeasure(measureIndex: number, staffIndex: number): GraphicalMeasure {
+        for (let i: number = measureIndex; i >= 0; i--) {
+            const gMeasure: GraphicalMeasure = this.measureList[i][staffIndex];
+            if (gMeasure) {
+                return gMeasure;
+            }
+            // else look backwards (previous measures). this is only really valid for MultipleRestMeasures of course.
+        }
+        return undefined; // shouldn't happen
+    }
+
     /**
      * Search the MeasureList for a certain GraphicalStaffEntry with the given SourceStaffEntry,
      * at a certain verticalIndex (eg a corresponding Staff), starting at a specific horizontalIndex (eg specific GraphicalMeasure).
@@ -455,7 +466,7 @@ export class GraphicalMusicSheet {
      */
     public getGraphicalMeasureFromSourceMeasureAndIndex(sourceMeasure: SourceMeasure, staffIndex: number): GraphicalMeasure {
         for (let i: number = 0; i < this.measureList.length; i++) {
-            if (this.measureList[i][0].parentSourceMeasure === sourceMeasure) {
+            if (this.measureList[i][0]?.parentSourceMeasure === sourceMeasure) {
                 return this.measureList[i][staffIndex];
             }
         }

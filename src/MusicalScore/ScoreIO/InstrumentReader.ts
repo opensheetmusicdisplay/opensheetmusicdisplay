@@ -134,7 +134,8 @@ export class InstrumentReader {
     let lastNoteWasGrace: boolean = false;
     try {
       const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
-      for (const xmlNode of xmlMeasureListArr) {
+      for (let xmlNodeIndex: number = 0; xmlNodeIndex < xmlMeasureListArr.length; xmlNodeIndex++) {
+        const xmlNode: IXmlElement = xmlMeasureListArr[xmlNodeIndex];
         if (xmlNode.name === "print") {
           const newSystemAttr: IXmlAttribute = xmlNode.attribute("new-system");
           if (newSystemAttr?.value === "yes") {
@@ -535,7 +536,8 @@ export class InstrumentReader {
            }
           }
           const location: IXmlAttribute = xmlNode.attribute("location");
-          if (location && location.value === "right") {
+          const isEndingBarline: boolean = (xmlNodeIndex === xmlMeasureListArr.length - 1);
+          if (isEndingBarline || (location && location.value === "right")) {
             const stringValue: string = xmlNode.element("bar-style")?.value;
             // TODO apparently we didn't anticipate bar-style not existing (the ? above was missing). how to handle?
             if (stringValue) {

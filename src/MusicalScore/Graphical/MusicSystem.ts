@@ -301,9 +301,8 @@ export abstract class MusicSystem extends GraphicalObject {
                     systemLabelsRightMargin = 0; // might affect lyricist/tempo placement. but without this there's still some extra x-spacing.
                 }
             } else {
-                if (!this.rules.RenderPartAbbreviations
-                    // don't render part abbreviations if there's only one instrument/part (could be an option in the future)
-                    || this.staffLines.length === 1
+                if (!this.rules.RenderPartAbbreviations || !this.rules.RenderPartNames // don't render abbreviations if we don't render part names
+                    || this.staffLines.length === 1 // don't render part abbreviations if there's only one instrument/part (could be an option in the future)
                     || !instrument.PartAbbreviation
                     || instrument.PartAbbreviation === "") {
                     return;

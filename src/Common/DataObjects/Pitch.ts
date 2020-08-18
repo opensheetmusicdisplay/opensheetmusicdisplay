@@ -73,12 +73,12 @@ export class Pitch {
      *          ret[1] = the octave shift (not the new octave!)
      * @constructor
      */
-    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { value: number; overflow: number; } {
+    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number; overflow: number; } {
         const newHalfTone: number = <number>pitch.fundamentalNote + pitch.AccidentalHalfTones + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
-    public static WrapAroundCheck(value: number, limit: number): { value: number; overflow: number; } {
+    public static WrapAroundCheck(value: number, limit: number): { halftone: number; overflow: number; } {
         let overflow: number = 0;
 
         while (value < 0) {
@@ -89,7 +89,7 @@ export class Pitch {
             value -= limit;
             overflow++; // the octave change
         }
-        return {overflow: overflow, value: value};
+        return {overflow: overflow, halftone: value};
     }
 
     //public static calcFrequency(pitch: Pitch): number;

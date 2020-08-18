@@ -467,10 +467,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
             for (let i: number = 0; i < this.ParentStaffLine.Measures.length; i++) {
                 const tempMeasure: GraphicalMeasure = this.ParentStaffLine.Measures[i];
                 if (!(tempMeasure instanceof VexFlowMeasure)) {
-                    //should never be the case... But check just to be sure
+                    // can happen for MultipleRestMeasures
                     continue;
                 }
-                if (tempMeasure.MeasureNumber === currentMeasureNumber - 1) {
+                if (tempMeasure.MeasureNumber === currentMeasureNumber - 1 ||
+                    tempMeasure.MeasureNumber + tempMeasure.parentSourceMeasure?.multipleRestMeasures === currentMeasureNumber) {
                     //We found the previous top measure
                     prevMeasure = tempMeasure as VexFlowMeasure;
                 }
@@ -994,9 +995,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                       const bracketed: boolean = tuplet.Bracket ||
                         (tuplet.TupletLabelNumber === 3 && this.rules.TripletsBracketed) ||
                         (tuplet.TupletLabelNumber !== 3 && this.rules.TupletsBracketed);
+                      let location: number = Vex.Flow.Tuplet.LOCATION_TOP;
+                      if (tuplet.tupletLabelNumberPlacement === PlacementEnum.Below) {
+                          location = Vex.Flow.Tuplet.LOCATION_BOTTOM;
+                      }
                       vftuplets.push(new Vex.Flow.Tuplet( tupletStaveNotes,
                                                           {
                                                             bracketed: bracketed,
+                                                            location: location,
                                                             notes_occupied: notesOccupied,
                                                             num_notes: tuplet.TupletLabelNumber, //, location: -1, ratioed: true
                                                             ratioed: this.rules.TupletsRatioed,
@@ -1290,13 +1296,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     continue;
                 }
             }
-            if (vexFlowVoiceEntry.vfStaveNote.getCategory() === "tabnotes") {
-                // TODO this doesn't work yet. don't add fingering for tabs for now.
-                // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
-            } else {
-                // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-                vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (fretFinger as any));
-            }
+            // if (vexFlowVoiceEntry.vfStaveNote.getCategory() === "tabnotes") {
+              // TODO this doesn't work yet for tabnotes. don't add fingering for tabs for now.
+              // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
+
+            // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
+            vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (fretFinger as any));
         }
     }
 

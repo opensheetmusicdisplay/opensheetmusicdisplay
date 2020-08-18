@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <score-partwise version="3.1">
     <work>
-        <work-title>OSMD Function Test Tablature - Bend, Release</work-title>
+        <work-title>OSMD Function Test Tablature - Hammeron, Pulloff</work-title>
     </work>
     <identification>
+        <creator type="composer">momo</creator>
         <encoding>
             <software>www.guitartabcreator.com</software>
-            <encoding-date>2020-06-14</encoding-date>
+            <encoding-date>2020-07-07</encoding-date>
             <supports attribute="new-system" element="print" type="yes" value="yes" />
             <supports attribute="new-page" element="print" type="yes" value="yes" />
             <supports element="accidental" type="yes" />
@@ -148,8 +149,8 @@
             <sound tempo="120" />
             <note>
                 <pitch>
-                    <step>E</step>
-                    <octave>3</octave>
+                    <step>B</step>
+                    <octave>2</octave>
                 </pitch>
                 <duration>2</duration>
                 <voice>1</voice>
@@ -158,22 +159,16 @@
                 <staff>1</staff>
                 <notations>
                     <technical>
-                        <string>4</string>
+                        <string>5</string>
                         <fret>2</fret>
-                        <bend>
-                            <bend-alter>4</bend-alter>
-                        </bend>
-                        <bend>
-                            <bend-alter>2</bend-alter>
-                            <release></release>
-                        </bend>
+                        <hammer-on number="1" type="start">H</hammer-on>
                     </technical>
                 </notations>
             </note>
             <note>
                 <pitch>
-                    <step>F</step>
-                    <octave>3</octave>
+                    <step>C</step>
+                    <octave>2</octave>
                 </pitch>
                 <duration>2</duration>
                 <voice>1</voice>
@@ -182,32 +177,15 @@
                 <staff>1</staff>
                 <notations>
                     <technical>
-                        <string>4</string>
+                        <string>5</string>
                         <fret>3</fret>
+                        <hammer-on number="1" type="stop" />
                     </technical>
                 </notations>
             </note>
             <note>
                 <pitch>
-                    <step>F</step>
-                    <octave>3</octave>
-                    <alter>1</alter>
-                </pitch>
-                <duration>2</duration>
-                <voice>1</voice>
-                <type>quarter</type>
-                <stem>none</stem>
-                <staff>1</staff>
-                <notations>
-                    <technical>
-                        <string>4</string>
-                        <fret>4</fret>
-                    </technical>
-                </notations>
-            </note>
-            <note>
-                <pitch>
-                    <step>G</step>
+                    <step>D</step>
                     <octave>3</octave>
                 </pitch>
                 <duration>2</duration>
@@ -217,8 +195,27 @@
                 <staff>1</staff>
                 <notations>
                     <technical>
-                        <string>4</string>
+                        <string>5</string>
                         <fret>5</fret>
+                        <pull-off number="1" type="start">P</pull-off>
+                    </technical>
+                </notations>
+            </note>
+            <note>
+                <pitch>
+                    <step>A</step>
+                    <octave>2</octave>
+                </pitch>
+                <duration>2</duration>
+                <voice>1</voice>
+                <type>quarter</type>
+                <stem>none</stem>
+                <staff>1</staff>
+                <notations>
+                    <technical>
+                        <string>5</string>
+                        <fret>0</fret>
+                        <pull-off number="1" type="stop" />
                     </technical>
                 </notations>
             </note>

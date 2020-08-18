@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <score-partwise version="3.1">
     <work>
-        <work-title>OSMD Function Test Tablature - Bend, Release</work-title>
+        <work-title>OSMD Function Test Tablature - Multibends</work-title>
     </work>
     <identification>
+        <creator type="composer">momo</creator>
         <encoding>
             <software>www.guitartabcreator.com</software>
-            <encoding-date>2020-06-14</encoding-date>
+            <encoding-date>2020-07-12</encoding-date>
             <supports attribute="new-system" element="print" type="yes" value="yes" />
             <supports attribute="new-page" element="print" type="yes" value="yes" />
             <supports element="accidental" type="yes" />

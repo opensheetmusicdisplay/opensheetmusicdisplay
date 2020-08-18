@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <score-partwise version="3.1">
     <work>
-        <work-title>OSMD Function Test Tablature - Bend, Release</work-title>
+        <work-title>OSMD Function Test Tablature - Bends</work-title>
     </work>
     <identification>
+        <creator type="composer">momo</creator>
         <encoding>
             <software>www.guitartabcreator.com</software>
             <encoding-date>2020-06-14</encoding-date>
@@ -163,10 +164,6 @@
                         <bend>
                             <bend-alter>4</bend-alter>
                         </bend>
-                        <bend>
-                            <bend-alter>2</bend-alter>
-                            <release></release>
-                        </bend>
                     </technical>
                 </notations>
             </note>
@@ -184,6 +181,9 @@
                     <technical>
                         <string>4</string>
                         <fret>3</fret>
+                        <bend>
+                            <bend-alter>4</bend-alter>
+                        </bend>
                     </technical>
                 </notations>
             </note>
@@ -202,6 +202,9 @@
                     <technical>
                         <string>4</string>
                         <fret>4</fret>
+                        <bend>
+                            <bend-alter>4</bend-alter>
+                        </bend>
                     </technical>
                 </notations>
             </note>
@@ -219,6 +222,9 @@
                     <technical>
                         <string>4</string>
                         <fret>5</fret>
+                        <bend>
+                            <bend-alter>4</bend-alter>
+                        </bend>
                     </technical>
                 </notations>
             </note>

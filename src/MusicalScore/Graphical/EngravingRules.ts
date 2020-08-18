@@ -60,6 +60,7 @@ export class EngravingRules {
     public KeyRightMargin: number;
     public RhythmRightMargin: number;
     public ShowRhythmAgainAfterPartEndOrFinalBarline: boolean;
+    public NewPartAndSystemAfterFinalBarline: boolean;
     public InStaffClefScalingFactor: number;
     public DistanceBetweenNaturalAndSymbolWhenCancelling: number;
     public NoteHelperLinesOffset: number;
@@ -241,6 +242,7 @@ export class EngravingRules {
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
     public RenderLyrics: boolean;
     public RenderMultipleRestMeasures: boolean;
+    public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
     public RenderTimeSignatures: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
@@ -324,6 +326,7 @@ export class EngravingRules {
         this.KeyRightMargin = 0.75;
         this.RhythmRightMargin = 1.25;
         this.ShowRhythmAgainAfterPartEndOrFinalBarline = true;
+        this.NewPartAndSystemAfterFinalBarline = false;
         this.InStaffClefScalingFactor = 0.8;
         this.DistanceBetweenNaturalAndSymbolWhenCancelling = 0.4;
 
@@ -418,7 +421,7 @@ export class EngravingRules {
         // Lyrics
         this.LyricsAlignmentStandard = TextAlignmentEnum.LeftBottom; // CenterBottom and LeftBottom tested, spacing-optimized
         this.LyricsHeight = 2.0; // actually size of lyrics
-        this.LyricsYOffsetToStaffHeight = 3.0; // distance between lyrics and staff. could partly be even lower/dynamic
+        this.LyricsYOffsetToStaffHeight = 0.0; // distance between lyrics and staff. could partly be even lower/dynamic
         this.VerticalBetweenLyricsDistance = 0.5;
         this.HorizontalBetweenLyricsDistance = 0.2;
         this.BetweenSyllableMaximumDistance = 10.0;
@@ -514,6 +517,7 @@ export class EngravingRules {
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
         this.RenderLyrics = true;
         this.RenderMultipleRestMeasures = true;
+        this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
         this.RenderTimeSignatures = true;
         this.FingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
         this.FingeringInsideStafflines = false;

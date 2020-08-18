@@ -724,11 +724,35 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (endMeasure && startStaffLine && endStaffLine) {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
-      if (!graphicalOctaveShift.getStartNote()) { // fix for rendering range set
-        graphicalOctaveShift.setStartNote(startMeasure.staffEntries[0]);
+      if (!graphicalOctaveShift.startNote) { // fix for rendering range set
+        let startGse: GraphicalStaffEntry;
+        for (const gse of startMeasure.staffEntries) {
+          if (gse) {
+            startGse = gse;
+            break;
+          } // sometimes the first graphical staff entry is undefined, not sure why.
+        }
+        if (!startGse) {
+          return; // couldn't find a start staffentry, don't draw the octave shift
+        }
+        graphicalOctaveShift.setStartNote(startGse);
+        if (!graphicalOctaveShift.startNote) {
+          return; // couldn't find a start note, don't draw the octave shift
+        }
       }
-      if (!graphicalOctaveShift.getStartNote()) { // fix for rendering range set
-        graphicalOctaveShift.setEndNote(endMeasure.staffEntries.last());
+      if (!graphicalOctaveShift.endNote) { // fix for rendering range set
+        let endGse: GraphicalStaffEntry;
+        for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i++) {
+          // search backwards from end of measure
+          if (endMeasure.staffEntries[i]) {
+            endGse = endMeasure.staffEntries[i];
+            break;
+          }
+        }
+        graphicalOctaveShift.setEndNote(endGse);
+        if (!graphicalOctaveShift.endNote) {
+          return;
+        }
       }
       startStaffLine.OctaveShifts.push(graphicalOctaveShift);
 
@@ -812,6 +836,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
     for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
       const graphicalMeasure: VexFlowMeasure = measures[idx];
+      if (graphicalMeasure && graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
         uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
         break;
       }
