@@ -79,6 +79,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawPage(page: GraphicalMusicPage): void {
+        if (!page) {
+            return;
+        }
         this.backend = this.backends[page.PageNumber - 1]; // TODO we may need to set this in a couple of other places. this.pageIdx is a bad solution
         super.drawPage(page);
         this.pageIdx += 1;

@@ -225,10 +225,8 @@ export class EngravingRules {
     public DefaultVexFlowNoteFont: string;
     public MaxMeasureToDrawIndex: number;
     public MinMeasureToDrawIndex: number;
-    public minMeasureToDrawPage: number;
-    public maxMeasureToDrawPage: number;
-    public MinMeasureSystemNumber: number;
-    public MaxMeasureSystemNumber: number;
+    public DrawUpToPageNumber: number;
+    public DrawUpToSystemNumber: number;
 
     /** Whether to render a label for the composer of the piece at the top of the sheet. */
     public RenderComposer: boolean;
@@ -502,9 +500,7 @@ export class EngravingRules {
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
         this.MinMeasureToDrawIndex = 0;
-     /* this.maxMeasureToDrawPage = Number. MAX_VALUE;/
-        this.MinMeasureToDrawPage = 0;
-        this.MaxMeasureSystemNumber = Number.MAX_VALUE
+     /* this.MaxMeasureSystemNumber = Number.MAX_VALUE
         this.MinMeasureSystemNumber = 0;*/
         this.RenderComposer = true;
         this.RenderTitle = true;

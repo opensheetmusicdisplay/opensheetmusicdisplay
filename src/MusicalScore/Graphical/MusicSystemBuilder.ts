@@ -142,10 +142,18 @@ export class MusicSystemBuilder {
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
                 if (sourceMeasureBreaksSystem) {
+                    if (this.rules.DrawUpToSystemNumber && this.rules.DrawUpToSystemNumber === this.musicSystems.length) {
+                        this.finalizeCurrentSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
+                        return this.musicSystems;
+                    }
                     this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
                 }
                 prevMeasureEndsPart = sourceMeasureEndsPart;
             } else {
+                if (this.rules.DrawUpToSystemNumber && this.rules.DrawUpToSystemNumber === this.musicSystems.length) {
+                    this.finalizeCurrentSystem(graphicalMeasures, false, true, doXmlPageBreak);
+                    return this.musicSystems;
+                }
                 // finalize current system and prepare a new one
                 this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, false, true, doXmlPageBreak);
                 // don't increase measure index to check this measure now again
@@ -153,6 +161,10 @@ export class MusicSystemBuilder {
             }
         }
         if (this.currentSystemParams.systemMeasures.length > 0) {
+            if (this.rules.DrawUpToSystemNumber && this.rules.DrawUpToSystemNumber === this.musicSystems.length) {
+                this.finalizeCurrentSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
+                return this.musicSystems;
+            }
             this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
         }
         return this.musicSystems;
@@ -201,6 +213,18 @@ export class MusicSystemBuilder {
                                                 systemEndsPart: boolean = false,
                                                 checkExtraInstructionMeasure: boolean = true,
                                                 startNewPage: boolean = false): void {
+        this.finalizeCurrentSystem(measures, systemEndsPart, checkExtraInstructionMeasure, startNewPage);
+        this.currentSystemParams = new SystemBuildParameters();
+        if (measures !== undefined &&
+            this.measureListIndex < this.measureList.length) {
+            this.currentSystemParams.currentSystem = this.initMusicSystem();
+        }
+    }
+
+    protected finalizeCurrentSystem(measures: GraphicalMeasure[],
+                                    systemEndsPart: boolean = false,
+                                    checkExtraInstructionMeasure: boolean = true,
+                                    startNewPage: boolean = false): void {
         this.currentSystemParams.currentSystem.breaksPage = startNewPage;
         this.adaptRepetitionLineWithIfNeeded();
         if (measures !== undefined &&
@@ -208,11 +232,6 @@ export class MusicSystemBuilder {
             this.checkAndCreateExtraInstructionMeasure(measures);
         }
         this.stretchMusicSystem(systemEndsPart);
-        this.currentSystemParams = new SystemBuildParameters();
-        if (measures !== undefined &&
-            this.measureListIndex < this.measureList.length) {
-            this.currentSystemParams.currentSystem = this.initMusicSystem();
-        }
     }
 
     /**
