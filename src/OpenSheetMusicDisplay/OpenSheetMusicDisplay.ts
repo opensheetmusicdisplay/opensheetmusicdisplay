@@ -495,6 +495,12 @@ export class OpenSheetMusicDisplay {
         if (options.drawFromMeasureNumber) {
             this.rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
         }
+        if (options.drawUpToPageNumber){
+            this.rules.maxMeasureToDrawPage = options.drawUpToPageNumber - 1; //anita change
+        }
+        if (options.drawUpToSystemNumber){
+            this.rules.maxMeasureToDrawPage = options.drawUpToSystemNumber - 1 ; //anita change tempo
+        }
         if (options.tupletsRatioed) {
             this.rules.TupletsRatioed = true;
         }
