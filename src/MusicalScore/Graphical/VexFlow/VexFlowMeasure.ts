@@ -44,16 +44,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;
 
-        /*
-         * There is no case in which `staffLine === undefined && sourceMeasure === undefined` holds.
-         * Hence, it is not necessary to specify an `else` case.
-         * One can verify this through a usage search for this constructor.
-         */
         if (staffLine) {
             this.rules = staffLine.ParentMusicSystem.rules;
         } else if (sourceMeasure) {
             this.rules = sourceMeasure.Rules;
         }
+        /* There is no case in which `staffLine === undefined && sourceMeasure === undefined` holds.
+         * Hence, it is not necessary to specify an `else` case.
+         * One can verify this through a usage search for this constructor.
+         */
 
         this.resetLayout();
     }
