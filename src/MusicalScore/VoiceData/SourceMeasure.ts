@@ -601,6 +601,13 @@ export class SourceMeasure {
                 }
             }
         }
-        return true;
+        // don't auto-rest pickup measures that aren't whole measure rests
+        return this.Duration?.RealValue === this.ActiveTimeSignature?.RealValue;
+        // if adding further checks, replace the above line with this:
+        // if (this.Duration?.RealValue !== this.ActiveTimeSignature?.RealValue) {
+        //     return false;
+        // }
+        // // TODO further checks?
+        // return true;
     }
 }

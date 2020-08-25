@@ -208,10 +208,10 @@ export class VexFlowConverter {
         const baseNote: GraphicalNote = notes[0];
         let keys: string[] = [];
         const accidentals: string[] = [];
-        const frac: Fraction = baseNote.graphicalNoteLength;
+        const baseNoteLength: Fraction = baseNote.graphicalNoteLength;
         const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
-        let duration: string = VexFlowConverter.duration(frac, isTuplet);
-        if (baseNote.sourceNote.TypeLength !== undefined && baseNote.sourceNote.TypeLength !== frac) {
+        let duration: string = VexFlowConverter.duration(baseNoteLength, isTuplet);
+        if (baseNote.sourceNote.TypeLength !== undefined && baseNote.sourceNote.TypeLength !== baseNoteLength) {
             duration = VexFlowConverter.duration(baseNote.sourceNote.TypeLength, isTuplet);
         }
         let vfClefType: string = undefined;
@@ -267,7 +267,11 @@ export class VexFlowConverter {
                 }
                 // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
                 // if it is a full measure rest:
-                if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
+                //   (a whole rest note signifies a whole measure duration, unless the time signature is longer than 4 quarter notes, e.g. 6/4 or 3/2.
+                //   Note: this should not apply to most pickup measures, e.g. with an 8th pickup measure in a 3/4 time signature)
+                // const measureDuration: number = note.sourceNote.SourceMeasure.Duration.RealValue;
+                const isWholeMeasureRest: boolean =  baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
+                if (isWholeMeasureRest) {
                     keys = ["d/5"];
                     duration = "w";
                     numDots = 0;
