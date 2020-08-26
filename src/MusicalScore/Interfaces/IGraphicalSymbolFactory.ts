@@ -27,6 +27,8 @@ export interface IGraphicalSymbolFactory {
 
     createMultiRestMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
+    createRepeatMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
+
     createTabStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
     createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure;

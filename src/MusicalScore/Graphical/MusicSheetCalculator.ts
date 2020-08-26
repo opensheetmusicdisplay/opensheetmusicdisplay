@@ -183,6 +183,18 @@ export abstract class MusicSheetCalculator {
                     // TODO we could push an object here or push nothing entirely,
                     //   but then the index doesn't correspond to measure numbers anymore.
                 }
+            } else if (sourceMeasure.repeatMeasures > 0 && this.rules.RenderRepeatMeasures) {
+                sourceMeasure.isReducedToRepeatMeasure = true;
+                sourceMeasure.repeatMeasureNumber = 1;
+                const measuresToSkip: number = sourceMeasure.repeatMeasures - 1;
+                idx += measuresToSkip;
+                // TODO mostly duplicated from multiple rest handling above
+                for (let idx2: number = 1; idx2 <= measuresToSkip; idx2++) {
+                    const nextSourceMeasure: SourceMeasure = musicSheet.SourceMeasures[sourceMeasure.MeasureNumber - 1 + idx2];
+                    nextSourceMeasure.repeatMeasureNumber = idx2 + 1;
+                    nextSourceMeasure.isReducedToRepeatMeasure = true;
+                    measureList.push([undefined]);
+                }
             }
         }
 
@@ -212,6 +224,7 @@ export abstract class MusicSheetCalculator {
                 } else { //not multirest measure
                     if (multiRestCount > 1) { //Actual multirest sequence just happened. Process
                         beginMultiRestMeasure.multipleRestMeasures = multiRestCount;
+                        beginMultiRestMeasure.multipleRestMeasureNumber = 1;
                         //regen graphical measures for this source measure
                         const graphicalMeasures: GraphicalMeasure[] = this.createGraphicalMeasuresForSourceMeasure(
                             beginMultiRestMeasure,
@@ -753,7 +766,7 @@ export abstract class MusicSheetCalculator {
                 if (graphicalMeasure?.isVisible()) {
                     visiblegraphicalMeasures.push(graphicalMeasure);
 
-                    if (this.rules.ColoringEnabled) {
+                    if (this.rules.ColoringEnabled && !graphicalMeasure.parentSourceMeasure.repeatMeasureNumber) {
                         // (re-)color notes
                         for (const staffEntry of graphicalMeasure.staffEntries) {
                             for (const gve of staffEntry.graphicalVoiceEntries) {
@@ -1995,6 +2008,9 @@ export abstract class MusicSheetCalculator {
     protected createGraphicalTies(): void {
         for (let measureIndex: number = 0; measureIndex < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; measureIndex++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[measureIndex];
+            if (sourceMeasure.multipleRestMeasureNumber || sourceMeasure.repeatMeasureNumber) {
+                continue;
+            }
             for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
                 for (let j: number = 0; j < sourceMeasure.VerticalSourceStaffEntryContainers.length; j++) {
                     const sourceStaffEntry: SourceStaffEntry = sourceMeasure.VerticalSourceStaffEntryContainers[j].StaffEntries[staffIndex];
@@ -2106,7 +2122,11 @@ export abstract class MusicSheetCalculator {
                 sourceMeasure, openTuplets, openBeams,
                 accidentalCalculators[staffIndex], activeClefs, openOctaveShifts, openLyricWords, staffIndex, staffEntryLinks
             );
-            restInAllGraphicalMeasures = restInAllGraphicalMeasures && measure.hasOnlyRests;
+            if (sourceMeasure.repeatMeasureNumber) {
+                restInAllGraphicalMeasures = false; // TODO this could be true, though it's not a reasonable case or very relevant
+            } else if (!sourceMeasure.multipleRestMeasureNumber) {
+                restInAllGraphicalMeasures = restInAllGraphicalMeasures && measure.hasOnlyRests;
+            }
             verticalMeasureList.push(measure);
         }
         sourceMeasure.allRests = restInAllGraphicalMeasures;
@@ -2126,10 +2146,12 @@ export abstract class MusicSheetCalculator {
         if (activeClefs[staffIndex].ClefType === ClefEnum.TAB) {
             staff.isTab = true;
             measure = MusicSheetCalculator.symbolFactory.createTabStaffMeasure(sourceMeasure, staff);
-        } else if (sourceMeasure.multipleRestMeasures && this.rules.RenderMultipleRestMeasures) {
+        } else if (sourceMeasure.multipleRestMeasureNumber === 1 && this.rules.RenderMultipleRestMeasures) {
             measure = MusicSheetCalculator.symbolFactory.createMultiRestMeasure(sourceMeasure, staff);
-        } else if (sourceMeasure.multipleRestMeasureNumber > 1) {
-            return undefined; // don't need to create a graphical measure that is within a multiple rest measure
+        } else if (sourceMeasure.repeatMeasureNumber === 1 && this.rules.RenderRepeatMeasures) {
+            measure = MusicSheetCalculator.symbolFactory.createRepeatMeasure(sourceMeasure, staff);
+        } else if (sourceMeasure.multipleRestMeasureNumber > 1 || sourceMeasure.repeatMeasureNumber > 1) {
+            return undefined; // don't need to create a graphical measure that is within a multiple rest or repeat measure
         } else {
             measure = MusicSheetCalculator.symbolFactory.createGraphicalMeasure(sourceMeasure, staff);
         }

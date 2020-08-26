@@ -29,6 +29,7 @@ import { VexFlowTabMeasure } from "./VexFlowTabMeasure";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 import { VexFlowMultiRestMeasure } from "./VexFlowMultiRestMeasure";
+import { VexFlowRepeatMeasure } from "./VexFlowRepeatMeasure";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -70,6 +71,16 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createMultiRestMeasure(sourceMeasure: SourceMeasure, staff: Staff, staffLine?: StaffLine): GraphicalMeasure {
         return new VexFlowMultiRestMeasure(staff, sourceMeasure, staffLine);
+    }
+
+    /**
+     * Construct a RepeatMeasure from the given source measure and staff.
+     * @param sourceMeasure
+     * @param staff
+     * @returns {VexFlowRepeatMeasure}
+     */
+    public createRepeatMeasure(sourceMeasure: SourceMeasure, staff: Staff, staffLine?: StaffLine): GraphicalMeasure {
+        return new VexFlowRepeatMeasure(staff, sourceMeasure, staffLine);
     }
 
     /**

@@ -60,6 +60,7 @@ export class SourceMeasure {
 
     private measureNumber: number;
     public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)
+    public repeatMeasures: number; // usually undefined (0), unless "repeat-measure" given in XML
     // public multipleRestMeasuresPerStaff: Dictionary<number, number>; // key: staffId. value: how many rest measures
     private absoluteTimestamp: Fraction;
     private completeNumberOfStaves: number;
@@ -72,8 +73,10 @@ export class SourceMeasure {
      */
     public allRests: boolean = false;
     public isReducedToMultiRest: boolean = false;
+    public isReducedToRepeatMeasure: boolean = false;
     /** If this measure is a MultipleRestMeasure, this is the number of the measure in that sequence of measures. */
     public multipleRestMeasureNumber: number = 0;
+    public repeatMeasureNumber: number = 0;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];

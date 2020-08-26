@@ -127,8 +127,10 @@ export class MusicSystemBuilder {
                 }
             }
             let totalMeasureWidth: number = currentMeasureBeginInstructionsWidth + currentMeasureEndInstructionsWidth + currentMeasureVarWidth;
-            if (graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasures) {
+            if (graphicalMeasures[0]?.parentSourceMeasure?.multipleRestMeasureNumber === 1) {
                 totalMeasureWidth = this.rules.MultipleRestMeasureDefaultWidth; // default 4 (12 seems too large)
+            } else if (graphicalMeasures[0]?.parentSourceMeasure?.repeatMeasureNumber === 1) {
+                totalMeasureWidth = this.rules.RepeatMeasureDefaultWidth;
             }
             const measureFitsInSystem: boolean = this.currentSystemParams.currentWidth + totalMeasureWidth + nextMeasureBeginInstructionWidth < systemMaxWidth;
             const doXmlPageBreak: boolean = this.rules.NewPageAtXMLNewPageAttribute && sourceMeasure.printNewPageXml;

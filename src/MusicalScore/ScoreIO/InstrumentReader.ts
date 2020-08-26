@@ -79,6 +79,7 @@ export class InstrumentReader {
   private divisions: number = 0;
   private currentMeasure: SourceMeasure;
   private previousMeasure: SourceMeasure;
+  private currentRepeatStartingMeasure: SourceMeasure;
   private currentClefNumber: number = 1;
   private currentXmlMeasureIndex: number = 0;
   private currentStaff: Staff;
@@ -456,7 +457,7 @@ export class InstrumentReader {
               this.instrument.Staves[staffNumber - 1].StafflineCount = parseInt(staffLinesNode.value, 10);
             }
           }
-          // check multi measure rest
+          // check multiple-rest and measure-repeat
           const measureStyle: IXmlElement = xmlNode.element("measure-style");
           if (measureStyle) {
             const multipleRest: IXmlElement = measureStyle.element("multiple-rest");
@@ -477,9 +478,39 @@ export class InstrumentReader {
                   //   issue: currentStaff can be undefined for first measure
                 } else {
                   currentMeasure.multipleRestMeasures = multipleRestNumber;
+                  currentMeasure.multipleRestMeasureNumber = 1;
                 }
               } catch (e) {
                 console.log("multirest parse error: " + e);
+              }
+            }
+            const measureRepeat: IXmlElement = measureStyle.element("measure-repeat");
+            if (measureRepeat) {
+              let isStart: boolean = true;
+              const typeAttr: Attr = measureRepeat.attribute("type");
+              let typeString: string;
+              if (typeAttr) {
+                typeString = typeAttr.value;
+                isStart = typeString === "start";
+              }
+              if (isStart) {
+                this.currentRepeatStartingMeasure = currentMeasure;
+                let slashes: number = 1;
+                // alternate way of giving slashes, not mentioned in the MusicXML 3.0 documentation, but seen in samples
+                if (measureRepeat.value && Number.parseInt(measureRepeat.value, 10) > 0) {
+                  slashes = Number.parseInt(measureRepeat.value, 10);
+                }
+                const slashesAttr: Attr = measureRepeat.attribute("slashes");
+                if (slashesAttr) {
+                  slashes = Number.parseInt(slashesAttr.value, 10);
+                }
+                currentMeasure.repeatMeasures = slashes;
+                currentMeasure.repeatMeasureNumber = 1;
+              } else if (this.currentRepeatStartingMeasure) { // continue or stop
+                const currentMeasureNumber: number = this.previousMeasure.MeasureNumber + 1; // currentMeasure.MeasureNumber is undefined here, unfortunately
+                // console.log(`current, start measure number: ${currentMeasureNumber},${this.currentRepeatStartingMeasure.MeasureNumber}`);
+                this.currentRepeatStartingMeasure.repeatMeasures = currentMeasureNumber - this.currentRepeatStartingMeasure.MeasureNumber + 1;
+                currentMeasure.repeatMeasureNumber = this.currentRepeatStartingMeasure.repeatMeasures;
               }
             }
           }

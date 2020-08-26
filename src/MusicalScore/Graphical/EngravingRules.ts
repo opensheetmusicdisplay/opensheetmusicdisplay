@@ -178,6 +178,7 @@ export class EngravingRules {
     public SystemRepetitionEndingLineWidth: number;
     public SystemDotWidth: number;
     public MultipleRestMeasureDefaultWidth: number;
+    public RepeatMeasureDefaultWidth: number;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
     public OctaveShiftLineWidth: number;
@@ -237,6 +238,7 @@ export class EngravingRules {
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
     public RenderLyrics: boolean;
     public RenderMultipleRestMeasures: boolean;
+    public RenderRepeatMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
     public RenderTimeSignatures: boolean;
     public DynamicExpressionMaxDistance: number;
@@ -455,7 +457,8 @@ export class EngravingRules {
         this.OctaveShiftVerticalLineLength = EngravingRules.unit;
         this.GraceLineWidth = this.StaffLineWidth * this.GraceNoteScalingFactor;
 
-        this.MultipleRestMeasureDefaultWidth = 4;
+        this.MultipleRestMeasureDefaultWidth = 4; // TODO not doing anything
+        this.RepeatMeasureDefaultWidth = 4;
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;
@@ -507,6 +510,7 @@ export class EngravingRules {
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
         this.RenderLyrics = true;
         this.RenderMultipleRestMeasures = true;
+        this.RenderRepeatMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
         this.RenderTimeSignatures = true;
         this.FingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
