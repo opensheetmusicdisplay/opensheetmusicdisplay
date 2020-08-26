@@ -21,16 +21,6 @@ export class VexFlowNotelessMeasure extends VexFlowMeasure {
 
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, sourceMeasure, staffLine);
-        this.minimumStaffEntriesWidth = -1;
-
-        if (staffLine) {
-            this.rules = staffLine.ParentMusicSystem.rules;
-        } else if (sourceMeasure) {
-            this.rules = sourceMeasure.Rules;
-        }
-        // There is no case in which `staffLine === undefined && sourceMeasure === undefined` holds (see usage).
-
-        this.resetLayout();
     }
 
     /**
