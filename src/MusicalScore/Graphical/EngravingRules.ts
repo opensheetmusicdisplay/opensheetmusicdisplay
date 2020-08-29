@@ -234,6 +234,7 @@ export class EngravingRules {
     public RenderPartAbbreviations: boolean;
     public RenderFingerings: boolean;
     public RenderMeasureNumbers: boolean;
+    public ReadXMLMeasureNumbers: boolean;
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
     public RenderLyrics: boolean;
     public RenderMultipleRestMeasures: boolean;

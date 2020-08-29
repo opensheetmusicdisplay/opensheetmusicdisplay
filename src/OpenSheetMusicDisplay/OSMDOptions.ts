@@ -92,6 +92,8 @@ export interface IOSMDOptions {
     drawTimeSignatures?: boolean;
     /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
     measureNumberInterval?: number;
+    /** Whether to read the first measure number from the "number" attribute in the xml file as opposed to defaulting to start at measure 1. Default false. */
+    useXMLMeasureNumbers?: boolean;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
     /** Where to draw fingerings (left, right, above, below, or auto).

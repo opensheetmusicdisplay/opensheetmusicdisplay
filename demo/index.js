@@ -438,6 +438,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
             //drawMeasureNumbers: false, // disable drawing measure numbers
             //measureNumberInterval: 4, // draw measure numbers only every 4 bars (and at the beginning of a new system)
+            useXMLMeasureNumbers: true, // read measure numbers from xml
 
             // coloring options
             coloringEnabled: true,

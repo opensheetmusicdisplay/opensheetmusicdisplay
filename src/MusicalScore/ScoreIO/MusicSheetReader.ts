@@ -120,6 +120,14 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.musicSheet = new MusicSheet();
         this.musicSheet.Path = path;
         this.musicSheet.Rules = this.rules;
+        if (this.rules.ReadXMLMeasureNumbers) {
+            const measureNum: number = parseInt(root.element("part").element("measure").attribute("number").value, 10) - 1;
+            if (isNaN(measureNum)) {
+                throw new MusicSheetReadingException("Unable to read first measure number");
+            } else {
+                sourceMeasureCounter = measureNum;
+            }
+        }
         if (!root) {
             throw new MusicSheetReadingException("Undefined root element");
         }
