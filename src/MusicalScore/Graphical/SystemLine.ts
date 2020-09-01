@@ -17,7 +17,7 @@ export class SystemLine extends GraphicalObject {
         this.parentMusicSystem = musicSystem;
         this.topMeasure = topMeasure;
         this.bottomMeasure = bottomMeasure;
-        this.parentTopStaffLine = topMeasure.ParentStaffLine;
+        this.parentTopStaffLine = topMeasure?.ParentStaffLine;
         this.boundingBox = new BoundingBox(this, musicSystem.PositionAndShape);
     }
 
