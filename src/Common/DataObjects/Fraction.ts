@@ -64,7 +64,7 @@ export class Fraction {
       return 1;
     }
 
-    while (b !== 0) {
+    while (Math.abs(b) > 0.0000001) {
       if (a > b) {
         a -= b;
       } else {
