@@ -415,7 +415,7 @@ export abstract class MusicSheetCalculator {
             log.warn("calculateMeasureNumberPlacement: measure undefined for system.Id " + musicSystem.Id);
             return; // TODO apparently happens in script sometimes (mp #70)
         }
-        let previousLabelMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
+        let previousMeasureNumber: number = staffLine.Measures[0].MeasureNumber;
         let labelOffsetX: number = 0;
         for (let i: number = 0; i < staffLine.Measures.length; i++) {
             if (this.rules.RenderMeasureNumbersOnlyAtSystemStart && i > 0) {
@@ -423,7 +423,7 @@ export abstract class MusicSheetCalculator {
             }
             const measure: GraphicalMeasure = staffLine.Measures[i];
             if (measure.MeasureNumber === 0 || measure.MeasureNumber === 1) {
-                previousLabelMeasureNumber = measure.MeasureNumber;
+                previousMeasureNumber = measure.MeasureNumber;
                 // for the first measure, this label still needs to be created. Afterwards, this variable will hold the previous label's measure number.
             }
             if (measure !== staffLine.Measures[0] && this.rules.MeasureNumberLabelXOffset) {
@@ -432,14 +432,19 @@ export abstract class MusicSheetCalculator {
                 labelOffsetX = 0; // don't offset label for first measure in staffline
             }
 
-            if ((measure.MeasureNumber === previousLabelMeasureNumber ||
-                measure.MeasureNumber >= previousLabelMeasureNumber + this.rules.MeasureNumberLabelOffset) &&
-                !measure.parentSourceMeasure.ImplicitMeasure) {
+            const isFirstMeasureAndNotPrintedOne: boolean = this.rules.UseXMLMeasureNumbers &&
+                measure.MeasureNumber === 1 && measure.parentSourceMeasure.getPrintedMeasureNumber() !== 1;
+            if ((measure.MeasureNumber === previousMeasureNumber ||
+                measure.MeasureNumber >= previousMeasureNumber + this.rules.MeasureNumberLabelOffset) &&
+                !measure.parentSourceMeasure.ImplicitMeasure ||
+                isFirstMeasureAndNotPrintedOne) {
                 if (measure.MeasureNumber !== 1 ||
-                    (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0])) {
+                    (measure.MeasureNumber === 1 && measure !== staffLine.Measures[0]) ||
+                    isFirstMeasureAndNotPrintedOne
+                    ) {
                     this.calculateSingleMeasureNumberPlacement(measure, staffLine, musicSystem, labelOffsetX);
                 }
-                previousLabelMeasureNumber = measure.MeasureNumber;
+                previousMeasureNumber = measure.MeasureNumber;
             }
         }
     }
@@ -452,7 +457,7 @@ export abstract class MusicSheetCalculator {
     /// <param name="musicSystem"></param>
     private calculateSingleMeasureNumberPlacement(measure: GraphicalMeasure, staffLine: StaffLine, musicSystem: MusicSystem,
                                                   labelOffsetX: number = 0): void {
-        const labelNumber: string = measure.MeasureNumber.toString();
+        const labelNumber: string = measure.parentSourceMeasure.getPrintedMeasureNumber().toString();
         const label: Label = new Label(labelNumber);
         // maybe give rules as argument instead of just setting fontStyle and maybe other settings manually afterwards
         const graphicalLabel: GraphicalLabel = new GraphicalLabel(label, this.rules.MeasureNumberLabelHeight,

@@ -234,8 +234,8 @@ export class EngravingRules {
     public RenderPartAbbreviations: boolean;
     public RenderFingerings: boolean;
     public RenderMeasureNumbers: boolean;
-    public ReadXMLMeasureNumbers: boolean;
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
+    public UseXMLMeasureNumbers: boolean;
     public RenderLyrics: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
@@ -506,6 +506,7 @@ export class EngravingRules {
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
+        this.UseXMLMeasureNumbers = true;
         this.RenderLyrics = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;

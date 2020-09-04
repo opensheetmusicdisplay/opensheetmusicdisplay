@@ -133,7 +133,14 @@ export class InstrumentReader {
     this.maxTieNoteFraction = new Fraction(0, 1);
     let lastNoteWasGrace: boolean = false;
     try {
-      const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
+      const measureNode: IXmlElement = this.xmlMeasureList[this.currentXmlMeasureIndex];
+      const xmlMeasureListArr: IXmlElement[] = measureNode.elements();
+      if (currentMeasure.Rules.UseXMLMeasureNumbers && !Number.isInteger(currentMeasure.MeasureNumberXML)) {
+        const measureNumberXml: number = parseInt(measureNode.attribute("number")?.value, 10);
+        if (Number.isInteger(measureNumberXml)) {
+            currentMeasure.MeasureNumberXML = measureNumberXml;
+        }
+      }
       for (let xmlNodeIndex: number = 0; xmlNodeIndex < xmlMeasureListArr.length; xmlNodeIndex++) {
         const xmlNode: IXmlElement = xmlMeasureListArr[xmlNodeIndex];
         if (xmlNode.name === "print") {
