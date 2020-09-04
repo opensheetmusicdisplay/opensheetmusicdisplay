@@ -64,7 +64,7 @@ export class Fraction {
       return 1;
     }
 
-    while (Math.abs(b) > 0.0000001) {
+    while (Math.abs(b) > 1e-8) { // essentially b > 0, accounts for floating point inaccuracies (0.0000...)
       if (a > b) {
         a -= b;
       } else {
@@ -72,7 +72,7 @@ export class Fraction {
       }
     }
 
-    return a;
+    return Math.round(a); // prevent returning 4.000001 or something, though it doesn't happen for our samples
   }
 
   /**
