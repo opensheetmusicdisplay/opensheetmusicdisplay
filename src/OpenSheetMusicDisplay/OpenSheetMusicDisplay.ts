@@ -447,6 +447,9 @@ export class OpenSheetMusicDisplay {
         if (options.measureNumberInterval !== undefined) {
             this.rules.MeasureNumberLabelOffset = options.measureNumberInterval;
         }
+        if (options.useXMLMeasureNumbers !== undefined) {
+            this.rules.ReadXMLMeasureNumbers = options.useXMLMeasureNumbers;
+        }
         if (options.fingeringPosition !== undefined) {
             this.rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
         }
