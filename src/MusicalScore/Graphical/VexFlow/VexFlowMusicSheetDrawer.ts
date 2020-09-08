@@ -65,6 +65,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
+            if (graphicalMusicPage.PageNumber > this.rules.MaxPageToDrawNumber) {
+                break;
+            }
             const backend: VexFlowBackend = this.backends[this.pageIdx];
             backend.graphicalMusicPage = graphicalMusicPage;
             backend.scale(this.zoom);

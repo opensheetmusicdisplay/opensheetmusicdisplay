@@ -282,6 +282,9 @@ export class OpenSheetMusicDisplay {
 
         // TODO check if resize is necessary. set needResize or something when size was changed
         for (const page of this.graphic.MusicPages) {
+            if (page.PageNumber > this.rules.MaxPageToDrawNumber) {
+                break; // don't add the bounding boxes of pages that aren't drawn to the container height etc
+            }
             const backend: VexFlowBackend = this.createBackend(this.backendType, page);
             const sizeWarningPartTwo: string = " exceeds CanvasBackend limit of 32767. Cutting off score.";
             if (backend.getOSMDBackendType() === BackendType.Canvas && width > canvasDimensionsLimit) {
