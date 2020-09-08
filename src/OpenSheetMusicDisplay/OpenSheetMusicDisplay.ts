@@ -292,7 +292,13 @@ export class OpenSheetMusicDisplay {
                 height = width / this.rules.PageFormat.aspectRatio;
                 // console.log("pageformat given. height: " + page.PositionAndShape.Size.height);
             } else {
-                height = (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0;
+                height = page.PositionAndShape.Size.height;
+                height += this.rules.PageBottomMargin;
+                height += this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin;
+                if (this.rules.RenderTitle) {
+                    height += this.rules.TitleTopDistance;
+                }
+                height *= this.zoom * 10.0;
                 // console.log("pageformat not given. height: " + page.PositionAndShape.Size.height);
             }
             if (backend.getOSMDBackendType() === BackendType.Canvas && height > canvasDimensionsLimit) {

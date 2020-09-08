@@ -27,7 +27,6 @@ export class EngravingRules {
     public PageTopMargin: number;
     public PageTopMarginNarrow: number;
     public PageBottomMargin: number;
-    public PageBottomExtraWhiteSpace: number; // experimental. extra white space that wil be added below the sheet
     public PageLeftMargin: number;
     public PageRightMargin: number;
     public TitleTopDistance: number;
@@ -259,6 +258,10 @@ export class EngravingRules {
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
     constructor() {
+        this.loadDefaultValues();
+    }
+
+    public loadDefaultValues(): void {
         // global variables
         this.SamplingUnit = EngravingRules.unit * 3;
 
@@ -276,10 +279,9 @@ export class EngravingRules {
         this.PageTopMargin = 5.0;
         this.PageTopMarginNarrow = 0.0; // for compact mode
         this.PageBottomMargin = 5.0;
-        this.PageBottomExtraWhiteSpace = 0.0; // experimental.
         this.PageLeftMargin = 5.0;
         this.PageRightMargin = 5.0;
-        this.TitleTopDistance = 9.0;
+        this.TitleTopDistance = 5.0;
         this.TitleBottomDistance = 1.0;
         this.StaffDistance = 7.0;
         this.BetweenStaffDistance = 5.0;

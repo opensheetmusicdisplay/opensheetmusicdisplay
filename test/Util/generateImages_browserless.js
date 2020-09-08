@@ -35,6 +35,7 @@ if (!osmdBuildDir || !sampleDir || !imageDir) {
     console.log('Error: need osmdBuildDir, sampleDir and imageDir. Exiting.')
     process.exit(1)
 }
+let pageFormat
 
 if (!mode) {
     mode = ''
@@ -62,7 +63,7 @@ async function init () {
     debug('sampleDir: ' + sampleDir, DEBUG)
     debug('imageDir: ' + imageDir, DEBUG)
 
-    let pageFormat = 'Endless'
+    pageFormat = 'Endless'
     pageWidth = Number.parseInt(pageWidth)
     pageHeight = Number.parseInt(pageHeight)
     const endlessPage = !(pageHeight > 0 && pageWidth > 0)
@@ -187,7 +188,8 @@ async function init () {
     // for more options check OSMDOptions.ts
 
     // you can set finer-grained rendering/engraving settings in EngravingRules:
-    osmdInstance.EngravingRules.TitleTopDistance = 5.0 // 9.0 is default
+    // osmdInstance.EngravingRules.TitleTopDistance = 5.0 // 5.0 is default
+    //   (unless in osmdTestingMode, these will be reset with drawingParameters default)
     // osmdInstance.EngravingRules.PageTopMargin = 5.0 // 5 is default
     // osmdInstance.EngravingRules.PageBottomMargin = 5.0 // 5 is default. <5 can cut off scores that extend in the last staffline
     // note that for now the png and canvas will still have the height given in the script argument,
@@ -242,15 +244,20 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isFunctionTestAutoColoring = sampleFilename.startsWith('OSMD_function_test_auto-custom-coloring')
         const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
         const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
+        const defaultOrCompactTightMode = sampleFilename.startsWith('OSMD_Function_Test_Container_height') ? 'compacttight' : 'default'
+        console.log('compacttightMode: ' + defaultOrCompactTightMode)
         osmdInstance.setOptions({
             autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
             coloringMode: isFunctionTestAutoColoring ? 2 : 0,
             coloringSetCustom: isFunctionTestAutoColoring ? ['#d82c6b', '#F89D15', '#FFE21A', '#4dbd5c', '#009D96', '#43469d', '#76429c', '#ff0000'] : undefined,
             colorStemsLikeNoteheads: isFunctionTestAutoColoring,
+            drawingParameters: defaultOrCompactTightMode, // default resets all EngravingRules
             drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
             drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
             newSystemFromXML: isFunctionTestSystemAndPageBreaks,
-            newPageFromXML: isFunctionTestSystemAndPageBreaks
+            newPageFromXML: isFunctionTestSystemAndPageBreaks,
+            pageBackgroundColor: '#FFFFFF', // reset by drawingparameters default
+            pageFormat: pageFormat // reset by drawingparameters default
         })
         osmdInstance.drawSkyLine = includeSkyBottomLine // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine
