@@ -282,6 +282,9 @@ export class OpenSheetMusicDisplay {
 
         // TODO check if resize is necessary. set needResize or something when size was changed
         for (const page of this.graphic.MusicPages) {
+            if (page.PageNumber > this.rules.MaxPageToDrawNumber) {
+                break; // don't add the bounding boxes of pages that aren't drawn to the container height etc
+            }
             const backend: VexFlowBackend = this.createBackend(this.backendType, page);
             const sizeWarningPartTwo: string = " exceeds CanvasBackend limit of 32767. Cutting off score.";
             if (backend.getOSMDBackendType() === BackendType.Canvas && width > canvasDimensionsLimit) {
@@ -503,6 +506,12 @@ export class OpenSheetMusicDisplay {
         }
         if (options.drawFromMeasureNumber) {
             this.rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
+        }
+        if (options.drawUpToPageNumber) {
+            this.rules.MaxPageToDrawNumber = options.drawUpToPageNumber;
+        }
+        if (options.drawUpToSystemNumber) {
+            this.rules.MaxSystemToDrawNumber = options.drawUpToSystemNumber;
         }
         if (options.tupletsRatioed) {
             this.rules.TupletsRatioed = true;

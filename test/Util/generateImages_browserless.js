@@ -245,13 +245,12 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
         const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
         const defaultOrCompactTightMode = sampleFilename.startsWith('OSMD_Function_Test_Container_height') ? 'compacttight' : 'default'
-        console.log('compacttightMode: ' + defaultOrCompactTightMode)
         osmdInstance.setOptions({
             autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
             coloringMode: isFunctionTestAutoColoring ? 2 : 0,
             coloringSetCustom: isFunctionTestAutoColoring ? ['#d82c6b', '#F89D15', '#FFE21A', '#4dbd5c', '#009D96', '#43469d', '#76429c', '#ff0000'] : undefined,
             colorStemsLikeNoteheads: isFunctionTestAutoColoring,
-            drawingParameters: defaultOrCompactTightMode, // default resets all EngravingRules
+            drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
             drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
             drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
             newSystemFromXML: isFunctionTestSystemAndPageBreaks,
