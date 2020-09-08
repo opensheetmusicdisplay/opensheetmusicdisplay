@@ -503,8 +503,8 @@ export class EngravingRules {
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
         this.MaxMeasureToDrawIndex = Number.MAX_VALUE;
         this.MinMeasureToDrawIndex = 0;
-     /* this.MaxMeasureSystemNumber = Number.MAX_VALUE
-        this.MinMeasureSystemNumber = 0;*/
+        this.DrawUpToSystemNumber = Number.MAX_VALUE;
+        this.DrawUpToPageNumber = Number.MAX_VALUE;
         this.RenderComposer = true;
         this.RenderTitle = true;
         this.RenderSubtitle = true;
