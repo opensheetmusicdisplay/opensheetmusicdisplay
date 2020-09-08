@@ -214,7 +214,7 @@ export class MusicSystemBuilder {
                                                 checkExtraInstructionMeasure: boolean = true,
                                                 startNewPage: boolean = false): void {
         this.finalizeCurrentSystem(measures, systemEndsPart, checkExtraInstructionMeasure, startNewPage);
-        this.currentSystemParams = new SystemBuildParameters();
+        this.currentSystemParams = new SystemBuildParameters(); // this and the following used to be in finalizeCurrentSystem after stretchMusicSystem
         if (measures !== undefined &&
             this.measureListIndex < this.measureList.length) {
             this.currentSystemParams.currentSystem = this.initMusicSystem();

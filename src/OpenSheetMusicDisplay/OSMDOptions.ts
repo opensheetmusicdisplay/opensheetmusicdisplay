@@ -108,13 +108,14 @@ export interface IOSMDOptions {
     drawLyrics?: boolean;
     /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
     drawSlurs?: boolean;
-    /** Only draw measure n to m, where m is the number you specify. */
+    /** Only draw measure n to m, where m is the number specified. */
     drawUpToMeasureNumber?: number;
-    /** draw measure to system number */
+    /** Only draw the first n systems, where n is the number specified. */
     drawUpToSystemNumber?: number;
-    drawUpToPageNumber?: number; // anita change temp
-            /** Only draw measure n to m, where n is the number you specify. */
-    drawFromMeasureNumber?: number; // anita change temp
+    /** Only draw the first n pages, where n is the number specified. */
+    drawUpToPageNumber?: number;
+    /** Only draw measure n to m, where n is the number you specify. */
+    drawFromMeasureNumber?: number;
     /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
     fillEmptyMeasuresWithWholeRest?: FillEmptyMeasuresWithWholeRests | number;
     /** Whether to set the wanted stem direction by xml (default) or automatically. */

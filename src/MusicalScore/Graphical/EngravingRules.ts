@@ -259,7 +259,6 @@ export class EngravingRules {
     public SpacingBetweenTextLines: number;
 
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
-    public MinMeasureToDrawPage: number;
 
     constructor() {
         this.loadDefaultValues();
@@ -644,10 +643,10 @@ export class EngravingRules {
 
 // TODO maybe this should be moved to OSMDOptions. Also see OpenSheetMusicDisplay.PageFormatStandards
 export class PageFormat {
-    constructor(Width: number, Height: number, IdString: string = "noIdStringGiven") {
-        this.width = Width;
-        this.height = Height;
-        this.idString = IdString;
+    constructor(width: number, height: number, idString: string = "noIdStringGiven") {
+        this.width = width;
+        this.height = height;
+        this.idString = idString;
     }
     public width: number;
     public height: number;

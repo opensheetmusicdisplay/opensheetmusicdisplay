@@ -563,6 +563,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // we do already use the min/max in MusicSheetCalculator.calculateDynamicsExpressions,
       // but this may be necessary for StaffLinkedExpressions, not tested.
     }
+
     // calculate absolute Timestamp
     const absoluteTimestamp: Fraction = multiExpression.AbsoluteTimestamp;
     const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[measureIndex];

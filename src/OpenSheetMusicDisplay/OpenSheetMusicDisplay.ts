@@ -505,10 +505,10 @@ export class OpenSheetMusicDisplay {
             this.rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
         }
         if (options.drawUpToPageNumber) {
-            this.rules.DrawUpToPageNumber = options.drawUpToPageNumber;
+            this.rules.MaxPageToDrawNumber = options.drawUpToPageNumber;
         }
         if (options.drawUpToSystemNumber) {
-            this.rules.DrawUpToSystemNumber = options.drawUpToSystemNumber;
+            this.rules.MaxSystemToDrawNumber = options.drawUpToSystemNumber;
         }
         if (options.tupletsRatioed) {
             this.rules.TupletsRatioed = true;
