@@ -96,6 +96,7 @@ export class DrawingParameters {
     }
 
     public setForDefault(): void {
+        this.rules.loadDefaultValues(); // this is not ideal, but it's hard to reset compactTight mode properly
         this.setForAllOn();
         this.drawHiddenNotes = false;
     }

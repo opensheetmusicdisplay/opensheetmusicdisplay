@@ -442,7 +442,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             //This causes getSkyLineMinInRange to return an incorrect min value (one from the previous measure, which has been modified)
             //We need to offset the end of what we are measuring by a bit to prevent this, otherwise volta pairs step up
             const start: number = this.PositionAndShape.AbsolutePosition.x + this.PositionAndShape.BorderMarginLeft + 0.4;
-            const end: number = this.PositionAndShape.AbsolutePosition.x + this.PositionAndShape.BorderMarginRight;
+            const end: number = Math.max(this.PositionAndShape.AbsolutePosition.x + this.PositionAndShape.BorderMarginRight, start + 0.4);
             //2 unit gap, since volta is positioned from y center it seems.
             //This prevents cases where the volta is rendered over another element
             const skylineMinForMeasure: number = skyBottomLineCalculator.getSkyLineMinInRange( start, end ) - 2;
@@ -484,7 +484,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     if (nextStaveModifier.hasOwnProperty("volta")) {
                         const prevskyBottomLineCalculator: SkyBottomLineCalculator = prevMeasure.ParentStaffLine.SkyBottomLineCalculator;
                         const prevStart: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginLeft + 0.4;
-                        const prevEnd: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginRight;
+                        const prevEnd: number = Math.max(
+                            prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginRight,
+                            prevStart + 0.4);
                         const prevMeasureSkyline: number = prevskyBottomLineCalculator.getSkyLineMinInRange(prevStart, prevEnd);
                         //if prev skyline is higher, use it
                         if (prevMeasureSkyline <= newSkylineValueForMeasure) {

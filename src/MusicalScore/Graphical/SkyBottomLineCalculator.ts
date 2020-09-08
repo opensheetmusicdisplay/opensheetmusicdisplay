@@ -432,7 +432,7 @@ export class SkyBottomLineCalculator {
         endIndex = Math.ceil(endIndex * this.SamplingUnit);
 
         if (endIndex < startIndex) {
-            throw new Error("start index of line is greater then the end index");
+            throw new Error("start index of line is greater than the end index");
         }
 
         if (startIndex < 0) {

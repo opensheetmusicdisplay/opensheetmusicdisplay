@@ -27,7 +27,6 @@ export class EngravingRules {
     public PageTopMargin: number;
     public PageTopMarginNarrow: number;
     public PageBottomMargin: number;
-    public PageBottomExtraWhiteSpace: number; // experimental. extra white space that wil be added below the sheet
     public PageLeftMargin: number;
     public PageRightMargin: number;
     public TitleTopDistance: number;
@@ -238,6 +237,7 @@ export class EngravingRules {
     public RenderFingerings: boolean;
     public RenderMeasureNumbers: boolean;
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
+    public UseXMLMeasureNumbers: boolean;
     public RenderLyrics: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
@@ -262,6 +262,10 @@ export class EngravingRules {
     public MinMeasureToDrawPage: number;
 
     constructor() {
+        this.loadDefaultValues();
+    }
+
+    public loadDefaultValues(): void {
         // global variables
         this.SamplingUnit = EngravingRules.unit * 3;
 
@@ -279,10 +283,9 @@ export class EngravingRules {
         this.PageTopMargin = 5.0;
         this.PageTopMarginNarrow = 0.0; // for compact mode
         this.PageBottomMargin = 5.0;
-        this.PageBottomExtraWhiteSpace = 0.0; // experimental.
         this.PageLeftMargin = 5.0;
         this.PageRightMargin = 5.0;
-        this.TitleTopDistance = 9.0;
+        this.TitleTopDistance = 5.0;
         this.TitleBottomDistance = 1.0;
         this.StaffDistance = 7.0;
         this.BetweenStaffDistance = 5.0;
@@ -511,6 +514,7 @@ export class EngravingRules {
         this.RenderFingerings = true;
         this.RenderMeasureNumbers = true;
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
+        this.UseXMLMeasureNumbers = true;
         this.RenderLyrics = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
@@ -531,7 +535,7 @@ export class EngravingRules {
         this.RenderSingleHorizontalStaffline = false;
         this.SpacingBetweenTextLines = 0;
 
-        this.populateDictionaries();
+        // this.populateDictionaries(); // these values aren't used currently
         try {
             this.MaxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
             //if (FontInfo.Info) {
@@ -579,46 +583,46 @@ export class EngravingRules {
     /**
      * This method maps NoteDurations to Distances and DistancesScalingFactors.
      */
-    private populateDictionaries(): void {
-        for (let i: number = 0; i < this.NoteDistances.length; i++) {
-            switch (i) {
-                case 0:
-                    this.DurationDistanceDict[0.015625] = this.NoteDistances[i];
-                    this.DurationScalingDistanceDict[0.015625] = this.NoteDistancesScalingFactors[i];
-                    break;
-                case 1:
-                    this.DurationDistanceDict[0.03125] = this.NoteDistances[i];
-                    this.DurationScalingDistanceDict[0.03125] = this.NoteDistancesScalingFactors[i];
-                    break;
-                case 2:
-                    this.DurationDistanceDict[0.0625] = this.NoteDistances[i];
-                    this.DurationScalingDistanceDict[0.0625] = this.NoteDistancesScalingFactors[i];
-                    break;
-                case 3:
-                    this.DurationDistanceDict[0.125] = this.NoteDistances[i];
-                    this.DurationScalingDistanceDict[0.125] = this.NoteDistancesScalingFactors[i];
-                    break;
-                case 4:
-                    this.DurationDistanceDict[0.25] = this.NoteDistances[i];
-                    this.DurationScalingDistanceDict[0.25] = this.NoteDistancesScalingFactors[i];
-                    break;
-                case 5:
-                    this.DurationDistanceDict[0.5] = this.NoteDistances[i];
-                    this.DurationScalingDistanceDict[0.5] = this.NoteDistancesScalingFactors[i];
-                    break;
-                case 6:
-                    this.DurationDistanceDict[1.0] = this.NoteDistances[i];
-                    this.DurationScalingDistanceDict[1.0] = this.NoteDistancesScalingFactors[i];
-                    break;
-                case 7:
-                    this.DurationDistanceDict[2.0] = this.NoteDistances[i];
-                    this.DurationScalingDistanceDict[2.0] = this.NoteDistancesScalingFactors[i];
-                    break;
-                default:
-                    // FIXME
-            }
-        }
-    }
+    // private populateDictionaries(): void {
+    //     for (let i: number = 0; i < this.NoteDistances.length; i++) {
+    //         switch (i) {
+    //             case 0:
+    //                 this.DurationDistanceDict[0.015625] = this.NoteDistances[i];
+    //                 this.DurationScalingDistanceDict[0.015625] = this.NoteDistancesScalingFactors[i];
+    //                 break;
+    //             case 1:
+    //                 this.DurationDistanceDict[0.03125] = this.NoteDistances[i];
+    //                 this.DurationScalingDistanceDict[0.03125] = this.NoteDistancesScalingFactors[i];
+    //                 break;
+    //             case 2:
+    //                 this.DurationDistanceDict[0.0625] = this.NoteDistances[i];
+    //                 this.DurationScalingDistanceDict[0.0625] = this.NoteDistancesScalingFactors[i];
+    //                 break;
+    //             case 3:
+    //                 this.DurationDistanceDict[0.125] = this.NoteDistances[i];
+    //                 this.DurationScalingDistanceDict[0.125] = this.NoteDistancesScalingFactors[i];
+    //                 break;
+    //             case 4:
+    //                 this.DurationDistanceDict[0.25] = this.NoteDistances[i];
+    //                 this.DurationScalingDistanceDict[0.25] = this.NoteDistancesScalingFactors[i];
+    //                 break;
+    //             case 5:
+    //                 this.DurationDistanceDict[0.5] = this.NoteDistances[i];
+    //                 this.DurationScalingDistanceDict[0.5] = this.NoteDistancesScalingFactors[i];
+    //                 break;
+    //             case 6:
+    //                 this.DurationDistanceDict[1.0] = this.NoteDistances[i];
+    //                 this.DurationScalingDistanceDict[1.0] = this.NoteDistancesScalingFactors[i];
+    //                 break;
+    //             case 7:
+    //                 this.DurationDistanceDict[2.0] = this.NoteDistances[i];
+    //                 this.DurationScalingDistanceDict[2.0] = this.NoteDistancesScalingFactors[i];
+    //                 break;
+    //             default:
+    //                 // FIXME
+    //         }
+    //     }
+    // }
 
     /**
      * Calculate Curve-independend factors, to be used later in the Slur- and TieCurvePoints calculation

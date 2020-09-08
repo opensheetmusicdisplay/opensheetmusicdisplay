@@ -59,6 +59,8 @@ export class SourceMeasure {
     public printNewPageXml: boolean = false;
 
     private measureNumber: number;
+    public MeasureNumberXML: number;
+    public MeasureNumberPrinted: number; // measureNumber if MeasureNumberXML undefined or NaN. Set in getPrintedMeasureNumber()
     public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)
     // public multipleRestMeasuresPerStaff: Dictionary<number, number>; // key: staffId. value: how many rest measures
     private absoluteTimestamp: Fraction;
@@ -94,6 +96,17 @@ export class SourceMeasure {
 
     public set MeasureNumber(value: number) {
         this.measureNumber = value;
+    }
+
+    public getPrintedMeasureNumber(): number {
+        if (this.rules.UseXMLMeasureNumbers) {
+            if (Number.isInteger(this.MeasureNumberXML)) { // false for NaN, undefined, null, "5" (string)
+                this.MeasureNumberPrinted = this.MeasureNumberXML;
+                return this.MeasureNumberPrinted;
+            }
+        }
+        this.MeasureNumberPrinted = this.MeasureNumber;
+        return this.MeasureNumberPrinted;
     }
 
     public get AbsoluteTimestamp(): Fraction {
@@ -601,6 +614,13 @@ export class SourceMeasure {
                 }
             }
         }
-        return true;
+        // don't auto-rest pickup measures that aren't whole measure rests
+        return this.Duration?.RealValue === this.ActiveTimeSignature?.RealValue;
+        // if adding further checks, replace the above line with this:
+        // if (this.Duration?.RealValue !== this.ActiveTimeSignature?.RealValue) {
+        //     return false;
+        // }
+        // // TODO further checks?
+        // return true;
     }
 }
