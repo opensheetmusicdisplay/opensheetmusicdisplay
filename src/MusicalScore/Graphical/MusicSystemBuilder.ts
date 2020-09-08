@@ -142,7 +142,7 @@ export class MusicSystemBuilder {
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
                 if (sourceMeasureBreaksSystem) {
-                    if (this.rules.DrawUpToSystemNumber && this.rules.DrawUpToSystemNumber === this.musicSystems.length) {
+                    if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
                         this.finalizeCurrentSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
                         return this.musicSystems;
                     }
@@ -150,7 +150,7 @@ export class MusicSystemBuilder {
                 }
                 prevMeasureEndsPart = sourceMeasureEndsPart;
             } else {
-                if (this.rules.DrawUpToSystemNumber && this.rules.DrawUpToSystemNumber === this.musicSystems.length) {
+                if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
                     this.finalizeCurrentSystem(graphicalMeasures, false, true, doXmlPageBreak);
                     return this.musicSystems;
                 }
@@ -161,7 +161,7 @@ export class MusicSystemBuilder {
             }
         }
         if (this.currentSystemParams.systemMeasures.length > 0) {
-            if (this.rules.DrawUpToSystemNumber && this.rules.DrawUpToSystemNumber === this.musicSystems.length) {
+            if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
                 this.finalizeCurrentSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
                 return this.musicSystems;
             }

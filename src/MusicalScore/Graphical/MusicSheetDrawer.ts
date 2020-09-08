@@ -91,15 +91,9 @@ export abstract class MusicSheetDrawer {
             this.drawScrollIndicator();
         }
         // Draw all the pages
-        if (this.rules.DrawUpToPageNumber) {
-            for (let i: number = 0; i < this.rules.DrawUpToPageNumber; i ++) {
-                const page: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[i];
-                this.drawPage(page);
-            }
-        } else {
-            for (const page of this.graphicalMusicSheet.MusicPages) {
-                this.drawPage(page);
-            }
+        for (let i: number = 0; i < this.rules.MaxPageToDrawNumber; i ++) {
+            const page: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[i];
+            this.drawPage(page);
         }
     }
 
