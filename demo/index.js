@@ -1,4 +1,4 @@
-import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay';
+import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
 import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min'
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
