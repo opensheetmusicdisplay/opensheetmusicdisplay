@@ -1,6 +1,5 @@
 These files are custom patches for the currently installed vexflow version.
-They should be copied to ../../node_modules/vexflow/src/
-This will be done by a pre-build script soon, but for now has to be done manually.
+They are copied by the npm prebuild script to ../../node_modules/vexflow/src/ before a build.
 
 stavevolta.js:
 Fix the length of voltas for first measures in a system
