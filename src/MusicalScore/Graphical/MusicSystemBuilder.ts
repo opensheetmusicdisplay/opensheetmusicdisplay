@@ -42,9 +42,10 @@ export class MusicSystemBuilder {
 
     public initialize(
         graphicalMusicSheet: GraphicalMusicSheet, measureList: GraphicalMeasure[][], numberOfStaffLines: number): void {
-        this.leadSheet = graphicalMusicSheet.LeadSheet;
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = this.graphicalMusicSheet.ParentMusicSheet.Rules;
+        this.leadSheet = this.rules.LeadSheet;
+        graphicalMusicSheet.LeadSheet = this.leadSheet;
         this.measureList = measureList;
         this.numberOfVisibleStaffLines = numberOfStaffLines;
         this.activeRhythm = new Array(this.numberOfVisibleStaffLines);
@@ -282,12 +283,14 @@ export class MusicSystemBuilder {
         const musicSystem: MusicSystem = MusicSheetCalculator.symbolFactory.createMusicSystem(this.globalSystemIndex++, this.rules);
         this.musicSystems.push(musicSystem);
         this.layoutSystemStaves(musicSystem);
-        musicSystem.createMusicSystemLabel(
-            this.rules.InstrumentLabelTextHeight,
-            this.rules.SystemLabelsRightMargin,
-            this.rules.LabelMarginBorderFactor,
-            this.musicSystems.length === 1
-        );
+        if (!this.leadSheet) {
+            musicSystem.createMusicSystemLabel(
+                this.rules.InstrumentLabelTextHeight,
+                this.rules.SystemLabelsRightMargin,
+                this.rules.LabelMarginBorderFactor,
+                this.musicSystems.length === 1
+            );
+        }
         return musicSystem;
     }
 
@@ -310,6 +313,7 @@ export class MusicSystemBuilder {
         const instruments: Instrument[] = this.graphicalMusicSheet.ParentMusicSheet.Instruments;
         for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
             const instrument: Instrument = instruments[idx];
+            // if (!instrument.Visible || instrument.Voices.length === 0 || this.leadSheet) {
             if (!instrument.Visible || instrument.Voices.length === 0) {
                 continue;
             }
@@ -664,6 +668,7 @@ export class MusicSystemBuilder {
             const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
             for (let visStaffIdx: number = 0; visStaffIdx < this.numberOfVisibleStaffLines; visStaffIdx++) {
                 const measure: GraphicalMeasure = gmeasures[visStaffIdx];
+                // currentSystem.StaffLines[visStaffIdx]?.Measures.push(measure);
                 currentSystem.StaffLines[visStaffIdx].Measures.push(measure);
                 measure.ParentStaffLine = currentSystem.StaffLines[visStaffIdx];
             }
@@ -878,6 +883,7 @@ export class MusicSystemBuilder {
         let systemEndX: number;
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
         systemEndX = currentSystem.StaffLines[0].PositionAndShape.Size.width;
+        // systemEndX = currentSystem.PositionAndShape.Size.width;
         const scalingFactor: number = (systemEndX - systemFixWidth) / systemVarWidth;
         return scalingFactor;
     }

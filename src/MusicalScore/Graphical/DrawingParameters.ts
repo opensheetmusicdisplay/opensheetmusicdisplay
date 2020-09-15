@@ -148,6 +148,7 @@ export class DrawingParameters {
     }
 
     public setForLeadsheet(): void {
+        this.Rules.LeadSheet = true;
         this.drawHighlights = false;
         this.drawErrors = false;
         this.drawSelectionStartSymbol = true;

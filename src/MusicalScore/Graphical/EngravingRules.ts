@@ -14,6 +14,7 @@ export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
     public static unit: number = 1.0;
     public SamplingUnit: number;
+    public LeadSheet: boolean;
     public StaccatoShorteningFactor: number;
     /** Height (size) of the sheet title. */
     public SheetTitleHeight: number;
@@ -267,6 +268,7 @@ export class EngravingRules {
     public loadDefaultValues(): void {
         // global variables
         this.SamplingUnit = EngravingRules.unit * 3;
+        this.LeadSheet = false;
 
         // Page Label Variables
         this.SheetTitleHeight = 4.0;
