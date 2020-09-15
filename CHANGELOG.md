@@ -1,7 +1,7 @@
 ## [0.8.6](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.8.5...0.8.6)  (2020-09-15)
 
 ### Bug Fixes
-* **Voltas, Tabs**: Fix regression in 0.8.5 where repetition volta shift and tabnote svg id were fixes were not applied (will soon be fixed by vexflow patch script)
+* **Voltas, Tabs**: Fix regression in 0.8.5 where repetition volta shift and tabnote svg id fixes were not applied (will soon be automatically fixed by vexflow patch script)
 
 ### Miscellaneous
 * **Build**: Build size down to 1.1MB again from mysterious increase to 1.3MB in 0.8.5
