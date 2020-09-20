@@ -134,7 +134,7 @@ export class ArticulationReader {
       const node: IXmlElement = xmlNode.element(xmlArticulation);
       if (node) {
         let placement: PlacementEnum = PlacementEnum.Above;
-        if (node.attribute("placement").value === "below") {
+        if (node.attribute("placement")?.value === "below") {
           placement = PlacementEnum.Below;
         }
         const newArticulation: Articulation = new Articulation(articulationEnum, placement);
