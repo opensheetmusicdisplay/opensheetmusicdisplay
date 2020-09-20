@@ -156,7 +156,7 @@ export class VoiceEntry {
         this.stemColor = value;
     }
 
-    public hasArticulation(articulation: Articulation) {
+    public hasArticulation(articulation: Articulation): boolean {
         for (const existingArticulation of this.articulations) {
             if (existingArticulation.Equals(articulation)) {
                 return true;

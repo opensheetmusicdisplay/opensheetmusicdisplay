@@ -450,17 +450,21 @@ export class VexFlowConverter {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
-        // Articulations:
-        let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
-
-        if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
-            vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
-        }
 
         for (const articulation of articulations) {
-            // tslint:disable-next-line:switch-default
+            // Articulations:
+            let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
+
+            if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
+                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+            }
             let vfArt: Vex.Flow.Articulation = undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;
+            if (articulation.placement === PlacementEnum.Above) {
+                vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+            } else if (articulation.placement === PlacementEnum.Below) {
+                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+            } // else if undefined: don't change
             switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new Vex.Flow.Articulation("a>");
@@ -477,12 +481,10 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.marcatodown: {
                     vfArt = new Vex.Flow.Articulation("a|"); // Vexflow only knows marcato up, so we use a down stroke here.
-                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE; // TODO take position from xml? can be below
                     break;
                 }
                 case ArticulationEnum.marcatoup: {
                     vfArt = new Vex.Flow.Articulation("a^");
-                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
@@ -521,11 +523,6 @@ export class VexFlowConverter {
                 default: {
                     break;
                 }
-            }
-            if (articulation.placement === PlacementEnum.Above) {
-                vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
-            } else {
-                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);

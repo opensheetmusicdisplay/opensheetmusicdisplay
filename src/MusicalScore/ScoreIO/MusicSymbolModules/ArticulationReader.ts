@@ -49,7 +49,7 @@ export class ArticulationReader {
         try {
           // some Articulations appear in Xml separated with a "-" (eg strong-accent), we remove it for enum parsing
           name = name.replace("-", "");
-          let articulationEnum: ArticulationEnum = ArticulationEnum[name];
+          const articulationEnum: ArticulationEnum = ArticulationEnum[name];
           if (VoiceEntry.isSupportedArticulation(articulationEnum)) {
             let placement: PlacementEnum = PlacementEnum.Above;
             if (childNode.attribute("placement")?.value === "below") {

@@ -2,7 +2,7 @@ import { PlacementEnum } from "./Expressions/AbstractExpression";
 import { ArticulationEnum } from "./VoiceEntry";
 
 export class Articulation {
-    public placement: PlacementEnum = PlacementEnum.Above;
+    public placement: PlacementEnum;
     public articulationEnum: ArticulationEnum;
 
     constructor(articulationEnum: ArticulationEnum, placement: PlacementEnum = PlacementEnum.Above) {
