@@ -7,7 +7,7 @@ export class Articulation {
 
     constructor(articulationEnum: ArticulationEnum, placement: PlacementEnum) {
         this.articulationEnum = articulationEnum;
-        this.placement = placement;
+        this.placement = placement; // undefined by default, to not restrict placement
     }
 
     public Equals(otherArticulation: Articulation): boolean {

@@ -502,6 +502,10 @@ export class VexFlowConverter {
                     vfArt = new Vex.Flow.Articulation("a+");
                     break;
                 }
+                case ArticulationEnum.naturalharmonic: {
+                    vfArt = new Vex.Flow.Articulation("ah");
+                    break;
+                }
                 case ArticulationEnum.snappizzicato: {
                     vfArt = new Vex.Flow.Articulation("ao");
                     break;
