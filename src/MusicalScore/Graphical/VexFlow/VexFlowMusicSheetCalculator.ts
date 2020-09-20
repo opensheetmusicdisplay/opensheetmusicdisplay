@@ -16,7 +16,7 @@ import { OctaveEnum, OctaveShift } from "../../VoiceData/Expressions/ContinuousE
 import { Fraction } from "../../../Common/DataObjects/Fraction";
 import { LyricWord } from "../../VoiceData/Lyrics/LyricsWord";
 import { OrnamentContainer } from "../../VoiceData/OrnamentContainer";
-import { ArticulationEnum } from "../../VoiceData/VoiceEntry";
+import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
@@ -458,7 +458,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param voiceEntry
    * @param graphicalStaffEntry
    */
-  protected layoutArticulationMarks(articulations: ArticulationEnum[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
+  protected layoutArticulationMarks(articulations: Articulation[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
     // uncomment this when implementing:
     // let vfse: VexFlowStaffEntry = (graphicalStaffEntry as VexFlowStaffEntry);
 
@@ -927,7 +927,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param voiceEntry
    * @param graphicalStaffEntry
    */
-  protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
+  protected handleVoiceEntryArticulations(articulations: Articulation[],
                                           voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
     // uncomment this when implementing:
     // let vfse: VexFlowStaffEntry = (graphicalStaffEntry as VexFlowStaffEntry);

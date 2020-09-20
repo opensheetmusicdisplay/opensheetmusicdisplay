@@ -12,6 +12,7 @@ import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import { Dictionary } from "typescript-collections";
 import {Arpeggio} from "./Arpeggio";
 import { SourceMeasure } from "./SourceMeasure";
+import { Articulation } from "./Articulation";
 
 /**
  * A [[VoiceEntry]] contains the notes in a voice at a timestamp.
@@ -45,7 +46,7 @@ export class VoiceEntry {
     private graceAfterMainNote: boolean;
     private graceNoteSlash: boolean;
     private graceSlur: boolean; // TODO grace slur system could be refined to be non-binary
-    private articulations: ArticulationEnum[] = [];
+    private articulations: Articulation[] = [];
     private technicalInstructions: TechnicalInstruction[] = [];
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
     /** The Arpeggio consisting of this VoiceEntry's notes. Undefined if no arpeggio exists. */
@@ -99,7 +100,7 @@ export class VoiceEntry {
     public set GraceSlur(value: boolean) {
         this.graceSlur = value;
     }
-    public get Articulations(): ArticulationEnum[] {
+    public get Articulations(): Articulation[] {
         return this.articulations;
     }
     public get TechnicalInstructions(): TechnicalInstruction[] {
@@ -155,6 +156,14 @@ export class VoiceEntry {
         this.stemColor = value;
     }
 
+    public hasArticulation(articulation: Articulation) {
+        for (const existingArticulation of this.articulations) {
+            if (existingArticulation.Equals(articulation)) {
+                return true;
+            }
+        }
+        return false;
+    }
     public static isSupportedArticulation(articulation: ArticulationEnum): boolean {
         switch (articulation) {
             case ArticulationEnum.accent:
@@ -194,16 +203,16 @@ export class VoiceEntry {
         return false;
     }
     public isStaccato(): boolean {
-        for (let idx: number = 0, len: number = this.Articulations.length; idx < len; ++idx) {
-            const articulation: ArticulationEnum = this.Articulations[idx];
-            if (articulation === ArticulationEnum.staccato) { return true; }
+        for (const articulation of this.Articulations) {
+            if (articulation.articulationEnum === ArticulationEnum.staccato) {
+                return true;
+            }
         }
         return false;
     }
     public isAccent(): boolean {
-        for (let idx: number = 0, len: number = this.Articulations.length; idx < len; ++idx) {
-            const articulation: ArticulationEnum = this.Articulations[idx];
-            if (articulation === ArticulationEnum.accent || articulation === ArticulationEnum.strongaccent) {
+        for (const articulation of this.Articulations) {
+            if (articulation.articulationEnum === ArticulationEnum.accent || articulation.articulationEnum === ArticulationEnum.strongaccent) {
                 return true;
             }
         }

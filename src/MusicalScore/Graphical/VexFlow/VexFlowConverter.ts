@@ -29,6 +29,7 @@ import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
+import { Articulation } from "../../VoiceData/Articulation";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -445,7 +446,7 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
+    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: Articulation[]): void {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
@@ -459,7 +460,8 @@ export class VexFlowConverter {
         for (const articulation of articulations) {
             // tslint:disable-next-line:switch-default
             let vfArt: Vex.Flow.Articulation = undefined;
-            switch (articulation) {
+            const articulationEnum: ArticulationEnum = articulation.articulationEnum;
+            switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new Vex.Flow.Articulation("a>");
                     break;
@@ -519,6 +521,11 @@ export class VexFlowConverter {
                 default: {
                     break;
                 }
+            }
+            if (articulation.placement === PlacementEnum.Above) {
+                vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+            } else {
+                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
