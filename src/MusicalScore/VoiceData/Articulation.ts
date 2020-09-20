@@ -3,6 +3,7 @@ import { ArticulationEnum } from "./VoiceEntry";
 
 export class Articulation {
     public placement: PlacementEnum;
+    // TODO distinguish and save both placementXML and placementRendered
     public articulationEnum: ArticulationEnum;
 
     constructor(articulationEnum: ArticulationEnum, placement: PlacementEnum) {
