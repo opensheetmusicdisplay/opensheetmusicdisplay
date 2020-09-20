@@ -428,7 +428,10 @@ export class VexFlowConverter {
             // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
             const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
             if (tremoloStrokes > 0) {
-                vfnote.addModifier(i, new Vex.Flow.Tremolo(tremoloStrokes));
+                const tremolo: Vex.Flow.Tremolo = new Vex.Flow.Tremolo(tremoloStrokes);
+                (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
+                (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
+                vfnote.addModifier(i, tremolo);
             }
         }
 
