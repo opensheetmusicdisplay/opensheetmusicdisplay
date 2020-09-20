@@ -446,7 +446,8 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: Articulation[]): void {
+    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: Articulation[],
+                                        rules: EngravingRules): void {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
@@ -460,11 +461,13 @@ export class VexFlowConverter {
             }
             let vfArt: Vex.Flow.Articulation = undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;
-            if (articulation.placement === PlacementEnum.Above) {
-                vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
-            } else if (articulation.placement === PlacementEnum.Below) {
-                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
-            } // else if undefined: don't change
+            if (rules.ArticulationPlacementFromXML) {
+                if (articulation.placement === PlacementEnum.Above) {
+                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                } else if (articulation.placement === PlacementEnum.Below) {
+                    vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+                } // else if undefined: don't change
+            }
             switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new Vex.Flow.Articulation("a>");
@@ -472,6 +475,9 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.downbow: {
                     vfArt = new Vex.Flow.Articulation("am");
+                    if (articulation.placement === undefined) { // downbow/upbow should be above by default
+                        vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    }
                     break;
                 }
                 case ArticulationEnum.fermata: {
@@ -514,6 +520,9 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.upbow: {
                     vfArt = new Vex.Flow.Articulation("a|");
+                    if (articulation.placement === undefined) { // downbow/upbow should be above by default
+                        vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    }
                     break;
                 }
                 case ArticulationEnum.strongaccent: {

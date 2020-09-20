@@ -5,7 +5,7 @@ export class Articulation {
     public placement: PlacementEnum;
     public articulationEnum: ArticulationEnum;
 
-    constructor(articulationEnum: ArticulationEnum, placement: PlacementEnum = PlacementEnum.Above) {
+    constructor(articulationEnum: ArticulationEnum, placement: PlacementEnum) {
         this.articulationEnum = articulationEnum;
         this.placement = placement;
     }

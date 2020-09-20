@@ -133,7 +133,10 @@ export class ArticulationReader {
       const articulationEnum: ArticulationEnum = xmlElementToArticulationEnum[xmlArticulation];
       const node: IXmlElement = xmlNode.element(xmlArticulation);
       if (node) {
-        let placement: PlacementEnum = PlacementEnum.Above;
+        let placement: PlacementEnum; // set undefined by default, to not restrict placement
+        if (node.attribute("placement")?.value === "above") {
+          placement = PlacementEnum.Above;
+        }
         if (node.attribute("placement")?.value === "below") {
           placement = PlacementEnum.Below;
         }
