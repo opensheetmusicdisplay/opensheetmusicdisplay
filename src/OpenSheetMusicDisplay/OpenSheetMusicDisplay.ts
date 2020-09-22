@@ -65,7 +65,7 @@ export class OpenSheetMusicDisplay {
     public zoom: number = 1.0;
     private zoomUpdated: boolean = false;
     /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
-    public loadUrlTimeout: number = 9000;
+    public loadUrlTimeout: number = 5000;
 
     private container: HTMLElement;
     private backendType: BackendType;
