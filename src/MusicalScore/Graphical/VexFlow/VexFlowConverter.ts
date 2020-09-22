@@ -456,7 +456,6 @@ export class VexFlowConverter {
         }
 
         for (const articulation of articulations) {
-            // Articulations:
             let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
 
             if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
