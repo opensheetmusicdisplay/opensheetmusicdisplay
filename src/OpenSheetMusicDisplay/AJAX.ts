@@ -9,7 +9,6 @@ export class AJAX {
      */
     public static ajax(url: string, timeout: number = 9000): Promise<string> {
         let xhttp: XMLHttpRequest;
-        xhttp.timeout = timeout;
         const mimeType: string = url.indexOf(".mxl") > -1 ? "text/plain; charset=x-user-defined" : "application/xml";
         if (XMLHttpRequest) {
             xhttp = new XMLHttpRequest();
@@ -19,6 +18,7 @@ export class AJAX {
         } else {
             return Promise.reject(new Error("XMLHttp not supported."));
         }
+        xhttp.timeout = timeout;
         return new Promise((resolve: (value: string) => void, reject: (error: any) => void) => {
             xhttp.onreadystatechange = () => {
                 if (xhttp.readyState === XMLHttpRequest.DONE) {
