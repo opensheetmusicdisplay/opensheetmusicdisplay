@@ -11,7 +11,7 @@
     "lint": "npm-run-all tslint eslint",
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
-    "prebuild": "fse copy src/VexFlowPatch/src/ node_modules/vexflow/src/",
+    "prebuild": "ncp src/VexFlowPatch/src/ node_modules/vexflow/src/",
     "prepare": "npm run build",
     "build": "npm-run-all lint build:webpack",
     "build:doc": "cross-env STATIC_FILES_SUBFOLDER=sheets npm run build",
@@ -69,7 +69,6 @@
     "vexflow": "1.2.93"
   },
   "devDependencies": {
-    "@atao60/fse-cli": "0.0.29",
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
     "@types/node": "^14.0.9",
@@ -99,6 +98,7 @@
     "karma-webpack": "^4.0.2",
     "karma-xml2js-preprocessor": "^0.0.3",
     "mocha": "^7.0.1",
+    "ncp": "^2.0.0",
     "npm-run-all": "^4.1.2",
     "pre-commit": "^1.2.2",
     "svg2pdf.js": "^1.5.0",
