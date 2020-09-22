@@ -64,6 +64,8 @@ export class OpenSheetMusicDisplay {
     public cursor: Cursor;
     public zoom: number = 1.0;
     private zoomUpdated: boolean = false;
+    /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
+    public loadUrlTimeout: number = 9000;
 
     private container: HTMLElement;
     private backendType: BackendType;
@@ -124,7 +126,7 @@ export class OpenSheetMusicDisplay {
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
-                return AJAX.ajax(trimmedStr).then(
+                return AJAX.ajax(trimmedStr, this.loadUrlTimeout).then(
                     (s: string) => { return self.load(s); },
                     (exc: Error) => { throw exc; }
                 );

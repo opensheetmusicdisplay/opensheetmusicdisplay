@@ -7,8 +7,9 @@ export class AJAX {
      * @param url
      * @returns {any}
      */
-    public static ajax(url: string): Promise<string> {
+    public static ajax(url: string, timeout: number = 9000): Promise<string> {
         let xhttp: XMLHttpRequest;
+        xhttp.timeout = timeout;
         const mimeType: string = url.indexOf(".mxl") > -1 ? "text/plain; charset=x-user-defined" : "application/xml";
         if (XMLHttpRequest) {
             xhttp = new XMLHttpRequest();
