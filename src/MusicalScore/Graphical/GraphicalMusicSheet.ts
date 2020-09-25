@@ -180,9 +180,10 @@ export class GraphicalMusicSheet {
         this.calculator.calculate();
     }
 
-    public prepare(): void {
-        this.calculator.prepareGraphicalMusicSheet();
-    }
+    // unused method
+    // public prepare(): void {
+    //     this.calculator.prepareGraphicalMusicSheet();
+    // }
 
     public EnforceRedrawOfMusicSystems(): void {
         for (let idx: number = 0, len: number = this.musicPages.length; idx < len; ++idx) {
