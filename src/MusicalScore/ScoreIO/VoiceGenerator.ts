@@ -132,7 +132,7 @@ export class VoiceGenerator {
       if (notationNode) {
         // read articulations
         if (this.articulationReader) {
-          this.readArticulations(notationNode, this.currentVoiceEntry);
+          this.readArticulations(notationNode, this.currentVoiceEntry, this.currentNote);
         }
         // read slurs
         const slurElements: IXmlElement[] = notationNode.elements("slur");
@@ -284,7 +284,7 @@ export class VoiceGenerator {
     return this.currentVoiceEntry !== undefined;
   }
 
-  private readArticulations(notationNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
+  private readArticulations(notationNode: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
     const articNode: IXmlElement = notationNode.element("articulations");
     if (articNode) {
       this.articulationReader.addArticulationExpression(articNode, currentVoiceEntry);
@@ -295,7 +295,7 @@ export class VoiceGenerator {
     }
     const tecNode: IXmlElement = notationNode.element("technical");
     if (tecNode) {
-      this.articulationReader.addTechnicalArticulations(tecNode, currentVoiceEntry);
+      this.articulationReader.addTechnicalArticulations(tecNode, currentVoiceEntry, currentNote);
     }
     const ornaNode: IXmlElement = notationNode.element("ornaments");
     if (ornaNode) {

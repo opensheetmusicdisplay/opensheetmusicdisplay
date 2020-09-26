@@ -6,6 +6,7 @@ import {OrnamentContainer, OrnamentEnum} from "../../VoiceData/OrnamentContainer
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import { Articulation } from "../../VoiceData/Articulation";
+import { Note } from "../../VoiceData/Note";
 export class ArticulationReader {
 
   private getAccEnumFromString(input: string): AccidentalEnum {
@@ -112,7 +113,7 @@ export class ArticulationReader {
    * @param xmlNode
    * @param currentVoiceEntry
    */
-  public addTechnicalArticulations(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
+  public addTechnicalArticulations(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
     interface XMLElementToArticulationEnum {
       [xmlElement: string]: ArticulationEnum;
     }
@@ -172,6 +173,8 @@ export class ArticulationReader {
             currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
         }
       }
+      currentTechnicalInstruction.sourceNote = currentNote;
+      currentNote.Fingering = currentTechnicalInstruction;
       currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
     }
   }
