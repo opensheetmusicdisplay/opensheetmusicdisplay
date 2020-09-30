@@ -225,6 +225,7 @@ async function init () {
     console.log('[OSMD.generateImages] done, exiting.')
 }
 
+// let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
     includeSkyBottomLine = false, DEBUG = false) {
     var samplePath = directory + '/' + sampleFilename
@@ -301,7 +302,21 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
 
             debug('got image data, saving to: ' + pageFilename, DEBUG)
             FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
+
+            // debug: log memory usage
+            // let usage = process.memoryUsage()
+            // for (entry of Object.entries(usage)) {
+            //     if (entry[0] === 'rss') {
+            //         if (entry[1] > maxRss) {
+            //             maxRss = entry[1]
+            //             maxRssFilename = pageFilename
+            //         }
+            //     }
+            //     console.log(entry[0] + ': ' + entry[1] / (1024 * 1024) + 'mb')
+            // }
+            // console.log('maxRss: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
         }
+        // console.log('maxRss total: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
     }) // end render then
     //     },
     //     function (e) {
