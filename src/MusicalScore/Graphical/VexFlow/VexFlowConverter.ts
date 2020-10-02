@@ -29,6 +29,7 @@ import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
+import { Articulation } from "../../VoiceData/Articulation";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -427,7 +428,10 @@ export class VexFlowConverter {
             // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
             const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
             if (tremoloStrokes > 0) {
-                vfnote.addModifier(i, new Vex.Flow.Tremolo(tremoloStrokes));
+                const tremolo: Vex.Flow.Tremolo = new Vex.Flow.Tremolo(tremoloStrokes);
+                (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
+                (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
+                vfnote.addModifier(i, tremolo);
             }
         }
 
@@ -445,27 +449,37 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
+    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: Articulation[],
+                                        rules: EngravingRules): void {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
         }
-        // Articulations:
-        let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
-
-        if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
-            vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
-        }
 
         for (const articulation of articulations) {
-            // tslint:disable-next-line:switch-default
+            let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
+
+            if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
+                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+            }
             let vfArt: Vex.Flow.Articulation = undefined;
-            switch (articulation) {
+            const articulationEnum: ArticulationEnum = articulation.articulationEnum;
+            if (rules.ArticulationPlacementFromXML) {
+                if (articulation.placement === PlacementEnum.Above) {
+                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                } else if (articulation.placement === PlacementEnum.Below) {
+                    vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+                } // else if undefined: don't change
+            }
+            switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new Vex.Flow.Articulation("a>");
                     break;
                 }
                 case ArticulationEnum.downbow: {
                     vfArt = new Vex.Flow.Articulation("am");
+                    if (articulation.placement === undefined) { // downbow/upbow should be above by default
+                        vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    }
                     break;
                 }
                 case ArticulationEnum.fermata: {
@@ -475,12 +489,10 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.marcatodown: {
                     vfArt = new Vex.Flow.Articulation("a|"); // Vexflow only knows marcato up, so we use a down stroke here.
-                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE; // TODO take position from xml? can be below
                     break;
                 }
                 case ArticulationEnum.marcatoup: {
                     vfArt = new Vex.Flow.Articulation("a^");
-                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
@@ -490,6 +502,10 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.lefthandpizzicato: {
                     vfArt = new Vex.Flow.Articulation("a+");
+                    break;
+                }
+                case ArticulationEnum.naturalharmonic: {
+                    vfArt = new Vex.Flow.Articulation("ah");
                     break;
                 }
                 case ArticulationEnum.snappizzicato: {
@@ -510,6 +526,9 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.upbow: {
                     vfArt = new Vex.Flow.Articulation("a|");
+                    if (articulation.placement === undefined) { // downbow/upbow should be above by default
+                        vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    }
                     break;
                 }
                 case ArticulationEnum.strongaccent: {

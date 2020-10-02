@@ -12,6 +12,7 @@ import {Notehead} from "./Notehead";
 import {Arpeggio} from "./Arpeggio";
 import {NoteType} from "./NoteType";
 import { SourceMeasure } from "./SourceMeasure";
+import { TechnicalInstruction } from "./Instructions";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -91,6 +92,7 @@ export class Note {
      */
     private noteheadColor: string;
     private noteheadColorCurrentlyRendered: string;
+    public Fingering: TechnicalInstruction; // this is also stored in VoiceEntry.TechnicalInstructions
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;

@@ -5,6 +5,8 @@ import {TechnicalInstruction, TechnicalInstructionType} from "../../VoiceData/In
 import {OrnamentContainer, OrnamentEnum} from "../../VoiceData/OrnamentContainer";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
+import { Articulation } from "../../VoiceData/Articulation";
+import { Note } from "../../VoiceData/Note";
 export class ArticulationReader {
 
   private getAccEnumFromString(input: string): AccidentalEnum {
@@ -48,27 +50,32 @@ export class ArticulationReader {
         try {
           // some Articulations appear in Xml separated with a "-" (eg strong-accent), we remove it for enum parsing
           name = name.replace("-", "");
-          let articulationEnum: ArticulationEnum = ArticulationEnum[name];
+          const articulationEnum: ArticulationEnum = ArticulationEnum[name];
           if (VoiceEntry.isSupportedArticulation(articulationEnum)) {
+            let placement: PlacementEnum = PlacementEnum.Above;
+            if (childNode.attribute("placement")?.value === "below") {
+              placement = PlacementEnum.Below;
+            }
+            const newArticulation: Articulation = new Articulation(articulationEnum, placement);
             // staccato should be first // necessary?
             if (name === "staccato") {
               if (currentVoiceEntry.Articulations.length > 0 &&
-                currentVoiceEntry.Articulations[0] !== ArticulationEnum.staccato) {
-                currentVoiceEntry.Articulations.splice(0, 0, articulationEnum); // TODO can't this overwrite another articulation?
+                currentVoiceEntry.Articulations[0].articulationEnum !== ArticulationEnum.staccato) {
+                currentVoiceEntry.Articulations.splice(0, 0, newArticulation); // TODO can't this overwrite another articulation?
               }
             }
             if (name === "strongaccent") { // see name.replace("-", "") above
               const marcatoType: string = childNode?.attribute("type")?.value;
               if (marcatoType === "up") {
-                articulationEnum = ArticulationEnum.marcatoup;
+                newArticulation.articulationEnum = ArticulationEnum.marcatoup;
               } else if (marcatoType === "down") {
-                articulationEnum = ArticulationEnum.marcatodown;
+                newArticulation.articulationEnum = ArticulationEnum.marcatodown;
               }
             }
 
             // don't add the same articulation twice
-            if (currentVoiceEntry.Articulations.indexOf(articulationEnum) === -1) {
-              currentVoiceEntry.Articulations.push(articulationEnum);
+            if (!currentVoiceEntry.hasArticulation(newArticulation)) {
+              currentVoiceEntry.Articulations.push(newArticulation);
             }
           }
         } catch (ex) {
@@ -93,8 +100,12 @@ export class ArticulationReader {
         articulationEnum = ArticulationEnum.invertedfermata;
       }
     }
+    let placement: PlacementEnum = PlacementEnum.Above;
+    if (xmlNode.attribute("placement")?.value === "below") {
+      placement = PlacementEnum.Below;
+    }
     // add to VoiceEntry
-    currentVoiceEntry.Articulations.push(articulationEnum);
+    currentVoiceEntry.Articulations.push(new Articulation(articulationEnum, placement));
   }
 
   /**
@@ -102,7 +113,7 @@ export class ArticulationReader {
    * @param xmlNode
    * @param currentVoiceEntry
    */
-  public addTechnicalArticulations(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry): void {
+  public addTechnicalArticulations(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
     interface XMLElementToArticulationEnum {
       [xmlElement: string]: ArticulationEnum;
     }
@@ -123,8 +134,16 @@ export class ArticulationReader {
       const articulationEnum: ArticulationEnum = xmlElementToArticulationEnum[xmlArticulation];
       const node: IXmlElement = xmlNode.element(xmlArticulation);
       if (node) {
-        if (currentVoiceEntry.Articulations.indexOf(articulationEnum) === -1) {
-          currentVoiceEntry.Articulations.push(articulationEnum);
+        let placement: PlacementEnum; // set undefined by default, to not restrict placement
+        if (node.attribute("placement")?.value === "above") {
+          placement = PlacementEnum.Above;
+        }
+        if (node.attribute("placement")?.value === "below") {
+          placement = PlacementEnum.Below;
+        }
+        const newArticulation: Articulation = new Articulation(articulationEnum, placement);
+        if (!currentVoiceEntry.hasArticulation(newArticulation)) {
+          currentVoiceEntry.Articulations.push(newArticulation);
         }
       }
     }
@@ -154,6 +173,8 @@ export class ArticulationReader {
             currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
         }
       }
+      currentTechnicalInstruction.sourceNote = currentNote;
+      currentNote.Fingering = currentTechnicalInstruction;
       currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
     }
   }

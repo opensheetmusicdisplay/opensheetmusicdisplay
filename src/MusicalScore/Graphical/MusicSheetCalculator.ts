@@ -16,7 +16,7 @@ import { Beam } from "../VoiceData/Beam";
 import { OctaveEnum } from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { VoiceEntry, StemDirectionType } from "../VoiceData/VoiceEntry";
 import { OrnamentContainer } from "../VoiceData/OrnamentContainer";
-import { ArticulationEnum } from "../VoiceData/VoiceEntry";
+import { Articulation } from "../VoiceData/Articulation";
 import { Tuplet } from "../VoiceData/Tuplet";
 import { MusicSystem } from "./MusicSystem";
 import { GraphicalTie } from "./GraphicalTie";
@@ -365,7 +365,7 @@ export abstract class MusicSheetCalculator {
         throw new Error("abstract, not implemented");
     }
 
-    protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
+    protected handleVoiceEntryArticulations(articulations: Articulation[],
                                             voiceEntry: VoiceEntry,
                                             staffEntry: GraphicalStaffEntry): void {
         throw new Error("abstract, not implemented");
@@ -966,7 +966,7 @@ export abstract class MusicSheetCalculator {
         return;
     }
 
-    protected layoutArticulationMarks(articulations: ArticulationEnum[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
+    protected layoutArticulationMarks(articulations: Articulation[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
         return;
     }
 

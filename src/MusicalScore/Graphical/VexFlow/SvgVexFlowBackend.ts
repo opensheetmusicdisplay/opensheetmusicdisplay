@@ -40,6 +40,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
+        this.ctx.svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
     }
 
     public getContext(): Vex.Flow.SVGContext {

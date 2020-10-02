@@ -142,10 +142,18 @@ export class MusicSystemBuilder {
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
                 if (sourceMeasureBreaksSystem) {
+                    if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
+                        this.finalizeCurrentSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
+                        return this.musicSystems;
+                    }
                     this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
                 }
                 prevMeasureEndsPart = sourceMeasureEndsPart;
             } else {
+                if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
+                    this.finalizeCurrentSystem(graphicalMeasures, false, true, doXmlPageBreak);
+                    return this.musicSystems;
+                }
                 // finalize current system and prepare a new one
                 this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, false, true, doXmlPageBreak);
                 // don't increase measure index to check this measure now again
@@ -153,6 +161,10 @@ export class MusicSystemBuilder {
             }
         }
         if (this.currentSystemParams.systemMeasures.length > 0) {
+            if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
+                this.finalizeCurrentSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
+                return this.musicSystems;
+            }
             this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
         }
         return this.musicSystems;
@@ -201,6 +213,18 @@ export class MusicSystemBuilder {
                                                 systemEndsPart: boolean = false,
                                                 checkExtraInstructionMeasure: boolean = true,
                                                 startNewPage: boolean = false): void {
+        this.finalizeCurrentSystem(measures, systemEndsPart, checkExtraInstructionMeasure, startNewPage);
+        this.currentSystemParams = new SystemBuildParameters(); // this and the following used to be in finalizeCurrentSystem after stretchMusicSystem
+        if (measures !== undefined &&
+            this.measureListIndex < this.measureList.length) {
+            this.currentSystemParams.currentSystem = this.initMusicSystem();
+        }
+    }
+
+    protected finalizeCurrentSystem(measures: GraphicalMeasure[],
+                                    systemEndsPart: boolean = false,
+                                    checkExtraInstructionMeasure: boolean = true,
+                                    startNewPage: boolean = false): void {
         this.currentSystemParams.currentSystem.breaksPage = startNewPage;
         this.adaptRepetitionLineWithIfNeeded();
         if (measures !== undefined &&
@@ -208,11 +232,6 @@ export class MusicSystemBuilder {
             this.checkAndCreateExtraInstructionMeasure(measures);
         }
         this.stretchMusicSystem(systemEndsPart);
-        this.currentSystemParams = new SystemBuildParameters();
-        if (measures !== undefined &&
-            this.measureListIndex < this.measureList.length) {
-            this.currentSystemParams.currentSystem = this.initMusicSystem();
-        }
     }
 
     /**
@@ -1143,25 +1162,6 @@ export class MusicSystemBuilder {
         if (timesPageCouldntFitSingleSystem > 0) {
             console.log(`total amount of pages that couldn't fit a single music system: ${timesPageCouldntFitSingleSystem} of ${currentPage.PageNumber}`);
         }
-        if (this.rules.PageBottomExtraWhiteSpace > 0 && this.graphicalMusicSheet.MusicPages.length === 1) {
-            // experimental, not used unless the EngravingRule is set to > 0 (default 0)
-
-            // calculate last page's bounding box, otherwise it uses this.rules.PageHeight which is 10001
-            currentPage.PositionAndShape.calculateBoundingBox();
-            // TODO currently bugged with PageFormat A3. this squeezes lyrics and notes (with A3 Landscape). why?
-            //   for this reason, the extra white space should currently only be used with the Endless PageFormat,
-            //   and using EngravingRules.PageBottomExtraWhiteSpace should be considered experimental.
-
-            // add this.rules.PageBottomMargin
-            const pageBottomMarginBB: BoundingBox = new BoundingBox(currentPage, currentPage.PositionAndShape, false);
-            // pageBottomMarginBB.RelativePosition.x = 0;
-            pageBottomMarginBB.RelativePosition.y = currentPage.PositionAndShape.BorderMarginBottom;
-            // pageBottomMarginBB.BorderBottom = this.rules.PageBottomMargin;
-            pageBottomMarginBB.BorderBottom = this.rules.PageBottomExtraWhiteSpace;
-            pageBottomMarginBB.calculateBoundingBox();
-            currentPage.PositionAndShape.calculateBoundingBox();
-        }
-
     }
 
     /**
