@@ -225,6 +225,7 @@ async function init () {
     console.log('[OSMD.generateImages] done, exiting.')
 }
 
+// eslint-disable-next-line
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
     includeSkyBottomLine = false, DEBUG = false) {
@@ -304,8 +305,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
 
             // debug: log memory usage
-            // let usage = process.memoryUsage()
-            // for (entry of Object.entries(usage)) {
+            // const usage = process.memoryUsage()
+            // for (const entry of Object.entries(usage)) {
             //     if (entry[0] === 'rss') {
             //         if (entry[1] > maxRss) {
             //             maxRss = entry[1]
