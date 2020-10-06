@@ -48,6 +48,7 @@ async function init () {
     console.log('[OSMD.generateImages] init')
 
     const osmdTestingMode = mode.includes('osmdtesting') // can also be --debugosmdtesting
+    const osmdTestingSingleMode = mode.includes('osmdtestingsingle')
     const DEBUG = mode.startsWith('--debug')
     // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
     if (DEBUG) {
@@ -216,7 +217,7 @@ async function init () {
 
         await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, false)
 
-        if (osmdTestingMode && sampleFilename.startsWith('Beethoven') && sampleFilename.includes('Geliebte')) {
+        if (osmdTestingMode && !osmdTestingSingleMode && sampleFilename.startsWith('Beethoven') && sampleFilename.includes('Geliebte')) {
             // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
             await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, true, DEBUG)
         }
