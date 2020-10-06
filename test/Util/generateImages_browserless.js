@@ -265,65 +265,62 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         osmdInstance.drawBottomLine = includeSkyBottomLine
     }
 
-    osmdInstance.load(loadParameter).then(function () {
-        debug('xml loaded', DEBUG)
-        try {
-            osmdInstance.render()
-        } catch (ex) {
-            console.log('renderError: ' + ex)
+    await osmdInstance.load(loadParameter) // if using load.then() without await, memory will not be freed up between renders
+    debug('xml loaded', DEBUG)
+    try {
+        osmdInstance.render()
+    } catch (ex) {
+        console.log('renderError: ' + ex)
+    }
+    debug('rendered', DEBUG)
+
+    const dataUrls = []
+    let canvasImage
+
+    for (let pageNumber = 1; pageNumber < 999; pageNumber++) {
+        canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
+        if (!canvasImage) {
+            break
         }
-        debug('rendered', DEBUG)
-
-        const dataUrls = []
-        let canvasImage
-
-        for (let pageNumber = 1; pageNumber < 999; pageNumber++) {
-            canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
-            if (!canvasImage) {
-                break
-            }
-            if (!canvasImage.toDataURL) {
-                console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
-                break
-            }
-            dataUrls.push(canvasImage.toDataURL())
+        if (!canvasImage.toDataURL) {
+            console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
+            break
         }
-        for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
-            const pageNumberingString = `${urlIndex + 1}`
-            const skybottomlineString = includeSkyBottomLine ? 'skybottomline_' : ''
-            // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-            var pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.png`
+        dataUrls.push(canvasImage.toDataURL())
+    }
+    for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
+        const pageNumberingString = `${urlIndex + 1}`
+        const skybottomlineString = includeSkyBottomLine ? 'skybottomline_' : ''
+        // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
+        var pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.png`
 
-            const dataUrl = dataUrls[urlIndex]
-            if (!dataUrl || !dataUrl.split) {
-                console.log(`error: could not get dataUrl (imageData) for page ${urlIndex + 1} of sample: ${sampleFilename}`)
-                continue
-            }
-            const imageData = dataUrl.split(';base64,').pop()
-            const imageBuffer = Buffer.from(imageData, 'base64')
-
-            debug('got image data, saving to: ' + pageFilename, DEBUG)
-            FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
-
-            // debug: log memory usage
-            // const usage = process.memoryUsage()
-            // for (const entry of Object.entries(usage)) {
-            //     if (entry[0] === 'rss') {
-            //         if (entry[1] > maxRss) {
-            //             maxRss = entry[1]
-            //             maxRssFilename = pageFilename
-            //         }
-            //     }
-            //     console.log(entry[0] + ': ' + entry[1] / (1024 * 1024) + 'mb')
-            // }
-            // console.log('maxRss: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
+        const dataUrl = dataUrls[urlIndex]
+        if (!dataUrl || !dataUrl.split) {
+            console.log(`error: could not get dataUrl (imageData) for page ${urlIndex + 1} of sample: ${sampleFilename}`)
+            continue
         }
-        // console.log('maxRss total: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
-    }) // end render then
-    //     },
-    //     function (e) {
-    //         console.log('error while rendering: ' + e)
-    //     }) // end load then
+        const imageData = dataUrl.split(';base64,').pop()
+        const imageBuffer = Buffer.from(imageData, 'base64')
+
+        debug('got image data, saving to: ' + pageFilename, DEBUG)
+        FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
+
+        // debug: log memory usage
+        // const usage = process.memoryUsage()
+        // for (const entry of Object.entries(usage)) {
+        //     if (entry[0] === 'rss') {
+        //         if (entry[1] > maxRss) {
+        //             maxRss = entry[1]
+        //             maxRssFilename = pageFilename
+        //         }
+        //     }
+        //     console.log(entry[0] + ': ' + entry[1] / (1024 * 1024) + 'mb')
+        // }
+        // console.log('maxRss: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
+    }
+    // console.log('maxRss total: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
+
+    // await sleep(5000)
     // }) // end read file
 }
 
