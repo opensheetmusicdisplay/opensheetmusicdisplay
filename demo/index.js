@@ -1,6 +1,7 @@
 import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
-import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min'
+import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
+// import { Fraction } from '../src/Common/DataObjects/Fraction';
 
 /*jslint browser:true */
 (function () {
