@@ -21,6 +21,7 @@ export class MusicPartManagerIterator {
         try {
             this.frontReached = true;
             this.manager = manager;
+            this.endTimeStamp = endTimestamp;
             this.currentVoiceEntries = undefined;
             this.frontReached = false;
             for (const rep of manager.MusicSheet.Repetitions) {
@@ -71,6 +72,7 @@ export class MusicPartManagerIterator {
     private endReached: boolean = false;
     private frontReached: boolean = false;
     public currentTimeStamp: Fraction = new Fraction(0, 1);
+    public endTimeStamp: Fraction = undefined;
     private currentEnrolledMeasureTimestamp: Fraction = new Fraction(0, 1);
     private currentVerticalContainerInMeasureTimestamp: Fraction = new Fraction(0, 1);
     private jumpResponsibleRepetition: Repetition = undefined;
@@ -241,6 +243,9 @@ export class MusicPartManagerIterator {
         this.recursiveMove();
         if (!this.currentMeasure) {
             this.currentTimeStamp = new Fraction(99999, 1);
+        }
+        if (this.endTimeStamp && this.currentTimeStamp.gte(this.endTimeStamp)) {
+            this.endReached = true;
         }
     }
     public moveToNextVisibleVoiceEntry(notesOnly: boolean): void {
