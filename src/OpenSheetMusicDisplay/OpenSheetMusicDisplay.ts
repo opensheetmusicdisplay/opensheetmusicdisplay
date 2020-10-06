@@ -187,11 +187,9 @@ export class OpenSheetMusicDisplay {
         if (!this.graphic) {
             throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
-        if (this.drawer) {
-            this.drawer.clear(); // clear canvas before setting width
-        }
-        // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
-        // musicSheetCalculator.clearRecreatedObjects();
+        this.drawer?.clear(); // clear canvas before setting width
+        // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
+        // this.graphic.GetCalculator.clearRecreatedObjects();
 
         // Set page width
         let width: number = this.container.offsetWidth;
