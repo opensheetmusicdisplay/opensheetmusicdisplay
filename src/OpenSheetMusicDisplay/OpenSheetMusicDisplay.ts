@@ -867,6 +867,9 @@ export class OpenSheetMusicDisplay {
         this.autoResizeEnabled = value;
     }
 
+    public get Zoom(): number {
+        return this.zoom;
+    }
     public set Zoom(value: number) {
         this.zoom = value;
         this.zoomUpdated = true;
