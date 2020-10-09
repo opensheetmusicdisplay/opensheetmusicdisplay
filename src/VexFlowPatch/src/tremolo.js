@@ -39,11 +39,13 @@ export class Tremolo extends Modifier {
 
     this.setRendered();
     const stemDirection = this.note.getStemDirection();
+    // VexFlowPatch:add y_spacing_scale
     this.y_spacing = 4 * stemDirection * this.y_spacing_scale;
     const start = this.note.getModifierStartXY(this.position, this.index);
     let x = start.x;
     let y = this.note.stem.getExtents().topY;
     let scale = this.note.getCategory() === 'gracenotes' ? GraceNote.SCALE : 1;
+    // VexFlowPatch: add extra stroke scale
     scale *= this.extra_stroke_scale;
     if (stemDirection < 0) {
       y += Tremolo.YOFFSETSTEMDOWN * scale;
