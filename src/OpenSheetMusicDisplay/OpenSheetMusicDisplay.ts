@@ -614,6 +614,9 @@ export class OpenSheetMusicDisplay {
             case "error":
                 log.setLevel(log.levels.ERROR);
                 break;
+            case "silent":
+                log.setLevel(log.levels.SILENT);
+                break;
             default:
                 log.warn(`Could not set log level to ${level}. Using warn instead.`);
                 log.setLevel(log.levels.WARN);
