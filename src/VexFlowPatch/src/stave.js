@@ -77,18 +77,12 @@ export class Stave extends Element {
   setNoteStartX(x) {
     if (!this.formatted) this.format();
 
-    if (!(x >= 0)) {
-      console.log("NaN here1");
-    }
     this.setStartX(x);
     const begBarline = this.modifiers[0];
     begBarline.setX(this.start_x - begBarline.getWidth());
     return this;
   }
   setStartX(x) {
-    if (!(x >= 0)) {
-      console.log("vex: x not >= 0");
-    }
     this.start_x = x;
   }
   getNoteStartX() {
