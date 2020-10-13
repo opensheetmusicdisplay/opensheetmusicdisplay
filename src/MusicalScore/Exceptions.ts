@@ -5,7 +5,7 @@ export class MusicSheetReadingException implements Error {
     constructor(message: string, e?: Error) {
         //super(message);
         this.message = message;
-        if (e !== undefined) {
+        if (e) {
             this.message += " " + e.toString();
         }
     }

@@ -8,7 +8,7 @@ export class MusicSheetErrors {
 
     public finalizeMeasure(measureNumber: number): void {
         let list: string[] = this.measureErrors[measureNumber];
-        if (list === undefined) {
+        if (!list) {
             list = [];
         }
         this.measureErrors[measureNumber] = list.concat(this.tempErrors);

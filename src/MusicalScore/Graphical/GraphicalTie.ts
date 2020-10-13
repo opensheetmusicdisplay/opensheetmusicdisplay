@@ -21,6 +21,9 @@ export class GraphicalTie {
     public get StartNote(): GraphicalNote {
         return this.startNote;
     }
+    public get Tie(): Tie {
+        return this.tie;
+    }
     public set StartNote(value: GraphicalNote) {
         this.startNote = value;
     }

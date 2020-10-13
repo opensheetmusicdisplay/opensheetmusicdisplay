@@ -86,11 +86,17 @@ export interface IOSMDOptions {
      * See the [measureNumberInterval] option, default is 2.
      */
     drawMeasureNumbers?: boolean;
+    /** Whether to only draw measure numbers at the start of a system ("new line"), instead of every [measureNumberInterval] measures. Default false. */
+    drawMeasureNumbersOnlyAtSystemStart?: boolean;
+    /** Whether to draw time signatures (e.g. 4/4). Default true. */
+    drawTimeSignatures?: boolean;
     /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
     measureNumberInterval?: number;
+    /** Whether to read measure numbers from the "number" attribute in the xml file as opposed to defaulting to start at measure 1. Default true. */
+    useXMLMeasureNumbers?: boolean;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
-    /** Where to draw fingerings (left, right, above, below, auto).
+    /** Where to draw fingerings (left, right, above, below, or auto).
      * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
      */
     fingeringPosition?: string;
@@ -102,8 +108,12 @@ export interface IOSMDOptions {
     drawLyrics?: boolean;
     /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
     drawSlurs?: boolean;
-    /** Only draw measure n to m, where m is the number you specify. */
+    /** Only draw measure n to m, where m is the number specified. */
     drawUpToMeasureNumber?: number;
+    /** Only draw the first n systems, where n is the number specified. */
+    drawUpToSystemNumber?: number;
+    /** Only draw the first n pages, where n is the number specified. */
+    drawUpToPageNumber?: number;
     /** Only draw measure n to m, where n is the number you specify. */
     drawFromMeasureNumber?: number;
     /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
@@ -192,6 +202,26 @@ export interface IOSMDOptions {
      *  IF this value is -1, it will render all percussion clef voices on the single line.
      */
     percussionForceVoicesOneLineCutoff?: number;
+    /** The softmaxFactor for Vexflow's formatter. Default is 5, default in Vexflow is 100 (voice.js).
+     *  Lowering this factor makes the spacing between individual notes smaller (especially from one half note to the next).
+     *  So, to get more compact scores, try lowering this value (or set osmd.zoom, which simply scales),
+     *  or try 100 for a more expansive layout.
+     *  Setting this is the same as setting osmd.EngravingRules.SoftmaxFactorVexFlow.
+     */
+    spacingFactorSoftmax?: number;
+    /**
+     * Number in pixels, of spacing between multi-line labels
+     */
+    spacingBetweenTextLines?: number;
+    /**
+     * Set to true if the last system line should be streched across the whole page just as the other systems. Default is false
+     */
+    stretchLastSystemLine?: boolean;
+    /**
+     * Set to true if subsequent measures full of rests should be auto-converted to multi-rest measure. Default is true
+     * This works across instruments- If all instruments have subsequent measures with nothing but rests, multirest measures are generated
+     */
+    autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
 }
 
 export enum AlignRestOption {
@@ -203,7 +233,7 @@ export enum AlignRestOption {
 export enum FillEmptyMeasuresWithWholeRests {
     No = 0,
     YesVisible = 1,
-    YesInvisible = 2
+    YesInvisible = 2 // fill with invisible whole rests
 }
 
 export enum BackendType {

@@ -8,7 +8,7 @@ import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { ISqueezable } from "./ISqueezable";
 import log from "loglevel";
-import { SourceMeasure } from "../VoiceData";
+import { SourceMeasure } from "../VoiceData/SourceMeasure";
 
 /**
  * This class prepares the graphical elements for a continuous expression. It calculates the wedges and
@@ -50,7 +50,7 @@ export class GraphicalContinuousDynamicExpression extends AbstractGraphicalExpre
     public get IsSplittedPart(): boolean { return this.isSplittedPart; }
     public set IsSplittedPart(value: boolean) { this.isSplittedPart = value; }
     /**  Is true if the dynamic is not a symbol but a text instruction. E.g. "decrescendo" */
-    public get IsVerbal(): boolean { return this.ContinuousDynamic.Label !== undefined && this.ContinuousDynamic.Label.length > 0; }
+    public get IsVerbal(): boolean { return this.ContinuousDynamic.Label && this.ContinuousDynamic.Label.length > 0; }
     /** True if this expression should not be removed if re-rendered */
     public get NotToBeRemoved(): boolean { return this.notToBeRemoved; }
     public set NotToBeRemoved(value: boolean) { this.notToBeRemoved = value; }

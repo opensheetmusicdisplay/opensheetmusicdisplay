@@ -119,7 +119,8 @@ export class MultiExpression {
            } else if (this.expressions[0].expression instanceof MoodExpression) {
             fontStyle = FontStyles.Italic;
            } else if (this.expressions[0].expression instanceof UnknownExpression) {
-            fontStyle = FontStyles.Regular;
+            const unknownExpression: UnknownExpression = (this.expressions[0].expression as UnknownExpression);
+            fontStyle = unknownExpression.fontStyle ?? FontStyles.Regular;
            }
        }
        return fontStyle;
@@ -142,7 +143,7 @@ export class MultiExpression {
     //}
     public addExpression(abstractExpression: AbstractExpression, prefix: string): void {
         if (abstractExpression instanceof InstantaneousDynamicExpression) {
-            if (this.instantaneousDynamic !== undefined) {
+            if (this.instantaneousDynamic) {
                 this.removeExpressionFromEntryList(this.InstantaneousDynamic);
             }
             this.instantaneousDynamic = <InstantaneousDynamicExpression>abstractExpression;

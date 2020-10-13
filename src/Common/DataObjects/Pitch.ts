@@ -73,12 +73,12 @@ export class Pitch {
      *          ret[1] = the octave shift (not the new octave!)
      * @constructor
      */
-    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { value: number; overflow: number; } {
+    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number; overflow: number; } {
         const newHalfTone: number = <number>pitch.fundamentalNote + pitch.AccidentalHalfTones + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
-    public static WrapAroundCheck(value: number, limit: number): { value: number; overflow: number; } {
+    public static WrapAroundCheck(value: number, limit: number): { halftone: number; overflow: number; } {
         let overflow: number = 0;
 
         while (value < 0) {
@@ -89,7 +89,7 @@ export class Pitch {
             value -= limit;
             overflow++; // the octave change
         }
-        return {overflow: overflow, value: value};
+        return {overflow: overflow, halftone: value};
     }
 
     //public static calcFrequency(pitch: Pitch): number;
@@ -352,7 +352,7 @@ export class Pitch {
         // if (ReferenceEquals(p1, p2)) {
         //     return true;
         // }
-        if ((<Object>p1 === undefined) || (<Object>p2 === undefined)) {
+        if (!p1 || !p2) {
             return false;
         }
         return (p1.FundamentalNote === p2.FundamentalNote && p1.Octave === p2.Octave && p1.Accidental === p2.Accidental);
@@ -361,6 +361,25 @@ export class Pitch {
     public OperatorNotEqual(p2: Pitch): boolean {
         const p1: Pitch = this;
         return !(p1 === p2);
+    }
+
+    //These don't take into account accidentals! which isn't needed for our current purpose
+    public OperatorFundamentalGreaterThan(p2: Pitch): boolean {
+        const p1: Pitch = this;
+        if (p1.Octave === p2.Octave) {
+            return p1.FundamentalNote > p2.FundamentalNote;
+        } else {
+            return p1.Octave > p2.Octave;
+        }
+    }
+
+    public OperatorFundamentalLessThan(p2: Pitch): boolean {
+        const p1: Pitch = this;
+        if (p1.Octave === p2.Octave) {
+            return p1.FundamentalNote < p2.FundamentalNote;
+        } else {
+            return p1.Octave < p2.Octave;
+        }
     }
 
     // This method returns a new Pitch factor-Halftones higher than the current Pitch

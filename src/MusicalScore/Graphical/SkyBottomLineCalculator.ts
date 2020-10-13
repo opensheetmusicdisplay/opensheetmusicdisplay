@@ -1,6 +1,3 @@
-/* tslint:disable no-unused-variable */
-//FIXME: Enble tslint again when all functions are implemented and in use!
-
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
 import { PointF2D } from "../../Common/DataObjects/PointF2D";
@@ -64,11 +61,16 @@ export class SkyBottomLineCalculator {
             const oldMeasureWidth: number = vsStaff.getWidth();
             // We need to tell the VexFlow stave about the canvas width. This looks
             // redundant because it should know the canvas but somehow it doesn't.
-            // Maybe I am overlooking something but for no this does the trick
+            // Maybe I am overlooking something but for now this does the trick
             vsStaff.setWidth(width);
             measure.format();
             vsStaff.setWidth(oldMeasureWidth);
-            measure.draw(ctx);
+            try {
+                measure.draw(ctx);
+                // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
+            } catch (ex) {
+                log.warn("SkyBottomLineCalculator.calculateLines.draw", ex);
+            }
 
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
             // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
@@ -430,7 +432,7 @@ export class SkyBottomLineCalculator {
         endIndex = Math.ceil(endIndex * this.SamplingUnit);
 
         if (endIndex < startIndex) {
-            throw new Error("start index of line is greater then the end index");
+            throw new Error("start index of line is greater than the end index");
         }
 
         if (startIndex < 0) {
@@ -483,7 +485,7 @@ export class SkyBottomLineCalculator {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
         endIndex = Math.ceil(endIndex * this.SamplingUnit);
 
-        if (skyBottomArray === undefined) {
+        if (!skyBottomArray) {
             // Highly questionable
             return Number.MAX_VALUE;
         }
@@ -516,7 +518,7 @@ export class SkyBottomLineCalculator {
         startIndex = Math.floor(startIndex * this.SamplingUnit);
         endIndex = Math.ceil(endIndex * this.SamplingUnit);
 
-        if (skyBottomArray === undefined) {
+        if (!skyBottomArray) {
             // Highly questionable
             return Number.MIN_VALUE;
         }

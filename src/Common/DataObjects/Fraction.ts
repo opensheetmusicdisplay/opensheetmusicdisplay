@@ -64,7 +64,7 @@ export class Fraction {
       return 1;
     }
 
-    while (b !== 0) {
+    while (Math.abs(b) > 1e-8) { // essentially b > 0, accounts for floating point inaccuracies (0.000...01)
       if (a > b) {
         a -= b;
       } else {
@@ -72,7 +72,7 @@ export class Fraction {
       }
     }
 
-    return a;
+    return Math.round(a); // prevent returning 4.000001 or something, though it doesn't happen for our samples
   }
 
   /**
@@ -239,7 +239,7 @@ export class Fraction {
   }
 
   public Equals(obj: Fraction): boolean {
-    return this.realValue === obj.realValue;
+    return this.realValue === obj?.realValue;
   }
 
   public CompareTo(obj: Fraction): number {
@@ -418,7 +418,7 @@ export class Fraction {
   //public static bool operator === (Fraction f1, Fraction f2)
   //{
   //    // code enhanced for performance
-  //    // System.Object.ReferenceEquals(f1, undefined) is better than if (f1 === undefined)
+  //    // System.Object.ReferenceEquals(f1, undefined) is better than if (f1)
   //    // and comparisons between booleans are quick
   //    bool f1IsNull = System.Object.ReferenceEquals(f1, undefined);
   //    bool f2IsNull = System.Object.ReferenceEquals(f2, undefined);

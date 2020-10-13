@@ -48,7 +48,7 @@ export class BoundingBox {
         this.isSymbol = isSymbol;
         this.xBordersHaveBeenSet = false;
         this.yBordersHaveBeenSet = false;
-        if (parent !== undefined) {
+        if (parent) {
             this.Parent = parent;
         }
     }
@@ -203,7 +203,7 @@ export class BoundingBox {
     }
 
     public set Parent(value: BoundingBox) {
-        if (this.parent !== undefined) {
+        if (this.parent) {
             // remove from old parent
             const index: number = this.parent.ChildElements.indexOf(this, 0);
             if (index > -1) {
@@ -235,7 +235,7 @@ export class BoundingBox {
     }
 
     public setAbsolutePositionFromParent(): void {
-        if (this.parent !== undefined) {
+        if (this.parent) {
             this.absolutePosition.x = this.parent.AbsolutePosition.x + this.relativePosition.x;
             this.absolutePosition.y = this.parent.AbsolutePosition.y + this.relativePosition.y;
         } else {
@@ -250,7 +250,7 @@ export class BoundingBox {
       this.absolutePosition.x = this.relativePosition.x;
       this.absolutePosition.y = this.relativePosition.y;
       let parent: BoundingBox = this.parent;
-      while (parent !== undefined) {
+      while (parent) {
         this.absolutePosition.x += parent.relativePosition.x;
         this.absolutePosition.y += parent.relativePosition.y;
         parent = parent.parent;
@@ -559,13 +559,13 @@ export class BoundingBox {
 
     public getClickedObjectOfType<T>(clickPosition: PointF2D): T {
         const obj: Object = this.dataObject;
-        if (this.pointLiesInsideBorders(clickPosition) && (<T>obj !== undefined)) {
+        if (this.pointLiesInsideBorders(clickPosition) && (<T>obj)) {
             return (obj as T);
         }
         for (let idx: number = 0, len: number = this.childElements.length; idx < len; ++idx) {
             const psi: BoundingBox = this.childElements[idx];
             const innerObject: Object = psi.getClickedObjectOfType<T>(clickPosition);
-            if (innerObject !== undefined) {
+            if (innerObject) {
                 return (innerObject as T);
             }
         }
@@ -573,7 +573,7 @@ export class BoundingBox {
     }
 
     public getObjectsInRegion<T>(region: BoundingBox, liesInside: boolean = true): T[] {
-        if (<T>this.dataObject !== undefined) {
+        if (<T>this.dataObject) {
             if (liesInside) {
                 if (region.liesInsideBorders(this)) {
                     return [this.dataObject as T];

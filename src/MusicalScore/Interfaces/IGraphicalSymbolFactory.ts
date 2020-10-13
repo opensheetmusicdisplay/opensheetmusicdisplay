@@ -15,7 +15,7 @@ import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruc
 import { GraphicalVoiceEntry } from "../Graphical/GraphicalVoiceEntry";
 import { VoiceEntry } from "../VoiceData/VoiceEntry";
 import { EngravingRules } from "../Graphical/EngravingRules";
-import { KeyInstruction } from "../VoiceData";
+import { KeyInstruction } from "../VoiceData/Instructions/KeyInstruction";
 
 export interface IGraphicalSymbolFactory {
 
@@ -24,6 +24,8 @@ export interface IGraphicalSymbolFactory {
     createStaffLine(parentSystem: MusicSystem, parentStaff: Staff): StaffLine;
 
     createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
+
+    createMultiRestMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
     createTabStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 

@@ -8,10 +8,13 @@ import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
 import {MultiExpression} from "./Expressions/MultiExpression";
 import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
-import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
+import {ClefInstruction} from "./Instructions/ClefInstruction";
+import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {Repetition} from "../MusicSource/Repetition";
-import {GraphicalMeasure, SystemLinesEnum, EngravingRules} from "../Graphical";
+import {SystemLinesEnum} from "../Graphical/SystemLinesEnum";
+import {EngravingRules} from "../Graphical/EngravingRules";
+import {GraphicalMeasure} from "../Graphical/GraphicalMeasure";
 //import {BaseIdClass} from "../../Util/BaseIdClass"; // SourceMeasure originally extended BaseIdClass, but ids weren't used.
 
 /**
@@ -23,6 +26,7 @@ export class SourceMeasure {
      * The data entries and data lists will be filled with null values according to the total number of staves,
      * so that existing objects can be referred to by staff index.
      * @param completeNumberOfStaves
+     * @param rules
      */
     constructor(completeNumberOfStaves: number, rules: EngravingRules) {
         this.completeNumberOfStaves = completeNumberOfStaves;
@@ -55,10 +59,23 @@ export class SourceMeasure {
     public printNewPageXml: boolean = false;
 
     private measureNumber: number;
+    public MeasureNumberXML: number;
+    public MeasureNumberPrinted: number; // measureNumber if MeasureNumberXML undefined or NaN. Set in getPrintedMeasureNumber()
+    public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)
+    // public multipleRestMeasuresPerStaff: Dictionary<number, number>; // key: staffId. value: how many rest measures
     private absoluteTimestamp: Fraction;
     private completeNumberOfStaves: number;
     private duration: Fraction;
     private activeTimeSignature: Fraction;
+    public hasLyrics: boolean = false;
+    public hasMoodExpressions: boolean = false;
+    /** Whether the SourceMeasure only has rests, no other entries.
+     *  Not the same as GraphicalMeasure.hasOnlyRests, because one SourceMeasure can have many GraphicalMeasures (staffs).
+     */
+    public allRests: boolean = false;
+    public isReducedToMultiRest: boolean = false;
+    /** If this measure is a MultipleRestMeasure, this is the number of the measure in that sequence of measures. */
+    public multipleRestMeasureNumber: number = 0;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
@@ -79,6 +96,17 @@ export class SourceMeasure {
 
     public set MeasureNumber(value: number) {
         this.measureNumber = value;
+    }
+
+    public getPrintedMeasureNumber(): number {
+        if (this.rules.UseXMLMeasureNumbers) {
+            if (Number.isInteger(this.MeasureNumberXML)) { // false for NaN, undefined, null, "5" (string)
+                this.MeasureNumberPrinted = this.MeasureNumberXML;
+                return this.MeasureNumberPrinted;
+            }
+        }
+        this.MeasureNumberPrinted = this.MeasureNumber;
+        return this.MeasureNumberPrinted;
     }
 
     public get AbsoluteTimestamp(): Fraction {
@@ -211,8 +239,8 @@ export class SourceMeasure {
                 break;
             }
         }
-        if (existingVerticalSourceStaffEntryContainer !== undefined) {
-            if (existingVerticalSourceStaffEntryContainer.StaffEntries[inSourceMeasureStaffIndex] !== undefined) {
+        if (existingVerticalSourceStaffEntryContainer) {
+            if (existingVerticalSourceStaffEntryContainer.StaffEntries[inSourceMeasureStaffIndex]) {
                 staffEntry = existingVerticalSourceStaffEntryContainer.StaffEntries[inSourceMeasureStaffIndex];
             } else {
                 staffEntry = new SourceStaffEntry(existingVerticalSourceStaffEntryContainer, staff);
@@ -272,7 +300,7 @@ export class SourceMeasure {
                 break;
             }
         }
-        if (ve === undefined) {
+        if (!ve) {
             ve = new VoiceEntry(sse.Timestamp, voice, sse);
             sse.VoiceEntries.push(ve);
             createdNewVoiceEntry = true;
@@ -289,7 +317,7 @@ export class SourceMeasure {
      */
     public getPreviousSourceStaffEntryFromIndex(verticalIndex: number, horizontalIndex: number): SourceStaffEntry {
         for (let i: number = horizontalIndex - 1; i >= 0; i--) {
-            if (this.verticalSourceStaffEntryContainers[i][verticalIndex] !== undefined) {
+            if (this.verticalSourceStaffEntryContainers[i][verticalIndex]) {
                 return this.verticalSourceStaffEntryContainers[i][verticalIndex];
             }
         }
@@ -333,7 +361,7 @@ export class SourceMeasure {
     public checkForEmptyVerticalContainer(index: number): void {
         let undefinedCounter: number = 0;
         for (let i: number = 0; i < this.completeNumberOfStaves; i++) {
-            if (this.verticalSourceStaffEntryContainers[index][i] === undefined) {
+            if (!this.verticalSourceStaffEntryContainers[index][i]) {
                 undefinedCounter++;
             }
         }
@@ -396,7 +424,7 @@ export class SourceMeasure {
             const inSourceMeasureInstrumentIndex: number = musicSheet.getGlobalStaffIndexOfFirstStaff(musicSheet.Instruments[i]);
             for (let j: number = 0; j < musicSheet.Instruments[i].Staves.length; j++) {
                 const lastStaffEntry: SourceStaffEntry = this.getLastSourceStaffEntryForInstrument(inSourceMeasureInstrumentIndex + j);
-                if (lastStaffEntry !== undefined && lastStaffEntry.Timestamp !== undefined) {
+                if (lastStaffEntry !== undefined && lastStaffEntry.Timestamp) {
                     if (instrumentDuration.lt(Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntry.calculateMaxNoteLength()))) {
                         instrumentDuration = Fraction.plus(lastStaffEntry.Timestamp, lastStaffEntry.calculateMaxNoteLength());
                     }
@@ -414,7 +442,7 @@ export class SourceMeasure {
         const sourceStaffEntries: SourceStaffEntry[] = [];
         for (const container of this.VerticalSourceStaffEntryContainers) {
             const sse: SourceStaffEntry = container.StaffEntries[staffIndex];
-            if (sse !== undefined) {
+            if (sse) {
                 sourceStaffEntries.push(sse);
             }
         }
@@ -460,7 +488,7 @@ export class SourceMeasure {
             }
 
             const rep: Repetition = instruction.parentRepetition;
-            if (rep === undefined) {
+            if (!rep) {
                 continue;
             }
             if (rep.FromWords) {
@@ -499,7 +527,7 @@ export class SourceMeasure {
         for (let idx: number = 0, len: number = this.LastRepetitionInstructions.length; idx < len; ++idx) {
             const instruction: RepetitionInstruction = this.LastRepetitionInstructions[idx];
             const rep: Repetition = instruction.parentRepetition;
-            if (rep === undefined) {
+            if (!rep) {
                 continue;
             }
             if (!rep.FromWords) {
@@ -539,7 +567,7 @@ export class SourceMeasure {
     }
 
     public getKeyInstruction(staffIndex: number): KeyInstruction {
-        if (this.FirstInstructionsStaffEntries[staffIndex] !== undefined) {
+        if (this.FirstInstructionsStaffEntries[staffIndex]) {
             const sourceStaffEntry: SourceStaffEntry = this.FirstInstructionsStaffEntries[staffIndex];
             for (let idx: number = 0, len: number = sourceStaffEntry.Instructions.length; idx < len; ++idx) {
                 const abstractNotationInstruction: AbstractNotationInstruction = sourceStaffEntry.Instructions[idx];
@@ -565,5 +593,34 @@ export class SourceMeasure {
             }
         }
         return entry;
+    }
+
+    public canBeReducedToMultiRest(): boolean {
+        if (!this.allRests || this.hasLyrics || this.hasMoodExpressions || this.tempoExpressions.length > 0) {
+            return false;
+        }
+        // check for StaffLinkedExpressions (e.g. MultiExpression, StaffText) (per staff)
+        for (const multiExpressions of this.staffLinkedExpressions) {
+            if (multiExpressions.length > 0) {
+                return false;
+            }
+        }
+        // check for clef instruction for next measure
+        for (const lastStaffEntry of this.lastInstructionsStaffEntries) {
+            for (let idx: number = 0, len: number = lastStaffEntry?.Instructions.length; idx < len; ++idx) {
+                const abstractNotationInstruction: AbstractNotationInstruction = lastStaffEntry.Instructions[idx];
+                if (abstractNotationInstruction instanceof ClefInstruction) {
+                    return false;
+                }
+            }
+        }
+        // don't auto-rest pickup measures that aren't whole measure rests
+        return this.Duration?.RealValue === this.ActiveTimeSignature?.RealValue;
+        // if adding further checks, replace the above line with this:
+        // if (this.Duration?.RealValue !== this.ActiveTimeSignature?.RealValue) {
+        //     return false;
+        // }
+        // // TODO further checks?
+        // return true;
     }
 }

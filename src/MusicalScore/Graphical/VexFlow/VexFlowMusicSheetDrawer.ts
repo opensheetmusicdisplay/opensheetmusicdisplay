@@ -21,7 +21,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
 import { GraphicalInstantaneousTempoExpression } from "../GraphicalInstantaneousTempoExpression";
 import { GraphicalInstantaneousDynamicExpression } from "../GraphicalInstantaneousDynamicExpression";
-import log = require("loglevel");
+import log from "loglevel";
 import { GraphicalContinuousDynamicExpression } from "../GraphicalContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
 import { DrawingParameters } from "../DrawingParameters";
@@ -51,8 +51,23 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
+        // vexflow 3.x: change default font
+        if (this.rules.DefaultVexFlowNoteFont === "gonville") {
+            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+        } // else keep new vexflow default Bravura (more cursive, bold).
+
+        // sizing defaults in Vexflow
+        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        // sets scale/size of notes/rest notes:
+        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
+            if (graphicalMusicPage.PageNumber > this.rules.MaxPageToDrawNumber) {
+                break;
+            }
             const backend: VexFlowBackend = this.backends[this.pageIdx];
             backend.graphicalMusicPage = graphicalMusicPage;
             backend.scale(this.zoom);
@@ -67,6 +82,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawPage(page: GraphicalMusicPage): void {
+        if (!page) {
+            return;
+        }
         this.backend = this.backends[page.PageNumber - 1]; // TODO we may need to set this in a couple of other places. this.pageIdx is a bad solution
         super.drawPage(page);
         this.pageIdx += 1;
@@ -150,7 +168,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.x * unitInPixels,
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
-        measure.draw(this.backend.getContext());
+        try {
+            measure.draw(this.backend.getContext());
+            // Vexflow errors can happen here. If we don't catch errors, rendering will stop after this measure.
+        } catch (ex) {
+            log.warn("VexFlowMusicSheetDrawer.drawMeasure", ex);
+        }
 
         // Draw the StaffEntries
         for (const staffEntry of measure.staffEntries) {
@@ -381,9 +404,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param screenPosition the position of the lower left corner of the text in screen coordinates
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
+                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): void {
+        if (!graphicalLabel.Label.print) {
+            return;
+        }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
-        const { font, text } = graphicalLabel.Label;
+        const { font } = graphicalLabel.Label;
         let color: string;
         if (this.rules.ColoringEnabled) {
             color = graphicalLabel.Label.colorDefault;
@@ -398,7 +424,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         if (!fontFamily) {
             fontFamily = this.rules.DefaultFontFamily;
         }
-        this.backend.renderText(height, fontStyle, font, text, heightInPixel, screenPosition, color, graphicalLabel.Label.fontFamily);
+
+        for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
+            const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
+            const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
+            const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
+            this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+            screenPosition.y = screenPosition.y + fontHeightInPixel;
+            if (graphicalLabel.TextLines.length > 1) {
+             screenPosition.y += this.rules.SpacingBetweenTextLines;
+            }
+        }
         // font currently unused, replaced by fontFamily
     }
 

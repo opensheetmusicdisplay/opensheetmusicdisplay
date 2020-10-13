@@ -27,7 +27,7 @@ export class GraphicalLyricWord {
 
     public isFilled(): boolean {
         for (let i: number = 0; i < this.graphicalLyricsEntries.length; i++) {
-            if (this.graphicalLyricsEntries[i] === undefined) {
+            if (!this.graphicalLyricsEntries[i]) {
                 return false;
             }
         }

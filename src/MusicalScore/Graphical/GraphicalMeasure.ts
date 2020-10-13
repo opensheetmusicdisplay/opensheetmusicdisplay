@@ -26,14 +26,14 @@ export abstract class GraphicalMeasure extends GraphicalObject {
         this.parentStaff = staff;
         this.parentSourceMeasure = parentSourceMeasure;
         this.parentStaffLine = staffLine;
-        if (staffLine !== undefined) {
+        if (staffLine) {
             this.parentStaff = staffLine.ParentStaff;
             this.PositionAndShape = new BoundingBox(this, staffLine.PositionAndShape);
         } else {
             this.PositionAndShape = new BoundingBox(this);
         }
         this.PositionAndShape.BorderBottom = 4;
-        if (this.parentSourceMeasure !== undefined) {
+        if (this.parentSourceMeasure) {
             this.measureNumber = this.parentSourceMeasure.MeasureNumber;
         }
 
@@ -59,6 +59,11 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      */
     public endInstructionsWidth: number;
     public hasError: boolean;
+    /**
+     * Whether or not this measure is nothing but rest(s).
+     * Also see SourceMeasure.allRests, which is not the same, because a source measure can have multiple staffs/graphicalMeasures.
+     */
+    public hasOnlyRests: boolean = false;
 
     private parentStaff: Staff;
     private parentMusicSystem: MusicSystem;
@@ -103,7 +108,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
 
     public set ParentStaffLine(value: StaffLine) {
         this.parentStaffLine = value;
-        if (this.parentStaffLine !== undefined) {
+        if (this.parentStaffLine) {
             this.PositionAndShape.Parent = this.parentStaffLine.PositionAndShape;
         }
     }
@@ -190,7 +195,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     public findGraphicalStaffEntryFromTimestamp(relativeTimestamp: Fraction): GraphicalStaffEntry {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: GraphicalStaffEntry = this.staffEntries[idx];
-            if (graphicalStaffEntry.relInMeasureTimestamp.Equals(relativeTimestamp)) {
+            if (graphicalStaffEntry.relInMeasureTimestamp?.Equals(relativeTimestamp)) {
                 return graphicalStaffEntry;
             }
         }
@@ -291,7 +296,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      * @param staffEntry
      */
     public addGraphicalStaffEntryAtTimestamp(staffEntry: GraphicalStaffEntry): void {
-        if (staffEntry !== undefined) {
+        if (staffEntry) {
             if (this.staffEntries.length === 0 || this.staffEntries[this.staffEntries.length - 1].relInMeasureTimestamp.lt(staffEntry.relInMeasureTimestamp)) {
                 this.staffEntries.push(staffEntry);
             } else {
@@ -310,7 +315,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
 
     public beginsWithLineRepetition(): boolean {
         const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
-        if (sourceMeasure === undefined) {
+        if (!sourceMeasure) {
             return false;
         }
         return sourceMeasure.beginsWithLineRepetition();
@@ -322,7 +327,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      */
     public endsWithLineRepetition(): boolean {
         const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
-        if (sourceMeasure === undefined) {
+        if (!sourceMeasure) {
             return false;
         }
         return sourceMeasure.endsWithLineRepetition();
@@ -334,7 +339,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      */
     public beginsWithWordRepetition(): boolean {
         const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
-        if (sourceMeasure === undefined) {
+        if (!sourceMeasure) {
             return false;
         }
         return sourceMeasure.beginsWithWordRepetition();
@@ -345,7 +350,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      */
     public endsWithWordRepetition(): boolean {
         const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
-        if (sourceMeasure === undefined) {
+        if (!sourceMeasure) {
             return false;
         }
         return sourceMeasure.endsWithWordRepetition();

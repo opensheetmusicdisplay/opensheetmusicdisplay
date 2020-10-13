@@ -14,6 +14,7 @@ import log from "loglevel";
 export class VexFlowTabMeasure extends VexFlowMeasure {
     constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
         super(staff, sourceMeasure, staffLine);
+        this.isTabMeasure = true;
     }
 
     /**
@@ -29,6 +30,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
         });
+        // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
         this.updateInstructionWidth();
     }
 
@@ -46,12 +48,14 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             }
         }
 
-        this.finalizeTuplets();
+        if (this.rules.TupletNumbersInTabs) { // default false, don't show tuplets in tab measures
+            this.finalizeTuplets();
+        }
 
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
         for (const voice of voices) {
-            if (voice === undefined) {
+            if (!voice) {
                 continue;
             }
 
@@ -78,13 +82,13 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                     continue;
                 }
 
-                // add fingering
-                if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
-                    this.createFingerings(voiceEntry);
-                }
+                // don't add non-tab fingerings for tab measures (doesn't work yet for tabnotes in vexflow, see VexFlowMeasure.createFingerings())
+                // if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
+                //     this.createFingerings(voiceEntry);
+                // }
 
                 // add Arpeggio
-                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio !== undefined) {
+                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio) {
                     const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
                     // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
                     // see VoiceGenerator. Doesn't matter for Vexflow for now though

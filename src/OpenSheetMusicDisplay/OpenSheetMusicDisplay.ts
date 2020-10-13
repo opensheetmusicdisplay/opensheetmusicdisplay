@@ -17,19 +17,18 @@ import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType } from "./OSMDO
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
-import { NoteEnum } from "..";
-import { AutoColorSet, GraphicalMusicPage } from "../MusicalScore";
-import jspdf = require("jspdf-yworks/dist/jspdf.min");
-import svg2pdf = require("svg2pdf.js/dist/svg2pdf.min");
-import { MusicPartManagerIterator } from "../MusicalScore/MusicParts";
-import { ITransposeCalculator } from "../MusicalScore/Interfaces";
+import { AutoColorSet } from "../MusicalScore/Graphical/DrawingEnums";
+import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage";
+import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
+import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
+import { NoteEnum } from "../Common/DataObjects/Pitch";
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.7.6-dev"; // getter: this.Version
+    private version: string = "0.8.6-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -65,6 +64,8 @@ export class OpenSheetMusicDisplay {
     public cursor: Cursor;
     public zoom: number = 1.0;
     private zoomUpdated: boolean = false;
+    /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
+    public loadUrlTimeout: number = 5000;
 
     private container: HTMLElement;
     private backendType: BackendType;
@@ -112,21 +113,25 @@ export class OpenSheetMusicDisplay {
                 // UTF with BOM detected, truncate first three bytes and pass along
                 return self.load(str.substr(3));
             }
-            if (str.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
-                log.debug("[OSMD] Finally parsing XML content, length: " + str.length);
+            let trimmedStr: string = str;
+            if (/^\s/.test(trimmedStr)) { // only trim if we need to. (end of string is irrelevant)
+                trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc
+            }
+            if (trimmedStr.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
+                log.debug("[OSMD] Finally parsing XML content, length: " + trimmedStr.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
-                content = parser.parseFromString(str, "application/xml");
-            } else if (str.length < 2083) { // TODO do proper URL format check
-                log.debug("[OSMD] Retrieve the file at the given URL: " + str);
+                content = parser.parseFromString(trimmedStr, "application/xml");
+            } else if (trimmedStr.length < 2083) { // TODO do proper URL format check
+                log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
-                return AJAX.ajax(str).then(
+                return AJAX.ajax(trimmedStr, this.loadUrlTimeout).then(
                     (s: string) => { return self.load(s); },
                     (exc: Error) => { throw exc; }
                 );
             } else {
-                console.error("[OSMD] osmd.load(string): Could not process string. Missing else branch?");
+                console.error("[OSMD] osmd.load(string): Could not process string. Did not find <?xml at beginning.");
             }
         }
 
@@ -182,11 +187,9 @@ export class OpenSheetMusicDisplay {
         if (!this.graphic) {
             throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
-        if (this.drawer) {
-            this.drawer.clear(); // clear canvas before setting width
-        }
-        // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
-        // musicSheetCalculator.clearRecreatedObjects();
+        this.drawer?.clear(); // clear canvas before setting width
+        // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
+        // this.graphic.GetCalculator.clearRecreatedObjects();
 
         // Set page width
         let width: number = this.container.offsetWidth;
@@ -279,6 +282,9 @@ export class OpenSheetMusicDisplay {
 
         // TODO check if resize is necessary. set needResize or something when size was changed
         for (const page of this.graphic.MusicPages) {
+            if (page.PageNumber > this.rules.MaxPageToDrawNumber) {
+                break; // don't add the bounding boxes of pages that aren't drawn to the container height etc
+            }
             const backend: VexFlowBackend = this.createBackend(this.backendType, page);
             const sizeWarningPartTwo: string = " exceeds CanvasBackend limit of 32767. Cutting off score.";
             if (backend.getOSMDBackendType() === BackendType.Canvas && width > canvasDimensionsLimit) {
@@ -289,7 +295,13 @@ export class OpenSheetMusicDisplay {
                 height = width / this.rules.PageFormat.aspectRatio;
                 // console.log("pageformat given. height: " + page.PositionAndShape.Size.height);
             } else {
-                height = (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0;
+                height = page.PositionAndShape.Size.height;
+                height += this.rules.PageBottomMargin;
+                height += this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin;
+                if (this.rules.RenderTitle) {
+                    height += this.rules.TitleTopDistance;
+                }
+                height *= this.zoom * 10.0;
                 // console.log("pageformat not given. height: " + page.PositionAndShape.Size.height);
             }
             if (backend.getOSMDBackendType() === BackendType.Canvas && height > canvasDimensionsLimit) {
@@ -429,14 +441,23 @@ export class OpenSheetMusicDisplay {
         if (options.drawMeasureNumbers !== undefined) {
             this.rules.RenderMeasureNumbers = options.drawMeasureNumbers;
         }
+        if (options.drawMeasureNumbersOnlyAtSystemStart) {
+            this.rules.RenderMeasureNumbersOnlyAtSystemStart = options.drawMeasureNumbersOnlyAtSystemStart;
+        }
         if (options.drawLyrics !== undefined) {
             this.rules.RenderLyrics = options.drawLyrics;
+        }
+        if (options.drawTimeSignatures !== undefined) {
+            this.rules.RenderTimeSignatures = options.drawTimeSignatures;
         }
         if (options.drawSlurs !== undefined) {
             this.rules.RenderSlurs = options.drawSlurs;
         }
         if (options.measureNumberInterval !== undefined) {
             this.rules.MeasureNumberLabelOffset = options.measureNumberInterval;
+        }
+        if (options.useXMLMeasureNumbers !== undefined) {
+            this.rules.UseXMLMeasureNumbers = options.useXMLMeasureNumbers;
         }
         if (options.fingeringPosition !== undefined) {
             this.rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
@@ -486,6 +507,12 @@ export class OpenSheetMusicDisplay {
         if (options.drawFromMeasureNumber) {
             this.rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
         }
+        if (options.drawUpToPageNumber) {
+            this.rules.MaxPageToDrawNumber = options.drawUpToPageNumber;
+        }
+        if (options.drawUpToSystemNumber) {
+            this.rules.MaxSystemToDrawNumber = options.drawUpToSystemNumber;
+        }
         if (options.tupletsRatioed) {
             this.rules.TupletsRatioed = true;
         }
@@ -512,6 +539,18 @@ export class OpenSheetMusicDisplay {
         }
         if (options.renderSingleHorizontalStaffline !== undefined) {
             this.rules.RenderSingleHorizontalStaffline = options.renderSingleHorizontalStaffline;
+        }
+        if (options.spacingFactorSoftmax !== undefined) {
+            this.rules.SoftmaxFactorVexFlow = options.spacingFactorSoftmax;
+        }
+        if (options.spacingBetweenTextLines !== undefined) {
+            this.rules.SpacingBetweenTextLines = options.spacingBetweenTextLines;
+        }
+        if (options.stretchLastSystemLine !== undefined) {
+            this.rules.StretchLastSystemLine = options.stretchLastSystemLine;
+        }
+        if (options.autoGenerateMutipleRestMeasuresFromRestMeasures !== undefined) {
+            this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures = options.autoGenerateMutipleRestMeasuresFromRestMeasures;
         }
     }
 
@@ -574,6 +613,9 @@ export class OpenSheetMusicDisplay {
                 break;
             case "error":
                 log.setLevel(log.levels.ERROR);
+                break;
+            case "silent":
+                log.setLevel(log.levels.SILENT);
                 break;
             default:
                 log.warn(`Could not set log level to ${level}. Using warn instead.`);
@@ -686,10 +728,17 @@ export class OpenSheetMusicDisplay {
             // save previous cursor state
             const hidden: boolean = this.cursor?.Hidden;
             const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
+            this.cursor?.hide();
 
+            // check which page/backend to draw the cursor on (the pages may have changed since last cursor)
+            let backendToDrawOn: VexFlowBackend = this.drawer?.Backends[0];
+            if (backendToDrawOn && this.rules.RestoreCursorAfterRerender && this.cursor) {
+                const newPageNumber: number = this.cursor.updateCurrentPage();
+                backendToDrawOn = this.drawer.Backends[newPageNumber - 1];
+            }
             // create new cursor
-            if (this.drawer?.Backends?.length >= 1 && this.drawer.Backends[0].getRenderElement()) {
-                this.cursor = new Cursor(this.drawer.Backends[0].getRenderElement(), this);
+            if (backendToDrawOn && backendToDrawOn.getRenderElement()) {
+                this.cursor = new Cursor(backendToDrawOn.getRenderElement(), this);
             }
             if (this.sheet && this.graphic && this.cursor) { // else init is called in load()
                 this.cursor.init(this.sheet.MusicPartManager, this.graphic);
@@ -700,6 +749,7 @@ export class OpenSheetMusicDisplay {
                 this.cursor.hidden = hidden;
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
+                    this.cursor.update();
                 }
             }
         } else { // disable cursor
@@ -779,59 +829,6 @@ export class OpenSheetMusicDisplay {
         }
     }
 
-    /**
-     * Creates a Pdf of the currently rendered MusicXML
-     * @param pdfName if no name is given, the composer and title of the piece will be used
-     */
-    public createPdf(pdfName: string = undefined): void {
-        if (this.backendType !== BackendType.SVG) {
-            console.log("[OSMD] osmd.createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
-                " Please use osmd.setOptions({backendType: SVG}).");
-            return;
-        }
-
-        if (pdfName === undefined) {
-            pdfName = this.sheet.FullNameString + ".pdf";
-        }
-
-        const backends: VexFlowBackend[] = this.drawer.Backends;
-        let svgElement: SVGElement = (<SvgVexFlowBackend>backends[0]).getSvgElement();
-
-        let pageWidth: number = 210;
-        let pageHeight: number = 297;
-        const engravingRulesPageFormat: PageFormat = this.rules.PageFormat;
-        if (engravingRulesPageFormat && !engravingRulesPageFormat.IsUndefined) {
-            pageWidth = engravingRulesPageFormat.width;
-            pageHeight = engravingRulesPageFormat.height;
-        } else {
-            pageHeight = pageWidth * svgElement.clientHeight / svgElement.clientWidth;
-        }
-
-        const orientation: string = pageHeight > pageWidth ? "p" : "l";
-        // create a new jsPDF instance
-        const pdf: any = new jspdf(orientation, "mm", [pageWidth, pageHeight]);
-        const scale: number = pageWidth / svgElement.clientWidth;
-        for (let idx: number = 0, len: number = backends.length; idx < len; ++idx) {
-            if (idx > 0) {
-                pdf.addPage();
-            }
-            svgElement = (<SvgVexFlowBackend>backends[idx]).getSvgElement();
-
-            // render the svg element
-            svg2pdf(svgElement, pdf, {
-                scale: scale,
-                xOffset: 0,
-                yOffset: 0
-            });
-        }
-
-        // simply save the created pdf
-        pdf.save(pdfName);
-
-        // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
-        // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32
-    }
-
     //#region GETTER / SETTER
     public set DrawSkyLine(value: boolean) {
         this.drawSkyLine = value;
@@ -873,6 +870,9 @@ export class OpenSheetMusicDisplay {
         this.autoResizeEnabled = value;
     }
 
+    public get Zoom(): number {
+        return this.zoom;
+    }
     public set Zoom(value: number) {
         this.zoom = value;
         this.zoomUpdated = true;

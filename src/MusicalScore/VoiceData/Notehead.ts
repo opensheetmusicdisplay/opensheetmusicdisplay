@@ -34,8 +34,8 @@ export class Notehead {
         this.shape = Notehead.ShapeTypeXmlToShape(shapeTypeXml);
 
         let filled: boolean = filledXmlAttribute;
-        if (filled === undefined) {
-            if (this.sourceNote === undefined) {
+        if (filled === undefined) { // don't replace undefined check
+            if (!this.sourceNote) {
                 // this should not happen. Either filledXmlAttribute or sourceNote should be defined.
                 log.warn("notehead: sourceNote and filledXmlAttribute undefined.");
                 filled = true;

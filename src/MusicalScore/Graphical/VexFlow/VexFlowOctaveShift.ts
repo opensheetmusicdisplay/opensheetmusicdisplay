@@ -12,9 +12,9 @@ import log from "loglevel";
 export class VexFlowOctaveShift extends GraphicalOctaveShift {
 
     /** Defines the note where the octave shift starts */
-    private startNote: Vex.Flow.StemmableNote;
+    public startNote: Vex.Flow.StemmableNote;
     /** Defines the note where the octave shift ends */
-    private endNote: Vex.Flow.StemmableNote;
+    public endNote: Vex.Flow.StemmableNote;
     /** Top or bottom of the staffline */
     private position: Vex.Flow.TextBracket.Positions;
     /** Supscript is a smaller text after the regular text (e.g. va after 8) */
@@ -60,24 +60,31 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      * Set a start note using a staff entry
      * @param graphicalStaffEntry the staff entry that holds the start note
      */
-    public setStartNote(graphicalStaffEntry: GraphicalStaffEntry): void {
-        this.startNote = (graphicalStaffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote;
+    public setStartNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
+        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
+            if (vve?.vfStaveNote) {
+                this.startNote = vve.vfStaveNote;
+                return true;
+            }
+        }
+        return false; // couldn't find a startNote
     }
 
     /**
      * Set an end note using a staff entry
      * @param graphicalStaffEntry the staff entry that holds the end note
      */
-    public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): void {
-        this.endNote = (graphicalStaffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote;
-    }
-
-    public getStartNote(): Vex.Flow.StemmableNote {
-        return this.startNote;
-    }
-
-    public getEndNote(): Vex.Flow.StemmableNote {
-        return this.endNote;
+    public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
+        // this is duplicate code from setStartNote, but if we make one general method, we add a lot of branching.
+        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
+            if (vve?.vfStaveNote) {
+                this.endNote = vve.vfStaveNote;
+                return true;
+            }
+        }
+        return false; // couldn't find an endNote
     }
 
     /**

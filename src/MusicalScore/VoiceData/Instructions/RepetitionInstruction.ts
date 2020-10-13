@@ -2,7 +2,7 @@ import {Repetition} from "../../MusicSource/Repetition";
 
 export class RepetitionInstructionComparer /*implements IComparer<RepetitionInstruction>*/ {
     public static Compare(x: RepetitionInstruction, y: RepetitionInstruction): number {
-        if (x.parentRepetition !== undefined && y.parentRepetition !== undefined) {
+        if (x.parentRepetition !== undefined && y.parentRepetition) {
             if (x.alignment === AlignmentType.End && y.alignment === AlignmentType.End) {
                 if (x.parentRepetition.StartIndex < y.parentRepetition.StartIndex) {
                     return 1;
@@ -44,7 +44,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
     constructor(measureIndex: number, type: RepetitionInstructionEnum, alignment: AlignmentType = AlignmentType.End,
                 parentRepetition: Repetition = undefined, endingIndices: number[] = undefined) {
         this.measureIndex = measureIndex;
-        if (endingIndices !== undefined) {
+        if (endingIndices) {
             this.endingIndices = endingIndices.slice(); // slice=arrayCopy
         }
         this.type = type;
@@ -132,7 +132,7 @@ export class RepetitionInstruction /*implements IComparable*/ {
         if (this.endingIndices === other.endingIndices) {
             return true;
         }
-        if (this.endingIndices === undefined || other.endingIndices === undefined ||
+        if (!this.endingIndices || !other.endingIndices ||
             this.endingIndices.length !== other.endingIndices.length) {
             return false;
         }

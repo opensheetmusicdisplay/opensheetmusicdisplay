@@ -141,7 +141,11 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("Timeout from server", (done: MochaDone) => {
+    it.skip("Timeout from server", (done: MochaDone) => {
+        // TODO this test times out from time to time, even with osmd.loadUrlTimeout set to 5000.
+        //   the test is unreliable, which makes it hard to test.
+        //   also, it's better not to use OSMD to fetch one's score anyways.
+        //   also, the timeout adds unnecessary time to the testing suite.
         const score: string = "https://httpstat.us/408";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -359,7 +363,8 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                     voiceEntry,
                     voiceEntry.ParentSourceStaffEntry,
                     new Fraction(1),
-                    new Pitch(11, 2, AccidentalEnum.NATURAL));
+                    new Pitch(11, 2, AccidentalEnum.NATURAL),
+                    voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure);
                     // note: if the pitch is such that the voice entry frequencies aren't ordered correctly,
                     // Vexflow will complain about unsorted pitches. see below
                 voiceEntry.Notes.push(newNote);

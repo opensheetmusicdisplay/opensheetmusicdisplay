@@ -95,7 +95,7 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         return InstantaneousDynamicExpression.dynamicToRelativeVolumeDict[this.dynamicEnum] * 127;
     }
     public static isInputStringInstantaneousDynamic(inputString: string): boolean {
-        if (inputString === undefined) { return false; }
+        if (!inputString) { return false; }
         return InstantaneousDynamicExpression.isStringInStringList(InstantaneousDynamicExpression.listInstantaneousDynamics, inputString);
     }
 

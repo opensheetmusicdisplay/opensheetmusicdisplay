@@ -24,7 +24,7 @@ export class ContinuousTempoExpression extends AbstractTempoExpression {
     private endTempo: number;
 
     public static isInputStringContinuousTempo(inputString: string): boolean {
-        if (inputString === undefined) { return false; }
+        if (!inputString) { return false; }
         return (
             ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoFaster, inputString)
             || ContinuousTempoExpression.isStringInStringList(ContinuousTempoExpression.listContinuousTempoSlower, inputString)
