@@ -1105,7 +1105,9 @@ export class MusicSystemBuilder {
                     }*/
                 }
                 // now add the border-top: everything that stands out above the staffline:
-                currentYPosition += -currentSystem.PositionAndShape.BorderTop;
+                if (!this.rules.CompactMode || this.rules.PageTopMargin > 0) {
+                    currentYPosition += -currentSystem.PositionAndShape.BorderTop;
+                }
                 const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
                                                                 currentYPosition);
                 currentSystem.PositionAndShape.RelativePosition = relativePosition;
