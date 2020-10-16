@@ -39,7 +39,7 @@ export class Tremolo extends Modifier {
 
     this.setRendered();
     const stemDirection = this.note.getStemDirection();
-    // VexFlowPatch:add y_spacing_scale
+    // VexFlowPatch: add y_spacing_scale
     this.y_spacing = 4 * stemDirection * this.y_spacing_scale;
     const start = this.note.getModifierStartXY(this.position, this.index);
     let x = start.x;
