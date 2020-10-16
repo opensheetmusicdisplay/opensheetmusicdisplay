@@ -115,7 +115,7 @@ export class DrawingParameters {
     }
 
     public setForCompactMode(): void {
-        this.setForDefault();
+        // this.setForDefault(); // this would reset all EngravingRules to default values.
         this.rules.CompactMode = true;
         this.DrawCredits = false; // sets DrawComposer, DrawTitle, DrawLyricist to false
         // this.DrawPartNames = true; // unnecessary
@@ -139,7 +139,7 @@ export class DrawingParameters {
         this.rules.StaffDistance = 3.5;
         this.rules.MinimumDistanceBetweenSystems = 1;
         // this.rules.PageTopMargin = 0.0; // see this.rules.PageTopMarginNarrow used in compact mode
-        this.rules.PageBottomMargin = 1.0;
+        this.rules.PageBottomMargin = 0.0;
         this.rules.PageLeftMargin = 2.0;
         this.rules.PageRightMargin = 2.0;
         // this.BetweenStaffDistance = 2.5 // etc needs to be set in OSMD.rules
