@@ -734,8 +734,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           return;
         }
       }
-      startStaffLine.OctaveShifts.push(graphicalOctaveShift);
-
       // calculate RelativePosition and Dashes
       let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
       if (!startStaffEntry) { // fix for rendering range set
@@ -759,7 +757,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const systemsInBetweenCount: number = endStaffLine.ParentMusicSystem.Id - startStaffLine.ParentMusicSystem.Id;
         if (systemsInBetweenCount > 0) {
           //Loop through the stafflines in between to the end
-          for (let i: number = 0; i < systemsInBetweenCount; i++) {
+          for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
             const idx: number = i + 1;
             const nextShiftMusicSystem: MusicSystem = this.musicSystems[idx];
             const nextShiftStaffline: StaffLine = nextShiftMusicSystem.StaffLines[staffIndex];
@@ -773,7 +771,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
             let nextShiftLastMeasure: GraphicalMeasure = nextShiftStaffline.Measures[nextShiftStaffline.Measures.length - 1];
             const firstNote: GraphicalStaffEntry = nextShiftFirstMeasure.staffEntries[0];
-            let lastNote: GraphicalStaffEntry = nextShiftLastMeasure.staffEntries[0];
+            let lastNote: GraphicalStaffEntry = nextShiftLastMeasure.staffEntries[nextShiftLastMeasure.staffEntries.length - 1];
 
             //If the is the ending staffline, this endMeasure is the end of the shift
             if (endMeasure.ParentStaffLine === nextShiftStaffline) {
