@@ -790,6 +790,8 @@ export class VexFlowConverter {
                 type = "treble";
                 break;
             default:
+                log.info("bad clef type: " + clef.ClefType);
+                type = "treble";
         }
 
         // annotations in vexflow don't allow bass and 8va. No matter the offset :(

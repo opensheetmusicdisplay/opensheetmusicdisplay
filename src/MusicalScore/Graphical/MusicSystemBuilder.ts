@@ -396,11 +396,16 @@ export class MusicSystemBuilder {
                 const graphicalMeasure: GraphicalMeasure = this.graphicalMusicSheet
                     .getGraphicalMeasureFromSourceMeasureAndIndex(firstSourceMeasure, staffIndex);
                 this.activeClefs[i] = <ClefInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[0];
-                let keyInstruction: KeyInstruction = KeyInstruction.copy(
-                    <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1]);
-                keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
-                this.activeKeys[i] = keyInstruction;
-                this.activeRhythm[i] = <RhythmInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
+                const firstKeyInstruction: KeyInstruction = <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1];
+                if (firstKeyInstruction) {
+                    let keyInstruction: KeyInstruction = KeyInstruction.copy(firstKeyInstruction);
+                    keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
+                    this.activeKeys[i] = keyInstruction;
+                }
+                const firstRhythmInstruction: RhythmInstruction = <RhythmInstruction>
+                    firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
+                // if (firstRhythmInstruction) {
+                this.activeRhythm[i] = firstRhythmInstruction;
             }
         }
     }
