@@ -87,9 +87,6 @@ export class VoiceGenerator {
     if (addToVoice) {
       this.voice.VoiceEntries.push(this.currentVoiceEntry);
     }
-    if (parentStaffEntry.VoiceEntries.indexOf(this.currentVoiceEntry) === -1) {
-      parentStaffEntry.VoiceEntries.push(this.currentVoiceEntry);
-    }
   }
 
   /**

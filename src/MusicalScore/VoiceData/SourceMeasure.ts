@@ -302,7 +302,6 @@ export class SourceMeasure {
         }
         if (!ve) {
             ve = new VoiceEntry(sse.Timestamp, voice, sse);
-            sse.VoiceEntries.push(ve);
             createdNewVoiceEntry = true;
         }
         return {createdVoiceEntry: createdNewVoiceEntry, voiceEntry: ve};
