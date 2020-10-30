@@ -55,8 +55,9 @@ export class VoiceGenerator {
   private currentNote: Note;
   private currentMeasure: SourceMeasure;
   private currentStaffEntry: SourceStaffEntry;
-  private lastBeamTag: string = "";
-  private openBeam: Beam;
+  // private lastBeamTag: string = "";
+  private openBeams: Beam[] = []; // works like a stack, with push and pop
+  private beamNumberOffset: number = 0;
   private openTieDict: { [_: number]: Tie; } = {};
   private currentOctaveShift: number = 0;
   private tupletDict: { [_: number]: Tuplet; } = {};
@@ -107,7 +108,7 @@ export class VoiceGenerator {
   public read(noteNode: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, noteTypeXml: NoteType, normalNotes: number, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
               measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
-              printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
+              printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
               stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     this.currentStaffEntry = parentStaffEntry;
     this.currentMeasure = parentMeasure;
@@ -117,7 +118,7 @@ export class VoiceGenerator {
       this.currentNote = restNote
         ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, guitarPro,
-                             printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
+                             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
       if (this.lyricsReader !== undefined && lyricElements) {
@@ -259,7 +260,7 @@ export class VoiceGenerator {
   }
 
   public checkForOpenBeam(): void {
-    if (this.openBeam !== undefined && this.currentNote) {
+    if (this.openBeams.length > 0 && this.currentNote) {
       this.handleOpenBeam();
     }
   }
@@ -314,7 +315,7 @@ export class VoiceGenerator {
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
                         normalNotes: number, chord: boolean, guitarPro: boolean,
-                        printObject: boolean, isCueNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
+                        printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
                         stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
@@ -450,6 +451,7 @@ export class VoiceGenerator {
     note.NormalNotes = normalNotes;
     note.PrintObject = printObject;
     note.IsCueNote = isCueNote;
+    note.IsGraceNote = isGraceNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
     note.TremoloStrokes = tremoloStrokes; // could be a Tremolo object in future if we have more data to manage like two-note tremolo
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
@@ -494,8 +496,8 @@ export class VoiceGenerator {
     restNote.NoteheadColorXml = noteheadColorXml;
     restNote.NoteheadColor = noteheadColorXml;
     this.currentVoiceEntry.Notes.push(restNote);
-    if (this.openBeam) {
-      this.openBeam.ExtendedNoteList.push(restNote);
+    if (this.openBeams.length > 0) {
+      this.openBeams.last().ExtendedNoteList.push(restNote);
     }
     return restNote;
   }
@@ -513,35 +515,44 @@ export class VoiceGenerator {
         beamAttr = beamNode.attribute("number");
       }
       if (beamAttr) {
-        const beamNumber: number = parseInt(beamAttr.value, 10);
+        let beamNumber: number = parseInt(beamAttr.value, 10);
         const mainBeamNode: IXmlElement[] = node.elements("beam");
         const currentBeamTag: string = mainBeamNode[0].value;
-        if (beamNumber === 1 && mainBeamNode) {
-          if (currentBeamTag === "begin" && this.lastBeamTag !== currentBeamTag) {
-              if (this.openBeam) {
+        if (mainBeamNode) {
+          if (currentBeamTag === "begin") {
+            if (beamNumber === this.openBeams.last()?.BeamNumber) {
+              // beam with same number already existed (error in XML), bump beam number
+              this.beamNumberOffset++;
+              beamNumber += this.beamNumberOffset;
+            } else if (this.openBeams.last()) {
                 this.handleOpenBeam();
-              }
-              this.openBeam = new Beam();
             }
-          this.lastBeamTag = currentBeamTag;
+            this.openBeams.push(new Beam(beamNumber, this.beamNumberOffset));
+          } else {
+            beamNumber += this.beamNumberOffset;
+          }
         }
         let sameVoiceEntry: boolean = false;
-        if (!this.openBeam) {
-            return;
-          }
-        for (let idx: number = 0, len: number = this.openBeam.Notes.length; idx < len; ++idx) {
-            const beamNote: Note = this.openBeam.Notes[idx];
-            if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
-              sameVoiceEntry = true;
-            }
-          }
-        if (!sameVoiceEntry) {
-            this.openBeam.addNoteToBeam(note);
-            if (currentBeamTag === "end" && beamNumber === 1) {
-              this.openBeam = undefined;
-            }
+        if (!(beamNumber > 0 && beamNumber <= this.openBeams.length) || !this.openBeams[beamNumber - 1]) {
+          console.log("invalid beamnumber"); // this shouldn't happen, probably error in this method
+          return;
+        }
+        for (let idx: number = 0, len: number = this.openBeams[beamNumber - 1].Notes.length; idx < len; ++idx) {
+          const beamNote: Note = this.openBeams[beamNumber - 1].Notes[idx];
+          if (this.currentVoiceEntry === beamNote.ParentVoiceEntry) {
+            sameVoiceEntry = true;
           }
         }
+        if (!sameVoiceEntry) {
+          const openBeam: Beam = this.openBeams[beamNumber - 1];
+          openBeam.addNoteToBeam(note);
+          // const lastBeamNote: Note = openBeam.Notes.last();
+          // const graceStatusChanged: boolean = (lastBeamNote?.IsCueNote || lastBeamNote?.IsGraceNote) !== (note.IsCueNote) || (note.IsGraceNote);
+          if (currentBeamTag === "end") {
+            this.endBeam();
+          }
+        }
+      }
     } catch (e) {
       const errorMsg: string = ITextTranslation.translateText(
         "ReaderErrorMessages/BeamError", "Error while reading beam."
@@ -549,23 +560,28 @@ export class VoiceGenerator {
       this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
       throw new MusicSheetReadingException("", e);
     }
+  }
 
+  private endBeam(): void {
+    this.openBeams.pop(); // pop the last open beam from the stack. the latest openBeam will be the one before that now
+    this.beamNumberOffset = Math.max(0, this.beamNumberOffset - 1);
   }
 
   /**
    * Check for open [[Beam]]s at end of [[SourceMeasure]] and closes them explicity.
    */
   private handleOpenBeam(): void {
-    if (this.openBeam.Notes.length === 1) {
-      const beamNote: Note = this.openBeam.Notes[0];
+    const openBeam: Beam = this.openBeams.last();
+    if (openBeam.Notes.length === 1) {
+      const beamNote: Note = openBeam.Notes[0];
       beamNote.NoteBeam = undefined;
-      this.openBeam = undefined;
+      this.endBeam();
       return;
     }
-    if (this.currentNote === CollectionUtil.last(this.openBeam.Notes)) {
-      this.openBeam = undefined;
+    if (this.currentNote === CollectionUtil.last(openBeam.Notes)) {
+      this.endBeam();
     } else {
-      const beamLastNote: Note = CollectionUtil.last(this.openBeam.Notes);
+      const beamLastNote: Note = CollectionUtil.last(openBeam.Notes);
       const beamLastNoteStaffEntry: SourceStaffEntry = beamLastNote.ParentStaffEntry;
       const horizontalIndex: number = this.currentMeasure.getVerticalContainerIndexByTimestamp(beamLastNoteStaffEntry.Timestamp);
       const verticalIndex: number = beamLastNoteStaffEntry.VerticalContainerParent.StaffEntries.indexOf(beamLastNoteStaffEntry);
@@ -579,16 +595,16 @@ export class VoiceGenerator {
             if (voiceEntry.ParentVoice === this.voice) {
               const candidateNote: Note = voiceEntry.Notes[0];
               if (candidateNote.Length.lte(new Fraction(1, 8))) {
-                this.openBeam.addNoteToBeam(candidateNote);
-                this.openBeam = undefined;
+                this.openBeams.last().addNoteToBeam(candidateNote);
+                this.endBeam();
               } else {
-                this.openBeam = undefined;
+                this.endBeam();
               }
             }
           }
         }
       } else {
-        this.openBeam = undefined;
+        this.endBeam();
       }
     }
   }

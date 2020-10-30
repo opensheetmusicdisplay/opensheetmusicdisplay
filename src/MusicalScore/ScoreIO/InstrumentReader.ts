@@ -395,7 +395,7 @@ export class InstrumentReader {
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
-            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
+            printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
             vibratoStrokes
           );
 

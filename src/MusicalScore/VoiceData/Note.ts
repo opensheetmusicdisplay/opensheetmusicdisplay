@@ -68,6 +68,7 @@ export class Note {
     private arpeggio: Arpeggio;
     /** States whether this is a cue note (Stichnote) (smaller size). */
     private isCueNote: boolean;
+    public IsGraceNote: boolean;
     /** The stem direction asked for in XML. Not necessarily final or wanted stem direction. */
     private stemDirectionXml: StemDirectionType;
     /** The number of tremolo strokes this note has (16th tremolo = 2 strokes).
