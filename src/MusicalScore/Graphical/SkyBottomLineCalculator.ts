@@ -173,10 +173,8 @@ export class SkyBottomLineCalculator {
      */
     private findPreviousValidNumber(start: number, tSkyLine: number[]): number {
         for (let idx: number = start; idx >= 0; idx--) {
-            if (!isNaN(tSkyLine[idx]) && tSkyLine[idx] !== undefined) {
+            if (!isNaN(tSkyLine[idx])) {
                 return tSkyLine[idx];
-            } else {
-                return 0;
             }
         }
         return 0;
