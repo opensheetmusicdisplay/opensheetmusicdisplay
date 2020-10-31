@@ -197,6 +197,7 @@ export class SkyBottomLineCalculator {
                 return tSkyLine[idx];
             }
         }
+        return 0;
     }
 
     /**
