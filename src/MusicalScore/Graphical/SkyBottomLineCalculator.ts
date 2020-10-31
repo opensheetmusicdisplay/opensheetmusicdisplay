@@ -110,7 +110,7 @@ export class SkyBottomLineCalculator {
 
             for (let idx: number = 0; idx < tmpSkyLine.length; idx++) {
                 if (tmpSkyLine[idx] === undefined) {
-                    tmpSkyLine[idx] = (this.findPreviousValidNumber(idx, tmpSkyLine) + this.findNextValidNumber(idx, tmpSkyLine)) / 2; // tmpSkyLine[x-1];
+                    tmpSkyLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpSkyLine), this.findNextValidNumber(idx, tmpSkyLine));
                 }
             }
 
@@ -190,7 +190,7 @@ export class SkyBottomLineCalculator {
      * @param color
      */
     private findNextValidNumber(start: number, tSkyLine: Array<number>): number {
-        if (start === tSkyLine.length) {
+        if (start >= tSkyLine.length) {
             return tSkyLine[start - 1];
         }
         for (let idx: number = start; idx < tSkyLine.length; idx++) {
