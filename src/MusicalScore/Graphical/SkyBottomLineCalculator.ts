@@ -101,7 +101,19 @@ export class SkyBottomLineCalculator {
                         break;
                     }
                 }
+
+               // if (tmpSkyLine[x] === undefined) {
+                 //   tmpSkyLine[x] = tmpSkyLine[x-1];
+               // }
+
             }
+
+            for (let idx: number = 0; idx < tmpSkyLine.length; idx++) {
+                if (tmpSkyLine[idx] === undefined) {
+                    tmpSkyLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpSkyLine), this.findNextValidNumber(idx, tmpSkyLine));
+                }
+            }
+
             this.mSkyLine.push(...tmpSkyLine);
             this.mBottomLine.push(...tmpBottomLine);
 
@@ -150,6 +162,41 @@ export class SkyBottomLineCalculator {
         // Remap the values from 0 to +/- height in units
         this.mSkyLine = this.mSkyLine.map(v => (v - Math.max(...this.mSkyLine)) / unitInPixels + this.StaffLineParent.TopLineOffset);
         this.mBottomLine = this.mBottomLine.map(v => (v - Math.min(...this.mBottomLine)) / unitInPixels + this.StaffLineParent.BottomLineOffset);
+    }
+
+    /**
+     * go backwards through the skyline array and find a number so that
+     * we can properly calculate the average
+     * @param start
+     * @param backend
+     * @param color
+     */
+    private findPreviousValidNumber(start: number, tSkyLine: number[]): number {
+        for (let idx: number = start; idx >= 0; idx--) {
+            if (!isNaN(tSkyLine[idx])) {
+                return tSkyLine[idx];
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * go forward through the skyline array and find a number so that
+     * we can properly calculate the average
+     * @param start
+     * @param backend
+     * @param color
+     */
+    private findNextValidNumber(start: number, tSkyLine: Array<number>): number {
+        if (start >= tSkyLine.length) {
+            return tSkyLine[start - 1];
+        }
+        for (let idx: number = start; idx < tSkyLine.length; idx++) {
+            if (!isNaN(tSkyLine[idx])) {
+                return tSkyLine[idx];
+            }
+        }
+        return 0;
     }
 
     /**
