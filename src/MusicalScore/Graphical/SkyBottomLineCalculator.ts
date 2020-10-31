@@ -101,7 +101,12 @@ export class SkyBottomLineCalculator {
                         break;
                     }
                 }
+
+                if (tmpSkyLine[x] === undefined) {
+                    tmpSkyLine[x] = 0;
+                }
             }
+
             this.mSkyLine.push(...tmpSkyLine);
             this.mBottomLine.push(...tmpBottomLine);
 
