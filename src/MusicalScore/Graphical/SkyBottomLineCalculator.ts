@@ -101,11 +101,6 @@ export class SkyBottomLineCalculator {
                         break;
                     }
                 }
-
-               // if (tmpSkyLine[x] === undefined) {
-                 //   tmpSkyLine[x] = tmpSkyLine[x-1];
-               // }
-
             }
 
             for (let idx: number = 0; idx < tmpSkyLine.length; idx++) {
