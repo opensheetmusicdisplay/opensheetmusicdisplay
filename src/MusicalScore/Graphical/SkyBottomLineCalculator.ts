@@ -171,7 +171,7 @@ export class SkyBottomLineCalculator {
      * @param backend
      * @param color
      */
-    private findPreviousValidNumber(start: number, tSkyLine: []): number {
+    private findPreviousValidNumber(start: number, tSkyLine: number[]): number {
         for (let idx: number = start; idx >= 0; idx--) {
             if (!isNaN(tSkyLine[idx])) {
                 return tSkyLine[idx];
@@ -190,7 +190,7 @@ export class SkyBottomLineCalculator {
      */
     private findNextValidNumber(start: number, tSkyLine: Array<number>): number {
         if (start === tSkyLine.length) {
-            return tSkyLine[start];
+            return tSkyLine[start - 1];
         }
         for (let idx: number = start; idx < tSkyLine.length; idx++) {
             if (!isNaN(tSkyLine[idx])) {
