@@ -11,6 +11,8 @@ import {Fraction} from "../Common/DataObjects/Fraction";
 import { EngravingRules } from "../MusicalScore/Graphical/EngravingRules";
 import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
 import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
+import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
+import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -69,7 +71,6 @@ export class Cursor {
   public show(): void {
     this.hidden = false;
     this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
-    this.currentPageNumber = 1;
     this.update();
   }
 
@@ -107,6 +108,8 @@ export class Cursor {
     if (this.hidden || this.hidden === undefined || this.hidden === null) {
       return;
     }
+    this.updateCurrentPage(); // attach cursor to new page DOM if necessary
+
     // this.graphic?.Cursors?.length = 0;
     const iterator: MusicPartManagerIterator = this.iterator;
     // TODO when measure draw range (drawUpToMeasureNumber) was changed, next/update can fail to move cursor. but of course it can be reset before.
@@ -116,35 +119,42 @@ export class Cursor {
       return;
     }
     let x: number = 0, y: number = 0, height: number = 0;
+    let musicSystem: MusicSystem;
+    if (iterator.CurrentMeasure.isReducedToMultiRest) {
+      const multiRestGMeasure: GraphicalMeasure = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0);
+      const totalRestMeasures: number = multiRestGMeasure.parentSourceMeasure.multipleRestMeasures;
+      const currentRestMeasureNumber: number = iterator.CurrentMeasure.multipleRestMeasureNumber;
+      const progressRatio: number = currentRestMeasureNumber / (totalRestMeasures + 1);
+      const effectiveWidth: number = multiRestGMeasure.PositionAndShape.Size.width - (multiRestGMeasure as VexFlowMeasure).beginInstructionsWidth;
+      x = multiRestGMeasure.PositionAndShape.AbsolutePosition.x + (multiRestGMeasure as VexFlowMeasure).beginInstructionsWidth + progressRatio * effectiveWidth;
 
-    // get all staff entries inside the current voice entry
-    const gseArr: VexFlowStaffEntry[] = voiceEntries.map(ve => this.getStaffEntryFromVoiceEntry(ve));
-    // sort them by x position and take the leftmost entry
-    const gse: VexFlowStaffEntry =
-          gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
-    x = gse.PositionAndShape.AbsolutePosition.x;
-    const musicSystem: MusicSystem = gse.parentMeasure.ParentMusicSystem;
+      musicSystem = multiRestGMeasure.ParentMusicSystem;
+    } else {
+          // get all staff entries inside the current voice entry
+          const gseArr: VexFlowStaffEntry[] = voiceEntries.map(ve => this.getStaffEntryFromVoiceEntry(ve));
+          // sort them by x position and take the leftmost entry
+          const gse: VexFlowStaffEntry =
+                gseArr.sort((a, b) => a?.PositionAndShape?.AbsolutePosition?.x <= b?.PositionAndShape?.AbsolutePosition?.x ? -1 : 1 )[0];
+          x = gse.PositionAndShape.AbsolutePosition.x;
+          musicSystem = gse.parentMeasure.ParentMusicSystem;
+
+          // debug: change color of notes under cursor (needs re-render)
+          // for (const gve of gse.graphicalVoiceEntries) {
+          //   for (const note of gve.notes) {
+          //     note.sourceNote.NoteheadColor = "#0000FF";
+          //   }
+          // }
+    }
     if (!musicSystem) {
       return;
     }
 
+    // y is common for both multirest and non-multirest, given the MusicSystem
     y = musicSystem.PositionAndShape.AbsolutePosition.y + musicSystem.StaffLines[0].PositionAndShape.RelativePosition.y;
     const bottomStaffline: StaffLine = musicSystem.StaffLines[musicSystem.StaffLines.length - 1];
     const endY: number = musicSystem.PositionAndShape.AbsolutePosition.y +
     bottomStaffline.PositionAndShape.RelativePosition.y + bottomStaffline.StaffHeight;
     height = endY - y;
-
-    // The following code is not necessary (for now, but it could come useful later):
-    // it highlights the notes under the cursor.
-    //let vfNotes: { [voiceID: number]: Vex.Flow.StaveNote; } = gse.vfNotes;
-    //for (let voiceId in vfNotes) {
-    //    if (vfNotes.hasOwnProperty(voiceId)) {
-    //        vfNotes[voiceId].setStyle({
-    //            fillStyle: "red",
-    //            strokeStyle: "red",
-    //        });
-    //    }
-    //}
 
     // Update the graphical cursor
     // The following is the legacy cursor rendered on the canvas:
@@ -188,7 +198,6 @@ export class Cursor {
    */
   public next(): void {
     this.iterator.moveToNext();
-    this.updateCurrentPage();
     this.update();
   }
 
@@ -197,7 +206,6 @@ export class Cursor {
    */
   public reset(): void {
     this.resetIterator();
-    this.updateCurrentPage();
     //this.iterator.moveToNext();
     this.update();
   }
@@ -244,6 +252,9 @@ export class Cursor {
     return notes;
   }
 
+  /** Check if there was a change in current page, and attach cursor element to the corresponding HTMLElement (div).
+   *  This is only necessary if using PageFormat (multiple pages).
+   */
   public updateCurrentPage(): number {
     const timestamp: Fraction = this.iterator.currentTimeStamp;
     for (const page of this.graphic.MusicPages) {
@@ -256,7 +267,8 @@ export class Cursor {
           this.container.removeChild(this.cursorElement);
           this.container = document.getElementById("osmdCanvasPage" + newPageNumber);
           this.container.appendChild(this.cursorElement);
-          // alternatively:
+          // TODO maybe store this.pageCurrentlyAttachedTo, though right now it isn't necessary
+          // alternative to remove/append:
           // this.openSheetMusicDisplay.enableOrDisableCursor(true);
         }
         return this.currentPageNumber = newPageNumber;

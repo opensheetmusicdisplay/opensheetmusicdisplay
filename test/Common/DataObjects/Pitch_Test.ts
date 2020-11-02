@@ -3,16 +3,16 @@ import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects
 describe("Pitch Unit Tests:", () => {
     describe("transpose Pitch", () => {
         const pitch: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
-        const transposedFundamentalAndOctave: {value: number; overflow: number; } =
+        const transposedFundamentalAndOctave: {halftone: number; overflow: number; } =
           Pitch.CalculateTransposedHalfTone(pitch, 12);
-        const higherTransposedFundamentalAndOctave: {value: number; overflow: number; } =
+        const higherTransposedFundamentalAndOctave: {halftone: number; overflow: number; } =
           Pitch.CalculateTransposedHalfTone(pitch, 26);
 
         it("should be 1 octave higher and same fundamental", (done: MochaDone) => {
             chai.expect(transposedFundamentalAndOctave.overflow).to.equal(1);
-            chai.expect(transposedFundamentalAndOctave.value).to.equal(pitch.FundamentalNote);
+            chai.expect(transposedFundamentalAndOctave.halftone).to.equal(pitch.FundamentalNote);
             chai.expect(higherTransposedFundamentalAndOctave.overflow).to.equal(2);
-            chai.expect(higherTransposedFundamentalAndOctave.value).to.equal(pitch.FundamentalNote + 2);
+            chai.expect(higherTransposedFundamentalAndOctave.halftone).to.equal(pitch.FundamentalNote + 2);
             done();
         });
     });

@@ -92,6 +92,8 @@ export interface IOSMDOptions {
     drawTimeSignatures?: boolean;
     /** The interval of measure numbers to draw, i.e. it draws the measure number above the beginning label every x measures. Default 2. */
     measureNumberInterval?: number;
+    /** Whether to read measure numbers from the "number" attribute in the xml file as opposed to defaulting to start at measure 1. Default true. */
+    useXMLMeasureNumbers?: boolean;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
     /** Where to draw fingerings (left, right, above, below, or auto).
@@ -106,8 +108,12 @@ export interface IOSMDOptions {
     drawLyrics?: boolean;
     /** Whether to calculate extra slurs with bezier curves not covered by Vexflow slurs. Default true. */
     drawSlurs?: boolean;
-    /** Only draw measure n to m, where m is the number you specify. */
+    /** Only draw measure n to m, where m is the number specified. */
     drawUpToMeasureNumber?: number;
+    /** Only draw the first n systems, where n is the number specified. */
+    drawUpToSystemNumber?: number;
+    /** Only draw the first n pages, where n is the number specified. */
+    drawUpToPageNumber?: number;
     /** Only draw measure n to m, where n is the number you specify. */
     drawFromMeasureNumber?: number;
     /** Whether to fill measures that don't have notes given in the XML with whole rests (visible = 1, invisible = 2, for layouting). Default No (0). */
@@ -211,6 +217,11 @@ export interface IOSMDOptions {
      * Set to true if the last system line should be streched across the whole page just as the other systems. Default is false
      */
     stretchLastSystemLine?: boolean;
+    /**
+     * Set to true if subsequent measures full of rests should be auto-converted to multi-rest measure. Default is true
+     * This works across instruments- If all instruments have subsequent measures with nothing but rests, multirest measures are generated
+     */
+    autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
 }
 
 export enum AlignRestOption {

@@ -82,6 +82,7 @@ export class MusicSystemBuilder {
             }
             const sourceMeasure: SourceMeasure = graphicalMeasures[0].parentSourceMeasure;
             const sourceMeasureEndsPart: boolean = sourceMeasure.HasEndLine;
+            const sourceMeasureBreaksSystem: boolean = sourceMeasureEndsPart && this.rules.NewPartAndSystemAfterFinalBarline;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
             const isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
             let currentMeasureBeginInstructionsWidth: number = this.rules.MeasureLeftMargin;
@@ -140,11 +141,19 @@ export class MusicSystemBuilder {
                 );
                 this.updateActiveClefs(sourceMeasure, graphicalMeasures);
                 this.measureListIndex++;
-                if (sourceMeasureEndsPart) {
+                if (sourceMeasureBreaksSystem) {
+                    if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
+                        this.finalizeCurrentSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
+                        return this.musicSystems;
+                    }
                     this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, !this.rules.StretchLastSystemLine, false);
                 }
                 prevMeasureEndsPart = sourceMeasureEndsPart;
             } else {
+                if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
+                    this.finalizeCurrentSystem(graphicalMeasures, false, true, doXmlPageBreak);
+                    return this.musicSystems;
+                }
                 // finalize current system and prepare a new one
                 this.finalizeCurrentAndCreateNewSystem(graphicalMeasures, false, true, doXmlPageBreak);
                 // don't increase measure index to check this measure now again
@@ -152,6 +161,10 @@ export class MusicSystemBuilder {
             }
         }
         if (this.currentSystemParams.systemMeasures.length > 0) {
+            if (this.rules.MaxSystemToDrawNumber === this.musicSystems.length) {
+                this.finalizeCurrentSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
+                return this.musicSystems;
+            }
             this.finalizeCurrentAndCreateNewSystem(this.measureList[this.measureList.length - 1], !this.rules.StretchLastSystemLine, false);
         }
         return this.musicSystems;
@@ -200,6 +213,18 @@ export class MusicSystemBuilder {
                                                 systemEndsPart: boolean = false,
                                                 checkExtraInstructionMeasure: boolean = true,
                                                 startNewPage: boolean = false): void {
+        this.finalizeCurrentSystem(measures, systemEndsPart, checkExtraInstructionMeasure, startNewPage);
+        this.currentSystemParams = new SystemBuildParameters(); // this and the following used to be in finalizeCurrentSystem after stretchMusicSystem
+        if (measures !== undefined &&
+            this.measureListIndex < this.measureList.length) {
+            this.currentSystemParams.currentSystem = this.initMusicSystem();
+        }
+    }
+
+    protected finalizeCurrentSystem(measures: GraphicalMeasure[],
+                                    systemEndsPart: boolean = false,
+                                    checkExtraInstructionMeasure: boolean = true,
+                                    startNewPage: boolean = false): void {
         this.currentSystemParams.currentSystem.breaksPage = startNewPage;
         this.adaptRepetitionLineWithIfNeeded();
         if (measures !== undefined &&
@@ -207,11 +232,6 @@ export class MusicSystemBuilder {
             this.checkAndCreateExtraInstructionMeasure(measures);
         }
         this.stretchMusicSystem(systemEndsPart);
-        this.currentSystemParams = new SystemBuildParameters();
-        if (measures !== undefined &&
-            this.measureListIndex < this.measureList.length) {
-            this.currentSystemParams.currentSystem = this.initMusicSystem();
-        }
     }
 
     /**
@@ -290,7 +310,7 @@ export class MusicSystemBuilder {
         const instruments: Instrument[] = this.graphicalMusicSheet.ParentMusicSheet.Instruments;
         for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
             const instrument: Instrument = instruments[idx];
-            if (instrument.Voices.length === 0 || !instrument.Visible) {
+            if (!instrument.Visible || instrument.Voices.length === 0) {
                 continue;
             }
             for (let idx2: number = 0, len2: number = instrument.Staves.length; idx2 < len2; ++idx2) {
@@ -376,11 +396,16 @@ export class MusicSystemBuilder {
                 const graphicalMeasure: GraphicalMeasure = this.graphicalMusicSheet
                     .getGraphicalMeasureFromSourceMeasureAndIndex(firstSourceMeasure, staffIndex);
                 this.activeClefs[i] = <ClefInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[0];
-                let keyInstruction: KeyInstruction = KeyInstruction.copy(
-                    <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1]);
-                keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
-                this.activeKeys[i] = keyInstruction;
-                this.activeRhythm[i] = <RhythmInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
+                const firstKeyInstruction: KeyInstruction = <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1];
+                if (firstKeyInstruction) {
+                    let keyInstruction: KeyInstruction = KeyInstruction.copy(firstKeyInstruction);
+                    keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
+                    this.activeKeys[i] = keyInstruction;
+                }
+                const firstRhythmInstruction: RhythmInstruction = <RhythmInstruction>
+                    firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
+                // if (firstRhythmInstruction) {
+                this.activeRhythm[i] = firstRhythmInstruction;
             }
         }
     }
@@ -1085,7 +1110,13 @@ export class MusicSystemBuilder {
                     }*/
                 }
                 // now add the border-top: everything that stands out above the staffline:
-                currentYPosition += -currentSystem.PositionAndShape.BorderTop;
+                // note: this is unnecessary. We have PageTopMargin and TitleBottomDistance for this.
+                //   also, this creates a sudden margin spike from PageTopMargin = 0.1 to PageTopMargin = 0.
+                // if (!this.rules.CompactMode) { // don't add extra margins/borders in compact mode
+                //     if (this.rules.PageTopMargin > 0) { // don't add extra margins with PageTopMargin == 0
+                //         currentYPosition += -currentSystem.PositionAndShape.BorderTop;
+                //     }
+                // }
                 const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
                                                                 currentYPosition);
                 currentSystem.PositionAndShape.RelativePosition = relativePosition;
@@ -1142,25 +1173,6 @@ export class MusicSystemBuilder {
         if (timesPageCouldntFitSingleSystem > 0) {
             console.log(`total amount of pages that couldn't fit a single music system: ${timesPageCouldntFitSingleSystem} of ${currentPage.PageNumber}`);
         }
-        if (this.rules.PageBottomExtraWhiteSpace > 0 && this.graphicalMusicSheet.MusicPages.length === 1) {
-            // experimental, not used unless the EngravingRule is set to > 0 (default 0)
-
-            // calculate last page's bounding box, otherwise it uses this.rules.PageHeight which is 10001
-            currentPage.PositionAndShape.calculateBoundingBox();
-            // TODO currently bugged with PageFormat A3. this squeezes lyrics and notes (with A3 Landscape). why?
-            //   for this reason, the extra white space should currently only be used with the Endless PageFormat,
-            //   and using EngravingRules.PageBottomExtraWhiteSpace should be considered experimental.
-
-            // add this.rules.PageBottomMargin
-            const pageBottomMarginBB: BoundingBox = new BoundingBox(currentPage, currentPage.PositionAndShape, false);
-            // pageBottomMarginBB.RelativePosition.x = 0;
-            pageBottomMarginBB.RelativePosition.y = currentPage.PositionAndShape.BorderMarginBottom;
-            // pageBottomMarginBB.BorderBottom = this.rules.PageBottomMargin;
-            pageBottomMarginBB.BorderBottom = this.rules.PageBottomExtraWhiteSpace;
-            pageBottomMarginBB.calculateBoundingBox();
-            currentPage.PositionAndShape.calculateBoundingBox();
-        }
-
     }
 
     /**

@@ -164,12 +164,18 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             return "";
         }
     }
+    public set TitleString(value: string) {
+        this.Title = new Label(value);
+    }
     public get SubtitleString(): string {
         if (this.subtitle) {
             return this.subtitle.text;
         } else {
             return "";
         }
+    }
+    public set SubtitleString(value: string) {
+        this.Subtitle = new Label(value);
     }
     public get ComposerString(): string {
         if (this.composer) {
@@ -178,12 +184,18 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             return "";
         }
     }
+    public set ComposerString(value: string) {
+        this.Composer = new Label(value);
+    }
     public get LyricistString(): string {
         if (this.lyricist) {
             return this.lyricist.text;
         } else {
             return "";
         }
+    }
+    public set LyricistString(value: string) {
+        this.Lyricist = new Label(value);
     }
     public get Title(): Label {
         return this.title;

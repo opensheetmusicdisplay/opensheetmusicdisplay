@@ -133,8 +133,16 @@ export class InstrumentReader {
     this.maxTieNoteFraction = new Fraction(0, 1);
     let lastNoteWasGrace: boolean = false;
     try {
-      const xmlMeasureListArr: IXmlElement[] = this.xmlMeasureList[this.currentXmlMeasureIndex].elements();
-      for (const xmlNode of xmlMeasureListArr) {
+      const measureNode: IXmlElement = this.xmlMeasureList[this.currentXmlMeasureIndex];
+      const xmlMeasureListArr: IXmlElement[] = measureNode.elements();
+      if (currentMeasure.Rules.UseXMLMeasureNumbers && !Number.isInteger(currentMeasure.MeasureNumberXML)) {
+        const measureNumberXml: number = parseInt(measureNode.attribute("number")?.value, 10);
+        if (Number.isInteger(measureNumberXml)) {
+            currentMeasure.MeasureNumberXML = measureNumberXml;
+        }
+      }
+      for (let xmlNodeIndex: number = 0; xmlNodeIndex < xmlMeasureListArr.length; xmlNodeIndex++) {
+        const xmlNode: IXmlElement = xmlMeasureListArr[xmlNodeIndex];
         if (xmlNode.name === "print") {
           const newSystemAttr: IXmlAttribute = xmlNode.attribute("new-system");
           if (newSystemAttr?.value === "yes") {
@@ -387,7 +395,7 @@ export class InstrumentReader {
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, guitarPro,
-            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
+            printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
             vibratoStrokes
           );
 
@@ -535,7 +543,8 @@ export class InstrumentReader {
            }
           }
           const location: IXmlAttribute = xmlNode.attribute("location");
-          if (location && location.value === "right") {
+          const isEndingBarline: boolean = (xmlNodeIndex === xmlMeasureListArr.length - 1);
+          if (isEndingBarline || (location && location.value === "right")) {
             const stringValue: string = xmlNode.element("bar-style")?.value;
             // TODO apparently we didn't anticipate bar-style not existing (the ? above was missing). how to handle?
             if (stringValue) {

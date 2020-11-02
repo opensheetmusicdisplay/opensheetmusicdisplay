@@ -28,7 +28,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.8.3-dev"; // getter: this.Version
+    private version: string = "0.8.6-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -64,6 +64,8 @@ export class OpenSheetMusicDisplay {
     public cursor: Cursor;
     public zoom: number = 1.0;
     private zoomUpdated: boolean = false;
+    /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
+    public loadUrlTimeout: number = 5000;
 
     private container: HTMLElement;
     private backendType: BackendType;
@@ -124,7 +126,7 @@ export class OpenSheetMusicDisplay {
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
                 // Retrieve the file at the given URL
-                return AJAX.ajax(trimmedStr).then(
+                return AJAX.ajax(trimmedStr, this.loadUrlTimeout).then(
                     (s: string) => { return self.load(s); },
                     (exc: Error) => { throw exc; }
                 );
@@ -185,11 +187,9 @@ export class OpenSheetMusicDisplay {
         if (!this.graphic) {
             throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
-        if (this.drawer) {
-            this.drawer.clear(); // clear canvas before setting width
-        }
-        // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
-        // musicSheetCalculator.clearRecreatedObjects();
+        this.drawer?.clear(); // clear canvas before setting width
+        // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
+        // this.graphic.GetCalculator.clearRecreatedObjects();
 
         // Set page width
         let width: number = this.container.offsetWidth;
@@ -282,6 +282,9 @@ export class OpenSheetMusicDisplay {
 
         // TODO check if resize is necessary. set needResize or something when size was changed
         for (const page of this.graphic.MusicPages) {
+            if (page.PageNumber > this.rules.MaxPageToDrawNumber) {
+                break; // don't add the bounding boxes of pages that aren't drawn to the container height etc
+            }
             const backend: VexFlowBackend = this.createBackend(this.backendType, page);
             const sizeWarningPartTwo: string = " exceeds CanvasBackend limit of 32767. Cutting off score.";
             if (backend.getOSMDBackendType() === BackendType.Canvas && width > canvasDimensionsLimit) {
@@ -292,7 +295,13 @@ export class OpenSheetMusicDisplay {
                 height = width / this.rules.PageFormat.aspectRatio;
                 // console.log("pageformat given. height: " + page.PositionAndShape.Size.height);
             } else {
-                height = (page.PositionAndShape.Size.height + 15) * this.zoom * 10.0;
+                height = page.PositionAndShape.Size.height;
+                height += this.rules.PageBottomMargin;
+                height += this.rules.CompactMode ? this.rules.PageTopMarginNarrow : this.rules.PageTopMargin;
+                if (this.rules.RenderTitle) {
+                    height += this.rules.TitleTopDistance;
+                }
+                height *= this.zoom * 10.0;
                 // console.log("pageformat not given. height: " + page.PositionAndShape.Size.height);
             }
             if (backend.getOSMDBackendType() === BackendType.Canvas && height > canvasDimensionsLimit) {
@@ -447,6 +456,9 @@ export class OpenSheetMusicDisplay {
         if (options.measureNumberInterval !== undefined) {
             this.rules.MeasureNumberLabelOffset = options.measureNumberInterval;
         }
+        if (options.useXMLMeasureNumbers !== undefined) {
+            this.rules.UseXMLMeasureNumbers = options.useXMLMeasureNumbers;
+        }
         if (options.fingeringPosition !== undefined) {
             this.rules.FingeringPosition = AbstractExpression.PlacementEnumFromString(options.fingeringPosition);
         }
@@ -495,6 +507,12 @@ export class OpenSheetMusicDisplay {
         if (options.drawFromMeasureNumber) {
             this.rules.MinMeasureToDrawIndex = options.drawFromMeasureNumber - 1;
         }
+        if (options.drawUpToPageNumber) {
+            this.rules.MaxPageToDrawNumber = options.drawUpToPageNumber;
+        }
+        if (options.drawUpToSystemNumber) {
+            this.rules.MaxSystemToDrawNumber = options.drawUpToSystemNumber;
+        }
         if (options.tupletsRatioed) {
             this.rules.TupletsRatioed = true;
         }
@@ -530,6 +548,9 @@ export class OpenSheetMusicDisplay {
         }
         if (options.stretchLastSystemLine !== undefined) {
             this.rules.StretchLastSystemLine = options.stretchLastSystemLine;
+        }
+        if (options.autoGenerateMutipleRestMeasuresFromRestMeasures !== undefined) {
+            this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures = options.autoGenerateMutipleRestMeasuresFromRestMeasures;
         }
     }
 
@@ -592,6 +613,9 @@ export class OpenSheetMusicDisplay {
                 break;
             case "error":
                 log.setLevel(log.levels.ERROR);
+                break;
+            case "silent":
+                log.setLevel(log.levels.SILENT);
                 break;
             default:
                 log.warn(`Could not set log level to ${level}. Using warn instead.`);
@@ -725,7 +749,6 @@ export class OpenSheetMusicDisplay {
                 this.cursor.hidden = hidden;
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
-                    this.cursor.updateCurrentPage();
                     this.cursor.update();
                 }
             }
@@ -847,6 +870,9 @@ export class OpenSheetMusicDisplay {
         this.autoResizeEnabled = value;
     }
 
+    public get Zoom(): number {
+        return this.zoom;
+    }
     public set Zoom(value: number) {
         this.zoom = value;
         this.zoomUpdated = true;

@@ -1,6 +1,7 @@
-import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay';
-import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min'
+import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
+import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
+// import { Fraction } from '../src/Common/DataObjects/Fraction';
 
 /*jslint browser:true */
 (function () {
@@ -31,11 +32,13 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
             "OSMD Function Test - Chord Symbols": "OSMD_function_test_chord_symbols.musicxml",
             "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
+            "OSMD Function Test - Container height (compacttight mode)": "OSMD_Function_Test_Container_height.musicxml",
             "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
             "OSMD Function Test - Drums on one Line": "OSMD_Function_Test_Drums_one_line_snare_plus_piano.musicxml", 
             "OSMD Function Test - Expressions": "OSMD_function_test_expressions.musicxml",
             "OSMD Function Test - Expressions Overlap": "OSMD_function_test_expressions_overlap.musicxml",
             "OSMD Function Test - Grace Notes": "OSMD_function_test_GraceNotes.xml",
+            "OSMD Function Test - Metronome Marks": "OSMD_function_test_metronome_marks.mxl",
             "OSMD Function Test - Multiple Rest Measures": "OSMD_function_test_multiple_rest_measures.musicxml",
             "OSMD Function Test - Invisible Notes": "OSMD_function_test_invisible_notes.musicxml",
             "OSMD Function Test - Notehead Shapes": "OSMD_function_test_noteheadShapes.musicxml",
@@ -43,9 +46,13 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Selecting Measures To Draw": "OSMD_function_test_measuresToDraw_Beethoven_AnDieFerneGeliebte.xml",
             "OSMD Function Test - System and Page Breaks": "OSMD_Function_Test_System_and_Page_Breaks_4_pages.mxl",
             "OSMD Function Test - Tabulature": "OSMD_Function_Test_Tabulature_hayden_study_1.mxl",
+            "OSMD Function Test - Tabulature MultiBends": "OSMD_Function_Test_Tablature_Multibends.musicxml",
+            "OSMD Function Test - Tabulature All Effects": "OSMD_Function_Test_Tablature_Alleffects.musicxml",
             "OSMD Function Test - Tremolo": "OSMD_Function_Test_Tremolo_2bars.musicxml",
             "OSMD Function Test - Labels": "OSMD_Function_Test_Labels.musicxml",
             "OSMD Function Test - High Slur Test": "Slurtest_highNotes.musicxml",
+            "OSMD Function Test - Auto Multirest Measures Single Staff": "Test_Auto_Multirest_1.musicxml",
+            "OSMD Function Test - Auto Multirest Measures Multiple Staves": "Test_Auto_Multirest_2.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
             "Actor, L. - Prelude (Large, No Print Part Names)": "ActorPreludeSample_PartName.xml",
@@ -90,6 +97,8 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
     var minMeasureToDrawStashed = 1;
     var maxMeasureToDrawStashed = Number.MAX_SAFE_INTEGER;
     var measureToDrawRangeNeedsReset = false;
+    var drawingParametersStashed = "default";
+    var drawingParametersNeedsReset = false;
     var autobeamOptionNeedsReset = false;
     var autobeamOptionStashedValue = false;
     var autoCustomColoringOptionNeedsReset = false;
@@ -433,6 +442,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
             //drawMeasureNumbers: false, // disable drawing measure numbers
             //measureNumberInterval: 4, // draw measure numbers only every 4 bars (and at the beginning of a new system)
+            useXMLMeasureNumbers: true, // read measure numbers from xml
 
             // coloring options
             coloringEnabled: true,
@@ -506,6 +516,9 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             // selectSampleOnChange();
         });
 
+        // TODO after selectSampleOnChange, the resize handler triggers immediately,
+        //   so we render twice at the start of the demo.
+        //   maybe delay the first osmd render, e.g. when window ready?
         if (paramOpenUrl) {
             if (openSheetMusicDisplay.getLogLevel() < 2) { // debug or trace
                 console.log("[OSMD] selectSampleOnChange with " + paramOpenUrl);
@@ -637,6 +650,19 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
                 drawUpToMeasureNumber: maxMeasureToDrawStashed
             });
             measureToDrawRangeNeedsReset = false;
+        }
+
+        if (!isCustom && str.includes("Test_Container_height")) {
+            drawingParametersStashed = openSheetMusicDisplay.drawingParameters.drawingParametersEnum;
+            openSheetMusicDisplay.setOptions({
+                drawingParameters: "compacttight"
+            });
+            drawingParametersNeedsReset = true;
+        } else if (drawingParametersNeedsReset) {
+            openSheetMusicDisplay.setOptions({
+                drawingParameters: drawingParametersStashed
+            });
+            drawingParametersNeedsReset = false;
         }
 
         // Enable Boomwhacker-like coloring for OSMD Function Test - Auto-Coloring (Boomwhacker-like, custom color set)

@@ -35,6 +35,7 @@ if (!osmdBuildDir || !sampleDir || !imageDir) {
     console.log('Error: need osmdBuildDir, sampleDir and imageDir. Exiting.')
     process.exit(1)
 }
+let pageFormat
 
 if (!mode) {
     mode = ''
@@ -47,6 +48,7 @@ async function init () {
     console.log('[OSMD.generateImages] init')
 
     const osmdTestingMode = mode.includes('osmdtesting') // can also be --debugosmdtesting
+    const osmdTestingSingleMode = mode.includes('osmdtestingsingle')
     const DEBUG = mode.startsWith('--debug')
     // const debugSleepTime = Number.parseInt(process.env.GENERATE_DEBUG_SLEEP_TIME) || 0; // 5000 works for me [sschmidTU]
     if (DEBUG) {
@@ -62,7 +64,7 @@ async function init () {
     debug('sampleDir: ' + sampleDir, DEBUG)
     debug('imageDir: ' + imageDir, DEBUG)
 
-    let pageFormat = 'Endless'
+    pageFormat = 'Endless'
     pageWidth = Number.parseInt(pageWidth)
     pageHeight = Number.parseInt(pageHeight)
     const endlessPage = !(pageHeight > 0 && pageWidth > 0)
@@ -187,7 +189,8 @@ async function init () {
     // for more options check OSMDOptions.ts
 
     // you can set finer-grained rendering/engraving settings in EngravingRules:
-    osmdInstance.EngravingRules.TitleTopDistance = 5.0 // 9.0 is default
+    // osmdInstance.EngravingRules.TitleTopDistance = 5.0 // 5.0 is default
+    //   (unless in osmdTestingMode, these will be reset with drawingParameters default)
     // osmdInstance.EngravingRules.PageTopMargin = 5.0 // 5 is default
     // osmdInstance.EngravingRules.PageBottomMargin = 5.0 // 5 is default. <5 can cut off scores that extend in the last staffline
     // note that for now the png and canvas will still have the height given in the script argument,
@@ -214,7 +217,7 @@ async function init () {
 
         await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, false)
 
-        if (osmdTestingMode && sampleFilename.startsWith('Beethoven') && sampleFilename.includes('Geliebte')) {
+        if (osmdTestingMode && !osmdTestingSingleMode && sampleFilename.startsWith('Beethoven') && sampleFilename.includes('Geliebte')) {
             // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
             await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, true, DEBUG)
         }
@@ -223,6 +226,8 @@ async function init () {
     console.log('[OSMD.generateImages] done, exiting.')
 }
 
+// eslint-disable-next-line
+// let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
     includeSkyBottomLine = false, DEBUG = false) {
     var samplePath = directory + '/' + sampleFilename
@@ -242,65 +247,80 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isFunctionTestAutoColoring = sampleFilename.startsWith('OSMD_function_test_auto-custom-coloring')
         const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
         const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
+        const defaultOrCompactTightMode = sampleFilename.startsWith('OSMD_Function_Test_Container_height') ? 'compacttight' : 'default'
         osmdInstance.setOptions({
             autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
             coloringMode: isFunctionTestAutoColoring ? 2 : 0,
             coloringSetCustom: isFunctionTestAutoColoring ? ['#d82c6b', '#F89D15', '#FFE21A', '#4dbd5c', '#009D96', '#43469d', '#76429c', '#ff0000'] : undefined,
             colorStemsLikeNoteheads: isFunctionTestAutoColoring,
+            drawingParameters: defaultOrCompactTightMode, // note: default resets all EngravingRules. could be solved differently
             drawFromMeasureNumber: isFunctionTestDrawingRange ? 9 : 1,
             drawUpToMeasureNumber: isFunctionTestDrawingRange ? 12 : Number.MAX_SAFE_INTEGER,
             newSystemFromXML: isFunctionTestSystemAndPageBreaks,
-            newPageFromXML: isFunctionTestSystemAndPageBreaks
+            newPageFromXML: isFunctionTestSystemAndPageBreaks,
+            pageBackgroundColor: '#FFFFFF', // reset by drawingparameters default
+            pageFormat: pageFormat // reset by drawingparameters default
         })
         osmdInstance.drawSkyLine = includeSkyBottomLine // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine
     }
 
-    osmdInstance.load(loadParameter).then(function () {
-        debug('xml loaded', DEBUG)
-        try {
-            osmdInstance.render()
-        } catch (ex) {
-            console.log('renderError: ' + ex)
+    await osmdInstance.load(loadParameter) // if using load.then() without await, memory will not be freed up between renders
+    debug('xml loaded', DEBUG)
+    try {
+        osmdInstance.render()
+    } catch (ex) {
+        console.log('renderError: ' + ex)
+    }
+    debug('rendered', DEBUG)
+
+    const dataUrls = []
+    let canvasImage
+
+    for (let pageNumber = 1; pageNumber < 999; pageNumber++) {
+        canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
+        if (!canvasImage) {
+            break
         }
-        debug('rendered', DEBUG)
-
-        const dataUrls = []
-        let canvasImage
-
-        for (let pageNumber = 1; pageNumber < 999; pageNumber++) {
-            canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
-            if (!canvasImage) {
-                break
-            }
-            if (!canvasImage.toDataURL) {
-                console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
-                break
-            }
-            dataUrls.push(canvasImage.toDataURL())
+        if (!canvasImage.toDataURL) {
+            console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
+            break
         }
-        for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
-            const pageNumberingString = `${urlIndex + 1}`
-            const skybottomlineString = includeSkyBottomLine ? 'skybottomline_' : ''
-            // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-            var pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.png`
+        dataUrls.push(canvasImage.toDataURL())
+    }
+    for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
+        const pageNumberingString = `${urlIndex + 1}`
+        const skybottomlineString = includeSkyBottomLine ? 'skybottomline_' : ''
+        // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
+        var pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.png`
 
-            const dataUrl = dataUrls[urlIndex]
-            if (!dataUrl || !dataUrl.split) {
-                console.log(`error: could not get dataUrl (imageData) for page ${urlIndex + 1} of sample: ${sampleFilename}`)
-                continue
-            }
-            const imageData = dataUrl.split(';base64,').pop()
-            const imageBuffer = Buffer.from(imageData, 'base64')
-
-            debug('got image data, saving to: ' + pageFilename, DEBUG)
-            FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
+        const dataUrl = dataUrls[urlIndex]
+        if (!dataUrl || !dataUrl.split) {
+            console.log(`error: could not get dataUrl (imageData) for page ${urlIndex + 1} of sample: ${sampleFilename}`)
+            continue
         }
-    }) // end render then
-    //     },
-    //     function (e) {
-    //         console.log('error while rendering: ' + e)
-    //     }) // end load then
+        const imageData = dataUrl.split(';base64,').pop()
+        const imageBuffer = Buffer.from(imageData, 'base64')
+
+        debug('got image data, saving to: ' + pageFilename, DEBUG)
+        FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
+
+        // debug: log memory usage
+        // const usage = process.memoryUsage()
+        // for (const entry of Object.entries(usage)) {
+        //     if (entry[0] === 'rss') {
+        //         if (entry[1] > maxRss) {
+        //             maxRss = entry[1]
+        //             maxRssFilename = pageFilename
+        //         }
+        //     }
+        //     console.log(entry[0] + ': ' + entry[1] / (1024 * 1024) + 'mb')
+        // }
+        // console.log('maxRss: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
+    }
+    // console.log('maxRss total: ' + (maxRss / 1024 / 1024) + 'mb' + ' for ' + maxRssFilename)
+
+    // await sleep(5000)
     // }) // end read file
 }
 

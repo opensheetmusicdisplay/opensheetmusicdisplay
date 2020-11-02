@@ -1,4 +1,5 @@
 import {PlacementEnum, AbstractExpression} from "./AbstractExpression";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 export class MoodExpression extends AbstractExpression {
     constructor(label: string, placement: PlacementEnum, staffNumber: number) {
@@ -46,6 +47,7 @@ export class MoodExpression extends AbstractExpression {
     private moodType: MoodEnum;
     private label: string;
     private staffNumber: number;
+    public fontStyle: FontStyles;
 
     public static isInputStringMood(inputString: string): boolean {
         if (!inputString) {

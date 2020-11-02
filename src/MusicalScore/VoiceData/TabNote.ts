@@ -3,12 +3,13 @@ import { Fraction } from "../../Common/DataObjects/Fraction";
 import { VoiceEntry } from "./VoiceEntry";
 import { SourceStaffEntry } from "./SourceStaffEntry";
 import { Pitch } from "../../Common/DataObjects/Pitch";
+import { SourceMeasure } from "./SourceMeasure";
 
 export class TabNote extends Note {
-    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch,
+    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch, sourceMeasure: SourceMeasure,
                 stringNumber: number, fretNumber: number, bendArray: { bendalter: number, direction: string }[],
                 vibratoStroke: boolean) {
-        super(voiceEntry, parentStaffEntry, length, pitch);
+        super(voiceEntry, parentStaffEntry, length, pitch, sourceMeasure);
         this.stringNumber = stringNumber;
         this.fretNumber = fretNumber;
         this.bendArray = bendArray;

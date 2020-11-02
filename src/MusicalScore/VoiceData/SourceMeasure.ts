@@ -8,8 +8,9 @@ import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
 import {MultiExpression} from "./Expressions/MultiExpression";
 import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
-import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
+import {ClefInstruction} from "./Instructions/ClefInstruction";
+import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {Repetition} from "../MusicSource/Repetition";
 import {SystemLinesEnum} from "../Graphical/SystemLinesEnum";
 import {EngravingRules} from "../Graphical/EngravingRules";
@@ -58,6 +59,8 @@ export class SourceMeasure {
     public printNewPageXml: boolean = false;
 
     private measureNumber: number;
+    public MeasureNumberXML: number;
+    public MeasureNumberPrinted: number; // measureNumber if MeasureNumberXML undefined or NaN. Set in getPrintedMeasureNumber()
     public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)
     // public multipleRestMeasuresPerStaff: Dictionary<number, number>; // key: staffId. value: how many rest measures
     private absoluteTimestamp: Fraction;
@@ -65,6 +68,14 @@ export class SourceMeasure {
     private duration: Fraction;
     private activeTimeSignature: Fraction;
     public hasLyrics: boolean = false;
+    public hasMoodExpressions: boolean = false;
+    /** Whether the SourceMeasure only has rests, no other entries.
+     *  Not the same as GraphicalMeasure.hasOnlyRests, because one SourceMeasure can have many GraphicalMeasures (staffs).
+     */
+    public allRests: boolean = false;
+    public isReducedToMultiRest: boolean = false;
+    /** If this measure is a MultipleRestMeasure, this is the number of the measure in that sequence of measures. */
+    public multipleRestMeasureNumber: number = 0;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
@@ -85,6 +96,17 @@ export class SourceMeasure {
 
     public set MeasureNumber(value: number) {
         this.measureNumber = value;
+    }
+
+    public getPrintedMeasureNumber(): number {
+        if (this.rules.UseXMLMeasureNumbers) {
+            if (Number.isInteger(this.MeasureNumberXML)) { // false for NaN, undefined, null, "5" (string)
+                this.MeasureNumberPrinted = this.MeasureNumberXML;
+                return this.MeasureNumberPrinted;
+            }
+        }
+        this.MeasureNumberPrinted = this.MeasureNumber;
+        return this.MeasureNumberPrinted;
     }
 
     public get AbsoluteTimestamp(): Fraction {
@@ -280,7 +302,6 @@ export class SourceMeasure {
         }
         if (!ve) {
             ve = new VoiceEntry(sse.Timestamp, voice, sse);
-            sse.VoiceEntries.push(ve);
             createdNewVoiceEntry = true;
         }
         return {createdVoiceEntry: createdNewVoiceEntry, voiceEntry: ve};
@@ -571,5 +592,34 @@ export class SourceMeasure {
             }
         }
         return entry;
+    }
+
+    public canBeReducedToMultiRest(): boolean {
+        if (!this.allRests || this.hasLyrics || this.hasMoodExpressions || this.tempoExpressions.length > 0) {
+            return false;
+        }
+        // check for StaffLinkedExpressions (e.g. MultiExpression, StaffText) (per staff)
+        for (const multiExpressions of this.staffLinkedExpressions) {
+            if (multiExpressions.length > 0) {
+                return false;
+            }
+        }
+        // check for clef instruction for next measure
+        for (const lastStaffEntry of this.lastInstructionsStaffEntries) {
+            for (let idx: number = 0, len: number = lastStaffEntry?.Instructions.length; idx < len; ++idx) {
+                const abstractNotationInstruction: AbstractNotationInstruction = lastStaffEntry.Instructions[idx];
+                if (abstractNotationInstruction instanceof ClefInstruction) {
+                    return false;
+                }
+            }
+        }
+        // don't auto-rest pickup measures that aren't whole measure rests
+        return this.Duration?.RealValue === this.ActiveTimeSignature?.RealValue;
+        // if adding further checks, replace the above line with this:
+        // if (this.Duration?.RealValue !== this.ActiveTimeSignature?.RealValue) {
+        //     return false;
+        // }
+        // // TODO further checks?
+        // return true;
     }
 }

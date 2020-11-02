@@ -132,9 +132,8 @@ export class MusicPartManagerIterator {
     /**
      * Creates a clone of this iterator which has the same actual position.
      */
-    public clone(startTimeStamp: Fraction = undefined): MusicPartManagerIterator {
-        // TODO this hopefully sets the cloned iterator to the given startTimeStamp. needs testing
-        const ret: MusicPartManagerIterator = new MusicPartManagerIterator(this.manager, startTimeStamp);
+    public clone(startTimeStamp: Fraction = undefined, endTimeStamp: Fraction = undefined): MusicPartManagerIterator {
+        const ret: MusicPartManagerIterator = new MusicPartManagerIterator(this.manager, startTimeStamp ?? this.currentTimeStamp, endTimeStamp);
         ret.currentVoiceEntryIndex = this.currentVoiceEntryIndex;
         ret.currentMappingPart = this.currentMappingPart;
         ret.currentPartIndex = this.currentPartIndex;

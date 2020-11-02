@@ -2,10 +2,10 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>Title</work-title>
+    <work-title>Slur Test - High Notes</work-title>
     </work>
   <identification>
-    <creator type="composer">Composer</creator>
+    <creator type="composer">OSMD</creator>
     <encoding>
       <software>MuseScore 3.0.2</software>
       <encoding-date>2020-06-19</encoding-date>

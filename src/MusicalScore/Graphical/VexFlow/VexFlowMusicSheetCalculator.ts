@@ -16,7 +16,7 @@ import { OctaveEnum, OctaveShift } from "../../VoiceData/Expressions/ContinuousE
 import { Fraction } from "../../../Common/DataObjects/Fraction";
 import { LyricWord } from "../../VoiceData/Lyrics/LyricsWord";
 import { OrnamentContainer } from "../../VoiceData/OrnamentContainer";
-import { ArticulationEnum } from "../../VoiceData/VoiceEntry";
+import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
@@ -49,6 +49,7 @@ import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
 import { VexflowStafflineNoteCalculator } from "./VexflowStafflineNoteCalculator";
+import { MusicSystem } from "../MusicSystem";
 import { NoteTypeHandler } from "../../VoiceData/NoteType";
 import { VexFlowConverter } from "./VexFlowConverter";
 import { TabNote } from "../../VoiceData/TabNote";
@@ -465,7 +466,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param voiceEntry
    * @param graphicalStaffEntry
    */
-  protected layoutArticulationMarks(articulations: ArticulationEnum[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
+  protected layoutArticulationMarks(articulations: Articulation[], voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry): void {
     // uncomment this when implementing:
     // let vfse: VexFlowStaffEntry = (graphicalStaffEntry as VexFlowStaffEntry);
 
@@ -710,14 +711,36 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (endMeasure && startStaffLine && endStaffLine) {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
-      if (!graphicalOctaveShift.getStartNote()) { // fix for rendering range set
-        graphicalOctaveShift.setStartNote(startMeasure.staffEntries[0]);
+      if (!graphicalOctaveShift.startNote) { // fix for rendering range set
+        let startGse: GraphicalStaffEntry;
+        for (const gse of startMeasure.staffEntries) {
+          if (gse) {
+            startGse = gse;
+            break;
+          } // sometimes the first graphical staff entry is undefined, not sure why.
+        }
+        if (!startGse) {
+          return; // couldn't find a start staffentry, don't draw the octave shift
+        }
+        graphicalOctaveShift.setStartNote(startGse);
+        if (!graphicalOctaveShift.startNote) {
+          return; // couldn't find a start note, don't draw the octave shift
+        }
       }
-      if (!graphicalOctaveShift.getStartNote()) { // fix for rendering range set
-        graphicalOctaveShift.setEndNote(endMeasure.staffEntries.last());
+      if (!graphicalOctaveShift.endNote) { // fix for rendering range set
+        let endGse: GraphicalStaffEntry;
+        for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i++) {
+          // search backwards from end of measure
+          if (endMeasure.staffEntries[i]) {
+            endGse = endMeasure.staffEntries[i];
+            break;
+          }
+        }
+        graphicalOctaveShift.setEndNote(endGse);
+        if (!graphicalOctaveShift.endNote) {
+          return;
+        }
       }
-      startStaffLine.OctaveShifts.push(graphicalOctaveShift);
-
       // calculate RelativePosition and Dashes
       let startStaffEntry: GraphicalStaffEntry = startMeasure.findGraphicalStaffEntryFromTimestamp(startTimeStamp);
       if (!startStaffEntry) { // fix for rendering range set
@@ -727,34 +750,55 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!endStaffEntry) { // fix for rendering range set
         endStaffEntry = endMeasure.staffEntries[endMeasure.staffEntries.length - 1];
       }
-
       graphicalOctaveShift.setStartNote(startStaffEntry);
 
       if (endStaffLine !== startStaffLine) {
         graphicalOctaveShift.endsOnDifferentStaffLine = true;
-        let lastMeasure: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
-        if (!lastMeasure) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
-          lastMeasure = endMeasure;
+        let lastMeasureOfFirstShift: GraphicalMeasure = startStaffLine.Measures[startStaffLine.Measures.length - 1];
+        if (lastMeasureOfFirstShift === undefined) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
+          lastMeasureOfFirstShift = endMeasure;
         }
-        const lastNote: GraphicalStaffEntry = lastMeasure.staffEntries[lastMeasure.staffEntries.length - 1];
-        graphicalOctaveShift.setEndNote(lastNote);
+        const lastNoteOfFirstShift: GraphicalStaffEntry = lastMeasureOfFirstShift.staffEntries[lastMeasureOfFirstShift.staffEntries.length - 1];
+        graphicalOctaveShift.setEndNote(lastNoteOfFirstShift);
 
-        // Now finish the shift on the next line
-        const remainingOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, endMeasure.PositionAndShape);
-        endStaffLine.OctaveShifts.push(remainingOctaveShift);
-        let firstMeasure: GraphicalMeasure = endStaffLine.Measures[0];
-        if (!firstMeasure) { // TODO handle this case correctly (when drawUpToMeasureNumber etc set)
-          firstMeasure = startMeasure;
+        const systemsInBetweenCount: number = endStaffLine.ParentMusicSystem.Id - startStaffLine.ParentMusicSystem.Id;
+        if (systemsInBetweenCount > 0) {
+          //Loop through the stafflines in between to the end
+          for (let i: number = startStaffLine.ParentMusicSystem.Id; i < endStaffLine.ParentMusicSystem.Id; i++) {
+            const idx: number = i + 1;
+            const nextShiftMusicSystem: MusicSystem = this.musicSystems[idx];
+            const nextShiftStaffline: StaffLine = nextShiftMusicSystem.StaffLines[staffIndex];
+            const nextShiftFirstMeasure: GraphicalMeasure = nextShiftStaffline.Measures[0];
+            // Shift starts on the first measure
+            const nextOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, nextShiftFirstMeasure.PositionAndShape);
+
+            if (i < systemsInBetweenCount) {
+              nextOctaveShift.endsOnDifferentStaffLine = true;
+            }
+
+            let nextShiftLastMeasure: GraphicalMeasure = nextShiftStaffline.Measures[nextShiftStaffline.Measures.length - 1];
+            const firstNote: GraphicalStaffEntry = nextShiftFirstMeasure.staffEntries[0];
+            let lastNote: GraphicalStaffEntry = nextShiftLastMeasure.staffEntries[nextShiftLastMeasure.staffEntries.length - 1];
+
+            //If the is the ending staffline, this endMeasure is the end of the shift
+            if (endMeasure.ParentStaffLine === nextShiftStaffline) {
+              nextShiftLastMeasure = endMeasure;
+              lastNote = endStaffEntry;
+            }
+
+            nextOctaveShift.setStartNote(firstNote);
+            nextOctaveShift.setEndNote(lastNote);
+            nextShiftStaffline.OctaveShifts.push(nextOctaveShift);
+            this.calculateOctaveShiftSkyBottomLine(firstNote, lastNote, nextOctaveShift, nextShiftStaffline);
+          }
         }
-        const firstNote: GraphicalStaffEntry = firstMeasure.staffEntries[0];
-        remainingOctaveShift.setStartNote(firstNote);
-        remainingOctaveShift.setEndNote(endStaffEntry);
-        this.calculateOctaveShiftSkyBottomLine(startStaffEntry, lastNote, graphicalOctaveShift, startStaffLine);
-        this.calculateOctaveShiftSkyBottomLine(firstNote, endStaffEntry, remainingOctaveShift, endStaffLine);
+
+        this.calculateOctaveShiftSkyBottomLine(startStaffEntry, lastNoteOfFirstShift, graphicalOctaveShift, startStaffLine);
       } else {
         graphicalOctaveShift.setEndNote(endStaffEntry);
         this.calculateOctaveShiftSkyBottomLine(startStaffEntry, endStaffEntry, graphicalOctaveShift, startStaffLine);
       }
+      startStaffLine.OctaveShifts.push(graphicalOctaveShift);
     } else {
       log.warn("End measure or staffLines for octave shift are undefined! This should not happen!");
     }
@@ -763,8 +807,27 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   private calculateOctaveShiftSkyBottomLine(startStaffEntry: GraphicalStaffEntry, endStaffEntry: GraphicalStaffEntry,
                                             vfOctaveShift: VexFlowOctaveShift, parentStaffline: StaffLine): void {
 
-    const startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startStaffEntry.PositionAndShape.Size.width / 2;
-    const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endStaffEntry.PositionAndShape.Size.width / 2;
+    let startXOffset: number = startStaffEntry.PositionAndShape.Size.width;
+    let endXOffset: number = endStaffEntry.PositionAndShape.Size.width;
+
+    //Vexflow renders differently with rests
+    if (startStaffEntry.hasOnlyRests()) {
+      startXOffset = -startXOffset;
+    } else {
+      startXOffset /= 2;
+    }
+
+    if (!endStaffEntry.hasOnlyRests()) {
+      endXOffset /= 2;
+    } else {
+      endXOffset *= 2;
+    }
+
+    if (startStaffEntry === endStaffEntry) {
+      endXOffset *= 2;
+    }
+    const startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startXOffset;
+    const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
     vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
     const textBracket: Vex.Flow.TextBracket = vfOctaveShift.getTextBracket();
     const fontSize: number = (textBracket as any).font.size / 10;
@@ -772,18 +835,18 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
       const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
-          return;
+        return;
       }
       (textBracket.start.getStave().options as any).top_text_position = Math.abs(headroom);
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
     } else {
-        const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
-        if (footroom === Infinity) { // will cause Vexflow error
-            return;
-        }
-        (textBracket.start.getStave().options as any).bottom_text_position = footroom;
-        //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
-        parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
+      const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
+      if (footroom === Infinity) { // will cause Vexflow error
+        return;
+      }
+      (textBracket.start.getStave().options as any).bottom_text_position = footroom;
+      //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
+      parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
     }
   }
 
@@ -798,7 +861,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
     for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
       const graphicalMeasure: VexFlowMeasure = measures[idx];
-      if (graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
+      if (graphicalMeasure && graphicalMeasure.ParentStaffLine && graphicalMeasure.ParentStaff.ParentInstrument.Visible) {
         uppermostMeasure = <VexFlowMeasure>graphicalMeasure;
         break;
       }
@@ -910,7 +973,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    * @param voiceEntry
    * @param graphicalStaffEntry
    */
-  protected handleVoiceEntryArticulations(articulations: ArticulationEnum[],
+  protected handleVoiceEntryArticulations(articulations: Articulation[],
                                           voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
     // uncomment this when implementing:
     // let vfse: VexFlowStaffEntry = (graphicalStaffEntry as VexFlowStaffEntry);

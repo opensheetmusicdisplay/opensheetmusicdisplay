@@ -90,8 +90,10 @@ export abstract class MusicSheetDrawer {
         if (this.drawingParameters.drawScrollIndicator) {
             this.drawScrollIndicator();
         }
-        // Draw all the pages
-        for (const page of this.graphicalMusicSheet.MusicPages) {
+        // Draw the pages
+        const pagesToDraw: number = Math.min(this.graphicalMusicSheet.MusicPages.length, this.rules.MaxPageToDrawNumber);
+        for (let i: number = 0; i < pagesToDraw; i ++) {
+            const page: GraphicalMusicPage = this.graphicalMusicSheet.MusicPages[i];
             this.drawPage(page);
         }
     }
