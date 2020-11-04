@@ -518,8 +518,20 @@ export class MusicSystemBuilder {
             keyAdded = true;
         }
         if (currentRhythm !== undefined && currentRhythm.PrintObject && this.rules.RenderTimeSignatures) {
-            measure.addRhythmAtBegin(currentRhythm);
-            rhythmAdded = true;
+            let printRhythm: boolean = true;
+            // check for previous pickup measure
+            const pickupMeasureNumber: number = measure.MeasureNumber - 1;
+            if (measure.MeasureNumber - 1 >= 0) {
+                const previousMeasure: SourceMeasure = this.measureList[pickupMeasureNumber][0]?.parentSourceMeasure;
+                if (previousMeasure?.ImplicitMeasure && previousMeasure?.RhythmPrinted) {
+                    printRhythm = false;
+                }
+            }
+            if (printRhythm) {
+                measure.addRhythmAtBegin(currentRhythm);
+                measure.parentSourceMeasure.RhythmPrinted = true;
+                rhythmAdded = true;
+            }
         }
         if (clefAdded || keyAdded || rhythmAdded) {
             instructionsLengthX += measure.beginInstructionsWidth;
