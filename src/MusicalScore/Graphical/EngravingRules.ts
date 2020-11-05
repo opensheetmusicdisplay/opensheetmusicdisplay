@@ -51,6 +51,9 @@ export class EngravingRules {
     public BeamWidth: number;
     public BeamSpaceWidth: number;
     public BeamForwardLength: number;
+    public FlatBeams: boolean;
+    public FlatBeamOffset: number;
+    public FlatBeamOffsetPerBeam: number;
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
     public PercussionOneLineCutoff: number;
@@ -319,6 +322,10 @@ export class EngravingRules {
         this.BeamWidth = EngravingRules.unit / 2.0;
         this.BeamSpaceWidth = EngravingRules.unit / 3.0;
         this.BeamForwardLength = 1.25 * EngravingRules.unit;
+
+        this.FlatBeams = false;
+        this.FlatBeamOffset = 20;
+        this.FlatBeamOffsetPerBeam = 10;
 
         // Beam Sizing Variables
         this.ClefLeftMargin = 0.5;
