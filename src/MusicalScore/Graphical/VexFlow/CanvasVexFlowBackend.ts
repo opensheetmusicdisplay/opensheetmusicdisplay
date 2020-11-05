@@ -11,6 +11,8 @@ import {EngravingRules} from "../EngravingRules";
 import {GraphicalMusicPage} from "../GraphicalMusicPage";
 
 export class CanvasVexFlowBackend extends VexFlowBackend {
+    private zoom: number;
+
     constructor(rules: EngravingRules) {
         super();
         this.rules = rules;
@@ -31,7 +33,8 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         //     document.getElementById("osmdCanvasVexFlowBackendCanvas" + this.graphicalMusicPage.PageNumber)?.style.height, 10);
     }
 
-    public initialize(container: HTMLElement): void {
+    public initialize(container: HTMLElement, zoom: number): void {
+        this.zoom = zoom;
         this.canvas = document.createElement("canvas");
         if (!this.graphicalMusicPage) {
             this.graphicalMusicPage = new GraphicalMusicPage(undefined);
@@ -78,7 +81,8 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
             this.ctx.save();
             // note that this will hide the cursor
             this.ctx.setFillStyle(this.rules.PageBackgroundColor);
-            this.ctx.fillRect(0, 0, (this.canvas as any).width, (this.canvas as any).height);
+            this.zoom = 1; // remove
+            this.ctx.fillRect(0, 0, (this.canvas as any).width / this.zoom, (this.canvas as any).height / this.zoom);
             this.ctx.restore();
         }
     }

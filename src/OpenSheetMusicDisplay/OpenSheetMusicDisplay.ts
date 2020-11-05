@@ -771,7 +771,7 @@ export class OpenSheetMusicDisplay {
             backend = new CanvasVexFlowBackend(this.rules);
         }
         backend.graphicalMusicPage = page; // the page the backend renders on. needed to identify DOM element to extract image/SVG
-        backend.initialize(this.container);
+        backend.initialize(this.container, this.zoom);
         return backend;
     }
 

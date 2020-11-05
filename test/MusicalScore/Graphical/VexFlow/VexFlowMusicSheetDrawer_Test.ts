@@ -24,7 +24,7 @@ describe("VexFlow Music Sheet Drawer", () => {
         // Create the canvas in the document:
         const canvas: HTMLCanvasElement = document.createElement("canvas");
         const backend: VexFlowBackend = new CanvasVexFlowBackend(sheet.Rules);
-        backend.initialize(canvas);
+        backend.initialize(canvas, 1.0);
         const drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer();
         drawer.Backends.push(backend);
         drawer.drawSheet(gms);
