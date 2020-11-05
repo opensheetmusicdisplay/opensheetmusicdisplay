@@ -248,7 +248,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isFunctionTestSystemAndPageBreaks = sampleFilename.startsWith('OSMD_Function_Test_System_and_Page_Breaks')
         const isFunctionTestDrawingRange = sampleFilename.startsWith('OSMD_function_test_measuresToDraw_')
         const defaultOrCompactTightMode = sampleFilename.startsWith('OSMD_Function_Test_Container_height') ? 'compacttight' : 'default'
-        const isTestFlatBeams = sampleFilename.startsWith('test_drum_tuplet_beams');
+        const isTestFlatBeams = sampleFilename.startsWith('test_drum_tuplet_beams')
         osmdInstance.setOptions({
             autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
             coloringMode: isFunctionTestAutoColoring ? 2 : 0,
@@ -265,12 +265,12 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         osmdInstance.drawSkyLine = includeSkyBottomLine // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine
         if (isTestFlatBeams) {
-            osmdInstance.EngravingRules.FlatBeams = true;
+            osmdInstance.EngravingRules.FlatBeams = true
             // osmdInstance.EngravingRules.FlatBeamOffset = 30;
-            osmdInstance.EngravingRules.FlatBeamOffset = 10;
-            osmdInstance.EngravingRules.FlatBeamOffsetPerBeam = 10;
+            osmdInstance.EngravingRules.FlatBeamOffset = 10
+            osmdInstance.EngravingRules.FlatBeamOffsetPerBeam = 10
         } else {
-            osmdInstance.EngravingRules.FlatBeams = false;
+            osmdInstance.EngravingRules.FlatBeams = false
         }
     }
 
