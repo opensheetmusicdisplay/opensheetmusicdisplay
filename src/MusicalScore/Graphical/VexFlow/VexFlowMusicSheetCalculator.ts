@@ -1045,7 +1045,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           const openGraphicalSlurs: GraphicalSlur[] = openSlursDict[staffLine.ParentStaff.idInMusicSheet];
           for (let slurIndex: number = 0; slurIndex < openGraphicalSlurs.length; slurIndex++) {
             const oldGSlur: GraphicalSlur = openGraphicalSlurs[slurIndex];
-            const newGSlur: GraphicalSlur = new GraphicalSlur(oldGSlur.slur); //Graphicalslur.createFromSlur(oldSlur);
+            const newGSlur: GraphicalSlur = new GraphicalSlur(oldGSlur.slur, this.rules); //Graphicalslur.createFromSlur(oldSlur);
             staffLine.addSlurToStaffline(newGSlur); // every VFSlur is added to the array in the VFStaffline!
             openGraphicalSlurs[slurIndex] = newGSlur;
           }
@@ -1083,7 +1083,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                       }
 
                       // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
-                      const gSlur: GraphicalSlur = new GraphicalSlur(slur);
+                      const gSlur: GraphicalSlur = new GraphicalSlur(slur, this.rules);
                       openGraphicalSlurs.push(gSlur);
                       staffLine.addSlurToStaffline(gSlur);
 

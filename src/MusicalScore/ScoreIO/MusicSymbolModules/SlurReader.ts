@@ -4,6 +4,7 @@ import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { Note } from "../../VoiceData/Note";
 import log from "loglevel";
 import { ITextTranslation } from "../../Interfaces/ITextTranslation";
+import { PlacementEnum } from "../../VoiceData/Expressions";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
@@ -27,6 +28,15 @@ export class SlurReader {
                             log.debug("VoiceGenerator.addSlur number: ", ex);
                         }
 
+                        let slurPlacementXml: PlacementEnum = PlacementEnum.NotYetDefined;
+                        const placementAttr: Attr = slurNode.attribute("placement");
+                        if (placementAttr && placementAttr.value) {
+                            if (placementAttr.value === "above") {
+                                slurPlacementXml = PlacementEnum.Above;
+                            } else if (placementAttr.value === "below") {
+                                slurPlacementXml = PlacementEnum.Below;
+                            }
+                        }
                         if (type === "start") {
                             let slur: Slur = this.openSlurDict[slurNumber];
                             if (!slur) {
@@ -34,6 +44,7 @@ export class SlurReader {
                                 this.openSlurDict[slurNumber] = slur;
                             }
                             slur.StartNote = currentNote;
+                            slur.PlacementXml = slurPlacementXml;
                         } else if (type === "stop") {
                             const slur: Slur = this.openSlurDict[slurNumber];
                             if (slur) {

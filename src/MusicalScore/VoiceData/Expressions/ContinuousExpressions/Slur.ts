@@ -1,5 +1,6 @@
 import {Note} from "../../Note";
-import {Fraction} from "../../../../Common/DataObjects/Fraction";
+import { Fraction } from "../../../../Common/DataObjects/Fraction";
+import { PlacementEnum } from "../AbstractExpression";
 
 export class Slur {
     constructor() {
@@ -8,6 +9,7 @@ export class Slur {
 
     private startNote: Note;
     private endNote: Note;
+    public PlacementXml: PlacementEnum; // how the slur is placed in the XML
 
     public get StartNote(): Note {
         return this.startNote;
