@@ -603,7 +603,7 @@ export class InstrumentReader {
       if (!this.musicSheet.HasBPMInfo) {
         this.currentMeasure.TempoInBPM = 120;
         this.musicSheet.DefaultStartTempoInBpm = 120;
-      } else if (currentMeasure.TempoInBPM === 0) {
+      } else if (currentMeasure.TempoInBPM === 0 && this.previousMeasure) {
         this.currentMeasure.TempoInBPM = this.previousMeasure.TempoInBPM;
       }
     } catch (e) {

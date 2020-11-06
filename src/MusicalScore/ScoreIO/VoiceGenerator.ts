@@ -198,16 +198,19 @@ export class VoiceGenerator {
         if (slideNodeList.length > 0) {
           this.addTie(slideNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.SLIDE);
         }
-        //check for slides, they are the same as Ties but with a different connection
+        //check for guitar specific symbols:
         const technicalNode: IXmlElement = notationNode.element("technical");
-        const hammerNodeList: IXmlElement[] = technicalNode.elements("hammer-on");
-        if (hammerNodeList.length > 0) {
-          this.addTie(hammerNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.HAMMERON);
+        if (technicalNode) {
+          const hammerNodeList: IXmlElement[] = technicalNode.elements("hammer-on");
+          if (hammerNodeList.length > 0) {
+            this.addTie(hammerNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.HAMMERON);
+          }
+          const pulloffNodeList: IXmlElement[] = technicalNode.elements("pull-off");
+          if (pulloffNodeList.length > 0) {
+            this.addTie(pulloffNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.PULLOFF);
+          }
         }
-        const pulloffNodeList: IXmlElement[] = technicalNode.elements("pull-off");
-        if (pulloffNodeList.length > 0) {
-          this.addTie(pulloffNodeList, measureStartAbsoluteTimestamp, maxTieNoteFraction, TieTypes.PULLOFF);
-        }
+
         // remove open ties, if there is already a gap between the last tie note and now.
         const openTieDict: { [_: number]: Tie; } = this.openTieDict;
         for (const key in openTieDict) {
