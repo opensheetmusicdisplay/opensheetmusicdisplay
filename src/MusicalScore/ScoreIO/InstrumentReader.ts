@@ -602,7 +602,6 @@ export class InstrumentReader {
       // next measures will automatically inherit that value
       if (!this.musicSheet.HasBPMInfo) {
         this.currentMeasure.TempoInBPM = 120;
-        this.musicSheet.DefaultStartTempoInBpm = 120;
       } else if (currentMeasure.TempoInBPM === 0 && this.previousMeasure) {
         this.currentMeasure.TempoInBPM = this.previousMeasure.TempoInBPM;
       }
