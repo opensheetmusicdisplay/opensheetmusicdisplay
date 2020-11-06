@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
-  <movement-title>Siebener Endstreich</movement-title>
+  <movement-title>Test - Drum Tuplet Flat Beams</movement-title>
   <identification>
-    <rights> Copyright Bernhard Henke 2020
-</rights>
     <encoding>
       <software>Finale v25 for Windows</software>
       <encoding-date>2020-08-31</encoding-date>
@@ -59,18 +57,6 @@
     <word-font font-family="Times New Roman" font-size="10.25"/>
     <lyric-font font-family="Finale Lyrics" font-size="10.25"/>
   </defaults>
-  <credit page="1">
-    <credit-type>title</credit-type>
-    <credit-words default-x="586" default-y="1538" font-family="Arial" font-size="24" justify="center" valign="top">Siebener Endstreich</credit-words>
-  </credit>
-  <credit page="1">
-    <credit-type>rights</credit-type>
-    <credit-words default-x="587" default-y="44" font-family="Arial" font-size="10" justify="center" valign="bottom" xml:space="preserve"> Copyright Bernhard Henke 2020
-</credit-words>
-  </credit>
-  <credit page="1">
-    <credit-words default-x="130" default-y="1461" font-family="Arial" font-size="12" valign="top" xml:lang="de">Eine wichtige Figur im Basler Trommeln ist der Siebener Endstreich. Wie der Name schon sagt kommt er oft am Ende eines traditionellen Trommelverses vor. Es gibt ihn auch als halben Endstreich, dann beginnt die Figur inder zweiten Hälfte des Taktes. Ganz typisch fürs Basler trommeln ist der Wechsel rechte Hand linke Hand. Der Basler "Swing" kommt am ehesten einer Quintole gleich. Deshalb die 5 als grundlegene Subdivision.</credit-words>
-  </credit>
   <credit page="1">
     <credit-words default-x="313" default-y="1217" font-family="Arial" font-size="12" valign="top">Basis</credit-words>
   </credit>
