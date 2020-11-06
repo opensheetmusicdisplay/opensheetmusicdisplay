@@ -72,8 +72,10 @@ export class MusicPartManagerIterator {
     private frontReached: boolean = false;
     public currentTimeStamp: Fraction = new Fraction(0, 1);
     private currentEnrolledMeasureTimestamp: Fraction = new Fraction(0, 1);
+    private currentRelativeInMeasureTimestamp: Fraction = new Fraction(0, 1);
     private currentVerticalContainerInMeasureTimestamp: Fraction = new Fraction(0, 1);
     private jumpResponsibleRepetition: Repetition = undefined;
+    private currentBpm: number;
     private activeDynamicExpressions: AbstractExpression[] = [];
     private activeTempoExpression: MultiTempoExpression;
 
@@ -101,6 +103,9 @@ export class MusicPartManagerIterator {
         }
         return 0;
     }
+    public get CurrentBpm(): number {
+        return this.currentBpm;
+    }
     public get CurrentVoiceEntries(): VoiceEntry[] {
         return this.currentVoiceEntries;
     }
@@ -112,6 +117,9 @@ export class MusicPartManagerIterator {
     }
     public get CurrentSourceTimestamp(): Fraction {
         return this.currentTimeStamp;
+    }
+    public get CurrentRelativeInMeasureTimestamp(): Fraction {
+        return this.currentRelativeInMeasureTimestamp;
     }
     public get JumpOccurred(): boolean {
         return this.backJumpOccurred || this.forwardJumpOccurred;
