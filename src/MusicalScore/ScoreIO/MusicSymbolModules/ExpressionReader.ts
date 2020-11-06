@@ -143,6 +143,9 @@ export class ExpressionReader {
                 const match: string[] = tempoAttr.value.match(/\d+/);
                 this.soundTempo = match !== undefined ? parseInt(match[0], 10) : 100;
                 currentMeasure.TempoInBPM = this.soundTempo;
+                if (this.musicSheet.DefaultStartTempoInBpm === 0) {
+                    this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
+                }
                 this.musicSheet.HasBPMInfo = true;
                 isTempoInstruction = true;
             }
@@ -179,6 +182,9 @@ export class ExpressionReader {
                                                      true);
                 this.soundTempo = bpmNumber;
                 currentMeasure.TempoInBPM = this.soundTempo;
+                if (this.musicSheet.DefaultStartTempoInBpm === 0) {
+                    this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
+                }
                 this.musicSheet.HasBPMInfo = true;
                 instantaneousTempoExpression.dotted = dotted;
                 instantaneousTempoExpression.beatUnit = beatUnit.value;
