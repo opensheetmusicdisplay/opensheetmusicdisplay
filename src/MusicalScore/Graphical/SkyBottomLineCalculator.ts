@@ -48,12 +48,20 @@ export class SkyBottomLineCalculator {
 
             // Pre initialize and get stuff for more performance
             const vsStaff: any = measure.getVFStave();
+            let width: number = vsStaff.getWidth();
+            if (!(width > 0)) {
+                log.warn("SkyBottomLineCalculator: width not > 0 in measure " + measure.MeasureNumber);
+                width = 50;
+            }
             // Headless because we are outside the DOM
-            tmpCanvas.initializeHeadless(vsStaff.getWidth());
+            tmpCanvas.initializeHeadless(width);
             const ctx: any = tmpCanvas.getContext();
             const canvas: any = tmpCanvas.getCanvas();
-            const width: number = canvas.width;
+            width = canvas.width;
             const height: number = canvas.height;
+            if (!(width > 0)) {
+                console.log("!!width: " + width);
+            }
 
             // This magic number is an offset from the top image border so that
             // elements above the staffline can be drawn correctly.
