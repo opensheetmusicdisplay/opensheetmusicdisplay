@@ -906,7 +906,8 @@ export abstract class MusicSheetCalculator {
             }
 
             // calculate TopBottom Borders for all elements recursively
-            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders(); // necessary for composer label (page labels) for high notes in first system
+            //   necessary for composer label (page labels) for high notes in first system
+            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders();
             // TODO how much performance does this cost? can we reduce the amount of calculations, e.g. only checking top?
 
             // calculate all Labels's Positions for the first Page
@@ -1747,6 +1748,7 @@ export abstract class MusicSheetCalculator {
         const defaultColorTitle: string = this.rules.DefaultColorTitle; // can be undefined => black
         if (musicSheet.Title !== undefined && this.rules.RenderTitle) {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom, this.rules);
+            title.Label.IsCreditLabel = true;
             title.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
@@ -1756,6 +1758,7 @@ export abstract class MusicSheetCalculator {
         if (musicSheet.Subtitle !== undefined && this.rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = new GraphicalLabel(
                 musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter, this.rules);
+            subtitle.Label.IsCreditLabel = true;
             subtitle.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
@@ -1765,6 +1768,7 @@ export abstract class MusicSheetCalculator {
         if (musicSheet.Composer !== undefined && this.rules.RenderComposer) {
             const composer: GraphicalLabel = new GraphicalLabel(
                 musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter, this.rules);
+            composer.Label.IsCreditLabel = true;
             composer.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
@@ -1774,6 +1778,7 @@ export abstract class MusicSheetCalculator {
         if (musicSheet.Lyricist !== undefined && this.rules.RenderLyricist) {
             const lyricist: GraphicalLabel = new GraphicalLabel(
                 musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter, this.rules);
+            lyricist.Label.IsCreditLabel = true;
             lyricist.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();
