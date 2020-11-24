@@ -57,7 +57,6 @@
     <word-font font-family="Times New Roman" font-size="10.25"/>
     <lyric-font font-family="Finale Lyrics" font-size="10.25"/>
   </defaults>
-  </credit>
   <credit page="1">
     <credit-words default-x="313" default-y="1217" font-family="Arial" font-size="12" valign="top">Basis</credit-words>
   </credit>
@@ -100,10 +99,6 @@
         </system-layout>
         <measure-numbering>system</measure-numbering>
       </print>
-      <barline location="left">
-        <bar-style>heavy-light</bar-style>
-        <repeat direction="forward" winged="none"/>
-      </barline>
       <attributes>
         <divisions>40</divisions>
         <key>
@@ -319,10 +314,6 @@
           <tuplet number="1" type="stop"/>
         </notations>
       </note>
-      <barline location="right">
-        <bar-style>light-heavy</bar-style>
-        <repeat direction="backward" winged="none"/>
-      </barline>
     </measure>
   </part>
   <!--=========================================================-->
