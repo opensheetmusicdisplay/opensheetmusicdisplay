@@ -388,7 +388,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             instruction = Vex.Flow.Repetition.type.FINE;
             break;
           case RepetitionInstructionEnum.ToCoda:
-            //instruction = "To Coda";
+            instruction = (Vex.Flow.Repetition as any).type.TO_CODA;
             break;
           case RepetitionInstructionEnum.DaCapoAlFine:
             instruction = Vex.Flow.Repetition.type.DC_AL_FINE;
@@ -406,7 +406,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             break;
         }
         if (instruction) {
-            this.stave.addModifier(new Vex.Flow.Repetition(instruction, 0, 0), position);
+            const repetition: Vex.Flow.Repetition = new Vex.Flow.Repetition(instruction, 0, -this.rules.RepetitionSymbolsYOffset);
+            this.stave.addModifier(repetition, position);
             return;
         }
 

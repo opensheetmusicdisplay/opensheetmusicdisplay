@@ -100,6 +100,7 @@ export class EngravingRules {
     public ChordSymbolXSpacing: number;
     public ChordSymbolYOffset: number;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
+    public RepetitionSymbolsYOffset: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -389,7 +390,7 @@ export class EngravingRules {
         this.ChordSymbolYOffset = 2.0;
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
-
+        this.RepetitionSymbolsYOffset = 0;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;

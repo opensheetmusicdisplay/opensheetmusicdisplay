@@ -531,12 +531,12 @@ export class Stave extends Element {
           widths.paddingLeft = 0;
         }
       } else {
-        widths.paddingRight = modifier.getPadding(i - lastBarlineIdx);
+        widths.paddingRight = modifier.getPadding(i - lastBarlineIdx) || 0; // can be null too
         if (i !== 0) {
-          widths.right = modifier.getWidth();
+          widths.right = modifier.getWidth() || 0;
         }
         if (i === 0) {
-          widths.left = modifier.getWidth();
+          widths.left = modifier.getWidth() || 0;
         }
       }
       x -= widths.paddingRight;
