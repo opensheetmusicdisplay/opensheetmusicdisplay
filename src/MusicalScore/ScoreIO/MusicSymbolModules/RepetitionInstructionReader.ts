@@ -125,7 +125,7 @@ export class RepetitionInstructionReader {
       const dsRegEx: string = "d\\s?\\.s\\."; // Input for new RegExp(). TS eliminates the first \
       // must Trim string and ToLower before compare
       const innerText: string = wordsNode.value.trim().toLowerCase();
-      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
@@ -135,7 +135,7 @@ export class RepetitionInstructionReader {
         return true;
       }
       const dcRegEx: string = "d\\.\\s?c\\.";
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
@@ -144,7 +144,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al fine")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al fine", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
@@ -153,7 +153,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
@@ -163,7 +163,7 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "da\\s?capo")) {
+        StringUtil.StringContainsSeparatedWord(innerText, "da\\s?capo", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
@@ -172,18 +172,23 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "dal\\s?segno")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx, true) ||
+        StringUtil.StringContainsSeparatedWord(innerText, "dal\\s?segno", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegno);
+        let newInstruction: RepetitionInstruction;
+        if (StringUtil.StringContainsSeparatedWord(innerText, "al\\s?coda", true)) {
+          newInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlCoda);
+        } else {
+          newInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegno);
+        }
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "to\\s?coda") ||
-        StringUtil.StringContainsSeparatedWord(innerText, "a (la )?coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, "to\\s?coda", true) ||
+        StringUtil.StringContainsSeparatedWord(innerText, "a (la )?coda", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
@@ -192,7 +197,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "fine")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, "fine", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
@@ -201,7 +206,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, "coda", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition > 0.5) {
           measureIndex++;
@@ -210,7 +215,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "segno")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, "segno", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition > 0.5) {
           measureIndex++;
