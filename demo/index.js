@@ -603,7 +603,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
         openSheetMusicDisplay.load(str).then(
             function () {
-                // This gives you access to the osmd object in the console. Do not use in productive code
+                // This gives you access to the osmd object in the console. Do not use in production code
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
                 return openSheetMusicDisplay.render();
