@@ -59,9 +59,6 @@ export class SkyBottomLineCalculator {
             const canvas: any = tmpCanvas.getCanvas();
             width = canvas.width;
             const height: number = canvas.height;
-            if (!(width > 0)) {
-                console.log("!!width: " + width);
-            }
 
             // This magic number is an offset from the top image border so that
             // elements above the staffline can be drawn correctly.
