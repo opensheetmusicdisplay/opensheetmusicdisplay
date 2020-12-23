@@ -266,6 +266,8 @@ export abstract class MusicSheetCalculator {
         // delete graphicalObjects (currently: ties) that will be recalculated, newly create GraphicalObjects streching over a single StaffEntry
         this.clearRecreatedObjects();
 
+        //this.graphicalMusicSheet.initializeActiveClefs(); // could have been changed since last render?
+
         this.createGraphicalTies();
 
         // calculate SheetLabelBoundingBoxes
@@ -2033,6 +2035,10 @@ export abstract class MusicSheetCalculator {
     }
 
     private handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number): void {
+        if (!startGraphicalStaffEntry) {
+            // console.log('tie not found in measure number ' + measureIndex - 1);
+            return;
+        }
         let startGse: GraphicalStaffEntry = startGraphicalStaffEntry;
         let startNote: GraphicalNote = undefined;
         let endGse: GraphicalStaffEntry = undefined;
