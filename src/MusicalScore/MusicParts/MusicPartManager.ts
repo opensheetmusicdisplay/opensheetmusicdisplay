@@ -55,9 +55,9 @@ export class MusicPartManager /*implements ISelectionListener*/ {
     }
     public getIterator(start?: Fraction): MusicPartManagerIterator {
         if (!start) {
-          return new MusicPartManagerIterator(this, this.musicSheet.SelectionStart, this.musicSheet.SelectionEnd);
+            return new MusicPartManagerIterator(this.musicSheet, this.musicSheet.SelectionStart, this.musicSheet.SelectionEnd);
         }
-        return new MusicPartManagerIterator(this, start, undefined);
+        return new MusicPartManagerIterator(this.musicSheet, start, undefined);
     }
     public setSelectionStart(beginning: Fraction): void {
         this.musicSheet.SelectionStart = beginning;

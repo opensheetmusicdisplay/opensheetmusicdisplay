@@ -48,11 +48,16 @@ export class SkyBottomLineCalculator {
 
             // Pre initialize and get stuff for more performance
             const vsStaff: any = measure.getVFStave();
+            let width: number = vsStaff.getWidth();
+            if (!(width > 0)) {
+                log.warn("SkyBottomLineCalculator: width not > 0 in measure " + measure.MeasureNumber);
+                width = 50;
+            }
             // Headless because we are outside the DOM
-            tmpCanvas.initializeHeadless(vsStaff.getWidth());
+            tmpCanvas.initializeHeadless(width);
             const ctx: any = tmpCanvas.getContext();
             const canvas: any = tmpCanvas.getCanvas();
-            const width: number = canvas.width;
+            width = canvas.width;
             const height: number = canvas.height;
 
             // This magic number is an offset from the top image border so that
@@ -437,13 +442,13 @@ export class SkyBottomLineCalculator {
     //#region Private methods
 
     /**
-     * Updates sky- and bottom line with a boundingBox and it's children
+     * Updates sky- and bottom line with a boundingBox and its children
      * @param boundingBox Bounding box to be added
      * @param topBorder top
      */
-    public updateWithBoundingBoxRecursivly(boundingBox: BoundingBox): void {
+    public updateWithBoundingBoxRecursively(boundingBox: BoundingBox): void {
         if (boundingBox.ChildElements && boundingBox.ChildElements.length > 0) {
-            this.updateWithBoundingBoxRecursivly(boundingBox);
+            this.updateWithBoundingBoxRecursively(boundingBox);
         } else {
             const currentTopBorder: number = boundingBox.BorderTop + boundingBox.AbsolutePosition.y;
             const currentBottomBorder: number = boundingBox.BorderBottom + boundingBox.AbsolutePosition.y;

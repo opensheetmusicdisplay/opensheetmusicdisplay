@@ -22,13 +22,14 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.8.6-dev"; // getter: this.Version
+    private version: string = "0.8.7-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -771,7 +772,7 @@ export class OpenSheetMusicDisplay {
             backend = new CanvasVexFlowBackend(this.rules);
         }
         backend.graphicalMusicPage = page; // the page the backend renders on. needed to identify DOM element to extract image/SVG
-        backend.initialize(this.container);
+        backend.initialize(this.container, this.zoom);
         return backend;
     }
 

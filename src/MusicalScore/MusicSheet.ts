@@ -436,17 +436,17 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    }
     //
     //}
-    //public GetExpressionsStartTempoInBPM(): number {
-    //    if (this.TimestampSortedTempoExpressionsList.length > 0) {
-    //        let me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
-    //        if (me.InstantaneousTempo) {
-    //            return me.InstantaneousTempo.TempoInBpm;
-    //        } else if (me.ContinuousTempo) {
-    //            return me.ContinuousTempo.StartTempo;
-    //        }
-    //    }
-    //    return this.UserStartTempoInBPM;
-    //}
+    public getExpressionsStartTempoInBPM(): number {
+        if (this.TimestampSortedTempoExpressionsList.length > 0) {
+            const me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
+            if (me.InstantaneousTempo) {
+                return me.InstantaneousTempo.TempoInBpm;
+            } else if (me.ContinuousTempo) {
+                return me.ContinuousTempo.StartTempo;
+            }
+        }
+        return this.userStartTempoInBPM;
+    }
     public get Errors(): { [n: number]: string[]; } {
         return this.musicSheetErrors.measureErrors;
     }

@@ -51,6 +51,9 @@ export class EngravingRules {
     public BeamWidth: number;
     public BeamSpaceWidth: number;
     public BeamForwardLength: number;
+    public FlatBeams: boolean;
+    public FlatBeamOffset: number;
+    public FlatBeamOffsetPerBeam: number;
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
     public PercussionOneLineCutoff: number;
@@ -97,6 +100,7 @@ export class EngravingRules {
     public ChordSymbolXSpacing: number;
     public ChordSymbolYOffset: number;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
+    public RepetitionSymbolsYOffset: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -139,6 +143,7 @@ export class EngravingRules {
     public MinimumDistanceBetweenDashes: number;
     public MaximumLyricsElongationFactor: number;
 
+    public SlurPlacementFromXML: boolean;
     public BezierCurveStepSize: number;
     public TPower3: number[];
     public OneMinusTPower3: number[];
@@ -320,6 +325,10 @@ export class EngravingRules {
         this.BeamSpaceWidth = EngravingRules.unit / 3.0;
         this.BeamForwardLength = 1.25 * EngravingRules.unit;
 
+        this.FlatBeams = false;
+        this.FlatBeamOffset = 20;
+        this.FlatBeamOffsetPerBeam = 10;
+
         // Beam Sizing Variables
         this.ClefLeftMargin = 0.5;
         this.ClefRightMargin = 0.75;
@@ -381,7 +390,7 @@ export class EngravingRules {
         this.ChordSymbolYOffset = 2.0;
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
-
+        this.RepetitionSymbolsYOffset = 0;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -397,6 +406,7 @@ export class EngravingRules {
         this.TupletNumbersInTabs = false; // disabled by default, nonstandard in tabs, at least how we show them in non-tabs.
 
         // Slur and Tie variables
+        this.SlurPlacementFromXML = true;
         this.BezierCurveStepSize = 1000;
         this.calculateCurveParametersArrays();
         this.TieGhostObjectWidth = 0.75;

@@ -27,6 +27,7 @@ export class Label {
     public fontStyle: FontStyles;
     public fontHeight: number;
     public textAlignment: TextAlignmentEnum;
+    public IsCreditLabel: boolean = false;
 
     public ToString(): string {
         return this.text;

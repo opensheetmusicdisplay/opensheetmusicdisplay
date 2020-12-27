@@ -61,6 +61,7 @@ export class SourceMeasure {
     private measureNumber: number;
     public MeasureNumberXML: number;
     public MeasureNumberPrinted: number; // measureNumber if MeasureNumberXML undefined or NaN. Set in getPrintedMeasureNumber()
+    public RhythmPrinted: boolean = false; // whether this measure prints a rhythm on the score
     public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)
     // public multipleRestMeasuresPerStaff: Dictionary<number, number>; // key: staffId. value: how many rest measures
     private absoluteTimestamp: Fraction;

@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>Title</work-title>
+    <work-title>Test - Measure Numbers XML Multirest</work-title>
     </work>
   <identification>
     <creator type="composer">Composer</creator>
@@ -40,12 +40,6 @@
     <word-font font-family="FreeSerif" font-size="10"/>
     <lyric-font font-family="FreeSerif" font-size="11"/>
     </defaults>
-  <credit page="1">
-    <credit-words default-x="595.44" default-y="1626.67" justify="center" valign="top" font-size="24">Title</credit-words>
-    </credit>
-  <credit page="1">
-    <credit-words default-x="1134.19" default-y="1526.67" justify="right" valign="bottom" font-size="12">Composer</credit-words>
-    </credit>
   <part-list>
     <score-part id="P1">
       <part-name>Piano</part-name>

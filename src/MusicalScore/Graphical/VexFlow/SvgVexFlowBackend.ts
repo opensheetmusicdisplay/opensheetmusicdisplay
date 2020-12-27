@@ -12,6 +12,7 @@ import {EngravingRules} from "../EngravingRules";
 export class SvgVexFlowBackend extends VexFlowBackend {
 
     private ctx: Vex.Flow.SVGContext;
+    private zoom: number;
 
     constructor(rules: EngravingRules) {
         super();
@@ -30,7 +31,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
     }
 
-    public initialize(container: HTMLElement): void {
+    public initialize(container: HTMLElement, zoom: number): void {
+        this.zoom = zoom;
         this.canvas = document.createElement("div");
         this.canvas.id = "osmdCanvasPage" + this.graphicalMusicPage.PageNumber;
         // this.canvas.id = uniqueID // TODO create unique tagName like with cursor now?
@@ -68,8 +70,9 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             this.ctx.save();
             // note that this will hide the cursor
             this.ctx.setFillStyle(this.rules.PageBackgroundColor);
+            this.ctx.setStrokeStyle("#12345600"); // transparent
 
-            this.ctx.fillRect(0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
+            this.ctx.fillRect(0, 0, this.canvas.offsetWidth / this.zoom, this.canvas.offsetHeight / this.zoom);
             this.ctx.restore();
         }
     }

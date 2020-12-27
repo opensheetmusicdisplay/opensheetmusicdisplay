@@ -17,9 +17,10 @@ import { StemDirectionType } from "../VoiceData/VoiceEntry";
 export class GraphicalSlur extends GraphicalCurve {
     // private intersection: PointF2D;
 
-    constructor(slur: Slur) {
+    constructor(slur: Slur, rules: EngravingRules) {
         super();
         this.slur = slur;
+        this.rules = rules;
     }
 
     public slur: Slur;
@@ -27,6 +28,7 @@ export class GraphicalSlur extends GraphicalCurve {
     public placement: PlacementEnum;
     public graceStart: boolean;
     public graceEnd: boolean;
+    private rules: EngravingRules;
 
     /**
      * Compares the timespan of two Graphical Slurs
@@ -605,6 +607,11 @@ export class GraphicalSlur extends GraphicalCurve {
         //     this.placement = PlacementEnum.Above;
         //     return;
         // }
+
+        if (this.rules.SlurPlacementFromXML) {
+            this.placement = this.slur.PlacementXml;
+            return;
+        }
 
         // if any StaffEntry belongs to a Measure with multiple Voices, than
         // if Slur's Start- or End-Note belongs to a LinkedVoice Below else Above

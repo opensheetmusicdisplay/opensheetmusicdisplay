@@ -1,4 +1,5 @@
-import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
+import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
+import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
 import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 // import { Fraction } from '../src/Common/DataObjects/Fraction';
@@ -602,7 +603,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
         openSheetMusicDisplay.load(str).then(
             function () {
-                // This gives you access to the osmd object in the console. Do not use in productive code
+                // This gives you access to the osmd object in the console. Do not use in production code
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
                 return openSheetMusicDisplay.render();
@@ -754,7 +755,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             if (openSheetMusicDisplay.IsReadyToRender()) {
                 openSheetMusicDisplay.render();
             } else {
-                console.log("[OSMD demo] Looses context!"); // TODO not sure that this message is reasonable, renders fine anyways. maybe vexflow context lost?
+                console.log("[OSMD demo] Loses context!"); // TODO not sure that this message is reasonable, renders fine anyways. maybe vexflow context lost?
                 selectSampleOnChange(); // reload sample e.g. after osmd.clear()
             }
             enable();

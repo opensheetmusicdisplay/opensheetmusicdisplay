@@ -555,6 +555,20 @@ export class InstrumentReader {
           // TODO do we need to process bars with left location too?
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
+          try {
+            if (xmlNode.hasAttributes && xmlNode.attribute("tempo") !== undefined) {
+
+                const tempo: number = parseFloat(xmlNode.attribute("tempo").value);
+
+                // should set the PlaybackSettings only at first Measure
+                if (this.currentXmlMeasureIndex === 0) {
+                    this.musicSheet.DefaultStartTempoInBpm = tempo;
+                    this.musicSheet.HasBPMInfo = true;
+                }
+            }
+          } catch (e) {
+            log.debug("InstrumentReader.readTempoInstruction", e);
+          }
         } else if (xmlNode.name === "harmony") {
           // new chord, could be second chord on same staffentry/note
           this.openChordSymbolContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
@@ -588,7 +602,7 @@ export class InstrumentReader {
       // next measures will automatically inherit that value
       if (!this.musicSheet.HasBPMInfo) {
         this.currentMeasure.TempoInBPM = 120;
-      } else if (currentMeasure.TempoInBPM === 0) {
+      } else if (currentMeasure.TempoInBPM === 0 && this.previousMeasure) {
         this.currentMeasure.TempoInBPM = this.previousMeasure.TempoInBPM;
       }
     } catch (e) {
