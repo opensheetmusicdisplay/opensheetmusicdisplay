@@ -65,3 +65,6 @@ package-lock.json
 
 #local env files
 webpack.local.js
+
+test/.DS_Store
+/.DS_Store
