@@ -409,20 +409,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
   }
 
+  //used calculateMeasureWidthFromLyrics as a starting point for this function.
   public calculateMeasureWidthFromChords(
     measuresVertical: GraphicalMeasure[],
     oldMinimumStaffEntriesWidth: number
   ): number {
     let elongationFactorForMeasureWidth: number = 1;
 
+    //info needed from the previous chord to space the current one
     interface ChordEntryInfo {
       extend: boolean;
       labelWidth: number;
       chordXPosition: number;
-      // sourceNoteDuration: Fraction;
       text: string;
       measureNumber: number;
     }
+    //gives us the previous chords for all staffs
     interface ChordEntryDict {
       [i: number]: ChordEntryInfo;
     }
@@ -535,14 +537,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             // sourceNoteDuration: graphicalChordContainer.LyricsEntry.Parent.Notes[0].Length,
             text: graphicalChordContainer.GetGraphicalLabel.Label.text
           };
-
-          // currentSpacingToMeasureEnd = maxXInMeasure - chordXPosition;
-          // spacingNeededToMeasureEnd = chordLabelWidth - 0;
-
-          // elongationFactorForMeasureWidth = Math.max(
-          //   elongationFactorNeededForMeasureEnd,
-          //   elongationFactorForMeasureWidth
-          // );
 
           j += 1;
         }
