@@ -34,6 +34,14 @@ To contact us directly, you can use the [Contact form on opensheetmusicdisplay.o
 or<br>
 [join the chat on Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
 
-If you'd like to support OSMD and our ongoing work, you can donate via PayPal:<br>
+<a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">
+<img src="https://user-images.githubusercontent.com/33069673/104040519-072b5c00-51d8-11eb-9ce3-80d162752152.png" height="200" alt="OSMD on Github Sponsors">
+</a>
+If you'd like to support OSMD and our ongoing work, and receive additional rewards like early builds or a postcard from Vienna,
+you can support us with Github Sponsors:
+https://github.com/sponsors/opensheetmusicdisplay/
+<br>
+
+Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FPHCYVV2HH8VU)<br>
 Any support is highly appreciated.
