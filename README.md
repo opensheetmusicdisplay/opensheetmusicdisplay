@@ -35,7 +35,7 @@ or<br>
 [join the chat on Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
 
 <a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">
-<img src="https://user-images.githubusercontent.com/33069673/104040519-072b5c00-51d8-11eb-9ce3-80d162752152.png" height="200" alt="OSMD on Github Sponsors">
+<img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors">
 </a><br>
 If you'd like to support OSMD and our ongoing work, and receive additional rewards like early builds or a postcard from Vienna,
 you can support us via Github Sponsors:<br>
