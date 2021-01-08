@@ -30,6 +30,7 @@ let [osmdBuildDir, sampleDir, imageDir, pageWidth, pageHeight, filterRegex, mode
 if (!osmdBuildDir || !sampleDir || !imageDir) {
     console.log('usage: ' +
         'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]')
+    console.log('  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))')
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)')
     console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export 210 297 allSmall --debug 5000')
     console.log('Error: need osmdBuildDir, sampleDir and imageDir. Exiting.')
