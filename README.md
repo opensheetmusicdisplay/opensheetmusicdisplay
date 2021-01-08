@@ -41,7 +41,7 @@ If you'd like to support OSMD and our ongoing work, and receive additional rewar
 you can support us with Github Sponsors:<br>
 https://github.com/sponsors/opensheetmusicdisplay/
 
-<br>
+<br><br>
 Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FPHCYVV2HH8VU)<br>
