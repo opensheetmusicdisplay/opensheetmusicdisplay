@@ -13,23 +13,29 @@ import {EngravingRules} from "./EngravingRules";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalStaffEntry} from "./GraphicalStaffEntry";
 import {SystemLinesEnum} from "./SystemLinesEnum";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import { Dictionary } from "typescript-collections";
 import {GraphicalComment} from "./GraphicalComment";
 import {GraphicalMarkedArea} from "./GraphicalMarkedArea";
 import {SystemLine} from "./SystemLine";
 import {SystemLinePosition} from "./SystemLinePosition";
 import {Staff} from "../VoiceData/Staff";
+import { Label } from "../Label";
 
 /**
  * A MusicSystem contains the [[StaffLine]]s for all instruments, until a line break
  */
 export abstract class MusicSystem extends GraphicalObject {
     public needsToBeRedrawn: boolean = true;
+    public rules: EngravingRules;
     protected parent: GraphicalMusicPage;
     protected id: number;
     protected staffLines: StaffLine[] = [];
     protected graphicalMeasures: GraphicalMeasure[][] = [];
-    protected labels: Dictionary<GraphicalLabel, Instrument> = new Dictionary<GraphicalLabel, Instrument>();
+    /** Dictionary of (Instruments and) labels.
+     * note that the key needs to be unique, GraphicalLabel is not unique yet.
+     * That is why the labels are labels.values() and not labels.keys().
+     */
+    protected labels: Dictionary<Instrument, GraphicalLabel> = new Dictionary<Instrument, GraphicalLabel>();
     protected measureNumberLabels: GraphicalLabel[] = [];
     protected maxLabelLength: number;
     protected objectsToRedraw: [Object[], Object][] = [];
@@ -38,15 +44,13 @@ export abstract class MusicSystem extends GraphicalObject {
     protected graphicalMarkedAreas: GraphicalMarkedArea[] = [];
     protected graphicalComments: GraphicalComment[] = [];
     protected systemLines: SystemLine[] = [];
-    protected rules: EngravingRules;
+    public breaksPage: boolean = false;
 
-    constructor(parent: GraphicalMusicPage, id: number) {
+    constructor(id: number) {
         super();
-        this.parent = parent;
         this.id = id;
-        this.boundingBox = new BoundingBox(this, parent.PositionAndShape);
+        this.boundingBox = new BoundingBox(this);
         this.maxLabelLength = 0.0;
-        this.rules = this.parent.Parent.ParentMusicSheet.Rules;
     }
 
     public get Parent(): GraphicalMusicPage {
@@ -54,7 +58,16 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     public set Parent(value: GraphicalMusicPage) {
+        // remove from old page
+        if (this.parent) {
+            const index: number = this.parent.MusicSystems.indexOf(this, 0);
+            if (index > -1) {
+                this.parent.MusicSystems.splice(index, 1);
+            }
+        }
+
         this.parent = value;
+        this.boundingBox.Parent = value.PositionAndShape;
     }
 
     public get NextSystem(): MusicSystem {
@@ -75,7 +88,7 @@ export abstract class MusicSystem extends GraphicalObject {
     }
 
     public get Labels(): GraphicalLabel[] {
-        return this.labels.keys();
+        return this.labels.values();
     }
 
     public get ObjectsToRedraw(): [Object[], Object][] {
@@ -111,9 +124,9 @@ export abstract class MusicSystem extends GraphicalObject {
      * @param lineWidth
      * @param systemLabelsRightMargin
      */
-    public createSystemLeftLine(lineWidth: number, systemLabelsRightMargin: number): void {
+    public createSystemLeftLine(lineWidth: number, systemLabelsRightMargin: number, isFirstSystem: boolean): void {
         let xPosition: number = -lineWidth / 2;
-        if (this === this.parent.MusicSystems[0] && this.parent === this.parent.Parent.MusicPages[0]) {
+        if (isFirstSystem) {
             xPosition = this.maxLabelLength + systemLabelsRightMargin - lineWidth / 2;
         }
         const top: GraphicalMeasure = this.staffLines[0].Measures[0];
@@ -143,6 +156,7 @@ export abstract class MusicSystem extends GraphicalObject {
      */
     public createVerticalLineForMeasure(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
                                         measureIndex: number, measure: GraphicalMeasure): void {
+        //return; // TODO check why there's a bold line here for the double barline sample
         const staffLine: StaffLine = measure.ParentStaffLine;
         const staffLineRelative: PointF2D = new PointF2D(staffLine.PositionAndShape.RelativePosition.x,
                                                          staffLine.PositionAndShape.RelativePosition.y);
@@ -189,7 +203,7 @@ export abstract class MusicSystem extends GraphicalObject {
     public AddGraphicalMeasures(graphicalMeasures: GraphicalMeasure[]): void {
         for (let idx: number = 0, len: number = graphicalMeasures.length; idx < len; ++idx) {
             const graphicalMeasure: GraphicalMeasure = graphicalMeasures[idx];
-            graphicalMeasure.parentMusicSystem = this;
+            graphicalMeasure.ParentMusicSystem = this;
         }
         this.graphicalMeasures.push(graphicalMeasures);
     }
@@ -222,7 +236,7 @@ export abstract class MusicSystem extends GraphicalObject {
                         lastStaffLine = staffLine;
                     }
                 }
-                if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
+                if (firstStaffLine && lastStaffLine) {
                     this.createInstrumentBracket(firstStaffLine, lastStaffLine);
                 }
             }
@@ -243,7 +257,7 @@ export abstract class MusicSystem extends GraphicalObject {
             }
             const instrument1: Instrument = this.findFirstVisibleInstrumentInInstrumentalGroup(instrumentGroup);
             const instrument2: Instrument = this.findLastVisibleInstrumentInInstrumentalGroup(instrumentGroup);
-            if (instrument1 === undefined || instrument2 === undefined) {
+            if (!instrument1 || !instrument2) {
                 continue;
             }
             let firstStaffLine: StaffLine = undefined;
@@ -257,7 +271,7 @@ export abstract class MusicSystem extends GraphicalObject {
                     lastStaffLine = staffLine;
                 }
             }
-            if (firstStaffLine !== undefined && lastStaffLine !== undefined) {
+            if (firstStaffLine && lastStaffLine) {
                 this.createGroupBracket(firstStaffLine, lastStaffLine, recursionDepth);
             }
             if (instrumentGroup.InstrumentalGroups.length < 1) {
@@ -273,60 +287,84 @@ export abstract class MusicSystem extends GraphicalObject {
      * @param systemLabelsRightMargin
      * @param labelMarginBorderFactor
      */
-    public createMusicSystemLabel(instrumentLabelTextHeight: number, systemLabelsRightMargin: number, labelMarginBorderFactor: number): void {
-        if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
-            const instruments: Instrument[] = this.parent.Parent.ParentMusicSheet.getVisibleInstruments();
-            for (let idx: number = 0, len: number = instruments.length; idx < len; ++idx) {
-                const instrument: Instrument = instruments[idx];
+    public createMusicSystemLabel(  instrumentLabelTextHeight: number, systemLabelsRightMargin: number,
+                                    labelMarginBorderFactor: number, isFirstSystem: boolean = false): void {
+
+        const originalSystemLabelsRightMargin: number = systemLabelsRightMargin;
+        for (let idx: number = 0, len: number = this.staffLines.length; idx < len; ++idx) {
+            const instrument: Instrument = this.staffLines[idx].ParentStaff.ParentInstrument;
+            let instrNameLabel: Label;
+            if (isFirstSystem) {
+                instrNameLabel = instrument.NameLabel;
+                if (!this.rules.RenderPartNames || !instrNameLabel?.print) {
+                    instrNameLabel = new Label("", instrument.NameLabel.textAlignment, instrument.NameLabel.font);
+                    systemLabelsRightMargin = 0; // might affect lyricist/tempo placement. but without this there's still some extra x-spacing.
+                }
+            } else {
+                if (!this.rules.RenderPartAbbreviations || !this.rules.RenderPartNames // don't render abbreviations if we don't render part names
+                    || this.staffLines.length === 1 // don't render part abbreviations if there's only one instrument/part (could be an option in the future)
+                    || !instrument.PartAbbreviation
+                    || instrument.PartAbbreviation === "") {
+                    return;
+                }
+                const labelText: string = instrument.PartAbbreviation;
+                // const labelText: string = instrument.NameLabel.text[0] + ".";
+                instrNameLabel = new Label(labelText, instrument.NameLabel.textAlignment, instrument.NameLabel.font);
+            }
+            if (instrument?.NameLabel?.print) {
                 const graphicalLabel: GraphicalLabel = new GraphicalLabel(
-                    instrument.NameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.boundingBox
+                    instrNameLabel, instrumentLabelTextHeight, TextAlignmentEnum.LeftCenter, this.rules, this.boundingBox
                 );
                 graphicalLabel.setLabelPositionAndShapeBorders();
-                this.labels.setValue(graphicalLabel, instrument);
+                this.labels.setValue(instrument, graphicalLabel);
                 // X-Position will be 0 (Label starts at the same PointF_2D with MusicSystem)
                 // Y-Position will be calculated after the y-Spacing
                 // graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
+            } else {
+                systemLabelsRightMargin = 0;
             }
-
-            // calculate maxLabelLength (needed for X-Spacing)
-            this.maxLabelLength = 0.0;
-            const labels: GraphicalLabel[] = this.labels.keys();
-            for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
-                const label: GraphicalLabel = labels[idx];
-                if (label.PositionAndShape.Size.width > this.maxLabelLength) {
-                    this.maxLabelLength = label.PositionAndShape.Size.width;
-                }
-            }
-            this.updateMusicSystemStaffLineXPosition(systemLabelsRightMargin);
         }
+
+        // calculate maxLabelLength (needed for X-Spacing)
+        this.maxLabelLength = 0.0;
+        const labels: GraphicalLabel[] = this.labels.values();
+        for (let idx: number = 0, len: number = labels.length; idx < len; ++idx) {
+            const label: GraphicalLabel = labels[idx];
+            if (!label.Label.print) {
+                continue;
+            }
+            if (label.PositionAndShape.Size.width > this.maxLabelLength) {
+                this.maxLabelLength = label.PositionAndShape.Size.width;
+                systemLabelsRightMargin = originalSystemLabelsRightMargin;
+            }
+        }
+        this.updateMusicSystemStaffLineXPosition(systemLabelsRightMargin);
     }
 
     /**
      * Set the Y-Positions for the MusicSystem's Labels.
      */
     public setMusicSystemLabelsYPosition(): void {
-        if (this.parent === this.parent.Parent.MusicPages[0] && this === this.parent.MusicSystems[0]) {
-            this.labels.forEach((key: GraphicalLabel, value: Instrument): void => {
-                let ypositionSum: number = 0;
-                let staffCounter: number = 0;
-                for (let i: number = 0; i < this.staffLines.length; i++) {
-                    if (this.staffLines[i].ParentStaff.ParentInstrument === value) {
-                        for (let j: number = i; j < this.staffLines.length; j++) {
-                            const staffLine: StaffLine = this.staffLines[j];
-                            if (staffLine.ParentStaff.ParentInstrument !== value) {
-                                break;
-                            }
-                            ypositionSum += staffLine.PositionAndShape.RelativePosition.y;
-                            staffCounter++;
+        this.labels.forEach((key: Instrument, value: GraphicalLabel): void => {
+            let ypositionSum: number = 0;
+            let staffCounter: number = 0;
+            for (let i: number = 0; i < this.staffLines.length; i++) {
+                if (this.staffLines[i].ParentStaff.ParentInstrument === key) {
+                    for (let j: number = i; j < this.staffLines.length; j++) {
+                        const staffLine: StaffLine = this.staffLines[j];
+                        if (staffLine.ParentStaff.ParentInstrument !== key) {
+                            break;
                         }
-                        break;
+                        ypositionSum += staffLine.PositionAndShape.RelativePosition.y;
+                        staffCounter++;
                     }
+                    break;
                 }
-                if (staffCounter > 0) {
-                    key.PositionAndShape.RelativePosition = new PointF2D(0.0, ypositionSum / staffCounter + 2.0);
-                }
-            });
-        }
+            }
+            if (staffCounter > 0) {
+                value.PositionAndShape.RelativePosition = new PointF2D(0.0, ypositionSum / staffCounter + 2.0);
+            }
+        });
     }
 
     /**
@@ -342,7 +380,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const measure: GraphicalMeasure = this.staffLines[i].Measures[idx];
                 for (let idx2: number = 0, len2: number = measure.staffEntries.length; idx2 < len2; ++idx2) {
                     const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
-                    if (staffEntry.sourceStaffEntry.Link !== undefined) {
+                    if (staffEntry.sourceStaffEntry.Link) {
                         first = true;
                     }
                 }
@@ -351,7 +389,7 @@ export abstract class MusicSystem extends GraphicalObject {
                 const measure: GraphicalMeasure = this.staffLines[i + 1].Measures[idx];
                 for (let idx2: number = 0, len2: number = measure.staffEntries.length; idx2 < len2; ++idx2) {
                     const staffEntry: GraphicalStaffEntry = measure.staffEntries[idx2];
-                    if (staffEntry.sourceStaffEntry.Link !== undefined) {
+                    if (staffEntry.sourceStaffEntry.Link) {
                         second = true;
                     }
                 }

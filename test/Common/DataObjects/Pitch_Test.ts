@@ -3,16 +3,16 @@ import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects
 describe("Pitch Unit Tests:", () => {
     describe("transpose Pitch", () => {
         const pitch: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
-        const transposedFundamentalAndOctave: {value: number; overflow: number; } =
+        const transposedFundamentalAndOctave: {halftone: number; overflow: number; } =
           Pitch.CalculateTransposedHalfTone(pitch, 12);
-        const higherTransposedFundamentalAndOctave: {value: number; overflow: number; } =
+        const higherTransposedFundamentalAndOctave: {halftone: number; overflow: number; } =
           Pitch.CalculateTransposedHalfTone(pitch, 26);
 
         it("should be 1 octave higher and same fundamental", (done: MochaDone) => {
             chai.expect(transposedFundamentalAndOctave.overflow).to.equal(1);
-            chai.expect(transposedFundamentalAndOctave.value).to.equal(pitch.FundamentalNote);
+            chai.expect(transposedFundamentalAndOctave.halftone).to.equal(pitch.FundamentalNote);
             chai.expect(higherTransposedFundamentalAndOctave.overflow).to.equal(2);
-            chai.expect(higherTransposedFundamentalAndOctave.value).to.equal(pitch.FundamentalNote + 2);
+            chai.expect(higherTransposedFundamentalAndOctave.halftone).to.equal(pitch.FundamentalNote + 2);
             done();
         });
     });
@@ -52,11 +52,11 @@ describe("Pitch Unit Tests:", () => {
         const key5: number = Pitch.calcFractionalKey(pitch5.Frequency);
 
         it("pitch key should equal midi key", (done: MochaDone) => {
-            chai.expect(key1).to.equal(109);
-            chai.expect(key2).to.equal(59);
-            chai.expect(key3).to.equal(87);
-            chai.expect(key4).to.equal(30);
-            chai.expect(key5).to.equal(57);
+            chai.expect(Math.round(key1)).to.equal(109);
+            chai.expect(Math.round(key2)).to.equal(59);
+            chai.expect(Math.round(key3)).to.equal(87);
+            chai.expect(Math.round(key4)).to.equal(30);
+            chai.expect(Math.round(key5)).to.equal(57);
             done();
         });
     });

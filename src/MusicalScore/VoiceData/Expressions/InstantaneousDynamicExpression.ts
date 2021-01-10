@@ -3,48 +3,48 @@ import {MultiExpression} from "./MultiExpression";
 import {DynamicExpressionSymbolEnum} from "./DynamicExpressionSymbolEnum";
 //import {ArgumentOutOfRangeException} from "../../Exceptions";
 import {InvalidEnumArgumentException} from "../../Exceptions";
-import * as log from "loglevel";
+import log from "loglevel";
+import { SourceMeasure } from "../SourceMeasure";
+import { Dictionary } from "typescript-collections";
 
 export class InstantaneousDynamicExpression extends AbstractExpression {
-    constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number) {
+    public static staticConstructor(): void {
+
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ffffff, 127.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fffff,  126.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ffff,   125.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fff,    124.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ff,     122.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.f,      108.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.mf,      76.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sf,     0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfp,    0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfpp,   0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fp,     0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.rf,     0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.rfz,    0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sfz,    0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.sffz,   0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.fz,     0.5);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.mp,      60 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.p,       28.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pp,      12.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ppp,     10.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pppp,    7.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.ppppp,    5.0 / 127.0);
+        InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.setValue(DynamicEnum.pppppp,   4.0 / 127.0);
+    }
+
+    constructor(dynamicExpression: string, soundDynamics: number, placement: PlacementEnum, staffNumber: number,
+                measure: SourceMeasure) {
         super(placement);
+        super.parentMeasure = measure;
         this.dynamicEnum = DynamicEnum[dynamicExpression.toLowerCase()];
         this.soundDynamic = soundDynamics;
         this.staffNumber = staffNumber;
     }
-    public static dynamicToRelativeVolumeDict: { [_: string]: number; } = {
-        "f": 92.0 / 127.0,
-        "ff": 108.0 / 127.0,
-        "fff": 124.0 / 127.0,
-        "ffff": 125.0 / 127.0,
-        "fffff": (126.0 / 127.0) ,
-        "ffffff": (127.0 / 127.0),
-        "fp": 0.5,
-        "fz": 0.5,
-        "mf": 76.0 / 127.0,
-        "mp": 60.0 / 127.0,
-        "p": 44.0 / 127.0,
-        "pp": 28.0 / 127.0,
-        "ppp": 12.0 / 127.0,
-        "pppp": 10.0 / 127.0,
-        "ppppp": 8.0 / 127.0,
-        "pppppp": 6.0 / 127.0,
-        "rf": 0.5,
-        "rfz": 0.5,
-        "sf": 0.5,
-        "sff": 0.5,
-        "sffz": 0.5,
-        "sfp": 0.5,
-        "sfpp": 0.5,
-        "sfz": 0.5
-    };
 
-    //private static weight: number;
-    private static listInstantaneousDynamics: string[] =  [
-        "pppppp", "ppppp", "pppp", "ppp", "pp", "p",
-        "ffffff", "fffff", "ffff", "fff", "ff", "f",
-        "mf", "mp", "sf", "sff", "sp", "spp", "fp", "rf", "rfz", "sfz", "sffz", "fz",
-    ];
+    public static dynamicToRelativeVolumeDict: Dictionary<DynamicEnum, number> = new Dictionary<DynamicEnum, number>();
 
     private multiExpression: MultiExpression;
     private dynamicEnum: DynamicEnum;
@@ -89,12 +89,24 @@ export class InstantaneousDynamicExpression extends AbstractExpression {
         return this.length;
     }
     public get MidiVolume(): number {
-        return InstantaneousDynamicExpression.dynamicToRelativeVolumeDict[this.dynamicEnum] * 127;
+        return this.Volume * 127;
     }
+
+    public get Volume(): number {
+        return InstantaneousDynamicExpression.dynamicToRelativeVolumeDict.getValue(this.dynamicEnum);
+    }
+
     public static isInputStringInstantaneousDynamic(inputString: string): boolean {
-        if (inputString === undefined) { return false; }
+        if (!inputString) { return false; }
         return InstantaneousDynamicExpression.isStringInStringList(InstantaneousDynamicExpression.listInstantaneousDynamics, inputString);
     }
+
+    //private static weight: number;
+    private static listInstantaneousDynamics: string[] =  [
+        "pppppp", "ppppp", "pppp", "ppp", "pp", "p",
+        "ffffff", "fffff", "ffff", "fff", "ff", "f",
+        "mf", "mp", "sf", "sff", "sp", "spp", "fp", "rf", "rfz", "sfz", "sffz", "fz",
+    ];
 
     //public getInstantaneousDynamicSymbol(expressionSymbolEnum:DynamicExpressionSymbolEnum): FontInfo.MusicFontSymbol {
     //    switch (expressionSymbolEnum) {
@@ -175,3 +187,5 @@ export enum DynamicEnum {
     fz = 23,
     other = 24
 }
+
+InstantaneousDynamicExpression.staticConstructor();

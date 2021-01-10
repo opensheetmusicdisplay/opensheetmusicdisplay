@@ -16,7 +16,7 @@ import {EngravingRules} from "./Graphical/EngravingRules";
 import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
-import * as log from "loglevel";
+import log from "loglevel";
 
 // FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
@@ -32,7 +32,6 @@ export class PlaybackSettings {
  */
 export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet>*/ {
     constructor() {
-        this.rules = EngravingRules.Rules;
         this.playbackSettings = new PlaybackSettings();
         // FIXME?
         // initialize SheetPlaybackSetting with default values
@@ -41,21 +40,22 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.pageWidth = 120;
         // create MusicPartManager
         this.MusicPartManager = new MusicPartManager(this);
+        this.hasBPMInfo = false;
     }
-    public static defaultTitle: string = "[kein Titel]";
+    public static defaultTitle: string = "[no title given]";
 
     public userStartTempoInBPM: number;
     public pageWidth: number;
-    public rules: EngravingRules;
 
-    private idString: string = "kjgdfuilhsdaöoihfsvjh";
+    private idString: string = "random idString, not initialized";
     private sourceMeasures: SourceMeasure[] = [];
     private repetitions: Repetition[] = [];
     private dynListStaves: DynamicsContainer[][] = [];
     private timestampSortedDynamicExpressionsList: DynamicsContainer[] = [];
     private timestampSortedTempoExpressionsList: MultiTempoExpression[] = [];
     private instrumentalGroups: InstrumentalGroup[] = [];
-    private instruments: Instrument[] = [];
+    /** The parts in the sheet, e.g. piano left hand, or piano right hand, or violin. */
+    private instruments: Instrument[] = []; // Should be renamed from instruments to parts and part, though this will be a big refactor
     private playbackSettings: PlaybackSettings;
     private path: string;
     private title: Label;
@@ -75,8 +75,10 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private hasBeenOpenedForTheFirstTime: boolean = false;
     private currentEnrolledPosition: Fraction = new Fraction(0, 1);
     // (*) private musicSheetParameterObject: MusicSheetParameterObject = undefined;
-    private engravingRules: EngravingRules;
+    private rules: EngravingRules;
     // (*) private musicSheetParameterChangedDelegate: MusicSheetParameterChangedDelegate;
+    /* Whether BPM info is present in the sheet. If it is set to false, each measure's BPM was set to a default of 120. */
+    private hasBPMInfo: boolean;
 
     /**
      * Get the global index within the music sheet for this staff.
@@ -110,13 +112,17 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public get InstrumentalGroups(): InstrumentalGroup[] {
         return this.instrumentalGroups;
     }
-    public get Instruments(): Instrument[] {
+    public get Parts(): Instrument[] { // Instrument should be renamed to Part
         return this.instruments;
     }
-     public get SheetPlaybackSetting(): PlaybackSettings {
+    public get Instruments(): Instrument[] { // deprecated
+        // this method name should remain for a while to maintain compatibility even when Instrument is renamed to Part
+        return this.instruments;
+    }
+    public get SheetPlaybackSetting(): PlaybackSettings {
         return this.playbackSettings;
     }
-     public set SheetPlaybackSetting(value: PlaybackSettings) {
+    public set SheetPlaybackSetting(value: PlaybackSettings) {
         this.playbackSettings = value;
     }
     public get DrawErroneousMeasures(): boolean {
@@ -152,32 +158,44 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return this.staves;
     }
     public get TitleString(): string {
-        if (this.title !== undefined) {
+        if (this.title) {
             return this.title.text;
         } else {
             return "";
         }
     }
+    public set TitleString(value: string) {
+        this.Title = new Label(value);
+    }
     public get SubtitleString(): string {
-        if (this.subtitle !== undefined) {
+        if (this.subtitle) {
             return this.subtitle.text;
         } else {
             return "";
         }
     }
+    public set SubtitleString(value: string) {
+        this.Subtitle = new Label(value);
+    }
     public get ComposerString(): string {
-        if (this.composer !== undefined) {
+        if (this.composer) {
             return this.composer.text;
         } else {
             return "";
         }
     }
+    public set ComposerString(value: string) {
+        this.Composer = new Label(value);
+    }
     public get LyricistString(): string {
-        if (this.lyricist !== undefined) {
+        if (this.lyricist) {
             return this.lyricist.text;
         } else {
             return "";
         }
+    }
+    public set LyricistString(value: string) {
+        this.Lyricist = new Label(value);
     }
     public get Title(): Label {
         return this.title;
@@ -204,10 +222,14 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.lyricist = value;
     }
     public get Rules(): EngravingRules {
-       return this.engravingRules;
+        if (!this.rules) {
+            log.debug("warning: sheet.Rules was undefined. Creating new EngravingRules.");
+            this.rules = new EngravingRules();
+        }
+        return this.rules;
     }
     public set Rules(value: EngravingRules) {
-       this.engravingRules = value;
+        this.rules = value;
     }
     public get SheetErrors(): MusicSheetErrors {
         return this.musicSheetErrors;
@@ -225,6 +247,15 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     public set SelectionEnd(value: Fraction) {
         this.selectionEnd = value;
     }
+
+    public set HasBPMInfo(value: boolean) {
+        this.hasBPMInfo = value;
+    }
+
+    public get HasBPMInfo(): boolean {
+        return this.hasBPMInfo;
+    }
+
     // (*) public get MusicSheetParameterObject(): MusicSheetParameterObject {
     //    return this.musicSheetParameterObject;
     //}
@@ -319,17 +350,17 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         return this.sourceMeasures[this.sourceMeasures.length - 1];
     }
     public resetAllNoteStates(): void {
-       const iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
-       while (!iterator.EndReached && iterator.CurrentVoiceEntries !== undefined) {
-           for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
-               const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
-               for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
-                   const note: Note = voiceEntry.Notes[idx2];
-                   note.state = NoteState.Normal;
-               }
-           }
-           iterator.moveToNext();
-       }
+        const iterator: MusicPartManagerIterator = this.MusicPartManager.getIterator();
+        while (!iterator.EndReached && iterator.CurrentVoiceEntries) {
+            for (let idx: number = 0, len: number = iterator.CurrentVoiceEntries.length; idx < len; ++idx) {
+                const voiceEntry: VoiceEntry = iterator.CurrentVoiceEntries[idx];
+                for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
+                    const note: Note = voiceEntry.Notes[idx2];
+                    note.state = NoteState.Normal;
+                }
+            }
+            iterator.moveToNext();
+        }
     }
     public getMusicSheetInstrumentIndex(instrument: Instrument): number {
         return this.Instruments.indexOf(instrument);
@@ -405,17 +436,17 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    }
     //
     //}
-    //public GetExpressionsStartTempoInBPM(): number {
-    //    if (this.TimestampSortedTempoExpressionsList.length > 0) {
-    //        let me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
-    //        if (me.InstantaneousTempo !== undefined) {
-    //            return me.InstantaneousTempo.TempoInBpm;
-    //        } else if (me.ContinuousTempo !== undefined) {
-    //            return me.ContinuousTempo.StartTempo;
-    //        }
-    //    }
-    //    return this.UserStartTempoInBPM;
-    //}
+    public getExpressionsStartTempoInBPM(): number {
+        if (this.TimestampSortedTempoExpressionsList.length > 0) {
+            const me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
+            if (me.InstantaneousTempo) {
+                return me.InstantaneousTempo.TempoInBpm;
+            } else if (me.ContinuousTempo) {
+                return me.ContinuousTempo.StartTempo;
+            }
+        }
+        return this.userStartTempoInBPM;
+    }
     public get Errors(): { [n: number]: string[]; } {
         return this.musicSheetErrors.measureErrors;
     }
@@ -451,22 +482,22 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     // (*)
     //public SetMusicSheetParameter(parameter: MusicSheetParameters, value: Object): void {
-    //    if (this.PhonicScoreInterface !== undefined) {
+    //    if (this.PhonicScoreInterface) {
     //        this.PhonicScoreInterface.RequestMusicSheetParameter(parameter, value);
     //    } else {
     //        let oldValue: Object = 0;
-    //        if (parameter === undefined) { // FIXME MusicSheetParameters.MusicSheetTranspose) {
+    //        if (!parameter) { // FIXME MusicSheetParameters.MusicSheetTranspose) {
     //            oldValue = this.Transpose;
     //            this.Transpose = value;
     //        }
-    //        if (parameter === undefined) { // FIXME MusicSheetParameters.StartTempoInBPM) {
+    //        if (!parameter) { // FIXME MusicSheetParameters.StartTempoInBPM) {
     //            oldValue = this.UserStartTempoInBPM;
     //            this.UserStartTempoInBPM = value;
     //        }
-    //        if (parameter === undefined) { // FIXME MusicSheetParameters.HighlightErrors) {
+    //        if (!parameter) { // FIXME MusicSheetParameters.HighlightErrors) {
     //            oldValue = value;
     //        }
-    //        if (this.MusicSheetParameterChanged !== undefined) {
+    //        if (this.MusicSheetParameterChanged) {
     //            this.musicSheetParameterChangedDelegate(undefined, parameter, value, oldValue);
     //        }
     //    }
@@ -478,13 +509,13 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    this.musicSheetParameterChangedDelegate = value;
     //}
     public get FullNameString(): string {
-       return this.ComposerString + " " + this.TitleString;
+        return this.ComposerString + " " + this.TitleString;
     }
     public get IdString(): string {
-       return this.idString;
+        return this.idString;
     }
     public set IdString(value: string) {
-       this.idString = value;
+        this.idString = value;
     }
     // (*)
     // public Dispose(): void {

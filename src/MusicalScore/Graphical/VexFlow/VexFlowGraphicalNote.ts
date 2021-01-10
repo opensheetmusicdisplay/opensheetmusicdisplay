@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import {GraphicalNote} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
@@ -7,6 +7,7 @@ import {Pitch} from "../../../Common/DataObjects/Pitch";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
+import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 
 /**
  * The VexFlow version of a [[GraphicalNote]].
@@ -19,8 +20,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         this.octaveShift = octaveShift;
         if (note.Pitch) {
             // TODO: Maybe shift to Transpose function when available
-            const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(note.Pitch, octaveShift);
-            this.vfpitch = VexFlowConverter.pitch(this, drawPitch);
+            const drawPitch: Pitch = note.isRest() ? note.Pitch : OctaveShift.getPitchFromOctaveShift(note.Pitch, octaveShift);
+            this.vfpitch = VexFlowConverter.pitch(drawPitch, note.isRest(), this.clef, this.sourceNote.Notehead);
             this.vfpitch[1] = undefined;
         }
     }
@@ -29,7 +30,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     // The pitch of this note as given by VexFlowConverter.pitch
     public vfpitch: [string, string, ClefInstruction];
     // The corresponding VexFlow StaveNote (plus its index in the chord)
-    public vfnote: [Vex.Flow.StaveNote, number];
+    public vfnote: [Vex.Flow.StemmableNote, number];
     // The current clef
     private clef: ClefInstruction;
 
@@ -38,18 +39,27 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * This is called by VexFlowGraphicalSymbolFactory.addGraphicalAccidental.
      * @param pitch
      */
-    public setPitch(pitch: Pitch): void {
-        if (this.vfnote) {
-            const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
-            if (acc) {
-                alert(acc);
-                this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
-            }
-        } else {
-            // revert octave shift, as the placement of the note is independent of octave brackets
-            const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
-            this.vfpitch = VexFlowConverter.pitch(this, drawPitch);
-        }
+    public setAccidental(pitch: Pitch): void {
+        // if (this.vfnote) {
+        //     let pitchAcc: AccidentalEnum = pitch.Accidental;
+        //     const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
+        //     if (acc) {
+        //         alert(acc);
+        //         this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
+        //     }
+        // } else {
+        // revert octave shift, as the placement of the note is independent of octave brackets
+        const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
+        // recalculate the pitch, and this time don't ignore the accidental:
+        this.vfpitch = VexFlowConverter.pitch(drawPitch, this.sourceNote.isRest(), this.clef, this.sourceNote.Notehead);
+        //}
+    }
+    public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
+        const tranposedPitch: Pitch = super.Transpose(keyInstruction, activeClef, halfTones, octaveEnum);
+        const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(tranposedPitch, this.octaveShift);
+        this.vfpitch = VexFlowConverter.pitch(drawPitch, this.sourceNote.isRest(), this.clef, this.sourceNote.Notehead);
+        this.vfpitch[1] = undefined;
+        return drawPitch;
     }
 
     /**
@@ -57,7 +67,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * @param note
      * @param index
      */
-    public setIndex(note: Vex.Flow.StaveNote, index: number): void {
+    public setIndex(note: Vex.Flow.StemmableNote, index: number): void {
         this.vfnote = [note, index];
     }
 
@@ -66,5 +76,21 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      */
     public Clef(): ClefInstruction {
         return this.clef;
+    }
+
+    /**
+     * Gets the id of the SVGGElement containing this note, given the SVGRenderer is used.
+     * This is for low-level rendering hacks and should be used with caution.
+     */
+    public getSVGId(): string {
+        return this.vfnote[0].getAttribute("id");
+    }
+
+    /**
+     * Gets the SVGGElement containing this note, given the SVGRenderer is used.
+     * This is for low-level rendering hacks and should be used with caution.
+     */
+    public getSVGGElement(): SVGGElement {
+        return this.vfnote[0].getAttribute("el");
     }
 }

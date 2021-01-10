@@ -1,20 +1,27 @@
 import {Note} from "./Note";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { Pitch } from "../../Common/DataObjects/Pitch";
+import { TieTypes } from "../../Common/Enums/";
 
 /**
  * A [[Tie]] connects two notes of the same pitch and name, indicating that they have to be played as a single note.
  */
 export class Tie {
 
-    constructor(note: Note) {
+    constructor(note: Note, type: TieTypes) {
         this.AddNote(note);
+        this.type = type;
     }
 
     private notes: Note[] = [];
+    private type: TieTypes;
 
     public get Notes(): Note[] {
         return this.notes;
+    }
+
+    public get Type(): TieTypes {
+        return this.type;
     }
 
     public get StartNote(): Note {

@@ -1,6 +1,6 @@
 import {Instrument} from "./Instrument";
 import {MidiInstrument} from "./VoiceData/Instructions/ClefInstruction";
-import * as log from "loglevel";
+import log from "loglevel";
 
 export class SubInstrument {
 

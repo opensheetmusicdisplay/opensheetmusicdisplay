@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import { GraphicalObject } from "../GraphicalObject";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { BoundingBox } from "../BoundingBox";
@@ -24,7 +24,7 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
      * Render the bracket using the given backend
      * @param ctx Render Vexflow context
      */
-    public draw(ctx: Vex.Flow.RenderContext): void {
+    public draw(ctx: Vex.IRenderContext): void {
         // Draw vexflow brace. This sets the positions inside the connector.
         this.vexflowConnector.setContext(ctx).draw();
         // Set bounding box

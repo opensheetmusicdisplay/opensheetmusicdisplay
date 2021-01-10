@@ -6,7 +6,7 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {AbstractTempoExpression} from "./AbstractTempoExpression";
 import {ContinuousTempoExpression} from "./ContinuousExpressions/ContinuousTempoExpression";
 
-export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>*/ {
+export class MultiTempoExpression {
 
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {
         this.sourceMeasure = sourceMeasure;
@@ -81,6 +81,10 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
     //    return undefined;
     //}
     public addExpression(abstractTempoExpression: AbstractTempoExpression, prefix: string): void {
+        if (this.checkIfAlreadyExists(abstractTempoExpression)) {
+            return;
+        }
+
         if (abstractTempoExpression instanceof InstantaneousTempoExpression) {
             this.instantaneousTempo = <InstantaneousTempoExpression>abstractTempoExpression;
         } else if (abstractTempoExpression instanceof ContinuousTempoExpression) {
@@ -93,18 +97,24 @@ export class MultiTempoExpression /*implements IComparable<MultiTempoExpression>
         this.expressions.push(tempoExpressionEntry);
     }
     public CompareTo(other: MultiTempoExpression): number {
-        if (this.SourceMeasureParent.MeasureNumber > other.SourceMeasureParent.MeasureNumber) {
+        if (this.Timestamp.RealValue > other.Timestamp.RealValue) {
             return 1;
-        } else if (this.SourceMeasureParent.MeasureNumber < other.SourceMeasureParent.MeasureNumber) {
+        }
+        if (this.Timestamp.RealValue < other.Timestamp.RealValue) {
             return -1;
         } else {
-            if (this.Timestamp.RealValue > other.Timestamp.RealValue) { return 1; }
-            if (this.Timestamp.RealValue < other.Timestamp.RealValue) {
-                return -1;
-            } else {
-                return 0;
+            return 0;
+        }
+    }
+
+    private checkIfAlreadyExists(abstractTempoExpression: AbstractTempoExpression ): boolean {
+        for (const entry of this.expressions) {
+            if (entry.label === abstractTempoExpression.Label) {
+                return true;
             }
         }
+
+        return false;
     }
 }
 

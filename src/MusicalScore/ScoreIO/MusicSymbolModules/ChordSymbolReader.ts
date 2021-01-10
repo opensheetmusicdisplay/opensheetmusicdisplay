@@ -1,18 +1,19 @@
-import {IXmlElement} from "../../../Common/FileIO/Xml";
+import {IXmlElement, IXmlAttribute} from "../../../Common/FileIO/Xml";
 import {MusicSheet} from "../../MusicSheet";
 import {ChordDegreeText, ChordSymbolContainer, ChordSymbolEnum, Degree} from "../../VoiceData/ChordSymbolContainer";
 import {AccidentalEnum, NoteEnum, Pitch} from "../../../Common/DataObjects/Pitch";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
-import * as log from "loglevel";
+import log from "loglevel";
 
 export class ChordSymbolReader {
     public static readChordSymbol(xmlNode: IXmlElement, musicSheet: MusicSheet, activeKey: KeyInstruction): ChordSymbolContainer {
         const root: IXmlElement = xmlNode.element("root");
         const kind: IXmlElement = xmlNode.element("kind");
+        const kindText: IXmlAttribute = kind.attribute("text");
 
         // must be always present
-        if (root === undefined || kind === undefined) {
+        if (!root || !kind) {
           return undefined;
         }
 
@@ -20,7 +21,7 @@ export class ChordSymbolReader {
         const rootAlter: IXmlElement = root.element("root-alter");
 
         // a valid NoteEnum value should be present
-        if (rootStep === undefined) {
+        if (!rootStep) {
             return undefined;
         }
         let rootNote: NoteEnum;
@@ -36,7 +37,7 @@ export class ChordSymbolReader {
 
         // an alteration value isn't necessary
         let rootAlteration: AccidentalEnum = AccidentalEnum.NONE;
-        if (rootAlter !== undefined) {
+        if (rootAlter) {
             try {
                 rootAlteration = Pitch.AccidentalFromHalfTones(parseInt(rootAlter.value, undefined));
             } catch (ex) {
@@ -49,7 +50,18 @@ export class ChordSymbolReader {
         }
         // using default octave value, to be changed later
         const rootPitch: Pitch = new Pitch(rootNote, 1, rootAlteration);
-        const kindValue: string = kind.value.trim().replace("-", "");
+        let kindValue: string = kind.value.trim().replace("-", "");
+        if (kindText) {
+            switch (kindText.value) {
+                case "aug":
+                    kindValue = "augmented";
+                    break;
+                case "dim":
+                    kindValue = "diminished";
+                    break;
+                default:
+            }
+        }
         let chordKind: ChordSymbolEnum;
         try {
             chordKind = ChordSymbolEnum[kindValue];
@@ -64,11 +76,11 @@ export class ChordSymbolReader {
         // bass is optional
         let bassPitch: Pitch = undefined;
         const bass: IXmlElement = xmlNode.element("bass");
-        if (bass !== undefined) {
+        if (bass) {
             const bassStep: IXmlElement = bass.element("bass-step");
             const bassAlter: IXmlElement = bass.element("bass-alter");
             let bassNote: NoteEnum = NoteEnum.C;
-            if (bassStep !== undefined) {
+            if (bassStep) {
                 try {
                     bassNote = NoteEnum[bassStep.value.trim()];
                 } catch (ex) {
@@ -80,7 +92,7 @@ export class ChordSymbolReader {
                 }
             }
             let bassAlteration: AccidentalEnum = AccidentalEnum.NONE;
-            if (bassAlter !== undefined) {
+            if (bassAlter) {
                 try {
                     bassAlteration = Pitch.AccidentalFromHalfTones(parseInt(bassAlter.value, undefined));
                 } catch (ex) {
@@ -96,11 +108,11 @@ export class ChordSymbolReader {
         // degree is optional
         let degree: Degree = undefined;
         const degreeNode: IXmlElement = xmlNode.element("degree");
-        if (degreeNode !== undefined) {
+        if (degreeNode) {
             const degreeValue: IXmlElement = degreeNode.element("degree-value");
             const degreeAlter: IXmlElement = degreeNode.element("degree-alter");
             const degreeType: IXmlElement = degreeNode.element("degree-type");
-            if (degreeValue === undefined || degreeAlter === undefined || degreeType === undefined) {
+            if (!degreeValue || !degreeAlter || !degreeType) {
               return undefined;
             }
 
@@ -139,6 +151,6 @@ export class ChordSymbolReader {
 
             degree = new Degree(value, alter, text);
         }
-        return new ChordSymbolContainer(rootPitch, chordKind, bassPitch, degree, activeKey);
+        return new ChordSymbolContainer(rootPitch, chordKind, bassPitch, degree, musicSheet.Rules);
     }
 }

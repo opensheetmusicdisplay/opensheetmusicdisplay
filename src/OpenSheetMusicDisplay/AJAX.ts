@@ -1,5 +1,3 @@
-import {Promise} from "es6-promise";
-
 /**
  * Class with helper methods to handle asynchronous JavaScript requests
  */
@@ -9,7 +7,7 @@ export class AJAX {
      * @param url
      * @returns {any}
      */
-    public static ajax(url: string): Promise<string> {
+    public static ajax(url: string, timeout: number = 9000): Promise<string> {
         let xhttp: XMLHttpRequest;
         const mimeType: string = url.indexOf(".mxl") > -1 ? "text/plain; charset=x-user-defined" : "application/xml";
         if (XMLHttpRequest) {
@@ -20,6 +18,7 @@ export class AJAX {
         } else {
             return Promise.reject(new Error("XMLHttp not supported."));
         }
+        xhttp.timeout = timeout;
         return new Promise((resolve: (value: string) => void, reject: (error: any) => void) => {
             xhttp.onreadystatechange = () => {
                 if (xhttp.readyState === XMLHttpRequest.DONE) {
@@ -29,9 +28,13 @@ export class AJAX {
                         resolve(xhttp.responseText);
                     } else {
                         //reject(new Error("AJAX error: '" + xhttp.statusText + "'"));
-                        reject(new Error("Could not retrieve requested URL"));
+                        reject(new Error("Could not retrieve requested URL " + xhttp.status));
                     }
                 }
+            };
+            xhttp.ontimeout = (e) => {
+                // For IE and node
+                reject(new Error("Server request Timeout"));
             };
             xhttp.overrideMimeType(mimeType);
             xhttp.open("GET", url, true);

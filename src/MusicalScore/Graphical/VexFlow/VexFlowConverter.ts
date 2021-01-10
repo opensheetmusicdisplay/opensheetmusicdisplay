@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
@@ -15,15 +15,21 @@ import {SystemLinesEnum} from "../SystemLinesEnum";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {OutlineAndFillStyleEnum, OUTLINE_AND_FILL_STYLE_DICT} from "../DrawingEnums";
-import * as log from "loglevel";
-import { ArticulationEnum, StemDirectionType } from "../../VoiceData/VoiceEntry";
+import log from "loglevel";
+import { ArticulationEnum, StemDirectionType, VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { SystemLinePosition } from "../SystemLinePosition";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { OrnamentEnum, OrnamentContainer } from "../../VoiceData/OrnamentContainer";
 import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
-import { Note } from "../..";
+import { Note } from "../../../MusicalScore/VoiceData/Note";
+import StaveNote = Vex.Flow.StaveNote;
+import { ArpeggioType } from "../../VoiceData/Arpeggio";
+import { TabNote } from "../../VoiceData/TabNote";
+import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
+import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
+import { Articulation } from "../../VoiceData/Articulation";
 
 /**
  * Helper class, which contains static methods which actually convert
@@ -55,11 +61,15 @@ export class VexFlowConverter {
     public static duration(fraction: Fraction, isTuplet: boolean): string {
       const dur: number = fraction.RealValue;
 
+      if (dur === 2) { // Breve
+        return "1/2";
+      }
+      // TODO consider long (dur=4) and maxima (dur=8), though Vexflow doesn't seem to support them
       if (dur >= 1) {
           return "w";
       } else if (dur < 1 && dur >= 0.5) {
         // change to the next higher straight note to get the correct note display type
-        if (isTuplet) {
+        if (isTuplet && dur > 0.5) {
           return "w";
         }
         return "h";
@@ -107,17 +117,46 @@ export class VexFlowConverter {
      * @param pitch
      * @returns {string[]}
      */
-    public static pitch(note: VexFlowGraphicalNote, pitch: Pitch): [string, string, ClefInstruction] {
+    public static pitch(pitch: Pitch, isRest: boolean, clef: ClefInstruction,
+                        notehead: Notehead = undefined): [string, string, ClefInstruction] {
+        //FIXME: The octave seems to need a shift of three?
+        //FIXME: Also rests seem to use different offsets depending on the clef.
+        let fixmeOffset: number = 3;
+        if (isRest) {
+            fixmeOffset = 0;
+            if (clef.ClefType === ClefEnum.F) {
+                fixmeOffset = 2;
+            }
+            if (clef.ClefType === ClefEnum.C) {
+                fixmeOffset = 2;
+            }
+            // TODO the pitch for rests will be the start position, for eights rests it will be the bottom point
+            // maybe we want to center on the display position instead of having the bottom there?
+        }
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
-        // The octave seems to need a shift of three FIXME?
-        const octave: number = pitch.Octave - note.Clef().OctaveOffset + 3;
-        const notehead: Notehead = note.sourceNote.Notehead;
+        const octave: number = pitch.Octave - clef.OctaveOffset + fixmeOffset;
         let noteheadCode: string = "";
-        if (notehead !== undefined) {
+        if (notehead) {
             noteheadCode = this.NoteHeadCode(notehead);
         }
-        return [fund + "n/" + octave + noteheadCode, acc, note.Clef()];
+        return [fund + "n/" + octave + noteheadCode, acc, clef];
+    }
+
+    public static restToNotePitch(pitch: Pitch, clefType: ClefEnum): Pitch {
+        let octave: number = pitch.Octave;
+        // offsets see pitch()
+        switch (clefType) {
+            case ClefEnum.C:
+            case ClefEnum.F: {
+                octave += 2;
+                break;
+            }
+            case ClefEnum.G:
+            default:
+        }
+
+        return new Pitch(pitch.FundamentalNote, octave, AccidentalEnum.NONE);
     }
 
     /** returns the Vexflow code for a note head. Some are still unsupported, see Vexflow/tables.js */
@@ -165,14 +204,15 @@ export class VexFlowConverter {
         } */
         // VexFlow needs the notes ordered vertically in the other direction:
         const notes: GraphicalNote[] = gve.notes.reverse();
+        const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
 
         const baseNote: GraphicalNote = notes[0];
         let keys: string[] = [];
         const accidentals: string[] = [];
-        const frac: Fraction = baseNote.graphicalNoteLength;
+        const baseNoteLength: Fraction = baseNote.graphicalNoteLength;
         const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
-        let duration: string = VexFlowConverter.duration(frac, isTuplet);
-        if (baseNote.sourceNote.TypeLength !== undefined && baseNote.sourceNote.TypeLength !== frac) {
+        let duration: string = VexFlowConverter.duration(baseNoteLength, isTuplet);
+        if (baseNote.sourceNote.TypeLength !== undefined && baseNote.sourceNote.TypeLength !== baseNoteLength) {
             duration = VexFlowConverter.duration(baseNote.sourceNote.TypeLength, isTuplet);
         }
         let vfClefType: string = undefined;
@@ -189,9 +229,50 @@ export class VexFlowConverter {
             // if it is a rest:
             if (note.sourceNote.isRest()) {
                 isRest = true;
-                keys = ["b/4"];
+                if (note.sourceNote.Pitch) {
+                    const restVfPitch: [string, string, ClefInstruction] = (note as VexFlowGraphicalNote).vfpitch;
+                    keys = [restVfPitch[0]];
+                    break;
+                } else {
+                    keys = ["b/4"]; // default placement
+
+                    // pause rest encircled by two beamed notes: place rest just below previous note
+                    const pauseVoiceEntry: VoiceEntry = note.parentVoiceEntry?.parentVoiceEntry;
+                    if (pauseVoiceEntry) {
+                        const neighborGSEs: GraphicalStaffEntry[] = note.parentVoiceEntry?.parentStaffEntry.parentMeasure.staffEntries;
+                        let previousVoiceEntry: VoiceEntry, followingVoiceEntry: VoiceEntry;
+                        let pauseVEIndex: number = -1;
+                        for (let i: number = 0; i < neighborGSEs.length; i++) {
+                            if (neighborGSEs[i]?.graphicalVoiceEntries[0].parentVoiceEntry === pauseVoiceEntry) {
+                                pauseVEIndex = i;
+                                break;
+                            }
+                        }
+                        if (pauseVEIndex >= 1 && (neighborGSEs.length - 1) >= (pauseVEIndex + 1)) {
+                            previousVoiceEntry = neighborGSEs[pauseVEIndex - 1]?.graphicalVoiceEntries[0]?.parentVoiceEntry;
+                            followingVoiceEntry = neighborGSEs[pauseVEIndex + 1]?.graphicalVoiceEntries[0]?.parentVoiceEntry;
+                            if (previousVoiceEntry && followingVoiceEntry) {
+                                const previousNote: Note = previousVoiceEntry.Notes[0];
+                                const followingNote: Note = followingVoiceEntry.Notes[0];
+                                if (previousNote.NoteBeam?.Notes.includes(followingNote)) {
+                                    const previousNotePitch: Pitch = previousVoiceEntry.Notes.last().Pitch;
+                                    const clef: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
+                                    const vfpitch: [string, string, ClefInstruction] = VexFlowConverter.pitch(
+                                        VexFlowConverter.restToNotePitch(previousNotePitch.getTransposedPitch(-2), clef.ClefType),
+                                        false, clef, undefined);
+                                    keys = [vfpitch[0]];
+                                }
+                            }
+                        }
+                    }
+                }
+                // TODO do collision checking, place rest e.g. either below staff (A3, for stem direction below voice) or above (C5)
                 // if it is a full measure rest:
-                if (note.parentVoiceEntry.parentStaffEntry.parentMeasure.parentSourceMeasure.Duration.RealValue <= frac.RealValue) {
+                //   (a whole rest note signifies a whole measure duration, unless the time signature is longer than 4 quarter notes, e.g. 6/4 or 3/2.
+                //   Note: this should not apply to most pickup measures, e.g. with an 8th pickup measure in a 3/4 time signature)
+                // const measureDuration: number = note.sourceNote.SourceMeasure.Duration.RealValue;
+                const isWholeMeasureRest: boolean =  baseNoteLength.RealValue === note.sourceNote.SourceMeasure.ActiveTimeSignature.RealValue;
+                if (isWholeMeasureRest) {
                     keys = ["d/5"];
                     duration = "w";
                     numDots = 0;
@@ -199,8 +280,30 @@ export class VexFlowConverter {
                     // https://github.com/0xfe/vexflow/issues/579 The author reports that he needs to add some negative x shift
                     // if the measure has no modifiers.
                     alignCenter = true;
-                    xShift = EngravingRules.Rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
+                    xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
                     // affects VexFlowStaffEntry.calculateXPosition()
+                }
+                if (note.sourceNote.ParentStaff.Voices.length > 1) {
+                    let visibleVoiceEntries: number = 0;
+                    //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
+                    for (let idx: number = 0; idx < note.sourceNote.ParentStaffEntry.VoiceEntries.length ; idx++) {
+                        if (note.sourceNote.ParentStaffEntry.VoiceEntries[idx].Notes[0].PrintObject) {
+                            visibleVoiceEntries++;
+                        }
+                    }
+                    //If we have more than one visible voice entry, shift the rests so no collision occurs
+                    if (visibleVoiceEntries > 1) {
+                        switch (note.sourceNote.ParentVoiceEntry?.ParentVoice?.VoiceId) {
+                            case 1:
+                                keys = ["e/5"];
+                                break;
+                            case 2:
+                                keys = ["f/4"];
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
                 break;
             }
@@ -235,7 +338,7 @@ export class VexFlowConverter {
 
         let vfnote: Vex.Flow.StaveNote;
 
-        const vfnoteStruct: Object = {
+        const vfnoteStruct: any = {
             align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
@@ -246,8 +349,8 @@ export class VexFlowConverter {
 
         const firstNote: Note = gve.notes[0].sourceNote;
         if (firstNote.IsCueNote) {
-            (<any>vfnoteStruct).glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
-            (<any>vfnoteStruct).stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
+            vfnoteStruct.glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
+            vfnoteStruct.stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
         }
 
         if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) {
@@ -255,17 +358,22 @@ export class VexFlowConverter {
         } else {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
-
-        // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration):
-        if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
-            const keyProps: Object[] = vfnote.getKeyProps();
-            for (let i: number = 0; i < keyProps.length; i++) {
-                (<any>keyProps[i]).code = "v81";
+        if (rules.LedgerLineWidth || rules.LedgerLineStrokeStyle) {
+            // FIXME should probably use vfnote.setLedgerLineStyle. this doesn't seem to do anything.
+            // however, this is also set in VexFlowVoiceEntry.color() anyways.
+            if (!((vfnote as any).ledgerLineStyle)) {
+                (vfnote as any).ledgerLineStyle = {};
+            }
+            if (rules.LedgerLineWidth) {
+                (vfnote as any).ledgerLineStyle.lineWidth = rules.LedgerLineWidth;
+            }
+            if (rules.LedgerLineStrokeStyle) {
+                (vfnote as any).ledgerLineStyle.strokeStyle = rules.LedgerLineStrokeStyle;
             }
         }
 
-        if (EngravingRules.Rules.ColoringEnabled) {
-            const defaultColorStem: string = EngravingRules.Rules.DefaultColorStem;
+        if (rules.ColoringEnabled) {
+            const defaultColorStem: string = rules.DefaultColorStem;
             let stemColor: string = gve.parentVoiceEntry.StemColor;
             if (!stemColor && defaultColorStem) {
                 stemColor = defaultColorStem;
@@ -275,7 +383,7 @@ export class VexFlowConverter {
             if (stemColor) {
                 gve.parentVoiceEntry.StemColor = stemColor;
                 vfnote.setStemStyle(stemStyle);
-                if (vfnote.flag && EngravingRules.Rules.ColorFlags) {
+                if (vfnote.flag && rules.ColorFlags) {
                     vfnote.setFlagStyle(stemStyle);
                 }
             }
@@ -288,7 +396,7 @@ export class VexFlowConverter {
             // when the stem is connected to a beamed main note (e.g. Haydn Concertante bar 57)
             gve.parentVoiceEntry.WantedStemDirection = gve.notes[0].sourceNote.NoteBeam.Notes[0].ParentVoiceEntry.WantedStemDirection;
         }
-        if (gve.parentVoiceEntry !== undefined) {
+        if (gve.parentVoiceEntry) {
             const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
@@ -316,39 +424,75 @@ export class VexFlowConverter {
                 }
                 vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i])); // normal accidental
             }
+
+            // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
+            const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
+            if (tremoloStrokes > 0) {
+                const tremolo: Vex.Flow.Tremolo = new Vex.Flow.Tremolo(tremoloStrokes);
+                (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
+                (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
+                vfnote.addModifier(i, tremolo);
+            }
         }
+
+        // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration) (Hack)
+        if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
+            const keyProps: Object[] = vfnote.getKeyProps();
+            for (let i: number = 0; i < keyProps.length; i++) {
+                (<any>keyProps[i]).code = "v81";
+            }
+        }
+
         for (let i: number = 0, len: number = numDots; i < len; ++i) {
             vfnote.addDotToAll();
         }
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: ArticulationEnum[]): void {
-        if (vfnote === undefined || vfnote.getAttribute("type") === "GhostNote") {
+    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: Articulation[],
+                                        rules: EngravingRules): void {
+        if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
-        }
-        // Articulations:
-        let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
-
-        if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
-            vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
         }
 
         for (const articulation of articulations) {
-            // tslint:disable-next-line:switch-default
+            let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
+
+            if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
+                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+            }
             let vfArt: Vex.Flow.Articulation = undefined;
-            switch (articulation) {
+            const articulationEnum: ArticulationEnum = articulation.articulationEnum;
+            if (rules.ArticulationPlacementFromXML) {
+                if (articulation.placement === PlacementEnum.Above) {
+                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                } else if (articulation.placement === PlacementEnum.Below) {
+                    vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+                } // else if undefined: don't change
+            }
+            switch (articulationEnum) {
                 case ArticulationEnum.accent: {
                     vfArt = new Vex.Flow.Articulation("a>");
                     break;
                 }
                 case ArticulationEnum.downbow: {
                     vfArt = new Vex.Flow.Articulation("am");
+                    if (articulation.placement === undefined) { // downbow/upbow should be above by default
+                        vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    }
                     break;
                 }
                 case ArticulationEnum.fermata: {
                     vfArt = new Vex.Flow.Articulation("a@a");
                     vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    break;
+                }
+                case ArticulationEnum.marcatodown: {
+                    vfArt = new Vex.Flow.Articulation("a|"); // Vexflow only knows marcato up, so we use a down stroke here.
+                    break;
+                }
+                case ArticulationEnum.marcatoup: {
+                    vfArt = new Vex.Flow.Articulation("a^");
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
@@ -358,6 +502,10 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.lefthandpizzicato: {
                     vfArt = new Vex.Flow.Articulation("a+");
+                    break;
+                }
+                case ArticulationEnum.naturalharmonic: {
+                    vfArt = new Vex.Flow.Articulation("ah");
                     break;
                 }
                 case ArticulationEnum.snappizzicato: {
@@ -378,6 +526,9 @@ export class VexFlowConverter {
                 }
                 case ArticulationEnum.upbow: {
                     vfArt = new Vex.Flow.Articulation("a|");
+                    if (articulation.placement === undefined) { // downbow/upbow should be above by default
+                        vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    }
                     break;
                 }
                 case ArticulationEnum.strongaccent: {
@@ -388,16 +539,16 @@ export class VexFlowConverter {
                     break;
                 }
             }
-            if (vfArt !== undefined) {
+            if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
-                vfnote.addModifier(0, vfArt);
+                (vfnote as StaveNote).addModifier(0, vfArt);
             }
         }
     }
 
     public static generateOrnaments(vfnote: Vex.Flow.StemmableNote, oContainer: OrnamentContainer): void {
         let vfPosition: number = Vex.Flow.Modifier.Position.ABOVE;
-        if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
+        if (oContainer.placement === PlacementEnum.Below) {
             vfPosition = Vex.Flow.Modifier.Position.BELOW;
         }
 
@@ -414,7 +565,7 @@ export class VexFlowConverter {
                 break;
             }
             case OrnamentEnum.InvertedMordent: {
-                vfOrna = new Vex.Flow.Ornament("mordent_inverted");
+                vfOrna = new Vex.Flow.Ornament("mordent"); // Vexflow uses baroque, not MusicXML definition
                 vfOrna.setDelayed(false);
                 break;
             }
@@ -424,7 +575,7 @@ export class VexFlowConverter {
                 break;
             }
             case OrnamentEnum.Mordent: {
-                vfOrna = new Vex.Flow.Ornament("mordent");
+                vfOrna = new Vex.Flow.Ornament("mordent_inverted");
                 vfOrna.setDelayed(false);
                 break;
             }
@@ -443,16 +594,109 @@ export class VexFlowConverter {
                 return;
             }
         }
-        if (vfOrna !== undefined) {
+        if (vfOrna) {
             if (oContainer.AccidentalBelow !== AccidentalEnum.NONE) {
                 vfOrna.setLowerAccidental(Pitch.accidentalVexflow(oContainer.AccidentalBelow));
             }
             if (oContainer.AccidentalAbove !== AccidentalEnum.NONE) {
                 vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
-            vfOrna.setPosition(vfPosition);
-            vfnote.addModifier(0, vfOrna);
+            vfOrna.setPosition(vfPosition); // Vexflow draws it above right now in any case, never below
+            (vfnote as StaveNote).addModifier(0, vfOrna);
         }
+    }
+
+    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): Vex.Flow.Stroke.Type {
+        switch (arpeggioType) {
+            case ArpeggioType.ARPEGGIO_DIRECTIONLESS:
+                return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+            case ArpeggioType.BRUSH_DOWN:
+                return Vex.Flow.Stroke.Type.BRUSH_UP; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.BRUSH_UP:
+                return Vex.Flow.Stroke.Type.BRUSH_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.RASQUEDO_DOWN:
+                return Vex.Flow.Stroke.Type.RASQUEDO_UP;
+            case ArpeggioType.RASQUEDO_UP:
+                return Vex.Flow.Stroke.Type.RASQUEDO_DOWN;
+            case ArpeggioType.ROLL_DOWN:
+                return Vex.Flow.Stroke.Type.ROLL_UP; // TODO somehow up and down are mixed up in Vexflow right now
+            case ArpeggioType.ROLL_UP:
+                return Vex.Flow.Stroke.Type.ROLL_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
+            default:
+                return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+        }
+    }
+
+    /**
+     * Convert a set of GraphicalNotes to a VexFlow StaveNote
+     * @param notes form a chord on the staff
+     * @returns {Vex.Flow.StaveNote}
+     */
+    public static CreateTabNote(gve: GraphicalVoiceEntry): Vex.Flow.TabNote {
+        const tabPositions: {str: number, fret: number}[] = [];
+        const notes: GraphicalNote[] = gve.notes.reverse();
+        const tabPhrases: { type: number, text: string, width: number }[] = [];
+        const frac: Fraction = gve.notes[0].graphicalNoteLength;
+        const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
+        let duration: string = VexFlowConverter.duration(frac, isTuplet);
+        let numDots: number = 0;
+        let tabVibrato: boolean = false;
+        for (const note of gve.notes) {
+            const tabNote: TabNote = note.sourceNote as TabNote;
+            const tabPosition: {str: number, fret: number} = {str: tabNote.StringNumber, fret: tabNote.FretNumber};
+            tabPositions.push(tabPosition);
+            if (tabNote.BendArray) {
+                tabNote.BendArray.forEach( function( bend: {bendalter: number, direction: string} ): void {
+                    let phraseText: string;
+                    const phraseStep: number = bend.bendalter - tabPosition.fret;
+                    if (phraseStep > 1) {
+                        phraseText = "Full";
+                    } else if (phraseStep === 1) {
+                        phraseText = "1/2";
+                    } else {
+                        phraseText = "1/4";
+                    }
+                    if (bend.direction === "up") {
+                        tabPhrases.push({type: Vex.Flow.Bend.UP, text: phraseText, width: 10});
+                    } else {
+                        tabPhrases.push({type: Vex.Flow.Bend.DOWN, text: phraseText, width: 10});
+                    }
+                });
+            }
+
+            if (tabNote.VibratoStroke) {
+                tabVibrato = true;
+            }
+
+            if (numDots < note.numberOfDots) {
+                numDots = note.numberOfDots;
+            }
+        }
+        for (let i: number = 0, len: number = numDots; i < len; ++i) {
+            duration += "d";
+        }
+
+        const vfnote: Vex.Flow.TabNote = new Vex.Flow.TabNote({
+            duration: duration,
+            positions: tabPositions,
+        });
+
+        for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
+            (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
+        }
+
+        tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
+            if (phrase.type === Vex.Flow.Bend.UP) {
+                vfnote.addModifier (new Vex.Flow.Bend(phrase.text, false));
+            } else {
+                vfnote.addModifier (new Vex.Flow.Bend(phrase.text, true));
+            }
+        });
+        if (tabVibrato) {
+            vfnote.addModifier(new Vex.Flow.Vibrato());
+        }
+
+        return vfnote;
     }
 
     /**
@@ -542,9 +786,12 @@ export class VexFlowConverter {
 
             // TAB Clef
             case ClefEnum.TAB:
-                type = "tab";
+                // only used currently for creating the notes in the normal stave: There we need a normal treble clef
+                type = "treble";
                 break;
             default:
+                log.info("bad clef type: " + clef.ClefType);
+                type = "treble";
         }
 
         // annotations in vexflow don't allow bass and 8va. No matter the offset :(
@@ -585,7 +832,7 @@ export class VexFlowConverter {
      * @returns {string}
      */
     public static keySignature(key: KeyInstruction): string {
-        if (key === undefined) {
+        if (!key) {
             return undefined;
         }
         let ret: string;
@@ -641,10 +888,11 @@ export class VexFlowConverter {
      * @param font
      * @returns {string}
      */
-    public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular, font: Fonts = Fonts.TimesNewRoman): string {
+    public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular,
+                       font: Fonts = Fonts.TimesNewRoman, rules: EngravingRules, fontFamily: string = undefined): string {
         let style: string = "normal";
         let weight: string = "normal";
-        const family: string = "'Times New Roman'";
+        let family: string = `'${rules.DefaultFontFamily}'`; // default "'Times New Roman'"
 
         switch (fontStyle) {
             case FontStyles.Bold:
@@ -664,15 +912,18 @@ export class VexFlowConverter {
                 break;
         }
 
-        switch (font) {
+        switch (font) { // currently not used
             case Fonts.Kokila:
                 // TODO Not Supported
                 break;
             default:
         }
 
+        if (fontFamily && fontFamily !== "default") {
+            family = `'${fontFamily}'`;
+        }
 
-        return  style + " " + weight + " " + Math.floor(fontSize) + "px " + family;
+        return style + " " + weight + " " + Math.floor(fontSize) + "px " + family;
     }
 
     /**
@@ -703,28 +954,4 @@ export class VexFlowConverter {
     }
 }
 
-export enum VexFlowRepetitionType {
-    NONE = 1,         // no coda or segno
-    CODA_LEFT = 2,    // coda at beginning of stave
-    CODA_RIGHT = 3,   // coda at end of stave
-    SEGNO_LEFT = 4,   // segno at beginning of stave
-    SEGNO_RIGHT = 5,  // segno at end of stave
-    DC = 6,           // D.C. at end of stave
-    DC_AL_CODA = 7,   // D.C. al coda at end of stave
-    DC_AL_FINE = 8,   // D.C. al Fine end of stave
-    DS = 9,           // D.S. at end of stave
-    DS_AL_CODA = 10,  // D.S. al coda at end of stave
-    DS_AL_FINE = 11,  // D.S. al Fine at end of stave
-    FINE = 12,        // Fine at end of stave
-}
-
-export enum VexFlowBarlineType {
-    SINGLE = 1,
-    DOUBLE = 2,
-    END = 3,
-    REPEAT_BEGIN = 4,
-    REPEAT_END = 5,
-    REPEAT_BOTH = 6,
-    NONE = 7,
-}
 

@@ -2,7 +2,7 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>OSMD function test - Ornaments</work-title>
+    <work-title>OSMD Function Test - Ornaments</work-title>
     </work>
   <identification>
     <encoding>
@@ -83,16 +83,6 @@
           <line>2</line>
           </clef>
         </attributes>
-      <direction placement="above">
-        <direction-type>
-          <words default-y="40.00" relative-x="-75.25" relative-y="19.26" font-weight="bold" font-size="12">Ornaments</words>
-          </direction-type>
-        </direction>
-      <direction placement="above">
-        <direction-type>
-          <words default-y="40.00" relative-x="-75.25" relative-y="19.26" font-weight="bold" font-size="12">Ornaments</words>
-          </direction-type>
-        </direction>
       <note default-x="137.53" default-y="-20.00">
         <pitch>
           <step>B</step>

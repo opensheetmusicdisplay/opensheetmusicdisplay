@@ -1,4 +1,4 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -6,39 +6,74 @@ import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
+import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
+import {EngravingRules} from "../EngravingRules";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
     private ctx: Vex.Flow.SVGContext;
+    private zoom: number;
 
-    public getBackendType(): number {
+    constructor(rules: EngravingRules) {
+        super();
+        this.rules = rules;
+    }
+
+    public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
         return Vex.Flow.Renderer.Backends.SVG;
     }
 
-    public initialize(container: HTMLElement): void {
+    public getOSMDBackendType(): BackendType {
+        return BackendType.SVG;
+    }
+
+    public getCanvasSize(): number {
+        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
+    }
+
+    public initialize(container: HTMLElement, zoom: number): void {
+        this.zoom = zoom;
         this.canvas = document.createElement("div");
+        this.canvas.id = "osmdCanvasPage" + this.graphicalMusicPage.PageNumber;
+        // this.canvas.id = uniqueID // TODO create unique tagName like with cursor now?
         this.inner = this.canvas;
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
         container.appendChild(this.inner);
-        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getBackendType());
+        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
-
+        this.ctx.svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
     }
 
     public getContext(): Vex.Flow.SVGContext {
         return this.ctx;
     }
 
+    public getSvgElement(): SVGElement {
+        return this.ctx.svg;
+    }
+
     public clear(): void {
         if (!this.ctx) {
             return;
         }
-        const { svg } = this.ctx;
+        //const { svg } = this.ctx; // seems to make svg static between osmd instances.
+        const svg: SVGElement = this.ctx.svg;
         // removes all children from the SVG element,
         // effectively clearing the SVG viewport
         while (svg.lastChild) {
             svg.removeChild(svg.lastChild);
+        }
+
+        // set background color if not transparent
+        if (this.rules.PageBackgroundColor) {
+            this.ctx.save();
+            // note that this will hide the cursor
+            this.ctx.setFillStyle(this.rules.PageBackgroundColor);
+            this.ctx.setStrokeStyle("#12345600"); // transparent
+
+            this.ctx.fillRect(0, 0, this.canvas.offsetWidth / this.zoom, this.canvas.offsetHeight / this.zoom);
+            this.ctx.restore();
         }
     }
 
@@ -50,17 +85,42 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         // TODO: implement this
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
-                      heightInPixel: number, screenPosition: PointF2D, color: string = undefined): void {
+                      heightInPixel: number, screenPosition: PointF2D,
+                      color: string = undefined, fontFamily: string = undefined): void {
         this.ctx.save();
 
         if (color) {
             this.ctx.attributes.fill = color;
             this.ctx.attributes.stroke = color;
         }
-        this.ctx.setFont("Times New Roman", fontHeight, VexFlowConverter.fontStyle(fontStyle));
+        let fontFamilyVexFlow: string = fontFamily;
+        if (!fontFamily || fontFamily === "default") {
+            fontFamilyVexFlow = this.rules.DefaultFontFamily;
+        }
+        this.ctx.setFont(fontFamilyVexFlow, fontHeight, VexFlowConverter.fontStyle(fontStyle));
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
         this.ctx.attributes["font-size"] = `${fontHeight}px`;
         this.ctx.state["font-size"] = `${fontHeight}px`;
+        let fontWeightVexflow: string = "normal";
+        let fontStyleVexflow: string = "normal";
+        switch (fontStyle) {
+            case FontStyles.Bold:
+                fontWeightVexflow = "bold";
+                break;
+            case FontStyles.Italic:
+                fontStyleVexflow = "italic";
+                break;
+            case FontStyles.BoldItalic:
+                fontWeightVexflow = "bold";
+                fontStyleVexflow = "italic";
+                break;
+            default:
+                fontWeightVexflow = "normal";
+        }
+        this.ctx.attributes["font-weight"] = fontWeightVexflow;
+        this.ctx.state["font-weight"] = fontWeightVexflow;
+        this.ctx.attributes["font-style"] = fontStyleVexflow;
+        this.ctx.state["font-style"] = fontStyleVexflow;
         this.ctx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
         this.ctx.restore();
     }

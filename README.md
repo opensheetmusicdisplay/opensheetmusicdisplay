@@ -1,4 +1,4 @@
-<img alt="OSMD logo" src="https://osmd.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg" width="200"/>
+<img alt="OSMD logo" src="https://opensheetmusicdisplay.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg" width="200"/>
 <!--img alt="Brought to you by PhonicScore" src="https://phonicscore.com/neu/wp-content/uploads/2018/06/phonicscore_brown.svg"/-->
 
 # OpenSheetMusicDisplay
@@ -18,7 +18,7 @@ MusicXML is the de facto standard for sharing sheet music on the internet. VexFl
 
 OpenSheetMusicDisplay brings the two together and offers an open source turnkey solution for your digital sheet music project.
 
-Written in [TypeScript](https://www.typescriptlang.org) and released under [MIT license](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/LICENSE).
+Written in [TypeScript](https://www.typescriptlang.org) and released under [BSD license](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/LICENSE).
 
 Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
 
@@ -34,21 +34,15 @@ To contact us directly, you can use the [Contact form on opensheetmusicdisplay.o
 or<br>
 [join the chat on Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
 
-If you'd like to support OSMD and our ongoing work, you can donate via PayPal:<br>
+<a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">
+<img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors">
+</a><br>
+If you'd like to support OSMD and our ongoing work, and receive additional rewards like early builds (Audio Player, Transposition plugin) or a postcard from Vienna,
+you can support us via Github Sponsors:<br>
+https://github.com/sponsors/opensheetmusicdisplay/
+<br>
+<br>
+Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
+
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FPHCYVV2HH8VU)<br>
 Any support is highly appreciated.
-
-
-
-
-<!--# <a name="license"></a>License
-The MIT License (MIT)
-
-Copyright &copy; 2016 PhonicScore GmbH
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
--->

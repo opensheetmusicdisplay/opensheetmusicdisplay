@@ -5,17 +5,21 @@ import { GraphicalLabel } from "../GraphicalLabel";
 import { Label } from "../../Label";
 import { TextAlignmentEnum } from "../../../Common/Enums/TextAlignment";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
+import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 
 /**
  * This class extends the GraphicalContinuousDynamicExpression and creates all necessary methods for drawing
  */
 export class VexFlowContinuousDynamicExpression extends GraphicalContinuousDynamicExpression {
-    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine, textHeight?: number) {
-        super(continuousDynamic, staffLine);
+    constructor(continuousDynamic: ContinuousDynamicExpression, staffLine: StaffLine,
+                measure: SourceMeasure, textHeight?: number) {
+        super(continuousDynamic, staffLine, measure);
         if (this.IsVerbal) {
-            this.label = new GraphicalLabel(new Label(continuousDynamic.Label),
+            const sourceLabel: Label = new Label(continuousDynamic.Label);
+            this.label = new GraphicalLabel(sourceLabel,
                                             textHeight ? textHeight : this.rules.ContinuousDynamicTextHeight,
                                             TextAlignmentEnum.LeftCenter,
+                                            this.rules,
                                             this.PositionAndShape);
 
             this.label.Label.fontStyle = FontStyles.Italic;

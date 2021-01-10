@@ -28,8 +28,8 @@ export class RepetitionInstructionReader {
     this.currentMeasureIndex = currentMeasureIndex;
   }
 
-  public handleLineRepetitionInstructions(barlineNode: IXmlElement, pieceEndingDetected: boolean): void {
-    pieceEndingDetected = false;
+  public handleLineRepetitionInstructions(barlineNode: IXmlElement): boolean {
+    let pieceEndingDetected: boolean = false;
     if (barlineNode.elements().length > 0) {
       let location: string = "";
       let hasRepeat: boolean = false;
@@ -42,10 +42,10 @@ export class RepetitionInstructionReader {
       const styleNode: IXmlElement = barlineNode.element("bar-style");
 
       // if location is ommited in Xml, right is implied (from documentation)
-      if (styleNode !== undefined) {
+      if (styleNode) {
         style = styleNode.value;
       }
-      if (barlineNode.attributes().length > 0 && barlineNode.attribute("location") !== undefined) {
+      if (barlineNode.attributes().length > 0 && barlineNode.attribute("location")) {
         location = barlineNode.attribute("location").value;
       } else {
         location = "right";
@@ -59,7 +59,7 @@ export class RepetitionInstructionReader {
           hasRepeat = true;
           direction = childNode.attribute("direction").value;
         } else if ( "ending" === childNode.name && childNode.hasAttributes &&
-                    childNode.attribute("type") !== undefined && childNode.attribute("number") !== undefined) {
+                    childNode.attribute("type") !== undefined && childNode.attribute("number")) {
           type = childNode.attribute("type").value;
           const num: string = childNode.attribute("number").value;
 
@@ -104,7 +104,7 @@ export class RepetitionInstructionReader {
             this.addInstruction(this.repetitionInstructions, newInstruction);
           }
         } else { // location right
-          if (type === "stop" || type === "discontinue") {
+          if (type === "stop") {
             const newInstruction: RepetitionInstruction = new RepetitionInstruction(this.currentMeasureIndex, RepetitionInstructionEnum.Ending,
                                                                                     AlignmentType.End, undefined, endingIndices);
             this.addInstruction(this.repetitionInstructions, newInstruction);
@@ -116,15 +116,16 @@ export class RepetitionInstructionReader {
         }
       }
     }
+    return pieceEndingDetected;
   }
 
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
-    if (wordsNode !== undefined) {
+    if (wordsNode) {
       const dsRegEx: string = "d\\s?\\.s\\."; // Input for new RegExp(). TS eliminates the first \
       // must Trim string and ToLower before compare
       const innerText: string = wordsNode.value.trim().toLowerCase();
-      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
@@ -134,7 +135,7 @@ export class RepetitionInstructionReader {
         return true;
       }
       const dcRegEx: string = "d\\.\\s?c\\.";
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
@@ -143,7 +144,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al fine")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al fine", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
@@ -152,7 +153,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
@@ -162,7 +163,7 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "da\\s?capo")) {
+        StringUtil.StringContainsSeparatedWord(innerText, "da\\s?capo", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
@@ -171,18 +172,23 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx) ||
-        StringUtil.StringContainsSeparatedWord(innerText, "dal\\s?segno")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx, true) ||
+        StringUtil.StringContainsSeparatedWord(innerText, "dal\\s?segno", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
           measureIndex--;
         }
-        const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegno);
+        let newInstruction: RepetitionInstruction;
+        if (StringUtil.StringContainsSeparatedWord(innerText, "al\\s?coda", true)) {
+          newInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegnoAlCoda);
+        } else {
+          newInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.DalSegno);
+        }
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "to\\s?coda") ||
-        StringUtil.StringContainsSeparatedWord(innerText, "a (la )?coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, "to\\s?coda", true) ||
+        StringUtil.StringContainsSeparatedWord(innerText, "a (la )?coda", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
@@ -191,7 +197,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "fine")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, "fine", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition < 0.5) {
           measureIndex--;
@@ -200,7 +206,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "coda")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, "coda", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition > 0.5) {
           measureIndex++;
@@ -209,7 +215,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-      if (StringUtil.StringContainsSeparatedWord(innerText, "segno")) {
+      if (StringUtil.StringContainsSeparatedWord(innerText, "segno", true)) {
         let measureIndex: number = this.currentMeasureIndex;
         if (relativeMeasurePosition > 0.5) {
           measureIndex++;
@@ -218,7 +224,7 @@ export class RepetitionInstructionReader {
         this.addInstruction(this.repetitionInstructions, newInstruction);
         return true;
       }
-    } else if (directionTypeNode.element("segno") !== undefined) {
+    } else if (directionTypeNode.element("segno")) {
       let measureIndex: number = this.currentMeasureIndex;
       if (relativeMeasurePosition > 0.5) {
         measureIndex++;
@@ -226,7 +232,7 @@ export class RepetitionInstructionReader {
       const newInstruction: RepetitionInstruction = new RepetitionInstruction(measureIndex, RepetitionInstructionEnum.Segno);
       this.addInstruction(this.repetitionInstructions, newInstruction);
       return true;
-    } else if (directionTypeNode.element("coda") !== undefined) {
+    } else if (directionTypeNode.element("coda")) {
       let measureIndex: number = this.currentMeasureIndex;
       if (relativeMeasurePosition > 0.5) {
         measureIndex++;

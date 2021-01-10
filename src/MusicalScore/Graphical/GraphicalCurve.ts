@@ -33,7 +33,7 @@ export class GraphicalCurve {
      * @param relativePosition
      */
     public calculateCurvePointAtIndex(relativePosition: number): PointF2D {
-        const index: number =  Math.round(relativePosition);
+        const index: number =  Math.round(relativePosition * GraphicalCurve.bezierCurveStepSize);
         if (index < 0 || index >= GraphicalCurve.bezierCurveStepSize) {
             return new PointF2D();
         }

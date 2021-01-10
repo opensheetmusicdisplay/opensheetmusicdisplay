@@ -1,6 +1,5 @@
 import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {Fraction} from "../../Common/DataObjects/Fraction";
-import {GraphicalMusicPage} from "../Graphical/GraphicalMusicPage";
 import {GraphicalNote} from "../Graphical/GraphicalNote";
 import {GraphicalStaffEntry} from "../Graphical/GraphicalStaffEntry";
 import {MusicSystem} from "../Graphical/MusicSystem";
@@ -15,14 +14,20 @@ import {GraphicalMeasure} from "../Graphical/GraphicalMeasure";
 import { TechnicalInstruction } from "../VoiceData/Instructions/TechnicalInstruction";
 import { GraphicalVoiceEntry } from "../Graphical/GraphicalVoiceEntry";
 import { VoiceEntry } from "../VoiceData/VoiceEntry";
+import { EngravingRules } from "../Graphical/EngravingRules";
+import { KeyInstruction } from "../VoiceData/Instructions/KeyInstruction";
 
 export interface IGraphicalSymbolFactory {
 
-    createMusicSystem(page: GraphicalMusicPage, systemIndex: number): MusicSystem;
+    createMusicSystem(systemIndex: number, rules: EngravingRules): MusicSystem;
 
     createStaffLine(parentSystem: MusicSystem, parentStaff: Staff): StaffLine;
 
     createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
+
+    createMultiRestMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
+
+    createTabStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure;
 
     createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure;
 
@@ -54,8 +59,9 @@ export interface IGraphicalSymbolFactory {
 
     createInStaffClef(graphicalStaffEntry: GraphicalStaffEntry, clefInstruction: ClefInstruction): void;
 
-    createChordSymbol(
+    createChordSymbols(
         sourceStaffEntry: SourceStaffEntry,
         graphicalStaffEntry: GraphicalStaffEntry,
+        keyInstruction: KeyInstruction,
         transposeHalftones: number): void;
 }

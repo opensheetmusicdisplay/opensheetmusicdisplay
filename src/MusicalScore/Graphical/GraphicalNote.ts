@@ -8,6 +8,7 @@ import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
 import {GraphicalVoiceEntry} from "./GraphicalVoiceEntry";
+import {GraphicalMusicPage} from "./GraphicalMusicPage";
 
 /**
  * The graphical counterpart of a [[Note]]
@@ -18,7 +19,7 @@ export class GraphicalNote extends GraphicalObject {
         this.sourceNote = note;
         this.parentVoiceEntry = parent;
         this.PositionAndShape = new BoundingBox(this, parent.PositionAndShape);
-        if (graphicalNoteLength !== undefined) {
+        if (graphicalNoteLength) {
             this.graphicalNoteLength = graphicalNoteLength;
         } else {
             this.graphicalNoteLength = note.Length;
@@ -34,7 +35,7 @@ export class GraphicalNote extends GraphicalObject {
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;
-        if (MusicSheetCalculator.transposeCalculator !== undefined) {
+        if (MusicSheetCalculator.transposeCalculator) {
             transposedPitch = MusicSheetCalculator.transposeCalculator.transposePitch(this.sourceNote.Pitch, keyInstruction, halfTones);
         }
         return transposedPitch;
@@ -49,12 +50,16 @@ export class GraphicalNote extends GraphicalObject {
       let num: number = 1;
       let product: number = 2;
       const expandedNumerator: number = fraction.GetExpandedNumerator();
-      if (this.sourceNote === undefined || this.sourceNote.NoteTuplet === undefined) {
+      if (!this.sourceNote || !this.sourceNote.NoteTuplet) {
         while (product < expandedNumerator) {
           num++;
           product = Math.pow(2, num);
         }
       }
       return Math.min(3, num - 1);
+    }
+
+    public get ParentMusicPage(): GraphicalMusicPage {
+      return this.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentMusicSystem.Parent;
     }
 }

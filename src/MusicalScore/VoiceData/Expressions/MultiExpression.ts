@@ -7,8 +7,9 @@ import {MoodExpression} from "./MoodExpression";
 import {UnknownExpression} from "./UnknownExpression";
 import {AbstractExpression} from "./AbstractExpression";
 import {PlacementEnum} from "./AbstractExpression";
+import { FontStyles } from "../../../Common/Enums/FontStyles";
 
-export class MultiExpression /*implements IComparable<MultiExpression>*/ {
+export class MultiExpression {
 
     constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {
         this.sourceMeasure = sourceMeasure;
@@ -109,19 +110,21 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
         }
         return placement;
     }
-    // (*)
-    //public getFontstyleOfFirstEntry(): PSFontStyles {
-    //    let fontStyle: PSFontStyles = PSFontStyles.Regular;
-    //    if (this.expressions.length > 0) {
-    //        if (this.expressions[0].expression instanceof ContinuousDynamicExpression)
-    //            fontStyle = PSFontStyles.Italic;
-    //        else if (this.expressions[0].expression instanceof MoodExpression)
-    //            fontStyle = PSFontStyles.Italic;
-    //        else if (this.expressions[0].expression instanceof UnknownExpression)
-    //            fontStyle = PSFontStyles.Regular;
-    //    }
-    //    return fontStyle;
-    //}
+
+    public getFontstyleOfFirstEntry(): FontStyles {
+       let fontStyle: FontStyles = FontStyles.Regular;
+       if (this.expressions.length > 0) {
+           if (this.expressions[0].expression instanceof ContinuousDynamicExpression) {
+            fontStyle = FontStyles.Italic;
+           } else if (this.expressions[0].expression instanceof MoodExpression) {
+            fontStyle = FontStyles.Italic;
+           } else if (this.expressions[0].expression instanceof UnknownExpression) {
+            const unknownExpression: UnknownExpression = (this.expressions[0].expression as UnknownExpression);
+            fontStyle = unknownExpression.fontStyle ?? FontStyles.Regular;
+           }
+       }
+       return fontStyle;
+    }
     //public getFirstEntry(staffLine: StaffLine, graphLabel: GraphicalLabel): AbstractGraphicalExpression {
     //    let indexOfFirstNotInstDynExpr: number = 0;
     //    if (this.expressions[0].expression instanceof InstantaneousDynamicExpression)
@@ -140,7 +143,7 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
     //}
     public addExpression(abstractExpression: AbstractExpression, prefix: string): void {
         if (abstractExpression instanceof InstantaneousDynamicExpression) {
-            if (this.instantaneousDynamic !== undefined) {
+            if (this.instantaneousDynamic) {
                 this.removeExpressionFromEntryList(this.InstantaneousDynamic);
             }
             this.instantaneousDynamic = <InstantaneousDynamicExpression>abstractExpression;
@@ -155,18 +158,13 @@ export class MultiExpression /*implements IComparable<MultiExpression>*/ {
         this.addExpressionToEntryList(abstractExpression, prefix);
     }
     public CompareTo(other: MultiExpression): number {
-        if (this.SourceMeasureParent.MeasureNumber > other.SourceMeasureParent.MeasureNumber) {
+        if (this.Timestamp.RealValue > other.Timestamp.RealValue) {
             return 1;
         }
-        if (this.SourceMeasureParent.MeasureNumber < other.SourceMeasureParent.MeasureNumber) {
+        if (this.Timestamp.RealValue < other.Timestamp.RealValue) {
             return -1;
         } else {
-            if (this.Timestamp.RealValue > other.Timestamp.RealValue) { return 1; }
-            if (this.Timestamp.RealValue < other.Timestamp.RealValue) {
-                return -1;
-            } else {
-                return 0;
-            }
+            return 0;
         }
     }
     private addExpressionToEntryList(expression: AbstractExpression, prefix: string): void {

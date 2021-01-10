@@ -1,15 +1,17 @@
-import {Label} from "../Label";
-import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
-import {Clickable} from "./Clickable";
-import {BoundingBox} from "./BoundingBox";
-import {EngravingRules} from "./EngravingRules";
-import {MusicSheetCalculator} from "./MusicSheetCalculator";
+import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
+import { Label } from "../Label";
+import { BoundingBox } from "./BoundingBox";
+import { Clickable } from "./Clickable";
+import { EngravingRules } from "./EngravingRules";
+import { MusicSheetCalculator } from "./MusicSheetCalculator";
 
 /**
  * The graphical counterpart of a Label
  */
 export class GraphicalLabel extends Clickable {
     private label: Label;
+    private rules: EngravingRules;
+    public TextLines: {text: string, xOffset: number, width: number}[];
 
     /**
      * Creates a new GraphicalLabel from a Label
@@ -18,12 +20,14 @@ export class GraphicalLabel extends Clickable {
      * @param alignment Alignement like left, right, top, ...
      * @param parent Parent Bounding Box where the label is attached to
      */
-    constructor(label: Label, textHeight: number, alignment: TextAlignmentEnum, parent: BoundingBox = undefined) {
+    constructor(label: Label, textHeight: number, alignment: TextAlignmentEnum, rules: EngravingRules,
+                parent: BoundingBox = undefined, ) {
         super();
         this.label = label;
         this.boundingBox = new BoundingBox(this, parent);
         this.label.fontHeight = textHeight;
         this.label.textAlignment = alignment;
+        this.rules = rules;
     }
 
     public get Label(): Label {
@@ -31,76 +35,112 @@ export class GraphicalLabel extends Clickable {
     }
 
     public toString(): string {
-        return this.label.text;
+        return `${this.label.text} (${this.boundingBox.RelativePosition.x},${this.boundingBox.RelativePosition.y})`;
     }
 
     /**
      * Calculate GraphicalLabel's Borders according to its Alignment
+     * Create also the text-lines and their offsets here
      */
     public setLabelPositionAndShapeBorders(): void {
         if (this.Label.text.trim() === "") {
             return;
         }
-        const labelMarginBorderFactor: number = EngravingRules.Rules.LabelMarginBorderFactor;
+        this.TextLines = [];
+        const labelMarginBorderFactor: number = this.rules?.LabelMarginBorderFactor ?? 0.1;
+        const lines: string[] = this.Label.text.split(/[\n\r]+/g);
+        const numOfLines: number = lines.length;
+        let maxWidth: number = 0;
+        for (let i: number = 0; i < numOfLines; i++) {
+            const line: string = lines[i].trim();
+            const widthToHeightRatio: number =
+            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(
+               line, this.Label.font, this.Label.fontStyle, this.label.fontFamily);
+            const currWidth: number = this.Label.fontHeight * widthToHeightRatio;
+            maxWidth = Math.max(maxWidth, currWidth);
+            // here push only text and width of the text:
+            this.TextLines.push({text: line, xOffset: 0, width: currWidth});
+        }
 
-        const widthToHeightRatio: number =
-            MusicSheetCalculator.TextMeasurer.computeTextWidthToHeightRatio(this.Label.text, this.Label.font, this.Label.fontStyle);
-        const height: number = this.Label.fontHeight;
-        const width: number = height * widthToHeightRatio;
+        // maxWidth is calculated ->
+        // now also set the x-offsets:
+        for (const line of this.TextLines) {
+            let xOffset: number = 0;
+            switch (this.Label.textAlignment) {
+                case TextAlignmentEnum.RightBottom:
+                case TextAlignmentEnum.RightCenter:
+                case TextAlignmentEnum.RightTop:
+                    xOffset = maxWidth - line.width;
+                    break;
+                case TextAlignmentEnum.CenterBottom:
+                case TextAlignmentEnum.CenterCenter:
+                case TextAlignmentEnum.CenterTop:
+                    xOffset = (maxWidth - line.width) / 2;
+                    break;
+                default:
+                    break;
+            }
+            line.xOffset = xOffset;
+        }
+
+        let height: number = this.Label.fontHeight * numOfLines;
+        if (this.rules.SpacingBetweenTextLines > 0 && this.TextLines.length > 1) {
+            height += (this.rules.SpacingBetweenTextLines * numOfLines) / 10;
+        }
         const bbox: BoundingBox = this.PositionAndShape;
 
         switch (this.Label.textAlignment) {
             case TextAlignmentEnum.CenterBottom:
                 bbox.BorderTop = -height;
-                bbox.BorderLeft = -width / 2;
+                bbox.BorderLeft = -maxWidth / 2;
                 bbox.BorderBottom = 0;
-                bbox.BorderRight = width / 2;
+                bbox.BorderRight = maxWidth / 2;
                 break;
             case TextAlignmentEnum.CenterCenter:
                 bbox.BorderTop = -height / 2;
-                bbox.BorderLeft = -width / 2;
+                bbox.BorderLeft = -maxWidth / 2;
                 bbox.BorderBottom = height / 2;
-                bbox.BorderRight = width / 2;
+                bbox.BorderRight = maxWidth / 2;
                 break;
             case TextAlignmentEnum.CenterTop:
                 bbox.BorderTop = 0;
-                bbox.BorderLeft = -width / 2;
+                bbox.BorderLeft = -maxWidth / 2;
                 bbox.BorderBottom = height;
-                bbox.BorderRight = width / 2;
+                bbox.BorderRight = maxWidth / 2;
                 break;
             case TextAlignmentEnum.LeftBottom:
                 bbox.BorderTop = -height;
                 bbox.BorderLeft = 0;
                 bbox.BorderBottom = 0;
-                bbox.BorderRight = width;
+                bbox.BorderRight = maxWidth;
                 break;
             case TextAlignmentEnum.LeftCenter:
                 bbox.BorderTop = -height / 2;
                 bbox.BorderLeft = 0;
                 bbox.BorderBottom = height / 2;
-                bbox.BorderRight = width;
+                bbox.BorderRight = maxWidth;
                 break;
             case TextAlignmentEnum.LeftTop:
                 bbox.BorderTop = 0;
                 bbox.BorderLeft = 0;
                 bbox.BorderBottom = height;
-                bbox.BorderRight = width;
+                bbox.BorderRight = maxWidth;
                 break;
             case TextAlignmentEnum.RightBottom:
                 bbox.BorderTop = -height;
-                bbox.BorderLeft = -width;
+                bbox.BorderLeft = -maxWidth;
                 bbox.BorderBottom = 0;
                 bbox.BorderRight = 0;
                 break;
             case TextAlignmentEnum.RightCenter:
                 bbox.BorderTop = -height / 2;
-                bbox.BorderLeft = -width;
+                bbox.BorderLeft = -maxWidth;
                 bbox.BorderBottom = height / 2;
                 bbox.BorderRight = 0;
                 break;
             case TextAlignmentEnum.RightTop:
                 bbox.BorderTop = 0;
-                bbox.BorderLeft = -width;
+                bbox.BorderLeft = -maxWidth;
                 bbox.BorderBottom = height;
                 bbox.BorderRight = 0;
                 break;

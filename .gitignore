@@ -14,6 +14,10 @@ pids
 *.pid
 *.seed
 
+# optional npm script-generated data
+visual_regression/
+export/
+
 # Documentation
 docs
 
@@ -58,3 +62,6 @@ node_modules/
 bin/gh_pages_deploy_key
 bin/gh_pages_deploy_key.pub
 package-lock.json
+
+#local env files
+webpack.local.js

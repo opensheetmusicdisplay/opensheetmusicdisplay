@@ -2,8 +2,9 @@
 import { IXmlElement, IXmlAttribute } from "../../../Common/FileIO/Xml";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { Note } from "../../VoiceData/Note";
-import * as log from "loglevel";
+import log from "loglevel";
 import { ITextTranslation } from "../../Interfaces/ITextTranslation";
+import { PlacementEnum } from "../../VoiceData/Expressions";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
@@ -13,30 +14,40 @@ export class SlurReader {
     }
     public addSlur(slurNodes: IXmlElement[], currentNote: Note): void {
         try {
-            if (slurNodes !== undefined) {
+            if (slurNodes) {
                 for (const slurNode of slurNodes) {
                     if (slurNode.attributes().length > 0) {
                         const type: string = slurNode.attribute("type").value;
                         let slurNumber: number = 1;
                         try {
                             const slurNumberAttribute: IXmlAttribute = slurNode.attribute("number");
-                            if (slurNumberAttribute !== undefined) {
+                            if (slurNumberAttribute) {
                                 slurNumber = parseInt(slurNode.attribute("number").value, 10);
                             }
                         } catch (ex) {
                             log.debug("VoiceGenerator.addSlur number: ", ex);
                         }
 
+                        let slurPlacementXml: PlacementEnum = PlacementEnum.NotYetDefined;
+                        const placementAttr: Attr = slurNode.attribute("placement");
+                        if (placementAttr && placementAttr.value) {
+                            if (placementAttr.value === "above") {
+                                slurPlacementXml = PlacementEnum.Above;
+                            } else if (placementAttr.value === "below") {
+                                slurPlacementXml = PlacementEnum.Below;
+                            }
+                        }
                         if (type === "start") {
                             let slur: Slur = this.openSlurDict[slurNumber];
-                            if (slur === undefined) {
+                            if (!slur) {
                                 slur = new Slur();
                                 this.openSlurDict[slurNumber] = slur;
                             }
                             slur.StartNote = currentNote;
+                            slur.PlacementXml = slurPlacementXml;
                         } else if (type === "stop") {
                             const slur: Slur = this.openSlurDict[slurNumber];
-                            if (slur !== undefined) {
+                            if (slur) {
                                 slur.EndNote = currentNote;
                                 // check if not already a slur with same notes has been given:
                                 if (!currentNote.checkForDoubleSlur(slur)) {

@@ -1,5 +1,4 @@
 import {MusicSystem} from "../MusicSystem";
-import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {SystemLinesEnum} from "../SystemLinesEnum";
 import {SystemLinePosition} from "../SystemLinePosition";
 import {GraphicalMeasure} from "../GraphicalMeasure";
@@ -14,9 +13,9 @@ import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
 import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
 
 export class VexFlowMusicSystem extends MusicSystem {
-    constructor(parent: GraphicalMusicPage, id: number) {
-        super(parent, id);
-
+    constructor(id: number, rules: EngravingRules) {
+        super(id);
+        this.rules = rules;
     }
 
     public calculateBorders(rules: EngravingRules): void {
@@ -56,14 +55,20 @@ export class VexFlowMusicSystem extends MusicSystem {
      */
     protected createSystemLine(xPosition: number, lineWidth: number, lineType: SystemLinesEnum, linePosition: SystemLinePosition,
                                musicSystem: MusicSystem, topMeasure: GraphicalMeasure, bottomMeasure: GraphicalMeasure = undefined): SystemLine {
-        const vfMeasure: VexFlowMeasure = topMeasure as VexFlowMeasure;
-        vfMeasure.addMeasureLine(lineType, linePosition);
+        const vfTopMeasure: VexFlowMeasure = topMeasure as VexFlowMeasure;
+        let renderInitialLine: boolean = false;
+
         if (bottomMeasure) {
-          // ToDo: feature/Repetitions
-          // create here the correct lines according to the given lineType.
-          (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType, linePosition));
-          (bottomMeasure as VexFlowMeasure).addMeasureLine(lineType, linePosition);
+            renderInitialLine = true;
+            // ToDo: feature/Repetitions
+            // create here the correct lines according to the given lineType.
+            (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType, linePosition));
+            (bottomMeasure as VexFlowMeasure).addMeasureLine(lineType, linePosition);
         }
+        if (vfTopMeasure) {
+            vfTopMeasure.addMeasureLine(lineType, linePosition, renderInitialLine);
+        }
+
         return new SystemLine(lineType, linePosition, this, topMeasure, bottomMeasure);
     }
 

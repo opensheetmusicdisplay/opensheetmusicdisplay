@@ -24,7 +24,7 @@ export class SourceStaffEntry {
     private voiceEntries: VoiceEntry[] = [];
     private staffEntryLink: StaffEntryLink;
     private instructions: AbstractNotationInstruction[] = [];
-    private chordSymbolContainer: ChordSymbolContainer;
+    private chordSymbolContainers: ChordSymbolContainer[] = [];
 
     public get ParentStaff(): Staff {
         return this.parentStaff;
@@ -35,14 +35,14 @@ export class SourceStaffEntry {
     }
 
     public get Timestamp(): Fraction {
-        if (this.VerticalContainerParent !== undefined) {
+        if (this.VerticalContainerParent) {
             return this.VerticalContainerParent.Timestamp;
         }
         return undefined;
     }
 
     public get AbsoluteTimestamp(): Fraction {
-        if (this.VerticalContainerParent !== undefined) {
+        if (this.VerticalContainerParent) {
             return Fraction.plus(this.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp, this.VerticalContainerParent.Timestamp);
         }
         return undefined;
@@ -72,12 +72,12 @@ export class SourceStaffEntry {
         this.instructions = value;
     }
 
-    public get ChordContainer(): ChordSymbolContainer {
-        return this.chordSymbolContainer;
+    public get ChordContainers(): ChordSymbolContainer[] {
+        return this.chordSymbolContainers;
     }
 
-    public set ChordContainer(value: ChordSymbolContainer) {
-        this.chordSymbolContainer = value;
+    public set ChordContainers(value: ChordSymbolContainer[]) {
+        this.chordSymbolContainers = value;
     }
 
     // public removeAllInstructionsOfType(type: AbstractNotationInstruction): number {
@@ -211,7 +211,7 @@ export class SourceStaffEntry {
             const voiceEntry: VoiceEntry = this.VoiceEntries[idx];
             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                 const note: Note = voiceEntry.Notes[idx2];
-                if (note.NoteTie !== undefined) {
+                if (note.NoteTie) {
                     // only add notes from this and after this sse!!
                     const tieRestDuration: Fraction = Fraction.createFromFraction(note.Length);
                     let addFollowingNotes: boolean = false;

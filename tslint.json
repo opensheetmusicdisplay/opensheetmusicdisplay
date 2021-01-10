@@ -101,6 +101,7 @@
     "variable-name": [
       true,
       "check-format",
+      "allow-pascal-case",
       "ban-keywords"
     ],
     "whitespace": [

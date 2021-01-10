@@ -98,11 +98,6 @@
         </direction>
       <direction placement="above">
         <direction-type>
-          <words default-y="40.00">Notenzeilentext</words>
-          </direction-type>
-        </direction>
-      <direction placement="above">
-        <direction-type>
           <octave-shift type="down" size="8" number="1" default-y="30.00"/>
           </direction-type>
         </direction>

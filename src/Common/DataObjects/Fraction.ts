@@ -64,7 +64,7 @@ export class Fraction {
       return 1;
     }
 
-    while (b !== 0) {
+    while (Math.abs(b) > 1e-8) { // essentially b > 0, accounts for floating point inaccuracies (0.000...01)
       if (a > b) {
         a -= b;
       } else {
@@ -72,7 +72,7 @@ export class Fraction {
       }
     }
 
-    return a;
+    return Math.round(a); // prevent returning 4.000001 or something, though it doesn't happen for our samples
   }
 
   /**
@@ -181,7 +181,7 @@ export class Fraction {
    * Use Fraction.plus() for creating a new Fraction object being the sum of two Fractions.
    * @param fraction the Fraction to add.
    */
-  public Add(fraction: Fraction): void {
+  public Add(fraction: Fraction): Fraction {
     // normally should check if denominator or fraction.denominator is 0 but in our case
     // a zero denominator doesn't make sense
     this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator +
@@ -190,6 +190,7 @@ export class Fraction {
     this.wholeValue = 0;
     this.simplify();
     this.setRealValue();
+    return this;
   }
 
   /**
@@ -198,7 +199,7 @@ export class Fraction {
    * Use Fraction.minus() for creating a new Fraction object being the difference of two Fractions.
    * @param fraction the Fraction to subtract.
    */
-  public Sub(fraction: Fraction): void {
+  public Sub(fraction: Fraction): Fraction {
     // normally should check if denominator or fraction.denominator is 0 but in our case
     // a zero denominator doesn't make sense
     this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator -
@@ -207,6 +208,7 @@ export class Fraction {
     this.wholeValue = 0;
     this.simplify();
     this.setRealValue();
+    return this;
   }
   /**
    * Brute Force quanization by searching incremental with the numerator until the denominator is
@@ -239,7 +241,7 @@ export class Fraction {
   }
 
   public Equals(obj: Fraction): boolean {
-    return this.realValue === obj.realValue;
+    return this.realValue === obj?.realValue;
   }
 
   public CompareTo(obj: Fraction): number {
@@ -254,6 +256,14 @@ export class Fraction {
 
   public lte(frac: Fraction): boolean {
     return this.realValue <= frac.realValue;
+  }
+
+  public gt(frac: Fraction): boolean {
+    return !this.lte(frac);
+  }
+
+  public gte(frac: Fraction): boolean {
+    return !this.lt(frac);
   }
 
   //public Equals(f: Fraction): boolean {
@@ -300,6 +310,19 @@ export class Fraction {
       this.numerator = Math.round(this.numerator / factor);
       this.denominator = Math.round(this.denominator / factor);
     }
+  }
+
+  public static FloatInaccuracyTolerance: number = 0.0001; // inaccuracy allowed when comparing Fraction.RealValues, because of floating point inaccuracy
+
+  public isOnBeat(timeSignature: Fraction): boolean { // use sourceMeasure.ActiveTimeSignature as timeSignature
+      const beatDistance: number = this.distanceFromBeat(timeSignature);
+      return Math.abs(beatDistance) < Fraction.FloatInaccuracyTolerance;
+  }
+
+  public distanceFromBeat(timeSignature: Fraction): number {
+      const beatStep: Fraction = new Fraction(1, timeSignature.Denominator);
+      const distanceFromBeat: number = this.RealValue % beatStep.RealValue; // take modulo the beat value, e.g. 1/8 in a 3/8 time signature
+      return distanceFromBeat;
   }
 
 
@@ -397,7 +420,7 @@ export class Fraction {
   //public static bool operator === (Fraction f1, Fraction f2)
   //{
   //    // code enhanced for performance
-  //    // System.Object.ReferenceEquals(f1, undefined) is better than if (f1 === undefined)
+  //    // System.Object.ReferenceEquals(f1, undefined) is better than if (f1)
   //    // and comparisons between booleans are quick
   //    bool f1IsNull = System.Object.ReferenceEquals(f1, undefined);
   //    bool f2IsNull = System.Object.ReferenceEquals(f2, undefined);

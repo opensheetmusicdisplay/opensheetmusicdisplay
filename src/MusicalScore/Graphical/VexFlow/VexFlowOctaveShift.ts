@@ -1,10 +1,10 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
-import * as log from "loglevel";
+import log from "loglevel";
 
 /**
  * The vexflow adaptation of a graphical shift.
@@ -12,11 +12,11 @@ import * as log from "loglevel";
 export class VexFlowOctaveShift extends GraphicalOctaveShift {
 
     /** Defines the note where the octave shift starts */
-    private startNote: Vex.Flow.StemmableNote;
+    public startNote: Vex.Flow.StemmableNote;
     /** Defines the note where the octave shift ends */
-    private endNote: Vex.Flow.StemmableNote;
+    public endNote: Vex.Flow.StemmableNote;
     /** Top or bottom of the staffline */
-    private position: string;
+    private position: Vex.Flow.TextBracket.Positions;
     /** Supscript is a smaller text after the regular text (e.g. va after 8) */
     private supscript: string;
     /** Main text element */
@@ -31,22 +31,22 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         super(octaveShift, parent);
         switch (octaveShift.Type) {
             case OctaveEnum.VA8:
-                this.position = "top";
+                this.position = Vex.Flow.TextBracket.Positions.TOP;
                 this.supscript = "va";
                 this.text = "8";
                 break;
-                case OctaveEnum.MA15:
-                this.position = "top";
+            case OctaveEnum.MA15:
+                this.position = Vex.Flow.TextBracket.Positions.TOP;
                 this.supscript = "ma";
                 this.text = "15";
                 break;
-                case OctaveEnum.VB8:
-                this.position = "bottom";
+            case OctaveEnum.VB8:
+                this.position = Vex.Flow.TextBracket.Positions.BOTTOM;
                 this.supscript = "vb";
                 this.text = "8";
                 break;
-                case OctaveEnum.MB15:
-                this.position = "bottom";
+            case OctaveEnum.MB15:
+                this.position = Vex.Flow.TextBracket.Positions.BOTTOM;
                 this.supscript = "mb";
                 this.text = "15";
                 break;
@@ -60,16 +60,31 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      * Set a start note using a staff entry
      * @param graphicalStaffEntry the staff entry that holds the start note
      */
-    public setStartNote(graphicalStaffEntry: GraphicalStaffEntry): void {
-        this.startNote = (graphicalStaffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote;
+    public setStartNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
+        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
+            if (vve?.vfStaveNote) {
+                this.startNote = vve.vfStaveNote;
+                return true;
+            }
+        }
+        return false; // couldn't find a startNote
     }
 
     /**
      * Set an end note using a staff entry
      * @param graphicalStaffEntry the staff entry that holds the end note
      */
-    public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): void {
-        this.endNote = (graphicalStaffEntry.graphicalVoiceEntries[0] as VexFlowVoiceEntry).vfStaveNote;
+    public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
+        // this is duplicate code from setStartNote, but if we make one general method, we add a lot of branching.
+        for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
+            const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
+            if (vve?.vfStaveNote) {
+                this.endNote = vve.vfStaveNote;
+                return true;
+            }
+        }
+        return false; // couldn't find an endNote
     }
 
     /**

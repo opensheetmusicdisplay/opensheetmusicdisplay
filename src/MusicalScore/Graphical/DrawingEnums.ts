@@ -1,4 +1,6 @@
-import * as Collections from "typescript-collections";
+// import * as Collections from "typescript-collections";
+// import Collections = require("typescript-collections");
+import { Dictionary } from "typescript-collections";
 
 /**
  * The supported styles to draw a rectangle on the music sheet
@@ -40,7 +42,8 @@ export enum OutlineAndFillStyleEnum {
 }
 
 // tslint:disable-next-line:max-line-length A linebreak would be more confusing here
-export const OUTLINE_AND_FILL_STYLE_DICT: Collections.Dictionary<OutlineAndFillStyleEnum, string> = new Collections.Dictionary<OutlineAndFillStyleEnum, string>();
+export const OUTLINE_AND_FILL_STYLE_DICT: Dictionary<OutlineAndFillStyleEnum, string> =
+    new Dictionary<OutlineAndFillStyleEnum, string>();
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.BaseWritingColor, "Thistle");
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.FollowingCursor, "Aqua");
 OUTLINE_AND_FILL_STYLE_DICT.setValue(OutlineAndFillStyleEnum.AlternativeFollowingCursor, "Azure");
@@ -105,4 +108,25 @@ export enum NoteState {
     Debug1,
     Debug2,
     Debug3
+}
+
+export enum AutoColorSet {
+    /* different (boomwhacker-like) color set*/
+    C = "#d82c6b",
+    D = "#F89D15",
+    E = "#FFE21A",
+    F = "#4dbd5c",
+    G = "#009D96",
+    A = "#43469d",
+    B = "#76429c",
+    Rest = "#000000"
+
+    // color set from MuseScore Color notehead plugin version 1.1 by Werner Schweer and others
+    /*C = "#eeee00",
+    D = "#9b30ff",
+    E = "#ee9a00",
+    F = "#8b4513",
+    G = "#ff0000",
+    A = "#1e90ff",
+    B = "#00ff00"*/
 }

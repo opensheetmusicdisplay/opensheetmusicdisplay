@@ -1,4 +1,5 @@
-import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
+import { AccidentalEnum } from "../../Common/DataObjects/Pitch";
+import { PlacementEnum } from "./Expressions/AbstractExpression";
 
 export class OrnamentContainer {
 
@@ -7,6 +8,7 @@ export class OrnamentContainer {
     }
 
     private ornament: OrnamentEnum;
+    public placement: PlacementEnum = PlacementEnum.Above;
     private accidentalAbove: AccidentalEnum = AccidentalEnum.NONE;
     private accidentalBelow: AccidentalEnum = AccidentalEnum.NONE;
 

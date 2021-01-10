@@ -25,7 +25,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
      * Main initialize method for MusicPartManager.
      */
     public init(): void {
-        this.parts = this.musicSheet.Repetitions.slice();
+        this.parts = this.musicSheet.Repetitions.slice(); // slice=arrayCopy
         this.sheetStart = this.musicSheet.SelectionStart = new Fraction(0, 1);
         this.sheetEnd = this.musicSheet.SelectionEnd = this.musicSheet.SheetEndTimestamp;
         this.calcMapping();
@@ -34,7 +34,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         let curTransform: TimestampTransform = undefined;
         for (let i: number = this.timestamps.length - 1; i >= 0; i--) {
             curTransform = this.timestamps[i];
-            if (curEnrolledTimestamp >= curTransform.$from) {
+            if (curEnrolledTimestamp.gte(curTransform.$from)) {
                 return curTransform;
             }
         }
@@ -54,18 +54,18 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         return this.musicSheet;
     }
     public getIterator(start?: Fraction): MusicPartManagerIterator {
-        if (start === undefined) {
-          return new MusicPartManagerIterator(this, this.musicSheet.SelectionStart, this.musicSheet.SelectionEnd);
+        if (!start) {
+            return new MusicPartManagerIterator(this.musicSheet, this.musicSheet.SelectionStart, this.musicSheet.SelectionEnd);
         }
-        return new MusicPartManagerIterator(this, start, undefined);
+        return new MusicPartManagerIterator(this.musicSheet, start, undefined);
     }
     public setSelectionStart(beginning: Fraction): void {
         this.musicSheet.SelectionStart = beginning;
         this.musicSheet.SelectionEnd = undefined;
     }
     public setSelectionRange(start: Fraction, end: Fraction): void {
-        this.musicSheet.SelectionStart = start === undefined ? this.sheetStart : start;
-        this.musicSheet.SelectionEnd = end === undefined ? this.sheetEnd : end;
+        this.musicSheet.SelectionStart = start ?? this.sheetStart;
+        this.musicSheet.SelectionEnd = end ?? this.sheetEnd;
     }
     private calcMapping(): void {
         const timestamps: TimestampTransform[] = [];
@@ -89,7 +89,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
                     curTimestampTransform.curRepetition = jumpRep;
                     curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;
                     for (let i: number = this.timestamps.length - 2; i >= 0; i--) {
-                        if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition !== undefined) {
+                        if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition) {
                             break;
                         }
                         timestamps[i].nextBackJump = curTimestampTransform.nextBackJump;

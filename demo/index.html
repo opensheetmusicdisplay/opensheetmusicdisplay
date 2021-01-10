@@ -3,30 +3,29 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <title><%= htmlWebpackPlugin.options.title %></title>
     <meta name="description" content="A showcase for OpenSheetMusicDisplay.">
     <meta name="author" content="OpenSheetMusicDisplay contributors">
-    <!-- Demo js file is included automatically by webpack druing build -->
+    <!-- Demo index.js file is included automatically by webpack during build -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.min.js" type="text/javascript"></script>    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.0/semantic.css" media="all" rel="stylesheet"/>
     <link rel="icon" href="./favicon.ico?" type="image/x-icon"/>
 </head>
 <body>
-<br>
-<h1 class="ui centered header">
+<h1 class="ui centered header" id="header" style="opacity: 0.0">
     <img src="./favicon.ico?" class="ui image">
     <%= htmlWebpackPlugin.options.title %>
 </h1>
-<div class="ui four column grid container">
+<div class="ui four column grid container" id="divControls" style="visibility: hidden; opacity: 0.0">
     <div class="column">
         <h3 class="ui header">Select a sample:</h3>
-        <select class="ui selection dropdown" id="selectSample" style="width:320px; height:38%"></select>
+        <select class="ui selection dropdown" id="selectSample" style="width:320px; height:38%; visibility: hidden"></select>
     </div>
-    <div class="column">
+    <div class="column" id="backend-select-div" style="visibility: hidden">
         <h3 class="ui header">Render backend:</h3>
-        <select class="ui selection dropdown" id="backend-select" value="svg" style="height:38%">
+        <select class="ui selection dropdown" id="backend-select" value="svg" style="height:38%; visibility: hidden;">
             <option value="svg">SVG</option>
             <option value="canvas">Canvas</option>>
         </select>
@@ -62,11 +61,17 @@
                     </div>
                 </div>
             </div>
+            <div class="item">
+                <div class="ui toggle checkbox">
+                    <input type="checkbox" name="public" id="follow-cursor-checkbox">
+                    <label>Follow Cursor</label>
+                </div>
+            </div>
         </div>
-    </div>         
-    <div class="column">
+    </div>
+    <div class="column" id="zoomControls">
         <h3 class="ui header">Zoom controls:</h3>
-        <div class="ui buttons">
+        <div class="ui buttons" id="zoomControlsButtons">
             <div class="ui button" id="zoom-in-btn">
                 <i class="search plus icon"></i>
             </div>
@@ -78,7 +83,7 @@
     </div>
     <div class="column">
         <h3 class="ui header">Show bounding box for:</h3>
-        <select class="ui selection dropdown" id="selectBounding">
+        <select class="ui selection dropdown" id="selectBounding" style="visibility: hidden;">
             <option value="none">None</option>
             <option value="all">All</option>
             <option value="VexFlowMeasure">Measures</option>
@@ -114,19 +119,74 @@
         <div>
             <div class="ui vertical buttons">
                 <div class="ui button" id="debug-re-render-btn">Re-render</div>
-                
+
             </div>
             <div class="ui vertical buttons">
-                <div class="ui button" id="debug-clear-btn"">Clear</div>
+                <div class="ui button" id="debug-clear-btn">Clear</div>
+            </div>
+        </div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Page size:</h3>
+        <select class="ui selection dropdown" id="selectPageSize"  style="visibility: hidden;">
+            <option value="endless">endless</option>
+            <option value="A3 P">A3 Portrait</option>
+            <option value="A3 L">A3 Landscape</option>
+            <option value="A4 P">A4 Portrait</option>
+            <option value="A4 L">A4 Landscape</option>
+            <option value="A5 P">A5 Portrait</option>
+            <option value="A5 L">A5 Landscape</option>
+            <option value="Letter P">Letter Portrait</option>
+            <option value="Letter L">Letter Landscape</option>
+        </select>
+        <div class="ui button" id="print-pdf-btn">Print to Pdf</div>
+    </div>
+</div>
+<div id="optionalControls" style="opacity: 0.0; width: 95%; display: block">
+    <div class="ui three column grid container" style="padding: 10px; margin-right: auto; margin-left: auto" id="optionalControlsColumnContainer">
+        <div class="column" id="zoomControlsButtons-optional-column" style="min-width: 30%; opacity: 0.0">
+            <div class="ui buttons" id="zoomControlsButtons-optional">
+                <div class="ui button" id="zoom-in-btn-optional">
+                    <i class="search plus icon"></i>
+                </div>
+                <div class="ui button" id="zoom-out-btn-optional">
+                    <i class="search minus icon"></i>
+                </div>
+            </div>
+            <h4 id="zoom-str-optional">???</h4>
+        </div>
+        <div class="column" id="print-pdf-btn-optional-column" style="opacity: 0.0; max-width: 25%;">
+            <div class="ui button" id="print-pdf-btn-optional">Print to Pdf</div>
+        </div>
+        <div class="column" id="selectPageSize-optional-column" style="opacity: 0.0; min-width: 35%">
+            <div class="ui two column grid container">
+            <div class="column" style="margin-top: 8px">
+            <h3>Format:</h3>
+            </div>
+            <div class="column">
+            <select class="ui selection dropdown" id="selectPageSize-optional">
+                <option value="endless">endless</option>
+                <option value="A3 P">A3 Portrait</option>
+                <option value="A3 L">A3 Landscape</option>
+                <option value="A4 P">A4 Portrait</option>
+                <option value="A4 L">A4 Landscape</option>
+                <option value="A5 P">A5 Portrait</option>
+                <option value="A5 L">A5 Landscape</option>
+                <option value="Letter P">Letter Portrait</option>
+                <option value="Letter L">Letter Landscape</option>
+            </select>
+            </div>
             </div>
         </div>
     </div>
 </div>
-<table cellspacing="0" style="max-width:700px;">
-    <tr id="error-tr">
-        <td></td>
-        <td id="error-td"></td>
-    </tr>
-</table>
+<div>
+    <table cellspacing="0" style="max-width:700px;">
+        <tr id="error-tr">
+            <td></td>
+            <td id="error-td"></td>
+        </tr>
+    </table>
+</div>
 </body>
 </html>

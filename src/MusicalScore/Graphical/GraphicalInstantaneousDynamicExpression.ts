@@ -4,14 +4,14 @@ import { GraphicalMeasure } from "./GraphicalMeasure";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
 import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import * as log from "loglevel";
+import log from "loglevel";
 
 export class GraphicalInstantaneousDynamicExpression extends AbstractGraphicalExpression {
     protected mInstantaneousDynamicExpression: InstantaneousDynamicExpression;
     protected mMeasure: GraphicalMeasure;
 
     constructor(instantaneousDynamic: InstantaneousDynamicExpression, staffLine: StaffLine, measure: GraphicalMeasure) {
-        super(staffLine, instantaneousDynamic);
+        super(staffLine, instantaneousDynamic, measure.parentSourceMeasure);
         this.mInstantaneousDynamicExpression = instantaneousDynamic;
         this.mMeasure = measure;
     }

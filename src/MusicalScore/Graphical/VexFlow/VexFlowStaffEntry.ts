@@ -1,11 +1,10 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
-import { EngravingRules } from "../EngravingRules";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -30,15 +29,23 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
                 gve.vfStaveNote.setStave(stave);
-                if (!gve.vfStaveNote.preFormatted || gve.vfStaveNote.getBoundingBox() === null) {
+                if (!gve.vfStaveNote.preFormatted) {
                     continue;
                 }
                 gve.applyBordersFromVexflow();
-                this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().x / unitInPixels;
+                if (this.parentMeasure.ParentStaff.isTab) {
+                    // the x-position could be finetuned for the cursor.
+                    // somehow, gve.vfStaveNote.getBoundingBox() is null for a TabNote (which is a StemmableNote).
+                    this.PositionAndShape.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + (<any>gve.vfStaveNote).glyph.getWidth()) / unitInPixels;
+                } else {
+                    this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
+                }
                 const sourceNote: Note = gve.notes[0].sourceNote;
-                if (sourceNote.isRest() && sourceNote.Length.WholeValue === 1) { // whole rest
+                if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {
+                    // whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
+                    // see Note.isWholeRest(), which is currently not safe
                     this.PositionAndShape.RelativePosition.x +=
-                        EngravingRules.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
+                        this.parentMeasure.parentSourceMeasure.Rules.WholeRestXShiftVexflow - 0.1; // xShift from VexFlowConverter
                     gve.PositionAndShape.BorderLeft = -0.7;
                     gve.PositionAndShape.BorderRight = 0.7;
                 }

@@ -3,7 +3,8 @@ import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {GraphicalNote} from "./GraphicalNote";
 import {Pitch} from "../../Common/DataObjects/Pitch";
 import {NoteEnum} from "../../Common/DataObjects/Pitch";
-import Dictionary from "typescript-collections/dist/lib/Dictionary";
+import { Dictionary } from "typescript-collections";
+// import { Dictionary } from "typescript-collections/dist/lib";
 import { MusicSheetCalculator } from "./MusicSheetCalculator";
 
 /**
@@ -26,6 +27,8 @@ export class AccidentalCalculator {
 
     /**
      * This method is called after each Measure
+     * It clears the in-measure alterations dict for the next measure
+     * and pre-loads with the alterations of the key signature
      */
     public doCalculationsAtEndOfMeasure(): void {
         this.currentInMeasureNoteAlterationsDict.clear();
@@ -35,7 +38,7 @@ export class AccidentalCalculator {
     }
 
     public checkAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void {
-        if (pitch === undefined) {
+        if (!pitch) {
             return;
         }
         const pitchKey: number = <number>pitch.FundamentalNote + pitch.Octave * 12;
@@ -69,13 +72,25 @@ export class AccidentalCalculator {
                     this.keySignatureNoteAlterationsDict.getValue(pitchKey) !== pitch.AccidentalHalfTones) {
                     this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
                     this.currentInMeasureNoteAlterationsDict.setValue(pitchKey, pitch.AccidentalHalfTones);
-                } else {
+                } else if (pitch.Accidental !== AccidentalEnum.NONE) {
                     this.currentInMeasureNoteAlterationsDict.remove(pitchKey);
+                }
+
+                const inMeasureAlterationAccidental: AccidentalEnum = this.currentInMeasureNoteAlterationsDict.getValue(pitchKey);
+                if (pitch.Accidental === AccidentalEnum.NONE) {
+                    if (Math.abs(inMeasureAlterationAccidental) === 0.5) {
+                        // fix to remember quartersharp and quarterflat and not make them natural on following notes
+                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NONE);
+                    } else {
+                        // If an AccidentalEnum.NONE is given, it would not be rendered.
+                        // We need here to convert to a AccidentalEnum.NATURAL:
+                        pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL);
+                    }
                 }
                 MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
             }
-        } else {
-            if (pitch.Accidental !== AccidentalEnum.NONE && pitch.Accidental !== AccidentalEnum.NATURAL) {
+        } else { // pitchkey not in measure dict:
+            if (pitch.Accidental !== AccidentalEnum.NONE) {
                 if (!isInCurrentAlterationsToKeyList) {
                     this.currentAlterationsComparedToKeyInstructionList.push(pitchKey);
                 }
@@ -83,6 +98,8 @@ export class AccidentalCalculator {
                 MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
             } else {
                 if (isInCurrentAlterationsToKeyList) {
+                    // we need here a AccidentalEnum.NATURAL now to get it rendered - AccidentalEnum.NONE would not be rendered
+                    pitch = new Pitch(pitch.FundamentalNote, pitch.Octave, AccidentalEnum.NATURAL);
                     this.currentAlterationsComparedToKeyInstructionList.splice(this.currentAlterationsComparedToKeyInstructionList.indexOf(pitchKey), 1);
                     MusicSheetCalculator.symbolFactory.addGraphicalAccidental(graphicalNote, pitch);
                 }
@@ -91,7 +108,7 @@ export class AccidentalCalculator {
     }
 
     private reactOnKeyInstructionChange(): void {
-        const noteEnums: NoteEnum[] = KeyInstruction.getNoteEnumList(this.activeKeyInstruction);
+        const noteEnums: NoteEnum[] = this.activeKeyInstruction.AlteratedNotes;
         let keyAccidentalType: AccidentalEnum;
         if (this.activeKeyInstruction.Key > 0) {
             keyAccidentalType = AccidentalEnum.SHARP;

@@ -1,5 +1,6 @@
 import {Note} from "../../Note";
-import {Fraction} from "../../../../Common/DataObjects/Fraction";
+import { Fraction } from "../../../../Common/DataObjects/Fraction";
+import { PlacementEnum } from "../AbstractExpression";
 
 export class Slur {
     constructor() {
@@ -8,6 +9,7 @@ export class Slur {
 
     private startNote: Note;
     private endNote: Note;
+    public PlacementXml: PlacementEnum; // how the slur is placed in the XML
 
     public get StartNote(): Note {
         return this.startNote;
@@ -22,7 +24,7 @@ export class Slur {
         this.endNote = value;
     }
     public startNoteHasMoreStartingSlurs(): boolean {
-        if (this.startNote === undefined) { return false; }
+        if (!this.startNote) { return false; }
         for (let idx: number = 0, len: number = this.startNote.NoteSlurs.length; idx < len; ++idx) {
             const slur: Slur = this.startNote.NoteSlurs[idx];
             if (slur !== this && slur.StartNote === this.startNote) {
@@ -32,7 +34,7 @@ export class Slur {
         return false;
     }
     public endNoteHasMoreEndingSlurs(): boolean {
-        if (this.endNote === undefined) { return false; }
+        if (!this.endNote) { return false; }
         for (let idx: number = 0, len: number = this.endNote.NoteSlurs.length; idx < len; ++idx) {
             const slur: Slur = this.endNote.NoteSlurs[idx];
             if (slur !== this && slur.EndNote === this.endNote) {
@@ -45,7 +47,7 @@ export class Slur {
         return (this.startNote.ParentStaffEntry.ParentStaff !== this.endNote.ParentStaffEntry.ParentStaff);
     }
     public isSlurLonger(): boolean {
-        if (this.endNote === undefined || this.startNote === undefined) {
+        if (!this.endNote || !this.startNote) {
             return false;
         }
         const length: Fraction = Fraction.minus(this.endNote.getAbsoluteTimestamp(), this.startNote.getAbsoluteTimestamp());

@@ -1,11 +1,9 @@
-import Vex = require("vexflow");
+import Vex from "vexflow";
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
-import {GraphicalMusicPage} from "../GraphicalMusicPage";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
-import {VexFlowStaffLine} from "./VexFlowStaffLine";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {VexFlowMeasure} from "./VexFlowMeasure";
@@ -27,6 +25,10 @@ import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { VexFlowConverter } from "./VexFlowConverter";
+import { VexFlowTabMeasure } from "./VexFlowTabMeasure";
+import { VexFlowStaffLine } from "./VexFlowStaffLine";
+import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
+import { VexFlowMultiRestMeasure } from "./VexFlowMultiRestMeasure";
 
 export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     /**
@@ -36,8 +38,8 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param systemIndex
      * @returns {VexFlowMusicSystem}
      */
-    public createMusicSystem(page: GraphicalMusicPage, systemIndex: number): MusicSystem {
-        return new VexFlowMusicSystem(page, systemIndex);
+    public createMusicSystem(systemIndex: number, rules: EngravingRules): MusicSystem {
+        return new VexFlowMusicSystem(systemIndex, rules);
     }
 
     /**
@@ -56,8 +58,28 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param staff
      * @returns {VexFlowMeasure}
      */
-    public createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure {
-        return new VexFlowMeasure(staff, undefined, sourceMeasure);
+    public createGraphicalMeasure(sourceMeasure: SourceMeasure, staff: Staff, isTabMeasure: boolean = false): GraphicalMeasure {
+        return new VexFlowMeasure(staff, sourceMeasure, undefined);
+    }
+
+    /**
+     * Construct a MultiRestMeasure from the given source measure and staff.
+     * @param sourceMeasure
+     * @param staff
+     * @returns {VexFlowMultiRestMeasure}
+     */
+    public createMultiRestMeasure(sourceMeasure: SourceMeasure, staff: Staff, staffLine?: StaffLine): GraphicalMeasure {
+        return new VexFlowMultiRestMeasure(staff, sourceMeasure, staffLine);
+    }
+
+    /**
+     * Construct an empty Tab staffMeasure from the given source measure and staff.
+     * @param sourceMeasure
+     * @param staff
+     * @returns {VexFlowTabMeasure}
+     */
+    public createTabStaffMeasure(sourceMeasure: SourceMeasure, staff: Staff): GraphicalMeasure {
+        return new VexFlowTabMeasure(staff, sourceMeasure);
     }
 
     /**
@@ -66,7 +88,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure {
-        return new VexFlowMeasure(staffLine.ParentStaff, staffLine);
+        return new VexFlowMeasure(staffLine.ParentStaff, undefined, staffLine);
     }
 
     /**
@@ -121,7 +143,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     public addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void {
         const note: VexFlowGraphicalNote = (graphicalNote as VexFlowGraphicalNote);
         // accidental is added in setPitch
-        note.setPitch(pitch);
+        note.setAccidental(pitch);
     }
 
     /**
@@ -155,17 +177,32 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param graphicalStaffEntry
      * @param transposeHalftones
      */
-    public createChordSymbol(sourceStaffEntry: SourceStaffEntry, graphicalStaffEntry: GraphicalStaffEntry, transposeHalftones: number): void {
-      const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
-        new GraphicalChordSymbolContainer(sourceStaffEntry.ChordContainer,
-                                          graphicalStaffEntry.PositionAndShape,
-                                          EngravingRules.Rules.ChordSymbolTextHeight,
-                                          transposeHalftones);
-      const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
-      graphicalLabel.PositionAndShape.RelativePosition.y -= EngravingRules.Rules.ChordSymbolYOffset;
-      graphicalLabel.setLabelPositionAndShapeBorders();
-      graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
-      graphicalStaffEntry.graphicalChordContainer = graphicalChordSymbolContainer;
+    public createChordSymbols(  sourceStaffEntry: SourceStaffEntry,
+                                graphicalStaffEntry: GraphicalStaffEntry,
+                                keyInstruction: KeyInstruction,
+                                transposeHalftones: number): void {
+        const rules: EngravingRules = graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules;
+        let xShift: number = 0;
+        const chordSymbolSpacing: number = rules.ChordSymbolXSpacing;
+        for (const chordSymbolContainer of sourceStaffEntry.ChordContainers) {
+            const graphicalChordSymbolContainer: GraphicalChordSymbolContainer =
+              new GraphicalChordSymbolContainer(chordSymbolContainer,
+                                                graphicalStaffEntry.PositionAndShape,
+                                                rules.ChordSymbolTextHeight,
+                                                keyInstruction,
+                                                transposeHalftones,
+                                                graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules // TODO undefined sometimes
+                                                );
+            const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
+            graphicalLabel.PositionAndShape.RelativePosition.y -= rules.ChordSymbolYOffset;
+            graphicalLabel.PositionAndShape.RelativePosition.x += xShift;
+            // TODO check for available space until next staffEntry or chord symbol (x direction)
+            graphicalLabel.setLabelPositionAndShapeBorders();
+            graphicalChordSymbolContainer.PositionAndShape.calculateBoundingBox();
+            graphicalStaffEntry.graphicalChordContainers.push(graphicalChordSymbolContainer);
+
+            xShift += graphicalLabel.PositionAndShape.Size.width + chordSymbolSpacing;
+        }
     }
 
     /**

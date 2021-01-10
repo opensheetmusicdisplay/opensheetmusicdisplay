@@ -10,18 +10,23 @@ import {Slur} from "./Expressions/ContinuousExpressions/Slur";
 import {NoteState} from "../Graphical/DrawingEnums";
 import {Notehead} from "./Notehead";
 import {Arpeggio} from "./Arpeggio";
+import {NoteType} from "./NoteType";
+import { SourceMeasure } from "./SourceMeasure";
+import { TechnicalInstruction } from "./Instructions";
 
 /**
  * Represents a single pitch with a duration (length)
  */
 export class Note {
 
-    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch) {
+    constructor(voiceEntry: VoiceEntry, parentStaffEntry: SourceStaffEntry, length: Fraction, pitch: Pitch, sourceMeasure: SourceMeasure, isRest?: boolean) {
         this.voiceEntry = voiceEntry;
         this.parentStaffEntry = parentStaffEntry;
         this.length = length;
         this.pitch = pitch;
-        if (pitch !== undefined) {
+        this.sourceMeasure = sourceMeasure;
+        this.isRestFlag = isRest ?? false;
+        if (pitch) {
             this.halfTone = pitch.getHalfTone();
         } else {
           this.halfTone = 0;
@@ -36,14 +41,21 @@ export class Note {
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;
+    private sourceMeasure: SourceMeasure;
     /** The length/duration given in the <type> tag. different from length for tuplets/tremolos. */
     private typeLength: Fraction;
+    /** The NoteType given in the XML, e.g. quarter, which can be a normal quarter or tuplet quarter -> can have different length/fraction */
+    private noteTypeXml: NoteType;
     /** The amount of notes the tuplet of this note (if there is one) replaces. */
     private normalNotes: number;
+    private isRestFlag: boolean;
     /**
      * The untransposed (!!!) source data.
      */
     private pitch: Pitch;
+    public get NoteAsString(): string {
+        return this.pitch.toString();
+    }
     private beam: Beam;
     private tuplet: Tuplet;
     private tie: Tie;
@@ -56,8 +68,13 @@ export class Note {
     private arpeggio: Arpeggio;
     /** States whether this is a cue note (Stichnote) (smaller size). */
     private isCueNote: boolean;
+    public IsGraceNote: boolean;
     /** The stem direction asked for in XML. Not necessarily final or wanted stem direction. */
     private stemDirectionXml: StemDirectionType;
+    /** The number of tremolo strokes this note has (16th tremolo = 2 strokes).
+     * Could be a Tremolo object in future when there is more data like tremolo between two notes.
+     */
+    private tremoloStrokes: number;
     /** Color of the stem given in the XML Stem tag. RGB Hexadecimal, like #00FF00.
      * This is not used for rendering, which takes VoiceEntry.StemColor.
      * It is merely given in the note's stem element in XML and stored here for reference.
@@ -70,11 +87,13 @@ export class Note {
      * because Note.Notehead is undefined for normal Noteheads to save space and time.
      */
     private noteheadColorXml: string;
-    /** Color of the notehead currently set. RGB Hexadecimal, like #00FF00.
+    /** Color of the notehead currently set/desired for next render. RGB Hexadecimal, like #00FF00.
      * Needs to be stored here and not in Note.Notehead,
      * because Note.Notehead is undefined for normal Noteheads to save space and time.
      */
     private noteheadColor: string;
+    private noteheadColorCurrentlyRendered: string;
+    public Fingering: TechnicalInstruction; // this is also stored in VoiceEntry.TechnicalInstructions
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;
@@ -94,11 +113,20 @@ export class Note {
     public set Length(value: Fraction) {
         this.length = value;
     }
+    public get SourceMeasure(): SourceMeasure {
+        return this.sourceMeasure;
+    }
     public get TypeLength(): Fraction {
         return this.typeLength;
     }
     public set TypeLength(value: Fraction) {
         this.typeLength = value;
+    }
+    public get NoteTypeXml(): NoteType {
+        return this.noteTypeXml;
+    }
+    public set NoteTypeXml(value: NoteType) {
+        this.noteTypeXml = value;
     }
     public get NormalNotes(): number {
         return this.normalNotes;
@@ -169,6 +197,12 @@ export class Note {
     public set StemDirectionXml(value: StemDirectionType) {
         this.stemDirectionXml = value;
     }
+    public get TremoloStrokes(): number {
+        return this.tremoloStrokes;
+    }
+    public set TremoloStrokes(value: number) {
+        this.tremoloStrokes = value;
+    }
     public get StemColorXml(): string {
         return this.stemColorXml;
     }
@@ -181,19 +215,34 @@ export class Note {
     public set NoteheadColorXml(value: string) {
         this.noteheadColorXml = value;
     }
+    /** The desired notehead color for the next render. */
     public get NoteheadColor(): string {
         return this.noteheadColor;
     }
     public set NoteheadColor(value: string) {
         this.noteheadColor = value;
     }
+    public get NoteheadColorCurrentlyRendered(): string {
+        return this.noteheadColorCurrentlyRendered;
+    }
+    public set NoteheadColorCurrentlyRendered(value: string) {
+        this.noteheadColorCurrentlyRendered = value;
+    }
 
     public isRest(): boolean {
-        return this.Pitch === undefined;
+        return this.isRestFlag;
+    }
+
+    /** Note: May be dangerous to use if ParentStaffEntry.VerticalContainerParent etc is not set.
+     * better calculate this directly when you have access to the note's measure.
+     * whole rest: length = measure length. (4/4 in a 4/4 time signature, 3/4 in a 3/4 time signature, 1/4 in a 1/4 time signature, etc.)
+     */
+    public isWholeRest(): boolean {
+        return this.isRest() && this.Length.RealValue === this.sourceMeasure.ActiveTimeSignature.RealValue;
     }
 
     public ToString(): string {
-        if (this.pitch !== undefined) {
+        if (this.pitch) {
             return this.Pitch.ToString() + ", length: " + this.length.toString();
         } else {
           return "rest note, length: " + this.length.toString();
@@ -202,7 +251,7 @@ export class Note {
     public getAbsoluteTimestamp(): Fraction {
         return Fraction.plus(
             this.voiceEntry.Timestamp,
-            this.parentStaffEntry.VerticalContainerParent.ParentMeasure.AbsoluteTimestamp
+            this.sourceMeasure.AbsoluteTimestamp
         );
     }
     public checkForDoubleSlur(slur: Slur): boolean {
