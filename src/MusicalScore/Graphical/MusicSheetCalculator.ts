@@ -298,19 +298,13 @@ export abstract class MusicSheetCalculator {
             /** list of vertically ordered measures belonging to one bar */
             let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
             let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
-            minimumStaffEntriesWidth = Math.max(
-                this.calculateMeasureWidthFromLyrics(measures, minimumStaffEntriesWidth),
-                this.calculateMeasureWidthFromChords(measures, minimumStaffEntriesWidth)
-            );
+            minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
             MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
             // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
                 minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
-                minimumStaffEntriesWidth = Math.max(
-                    this.calculateMeasureWidthFromLyrics(measures, minimumStaffEntriesWidth),
-                    this.calculateMeasureWidthFromChords(measures, minimumStaffEntriesWidth)
-                );
+                minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
                 MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
                 // minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
             }
@@ -318,11 +312,7 @@ export abstract class MusicSheetCalculator {
         // this.graphicalMusicSheet.MinAllowedSystemWidth = minLength; // currently unused
     }
 
-    public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
-        throw new Error("abstract, not implemented");
-    }
-
-    public calculateMeasureWidthFromChords(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
+    public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
         throw new Error("abstract, not implemented");
     }
 

@@ -261,291 +261,228 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return minStaffEntriesWidth;
   }
 
-  public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
-    let elongationFactorForMeasureWidth: number = 1;
+  private calculateElongationFactor(
+    containers: any[], //not sure how or what the type should be here... I'm new to TypeScript
+    staffEntry: GraphicalStaffEntry,
+    lastEntryDict: any,
+    oldMinimumStaffEntriesWidth: number,
+    elongationFactorForMeasureWidth: number,
+    measureNumber: number,
+    oldMinSpacing: number,
+  ): number {
 
-    // information we need for the previous lyricsEntries to space the current one
-    interface LyricEntryInfo {
+    let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
+    let currentContainerIndex: number = 0;
+
+    for (const container of containers) {
+      const alignment: TextAlignmentEnum =
+        (container.GraphicalLabel)
+          ? container.GraphicalLabel.Label.textAlignment
+          : container.GetGraphicalLabel.Label.textAlignment;
+      let minSpacing: number = oldMinSpacing;
+      //only used if this is a lyric anyway... but could probably label it as a lyric prop
+      let overlapAllowedIntoNextMeasure: number =
+        this.rules.LyricOverlapAllowedIntoNextMeasure;
+
+      // spacing for multi-syllable words
+      if (container.ParentLyricWord) {
+        if (container.LyricsEntry.SyllableIndex > 0) { // syllables after first
+          // give a little more spacing for dash between syllables
+          minSpacing = this.rules.BetweenSyllableMinimumDistance;
+          if (TextAlignment.IsCenterAligned(alignment)) {
+            minSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
+            // without this, there's not enough space for dashes between long syllables on eigth notes
+          }
+        }
+        const syllables: LyricsEntry[] = container.ParentLyricWord.GetLyricWord.Syllables;
+        if (syllables.length > 1) {
+          if (container.LyricsEntry.SyllableIndex < syllables.length - 1) {
+            // if a middle syllable of a word, give less measure overlap into next measure, to give room for dash
+            if (this.dashSpace === undefined) { // don't replace undefined check
+              this.dashSpace = 1.5;
+              // better method, doesn't work:
+              // this.dashLength = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom)
+              //   .PositionAndShape.Size.width; // always returns 0
+            }
+            overlapAllowedIntoNextMeasure -= this.dashSpace;
+          }
+        }
+      }
+
+      const bBox: BoundingBox = container.PositionAndShape || container.GraphicalLabel.PositionAndShape;
+      const labelWidth: number = bBox.Size.width;
+      const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
+      const xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft;
+
+      if (lastEntryDict[currentContainerIndex] !== undefined) {
+        if (lastEntryDict[currentContainerIndex].extend) {
+          // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
+          // only necessary for center alignment
+        }
+      }
+
+      let spacingNeededToLastContainer: number;
+      let currentSpacingToLastContainer: number; // undefined for first container in measure
+      if (lastEntryDict[currentContainerIndex]) {
+        currentSpacingToLastContainer = xPosition - lastEntryDict[currentContainerIndex].xPosition;
+      }
+
+      let currentSpacingToMeasureEnd: number;
+      let spacingNeededToMeasureEnd: number;
+      const maxXInMeasure: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
+
+      if (TextAlignment.IsCenterAligned(alignment)) {
+        overlapAllowedIntoNextMeasure /= 4; // reserve space for overlap from next measure. its first note can't be spaced.
+        currentSpacingToMeasureEnd = maxXInMeasure - xPosition;
+        spacingNeededToMeasureEnd = (labelWidth / 2) - overlapAllowedIntoNextMeasure;
+        // spacing to last lyric only done if not first lyric in measure:
+        if (lastEntryDict[currentContainerIndex]) {
+          spacingNeededToLastContainer =
+            lastEntryDict[currentContainerIndex].labelWidth / 2 + labelWidth / 2 + minSpacing;
+        }
+      } else if (TextAlignment.IsLeft(alignment)) {
+        currentSpacingToMeasureEnd = maxXInMeasure - xPosition;
+        spacingNeededToMeasureEnd = labelWidth - overlapAllowedIntoNextMeasure;
+        if (lastEntryDict[currentContainerIndex]) {
+          spacingNeededToLastContainer = lastEntryDict[currentContainerIndex].labelWidth + minSpacing;
+        }
+      }
+
+      // get factor of how much we need to stretch the measure to space the current lyric
+      let elongationFactorForMeasureWidthForCurrentContainer: number = 1;
+      const elongationFactorNeededForMeasureEnd: number =
+        spacingNeededToMeasureEnd / currentSpacingToMeasureEnd;
+      let elongationFactorNeededForLastContainer: number = 1;
+
+      if (container.LyricsEntry !== undefined) {
+        if (lastEntryDict[currentContainerIndex]) { // if previous lyric needs more spacing than measure end, take that spacing
+          const lastNoteDuration: Fraction = lastEntryDict[currentContainerIndex].sourceNoteDuration;
+          elongationFactorNeededForLastContainer = spacingNeededToLastContainer / currentSpacingToLastContainer;
+          if ((lastNoteDuration.Denominator) > 4) {
+            elongationFactorNeededForLastContainer *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
+            // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
+            // if we double the measure length, the distance between eigth notes only gets half of the added length
+            // compared to a quarter note.
+          }
+        }
+      } else if (lastEntryDict[currentContainerIndex]) {
+        elongationFactorNeededForLastContainer =
+        spacingNeededToLastContainer / currentSpacingToLastContainer;
+      }
+
+      elongationFactorForMeasureWidthForCurrentContainer = Math.max(
+        elongationFactorNeededForMeasureEnd,
+        elongationFactorNeededForLastContainer
+      );
+
+      newElongationFactorForMeasureWidth = Math.max(
+        newElongationFactorForMeasureWidth,
+        elongationFactorForMeasureWidthForCurrentContainer
+      );
+
+      let overlap: number = Math.max((spacingNeededToLastContainer - currentSpacingToLastContainer) || 0, 0);
+      if (lastEntryDict[currentContainerIndex]) {
+        overlap += lastEntryDict[currentContainerIndex].cumulativeOverlap;
+      }
+
+      // set up information about this lyric entry of verse j for next lyric entry of verse j
+      lastEntryDict[currentContainerIndex] = {
+        cumulativeOverlap: overlap,
+        extend: container.LyricsEntry ? container.LyricsEntry.extend : false,
+        labelWidth: labelWidth,
+        measureNumber: measureNumber,
+        sourceNoteDuration: (container.LyricsEntry) && container.LyricsEntry.Parent.Notes[0].Length,
+        text: container.LyricsEntry ? container.LyricsEntry.Text : "",  // TODO we should add the chord text here...
+        xPosition: xPosition,
+      };
+
+      currentContainerIndex++;
+    }
+    return newElongationFactorForMeasureWidth;
+  }
+
+  public calculateElongationFactorFromStaffEntries(
+    staffEntries: GraphicalStaffEntry[],
+    oldMinimumStaffEntriesWidth: number,
+    elongationFactorForMeasureWidth: number,
+    measureNumber: number,
+  ): number {
+    interface EntryInfo {
+      cumulativeOverlap: number;
       extend: boolean;
       labelWidth: number;
-      lyricsXPosition: number;
+      xPosition: number;
       sourceNoteDuration: Fraction;
       text: string;
       measureNumber: number;
     }
     // holds lyrics entries for verses i
-    interface LyricEntryDict {
-      [i: number]: LyricEntryInfo;
+    interface EntryDict {
+      [i: number]: EntryInfo;
     }
 
-    for (const measure of measuresVertical) {
-      if (!measure) {
-        continue;
+    let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
+
+    const lastLyricEntryDict: EntryDict = {}; // holds info about last lyric entries for all verses j???
+    const lastChordEntryDict: EntryDict = {}; // holds info about last chord entries for all verses j???
+
+    // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
+    for (const staffEntry of staffEntries) {
+      if (staffEntry.LyricsEntries.length > 0) {
+        newElongationFactorForMeasureWidth =
+          this.calculateElongationFactor(
+            staffEntry.LyricsEntries,
+            staffEntry,
+            lastLyricEntryDict,
+            oldMinimumStaffEntriesWidth,
+            newElongationFactorForMeasureWidth,
+            measureNumber,
+            this.rules.HorizontalBetweenLyricsDistance,
+          );
       }
-      const lastLyricEntryDict: LyricEntryDict = {}; // holds info about last lyrics entries for all verses j
-
-      // for all staffEntries i, each containing the lyric entry for all verses at that timestamp in the measure
-      for (let i: number = 0; i < measure.staffEntries.length; i++) {
-        const staffEntry: GraphicalStaffEntry = measure.staffEntries[i];
-        if (staffEntry.LyricsEntries.length === 0) {
-          continue;
-        }
-        // for all verses j
-        for (let j: number = 0; j < staffEntry.LyricsEntries.length; j++) {
-          const lyricsEntry: GraphicalLyricEntry = staffEntry.LyricsEntries[j];
-          // const lyricsEntryText = lyricsEntry.LyricsEntry.Text; // for easier debugging
-          const lyricAlignment: TextAlignmentEnum = lyricsEntry.GraphicalLabel.Label.textAlignment;
-          let minLyricsSpacing: number = this.rules.HorizontalBetweenLyricsDistance;
-          // for quarter note in Vexflow, where spacing is halfed for each smaller note duration.
-
-          let lyricOverlapAllowedIntoNextMeasure: number =
-            this.rules.LyricOverlapAllowedIntoNextMeasure;
-          // TODO allow more overlap if there are no lyrics in next measure
-
-          // spacing for multi-syllable words
-          if (lyricsEntry.ParentLyricWord) {
-            if (lyricsEntry.LyricsEntry.SyllableIndex > 0) { // syllables after first
-              // give a little more spacing for dash between syllables
-              minLyricsSpacing = this.rules.BetweenSyllableMinimumDistance;
-              if (TextAlignment.IsCenterAligned(lyricsEntry.GraphicalLabel.Label.textAlignment)) {
-                minLyricsSpacing += 1.0; // TODO check for previous lyric alignment too. though center is not standard
-                // without this, there's not enough space for dashes between long syllables on eigth notes
-              }
-            }
-            const syllables: LyricsEntry[] = lyricsEntry.ParentLyricWord.GetLyricWord.Syllables;
-            if (syllables.length > 1) {
-              if (lyricsEntry.LyricsEntry.SyllableIndex < syllables.length - 1) {
-                // if a middle syllable of a word, give less measure overlap into next measure, to give room for dash
-                if (this.dashSpace === undefined) { // don't replace undefined check
-                  this.dashSpace = 1.5;
-                  // better method, doesn't work:
-                  // this.dashLength = new GraphicalLabel(new Label("-"), this.rules.LyricsHeight, TextAlignmentEnum.CenterBottom)
-                  //   .PositionAndShape.Size.width; // always returns 0
-                }
-                lyricOverlapAllowedIntoNextMeasure -= this.dashSpace;
-              }
-            }
-          }
-
-          const lyricsBbox: BoundingBox = lyricsEntry.GraphicalLabel.PositionAndShape;
-          const lyricsLabelWidth: number = lyricsBbox.Size.width;
-          const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
-          const lyricsXPosition: number = staffEntryXPosition + lyricsBbox.BorderMarginLeft;
-
-          if (lastLyricEntryDict[j]) {
-            if (lastLyricEntryDict[j].extend) {
-              // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
-              // only necessary for center alignment
-            }
-          }
-
-          let spacingNeededToLastLyric: number;
-          let currentSpacingToLastLyric: number; // undefined for first lyric in measure
-          if (lastLyricEntryDict[j]) {
-            currentSpacingToLastLyric = lyricsXPosition - lastLyricEntryDict[j].lyricsXPosition;
-          }
-
-          let currentSpacingToMeasureEnd: number;
-          let spacingNeededToMeasureEnd: number;
-          const maxXInMeasure: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
-
-          // when the lyrics are centered, we need to consider spacing differently than when they are left-aligned:
-          if (TextAlignment.IsCenterAligned(lyricAlignment)) {
-            lyricOverlapAllowedIntoNextMeasure /= 4; // reserve space for overlap from next measure. its first note can't be spaced.
-            currentSpacingToMeasureEnd = maxXInMeasure - lyricsXPosition;
-            spacingNeededToMeasureEnd = (lyricsLabelWidth / 2) - lyricOverlapAllowedIntoNextMeasure;
-            // spacing to last lyric only done if not first lyric in measure:
-            if (lastLyricEntryDict[j]) {
-              spacingNeededToLastLyric =
-                lastLyricEntryDict[j].labelWidth / 2 + lyricsLabelWidth / 2 + minLyricsSpacing;
-            }
-          } else if (TextAlignment.IsLeft(lyricAlignment)) {
-            currentSpacingToMeasureEnd = maxXInMeasure - lyricsXPosition;
-            spacingNeededToMeasureEnd = lyricsLabelWidth - lyricOverlapAllowedIntoNextMeasure;
-            if (lastLyricEntryDict[j]) {
-              spacingNeededToLastLyric = lastLyricEntryDict[j].labelWidth + minLyricsSpacing;
-            }
-          }
-
-          // get factor of how much we need to stretch the measure to space the current lyric
-          let elongationFactorForMeasureWidthForCurrentLyric: number = 1;
-          const elongationFactorNeededForMeasureEnd: number =
-            spacingNeededToMeasureEnd / currentSpacingToMeasureEnd;
-          let elongationFactorNeededForLastLyric: number = 1;
-          if (lastLyricEntryDict[j]) { // if previous lyric needs more spacing than measure end, take that spacing
-            const lastNoteDuration: Fraction = lastLyricEntryDict[j].sourceNoteDuration;
-            elongationFactorNeededForLastLyric = spacingNeededToLastLyric / currentSpacingToLastLyric;
-            if (lastNoteDuration.Denominator > 4) {
-              elongationFactorNeededForLastLyric *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
-              // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
-              // if we double the measure length, the distance between eigth notes only gets half of the added length
-              // compared to a quarter note.
-            }
-          }
-          elongationFactorForMeasureWidthForCurrentLyric = Math.max(
-            elongationFactorNeededForMeasureEnd,
-            elongationFactorNeededForLastLyric
+      if (staffEntry.graphicalChordContainers.length > 0) {
+        newElongationFactorForMeasureWidth =
+          this.calculateElongationFactor(
+            staffEntry.graphicalChordContainers,
+            staffEntry,
+            lastChordEntryDict,
+            oldMinimumStaffEntriesWidth,
+            newElongationFactorForMeasureWidth,
+            measureNumber,
+            this.rules.ChordSymbolXSpacing,
           );
-
-          elongationFactorForMeasureWidth = Math.max(
-            elongationFactorForMeasureWidth,
-            elongationFactorForMeasureWidthForCurrentLyric
-          );
-
-          // set up information about this lyric entry of verse j for next lyric entry of verse j
-          lastLyricEntryDict[j] = {
-            extend: lyricsEntry.LyricsEntry.extend,
-            labelWidth: lyricsLabelWidth,
-            lyricsXPosition: lyricsXPosition,
-            measureNumber: measure.MeasureNumber,
-            sourceNoteDuration: lyricsEntry.LyricsEntry.Parent.Notes[0].Length,
-            text: lyricsEntry.LyricsEntry.Text,
-          };
-        }
       }
     }
-    elongationFactorForMeasureWidth = Math.min(elongationFactorForMeasureWidth, this.rules.MaximumLyricsElongationFactor);
-    // TODO check when this is > 2.0. there seems to be an error here where this is unnecessarily > 2 in Beethoven Geliebte.
-    return oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
+
+    return newElongationFactorForMeasureWidth;
   }
 
-  //used calculateMeasureWidthFromLyrics as a starting point for this function.
-  public calculateMeasureWidthFromChords(
+  public calculateMeasureWidthFromStaffEntries(
     measuresVertical: GraphicalMeasure[],
-    oldMinimumStaffEntriesWidth: number
+    oldMinimumStaffEntriesWidth: number,
   ): number {
     let elongationFactorForMeasureWidth: number = 1;
 
-    //info needed from the previous chord to space the current one
-    interface ChordEntryInfo {
-      extend: boolean;
-      labelWidth: number;
-      chordXPosition: number;
-      text: string;
-      measureNumber: number;
-    }
-    //gives us the previous chords for all staffs
-    interface ChordEntryDict {
-      [i: number]: ChordEntryInfo;
-    }
-
     for (const measure of measuresVertical) {
-      const lastChordEntryDict: ChordEntryDict = {};
-      if (measure === undefined) {
+      if (!measure || measure.staffEntries.length === 0) {
         continue;
       }
-      for (const staffEntry of measure.staffEntries) {
-        if (staffEntry.graphicalChordContainers.length === 0) {
-          continue;
-        }
 
-        let j: number = 0;
-        for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
-          const chordAlignment: TextAlignmentEnum =
-            graphicalChordContainer.GetGraphicalLabel.Label.textAlignment;
+      elongationFactorForMeasureWidth =
+        this.calculateElongationFactorFromStaffEntries(
+          measure.staffEntries,
+          oldMinimumStaffEntriesWidth,
+          elongationFactorForMeasureWidth,
+          measure.MeasureNumber,
+        );
 
-          const minChordSpacing: number =
-            this.rules.HorizontalBetweenLyricsDistance;
-
-          let chordOverlapAllowedIntoNextMeasure: number =
-            this.rules.LyricOverlapAllowedIntoNextMeasure;
-
-          const chordBbox: BoundingBox =
-            graphicalChordContainer.PositionAndShape;
-          const chordLabelWidth: number = chordBbox.Size.width;
-          const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry)
-            .PositionAndShape.RelativePosition.x;
-          const chordXPosition: number =
-            staffEntryXPosition + chordBbox.BorderMarginLeft;
-
-          if (lastChordEntryDict[j] !== undefined) {
-            if (lastChordEntryDict[j].extend) {
-              // TODO handle extend of last entry (extend is stored in lyrics entry of preceding syllable)
-              // only necessary for center alignment
-            }
-          }
-
-          let spacingNeededToLastChord: number;
-          let currentSpacingToLastChord: number; // undefined for first lyric in measure
-          if (lastChordEntryDict[j]) {
-            currentSpacingToLastChord =
-              chordXPosition - lastChordEntryDict[j].chordXPosition;
-          }
-
-          let currentSpacingToMeasureEnd: number;
-          let spacingNeededToMeasureEnd: number;
-          const maxXInMeasure: number =
-            oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
-
-          if (TextAlignment.IsCenterAligned(chordAlignment)) {
-            chordOverlapAllowedIntoNextMeasure /= 4; // reserve space for overlap from next measure. its first note can't be spaced.
-            currentSpacingToMeasureEnd = maxXInMeasure - chordXPosition;
-            spacingNeededToMeasureEnd =
-              chordLabelWidth / 2 - chordOverlapAllowedIntoNextMeasure;
-            // spacing to last lyric only done if not first lyric in measure:
-            if (lastChordEntryDict[j]) {
-              spacingNeededToLastChord =
-                lastChordEntryDict[j].labelWidth / 2 +
-                chordLabelWidth / 2 +
-                minChordSpacing;
-            }
-          } else if (TextAlignment.IsLeft(chordAlignment)) {
-            currentSpacingToMeasureEnd = maxXInMeasure - chordXPosition;
-            spacingNeededToMeasureEnd =
-              chordLabelWidth - chordOverlapAllowedIntoNextMeasure;
-            if (lastChordEntryDict[j]) {
-              spacingNeededToLastChord =
-                lastChordEntryDict[j].labelWidth + minChordSpacing;
-            }
-          }
-
-          // get factor of how much we need to stretch the measure to space the current lyric
-          let elongationFactorForMeasureWidthForCurrentChord: number = 1;
-          const elongationFactorNeededForMeasureEnd: number =
-            spacingNeededToMeasureEnd / currentSpacingToMeasureEnd;
-          let elongationFactorNeededForLastChord: number = 1;
-          if (lastChordEntryDict[j]) {
-            // if previous lyric needs more spacing than measure end, take that spacing
-            // const lastNoteDuration: Fraction =
-            //   lastChordEntryDict[j].sourceNoteDuration;
-            elongationFactorNeededForLastChord =
-              spacingNeededToLastChord / currentSpacingToLastChord;
-            // if (lastNoteDuration.Denominator > 4) {
-            //   elongationFactorNeededForLastChord *= 1.1; // from 1.2 upwards, this unnecessarily bloats shorter measures
-            //   // spacing in Vexflow depends on note duration, our minSpacing is calibrated for quarter notes
-            //   // if we double the measure length, the distance between eigth notes only gets half of the added length
-            //   // compared to a quarter note.
-            // }
-          }
-          elongationFactorForMeasureWidthForCurrentChord = Math.max(
-            elongationFactorNeededForMeasureEnd,
-            elongationFactorNeededForLastChord
-          );
-
-          elongationFactorForMeasureWidth = Math.max(
-            elongationFactorForMeasureWidth,
-            elongationFactorForMeasureWidthForCurrentChord
-          );
-
-          // set up information about this lyric entry of verse j for next lyric entry of verse j
-          lastChordEntryDict[j] = {
-            // extend: graphicalChordContainer.LyricsEntry.extend,
-            chordXPosition: chordXPosition,
-            extend: false,
-            labelWidth: chordLabelWidth,
-            measureNumber: measure.MeasureNumber,
-            // sourceNoteDuration: graphicalChordContainer.LyricsEntry.Parent.Notes[0].Length,
-            text: graphicalChordContainer.GetGraphicalLabel.Label.text
-          };
-
-          j += 1;
-        }
-      }
     }
-
     elongationFactorForMeasureWidth = Math.min(elongationFactorForMeasureWidth, this.rules.MaximumLyricsElongationFactor);
     // TODO check when this is > 2.0. there seems to be an error here where this is unnecessarily > 2 in Beethoven Geliebte.
-    return oldMinimumStaffEntriesWidth * (elongationFactorForMeasureWidth);
+
+    const newMinimumStaffEntriesWidth: number = oldMinimumStaffEntriesWidth * elongationFactorForMeasureWidth;
+
+    return newMinimumStaffEntriesWidth;
   }
 
   protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry,
