@@ -197,7 +197,7 @@ export class Cursor {
    * Go to next entry
    */
   public next(): void {
-    this.iterator.moveToNext();
+    this.iterator.moveToNextVisibleVoiceEntry(false);
     this.update();
   }
 
