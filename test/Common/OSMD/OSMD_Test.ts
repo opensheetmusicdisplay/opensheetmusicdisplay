@@ -294,6 +294,8 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             for (let i: number = 0; i < 100; i++) {
                 osmd.cursor.next();
             }
+            // After 100 steps in the visible score, cursor reached 3rd note from 17, a C
+            chai.expect(osmd.cursor.NotesUnderCursor()[0].halfTone).to.equal(60);
         });
     });
     describe("cursor", () => {
