@@ -11,7 +11,13 @@ export class ChordSymbolContainer {
     private degree: Degree;
     private rules: EngravingRules;
 
-    constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree, rules: EngravingRules) {
+    constructor(
+        rootPitch: Pitch,
+        chordKind: ChordSymbolEnum,
+        bassPitch: Pitch,
+        chordDegree: Degree,
+        rules: EngravingRules
+    ) {
         this.rootPitch = rootPitch;
         this.chordKind = chordKind;
         this.bassPitch = bassPitch;
