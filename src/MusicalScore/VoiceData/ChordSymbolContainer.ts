@@ -8,20 +8,20 @@ export class ChordSymbolContainer {
     private rootPitch: Pitch;
     private chordKind: ChordSymbolEnum;
     private bassPitch: Pitch;
-    private degree: Degree;
+    private degrees: Degree[];
     private rules: EngravingRules;
 
     constructor(
         rootPitch: Pitch,
         chordKind: ChordSymbolEnum,
         bassPitch: Pitch,
-        chordDegree: Degree,
+        chordDegrees: Degree[],
         rules: EngravingRules
     ) {
         this.rootPitch = rootPitch;
         this.chordKind = chordKind;
         this.bassPitch = bassPitch;
-        this.degree = chordDegree;
+        this.degrees = chordDegrees;
         this.rules = rules;
     }
 
@@ -37,8 +37,8 @@ export class ChordSymbolContainer {
         return this.bassPitch;
     }
 
-    public get ChordDegree(): Degree {
-        return this.degree;
+    public get ChordDegrees(): Degree[] {
+        return this.degrees;
     }
 
     public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction): string {
@@ -59,26 +59,39 @@ export class ChordSymbolContainer {
         }
         // chord kind text
         text += chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
-        // degree
-        if (chordSymbol.ChordDegree) {
-            switch (chordSymbol.ChordDegree.text) {
-                case ChordDegreeText.add:
-                    text += "add";
-                    text += chordSymbol.ChordDegree.value.toString();
-                    break;
-                case ChordDegreeText.alter:
-                    if (chordSymbol.ChordDegree.alteration !== AccidentalEnum.NONE) {
-                        text += this.getTextForAccidental(chordSymbol.ChordDegree.alteration);
-                    }
-                    text += chordSymbol.ChordDegree.value.toString();
-                    break;
-                case ChordDegreeText.subtract:
-                    text += "(omit";
-                    text += chordSymbol.ChordDegree.value.toString();
-                    text += ")";
-                    break;
-                default:
+        // degrees
+        const adds: string[] = [];
+        const alts: string[] = [];
+        const subs: string[] = [];
+        for (const chordDegree of chordSymbol.ChordDegrees) {
+            if (chordDegree) {
+                let t: string = "";
+                if (chordDegree.alteration !== AccidentalEnum.NONE) {
+                    t += this.getTextForAccidental(chordDegree.alteration);
+                }
+                t += chordDegree.value;
+                switch (chordDegree.text) {
+                    case ChordDegreeText.add:
+                        adds.push(t);
+                        break;
+                    case ChordDegreeText.alter:
+                        alts.push(t);
+                        break;
+                    case ChordDegreeText.subtract:
+                        subs.push(t);
+                        break;
+                    default:
+                }
             }
+        }
+        if (adds.length > 0) {
+            text += "(" + adds.join(",") + ")";
+        }
+        if (alts.length > 0) {
+            text += "(alt " + alts.join(",") + ")";
+        }
+        if (subs.length > 0) {
+            text += "(omit " + subs.join(",") + ")";
         }
         // bass
         if (chordSymbol.BassPitch) {
