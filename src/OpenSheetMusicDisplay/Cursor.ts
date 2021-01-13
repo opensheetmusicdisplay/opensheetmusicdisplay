@@ -197,7 +197,7 @@ export class Cursor {
    * Go to next entry
    */
   public next(): void {
-    this.iterator.moveToNextVisibleVoiceEntry(false);
+    this.iterator.moveToNextVisibleVoiceEntry(false); // moveToNext() would not skip notes in hidden (visible = false) parts
     this.update();
   }
 
