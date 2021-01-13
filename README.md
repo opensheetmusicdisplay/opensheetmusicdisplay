@@ -27,7 +27,7 @@ See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wi
 If you have further technical questions, you can browse through our [Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue) or open a new one.
 
 Brought to you by [PhonicScore](https://phonicscore.com/)
-(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [PhonicScore for Android](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))<br>
+(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [Android (formerly PhonicScore)](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))<br>
 and [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors)
 
 To contact us directly, you can use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/),
