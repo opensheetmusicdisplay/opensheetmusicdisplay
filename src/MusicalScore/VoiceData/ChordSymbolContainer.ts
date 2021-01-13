@@ -84,6 +84,31 @@ export class ChordSymbolContainer {
                 }
             }
         }
+        //check for an altered chord and simplify
+        //in MuseScore 3, an altered chord is given #5, b9, #9 and alt b5 degrees
+        //I'm just replacing all those with an "alt" designation.
+        if (
+            adds.indexOf("#5") >= 0 &&
+            adds.indexOf("b9") >= 0 &&
+            adds.indexOf("#9") >= 0 &&
+            alts.indexOf("b5") >= 0
+        ) {
+            text += "alt";
+            adds.splice(adds.indexOf("#5"), 1);
+            adds.splice(adds.indexOf("b9"), 1);
+            adds.splice(adds.indexOf("#9"), 1);
+            alts.splice(alts.indexOf("b5"), 1);
+        }
+        //check for sus chords
+        if (
+            adds.indexOf("4") >= 0 &&
+            subs.indexOf("3") >= 0
+        ) {
+            text += "sus4";
+            adds.splice(adds.indexOf("4"), 1);
+            subs.splice(subs.indexOf("3"), 1);
+        }
+
         if (adds.length > 0) {
             text += "(" + adds.join(",") + ")";
         }
