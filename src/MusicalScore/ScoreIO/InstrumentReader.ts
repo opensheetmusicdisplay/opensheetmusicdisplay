@@ -198,10 +198,8 @@ export class InstrumentReader {
               if (xmlNode.element("time-modification")) {
                 noteDuration = this.getNoteDurationForTuplet(xmlNode);
                 const time: IXmlElement = xmlNode.element("time-modification");
-                if (time) {
-                  if (time.element("normal-notes")) {
-                    normalNotes = parseInt(time.element("normal-notes").value, 10);
-                  }
+                if (time?.element("normal-notes")) {
+                  normalNotes = parseInt(time.element("normal-notes").value, 10);
                 }
                 isTuplet = true;
               }

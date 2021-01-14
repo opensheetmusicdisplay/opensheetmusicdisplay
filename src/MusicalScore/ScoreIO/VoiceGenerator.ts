@@ -116,7 +116,7 @@ export class VoiceGenerator {
 
     try {
       this.currentNote = restNote
-        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, printObject, isCueNote, noteheadColorXml)
+        ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, normalNotes, printObject, isCueNote, noteheadColorXml)
         : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, guitarPro,
                              printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
       // read lyrics
@@ -449,20 +449,15 @@ export class VoiceGenerator {
                          stringNumber, fretNumber, bends, vibratoStrokes);
     }
 
+    this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes, noteheadColorXml, noteheadColorXml);
     note.TypeLength = typeDuration;
-    note.NoteTypeXml = noteTypeXml;
-    note.NormalNotes = normalNotes;
-    note.PrintObject = printObject;
-    note.IsCueNote = isCueNote;
     note.IsGraceNote = isGraceNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
     note.TremoloStrokes = tremoloStrokes; // could be a Tremolo object in future if we have more data to manage like two-note tremolo
+    note.PlaybackInstrumentId = playbackInstrumentId;
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
-    note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
-    note.NoteheadColor = noteheadColorXml; // color currently used
-    note.PlaybackInstrumentId = playbackInstrumentId;
     this.currentVoiceEntry.Notes.push(note);
     this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
     if (stemColorXml) {
@@ -483,7 +478,7 @@ export class VoiceGenerator {
    * @returns {Note}
    */
   private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType,
-                      printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
+                      normalNotes: number, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
     const displayStep: IXmlElement = node.element("display-step");
     const octave: IXmlElement = node.element("display-octave");
@@ -493,17 +488,28 @@ export class VoiceGenerator {
         pitch = new Pitch(noteStep, parseInt(octave.value, 10), AccidentalEnum.NONE);
     }
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
-    restNote.NoteTypeXml = noteTypeXml;
-    restNote.PrintObject = printObject;
-    restNote.IsCueNote = isCueNote;
-    restNote.NoteheadColorXml = noteheadColorXml;
-    restNote.NoteheadColor = noteheadColorXml;
+    this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, noteheadColorXml, noteheadColorXml);
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeams.length > 0) {
       this.openBeams.last().ExtendedNoteList.push(restNote);
     }
     return restNote;
   }
+
+  // common for "normal" notes and rest notes
+  private addNoteInfo(note: Note, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean,
+                      normalNotes: number, noteheadColorXml: string, noteheadColor: string): void {
+      // common for normal notes and rest note
+      note.NoteTypeXml = noteTypeXml;
+      note.PrintObject = printObject;
+      note.NormalNotes = normalNotes; // how many rhythmical notes the notes replace (e.g. for tuplets), see xml "actual-notes" and "normal-notes"
+      note.IsCueNote = isCueNote;
+      note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
+      note.NoteheadColor = noteheadColorXml; // color currently used
+      // add TypeLength for rest notes like with Note?
+      // add IsGraceNote for rest notes like with Notes?
+      // add PlaybackInstrumentId for rest notes?
+    }
 
   /**
    * Handle the currentVoiceBeam.
