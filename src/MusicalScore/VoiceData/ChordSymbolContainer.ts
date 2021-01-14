@@ -58,7 +58,9 @@ export class ChordSymbolContainer {
             text += this.getTextForAccidental(transposedRootPitch.Accidental);
         }
         // chord kind text
-        text += chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        // I'm going to store this in a variable for now so I can evaluate it with the degrees
+        let chordKind: string = chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+
         // degrees
         const adds: string[] = [];
         const alts: string[] = [];
@@ -84,6 +86,26 @@ export class ChordSymbolContainer {
                 }
             }
         }
+        //MuseScore 3 renders dominant sus2 chords as sus2's with the dominant degrees added.
+        //this results in a rendering "Csus2(7)" for a C7sus2
+        //and a "Csus2(7,9)" for a C9sus2.
+        if (
+            chordSymbol.ChordKind ===  ChordSymbolEnum.suspendedsecond
+        ) {
+            if (adds.indexOf("7") >= 0) {
+                chordKind = "7";
+                adds.splice(adds.indexOf("7"), 1);
+                adds.push("2");
+                subs.push("3");
+                if (adds.indexOf("9") >= 0) {
+                    chordKind = "9";
+                    adds.splice(adds.indexOf("9"), 1);
+                }
+            }
+        }
+
+        text += chordKind;
+
         //check for an altered chord and simplify
         //in MuseScore 3, an altered chord is given #5, b9, #9 and alt b5 degrees
         //I'm just replacing all those with an "alt" designation.
@@ -106,6 +128,16 @@ export class ChordSymbolContainer {
         ) {
             text += "sus4";
             adds.splice(adds.indexOf("4"), 1);
+            subs.splice(subs.indexOf("3"), 1);
+        }
+        // I don't have what I believe is a proper test for this so
+        // I'm just going to assume that sus2's will look just like sus4's.
+        if (
+            adds.indexOf("2") >= 0 &&
+            subs.indexOf("3") >= 0
+        ) {
+            text += "sus2";
+            adds.splice(adds.indexOf("2"), 1);
             subs.splice(subs.indexOf("3"), 1);
         }
 
