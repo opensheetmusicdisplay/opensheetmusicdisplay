@@ -1,17 +1,18 @@
 /*
   Render each OSMD sample, grab the generated images, and
-  dump them into a local directory as PNG files.
+  dump them into a local directory as PNG or SVG files.
 
   inspired by Vexflow's generate_png_images and vexflow-tests.js
 
-  This can be used to generate PNGs from OSMD without a browser.
-  It's also used with the visual regression test system in
+  This can be used to generate PNGs or SVGs from OSMD without a browser.
+  It's also used with the visual regression test system (using PNGs) in
   `tools/visual_regression.sh`
   (see package.json, used with npm run generate:blessed and generate:current, then test:visual).
 
-  Note: this script needs to "fake" quite a few browser elements, like window, document, and a Canvas HTMLElement,
+  Note: this script needs to "fake" quite a few browser elements, like window, document,
+  and a Canvas HTMLElement (for PNG) or the DOM (for SVG)   ,
   which otherwise are missing in pure nodejs, causing errors in OSMD.
-  For that it needs the canvas package installed.
+  For PNG it needs the canvas package installed.
   There are also some hacks needed to set the container size (offsetWidth) correctly.
 
   Otherwise you'd need to run a headless browser, which is way slower,
@@ -26,20 +27,23 @@ function sleep (ms) {
 
 // global variables
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
-let [osmdBuildDir, sampleDir, imageDir, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString] = process.argv.slice(2, 10)
-if (!osmdBuildDir || !sampleDir || !imageDir) {
+let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString] = process.argv.slice(2, 10)
+if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== 'png' && imageFormat !== 'svg')) {
     console.log('usage: ' +
-        'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]')
+        'node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]')
     console.log('  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))')
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)')
-    console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export 210 297 allSmall --debug 5000')
-    console.log('Error: need osmdBuildDir, sampleDir and imageDir. Exiting.')
+    console.log('example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export png 210 297 allSmall --debug 5000')
+    console.log('Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.')
     process.exit(1)
 }
 let pageFormat
 
 if (!mode) {
     mode = ''
+}
+if (imageFormat !== 'svg') {
+    imageFormat = 'png'
 }
 
 let OSMD // can only be required once window was simulated
@@ -64,6 +68,7 @@ async function init () {
     }
     debug('sampleDir: ' + sampleDir, DEBUG)
     debug('imageDir: ' + imageDir, DEBUG)
+    debug('imageFormat: ' + imageFormat, DEBUG)
 
     pageFormat = 'Endless'
     pageWidth = Number.parseInt(pageWidth)
@@ -91,7 +96,9 @@ async function init () {
     global.XMLHttpRequest = window.XMLHttpRequest
     global.DOMParser = window.DOMParser
     global.Node = window.Node
-    global.Canvas = window.Canvas
+    if (imageFormat === 'png') {
+        global.Canvas = window.Canvas
+    }
 
     // fix Blob not found (to support external modules like is-blob)
     global.Blob = require('cross-blob')
@@ -179,9 +186,10 @@ async function init () {
         }
     }
 
+    const backend = imageFormat === 'png' ? 'canvas' : 'svg'
     const osmdInstance = new OSMD.OpenSheetMusicDisplay(div, {
         autoResize: false,
-        backend: 'canvas',
+        backend: backend,
         pageBackgroundColor: '#FFFFFF',
         pageFormat: pageFormat
         // defaultFontFamily: 'Arial',
@@ -279,41 +287,65 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     debug('xml loaded', DEBUG)
     try {
         osmdInstance.render()
+        // there were reports that await could help here, but render isn't a synchronous function, and it seems to work. see #932
     } catch (ex) {
         console.log('renderError: ' + ex)
     }
     debug('rendered', DEBUG)
 
-    const dataUrls = []
+    const markupStrings = [] // svg
+    const dataUrls = [] // png
     let canvasImage
 
-    for (let pageNumber = 1; pageNumber < 999; pageNumber++) {
-        canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
-        if (!canvasImage) {
-            break
+    for (let pageNumber = 1; pageNumber < Number.POSITIVE_INFINITY; pageNumber++) {
+        if (imageFormat === 'png') {
+            canvasImage = document.getElementById('osmdCanvasVexFlowBackendCanvas' + pageNumber)
+            if (!canvasImage) {
+                break
+            }
+            if (!canvasImage.toDataURL) {
+                console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
+                break
+            }
+            dataUrls.push(canvasImage.toDataURL())
+        } else if (imageFormat === 'svg') {
+            let svgElement = document.getElementById('osmdSvgPage' + pageNumber)
+            if (!svgElement) {
+                break
+            }
+            // The important xmlns attribute is not serialized unless we set it here
+            svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+            markupStrings.push(svgElement.outerHTML)
         }
-        if (!canvasImage.toDataURL) {
-            console.log(`error: could not get canvas image for page ${pageNumber} for file: ${sampleFilename}`)
-            break
-        }
-        dataUrls.push(canvasImage.toDataURL())
     }
-    for (let urlIndex = 0; urlIndex < dataUrls.length; urlIndex++) {
-        const pageNumberingString = `${urlIndex + 1}`
+
+    for (let pageIndex = 0; pageIndex < Math.max(dataUrls.length, markupStrings.length); pageIndex++) {
+        const pageNumberingString = `${pageIndex + 1}`
         const skybottomlineString = includeSkyBottomLine ? 'skybottomline_' : ''
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-        var pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.png`
+        var pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.${imageFormat}`
 
-        const dataUrl = dataUrls[urlIndex]
-        if (!dataUrl || !dataUrl.split) {
-            console.log(`error: could not get dataUrl (imageData) for page ${urlIndex + 1} of sample: ${sampleFilename}`)
-            continue
+        if (imageFormat === 'png') {
+            const dataUrl = dataUrls[pageIndex]
+            if (!dataUrl || !dataUrl.split) {
+                console.log(`error: could not get dataUrl (imageData) for page ${pageIndex + 1} of sample: ${sampleFilename}`)
+                continue
+            }
+            const imageData = dataUrl.split(';base64,').pop()
+            const imageBuffer = Buffer.from(imageData, 'base64')
+
+            debug('got image data, saving to: ' + pageFilename, DEBUG)
+            FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
+        } else if (imageFormat === 'svg') {
+            const markup = markupStrings[pageIndex]
+            if (!markup) {
+                console.log(`error: could not get markup (SVG data) for page ${pageIndex + 1} of sample: ${sampleFilename}`)
+                continue
+            }
+
+            debug('got svg markup data, saving to: ' + pageFilename, DEBUG)
+            FS.writeFileSync(pageFilename, markup, { encoding: 'utf-8' })
         }
-        const imageData = dataUrl.split(';base64,').pop()
-        const imageBuffer = Buffer.from(imageData, 'base64')
-
-        debug('got image data, saving to: ' + pageFilename, DEBUG)
-        FS.writeFileSync(pageFilename, imageBuffer, { encoding: 'base64' })
 
         // debug: log memory usage
         // const usage = process.memoryUsage()
