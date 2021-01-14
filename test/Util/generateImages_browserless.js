@@ -309,7 +309,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             }
             dataUrls.push(canvasImage.toDataURL())
         } else if (imageFormat === 'svg') {
-            let svgElement = document.getElementById('osmdSvgPage' + pageNumber)
+            const svgElement = document.getElementById('osmdSvgPage' + pageNumber)
             if (!svgElement) {
                 break
             }
