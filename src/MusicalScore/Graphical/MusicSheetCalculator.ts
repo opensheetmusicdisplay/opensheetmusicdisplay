@@ -266,7 +266,7 @@ export abstract class MusicSheetCalculator {
         // delete graphicalObjects (currently: ties) that will be recalculated, newly create GraphicalObjects streching over a single StaffEntry
         this.clearRecreatedObjects();
 
-        //this.graphicalMusicSheet.initializeActiveClefs(); // could have been changed since last render?
+        // this.graphicalMusicSheet.initializeActiveClefs(); // could have been changed since last render?
 
         this.createGraphicalTies();
 

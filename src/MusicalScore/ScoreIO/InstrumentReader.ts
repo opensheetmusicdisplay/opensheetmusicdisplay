@@ -154,8 +154,7 @@ export class InstrumentReader {
           }
         } else if (xmlNode.name === "note") {
           let printObject: boolean = true;
-          if (xmlNode.hasAttributes && xmlNode.attribute("print-object") &&
-              xmlNode.attribute("print-object").value === "no") {
+          if (xmlNode.attribute("print-object")?.value === "no") {
               printObject = false; // note will not be rendered, but still parsed for Playback etc.
               // if (xmlNode.attribute("print-spacing")) {
               //   if (xmlNode.attribute("print-spacing").value === "yes" {
@@ -199,10 +198,8 @@ export class InstrumentReader {
               if (xmlNode.element("time-modification")) {
                 noteDuration = this.getNoteDurationForTuplet(xmlNode);
                 const time: IXmlElement = xmlNode.element("time-modification");
-                if (time) {
-                  if (time.element("normal-notes")) {
-                    normalNotes = parseInt(time.element("normal-notes").value, 10);
-                  }
+                if (time?.element("normal-notes")) {
+                  normalNotes = parseInt(time.element("normal-notes").value, 10);
                 }
                 isTuplet = true;
               }
@@ -556,7 +553,7 @@ export class InstrumentReader {
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
           try {
-            if (xmlNode.hasAttributes && xmlNode.attribute("tempo") !== undefined) {
+            if (xmlNode.attribute("tempo")) { // can be null, not just undefined!
 
                 const tempo: number = parseFloat(xmlNode.attribute("tempo").value);
 
