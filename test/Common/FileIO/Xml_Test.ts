@@ -37,7 +37,10 @@ describe("XML interface", () => {
         "ScottJoplin_The_Entertainer.xml",
         "TelemannWV40.102_Sonate-Nr.1.1-Dolce.xml",
         "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
-        "ChordSpacingText.musicxml",
+        "ChordSpacingTest.musicxml",
+        "sus4_test.musicxml",
+        "Cmmaj9_test.xml",
+        "Butterfly.musicxml",
     ];
     for (const score of xmlTestset) {
         testFile(score);

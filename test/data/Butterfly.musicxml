@@ -1,0 +1,1335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise>
+  <work>
+    <work-title>Butterfly</work-title>
+  </work>
+  <identification>
+    <creator type="composer">Herbie Hancock</creator>
+    <creator type="lyricist">Funk</creator>
+    <encoding>
+      <software>@infojunkie/ireal-musicxml</software>
+      <encoding-date>2021-01-12</encoding-date>
+      <supports element="accidental" type="no"/>
+      <supports element="transpose" type="no"/>
+      <supports attribute="new-page" element="print" type="yes" value="yes"/>
+      <supports attribute="new-system" element="print" type="yes" value="yes"/>
+    </encoding>
+  </identification>
+  <defaults>
+    <scaling>
+      <millimeters>7</millimeters>
+      <tenths>40</tenths>
+    </scaling>
+  </defaults>
+  <part-list>
+    <score-part id="P1">
+      <part-name print-object="no">Lead sheet</part-name>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <direction placement="above">
+        <direction-type>
+          <rehearsal>Intro</rehearsal>
+        </direction-type>
+      </direction>
+      <barline location="left">
+        <bar-style>heavy-light</bar-style>
+        <repeat direction="forward"/>
+      </barline>
+      <direction placement="below">
+        <direction-type>
+          <words>half x feel throughout</words>
+        </direction-type>
+      </direction>
+      <attributes>
+        <divisions>768</divisions>
+        <key>
+          <fifths>-4</fifths>
+          <mode>minor</mode>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+        <measure-style>
+          <slash type="start" use-stems="yes"/>
+        </measure-style>
+      </attributes>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="2">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="3">
+      <direction placement="below">
+        <direction-type>
+          <words>(4xs)</words>
+        </direction-type>
+      </direction>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="4">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <repeat direction="backward" times="2"/>
+      </barline>
+    </measure>
+    <measure number="5">
+      <print new-system="yes"/>
+      <barline location="left">
+        <bar-style>heavy-light</bar-style>
+        <repeat direction="forward"/>
+      </barline>
+      <direction placement="above">
+        <direction-type>
+          <segno/>
+        </direction-type>
+        <sound segno="segno"/>
+      </direction>
+      <direction placement="above">
+        <direction-type>
+          <rehearsal>A</rehearsal>
+        </direction-type>
+      </direction>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="6">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="7">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="8">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>D</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <repeat direction="backward" times="2"/>
+      </barline>
+    </measure>
+    <measure number="9">
+      <print new-system="yes"/>
+      <barline location="left">
+        <bar-style>light-light</bar-style>
+      </barline>
+      <direction placement="above">
+        <direction-type>
+          <rehearsal>B</rehearsal>
+        </direction-type>
+      </direction>
+      <harmony>
+        <root>
+          <root-step text="">B</root-step>
+        </root>
+        <kind text="N.C.">none</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="7" use-symbols="no">dominant</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="10">
+      <harmony>
+        <root>
+          <root-step text="">B</root-step>
+        </root>
+        <kind text="N.C.">none</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="11">
+      <harmony>
+        <root>
+          <root-step text="">B</root-step>
+        </root>
+        <kind text="N.C.">none</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="12">
+      <harmony>
+        <root>
+          <root-step text="">B</root-step>
+        </root>
+        <kind text="N.C.">none</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="7#5#9" use-symbols="no">dominant</kind>
+        <degree print-object="no">
+          <degree-value>5</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+        <degree print-object="no">
+          <degree-value>9</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="13">
+      <print new-system="yes"/>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="M7" use-symbols="no">major-seventh</kind>
+        <bass>
+          <bass-step>B</bass-step>
+          <bass-alter>-1</bass-alter>
+        </bass>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="14">
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="M7#5" use-symbols="no">major-seventh</kind>
+        <bass>
+          <bass-step>B</bass-step>
+          <bass-alter>-1</bass-alter>
+        </bass>
+        <degree print-object="no">
+          <degree-value>5</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="15">
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="M7" use-symbols="no">major-seventh</kind>
+        <bass>
+          <bass-step>B</bass-step>
+          <bass-alter>-1</bass-alter>
+        </bass>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="16">
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13" use-symbols="no">dominant-13th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="17">
+      <print new-system="yes"/>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <harmony>
+        <root>
+          <root-step>E</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13sus" use-symbols="no">dominant-13th</kind>
+        <degree print-object="no">
+          <degree-value>3</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>subtract</degree-type>
+        </degree>
+        <degree print-object="no">
+          <degree-value>4</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="18">
+      <harmony>
+        <root>
+          <root-step>E</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13sus" use-symbols="no">dominant-13th</kind>
+        <degree print-object="no">
+          <degree-value>3</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>subtract</degree-type>
+        </degree>
+        <degree print-object="no">
+          <degree-value>4</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="19">
+      <harmony>
+        <root>
+          <root-step>E</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="7#5#9" use-symbols="no">dominant</kind>
+        <degree print-object="no">
+          <degree-value>5</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+        <degree print-object="no">
+          <degree-value>9</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="20">
+      <harmony>
+        <root>
+          <root-step>E</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="7#5#9" use-symbols="no">dominant</kind>
+        <degree print-object="no">
+          <degree-value>5</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+        <degree print-object="no">
+          <degree-value>9</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="21">
+      <print new-system="yes"/>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13sus" use-symbols="no">dominant-13th</kind>
+        <degree print-object="no">
+          <degree-value>3</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>subtract</degree-type>
+        </degree>
+        <degree print-object="no">
+          <degree-value>4</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="22">
+      <direction placement="above">
+        <direction-type>
+          <words>To Coda</words>
+        </direction-type>
+        <sound tocoda="coda"/>
+      </direction>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <direction placement="below">
+        <direction-type>
+          <words>Fine</words>
+        </direction-type>
+        <sound fine="yes"/>
+      </direction>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13sus" use-symbols="no">dominant-13th</kind>
+        <degree print-object="no">
+          <degree-value>3</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>subtract</degree-type>
+        </degree>
+        <degree print-object="no">
+          <degree-value>4</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13sus" use-symbols="no">dominant-13th</kind>
+        <bass>
+          <bass-step>C</bass-step>
+        </bass>
+        <degree print-object="no">
+          <degree-value>3</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>subtract</degree-type>
+        </degree>
+        <degree print-object="no">
+          <degree-value>4</degree-value>
+          <degree-alter>0</degree-alter>
+          <degree-type>add</degree-type>
+        </degree>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>C</root-step>
+        </root>
+        <kind text="7" use-symbols="no">dominant</kind>
+        <bass>
+          <bass-step>E</bass-step>
+        </bass>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="23">
+      <harmony>
+        <root>
+          <root-step text="">B</root-step>
+        </root>
+        <kind text="N.C.">none</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="24">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="25">
+      <print new-system="yes"/>
+      <barline location="left">
+        <bar-style>heavy-light</bar-style>
+        <repeat direction="forward"/>
+      </barline>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="26">
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <direction placement="below">
+        <direction-type>
+          <words>D.S. al Coda</words>
+        </direction-type>
+        <sound dalsegno="yes"/>
+      </direction>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>768</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        <notehead>slash</notehead>
+      </note>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="m7" use-symbols="no">minor-seventh</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>2304</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <dot/>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <repeat direction="backward" times="3"/>
+      </barline>
+    </measure>
+    <measure number="27">
+      <print new-system="yes"/>
+      <barline location="left">
+        <bar-style>heavy-light</bar-style>
+        <repeat direction="forward"/>
+      </barline>
+      <direction placement="above">
+        <direction-type>
+          <coda/>
+        </direction-type>
+        <sound coda="coda"/>
+      </direction>
+      <direction placement="above">
+        <direction-type>
+          <words>open</words>
+        </direction-type>
+      </direction>
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="28">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="29">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="30">
+      <harmony>
+        <root>
+          <root-step>F</root-step>
+        </root>
+        <kind text="m11" use-symbols="no">minor-11th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <repeat direction="backward" times="2"/>
+      </barline>
+    </measure>
+    <measure number="31">
+      <print new-system="yes"/>
+      <barline location="left">
+        <bar-style>heavy-light</bar-style>
+        <repeat direction="forward"/>
+      </barline>
+      <direction placement="above">
+        <direction-type>
+          <words>open</words>
+        </direction-type>
+      </direction>
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13" use-symbols="no">dominant-13th</kind>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="32">
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13" use-symbols="no">dominant-13th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="33">
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13" use-symbols="no">dominant-13th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>regular</bar-style>
+      </barline>
+    </measure>
+    <measure number="34">
+      <harmony>
+        <root>
+          <root-step>B</root-step>
+          <root-alter>-1</root-alter>
+        </root>
+        <kind text="13" use-symbols="no">dominant-13th</kind>
+      </harmony>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <repeat direction="backward" times="2"/>
+      </barline>
+    </measure>
+    <measure number="35">
+      <direction placement="below">
+        <direction-type>
+          <words>D.C. al Fine</words>
+        </direction-type>
+        <sound dacapo="yes"/>
+      </direction>
+      <barline location="left">
+        <bar-style>none</bar-style>
+      </barline>
+      <harmony>
+        <root>
+          <root-step>A</root-step>
+        </root>
+        <kind text="M7#11" use-symbols="no">major-seventh</kind>
+        <degree print-object="no">
+          <degree-value>11</degree-value>
+          <degree-alter>1</degree-alter>
+          <degree-type>alter</degree-type>
+        </degree>
+      </harmony>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>3072</duration>
+        <voice>1</voice>
+        <type>whole</type>
+        <notehead>slash</notehead>
+        <notations>
+          <fermata/>
+        </notations>
+      </note>
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+      </barline>
+    </measure>
+  </part>
+</score-partwise>
