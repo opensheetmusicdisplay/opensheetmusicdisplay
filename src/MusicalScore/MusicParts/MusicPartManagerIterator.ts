@@ -500,7 +500,7 @@ export class MusicPartManagerIterator {
         }
     }
     private recursiveMove(): void {
-        this.currentVoiceEntryIndex++;
+        this.currentVoiceEntryIndex++; // TODO handle hidden part: skip hidden voice if requested by parameter
         if (this.currentVoiceEntryIndex === 0) {
             this.handleRepetitionsAtMeasureBegin();
             this.activateCurrentRhythmInstructions();

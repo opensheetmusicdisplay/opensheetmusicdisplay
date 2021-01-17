@@ -317,6 +317,16 @@ export class OpenSheetMusicDisplay {
         }
     }
 
+    // for now SVG only, see generateImages_browserless (PNG/SVG)
+    public exportSVG(): void {
+        for (const backend of this.drawer?.Backends) {
+            if (backend instanceof SvgVexFlowBackend) {
+                (backend as SvgVexFlowBackend).export();
+            }
+            // if we add CanvasVexFlowBackend exporting, rename function to export() or exportImages() again
+        }
+    }
+
     /** States whether the render() function can be safely called. */
     public IsReadyToRender(): boolean {
         return this.graphic !== undefined;
