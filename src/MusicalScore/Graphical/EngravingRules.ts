@@ -98,6 +98,7 @@ export class EngravingRules {
     public OrnamentAccidentalScalingFactor: number;
     public ChordSymbolTextHeight: number;
     public ChordSymbolXSpacing: number;
+    public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     public RepetitionSymbolsYOffset: number;
@@ -387,6 +388,7 @@ export class EngravingRules {
         this.OrnamentAccidentalScalingFactor = 0.65;
         this.ChordSymbolTextHeight = 2.0;
         this.ChordSymbolXSpacing = 1.0;
+        this.ChordOverlapAllowedIntoNextMeasure = 0;
         this.ChordSymbolYOffset = 2.0;
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);

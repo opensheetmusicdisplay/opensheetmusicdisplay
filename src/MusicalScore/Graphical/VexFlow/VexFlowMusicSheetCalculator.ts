@@ -269,6 +269,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     elongationFactorForMeasureWidth: number,
     measureNumber: number,
     oldMinSpacing: number,
+    nextMeasureOverlap: number,
   ): number {
 
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
@@ -280,9 +281,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           ? container.GraphicalLabel.Label.textAlignment
           : container.GetGraphicalLabel.Label.textAlignment;
       let minSpacing: number = oldMinSpacing;
-      //only used if this is a lyric anyway... but could probably label it as a lyric prop
-      let overlapAllowedIntoNextMeasure: number =
-        this.rules.LyricOverlapAllowedIntoNextMeasure;
+
+      let overlapAllowedIntoNextMeasure: number = nextMeasureOverlap;
 
       // spacing for multi-syllable words
       if (container.ParentLyricWord) {
@@ -438,6 +438,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             newElongationFactorForMeasureWidth,
             measureNumber,
             this.rules.HorizontalBetweenLyricsDistance,
+            this.rules.LyricOverlapAllowedIntoNextMeasure,
           );
       }
       if (staffEntry.graphicalChordContainers.length > 0) {
@@ -450,6 +451,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             newElongationFactorForMeasureWidth,
             measureNumber,
             this.rules.ChordSymbolXSpacing,
+            this.rules.ChordOverlapAllowedIntoNextMeasure,
           );
       }
     }
