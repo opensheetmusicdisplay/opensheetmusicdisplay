@@ -17,7 +17,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
 
     /**
      * Calculates the staff entry positions from the VexFlow stave information and the tickabels inside the staff.
-     * This is needed in order to set the OSMD staff entries (which are almost the same as tickables) to the correct positionts.
+     * This is needed in order to set the OSMD staff entries (which are almost the same as tickables) to the correct positions.
      * It is also needed to be done after formatting!
      */
     public calculateXPosition(): void {
