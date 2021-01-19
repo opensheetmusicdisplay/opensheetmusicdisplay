@@ -110,6 +110,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0
         });
+        (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
 
         if (this.ParentStaff) {
@@ -367,16 +368,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
         let instruction: Vex.Flow.Repetition.type = undefined;
         let position: any = Vex.Flow.StaveModifier.Position.END;
+        const xShift: number = this.beginInstructionsWidth;
         switch (repetitionInstruction.type) {
           case RepetitionInstructionEnum.Segno:
             // create Segno Symbol:
             instruction = Vex.Flow.Repetition.type.SEGNO_LEFT;
-            position = Vex.Flow.StaveModifier.Position.BEGIN;
+            position = Vex.Flow.StaveModifier.Position.LEFT;
             break;
           case RepetitionInstructionEnum.Coda:
             // create Coda Symbol:
             instruction = Vex.Flow.Repetition.type.CODA_LEFT;
-            position = Vex.Flow.StaveModifier.Position.BEGIN;
+            position = Vex.Flow.StaveModifier.Position.LEFT;
             break;
           case RepetitionInstructionEnum.DaCapo:
             instruction = Vex.Flow.Repetition.type.DC;
@@ -406,7 +408,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             break;
         }
         if (instruction) {
-            const repetition: Vex.Flow.Repetition = new Vex.Flow.Repetition(instruction, 0, -this.rules.RepetitionSymbolsYOffset);
+            const repetition: Vex.Flow.Repetition = new Vex.Flow.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
             this.stave.addModifier(repetition, position);
             return;
         }
