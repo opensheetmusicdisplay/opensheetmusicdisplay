@@ -3,7 +3,7 @@
   "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="2.0">
   <work>
-    <work-title>Test - StaveRepetitions (Coda etc)</work-title>
+    <work-title>Test - StaveRepetitions (Coda etc) - Positioning</work-title>
   </work>
   <identification>
     <creator type="composer"/>
