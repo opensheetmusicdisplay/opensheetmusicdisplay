@@ -180,6 +180,7 @@ export class ExpressionReader {
                                                      bpmNumber,
                                                      this.currentMultiTempoExpression,
                                                      true);
+                instantaneousTempoExpression.parentMeasure = currentMeasure;
                 this.soundTempo = bpmNumber;
                 currentMeasure.TempoInBPM = this.soundTempo;
                 if (this.musicSheet.DefaultStartTempoInBpm === 0) {

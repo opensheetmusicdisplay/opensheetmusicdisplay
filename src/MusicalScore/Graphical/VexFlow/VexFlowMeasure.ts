@@ -1374,8 +1374,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
 
-        this.beginInstructionsWidth = vfBeginInstructionsWidth / unitInPixels;
-        this.endInstructionsWidth = vfEndInstructionsWidth / unitInPixels;
+        this.beginInstructionsWidth = (vfBeginInstructionsWidth ?? 0) / unitInPixels;
+        this.endInstructionsWidth = (vfEndInstructionsWidth ?? 0) / unitInPixels;
     }
 }
 

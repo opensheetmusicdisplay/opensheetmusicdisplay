@@ -44,7 +44,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
-import { InstantaneousTempoExpression } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import { InstantaneousTempoExpression, TempoEnum } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
@@ -53,6 +53,7 @@ import { MusicSystem } from "../MusicSystem";
 import { NoteTypeHandler } from "../../VoiceData/NoteType";
 import { VexFlowConverter } from "./VexFlowConverter";
 import { TabNote } from "../../VoiceData/TabNote";
+import { PlacementEnum } from "../../VoiceData/Expressions";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -629,13 +630,33 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vexflowDuration = VexFlowConverter.duration(duration, false);
     }
 
+    let yShift: number = this.rules.MetronomeMarkYShift;
+    let hasExpressionsAboveStaffline: boolean = false;
+    for (const expression of metronomeExpression.parentMeasure.TempoExpressions) {
+      const isMetronomeExpression: boolean = expression.InstantaneousTempo?.Enum === TempoEnum.metronomeMark;
+      if (expression.getPlacementOfFirstEntry() === PlacementEnum.Above &&
+          !isMetronomeExpression) {
+        hasExpressionsAboveStaffline = true;
+        break;
+      }
+    }
+    if (hasExpressionsAboveStaffline) {
+      yShift -= 1.4;
+      // TODO improve this with proper skyline / collision detection. unfortunately we don't have a skyline here yet.
+      // let maxSkylineBeginning: number = 0;
+      // for (let i = 0; i < skyline.length / 1; i++) { // search in first 3rd, disregard end of measure
+      //   maxSkylineBeginning = Math.max(skyline[i], maxSkylineBeginning);
+      // }
+      // console.log('max skyline: ' + maxSkylineBeginning);
+    }
+    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
           dots: metronomeExpression.dotted,
           duration: vexflowDuration
       },
-      this.rules.MetronomeMarkYShift * unitInPixels);
+      yShift * unitInPixels);
        // -50, -30), 0); //needs Vexflow PR
        //.setShiftX(-50);
     const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
@@ -643,8 +664,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       xShift
     );
     // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
-    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
-    skyline[0] = Math.min(skyline[0], -4.5 + this.rules.MetronomeMarkYShift);
+    skyline[0] = Math.min(skyline[0], -4.5 + yShift);
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
   }
 
