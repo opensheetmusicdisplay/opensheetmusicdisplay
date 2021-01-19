@@ -31,7 +31,14 @@ export class LyricsReader {
                             syllabic = lyricNode.element("syllabic").value;
                         }
                         if (textNode) {
-                            const text: string = textNode.value;
+                            let text: string = "";
+                            const textAndElisionNodes: IXmlElement[] = lyricNode.elements();
+                            for (const node of textAndElisionNodes) {
+                                if (node.name === "text" || node.name === "elision") {
+                                    text += node.value;
+                                }
+                            }
+                            text = text.replace("  ", " "); // filter multiple spaces from concatenating e.g. "a " with elision " "
                             // <elision> separates Multiple syllabels on a single LyricNote
                             // "-" text indicating separated syllabel should be ignored
                             // we calculate the Dash element much later
