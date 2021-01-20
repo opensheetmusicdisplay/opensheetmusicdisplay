@@ -40,7 +40,7 @@ export class VexFlowConverter {
      * Mapping from numbers of alterations on the key signature to major keys
      * @type {[alterationsNo: number]: string; }
      */
-    private static majorMap: {[_: number]: string; } = {
+    private static majorMap: {[_: number]: string } = {
         "-1": "F", "-2": "Bb", "-3": "Eb", "-4": "Ab", "-5": "Db", "-6": "Gb", "-7": "Cb", "-8": "Fb",
         "0": "C", "1": "G", "2": "D", "3": "A", "4": "E", "5": "B", "6": "F#", "7": "C#", "8": "G#"
     };
@@ -48,7 +48,7 @@ export class VexFlowConverter {
      * Mapping from numbers of alterations on the key signature to minor keys
      * @type {[alterationsNo: number]: string; }
      */
-    private static minorMap: {[_: number]: string; } = {
+    private static minorMap: {[_: number]: string } = {
         "-1": "D", "-2": "G", "-3": "C", "-4": "F", "-5": "Bb", "-6": "Eb", "-7": "Ab", "-8": "Db",
         "0": "A", "1": "E", "2": "B", "3": "F#", "4": "C#", "5": "G#", "6": "D#", "7": "A#", "8": "E#"
     };
@@ -703,8 +703,8 @@ export class VexFlowConverter {
      * Convert a ClefInstruction to a string represention of a clef type in VexFlow.
      *
      * @param clef The OSMD object to be converted representing the clef
-     * @param size The VexFlow size to be used. Can be `default` or `small`. As soon as
-     *             #118 is done, this parameter will be dispensable.
+     * @param size The VexFlow size to be used. Can be `default` or `small`.
+     * As soon as #118 is done, this parameter will be dispensable.
      * @returns    A string representation of a VexFlow clef
      * @see        https://github.com/0xfe/vexflow/blob/master/src/clef.js
      * @see        https://github.com/0xfe/vexflow/blob/master/tests/clef_tests.js
