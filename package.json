@@ -6,8 +6,8 @@
   "typings": "build/dist/src/",
   "scripts": {
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES2017 --ignoreCompilerErrors --mode file ./src",
-    "eslint": "eslint . --ext .ts src/",
-    "lint": "eslint -c .eslintrc.js --ext .ts src/",
+    "eslint": "eslint -c .eslintrc.js --ext .ts",
+    "lint": "npm run eslint",
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
     "prebuild": "ncp src/VexFlowPatch/src/ node_modules/vexflow/src/",
@@ -109,6 +109,7 @@
     "pre-commit": "^1.2.2",
     "svg2pdf.js": "^1.5.0",
     "ts-loader": "^4.1.0",
+    "tslint": "^5.14.0",
     "typedoc": "^0.17.3",
     "typescript": "^3.9.5",
     "webpack": "^4.43.0",
