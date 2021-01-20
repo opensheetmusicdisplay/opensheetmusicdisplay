@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { MusicSheetReader }       from "../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import { MusicSheet }             from "../../../src/MusicalScore/MusicSheet";
 import { IXmlElement }            from "../../../src/Common/FileIO/Xml";

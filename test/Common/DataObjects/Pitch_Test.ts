@@ -3,9 +3,9 @@ import { Pitch, NoteEnum, AccidentalEnum } from "../../../src/Common/DataObjects
 describe("Pitch Unit Tests:", () => {
     describe("transpose Pitch", () => {
         const pitch: Pitch = new Pitch(NoteEnum.A, 1, AccidentalEnum.NONE);
-        const transposedFundamentalAndOctave: {halftone: number; overflow: number; } =
+        const transposedFundamentalAndOctave: {halftone: number, overflow: number } =
           Pitch.CalculateTransposedHalfTone(pitch, 12);
-        const higherTransposedFundamentalAndOctave: {halftone: number; overflow: number; } =
+        const higherTransposedFundamentalAndOctave: {halftone: number, overflow: number } =
           Pitch.CalculateTransposedHalfTone(pitch, 26);
 
         it("should be 1 octave higher and same fundamental", (done: Mocha.Done) => {
