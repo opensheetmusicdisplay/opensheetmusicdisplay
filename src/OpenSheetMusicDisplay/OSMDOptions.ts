@@ -4,7 +4,7 @@ import { FontStyles } from "../Common/Enums/FontStyles";
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
  *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
- * 
+ *
  *  Note that some additional, usually more small scale options are available in EngravingRules,
  *  though not all of them are meant to be manipulated.
  *  The OSMDOptions are the main options we support.

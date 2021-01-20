@@ -148,7 +148,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!measure) {
         continue;
       }
-      const mvoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
+      const mvoices: { [voiceID: number]: Vex.Flow.Voice } = (measure as VexFlowMeasure).vfVoices;
       const voices: Vex.Flow.Voice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
@@ -1045,7 +1045,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   // Generate all Graphical Slurs and attach them to the staffline
   protected calculateSlurs(): void {
-    const openSlursDict: { [staffId: number]: GraphicalSlur[]; } = {};
+    const openSlursDict: { [staffId: number]: GraphicalSlur[] } = {};
     for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
       openSlursDict[graphicalMeasure.ParentStaff.idInMusicSheet] = [];
     }

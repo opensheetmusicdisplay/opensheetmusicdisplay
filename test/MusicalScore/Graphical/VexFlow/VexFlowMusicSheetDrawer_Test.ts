@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import {VexFlowMusicSheetDrawer} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
@@ -8,7 +9,6 @@ import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {VexFlowBackend} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowBackend";
 import {CanvasVexFlowBackend} from "../../../../src/MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
 
-/* tslint:disable:no-unused-expression */
 describe("VexFlow Music Sheet Drawer", () => {
 
     it("draws sheet \"Clementi pt. 1\"", (done: MochaDone) => {

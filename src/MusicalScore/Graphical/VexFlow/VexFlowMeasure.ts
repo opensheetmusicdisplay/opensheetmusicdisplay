@@ -62,7 +62,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** octaveOffset according to active clef */
     public octaveOffset: number = 3;
     /** The VexFlow Voices in the measure */
-    public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
+    public vfVoices: { [voiceID: number]: Vex.Flow.Voice } = {};
     /** Call this function (if present) to x-format all the voices in the measure */
     public formatVoices: (width: number, parent: VexFlowMeasure) => void;
     /** The VexFlow Ties in the measure */
@@ -74,17 +74,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** VexFlow StaveConnectors (vertical lines) */
     protected connectors: Vex.Flow.StaveConnector[] = [];
     /** Intermediate object to construct beams */
-    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][]; } = {};
+    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][] } = {};
     /** Beams created by (optional) autoBeam function. */
     private autoVfBeams: Vex.Flow.Beam[];
     /** Beams of tuplet notes created by (optional) autoBeam function. */
     private autoTupletVfBeams: Vex.Flow.Beam[];
     /** VexFlow Beams */
-    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
+    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[] };
     /** Intermediate object to construct tuplets */
-    protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
+    protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][] } = {};
     /** VexFlow Tuplets */
-    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
+    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[] } = {};
     // The engraving rules of OSMD.
     public rules: EngravingRules;
 
@@ -1243,7 +1243,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     protected createOrnaments(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
-            const gvoices: { [voiceID: number]: GraphicalVoiceEntry; } = graphicalStaffEntry.graphicalVoiceEntries;
+            const gvoices: { [voiceID: number]: GraphicalVoiceEntry } = graphicalStaffEntry.graphicalVoiceEntries;
 
             for (const voiceID in gvoices) {
                 if (gvoices.hasOwnProperty(voiceID)) {

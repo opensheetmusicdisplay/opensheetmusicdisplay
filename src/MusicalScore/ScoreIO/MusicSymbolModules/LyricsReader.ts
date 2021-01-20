@@ -6,7 +6,7 @@ import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import {MusicSheet} from "../../MusicSheet";
 
 export class LyricsReader {
-    private openLyricWords: { [_: number]: LyricWord; } = {};
+    private openLyricWords: { [_: number]: LyricWord } = {};
     private currentLyricWord: LyricWord;
     private musicSheet: MusicSheet;
 

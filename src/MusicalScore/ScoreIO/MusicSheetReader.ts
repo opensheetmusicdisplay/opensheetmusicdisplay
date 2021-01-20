@@ -195,7 +195,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     }
 
     private initializeReading(partList: IXmlElement[], partInst: IXmlElement[], instrumentReaders: InstrumentReader[]): void {
-        const instrumentDict: { [_: string]: Instrument; } = this.createInstrumentGroups(partList);
+        const instrumentDict: { [_: string]: Instrument } = this.createInstrumentGroups(partList);
         this.completeNumberOfStaves = this.getCompleteNumberOfStavesFromXml(partInst);
         if (partInst.length !== 0) {
             this.repetitionInstructionReader.MusicSheet = this.musicSheet;
@@ -571,6 +571,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     }
                     const creditJustify: string = creditChild.attribute("justify")?.value;
                     const creditY: string = creditChild.attribute("default-y")?.value;
+                    // eslint-disable-next-line no-null/no-null
                     const creditYGiven: boolean = creditY !== undefined && creditY !== null;
                     const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
                     if (creditYGiven && creditYInfo > systemYCoordinates) {

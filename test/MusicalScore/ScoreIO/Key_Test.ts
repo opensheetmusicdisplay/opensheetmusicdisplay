@@ -11,7 +11,6 @@ import { RhythmInstruction, RhythmSymbolEnum } from "../../../src/MusicalScore/V
 let reader: MusicSheetReader;
 let parser: DOMParser;
 
-/* tslint:disable:no-unused-expression */
 describe("MusicXML parser for element 'key'", () => {
 
   before((): void => {

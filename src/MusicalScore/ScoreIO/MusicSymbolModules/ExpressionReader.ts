@@ -72,7 +72,7 @@ export class ExpressionReader {
         }
 
         const placeAttr: IXmlAttribute = xmlNode.attribute("placement");
-        if (placeAttr !== undefined && placeAttr !== null) {
+        if (placeAttr) {
             try {
                 const placementString: string = placeAttr.value;
                 if (placementString === "below") {
@@ -96,21 +96,21 @@ export class ExpressionReader {
                     const dynamicsNode: IXmlElement = directionTypeNode.element("dynamics");
                     if (dynamicsNode) {
                         const defAttr: IXmlAttribute = dynamicsNode.attribute("default-y");
-                        if (defAttr !== undefined && defAttr !== null) {
+                        if (defAttr) {
                             this.readExpressionPlacement(defAttr, "read dynamics y pos");
                         }
                     }
                     const wedgeNode: IXmlElement = directionTypeNode.element("wedge");
                     if (wedgeNode) {
                         const defAttr: IXmlAttribute = wedgeNode.attribute("default-y");
-                        if (defAttr !== undefined && defAttr !== null) {
+                        if (defAttr) {
                             this.readExpressionPlacement(defAttr, "read wedge y pos");
                         }
                     }
                     const wordsNode: IXmlElement = directionTypeNode.element("words");
                     if (wordsNode) {
                         const defAttr: IXmlAttribute = wordsNode.attribute("default-y");
-                        if (defAttr !== undefined && defAttr !== null) {
+                        if (defAttr) {
                             this.readExpressionPlacement(defAttr, "read words y pos");
                         }
                     }

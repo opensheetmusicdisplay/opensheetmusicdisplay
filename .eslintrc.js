@@ -55,7 +55,7 @@ module.exports = {
             "error",
             {
                 "multiline": {
-                    "delimiter": "none",
+                    "delimiter": "semi",
                     "requireLast": true
                 },
                 "singleline": {
@@ -119,7 +119,7 @@ module.exports = {
         ],*/
         "id-match": "error",
         "jsdoc/check-alignment": "error",
-        "jsdoc/check-indentation": "error",
+        "jsdoc/check-indentation": "off",
         "jsdoc/newline-after-description": "off",
         "max-len": [
             "error",
@@ -162,10 +162,10 @@ module.exports = {
         "no-fallthrough": "error",
         "no-multiple-empty-lines": "off",
         "no-new-wrappers": "error",
-        "no-null/no-null": "error",
+        "no-null/no-null": "off",
         "no-redeclare": "error",
         "no-trailing-spaces": "error",
-        "no-underscore-dangle": "error",
+        "no-underscore-dangle": "off",
         "no-unused-labels": "error",
         "no-var": "error",
         "prefer-const": "error",

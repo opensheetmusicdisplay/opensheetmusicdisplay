@@ -155,7 +155,7 @@ export class ArticulationReader {
       currentTechnicalInstruction.value = nodeFingering.value;
       currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
       const placement: Attr = nodeFingering.attribute("placement");
-      if (placement !== undefined && placement !== null) {
+      if (placement) {
         switch (placement.value) {
           case "above":
             currentTechnicalInstruction.placement = PlacementEnum.Above;

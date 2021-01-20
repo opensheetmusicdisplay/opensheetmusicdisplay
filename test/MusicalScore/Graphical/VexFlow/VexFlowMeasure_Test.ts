@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
@@ -10,7 +11,6 @@ import {GraphicalMeasure} from "../../../../src/MusicalScore/Graphical/Graphical
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import {EngravingRules} from "../../../../src/MusicalScore/Graphical/EngravingRules";
 
-/* tslint:disable:no-unused-expression */
 describe("VexFlow Measure", () => {
 
    it("GraphicalMusicSheet", (done: MochaDone) => {

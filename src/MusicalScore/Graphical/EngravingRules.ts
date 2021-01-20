@@ -207,8 +207,8 @@ export class EngravingRules {
     public MaxInstructionsConstValue: number;
     public NoteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     public NoteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
-    public DurationDistanceDict: {[_: number]: number; } = {};
-    public DurationScalingDistanceDict: {[_: number]: number; } = {};
+    public DurationDistanceDict: {[_: number]: number } = {};
+    public DurationScalingDistanceDict: {[_: number]: number } = {};
 
     public AlignRests: number; // 0 = false, 1 = true, 2 = auto
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
