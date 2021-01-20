@@ -28,6 +28,15 @@ module.exports = {
         "@typescript-eslint",
         //"@typescript-eslint/tslint"
     ],
+    "overrides": [
+        {
+          "files": ["test/Util/*.js"],
+          "rules": {
+            "@typescript-eslint/explicit-function-return-type": "off",
+            "@typescript-eslint/typedef": "off",
+          }
+        }
+    ],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
         "@typescript-eslint/explicit-function-return-type": "error",
@@ -189,15 +198,6 @@ module.exports = {
                 "markers": [
                     "/"
                 ]
-            }
-        ],
-        "overrides": [
-            {
-              "files": ["test/Util/*.js"],
-              "rules": {
-                "@typescript-eslint/explicit-function-return-type": "off",
-                "@typescript-eslint/typedef": "off",
-              }
             }
         ],
         // using this requires two extra modules: tslint and @typescript-eslint/tslint.
