@@ -13,7 +13,7 @@ import {EngravingRules} from "../../../../src/MusicalScore/Graphical/EngravingRu
 
 describe("VexFlow Measure", () => {
 
-   it("GraphicalMusicSheet", (done: MochaDone) => {
+   it("GraphicalMusicSheet", (done: Mocha.Done) => {
       const path: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
       const score: Document = TestUtils.getScore(path);
       chai.expect(score).to.not.be.undefined;
@@ -28,7 +28,7 @@ describe("VexFlow Measure", () => {
       done();
    });
 
-   it("Simple Measure", (done: MochaDone) => {
+   it("Simple Measure", (done: Mocha.Done) => {
       const sheet: MusicSheet = new MusicSheet();
       sheet.Rules = new EngravingRules();
       const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
@@ -43,7 +43,7 @@ describe("VexFlow Measure", () => {
       done();
    });
 
-   it("Empty Measure", (done: MochaDone) => {
+   it("Empty Measure", (done: Mocha.Done) => {
       const sheet: MusicSheet = new MusicSheet();
       sheet.Rules = new EngravingRules();
       const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
