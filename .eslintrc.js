@@ -191,6 +191,15 @@ module.exports = {
                 ]
             }
         ],
+        "overrides": [
+            {
+              "files": ["test/Util/*.js"],
+              "rules": {
+                "@typescript-eslint/explicit-function-return-type": "off",
+                "@typescript-eslint/typedef": "off",
+              }
+            }
+        ],
         // using this requires two extra modules: tslint and @typescript-eslint/tslint.
         // "@typescript-eslint/tslint/config": [
         //     "error",

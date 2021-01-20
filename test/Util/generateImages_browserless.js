@@ -19,9 +19,6 @@
   see the semi-obsolete generateDiffImagesPuppeteerLocalhost.js
 */
 
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable @typescript-eslint/typedef */
-
 function sleep (ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
