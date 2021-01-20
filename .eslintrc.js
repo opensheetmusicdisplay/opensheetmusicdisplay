@@ -26,7 +26,7 @@ module.exports = {
         "eslint-plugin-jsdoc",
         "eslint-plugin-no-null",
         "@typescript-eslint",
-        "@typescript-eslint/tslint"
+        //"@typescript-eslint/tslint"
     ],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
@@ -179,29 +179,30 @@ module.exports = {
                 ]
             }
         ],
-        "@typescript-eslint/tslint/config": [
-            "error",
-            {
-                "rules": {
-                    "object-literal-sort-keys": true,
-                    "typedef": [
-                        true,
-                        "call-signature",
-                        "parameter",
-                        "property-declaration",
-                        "variable-declaration",
-                        "member-variable-declaration"
-                    ],
-                    "whitespace": [
-                        true,
-                        "check-branch",
-                        "check-decl",
-                        "check-operator",
-                        "check-separator",
-                        "check-type"
-                    ]
-                }
-            }
-        ]
+        // using this requires two extra modules: tslint and @typescript-eslint/tslint.
+        // "@typescript-eslint/tslint/config": [
+        //     "error",
+        //     {
+        //         "rules": {
+        //             "object-literal-sort-keys": true,
+        //             "typedef": [
+        //                 true,
+        //                 "call-signature",
+        //                 "parameter",
+        //                 "property-declaration",
+        //                 "variable-declaration",
+        //                 "member-variable-declaration"
+        //             ],
+        //             "whitespace": [
+        //                 true,
+        //                 "check-branch",
+        //                 "check-decl",
+        //                 "check-operator",
+        //                 "check-separator",
+        //                 "check-type"
+        //             ]
+        //         }
+        //     }
+        // ]
     }
 };
