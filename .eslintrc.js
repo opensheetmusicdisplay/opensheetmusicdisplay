@@ -91,6 +91,13 @@ module.exports = {
         "@typescript-eslint/semi": [
             "error"
         ],
+        "@typescript-eslint/typedef": [
+            "error",
+            {
+              "arrowParameter": false,
+              "variableDeclaration": true
+            }
+        ],
         "@typescript-eslint/type-annotation-spacing": "error",
         "brace-style": [
             "off",
