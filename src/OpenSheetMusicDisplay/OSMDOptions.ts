@@ -57,7 +57,7 @@ export interface IOSMDOptions {
     /** Default font used for text and labels, e.g. title or lyrics. Default Times New Roman
      * Note that OSMD originally always used Times New Roman,
      * so things like layout and spacing may still be optimized for it.
-     * Valid options are CSS font families available in the browser used for rendering, 
+     * Valid options are CSS font families available in the browser used for rendering,
      * e.g. Times New Roman, Helvetica.
      */
     defaultFontFamily?: string;
