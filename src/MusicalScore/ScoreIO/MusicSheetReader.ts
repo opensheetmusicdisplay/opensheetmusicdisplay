@@ -712,9 +712,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * @param entryList
      * @returns {{}}
      */
-    private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument; } {
+    private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument } {
         let instrumentId: number = 0;
-        const instrumentDict: { [_: string]: Instrument; } = {};
+        const instrumentDict: { [_: string]: Instrument } = {};
         let currentGroup: InstrumentalGroup;
         try {
             const entryArray: IXmlElement[] = entryList;
