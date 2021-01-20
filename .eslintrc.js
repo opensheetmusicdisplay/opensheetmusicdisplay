@@ -30,6 +30,7 @@ module.exports = {
     ],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
+        "@typescript-eslint/explicit-function-return-type": "error",
         "@typescript-eslint/explicit-member-accessibility": [
             "off",
             {
