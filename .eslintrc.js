@@ -94,7 +94,7 @@ module.exports = {
         "@typescript-eslint/typedef": [
             "error",
             {
-              // we could add this requirement for arrow parameters too,
+              // we could add this requirement for arrow (function) parameters too,
               //   but we have a lot of arrow parameters without types already (~25),
               //   and a lot of them look ugly and unnecessarily explicit with types,
               //   the type info is usually obvious there.
