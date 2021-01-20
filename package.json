@@ -6,7 +6,7 @@
   "typings": "build/dist/src/",
   "scripts": {
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES2017 --ignoreCompilerErrors --mode file ./src",
-    "eslint": "eslint -c .eslintrc.js --ext .ts",
+    "eslint": "eslint -c .eslintrc.js --ext .ts .",
     "lint": "npm run eslint",
     "test": "karma start --single-run --no-auto-watch",
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
