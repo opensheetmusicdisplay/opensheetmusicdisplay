@@ -197,7 +197,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
         if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
           minStaffEntriesWidth += maxStaffEntries * staffEntryFactor; // don't scale this for implicit measures
-          // in fact overscale it, this needs a lot of space the more staffEntries there are
+          // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
+          //   TODO idea: count accidentals/other modifiers, count them as another staffentry or half or so
         }
         minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
       }
