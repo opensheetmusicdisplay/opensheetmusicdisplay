@@ -199,6 +199,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           minStaffEntriesWidth += maxStaffEntries * staffEntryFactor; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries there are
         }
+        minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
       }
 
         // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.

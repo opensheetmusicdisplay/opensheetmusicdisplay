@@ -195,6 +195,7 @@ export class EngravingRules {
 
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
+    public PickupMeasureWidthMultiplier: number;
     public DisplacedNoteMargin: number;
     public MinNoteDistance: number;
     public SubMeasureXSpacingThreshold: number;
@@ -484,6 +485,7 @@ export class EngravingRules {
         // xSpacing Variables
         this.VoiceSpacingMultiplierVexflow = 0.85;
         this.VoiceSpacingAddendVexflow = 3.0;
+        this.PickupMeasureWidthMultiplier = 1.0;
         this.DisplacedNoteMargin = 0.1;
         this.MinNoteDistance = 2.0;
         this.SubMeasureXSpacingThreshold = 35;
