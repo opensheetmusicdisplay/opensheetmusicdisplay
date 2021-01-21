@@ -195,6 +195,7 @@ export class EngravingRules {
 
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
+    public PickupMeasureWidthMultiplier: number;
     public DisplacedNoteMargin: number;
     public MinNoteDistance: number;
     public SubMeasureXSpacingThreshold: number;
@@ -207,8 +208,8 @@ export class EngravingRules {
     public MaxInstructionsConstValue: number;
     public NoteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     public NoteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
-    public DurationDistanceDict: {[_: number]: number; } = {};
-    public DurationScalingDistanceDict: {[_: number]: number; } = {};
+    public DurationDistanceDict: {[_: number]: number } = {};
+    public DurationScalingDistanceDict: {[_: number]: number } = {};
 
     public AlignRests: number; // 0 = false, 1 = true, 2 = auto
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
@@ -484,6 +485,7 @@ export class EngravingRules {
         // xSpacing Variables
         this.VoiceSpacingMultiplierVexflow = 0.85;
         this.VoiceSpacingAddendVexflow = 3.0;
+        this.PickupMeasureWidthMultiplier = 1.0;
         this.DisplacedNoteMargin = 0.1;
         this.MinNoteDistance = 2.0;
         this.SubMeasureXSpacingThreshold = 35;

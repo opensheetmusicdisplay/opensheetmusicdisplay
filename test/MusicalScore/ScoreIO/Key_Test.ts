@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { MusicSheetReader }       from "../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import { MusicSheet }             from "../../../src/MusicalScore/MusicSheet";
 import { IXmlElement }            from "../../../src/Common/FileIO/Xml";
@@ -11,7 +12,6 @@ import { RhythmInstruction, RhythmSymbolEnum } from "../../../src/MusicalScore/V
 let reader: MusicSheetReader;
 let parser: DOMParser;
 
-/* tslint:disable:no-unused-expression */
 describe("MusicXML parser for element 'key'", () => {
 
   before((): void => {
@@ -21,14 +21,14 @@ describe("MusicXML parser for element 'key'", () => {
 
   describe("for group traditional keys", () => {
 
-    it("enforces single occurrence of element 'fifths'", (done: MochaDone) => {
+    it("enforces single occurrence of element 'fifths'", (done: Mocha.Done) => {
       const keyInstruction: KeyInstruction = getIllegalMusicXmlWithTwoFifthsElements().getFirstSourceMeasure().getKeyInstruction(0);
       // TODO Make sure we detect the multiple fifths and react properly // [it seems like we do this, test passes. ssch]
       chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.none);
       done();
     });
 
-    it("reads key signature with no optional 'mode' element present", (done: MochaDone) => {
+    it("reads key signature with no optional 'mode' element present", (done: Mocha.Done) => {
       const keyInstruction: KeyInstruction = getMusicSheetWithKey(0, undefined).getFirstSourceMeasure().getKeyInstruction(0);
       chai.expect(keyInstruction.Key).to.equal(0);
       chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.none);
@@ -37,112 +37,112 @@ describe("MusicXML parser for element 'key'", () => {
 
     describe("major keys", () => {
 
-      it("reads key signature C-major", (done: MochaDone) => {
+      it("reads key signature C-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(0, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(0);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature G-major", (done: MochaDone) => {
+      it("reads key signature G-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(1, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(1);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature D-major", (done: MochaDone) => {
+      it("reads key signature D-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(2, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(2);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature A-major", (done: MochaDone) => {
+      it("reads key signature A-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(3, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(3);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature E-major", (done: MochaDone) => {
+      it("reads key signature E-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(4, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(4);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature B-major", (done: MochaDone) => {
+      it("reads key signature B-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(5, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(5);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature F#-major", (done: MochaDone) => {
+      it("reads key signature F#-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(6, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(6);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature C#-major", (done: MochaDone) => {
+      it("reads key signature C#-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(7, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(7);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature G#-major", (done: MochaDone) => {
+      it("reads key signature G#-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(8, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(8);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature F-major", (done: MochaDone) => {
+      it("reads key signature F-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-1, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-1);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature B-major", (done: MochaDone) => {
+      it("reads key signature B-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-2, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-2);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature Eb-major", (done: MochaDone) => {
+      it("reads key signature Eb-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-3, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-3);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature Ab-major", (done: MochaDone) => {
+      it("reads key signature Ab-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-4, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-4);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature Db-major", (done: MochaDone) => {
+      it("reads key signature Db-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-5, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-5);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature Gb-major", (done: MochaDone) => {
+      it("reads key signature Gb-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-6, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-6);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
         done();
       });
 
-      it("reads key signature Fb-major", (done: MochaDone) => {
+      it("reads key signature Fb-major", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-8, "major").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-8);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.major);
@@ -152,105 +152,105 @@ describe("MusicXML parser for element 'key'", () => {
 
     describe("minor keys", () => {
 
-      it("reads key signature a-minor", (done: MochaDone) => {
+      it("reads key signature a-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(0, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(0);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature e-minor", (done: MochaDone) => {
+      it("reads key signature e-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(1, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(1);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature b-minor", (done: MochaDone) => {
+      it("reads key signature b-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(2, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(2);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature f#-minor", (done: MochaDone) => {
+      it("reads key signature f#-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(3, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(3);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature c#-minor", (done: MochaDone) => {
+      it("reads key signature c#-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(4, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(4);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature g#-minor", (done: MochaDone) => {
+      it("reads key signature g#-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(5, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(5);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature d#-minor", (done: MochaDone) => {
+      it("reads key signature d#-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(6, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(6);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature a#-minor", (done: MochaDone) => {
+      it("reads key signature a#-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(7, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(7);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature d-minor", (done: MochaDone) => {
+      it("reads key signature d-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-1, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-1);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature g-minor", (done: MochaDone) => {
+      it("reads key signature g-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-2, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-2);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature c-minor", (done: MochaDone) => {
+      it("reads key signature c-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-3, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-3);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature f-minor", (done: MochaDone) => {
+      it("reads key signature f-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-4, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-4);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature bb-minor", (done: MochaDone) => {
+      it("reads key signature bb-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-5, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-5);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature eb-minor", (done: MochaDone) => {
+      it("reads key signature eb-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-6, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-6);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
         done();
       });
 
-      it("reads key signature ab-minor", (done: MochaDone) => {
+      it("reads key signature ab-minor", (done: Mocha.Done) => {
         const keyInstruction: KeyInstruction = getMusicSheetWithKey(-7, "minor").getFirstSourceMeasure().getKeyInstruction(0);
         chai.expect(keyInstruction.Key).to.equal(-7);
         chai.expect(keyInstruction.Mode).to.equal(KeyModeEnum.minor);
@@ -266,7 +266,7 @@ describe("VexFlowConverter for element 'key'", () => {
     parser = new DOMParser();
   });
 
-  it("gives key signature G-major with no optional 'mode' element present", (done: MochaDone) => {
+  it("gives key signature G-major with no optional 'mode' element present", (done: Mocha.Done) => {
     const keyInstruction: KeyInstruction = getMusicSheetWithKey(1, "").getFirstSourceMeasure().getKeyInstruction(0);
     const vexflowKeySignature: string = VexFlowConverter.keySignature(keyInstruction);
     const isGMajorOrEminor: boolean = ["G", "E"].indexOf(vexflowKeySignature.charAt(0)) !== -1;
@@ -282,7 +282,7 @@ describe("InstrumentReader for element 'time'", () => {
     parser = new DOMParser();
   });
 
-  it("gives common time RythmSymbolEnum from xml", (done: MochaDone) => {
+  it("gives common time RythmSymbolEnum from xml", (done: Mocha.Done) => {
     const instructions: AbstractNotationInstruction[] =
       getMusicSheetWithKey(1, "major", "common").getFirstSourceMeasure().FirstInstructionsStaffEntries[0].Instructions;
     for (const instruction of instructions) {
@@ -293,7 +293,7 @@ describe("InstrumentReader for element 'time'", () => {
     done();
   });
 
-  it("gives alla breve/cut time RythmSymbolEnum from xml", (done: MochaDone) => {
+  it("gives alla breve/cut time RythmSymbolEnum from xml", (done: Mocha.Done) => {
     const instructions: AbstractNotationInstruction[] =
       getMusicSheetWithKey(1, "major", "cut").getFirstSourceMeasure().FirstInstructionsStaffEntries[0].Instructions;
     for (const instruction of instructions) {

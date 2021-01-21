@@ -892,9 +892,8 @@ export class MusicSystemBuilder {
         if (Math.abs(systemVarWidth - 0) < 0.00001 || Math.abs(systemFixWidth - 0) < 0.00001) {
             return 1.0;
         }
-        let systemEndX: number;
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
-        systemEndX = currentSystem.StaffLines[0].PositionAndShape.Size.width;
+        const systemEndX: number = currentSystem.StaffLines[0].PositionAndShape.Size.width;
         const scalingFactor: number = (systemEndX - systemFixWidth) / systemVarWidth;
         return scalingFactor;
     }

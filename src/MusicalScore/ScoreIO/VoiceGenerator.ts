@@ -58,9 +58,9 @@ export class VoiceGenerator {
   // private lastBeamTag: string = "";
   private openBeams: Beam[] = []; // works like a stack, with push and pop
   private beamNumberOffset: number = 0;
-  private openTieDict: { [_: number]: Tie; } = {};
+  private openTieDict: { [_: number]: Tie } = {};
   private currentOctaveShift: number = 0;
-  private tupletDict: { [_: number]: Tuplet; } = {};
+  private tupletDict: { [_: number]: Tuplet } = {};
   private openTupletNumber: number = 0;
 
   public get GetVoice(): Voice {
@@ -169,7 +169,7 @@ export class VoiceGenerator {
             if (!arpeggioAlreadyExists) {
                 let arpeggioType: ArpeggioType = ArpeggioType.ARPEGGIO_DIRECTIONLESS;
                 const directionAttr: Attr = arpeggioNode.attribute("direction");
-                if (directionAttr !== null) {
+                if (directionAttr) {
                   switch (directionAttr.value) {
                     case "up":
                       arpeggioType = ArpeggioType.ROLL_UP;
@@ -212,7 +212,7 @@ export class VoiceGenerator {
         }
 
         // remove open ties, if there is already a gap between the last tie note and now.
-        const openTieDict: { [_: number]: Tie; } = this.openTieDict;
+        const openTieDict: { [_: number]: Tie } = this.openTieDict;
         for (const key in openTieDict) {
           if (openTieDict.hasOwnProperty(key)) {
             const tie: Tie = openTieDict[key];
@@ -398,7 +398,7 @@ export class VoiceGenerator {
           }
         } else if (noteElement.name === "notehead") {
           noteheadShapeXml = noteElement.value;
-          if (noteElement.attribute("filled") !== null) {
+          if (noteElement.attribute("filled")) {
             noteheadFilledXml = noteElement.attribute("filled").value === "yes";
           }
         }
@@ -543,7 +543,7 @@ export class VoiceGenerator {
         }
         let sameVoiceEntry: boolean = false;
         if (!(beamNumber > 0 && beamNumber <= this.openBeams.length) || !this.openBeams[beamNumber - 1]) {
-          console.log("invalid beamnumber"); // this shouldn't happen, probably error in this method
+          log.debug("[OSMD] invalid beamnumber"); // this shouldn't happen, probably error in this method
           return;
         }
         for (let idx: number = 0, len: number = this.openBeams[beamNumber - 1].Notes.length; idx < len; ++idx) {
@@ -875,7 +875,7 @@ export class VoiceGenerator {
    * @returns {number}
    */
   private findCurrentNoteInTieDict(candidateNote: Note): number {
-    const openTieDict: { [_: number]: Tie; } = this.openTieDict;
+    const openTieDict: { [_: number]: Tie } = this.openTieDict;
     for (const key in openTieDict) {
       if (openTieDict.hasOwnProperty(key)) {
         const tie: Tie = openTieDict[key];

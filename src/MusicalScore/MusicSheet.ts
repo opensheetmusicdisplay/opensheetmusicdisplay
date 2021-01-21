@@ -447,7 +447,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         }
         return this.userStartTempoInBPM;
     }
-    public get Errors(): { [n: number]: string[]; } {
+    public get Errors(): { [n: number]: string[] } {
         return this.musicSheetErrors.measureErrors;
     }
     public get FirstMeasureNumber(): number {

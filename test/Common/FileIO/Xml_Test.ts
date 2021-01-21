@@ -49,7 +49,7 @@ describe("XML interface", () => {
 
     // Generates a test for a mxl file name
     function testFile(scoreName: string): void {
-        it(scoreName, (done: MochaDone) => {
+        it(scoreName, (done: Mocha.Done) => {
             // Load the xml file content
             const score: Document = TestUtils.getScore(scoreName);
             const div: HTMLElement = document.createElement("div");
@@ -60,7 +60,7 @@ describe("XML interface", () => {
         }).timeout(10000);
     }
 
-    it("test IXmlElement", (done: MochaDone) => {
+    it("test IXmlElement", (done: Mocha.Done) => {
         // Test name attribute
         chai.expect(documentElement.name).to.equal("score-partwise");
         // Test element method
@@ -73,7 +73,7 @@ describe("XML interface", () => {
         done();
     });
 
-    it("test IXmlAttribute", (done: MochaDone) => {
+    it("test IXmlAttribute", (done: Mocha.Done) => {
         // Test attributes method
         chai.expect(
             documentElement.element("credit").attributes()[0].name

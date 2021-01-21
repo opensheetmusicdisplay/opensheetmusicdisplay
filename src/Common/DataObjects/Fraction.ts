@@ -81,7 +81,7 @@ export class Fraction {
    * @param denominator
    * @param wholeValue - the integer number, needed for values greater than 1
    * @param simplify - If simplify is true, then the fraction is simplified
-   *      to make both the numerator and denominator coprime, and less than maximumAllowedNumber.
+   * to make both the numerator and denominator coprime, and less than maximumAllowedNumber.
    */
   constructor(numerator: number = 0, denominator: number = 1, wholeValue: number = 0, simplify: boolean = true) {
     this.numerator = numerator;

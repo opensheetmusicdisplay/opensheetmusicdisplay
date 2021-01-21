@@ -44,7 +44,7 @@ import { GraphicalSlur } from "../GraphicalSlur";
 import { BoundingBox } from "../BoundingBox";
 import { ContinuousDynamicExpression } from "../../VoiceData/Expressions/ContinuousExpressions/ContinuousDynamicExpression";
 import { VexFlowContinuousDynamicExpression } from "./VexFlowContinuousDynamicExpression";
-import { InstantaneousTempoExpression } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
+import { InstantaneousTempoExpression, TempoEnum } from "../../VoiceData/Expressions/InstantaneousTempoExpression";
 import { AlignRestOption } from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { EngravingRules } from "../EngravingRules";
@@ -53,6 +53,7 @@ import { MusicSystem } from "../MusicSystem";
 import { NoteTypeHandler } from "../../VoiceData/NoteType";
 import { VexFlowConverter } from "./VexFlowConverter";
 import { TabNote } from "../../VoiceData/TabNote";
+import { PlacementEnum } from "../../VoiceData/Expressions";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -132,7 +133,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
     const visibleMeasures: GraphicalMeasure[] = [];
     for (const measure of measures) {
-      visibleMeasures.push(measure);
+      if (measure) {
+        visibleMeasures.push(measure);
+      }
+    }
+    if (visibleMeasures.length === 0) { // e.g. after Multiple Rest measures (VexflowMultiRestMeasure)
+      return 0;
     }
     measures = visibleMeasures;
 
@@ -143,11 +149,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
     });
 
+    let maxStaffEntries: number = measures[0].staffEntries.length;
     for (const measure of measures) {
       if (!measure) {
         continue;
       }
-      const mvoices: { [voiceID: number]: Vex.Flow.Voice; } = (measure as VexFlowMeasure).vfVoices;
+      // the if is a TEMP change to show pure diff for pickup measures, should be done for all measures, but increases spacing
+      if (measure.parentSourceMeasure.ImplicitMeasure) {
+        maxStaffEntries = Math.max(measure.staffEntries.length, maxStaffEntries);
+      }
+      const mvoices: { [voiceID: number]: Vex.Flow.Voice } = (measure as VexFlowMeasure).vfVoices;
       const voices: Vex.Flow.Voice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
@@ -166,14 +177,32 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
+    const parentSourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
+
     if (allVoices.length > 0) {
       // the voicing space bonus addition makes the voicing more relaxed. With a bonus of 0 the notes are basically completely squeezed together.
       const staffEntryFactor: number = 0.3;
 
       minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
-        * this.rules.VoiceSpacingMultiplierVexflow
-        + this.rules.VoiceSpacingAddendVexflow
-        + measures[0].staffEntries.length * staffEntryFactor;
+      * this.rules.VoiceSpacingMultiplierVexflow
+      + this.rules.VoiceSpacingAddendVexflow
+      + maxStaffEntries * staffEntryFactor;
+      if (parentSourceMeasure?.ImplicitMeasure) {
+        // shrink width in the ratio that the pickup measure is shorter compared to a full measure('s time signature):
+        minStaffEntriesWidth = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue * minStaffEntriesWidth;
+        // e.g. a 1/4 pickup measure in a 3/4 time signature should be 1/4 / 3/4 = 1/3 as long (a third)
+        // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
+        //   without this the pickup measures were always too long.
+
+        // add more than the original staffEntries scaling again: (removing it above makes it too short)
+        if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
+          minStaffEntriesWidth += maxStaffEntries * staffEntryFactor; // don't scale this for implicit measures
+          // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
+          //   TODO idea: count accidentals/other modifiers, count them as another staffentry or half or so
+        }
+        minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
+      }
+
         // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
       // firstMeasure.formatVoices = (w: number) => {
       //     formatter.format(allVoices, w);
@@ -629,13 +658,33 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       vexflowDuration = VexFlowConverter.duration(duration, false);
     }
 
+    let yShift: number = this.rules.MetronomeMarkYShift;
+    let hasExpressionsAboveStaffline: boolean = false;
+    for (const expression of metronomeExpression.parentMeasure.TempoExpressions) {
+      const isMetronomeExpression: boolean = expression.InstantaneousTempo?.Enum === TempoEnum.metronomeMark;
+      if (expression.getPlacementOfFirstEntry() === PlacementEnum.Above &&
+          !isMetronomeExpression) {
+        hasExpressionsAboveStaffline = true;
+        break;
+      }
+    }
+    if (hasExpressionsAboveStaffline) {
+      yShift -= 1.4;
+      // TODO improve this with proper skyline / collision detection. unfortunately we don't have a skyline here yet.
+      // let maxSkylineBeginning: number = 0;
+      // for (let i = 0; i < skyline.length / 1; i++) { // search in first 3rd, disregard end of measure
+      //   maxSkylineBeginning = Math.max(skyline[i], maxSkylineBeginning);
+      // }
+      // console.log('max skyline: ' + maxSkylineBeginning);
+    }
+    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
           dots: metronomeExpression.dotted,
           duration: vexflowDuration
       },
-      this.rules.MetronomeMarkYShift * unitInPixels);
+      yShift * unitInPixels);
        // -50, -30), 0); //needs Vexflow PR
        //.setShiftX(-50);
     const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
@@ -643,8 +692,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       xShift
     );
     // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
-    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
-    skyline[0] = Math.min(skyline[0], -4.5 + this.rules.MetronomeMarkYShift);
+    skyline[0] = Math.min(skyline[0], -4.5 + yShift);
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
   }
 
@@ -1025,7 +1073,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   // Generate all Graphical Slurs and attach them to the staffline
   protected calculateSlurs(): void {
-    const openSlursDict: { [staffId: number]: GraphicalSlur[]; } = {};
+    const openSlursDict: { [staffId: number]: GraphicalSlur[] } = {};
     for (const graphicalMeasure of this.graphicalMusicSheet.MeasureList[0]) { //let i: number = 0; i < this.graphicalMusicSheet.MeasureList[0].length; i++) {
       openSlursDict[graphicalMeasure.ParentStaff.idInMusicSheet] = [];
     }

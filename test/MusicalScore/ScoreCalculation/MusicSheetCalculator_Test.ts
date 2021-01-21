@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import {MusicSheetReader} from "../../../src/MusicalScore/ScoreIO/MusicSheetReader";
 import {MusicSheet} from "../../../src/MusicalScore/MusicSheet";
 import {IXmlElement} from "../../../src/Common/FileIO/Xml";
@@ -8,7 +9,6 @@ import {VexFlowTextMeasurer} from "../../../src/MusicalScore/Graphical/VexFlow/V
 import {TestUtils} from "../../Util/TestUtils";
 import {EngravingRules} from "../../../src";
 
-/* tslint:disable:no-unused-expression */
 describe("Music Sheet Calculator", () => {
     const filename: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
     const reader: MusicSheetReader = new MusicSheetReader();
@@ -16,7 +16,7 @@ describe("Music Sheet Calculator", () => {
     let score: IXmlElement;
     let sheet: MusicSheet;
 
-    it("calculates music sheet", (done: MochaDone) => {
+    it("calculates music sheet", (done: Mocha.Done) => {
         this.timeout = 10000;
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
         // Load the XML file

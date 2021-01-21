@@ -73,7 +73,7 @@ export class InstrumentReader {
   private musicSheet: MusicSheet;
   private slurReader: SlurReader;
   private instrument: Instrument;
-  private voiceGeneratorsDict: { [n: number]: VoiceGenerator; } = {};
+  private voiceGeneratorsDict: { [n: number]: VoiceGenerator } = {};
   private staffMainVoiceGeneratorDict: { [staffId: number]: VoiceGenerator } = {};
   private inSourceMeasureInstrumentIndex: number;
   private divisions: number = 0;
@@ -252,10 +252,8 @@ export class InstrumentReader {
           let noteTypeXml: NoteType = NoteType.UNDEFINED;
           if (typeNode) {
             const sizeAttr: Attr = typeNode.attribute("size");
-            if (sizeAttr !== undefined && sizeAttr !== null) {
-              if (sizeAttr.value === "cue") {
-                isCueNote = true;
-              }
+            if (sizeAttr?.value === "cue") {
+              isCueNote = true;
             }
             noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
           }
