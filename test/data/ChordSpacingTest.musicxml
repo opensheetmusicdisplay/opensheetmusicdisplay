@@ -8,7 +8,7 @@
     <creator type="composer">Composer</creator>
     <encoding>
       <software>MuseScore 3.4.2</software>
-      <encoding-date>2021-01-13</encoding-date>
+      <encoding-date>2021-01-14</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -1760,10 +1760,9 @@
         </note>
       <harmony print-frame="no">
         <root>
-          <root-step>F</root-step>
-          <root-alter>1</root-alter>
+          <root-step text="">C</root-step>
           </root>
-        <kind>dominant</kind>
+        <kind text="N.C.">none</kind>
         </harmony>
       <note default-x="83.39" default-y="-20.00">
         <pitch>
