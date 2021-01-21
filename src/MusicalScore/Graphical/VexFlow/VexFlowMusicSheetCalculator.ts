@@ -133,7 +133,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
     const visibleMeasures: GraphicalMeasure[] = [];
     for (const measure of measures) {
-      visibleMeasures.push(measure);
+      if (measure) {
+        visibleMeasures.push(measure);
+      }
+    }
+    if (visibleMeasures.length === 0) { // e.g. after Multiple Rest measures (VexflowMultiRestMeasure)
+      return 0;
     }
     measures = visibleMeasures;
 
@@ -144,9 +149,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
     });
 
+    let maxStaffEntries: number = measures[0].staffEntries.length;
     for (const measure of measures) {
       if (!measure) {
         continue;
+      }
+      // the if is a TEMP change to show pure diff for pickup measures, should be done for all measures, but increases spacing
+      if (measure.parentSourceMeasure.ImplicitMeasure) {
+        maxStaffEntries = Math.max(measure.staffEntries.length, maxStaffEntries);
       }
       const mvoices: { [voiceID: number]: Vex.Flow.Voice } = (measure as VexFlowMeasure).vfVoices;
       const voices: Vex.Flow.Voice[] = [];
@@ -167,14 +177,30 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     }
 
     let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
+    const parentSourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
+
     if (allVoices.length > 0) {
       // the voicing space bonus addition makes the voicing more relaxed. With a bonus of 0 the notes are basically completely squeezed together.
       const staffEntryFactor: number = 0.3;
 
       minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
-        * this.rules.VoiceSpacingMultiplierVexflow
-        + this.rules.VoiceSpacingAddendVexflow
-        + measures[0].staffEntries.length * staffEntryFactor;
+      * this.rules.VoiceSpacingMultiplierVexflow
+      + this.rules.VoiceSpacingAddendVexflow
+      + maxStaffEntries * staffEntryFactor;
+      if (parentSourceMeasure?.ImplicitMeasure) {
+        // shrink width in the ratio that the pickup measure is shorter compared to a full measure('s time signature):
+        minStaffEntriesWidth = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue * minStaffEntriesWidth;
+        // e.g. a 1/4 pickup measure in a 3/4 time signature should be 1/4 / 3/4 = 1/3 as long (a third)
+        // it seems like this should be respected by staffEntries.length and preCaculateMinTotalWidth, but apparently not,
+        //   without this the pickup measures were always too long.
+
+        // add more than the original staffEntries scaling again: (removing it above makes it too short)
+        if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
+          minStaffEntriesWidth += maxStaffEntries * staffEntryFactor; // don't scale this for implicit measures
+          // in fact overscale it, this needs a lot of space the more staffEntries there are
+        }
+      }
+
         // TODO this could use some fine-tuning. currently using *1.5 + 1 by default, results in decent spacing.
       // firstMeasure.formatVoices = (w: number) => {
       //     formatter.format(allVoices, w);
