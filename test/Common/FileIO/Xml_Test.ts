@@ -41,6 +41,7 @@ describe("XML interface", () => {
         "VariousChordTests.musicxml",
         "Cmmaj9_test.xml",
         "Butterfly.musicxml",
+        "BrookeWestSample.musicxml",
     ];
     for (const score of xmlTestset) {
         testFile(score);
