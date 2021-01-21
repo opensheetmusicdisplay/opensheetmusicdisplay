@@ -1126,7 +1126,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
 
-            const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
+            const restFilledEntries: GraphicalVoiceEntry[] = this.getRestFilledVexFlowStaveNotesPerVoice(voice);
+                    // .sort((a,b) => a.)
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
                 if (voiceEntry.parentVoiceEntry) {

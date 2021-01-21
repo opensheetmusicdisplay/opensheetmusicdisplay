@@ -197,13 +197,17 @@ export class VexFlowConverter {
      * @returns {Vex.Flow.StaveNote}
      */
     public static StaveNote(gve: GraphicalVoiceEntry): Vex.Flow.StaveNote {
-        // sort notes
-        /* seems unnecessary for now
-        if (gve.octaveShiftValue !== undefined && gve.octaveShiftValue !== OctaveEnum.NONE) {
-            gve.sort(); // gves with accidentals in octave shift brackets can be unsorted
-        } */
-        // VexFlow needs the notes ordered vertically in the other direction:
-        const notes: GraphicalNote[] = gve.notes.reverse();
+        // if (gve.octaveShiftValue !== OctaveEnum.NONE) { // gves with accidentals in octave shift brackets can be unsorted
+        gve.sortForVexflow(); // also necessary for some other cases, see test_sorted_notes... sample
+        //   sort and reverse replace the array anyways, so we might as well directly sort them reversely for now.
+        //   otherwise we should copy the array, see the commented GraphicalVoiceEntry.sortedNotesCopyForVexflow()
+        //   another alternative: don't sort gve notes, instead collect and sort tickables in an array,
+        //     then iterate over the array by addTickable() in VexFlowMeasure.graphicalMeasureCreatedCalculations()
+        const notes: GraphicalNote[] = gve.notes;
+        // for (const note of gve.notes) { // debug
+        //     const pitch: Pitch = note.sourceNote.Pitch;
+        //     console.log('note: ' + pitch?.ToString() + ', halftone: ' + pitch?.getHalfTone());
+        // }
         const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
 
         const baseNote: GraphicalNote = notes[0];
