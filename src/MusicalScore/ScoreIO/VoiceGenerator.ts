@@ -543,7 +543,7 @@ export class VoiceGenerator {
         }
         let sameVoiceEntry: boolean = false;
         if (!(beamNumber > 0 && beamNumber <= this.openBeams.length) || !this.openBeams[beamNumber - 1]) {
-          console.log("invalid beamnumber"); // this shouldn't happen, probably error in this method
+          log.debug("[OSMD] invalid beamnumber"); // this shouldn't happen, probably error in this method
           return;
         }
         for (let idx: number = 0, len: number = this.openBeams[beamNumber - 1].Notes.length; idx < len; ++idx) {
