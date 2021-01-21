@@ -591,6 +591,7 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.suspendedsecond, "sus2");
         chordtexts.setValue(ChordSymbolEnum.suspendedfourth, "sus4");
         chordtexts.setValue(ChordSymbolEnum.power, "5");
+        chordtexts.setValue(ChordSymbolEnum.none, "N.C.");
 
         return chordtexts;
     }

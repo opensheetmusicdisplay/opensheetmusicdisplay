@@ -51,6 +51,9 @@ export class ChordSymbolContainer {
                 transposeHalftones
             );
         }
+        if (chordSymbol.ChordKind === ChordSymbolEnum.none) {
+            return chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        }
         // main Note
         let text: string = Pitch.getNoteEnumString(transposedRootPitch.FundamentalNote);
         // main alteration
@@ -242,5 +245,6 @@ export enum ChordSymbolEnum {
     German,
     pedal,
     power,
-    Tristan
+    Tristan,
+    none
 }
