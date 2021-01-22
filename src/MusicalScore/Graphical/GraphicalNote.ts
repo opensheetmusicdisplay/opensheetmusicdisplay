@@ -3,7 +3,7 @@ import {Fraction} from "../../Common/DataObjects/Fraction";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
 import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {OctaveEnum} from "../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
-import {Pitch} from "../../Common/DataObjects/Pitch";
+import {AccidentalEnum, Pitch} from "../../Common/DataObjects/Pitch";
 import {GraphicalObject} from "./GraphicalObject";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import {BoundingBox} from "./BoundingBox";
@@ -29,6 +29,7 @@ export class GraphicalNote extends GraphicalObject {
     }
 
     public sourceNote: Note;
+    public DrawnAccidental: AccidentalEnum = AccidentalEnum.NONE;
     public graphicalNoteLength: Fraction;
     public parentVoiceEntry: GraphicalVoiceEntry;
     public numberOfDots: number;

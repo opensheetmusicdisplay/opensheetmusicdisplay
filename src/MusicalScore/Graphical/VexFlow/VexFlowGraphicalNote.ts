@@ -49,11 +49,17 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         //     }
         // } else {
         // revert octave shift, as the placement of the note is independent of octave brackets
-        const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
+        const drawPitch: Pitch = this.drawPitch(pitch);
         // recalculate the pitch, and this time don't ignore the accidental:
         this.vfpitch = VexFlowConverter.pitch(drawPitch, this.sourceNote.isRest(), this.clef, this.sourceNote.Notehead);
+        this.DrawnAccidental = drawPitch.Accidental;
         //}
     }
+
+    public drawPitch(pitch: Pitch): Pitch {
+        return OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
+    }
+
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         const tranposedPitch: Pitch = super.Transpose(keyInstruction, activeClef, halfTones, octaveEnum);
         const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(tranposedPitch, this.octaveShift);

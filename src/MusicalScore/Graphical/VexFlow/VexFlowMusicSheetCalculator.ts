@@ -150,13 +150,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     });
 
     let maxStaffEntries: number = measures[0].staffEntries.length;
+    let maxStaffEntriesPlusAccidentals: number = 1;
     for (const measure of measures) {
       if (!measure) {
         continue;
       }
-      // the if is a TEMP change to show pure diff for pickup measures, should be done for all measures, but increases spacing
+      let measureAccidentals: number = 0;
+      for (const staffEntry of measure.staffEntries) {
+        measureAccidentals += (staffEntry as VexFlowStaffEntry).setMaxAccidentals(); // staffEntryAccidentals
+      }
+      // TODO the if is a TEMP change to show pure diff for pickup measures, should be done for all measures, but increases spacing
       if (measure.parentSourceMeasure.ImplicitMeasure) {
         maxStaffEntries = Math.max(measure.staffEntries.length, maxStaffEntries);
+        maxStaffEntriesPlusAccidentals = Math.max(measure.staffEntries.length + measureAccidentals, maxStaffEntriesPlusAccidentals);
       }
       const mvoices: { [voiceID: number]: Vex.Flow.Voice } = (measure as VexFlowMeasure).vfVoices;
       const voices: Vex.Flow.Voice[] = [];
@@ -186,7 +192,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
       * this.rules.VoiceSpacingMultiplierVexflow
       + this.rules.VoiceSpacingAddendVexflow
-      + maxStaffEntries * staffEntryFactor;
+      + maxStaffEntries * staffEntryFactor; // TODO use maxStaffEntriesPlusAccidentals here as well, adjust spacing
       if (parentSourceMeasure?.ImplicitMeasure) {
         // shrink width in the ratio that the pickup measure is shorter compared to a full measure('s time signature):
         minStaffEntriesWidth = parentSourceMeasure.Duration.RealValue / parentSourceMeasure.ActiveTimeSignature.RealValue * minStaffEntriesWidth;
@@ -196,9 +202,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
         if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
-          minStaffEntriesWidth += maxStaffEntries * staffEntryFactor; // don't scale this for implicit measures
+          console.log('max: ' + maxStaffEntriesPlusAccidentals);
+          minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
-          //   TODO idea: count accidentals/other modifiers, count them as another staffentry or half or so
         }
         minStaffEntriesWidth *= this.rules.PickupMeasureWidthMultiplier;
       }
