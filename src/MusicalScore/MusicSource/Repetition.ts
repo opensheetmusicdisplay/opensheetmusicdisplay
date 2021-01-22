@@ -19,7 +19,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
 
     private backwardJumpInstructions: RepetitionInstruction[] = [];
     private endingParts: RepetitionEndingPart[] = [];
-    private endingIndexDict: { [_: number]: RepetitionEndingPart; } = {};
+    private endingIndexDict: { [_: number]: RepetitionEndingPart } = {};
     private userNumberOfRepetitions: number = 0;
     private visibles: boolean[] = [];
     private fromWords: boolean = false;
@@ -31,7 +31,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     public get BackwardJumpInstructions(): RepetitionInstruction[] {
         return this.backwardJumpInstructions;
     }
-    public get EndingIndexDict(): { [_: number]: RepetitionEndingPart; } {
+    public get EndingIndexDict(): { [_: number]: RepetitionEndingPart } {
         return this.endingIndexDict;
     }
     public get EndingParts(): RepetitionEndingPart[] {

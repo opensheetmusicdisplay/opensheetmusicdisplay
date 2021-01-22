@@ -12,7 +12,7 @@ export enum NoteEnum {
 /** Describes Accidental types.
  * Do not use the number values of these enum members directly for calculation anymore.
  * To use these for pitch calculation, use pitch.AccidentalHalfTones()
- *  or Pitch.HalfTonesFromAccidental(accidentalEnum).
+ * or Pitch.HalfTonesFromAccidental(accidentalEnum).
  */
 export enum AccidentalEnum {
     SHARP,
@@ -70,15 +70,15 @@ export class Pitch {
      * @param the input pitch
      * @param the number of halftones to transpose with
      * @returns ret[0] = the transposed fundamental.
-     *          ret[1] = the octave shift (not the new octave!)
+     * ret[1] = the octave shift (not the new octave!)
      * @constructor
      */
-    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number; overflow: number; } {
+    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number, overflow: number } {
         const newHalfTone: number = <number>pitch.fundamentalNote + pitch.AccidentalHalfTones + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
-    public static WrapAroundCheck(value: number, limit: number): { halftone: number; overflow: number; } {
+    public static WrapAroundCheck(value: number, limit: number): { halftone: number, overflow: number } {
         let overflow: number = 0;
 
         while (value < 0) {

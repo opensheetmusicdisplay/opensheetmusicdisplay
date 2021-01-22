@@ -119,11 +119,16 @@ export class Repetition extends StaveModifier {
       text_x = this.x + stave.options.vertical_bar_width;
       symbol_x = text_x + ctx.measureText(text).width + 12;
     } else if (this.symbol_type === Repetition.type.TO_CODA) {
-      text_x = x + this.x + stave.options.vertical_bar_width;
+      // text_x = x + this.x + this.x_shift + stave.options.vertical_bar_width;
+      // symbol_x = text_x + ctx.measureText(text).width + 12;
+
+      this.x_shift = -(text_x + ctx.measureText(text).width + 12 + stave.options.vertical_bar_width + 12);
+      // TO_CODA and DS_AL_CODA draw in the next measure without this x_shift, not sure why not for other symbols.
+      text_x = this.x + this.x_shift + stave.options.vertical_bar_width;
       symbol_x = text_x + ctx.measureText(text).width + 12;
     } else if (this.symbol_type === Repetition.type.DS_AL_CODA) {
       this.x_shift = -(text_x + ctx.measureText(text).width + 12 + stave.options.vertical_bar_width + 12);
-      // DS_AL_CODA draws in the next measure without this x_shift, not sure why for this symbol specifically.
+      // TO_CODA and DS_AL_CODA draw in the next measure without this x_shift, not sure why not for other symbols.
       text_x = this.x + this.x_shift + stave.options.vertical_bar_width;
       symbol_x = text_x + ctx.measureText(text).width + 12;
     } else {

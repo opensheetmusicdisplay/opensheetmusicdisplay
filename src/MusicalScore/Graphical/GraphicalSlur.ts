@@ -152,9 +152,8 @@ export class GraphicalSlur extends GraphicalCurve {
                 // clockwise/counterclockwise Rotation
                 // after Rotation end2.Y must be 0
                 // Inverse of RotationMatrix = TransposeMatrix of RotationMatrix
-            let rotationMatrix: Matrix2D, transposeMatrix: Matrix2D;
-            rotationMatrix = Matrix2D.getRotationMatrix(startEndLineAngleRadians);
-            transposeMatrix = rotationMatrix.getTransposeMatrix();
+            const rotationMatrix: Matrix2D = Matrix2D.getRotationMatrix(startEndLineAngleRadians);
+            const transposeMatrix: Matrix2D = rotationMatrix.getTransposeMatrix();
             end2 = rotationMatrix.vectorMultiplication(end2);
             const transformedPoints: PointF2D[] = this.calculateTranslatedAndRotatedPointListAbove(points, startX, startY, rotationMatrix);
 
@@ -323,9 +322,8 @@ export class GraphicalSlur extends GraphicalCurve {
             // clockwise/counterclockwise Rotation
             // after Rotation end2.Y must be 0
             // Inverse of RotationMatrix = TransposeMatrix of RotationMatrix
-            let rotationMatrix: Matrix2D, transposeMatrix: Matrix2D;
-            rotationMatrix = Matrix2D.getRotationMatrix(-startEndLineAngleRadians);
-            transposeMatrix = rotationMatrix.getTransposeMatrix();
+            const rotationMatrix: Matrix2D = Matrix2D.getRotationMatrix(-startEndLineAngleRadians);
+            const transposeMatrix: Matrix2D = rotationMatrix.getTransposeMatrix();
             end2 = rotationMatrix.vectorMultiplication(end2);
             const transformedPoints: PointF2D[] = this.calculateTranslatedAndRotatedPointListBelow(points, startX, startY, rotationMatrix);
 

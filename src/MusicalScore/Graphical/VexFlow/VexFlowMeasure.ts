@@ -62,7 +62,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** octaveOffset according to active clef */
     public octaveOffset: number = 3;
     /** The VexFlow Voices in the measure */
-    public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
+    public vfVoices: { [voiceID: number]: Vex.Flow.Voice } = {};
     /** Call this function (if present) to x-format all the voices in the measure */
     public formatVoices: (width: number, parent: VexFlowMeasure) => void;
     /** The VexFlow Ties in the measure */
@@ -74,17 +74,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** VexFlow StaveConnectors (vertical lines) */
     protected connectors: Vex.Flow.StaveConnector[] = [];
     /** Intermediate object to construct beams */
-    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][]; } = {};
+    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][] } = {};
     /** Beams created by (optional) autoBeam function. */
     private autoVfBeams: Vex.Flow.Beam[];
     /** Beams of tuplet notes created by (optional) autoBeam function. */
     private autoTupletVfBeams: Vex.Flow.Beam[];
     /** VexFlow Beams */
-    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
+    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[] };
     /** Intermediate object to construct tuplets */
-    protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
+    protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][] } = {};
     /** VexFlow Tuplets */
-    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
+    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[] } = {};
     // The engraving rules of OSMD.
     public rules: EngravingRules;
 
@@ -110,6 +110,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0
         });
+        (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
 
         if (this.ParentStaff) {
@@ -367,16 +368,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
         let instruction: Vex.Flow.Repetition.type = undefined;
         let position: any = Vex.Flow.StaveModifier.Position.END;
+        const xShift: number = this.beginInstructionsWidth;
         switch (repetitionInstruction.type) {
           case RepetitionInstructionEnum.Segno:
             // create Segno Symbol:
             instruction = Vex.Flow.Repetition.type.SEGNO_LEFT;
-            position = Vex.Flow.StaveModifier.Position.BEGIN;
+            position = Vex.Flow.StaveModifier.Position.LEFT;
             break;
           case RepetitionInstructionEnum.Coda:
             // create Coda Symbol:
             instruction = Vex.Flow.Repetition.type.CODA_LEFT;
-            position = Vex.Flow.StaveModifier.Position.BEGIN;
+            position = Vex.Flow.StaveModifier.Position.LEFT;
             break;
           case RepetitionInstructionEnum.DaCapo:
             instruction = Vex.Flow.Repetition.type.DC;
@@ -406,7 +408,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             break;
         }
         if (instruction) {
-            const repetition: Vex.Flow.Repetition = new Vex.Flow.Repetition(instruction, 0, -this.rules.RepetitionSymbolsYOffset);
+            const repetition: Vex.Flow.Repetition = new Vex.Flow.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
             this.stave.addModifier(repetition, position);
             return;
         }
@@ -1124,7 +1126,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
 
-            const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
+            const restFilledEntries: GraphicalVoiceEntry[] = this.getRestFilledVexFlowStaveNotesPerVoice(voice);
+                    // .sort((a,b) => a.)
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
                 if (voiceEntry.parentVoiceEntry) {
@@ -1241,7 +1244,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     protected createOrnaments(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
-            const gvoices: { [voiceID: number]: GraphicalVoiceEntry; } = graphicalStaffEntry.graphicalVoiceEntries;
+            const gvoices: { [voiceID: number]: GraphicalVoiceEntry } = graphicalStaffEntry.graphicalVoiceEntries;
 
             for (const voiceID in gvoices) {
                 if (gvoices.hasOwnProperty(voiceID)) {
@@ -1372,8 +1375,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
 
-        this.beginInstructionsWidth = vfBeginInstructionsWidth / unitInPixels;
-        this.endInstructionsWidth = vfEndInstructionsWidth / unitInPixels;
+        this.beginInstructionsWidth = (vfBeginInstructionsWidth ?? 0) / unitInPixels;
+        this.endInstructionsWidth = (vfEndInstructionsWidth ?? 0) / unitInPixels;
     }
 }
 

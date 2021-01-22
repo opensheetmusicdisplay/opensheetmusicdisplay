@@ -8,7 +8,7 @@ import { PlacementEnum } from "../../VoiceData/Expressions";
 
 export class SlurReader {
     private musicSheet: MusicSheet;
-    private openSlurDict: { [_: number]: Slur; } = {};
+    private openSlurDict: { [_: number]: Slur } = {};
     constructor(musicSheet: MusicSheet) {
         this.musicSheet = musicSheet;
     }

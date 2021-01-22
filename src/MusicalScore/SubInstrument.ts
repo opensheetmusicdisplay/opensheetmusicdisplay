@@ -12,7 +12,7 @@ export class SubInstrument {
         this.volume = 1.0;
     }
 
-    private static midiInstrument: { [key: string]: MidiInstrument; } = {
+    private static midiInstrument: { [key: string]: MidiInstrument } = {
         "alt": MidiInstrument.Synth_Voice,
         "alto": MidiInstrument.Synth_Voice,
         "banjo": MidiInstrument.Banjo,

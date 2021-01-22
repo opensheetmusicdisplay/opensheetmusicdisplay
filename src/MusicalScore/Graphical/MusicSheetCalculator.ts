@@ -2331,11 +2331,7 @@ export abstract class MusicSheetCalculator {
         accidentalCalculator.checkAccidental(graphicalNote, pitch);
     }
 
-    // // needed to disable linter, as it doesn't recognize the existing usage of this method.
-    // // ToDo: check if a newer version doesn't have the problem.
-    // /* tslint:disable:no-unused-variable */
     // private createStaffEntryForTieNote(measure: StaffMeasure, absoluteTimestamp: Fraction, openTie: Tie): GraphicalStaffEntry {
-    //     /* tslint:enable:no-unused-variable */
     //     let graphicalStaffEntry: GraphicalStaffEntry;
     //     graphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(openTie.Start.ParentStaffEntry, measure);
     //     graphicalStaffEntry.relInMeasureTimestamp = Fraction.minus(absoluteTimestamp, measure.parentSourceMeasure.AbsoluteTimestamp);
