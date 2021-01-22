@@ -295,17 +295,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return minStaffEntriesWidth;
   }
 
-  private calculateElongationFactor(
-    containers: any[], //not sure how or what the type should be here... I'm new to TypeScript
-    staffEntry: GraphicalStaffEntry,
-    lastEntryDict: any,
-    oldMinimumStaffEntriesWidth: number,
-    elongationFactorForMeasureWidth: number,
-    measureNumber: number,
-    oldMinSpacing: number,
-    nextMeasureOverlap: number,
-  ): number {
-
+  private calculateElongationFactor(containers: any[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
+                                    oldMinimumStaffEntriesWidth: number, elongationFactorForMeasureWidth: number,
+                                    measureNumber: number, oldMinSpacing: number, nextMeasureOverlap: number): number {
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
     let currentContainerIndex: number = 0;
 
@@ -318,8 +310,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       let overlapAllowedIntoNextMeasure: number = nextMeasureOverlap;
 
-      // spacing for multi-syllable words
       if (container.ParentLyricWord) {
+        // spacing for multi-syllable words
         if (container.LyricsEntry.SyllableIndex > 0) { // syllables after first
           // give a little more spacing for dash between syllables
           minSpacing = this.rules.BetweenSyllableMinimumDistance;
@@ -432,15 +424,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
       currentContainerIndex++;
     }
+
     return newElongationFactorForMeasureWidth;
   }
 
-  public calculateElongationFactorFromStaffEntries(
-    staffEntries: GraphicalStaffEntry[],
-    oldMinimumStaffEntriesWidth: number,
-    elongationFactorForMeasureWidth: number,
-    measureNumber: number,
-  ): number {
+  public calculateElongationFactorFromStaffEntries(staffEntries: GraphicalStaffEntry[], oldMinimumStaffEntriesWidth: number,
+                                                  elongationFactorForMeasureWidth: number, measureNumber: number): number {
     interface EntryInfo {
       cumulativeOverlap: number;
       extend: boolean;
@@ -493,10 +482,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return newElongationFactorForMeasureWidth;
   }
 
-  public calculateMeasureWidthFromStaffEntries(
-    measuresVertical: GraphicalMeasure[],
-    oldMinimumStaffEntriesWidth: number,
-  ): number {
+  public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
     let elongationFactorForMeasureWidth: number = 1;
 
     for (const measure of measuresVertical) {
