@@ -5,6 +5,7 @@ import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowVoiceEntry } from "./VexFlowVoiceEntry";
 import { Note } from "../../VoiceData/Note";
+import { AccidentalEnum } from "../../../Common/DataObjects/Pitch";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
     constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
@@ -56,5 +57,27 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         }
         this.PositionAndShape.RelativePosition.x -= lastBorderLeft;
         this.PositionAndShape.calculateBoundingBox();
+    }
+
+    public setMaxAccidentals(): number {
+        for (const gve of this.graphicalVoiceEntries) {
+            for (const note of gve.notes) {
+                if (note.DrawnAccidental !== AccidentalEnum.NONE) {
+                    //TODO continue checking for double accidentals in other notes?
+                    return this.MaxAccidentals = 1;
+                }
+                // live calculation if the note was changed:
+                // let pitch: Pitch = note.sourceNote.Pitch;
+                // pitch = (note as VexFlowGraphicalNote).drawPitch(pitch);
+                // if (pitch) {
+                //     const accidental: AccidentalEnum = pitch.Accidental;
+                //     if (accidental !== AccidentalEnum.NONE) {
+                //         this.maxAccidentals = 1;
+                //         return this.maxAccidentals;
+                //     }
+                // }
+            }
+        }
+        return this.MaxAccidentals = 0;
     }
 }
