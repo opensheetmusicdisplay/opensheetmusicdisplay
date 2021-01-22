@@ -3,7 +3,6 @@ import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import { EngravingRules } from "../Graphical/EngravingRules";
-import { CustomChordKind } from "./CustomChordKind";
 
 export class ChordSymbolContainer {
     private rootPitch: Pitch;
@@ -96,9 +95,9 @@ export class ChordSymbolContainer {
         let chordKind: string = chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
         const degreeTypeAry: string[] = ["adds", "alts", "subs"];
 
-        const customChordKinds: CustomChordKind[] = chordSymbol.rules.CustomChordKinds;
+        const customChords: CustomChord[] = chordSymbol.rules.CustomChords;
 
-        for (const customKind of customChordKinds) {
+        for (const customKind of customChords) {
             if (customKind.chordKind !== chordSymbol.chordKind) {
                 continue;
             }
@@ -197,6 +196,50 @@ export interface DegreesInfo {
     adds?: string[];
     alts?: string[];
     subs?: string[];
+}
+
+export class CustomChord {
+  public alternateName: string;
+  public chordKind: ChordSymbolEnum;
+  public adds: string[];
+  public alts: string[];
+  public subs: string[];
+
+  constructor(
+    alternateName: string,
+    chordKind: ChordSymbolEnum,
+    adds: string[],
+    alts: string[],
+    subs: string[],
+  ) {
+    this.alternateName = alternateName;
+    this.chordKind = chordKind;
+    this.adds = adds;
+    this.alts = alts;
+    this.subs = subs;
+  }
+
+  public static createCustomChord(
+    altName: string,
+    chordKind: ChordSymbolEnum,
+    adds: string[],
+    alts: string[],
+    subs: string[],
+  ): CustomChord {
+      return new CustomChord(altName, chordKind, adds, alts, subs);
+  }
+
+  public static renameCustomChord(
+    altName: string,
+    newAltName: string,
+    customKinds: CustomChord[],
+  ): void {
+    for (const customKind of customKinds) {
+      if (customKind.alternateName === altName) {
+        customKind.alternateName = newAltName;
+      }
+    }
+  }
 }
 
 export enum ChordDegreeText {
