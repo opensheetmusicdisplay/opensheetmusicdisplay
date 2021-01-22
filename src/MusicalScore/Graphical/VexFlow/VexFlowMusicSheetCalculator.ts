@@ -202,7 +202,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
         // add more than the original staffEntries scaling again: (removing it above makes it too short)
         if (maxStaffEntries > 1) { // not necessary for only 1 StaffEntry
-          console.log('max: ' + maxStaffEntriesPlusAccidentals);
           minStaffEntriesWidth += maxStaffEntriesPlusAccidentals * staffEntryFactor * 1.5; // don't scale this for implicit measures
           // in fact overscale it, this needs a lot of space the more staffEntries (and modifiers like accidentals) there are
         }
