@@ -54,6 +54,7 @@ import { NoteTypeHandler } from "../../VoiceData/NoteType";
 import { VexFlowConverter } from "./VexFlowConverter";
 import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions";
+import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -295,22 +296,19 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return minStaffEntriesWidth;
   }
 
-  private calculateElongationFactor(containers: any[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
+  private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
                                     oldMinimumStaffEntriesWidth: number, elongationFactorForMeasureWidth: number,
                                     measureNumber: number, oldMinSpacing: number, nextMeasureOverlap: number): number {
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
     let currentContainerIndex: number = 0;
 
     for (const container of containers) {
-      const alignment: TextAlignmentEnum =
-        (container.GraphicalLabel)
-          ? container.GraphicalLabel.Label.textAlignment
-          : container.GetGraphicalLabel.Label.textAlignment;
+      const alignment: TextAlignmentEnum = container.GraphicalLabel.Label.textAlignment;
       let minSpacing: number = oldMinSpacing;
 
       let overlapAllowedIntoNextMeasure: number = nextMeasureOverlap;
 
-      if (container.ParentLyricWord) {
+      if (container instanceof GraphicalLyricEntry && container.ParentLyricWord) {
         // spacing for multi-syllable words
         if (container.LyricsEntry.SyllableIndex > 0) { // syllables after first
           // give a little more spacing for dash between syllables
@@ -335,7 +333,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
 
-      const bBox: BoundingBox = container.PositionAndShape || container.GraphicalLabel.PositionAndShape;
+      const bBox: BoundingBox = container instanceof GraphicalLyricEntry ? container.GraphicalLabel.PositionAndShape : container.PositionAndShape;
       const labelWidth: number = bBox.Size.width;
       const staffEntryXPosition: number = (staffEntry as VexFlowStaffEntry).PositionAndShape.RelativePosition.x;
       const xPosition: number = staffEntryXPosition + bBox.BorderMarginLeft;
@@ -380,7 +378,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         spacingNeededToMeasureEnd / currentSpacingToMeasureEnd;
       let elongationFactorNeededForLastContainer: number = 1;
 
-      if (container.LyricsEntry !== undefined) {
+      if (container instanceof GraphicalLyricEntry && container.LyricsEntry) {
         if (lastEntryDict[currentContainerIndex]) { // if previous lyric needs more spacing than measure end, take that spacing
           const lastNoteDuration: Fraction = lastEntryDict[currentContainerIndex].sourceNoteDuration;
           elongationFactorNeededForLastContainer = spacingNeededToLastContainer / currentSpacingToLastContainer;
@@ -414,11 +412,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // set up information about this lyric entry of verse j for next lyric entry of verse j
       lastEntryDict[currentContainerIndex] = {
         cumulativeOverlap: overlap,
-        extend: container.LyricsEntry ? container.LyricsEntry.extend : false,
+        extend: container instanceof GraphicalLyricEntry ? container.LyricsEntry.extend : false,
         labelWidth: labelWidth,
         measureNumber: measureNumber,
-        sourceNoteDuration: (container.LyricsEntry) && container.LyricsEntry.Parent.Notes[0].Length,
-        text: container.LyricsEntry ? container.LyricsEntry.Text : "",  // TODO we should add the chord text here...
+        sourceNoteDuration: container instanceof GraphicalLyricEntry ? (container.LyricsEntry && container.LyricsEntry.Parent.Notes[0].Length) : false,
+        text: container instanceof GraphicalLyricEntry ? container.LyricsEntry.Text : container.GraphicalLabel.Label.text,
         xPosition: xPosition,
       };
 

@@ -24,7 +24,7 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     public get GetChordSymbolContainer(): ChordSymbolContainer {
         return this.chordSymbolContainer;
     }
-    public get GetGraphicalLabel(): GraphicalLabel {
+    public get GraphicalLabel(): GraphicalLabel {
         return this.graphicalLabel;
     }
     private calculateLabel(textHeight: number, transposeHalftones: number, keyInstruction: KeyInstruction): void {
