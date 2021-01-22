@@ -40,7 +40,6 @@ describe("XML interface", () => {
         "ChordSpacingTest.musicxml",
         "sus4_test.musicxml",
         "Cmmaj9_test.xml",
-        "Butterfly.musicxml",
     ];
     for (const score of xmlTestset) {
         testFile(score);
