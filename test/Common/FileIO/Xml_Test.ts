@@ -39,7 +39,6 @@ describe("XML interface", () => {
         "TelemannWV40.102_Sonate-Nr.1.2-Allegro-F-Dur.xml",
         "ChordSpacingTest.musicxml",
         "VariousChordTests.musicxml",
-        "Cmmaj9_test.xml",
     ];
     for (const score of xmlTestset) {
         testFile(score);
