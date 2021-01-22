@@ -791,10 +791,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (const gve of voiceEntries) {
                         if (gve.parentVoiceEntry.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
                             autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
-                            if (psBeam.Notes[0].NoteTuplet) {
-                                autoStemBeam = true; // TODO fix necessary for now for tuplets with beams, see test_drum_tublet_beams
-                                break;
-                            }
+                            // if (psBeam.Notes[0].NoteTuplet) {
+                            //     autoStemBeam = true;
+                            //     // this fix seemed temporarily necessary for tuplets with beams, see test_drum_tublet_beams
+                            //     break;
+                            // }
                         }
                     }
 

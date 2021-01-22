@@ -193,7 +193,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                                                 transposeHalftones,
                                                 graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules // TODO undefined sometimes
                                                 );
-            const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
+            const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GraphicalLabel;
             graphicalLabel.PositionAndShape.RelativePosition.y -= rules.ChordSymbolYOffset;
             graphicalLabel.PositionAndShape.RelativePosition.x += xShift;
             // TODO check for available space until next staffEntry or chord symbol (x direction)

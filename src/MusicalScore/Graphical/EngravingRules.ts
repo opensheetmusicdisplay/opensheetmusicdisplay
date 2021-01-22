@@ -57,6 +57,7 @@ export class EngravingRules {
     public FlatBeamOffsetPerBeam: number;
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
+    /** How many unique note positions a percussion score needs to have to not be rendered on one line. */
     public PercussionOneLineCutoff: number;
     public PercussionForceVoicesOneLineCutoff: number;
     public BetweenKeySymbolsDistance: number;
@@ -99,6 +100,7 @@ export class EngravingRules {
     public OrnamentAccidentalScalingFactor: number;
     public ChordSymbolTextHeight: number;
     public ChordSymbolXSpacing: number;
+    public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     public CustomChordKinds: CustomChordKind[];
@@ -335,7 +337,7 @@ export class EngravingRules {
         // Beam Sizing Variables
         this.ClefLeftMargin = 0.5;
         this.ClefRightMargin = 0.75;
-        this.PercussionOneLineCutoff = 3;
+        this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
         this.PercussionForceVoicesOneLineCutoff = 1;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;
@@ -390,6 +392,7 @@ export class EngravingRules {
         this.OrnamentAccidentalScalingFactor = 0.65;
         this.ChordSymbolTextHeight = 2.0;
         this.ChordSymbolXSpacing = 1.0;
+        this.ChordOverlapAllowedIntoNextMeasure = 0;
         this.ChordSymbolYOffset = 2.0;
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
