@@ -617,10 +617,7 @@ export class EngravingRules {
         }
     }
 
-    public renameCustomChordKind(
-        altName: string,
-        newAltName: string,
-    ): void {
+    public renameCustomChordKind(altName: string, newAltName: string): void {
         CustomChordKind.renameCustomChordKind(altName, newAltName, this.CustomChordKinds);
     }
 

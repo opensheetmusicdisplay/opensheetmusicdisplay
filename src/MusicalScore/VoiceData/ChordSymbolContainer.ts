@@ -99,9 +99,7 @@ export class ChordSymbolContainer {
         const customChordKinds: CustomChordKind[] = chordSymbol.rules.CustomChordKinds;
 
         for (const customKind of customChordKinds) {
-            if (
-                customKind.chordKind !== chordSymbol.chordKind
-            ) {
+            if (customKind.chordKind !== chordSymbol.chordKind) {
                 continue;
             }
 
@@ -121,6 +119,7 @@ export class ChordSymbolContainer {
             if (check) {
                 for (const degType of degreeTypeAry) {
                     for (const deg of (customKind[degType] || [])) {
+                        // delete degree since we don't want it displayed when the alternate name of the customKind should contain the degrees.
                         degrees[degType].splice(degrees[degType].indexOf(deg), 1);
                     }
                 }
@@ -129,7 +128,6 @@ export class ChordSymbolContainer {
         }
 
         text += chordKind;
-
         if (degrees.adds.length > 0) {
             text += "(" + degrees.adds.join(",") + ")";
         }
@@ -154,7 +152,6 @@ export class ChordSymbolContainer {
             text += Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote);
             text += this.getTextForAccidental(transposedBassPitch.Accidental);
         }
-        console.log(text);
         return text;
     }
 
