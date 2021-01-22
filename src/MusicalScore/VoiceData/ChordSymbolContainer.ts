@@ -103,20 +103,20 @@ export class ChordSymbolContainer {
                 continue;
             }
 
-            let check: boolean = true;
+            let hasCustomKindDegrees: boolean = true;
 
             for (const degType of degreeTypeAry) {
                 for (const deg of (customKind[degType] || [])) {
                     if (degrees[degType].indexOf(deg) < 0) {
-                        check = false;
+                        hasCustomKindDegrees = false;
                         break;
                     }
                 }
-                if (check === false) {
+                if (!hasCustomKindDegrees) {
                     break;
                 }
             }
-            if (check) {
+            if (hasCustomKindDegrees) {
                 for (const degType of degreeTypeAry) {
                     for (const deg of (customKind[degType] || [])) {
                         // delete degree since we don't want it displayed when the alternate name of the customKind should contain the degrees.
