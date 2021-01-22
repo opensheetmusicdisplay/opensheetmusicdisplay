@@ -33,7 +33,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
             "OSMD Function Test - Chord Symbols": "OSMD_function_test_chord_symbols.musicxml",
             "OSMD Function Test - Chord Spacing Test": "ChordSpacingTest.musicxml",
-            "OSMD Function Test - Chord Symbols - sus4 test": "sus4_test.musicxml",
+            "OSMD Function Test - Chord Symbols - Various Chord Tests": "VariousChordTests.musicxml",
             "OSMD Function Test - Chord Symbols - Cmmaj9 test": "Cmmaj9_test.xml",
             "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
             "OSMD Function Test - Container height (compacttight mode)": "OSMD_Function_Test_Container_height.musicxml",
