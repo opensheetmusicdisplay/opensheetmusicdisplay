@@ -9,6 +9,7 @@ import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum } from "../../Common/DataObjects/Pitch";
 import { ChordSymbolEnum } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { CustomChordKind } from "../../MusicalScore/VoiceData/CustomChordKind";
 
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
@@ -100,6 +101,7 @@ export class EngravingRules {
     public ChordSymbolXSpacing: number;
     public ChordSymbolYOffset: number;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
+    public CustomChordKinds: CustomChordKind[];
     public RepetitionSymbolsYOffset: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
@@ -391,6 +393,8 @@ export class EngravingRules {
         this.ChordSymbolYOffset = 2.0;
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
+        this.CustomChordKinds = [];
+        this.resetCustomChordKinds();
         this.RepetitionSymbolsYOffset = 0;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
@@ -596,6 +600,52 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.none, "N.C.");
 
         return chordtexts;
+    }
+
+    public addCustomChordKind(
+        altName: string,
+        chordKindText: string,
+        adds: string[],
+        alts: string[],
+        subs: string[],
+    ): void {
+        if (ChordSymbolEnum[chordKindText] !== undefined) {
+            this.CustomChordKinds.push(CustomChordKind.createCustomChordKind(altName, ChordSymbolEnum[chordKindText], adds, alts, subs));
+        }
+    }
+
+    public renameCustomChordKind(
+        altName: string,
+        newAltName: string,
+    ): void {
+        CustomChordKind.renameCustomChordKind(altName, newAltName, this.CustomChordKinds);
+    }
+
+    public resetCustomChordKinds(): void {
+        // addCustomChordKind(alternateName, chordKindText, adds, alters, subtracts)
+        this.addCustomChordKind("alt", "major", ["#5", "b9", "#9"], ["b5"], []);
+        this.addCustomChordKind("7alt", "dominant", ["#5", "b9", "#9"], ["b5"], []);
+        this.addCustomChordKind("7sus4", "dominant", ["4"], [], ["3"]);
+        this.addCustomChordKind("7sus4", "suspendedfourth", ["7"], [], []);
+        this.addCustomChordKind("9sus4", "dominantninth", ["4"], [], ["3"]);
+        this.addCustomChordKind("9sus4", "suspendedfourth", ["9"], [], []);
+        this.addCustomChordKind("11sus4", "dominant11th", ["4"], [], ["3"]);
+        this.addCustomChordKind("11sus4", "suspendedfourth", ["11"], [], []);
+        this.addCustomChordKind("13sus4", "dominant13th", ["4"], [], ["3"]);
+        this.addCustomChordKind("13sus4", "suspendedfourth", ["13"], [], []);
+        this.addCustomChordKind("7sus2", "dominant", ["2"], [], ["3"]);
+        this.addCustomChordKind("7sus2", "suspendedsecond", ["7"], [], []);
+        this.addCustomChordKind("9sus2", "dominantninth", ["2"], [], ["3"]);
+        this.addCustomChordKind("9sus2", "suspendedsecond", ["9"], [], []);
+        this.addCustomChordKind("11sus2", "dominant11th", ["2"], [], ["3"]);
+        this.addCustomChordKind("11sus2", "suspendedsecond", ["11"], [], []);
+        this.addCustomChordKind("13sus2", "dominant13th", ["2"], [], ["3"]);
+        this.addCustomChordKind("13sus2", "suspendedsecond", ["13"], [], []);
+        this.addCustomChordKind("m(maj9)", "majorminor", ["9"], [], []);
+        this.addCustomChordKind("m(maj11)", "majorminor", ["11"], [], []);
+        this.addCustomChordKind("m(maj13)", "majorminor", ["13"], [], []);
+        this.addCustomChordKind("69", "majorsixth", ["9"], [], []);
+        this.addCustomChordKind("mi69", "minorsixth", ["9"], [], []);
     }
 
     /**

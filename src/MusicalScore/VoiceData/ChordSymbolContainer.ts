@@ -3,6 +3,7 @@ import {KeyInstruction} from "./Instructions/KeyInstruction";
 import {MusicSheetCalculator} from "../Graphical/MusicSheetCalculator";
 import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import { EngravingRules } from "../Graphical/EngravingRules";
+import { CustomChordKind } from "./CustomChordKind";
 
 export class ChordSymbolContainer {
     private rootPitch: Pitch;
@@ -60,14 +61,14 @@ export class ChordSymbolContainer {
         if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
             text += this.getTextForAccidental(transposedRootPitch.Accidental);
         }
-        // chord kind text
-        // I'm going to store this in a variable for now so I can evaluate it with the degrees
-        let chordKind: string = chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
 
         // degrees
-        const adds: string[] = [];
-        const alts: string[] = [];
-        const subs: string[] = [];
+        const degrees: DegreesInfo = {
+            adds: [],
+            alts: [],
+            subs: [],
+        };
+
         for (const chordDegree of chordSymbol.ChordDegrees) {
             if (chordDegree) {
                 let t: string = "";
@@ -77,82 +78,68 @@ export class ChordSymbolContainer {
                 t += chordDegree.value;
                 switch (chordDegree.text) {
                     case ChordDegreeText.add:
-                        adds.push(t);
+                        degrees.adds.push(t);
                         break;
                     case ChordDegreeText.alter:
-                        alts.push(t);
+                        degrees.alts.push(t);
                         break;
                     case ChordDegreeText.subtract:
-                        subs.push(t);
+                        degrees.subs.push(t);
                         break;
                     default:
                 }
             }
         }
-        //MuseScore 3 renders dominant sus2 chords as sus2's with the dominant degrees added.
-        //this results in a rendering "Csus2(7)" for a C7sus2
-        //and a "Csus2(7,9)" for a C9sus2.
-        if (
-            chordSymbol.ChordKind ===  ChordSymbolEnum.suspendedsecond
-        ) {
-            if (adds.indexOf("7") >= 0) {
-                chordKind = "7";
-                adds.splice(adds.indexOf("7"), 1);
-                adds.push("2");
-                subs.push("3");
-                if (adds.indexOf("9") >= 0) {
-                    chordKind = "9";
-                    adds.splice(adds.indexOf("9"), 1);
+
+        // chord kind text
+        // I'm going to store this in a variable for now so I can evaluate it with the degrees
+        let chordKind: string = chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        const degreeTypeAry: string[] = ["adds", "alts", "subs"];
+
+        const customChordKinds: CustomChordKind[] = chordSymbol.rules.CustomChordKinds;
+
+        for (const customKind of customChordKinds) {
+            if (
+                customKind.chordKind !== chordSymbol.chordKind
+            ) {
+                continue;
+            }
+
+            let check: boolean = true;
+
+            for (const degType of degreeTypeAry) {
+                for (const deg of (customKind[degType] || [])) {
+                    if (degrees[degType].indexOf(deg) < 0) {
+                        check = false;
+                        break;
+                    }
                 }
+                if (check === false) {
+                    break;
+                }
+            }
+            if (check) {
+                for (const degType of degreeTypeAry) {
+                    for (const deg of (customKind[degType] || [])) {
+                        degrees[degType].splice(degrees[degType].indexOf(deg), 1);
+                    }
+                }
+                chordKind = customKind.alternateName;
             }
         }
 
         text += chordKind;
 
-        //check for an altered chord and simplify
-        //in MuseScore 3, an altered chord is given #5, b9, #9 and alt b5 degrees
-        //I'm just replacing all those with an "alt" designation.
-        if (
-            adds.indexOf("#5") >= 0 &&
-            adds.indexOf("b9") >= 0 &&
-            adds.indexOf("#9") >= 0 &&
-            alts.indexOf("b5") >= 0
-        ) {
-            text += "alt";
-            adds.splice(adds.indexOf("#5"), 1);
-            adds.splice(adds.indexOf("b9"), 1);
-            adds.splice(adds.indexOf("#9"), 1);
-            alts.splice(alts.indexOf("b5"), 1);
+        if (degrees.adds.length > 0) {
+            text += "(" + degrees.adds.join(",") + ")";
         }
-        //check for sus chords
-        if (
-            adds.indexOf("4") >= 0 &&
-            subs.indexOf("3") >= 0
-        ) {
-            text += "sus4";
-            adds.splice(adds.indexOf("4"), 1);
-            subs.splice(subs.indexOf("3"), 1);
+        if (degrees.alts.length > 0) {
+            text += "(alt " + degrees.alts.join(",") + ")";
         }
-        // I don't have what I believe is a proper test for this so
-        // I'm just going to assume that sus2's will look just like sus4's.
-        if (
-            adds.indexOf("2") >= 0 &&
-            subs.indexOf("3") >= 0
-        ) {
-            text += "sus2";
-            adds.splice(adds.indexOf("2"), 1);
-            subs.splice(subs.indexOf("3"), 1);
+        if (degrees.subs.length > 0) {
+            text += "(omit " + degrees.subs.join(",") + ")";
         }
 
-        if (adds.length > 0) {
-            text += "(" + adds.join(",") + ")";
-        }
-        if (alts.length > 0) {
-            text += "(alt " + alts.join(",") + ")";
-        }
-        if (subs.length > 0) {
-            text += "(omit " + subs.join(",") + ")";
-        }
         // bass
         if (chordSymbol.BassPitch) {
             let transposedBassPitch: Pitch = chordSymbol.BassPitch;
@@ -167,6 +154,7 @@ export class ChordSymbolContainer {
             text += Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote);
             text += this.getTextForAccidental(transposedBassPitch.Accidental);
         }
+        console.log(text);
         return text;
     }
 
@@ -206,6 +194,12 @@ export class Degree {
     public value: number;
     public alteration: AccidentalEnum;
     public text: ChordDegreeText;
+}
+
+export interface DegreesInfo {
+    adds?: string[];
+    alts?: string[];
+    subs?: string[];
 }
 
 export enum ChordDegreeText {
