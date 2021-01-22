@@ -49,7 +49,7 @@ export class Repetition extends StaveModifier {
 
   draw(stave, x) {
     this.setRendered();
-    
+
     switch (this.symbol_type) {
       case Repetition.type.CODA_RIGHT:
         this.drawCodaFixed(stave, x + stave.width);

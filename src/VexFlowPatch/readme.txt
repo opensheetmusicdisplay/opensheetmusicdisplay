@@ -10,8 +10,16 @@ They are copied by the npm prebuild script to ../../node_modules/vexflow/src/ be
 Each .js has comments like "// VexFlowPatch: [explanation]" to indicate what was changed.
 (a diff can be created from the base vexflow version)
 
+beam.js (custom addition):
+add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option
+
 stave.js (custom addition):
 prevent a bug where a modifier width is NaN, leading to a VexFlow error
+
+staverepetition.js (custom addition):
+add TO_CODA enum to type() and draw()
+fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
+fix y-shift
 
 stavevolta.js (merged Vexflow 3.x):
 Fix the length of voltas for first measures in a system

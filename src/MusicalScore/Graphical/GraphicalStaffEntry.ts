@@ -50,6 +50,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public staffEntryParent: GraphicalStaffEntry;
     public parentVerticalContainer: VerticalGraphicalStaffEntryContainer;
     public tabStaffEntry: GraphicalStaffEntry = undefined;
+    public MaxAccidentals: number = 0;
 
     private graphicalInstructions: AbstractGraphicalInstruction[] = [];
     private graphicalTies: GraphicalTie[] = [];
