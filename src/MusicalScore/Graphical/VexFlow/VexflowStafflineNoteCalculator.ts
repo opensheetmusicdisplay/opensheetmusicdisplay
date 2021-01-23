@@ -151,7 +151,8 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
                 //Map the pitch, set stems properly
                 vfGraphicalNote.setAccidental(mappedPitch);
                 const parentVoiceEntry: VoiceEntry = vfGraphicalNote.parentVoiceEntry.parentVoiceEntry;
-                if (parentVoiceEntry.Notes.length < 2) { // Only switch stems if we aren't sharing stems with another note
+                // Only switch stems if we aren't sharing stems with another note
+                if (!this.rules.SetWantedStemDirectionByXml && parentVoiceEntry.Notes.length < 2) {
                     if (mappedPitch.Octave > this.baseLineOctave ||
                         (mappedPitch.FundamentalNote === this.baseLineNote && mappedPitch.Octave === this.baseLineOctave)) {
                         vfGraphicalNote.parentVoiceEntry.parentVoiceEntry.WantedStemDirection = StemDirectionType.Up;

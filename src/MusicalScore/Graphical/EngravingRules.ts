@@ -56,6 +56,7 @@ export class EngravingRules {
     public FlatBeamOffsetPerBeam: number;
     public ClefLeftMargin: number;
     public ClefRightMargin: number;
+    /** How many unique note positions a percussion score needs to have to not be rendered on one line. */
     public PercussionOneLineCutoff: number;
     public PercussionForceVoicesOneLineCutoff: number;
     public BetweenKeySymbolsDistance: number;
@@ -334,7 +335,7 @@ export class EngravingRules {
         // Beam Sizing Variables
         this.ClefLeftMargin = 0.5;
         this.ClefRightMargin = 0.75;
-        this.PercussionOneLineCutoff = 3;
+        this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
         this.PercussionForceVoicesOneLineCutoff = 1;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;
