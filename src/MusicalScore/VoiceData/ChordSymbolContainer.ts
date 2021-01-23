@@ -97,32 +97,32 @@ export class ChordSymbolContainer {
 
         const customChords: CustomChord[] = chordSymbol.rules.CustomChords;
 
-        for (const customKind of customChords) {
-            if (customKind.chordKind !== chordSymbol.chordKind) {
+        for (const customChord of customChords) {
+            if (customChord.chordKind !== chordSymbol.chordKind) {
                 continue;
             }
 
-            let hasCustomKindDegrees: boolean = true;
+            let hasCustomChordDegrees: boolean = true;
 
             for (const degType of degreeTypeAry) {
-                for (const deg of (customKind.degrees[degType] || [])) {
+                for (const deg of (customChord.degrees[degType] || [])) {
                     if (degrees[degType].indexOf(deg) < 0) {
-                        hasCustomKindDegrees = false;
+                        hasCustomChordDegrees = false;
                         break;
                     }
                 }
-                if (!hasCustomKindDegrees) {
+                if (!hasCustomChordDegrees) {
                     break;
                 }
             }
-            if (hasCustomKindDegrees) {
+            if (hasCustomChordDegrees) {
                 for (const degType of degreeTypeAry) {
-                    for (const deg of (customKind.degrees[degType] || [])) {
-                        // delete degree since we don't want it displayed when the alternate name of the customKind should contain the degrees.
+                    for (const deg of (customChord.degrees[degType] || [])) {
+                        // delete degree since we don't want it displayed when the alternate name of the customChord should contain the degrees.
                         degrees[degType].splice(degrees[degType].indexOf(deg), 1);
                     }
                 }
-                chordKind = customKind.alternateName;
+                chordKind = customChord.alternateName;
             }
         }
 
@@ -224,11 +224,11 @@ export class CustomChord {
     public static renameCustomChord(
         altName: string,
         newAltName: string,
-        customKinds: CustomChord[],
+        customChords: CustomChord[],
     ): void {
-        for (const customKind of customKinds) {
-            if (customKind.alternateName === altName) {
-            customKind.alternateName = newAltName;
+        for (const customChord of customChords) {
+            if (customChord.alternateName === altName) {
+            customChord.alternateName = newAltName;
             }
         }
     }
