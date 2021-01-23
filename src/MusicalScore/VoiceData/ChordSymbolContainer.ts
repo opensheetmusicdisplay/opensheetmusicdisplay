@@ -105,7 +105,7 @@ export class ChordSymbolContainer {
             let hasCustomKindDegrees: boolean = true;
 
             for (const degType of degreeTypeAry) {
-                for (const deg of (customKind[degType] || [])) {
+                for (const deg of (customKind.degrees[degType] || [])) {
                     if (degrees[degType].indexOf(deg) < 0) {
                         hasCustomKindDegrees = false;
                         break;
@@ -117,7 +117,7 @@ export class ChordSymbolContainer {
             }
             if (hasCustomKindDegrees) {
                 for (const degType of degreeTypeAry) {
-                    for (const deg of (customKind[degType] || [])) {
+                    for (const deg of (customKind.degrees[degType] || [])) {
                         // delete degree since we don't want it displayed when the alternate name of the customKind should contain the degrees.
                         degrees[degType].splice(degrees[degType].indexOf(deg), 1);
                     }
@@ -201,32 +201,24 @@ export interface DegreesInfo {
 export class CustomChord {
     public alternateName: string;
     public chordKind: ChordSymbolEnum;
-    public adds: string[];
-    public alts: string[];
-    public subs: string[];
+    public degrees: DegreesInfo;
 
     constructor(
         alternateName: string,
         chordKind: ChordSymbolEnum,
-        adds: string[],
-        alts: string[],
-        subs: string[],
+        degrees: DegreesInfo,
     ) {
         this.alternateName = alternateName;
         this.chordKind = chordKind;
-        this.adds = adds;
-        this.alts = alts;
-        this.subs = subs;
+        this.degrees = degrees;
     }
 
     public static createCustomChord(
         altName: string,
         chordKind: ChordSymbolEnum,
-        adds: string[],
-        alts: string[],
-        subs: string[],
+        degrees: DegreesInfo,
     ): CustomChord {
-        return new CustomChord(altName, chordKind, adds, alts, subs);
+        return new CustomChord(altName, chordKind, degrees);
     }
 
     public static renameCustomChord(

@@ -8,7 +8,7 @@ import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum } from "../../Common/DataObjects/Pitch";
-import { ChordSymbolEnum, CustomChord } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
 
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
@@ -612,7 +612,12 @@ export class EngravingRules {
         subs: string[],
     ): void {
         if (ChordSymbolEnum[chordKindText] !== undefined) {
-            this.CustomChords.push(CustomChord.createCustomChord(altName, ChordSymbolEnum[chordKindText], adds, alts, subs));
+            const degrees: DegreesInfo = {
+                adds,
+                alts,
+                subs,
+            };
+            this.CustomChords.push(CustomChord.createCustomChord(altName, ChordSymbolEnum[chordKindText], degrees));
         }
     }
 
