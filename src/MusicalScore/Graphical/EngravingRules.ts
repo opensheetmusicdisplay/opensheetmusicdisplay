@@ -565,6 +565,7 @@ export class EngravingRules {
         this.SpacingBetweenTextLines = 0;
 
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
+        this.NoteToGraphicalNoteMapObjectCount = 0;
 
         // this.populateDictionaries(); // these values aren't used currently
         try {

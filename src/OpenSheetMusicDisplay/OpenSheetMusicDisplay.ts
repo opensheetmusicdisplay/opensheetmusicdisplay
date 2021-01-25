@@ -191,7 +191,6 @@ export class OpenSheetMusicDisplay {
         this.drawer?.clear(); // clear canvas before setting width
         // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
         // this.graphic.GetCalculator.clearRecreatedObjects();
-        this.rules.clearObjects();
 
         // Set page width
         let width: number = this.container.offsetWidth;

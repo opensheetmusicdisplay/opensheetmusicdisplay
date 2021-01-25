@@ -15,7 +15,7 @@ import { EngravingRules } from "./EngravingRules";
  * The graphical counterpart of a [[Note]]
  */
 export class GraphicalNote extends GraphicalObject {
-    constructor(note: Note, parent: GraphicalVoiceEntry, graphicalNoteLength: Fraction = undefined) {
+    constructor(note: Note, parent: GraphicalVoiceEntry, rules: EngravingRules, graphicalNoteLength: Fraction = undefined) {
         super();
         this.sourceNote = note;
         this.parentVoiceEntry = parent;
@@ -27,6 +27,8 @@ export class GraphicalNote extends GraphicalObject {
         }
 
         this.numberOfDots = this.calculateNumberOfNeededDots(this.graphicalNoteLength);
+        this.rules = rules;
+        this.rules.addGraphicalNoteToNoteMap(note, this);
     }
 
     public sourceNote: Note;

@@ -17,10 +17,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     constructor(note: Note, parent: GraphicalVoiceEntry, activeClef: ClefInstruction,
                 octaveShift: OctaveEnum = OctaveEnum.NONE, rules: EngravingRules,
                 graphicalNoteLength: Fraction = undefined) {
-        super(note, parent, graphicalNoteLength);
+        super(note, parent, rules, graphicalNoteLength);
         this.clef = activeClef;
         this.octaveShift = octaveShift;
-        this.rules = rules;
         if (note.Pitch) {
             // TODO: Maybe shift to Transpose function when available
             const drawPitch: Pitch = note.isRest() ? note.Pitch : OctaveShift.getPitchFromOctaveShift(note.Pitch, octaveShift);
@@ -36,7 +35,6 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public vfnote: [Vex.Flow.StemmableNote, number];
     // The current clef
     private clef: ClefInstruction;
-    public rules: EngravingRules;
 
     /**
      * Update the pitch of this note. Necessary in order to display accidentals correctly.

@@ -114,6 +114,7 @@ export abstract class MusicSheetCalculator {
     public initialize(graphicalMusicSheet: GraphicalMusicSheet): void {
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = graphicalMusicSheet.ParentMusicSheet.Rules;
+        this.rules.clearMusicSheetObjects();
         this.prepareGraphicalMusicSheet();
         //this.calculate();
     }
