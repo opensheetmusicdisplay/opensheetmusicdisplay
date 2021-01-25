@@ -147,7 +147,7 @@ export class VoiceGenerator {
         }
         // check for Arpeggios
         const arpeggioNode: IXmlElement = notationNode.element("arpeggiate");
-        if (arpeggioNode !== undefined && !this.currentVoiceEntry.IsGrace) {
+        if (arpeggioNode !== undefined) {
           let currentArpeggio: Arpeggio;
           if (this.currentVoiceEntry.Arpeggio) { // add note to existing Arpeggio
             currentArpeggio = this.currentVoiceEntry.Arpeggio;
