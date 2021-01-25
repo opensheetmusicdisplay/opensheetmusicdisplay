@@ -68,7 +68,8 @@ export class GraphicalNote extends GraphicalObject {
       return this.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentMusicSystem.Parent;
     }
 
-    /** Get a GraphicalNote from a Note. Use osmd.rules as the second parameter (instance reference). */
+    /** Get a GraphicalNote from a Note. Use osmd.rules as the second parameter (instance reference).
+     *  Also more easily available via osmd.rules.GNote(note). */
     public static FromNote(note: Note, rules: EngravingRules): GraphicalNote {
       return rules.NoteToGraphicalNoteMap.getValue(note.NoteToGraphicalNoteObjectId);
     }
