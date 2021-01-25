@@ -3,7 +3,7 @@ import {GraphicalMusicPage} from "./GraphicalMusicPage";
 import {EngravingRules} from "./EngravingRules";
 import {RhythmInstruction} from "../VoiceData/Instructions/RhythmInstruction";
 import {KeyInstruction} from "../VoiceData/Instructions/KeyInstruction";
-import {ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
+import {ClefEnum, ClefInstruction} from "../VoiceData/Instructions/ClefInstruction";
 import {SourceMeasure} from "../VoiceData/SourceMeasure";
 import {MusicSystem} from "./MusicSystem";
 import {BoundingBox} from "./BoundingBox";
@@ -17,9 +17,10 @@ import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNot
 import {SystemLinesEnum} from "./SystemLinesEnum";
 import {GraphicalMusicSheet} from "./GraphicalMusicSheet";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
-import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
+// import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SystemLinePosition} from "./SystemLinePosition";
+import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 
 export class MusicSystemBuilder {
     protected measureList: GraphicalMeasure[][];
@@ -412,7 +413,7 @@ export class MusicSystemBuilder {
 
     protected transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: GraphicalMeasure): KeyInstruction {
         if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0
-            && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
+            // && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion // need key for width alignment
             && MusicSheetCalculator.transposeCalculator !== undefined
         ) {
             MusicSheetCalculator.transposeCalculator.transposeKey(
@@ -422,6 +423,10 @@ export class MusicSystemBuilder {
         }
         return keyInstruction;
     }
+
+    private currentSourceMeasure: SourceMeasure;
+    private percussionMeasureNeedsWidthUpdate: GraphicalMeasure;
+    private currentKeySigWidth: number = 0;
 
     /**
      * Calculate the width needed for Instructions (Key, Clef, Rhythm, Repetition) for the measure.
@@ -436,11 +441,11 @@ export class MusicSystemBuilder {
             return 0;
         }
         let totalBeginInstructionLengthX: number = 0.0;
-        const sourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
+        this.currentSourceMeasure = measures[0].parentSourceMeasure;
         for (let idx: number = 0; idx < measureCount; ++idx) {
             const measure: GraphicalMeasure = measures[idx];
             const staffIndex: number = this.visibleStaffIndices[idx];
-            const beginInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.FirstInstructionsStaffEntries[staffIndex];
+            const beginInstructionsStaffEntry: SourceStaffEntry = this.currentSourceMeasure.FirstInstructionsStaffEntries[staffIndex];
             const beginInstructionLengthX: number = this.AddInstructionsAtMeasureBegin(
                 beginInstructionsStaffEntry, measure,
                 idx, isFirstSourceMeasure,
@@ -514,7 +519,17 @@ export class MusicSystemBuilder {
         if (currentKey) {
             currentKey = this.transposeKeyInstruction(currentKey, measure);
             const previousKey: KeyInstruction = isSystemStartMeasure ? undefined : this.activeKeys[visibleStaffIdx];
-            measure.addKeyAtBegin(currentKey, previousKey, currentClef);
+            const currentMeasureKeySigWidth: number = measure.addKeyAtBegin(currentKey, previousKey, currentClef);
+            this.currentKeySigWidth = Math.max(currentMeasureKeySigWidth, currentMeasureKeySigWidth);
+            if (this.percussionMeasureNeedsWidthUpdate && this.currentKeySigWidth > 0) {
+                console.log(">0!");
+                this.percussionMeasureNeedsWidthUpdate.beginInstructionsWidth += this.currentKeySigWidth + 100;
+                (this.percussionMeasureNeedsWidthUpdate as VexFlowMeasure).format();
+                this.percussionMeasureNeedsWidthUpdate = undefined;
+            }
+            if (currentClef.ClefType === ClefEnum.percussion) {
+                this.percussionMeasureNeedsWidthUpdate = measure;
+            }
             keyAdded = true;
         }
         if (currentRhythm !== undefined && currentRhythm.PrintObject && this.rules.RenderTimeSignatures) {

@@ -145,7 +145,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      * @param previousKey - The old cancelled key. Needed to show which accidentals are not valid any more.
      * @param currentClef - The valid clef. Needed to put the accidentals on the right y-positions.
      */
-    public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
+    public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): number {
         throw new Error("not implemented");
     }
 

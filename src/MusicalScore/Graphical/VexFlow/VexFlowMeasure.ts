@@ -4,7 +4,7 @@ import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
 import {SystemLinesEnum} from "../SystemLinesEnum";
-import {ClefInstruction, ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
+import {ClefInstruction, ClefEnum, MidiInstrument} from "../../VoiceData/Instructions/ClefInstruction";
 import {KeyInstruction} from "../../VoiceData/Instructions/KeyInstruction";
 import {RhythmInstruction} from "../../VoiceData/Instructions/RhythmInstruction";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -241,16 +241,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param previousKey the old cancelled key. Needed to show which accidentals are not valid any more.
      * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
      */
-    public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
+    public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): number {
         if (!this.rules.RenderKeySignatures) {
-            return;
+            return 0;
         }
+        console.log("addkey");
         this.stave.setKeySignature(
             VexFlowConverter.keySignature(currentKey),
             VexFlowConverter.keySignature(previousKey),
-            undefined
+            Vex.Flow.StaveModifier.Position.BEGIN
         );
-        this.updateInstructionWidth();
+        return this.updateInstructionWidth();
     }
 
     /**
@@ -1377,20 +1378,29 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * After re-running the formatting on the VexFlow Stave, update the
      * space needed by Instructions (in VexFlow: StaveModifiers)
      */
-    protected updateInstructionWidth(): void {
+    protected updateInstructionWidth(): number {
         let vfBeginInstructionsWidth: number = 0;
         let vfEndInstructionsWidth: number = 0;
+        let keySigWidth: number = 0;
         const modifiers: Vex.Flow.StaveModifier[] = this.stave.getModifiers();
         for (const mod of modifiers) {
             if (mod.getPosition() === StavePositionEnum.BEGIN) {  //Vex.Flow.StaveModifier.Position.BEGIN) {
-                vfBeginInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
+                const extraWidth: number = mod.getWidth() + mod.getPadding(undefined);
+                vfBeginInstructionsWidth += extraWidth;
+                if (mod.getCategory() === "keysignatures") {
+                    keySigWidth = extraWidth;
+                }
             } else if (mod.getPosition() === StavePositionEnum.END) { //Vex.Flow.StaveModifier.Position.END) {
                 vfEndInstructionsWidth += mod.getWidth() + mod.getPadding(undefined);
             }
         }
+        if (this.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion) {
+
+        }
 
         this.beginInstructionsWidth = (vfBeginInstructionsWidth ?? 0) / unitInPixels;
         this.endInstructionsWidth = (vfEndInstructionsWidth ?? 0) / unitInPixels;
+        return keySigWidth;
     }
 }
 

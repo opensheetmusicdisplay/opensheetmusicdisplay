@@ -2163,12 +2163,11 @@ export abstract class MusicSheetCalculator {
                 const instruction: AbstractNotationInstruction = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[idx];
                 if (instruction instanceof KeyInstruction) {
                     const key: KeyInstruction = KeyInstruction.copy(instruction);
-                    if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0 &&
-                        measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
-                        MusicSheetCalculator.transposeCalculator) {
+                    if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0 && MusicSheetCalculator.transposeCalculator) {
                         MusicSheetCalculator.transposeCalculator.transposeKey(
                             key, this.graphicalMusicSheet.ParentMusicSheet.Transpose
                         );
+                        // also do this for percussion, need key signature for width calculations
                     }
                     accidentalCalculator.ActiveKeyInstruction = key;
                 }
