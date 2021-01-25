@@ -94,6 +94,8 @@ export class Note {
     private noteheadColor: string;
     private noteheadColorCurrentlyRendered: string;
     public Fingering: TechnicalInstruction; // this is also stored in VoiceEntry.TechnicalInstructions
+    /** Used by GraphicalNote.FromNote() to get a GraphicalNote from a Note. */
+    public NoteToGraphicalNoteObjectId: number; // used with EngravingRules.NoteToGraphicalNoteMap
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;

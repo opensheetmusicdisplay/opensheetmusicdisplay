@@ -9,6 +9,8 @@ import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum } from "../../Common/DataObjects/Pitch";
 import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { GraphicalNote } from "./GraphicalNote";
+import { Note } from "../VoiceData/Note";
 
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
@@ -269,6 +271,10 @@ export class EngravingRules {
     public RestoreCursorAfterRerender: boolean;
     public StretchLastSystemLine: boolean;
     public SpacingBetweenTextLines: number;
+
+    public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
+    // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
+    public NoteToGraphicalNoteMapObjectCount: number = 0;
 
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
@@ -558,6 +564,8 @@ export class EngravingRules {
         this.RenderSingleHorizontalStaffline = false;
         this.SpacingBetweenTextLines = 0;
 
+        this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
+
         // this.populateDictionaries(); // these values aren't used currently
         try {
             this.MaxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
@@ -569,6 +577,16 @@ export class EngravingRules {
         } catch (ex) {
             log.info("EngravingRules()", ex);
         }
+    }
+
+    public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {
+        note.NoteToGraphicalNoteObjectId = this.NoteToGraphicalNoteMapObjectCount;
+        this.NoteToGraphicalNoteMap.setValue(note.NoteToGraphicalNoteObjectId, graphicalNote);
+        this.NoteToGraphicalNoteMapObjectCount++;
+    }
+
+    public clearObjects(): void {
+        this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
     }
 
     public setChordSymbolLabelText(key: ChordSymbolEnum, value: string): void {
