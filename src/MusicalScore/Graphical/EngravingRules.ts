@@ -585,8 +585,14 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMapObjectCount++;
     }
 
-    public clearObjects(): void {
+    public GNote(note: Note): GraphicalNote {
+        return GraphicalNote.FromNote(note, this);
+    }
+
+    /** This should be done before a new sheet is loaded, not each re-render (otherwise the map would end empty). */
+    public clearMusicSheetObjects(): void {
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
+        this.NoteToGraphicalNoteMapObjectCount = 0;
     }
 
     public setChordSymbolLabelText(key: ChordSymbolEnum, value: string): void {
