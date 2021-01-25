@@ -91,19 +91,15 @@ export class ChordSymbolContainer {
         }
 
         // chord kind text
-        // I'm going to store this in a variable for now so I can evaluate it with the degrees
         let chordKind: string = chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
         const degreeTypeAry: string[] = ["adds", "alts", "subs"];
-
         const customChords: CustomChord[] = chordSymbol.rules.CustomChords;
-
         for (const customChord of customChords) {
             if (customChord.chordKind !== chordSymbol.chordKind) {
                 continue;
             }
 
             let hasCustomChordDegrees: boolean = true;
-
             for (const degType of degreeTypeAry) {
                 for (const deg of (customChord.degrees[degType] || [])) {
                     if (degrees[degType].indexOf(deg) < 0) {
@@ -228,7 +224,7 @@ export class CustomChord {
     ): void {
         for (const customChord of customChords) {
             if (customChord.alternateName === altName) {
-            customChord.alternateName = newAltName;
+                customChord.alternateName = newAltName;
             }
         }
     }
