@@ -8,7 +8,7 @@ import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum } from "../../Common/DataObjects/Pitch";
-import { ChordSymbolEnum } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
 
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
@@ -102,6 +102,7 @@ export class EngravingRules {
     public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
+    public CustomChords: CustomChord[];
     public RepetitionSymbolsYOffset: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
@@ -394,6 +395,8 @@ export class EngravingRules {
         this.ChordSymbolYOffset = 2.0;
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
+        this.CustomChords = [];
+        this.resetChordNames();
         this.RepetitionSymbolsYOffset = 0;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
@@ -596,8 +599,57 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.suspendedsecond, "sus2");
         chordtexts.setValue(ChordSymbolEnum.suspendedfourth, "sus4");
         chordtexts.setValue(ChordSymbolEnum.power, "5");
+        chordtexts.setValue(ChordSymbolEnum.none, "N.C.");
 
         return chordtexts;
+    }
+
+    public addChordName(
+        altName: string,
+        chordKindText: string,
+        adds: string[],
+        alts: string[],
+        subs: string[],
+    ): void {
+        if (ChordSymbolEnum[chordKindText] !== undefined) {
+            const degrees: DegreesInfo = {
+                adds,
+                alts,
+                subs,
+            };
+            this.CustomChords.push(CustomChord.createCustomChord(altName, ChordSymbolEnum[chordKindText], degrees));
+        }
+    }
+
+    public renameChord(altName: string, newAltName: string): void {
+        CustomChord.renameCustomChord(altName, newAltName, this.CustomChords);
+    }
+
+    public resetChordNames(): void {
+        // addChordName(alternateName, chordKindText, adds, alters, subtracts)
+        this.addChordName("alt", "major", ["#5", "b9", "#9"], ["b5"], []);
+        this.addChordName("7alt", "dominant", ["#5", "b9", "#9"], ["b5"], []);
+        this.addChordName("7sus4", "dominant", ["4"], [], ["3"]);
+        this.addChordName("7sus4", "suspendedfourth", ["7"], [], []);
+        this.addChordName("9sus4", "dominantninth", ["4"], [], ["3"]);
+        this.addChordName("9sus4", "suspendedfourth", ["9"], [], []);
+        this.addChordName("11sus4", "dominant11th", ["4"], [], ["3"]);
+        this.addChordName("11sus4", "suspendedfourth", ["11"], [], []);
+        this.addChordName("13sus4", "dominant13th", ["4"], [], ["3"]);
+        this.addChordName("13sus4", "suspendedfourth", ["13"], [], []);
+        this.addChordName("7sus2", "dominant", ["2"], [], ["3"]);
+        this.addChordName("7sus2", "suspendedsecond", ["7"], [], []);
+        this.addChordName("9sus2", "dominantninth", ["2"], [], ["3"]);
+        this.addChordName("9sus2", "suspendedsecond", ["9"], [], []);
+        this.addChordName("11sus2", "dominant11th", ["2"], [], ["3"]);
+        this.addChordName("11sus2", "suspendedsecond", ["11"], [], []);
+        this.addChordName("13sus2", "dominant13th", ["2"], [], ["3"]);
+        this.addChordName("13sus2", "suspendedsecond", ["13"], [], []);
+        this.addChordName("m(maj9)", "majorminor", ["9"], [], []);
+        this.addChordName("m(maj11)", "majorminor", ["11"], [], []);
+        this.addChordName("m(maj13)", "majorminor", ["13"], [], []);
+        this.addChordName("69", "majorsixth", ["9"], [], []);
+        this.addChordName("mi69", "minorsixth", ["9"], [], []);
     }
 
     /**
