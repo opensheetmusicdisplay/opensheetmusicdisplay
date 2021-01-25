@@ -348,7 +348,7 @@ export class EngravingRules {
         this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
         this.PercussionForceVoicesOneLineCutoff = 1;
         this.PercussionOneLineUseXMLDisplayStep = true;
-        this.PercussionOneLineXMLDisplayStepOctaveOffset = 2;
+        this.PercussionOneLineXMLDisplayStepOctaveOffset = 0;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;
         this.RhythmRightMargin = 1.25;
