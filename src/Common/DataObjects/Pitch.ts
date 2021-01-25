@@ -66,6 +66,19 @@ export class Pitch {
         }
     }
 
+    /** This method goes x steps from a NoteEnum on a keyboard.
+     * E.g. Two steps to the left (-2) from a D is a B.
+     * Two steps to the right from an A is a C. */
+    public static stepFromNoteEnum(noteEnum: NoteEnum, step: number): NoteEnum {
+        const enums: NoteEnum[] = Pitch.pitchEnumValues;
+        const originalIndex: number = enums.indexOf(noteEnum);
+        let newIndex: number = originalIndex + step % enums.length; // modulo only handles positive overflow
+        if (newIndex < 0) {
+            newIndex = enums.length + newIndex; // handle underflow, e.g. - 1: enums.length + (-1) = last element
+        }
+        return enums[newIndex];
+    }
+
     /**
      * @param the input pitch
      * @param the number of halftones to transpose with

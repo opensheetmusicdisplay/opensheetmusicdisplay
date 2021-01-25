@@ -20,7 +20,7 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
     /**
      * This method is called for each note during the calc phase. We want to track all possible positions to make decisions
      * during layout about where notes should be positioned.
-     * This directly notes that share a line to the same position, regardless of voice
+     * This directly puts notes that share a line to the same position, regardless of voice
      * @param graphicalNote The note to be checked/positioned
      * @param staffIndex The staffline the note is on
      */
@@ -98,7 +98,13 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
 
         //If we only need to render on one line
         if (currentPitchList.length <= this.rules.PercussionForceVoicesOneLineCutoff) {
-            vfGraphicalNote.setAccidental(new Pitch(this.baseLineNote, this.baseLineOctave, notePitch.Accidental));
+            let displayNote: NoteEnum = this.baseLineNote;
+            let displayOctave: number = this.baseLineOctave;
+            if (this.rules.PercussionOneLineUseXMLDisplayStep && graphicalNote.sourceNote.displayStepUnpitched !== undefined) {
+                displayNote = graphicalNote.sourceNote.displayStepUnpitched;
+                displayOctave = graphicalNote.sourceNote.displayOctaveUnpitched;
+            }
+            vfGraphicalNote.setAccidental(new Pitch(displayNote, displayOctave, notePitch.Accidental));
         } else {
             const pitchIndex: number = VexflowStafflineNoteCalculator.PitchIndexOf(currentPitchList, notePitch);
             if (pitchIndex > -1) {

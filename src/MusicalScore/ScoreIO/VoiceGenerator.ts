@@ -324,7 +324,9 @@ export class VoiceGenerator {
     let noteAlter: number = 0;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
+    let displayStepUnpitched: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
+    let displayOctaveUnpitched: number = 0;
     let playbackInstrumentId: string = undefined;
     let noteheadShapeXml: string = undefined;
     let noteheadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
@@ -381,13 +383,15 @@ export class VoiceGenerator {
             noteAccidental = AccidentalEnum.NATURAL;
           }
         } else if (noteElement.name === "unpitched") {
-          const displayStep: IXmlElement = noteElement.element("display-step");
-          if (displayStep) {
-            noteStep = NoteEnum[displayStep.value.toUpperCase()];
+          const displayStepElement: IXmlElement = noteElement.element("display-step");
+          if (displayStepElement) {
+            noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
+            displayStepUnpitched = Pitch.stepFromNoteEnum(noteStep, -3);
           }
           const octave: IXmlElement = noteElement.element("display-octave");
           if (octave) {
             noteOctave = parseInt(octave.value, 10);
+            displayOctaveUnpitched = noteOctave - 3;
             if (guitarPro) {
               noteOctave += 1;
             }
@@ -449,7 +453,9 @@ export class VoiceGenerator {
                          stringNumber, fretNumber, bends, vibratoStrokes);
     }
 
-    this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes, noteheadColorXml, noteheadColorXml);
+    this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes,
+                     displayStepUnpitched, displayOctaveUnpitched,
+                     noteheadColorXml, noteheadColorXml);
     note.TypeLength = typeDuration;
     note.IsGraceNote = isGraceNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
@@ -480,15 +486,18 @@ export class VoiceGenerator {
   private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType,
                       normalNotes: number, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
-    const displayStep: IXmlElement = node.element("display-step");
-    const octave: IXmlElement = node.element("display-octave");
+    const displayStepElement: IXmlElement = node.element("display-step");
+    const octaveElement: IXmlElement = node.element("display-octave");
+    let displayStep: NoteEnum;
+    let displayOctave: number;
     let pitch: Pitch = undefined;
-    if (displayStep && octave) {
-        const noteStep: NoteEnum = NoteEnum[displayStep.value.toUpperCase()];
-        pitch = new Pitch(noteStep, parseInt(octave.value, 10), AccidentalEnum.NONE);
+    if (displayStepElement && octaveElement) {
+        displayStep = NoteEnum[displayStepElement.value.toUpperCase()];
+        displayOctave = parseInt(octaveElement.value, 10);
+        pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE);
     }
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
-    this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, noteheadColorXml, noteheadColorXml);
+    this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, displayStep, displayOctave, noteheadColorXml, noteheadColorXml);
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeams.length > 0) {
       this.openBeams.last().ExtendedNoteList.push(restNote);
@@ -497,13 +506,16 @@ export class VoiceGenerator {
   }
 
   // common for "normal" notes and rest notes
-  private addNoteInfo(note: Note, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean,
-                      normalNotes: number, noteheadColorXml: string, noteheadColor: string): void {
+  private addNoteInfo(note: Note, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean, normalNotes: number,
+                      displayStep: NoteEnum, displayOctave: number,
+                      noteheadColorXml: string, noteheadColor: string): void {
       // common for normal notes and rest note
       note.NoteTypeXml = noteTypeXml;
       note.PrintObject = printObject;
-      note.NormalNotes = normalNotes; // how many rhythmical notes the notes replace (e.g. for tuplets), see xml "actual-notes" and "normal-notes"
       note.IsCueNote = isCueNote;
+      note.NormalNotes = normalNotes; // how many rhythmical notes the notes replace (e.g. for tuplets), see xml "actual-notes" and "normal-notes"
+      note.displayStepUnpitched = displayStep;
+      note.displayOctaveUnpitched = displayOctave;
       note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
       note.NoteheadColor = noteheadColorXml; // color currently used
       // add TypeLength for rest notes like with Note?
