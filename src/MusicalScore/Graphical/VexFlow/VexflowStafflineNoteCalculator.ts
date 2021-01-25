@@ -108,52 +108,56 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
         } else {
             const pitchIndex: number = VexflowStafflineNoteCalculator.PitchIndexOf(currentPitchList, notePitch);
             if (pitchIndex > -1) {
-                let fundamental: NoteEnum = this.baseLineNote;
-                let octave: number = this.baseLineOctave;
+                let displayNote: NoteEnum = this.baseLineNote;
+                let displayOctave: number = this.baseLineOctave;
+                if (this.rules.PercussionOneLineUseXMLDisplayStep && graphicalNote.sourceNote.displayStepUnpitched !== undefined) {
+                    displayNote = graphicalNote.sourceNote.displayStepUnpitched;
+                    displayOctave = graphicalNote.sourceNote.displayOctaveUnpitched + this.rules.PercussionOneLineXMLDisplayStepOctaveOffset;
+                }
                 const half: number = Math.ceil(currentPitchList.length / 2);
                 //position above
-                if (pitchIndex >= half) {
-                    octave = 2;
+                if (pitchIndex >= half && !this.rules.PercussionOneLineUseXMLDisplayStep) {
+                    displayOctave = 2;
                     switch ((pitchIndex - half) % 5) {
                         case 1:
-                            fundamental = NoteEnum.E;
+                            displayNote = NoteEnum.E;
                             break;
                         case 2:
-                            fundamental = NoteEnum.G;
+                            displayNote = NoteEnum.G;
                             break;
                         case 3:
-                            fundamental = NoteEnum.B;
+                            displayNote = NoteEnum.B;
                             break;
                         case 4:
-                            fundamental = NoteEnum.D;
-                            octave = 3;
+                            displayNote = NoteEnum.D;
+                            displayOctave = 3;
                             break;
                         default:
-                            fundamental = NoteEnum.C;
+                            displayNote = NoteEnum.C;
                             break;
                     }
-                } else { //position below
+                } else if (!this.rules.PercussionOneLineUseXMLDisplayStep) { //position below
                     switch (pitchIndex % 5) {
                         case 1:
-                            fundamental = NoteEnum.F;
+                            displayNote = NoteEnum.F;
                             break;
                         case 2:
-                            fundamental = NoteEnum.D;
+                            displayNote = NoteEnum.D;
                             break;
                         case 3:
-                            fundamental = NoteEnum.B;
-                            octave = 0;
+                            displayNote = NoteEnum.B;
+                            displayOctave = 0;
                             break;
                         case 4:
-                            fundamental = NoteEnum.G;
-                            octave = 0;
+                            displayNote = NoteEnum.G;
+                            displayOctave = 0;
                             break;
                         default:
-                            fundamental = NoteEnum.A;
+                            displayNote = NoteEnum.A;
                             break;
                     }
                 }
-                const mappedPitch: Pitch = new Pitch(fundamental, octave, notePitch.Accidental);
+                const mappedPitch: Pitch = new Pitch(displayNote, displayOctave, notePitch.Accidental);
                 //Map the pitch, set stems properly
                 vfGraphicalNote.setAccidental(mappedPitch);
                 const parentVoiceEntry: VoiceEntry = vfGraphicalNote.parentVoiceEntry.parentVoiceEntry;
