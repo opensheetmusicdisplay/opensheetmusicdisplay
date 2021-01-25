@@ -102,7 +102,7 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
             let displayOctave: number = this.baseLineOctave;
             if (this.rules.PercussionOneLineUseXMLDisplayStep && graphicalNote.sourceNote.displayStepUnpitched !== undefined) {
                 displayNote = graphicalNote.sourceNote.displayStepUnpitched;
-                displayOctave = graphicalNote.sourceNote.displayOctaveUnpitched;
+                displayOctave = graphicalNote.sourceNote.displayOctaveUnpitched + this.rules.PercussionOneLineXMLDisplayStepOctaveOffset;
             }
             vfGraphicalNote.setAccidental(new Pitch(displayNote, displayOctave, notePitch.Accidental));
         } else {
