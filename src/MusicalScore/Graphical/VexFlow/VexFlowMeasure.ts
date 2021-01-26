@@ -272,10 +272,43 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * This has to update/increase EndInstructionsWidth.
      * @param clef
      */
-    public addClefAtEnd(clef: ClefInstruction): void {
+    public addClefAtEnd(clef: ClefInstruction, visible: boolean = true): void {
         const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "small");
+        if (!visible && (this.stave as any).endClef) {
+            return; // don't overwrite existing clef with invisible clef
+        }
         this.stave.setEndClef(vfclef.type, vfclef.size, vfclef.annotation);
-        this.updateInstructionWidth();
+        for (const modifier of this.stave.getModifiers()) {
+            if (!visible) {
+                // make clef invisible in vexflow. (only rendered to correct layout and staffentry boundingbox)
+                if (modifier.getCategory() === "clefs" && modifier.getPosition() === Vex.Flow.StaveModifier.Position.END) {
+                    if ((modifier as any).type === vfclef.type) { // any = Vex.Flow.Clef
+                        const transparentStyle: string = "#12345600";
+                        const originalStyle: any = (modifier as any).getStyle();
+                        if (originalStyle) {
+                            (modifier as any).originalStrokeStyle = originalStyle.strokeStyle;
+                            (modifier as any).originalFillStyle = originalStyle.fillStyle;
+                        }
+                        (modifier as any).setStyle({strokeStyle: transparentStyle, fillStyle: transparentStyle});
+                    }
+                }
+            } else {
+                // reset invisible style
+                const originalStrokeStyle: any = (modifier as any).originalStrokeStyle;
+                const originalFillStyle: any = (modifier as any).originalFillStyle;
+                if ((modifier as any).getStyle()) {
+                    if (originalStrokeStyle && originalFillStyle) {
+                        ((modifier as any).getStyle() as any).strokeStyle = originalStrokeStyle;
+                        ((modifier as any).getStyle() as any).fillStyle = originalFillStyle;
+                    } else {
+                        ((modifier as any).getStyle() as any).strokeStyle = null;
+                        ((modifier as any).getStyle() as any).fillStyle = null;
+                    }
+                }
+            }
+        }
+        this.parentSourceMeasure.hasEndClef = true;
+        return this.updateInstructionWidth();
     }
 
     // Render initial line is whether or not to render a single bar line at the beginning (if the repeat line we are drawing is

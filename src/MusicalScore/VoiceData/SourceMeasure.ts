@@ -82,6 +82,7 @@ export class SourceMeasure {
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
     private implicitMeasure: boolean;
     private hasEndLine: boolean;
+    public hasEndClef: boolean;
     private graphicalMeasureErrors: boolean[] = [];
     private firstInstructionsStaffEntries: SourceStaffEntry[];
     private lastInstructionsStaffEntries: SourceStaffEntry[];

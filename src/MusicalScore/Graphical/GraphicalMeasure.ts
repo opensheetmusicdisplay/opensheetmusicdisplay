@@ -163,7 +163,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
      * This has to update/increase EndInstructionsWidth.
      * @param clef
      */
-    public addClefAtEnd(clef: ClefInstruction): void {
+    public addClefAtEnd(clef: ClefInstruction, visible: boolean = true): void {
         throw new Error("not implemented");
     }
 

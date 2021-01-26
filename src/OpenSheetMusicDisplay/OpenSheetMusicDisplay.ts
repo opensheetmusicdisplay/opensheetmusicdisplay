@@ -864,14 +864,20 @@ export class OpenSheetMusicDisplay {
     public get DrawBottomLine(): boolean {
         return this.drawer.bottomLineVisible;
     }
-
     public set DrawBoundingBox(value: string) {
-        this.drawBoundingBox = value;
-        this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
-        this.render(); // may create new Drawer.
+        this.setDrawBoundingBox(value, true);
     }
     public get DrawBoundingBox(): string {
         return this.drawBoundingBox;
+    }
+    public setDrawBoundingBox(value: string, render: boolean = false): void {
+        this.drawBoundingBox = value;
+        if (this.drawer) {
+            this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
+        }
+        if (render) {
+            this.render(); // may create new Drawer.
+        }
     }
 
     public get AutoResizeEnabled(): boolean {
