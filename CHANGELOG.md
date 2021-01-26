@@ -1,3 +1,11 @@
+## [0.9.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.9.0...0.9.1) (2021-01-26)
+
+### Bug Fixes
+
+* **Accidentals:** Remove many unnecessary extra courtesy accidentals not given in XML ([#747](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/747)) ([7493be9](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/7493be919826e481572e327949e4f7cf59fac790))
+* **PercussionOneLineXMLDisplayStep:** Display XML position correctly in all cases ([#945](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/945)) ([3eb4747](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/3eb474734fda421c3033c9f7ffc4cf64e92f24af))
+
+
 # [0.9.0](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.8.7...0.9.0) (2021-01-25)
 
 
