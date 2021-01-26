@@ -29,7 +29,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.8.7-dev"; // getter: this.Version
+    private version: string = "0.9.1-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**

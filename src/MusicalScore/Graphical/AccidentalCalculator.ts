@@ -32,6 +32,7 @@ export class AccidentalCalculator {
      */
     public doCalculationsAtEndOfMeasure(): void {
         this.currentInMeasureNoteAlterationsDict.clear();
+        this.currentAlterationsComparedToKeyInstructionList.clear();
         for (const key of this.keySignatureNoteAlterationsDict.keys()) {
             this.currentInMeasureNoteAlterationsDict.setValue(key, this.keySignatureNoteAlterationsDict.getValue(key));
         }

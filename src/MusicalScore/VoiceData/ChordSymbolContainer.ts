@@ -8,14 +8,20 @@ export class ChordSymbolContainer {
     private rootPitch: Pitch;
     private chordKind: ChordSymbolEnum;
     private bassPitch: Pitch;
-    private degree: Degree;
+    private degrees: Degree[];
     private rules: EngravingRules;
 
-    constructor(rootPitch: Pitch, chordKind: ChordSymbolEnum, bassPitch: Pitch, chordDegree: Degree, rules: EngravingRules) {
+    constructor(
+        rootPitch: Pitch,
+        chordKind: ChordSymbolEnum,
+        bassPitch: Pitch,
+        chordDegrees: Degree[],
+        rules: EngravingRules
+    ) {
         this.rootPitch = rootPitch;
         this.chordKind = chordKind;
         this.bassPitch = bassPitch;
-        this.degree = chordDegree;
+        this.degrees = chordDegrees;
         this.rules = rules;
     }
 
@@ -31,8 +37,8 @@ export class ChordSymbolContainer {
         return this.bassPitch;
     }
 
-    public get ChordDegree(): Degree {
-        return this.degree;
+    public get ChordDegrees(): Degree[] {
+        return this.degrees;
     }
 
     public static calculateChordText(chordSymbol: ChordSymbolContainer, transposeHalftones: number, keyInstruction: KeyInstruction): string {
@@ -45,35 +51,88 @@ export class ChordSymbolContainer {
                 transposeHalftones
             );
         }
+        if (chordSymbol.ChordKind === ChordSymbolEnum.none) {
+            return chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        }
         // main Note
         let text: string = Pitch.getNoteEnumString(transposedRootPitch.FundamentalNote);
         // main alteration
         if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
             text += this.getTextForAccidental(transposedRootPitch.Accidental);
         }
-        // chord kind text
-        text += chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
-        // degree
-        if (chordSymbol.ChordDegree) {
-            switch (chordSymbol.ChordDegree.text) {
-                case ChordDegreeText.add:
-                    text += "add";
-                    text += chordSymbol.ChordDegree.value.toString();
-                    break;
-                case ChordDegreeText.alter:
-                    if (chordSymbol.ChordDegree.alteration !== AccidentalEnum.NONE) {
-                        text += this.getTextForAccidental(chordSymbol.ChordDegree.alteration);
-                    }
-                    text += chordSymbol.ChordDegree.value.toString();
-                    break;
-                case ChordDegreeText.subtract:
-                    text += "(omit";
-                    text += chordSymbol.ChordDegree.value.toString();
-                    text += ")";
-                    break;
-                default:
+
+        // degrees
+        const degrees: DegreesInfo = {
+            adds: [],
+            alts: [],
+            subs: [],
+        };
+
+        for (const chordDegree of chordSymbol.ChordDegrees) {
+            if (chordDegree) {
+                let t: string = "";
+                if (chordDegree.alteration !== AccidentalEnum.NONE) {
+                    t += this.getTextForAccidental(chordDegree.alteration);
+                }
+                t += chordDegree.value;
+                switch (chordDegree.text) {
+                    case ChordDegreeText.add:
+                        degrees.adds.push(t);
+                        break;
+                    case ChordDegreeText.alter:
+                        degrees.alts.push(t);
+                        break;
+                    case ChordDegreeText.subtract:
+                        degrees.subs.push(t);
+                        break;
+                    default:
+                }
             }
         }
+
+        // chord kind text
+        let chordKind: string = chordSymbol.getTextFromChordKindEnum(chordSymbol.ChordKind);
+        const degreeTypeAry: string[] = ["adds", "alts", "subs"];
+        const customChords: CustomChord[] = chordSymbol.rules.CustomChords;
+        for (const customChord of customChords) {
+            if (customChord.chordKind !== chordSymbol.chordKind) {
+                continue;
+            }
+
+            let hasCustomChordDegrees: boolean = true;
+            for (const degType of degreeTypeAry) {
+                for (const deg of (customChord.degrees[degType] || [])) {
+                    if (degrees[degType].indexOf(deg) < 0) {
+                        hasCustomChordDegrees = false;
+                        break;
+                    }
+                }
+                if (!hasCustomChordDegrees) {
+                    break;
+                }
+            }
+            if (hasCustomChordDegrees) {
+                for (const degType of degreeTypeAry) {
+                    for (const deg of (customChord.degrees[degType] || [])) {
+                        // delete degree since we don't want it displayed when the alternate name of the customChord should contain the degrees.
+                        degrees[degType].splice(degrees[degType].indexOf(deg), 1);
+                    }
+                }
+                chordKind = customChord.alternateName;
+            }
+        }
+
+        text += chordKind;
+        if (degrees.adds.length > 0) {
+            text += "(" + degrees.adds.join(",") + ")";
+        }
+        if (degrees.alts.length > 0) {
+            text += "(alt " + degrees.alts.join(",") + ")";
+        }
+        if (degrees.subs.length > 0) {
+            text += "(omit " + degrees.subs.join(",") + ")";
+        }
+
         // bass
         if (chordSymbol.BassPitch) {
             let transposedBassPitch: Pitch = chordSymbol.BassPitch;
@@ -129,6 +188,48 @@ export class Degree {
     public text: ChordDegreeText;
 }
 
+export interface DegreesInfo {
+    adds?: string[];
+    alts?: string[];
+    subs?: string[];
+}
+
+export class CustomChord {
+    public alternateName: string;
+    public chordKind: ChordSymbolEnum;
+    public degrees: DegreesInfo;
+
+    constructor(
+        alternateName: string,
+        chordKind: ChordSymbolEnum,
+        degrees: DegreesInfo,
+    ) {
+        this.alternateName = alternateName;
+        this.chordKind = chordKind;
+        this.degrees = degrees;
+    }
+
+    public static createCustomChord(
+        altName: string,
+        chordKind: ChordSymbolEnum,
+        degrees: DegreesInfo,
+    ): CustomChord {
+        return new CustomChord(altName, chordKind, degrees);
+    }
+
+    public static renameCustomChord(
+        altName: string,
+        newAltName: string,
+        customChords: CustomChord[],
+    ): void {
+        for (const customChord of customChords) {
+            if (customChord.alternateName === altName) {
+                customChord.alternateName = newAltName;
+            }
+        }
+    }
+}
+
 export enum ChordDegreeText {
     add,
     alter,
@@ -166,5 +267,6 @@ export enum ChordSymbolEnum {
     German,
     pedal,
     power,
-    Tristan
+    Tristan,
+    none
 }

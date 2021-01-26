@@ -242,6 +242,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
      */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
+        if (!this.rules.RenderKeySignatures) {
+            return;
+        }
         this.stave.setKeySignature(
             VexFlowConverter.keySignature(currentKey),
             VexFlowConverter.keySignature(previousKey),
@@ -1054,6 +1057,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public graphicalMeasureCreatedCalculations(): void {
         let graceSlur: boolean;
         let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
+        const graveGVoiceEntriesAdded: GraphicalVoiceEntry[] = [];
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             graceSlur = false;
             graceGVoiceEntriesBefore = [];
@@ -1062,6 +1066,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (gve.parentVoiceEntry.IsGrace) {
                     // save grace notes for the next non-grace note
                     graceGVoiceEntriesBefore.push(gve);
+                    graveGVoiceEntriesAdded.push(gve);
                     if (!graceSlur) {
                         graceSlur = gve.parentVoiceEntry.GraceSlur;
                     }
@@ -1165,34 +1170,42 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
 
                 // add Arpeggio
-                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio) {
-                    const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
-                    // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
-                    // see VoiceGenerator. Doesn't matter for Vexflow for now though
-                    if (voiceEntry.notes && voiceEntry.notes.length > 1) {
-                        const type: Vex.Flow.Stroke.Type = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
-                        const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
-                            all_voices: this.rules.ArpeggiosGoAcrossVoices
-                            // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
-                            // also, this can cause infinite height of stroke, see #546
-                        });
-                        //if (arpeggio.notes.length === vexFlowVoiceEntry.notes.length) { // different workaround for endless y bug
-                        if (this.rules.RenderArpeggios) {
-                            vexFlowVoiceEntry.vfStaveNote.addStroke(0, stroke);
-                        }
-                    } else {
-                        log.debug(`[OSMD] arpeggio in measure ${this.MeasureNumber} could not be drawn.
-                        voice entry had less than two notes, arpeggio is likely between voice entries, not currently supported in Vexflow.`);
-                        // TODO: create new arpeggio with all the arpeggio's notes (arpeggio.notes), perhaps with GhostNotes in a new vfStaveNote. not easy.
-                    }
-                }
+                this.createArpeggio(voiceEntry);
 
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
             }
         }
+        for (const graceGVoiceEntry of graveGVoiceEntriesAdded) {
+            this.createFingerings(graceGVoiceEntry);
+            this.createArpeggio(graceGVoiceEntry);
+        }
         this.createArticulations();
         this.createOrnaments();
         this.setStemDirectionFromVexFlow();
+    }
+
+    private createArpeggio(voiceEntry: GraphicalVoiceEntry): void {
+        if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio) {
+            const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
+            // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
+            // see VoiceGenerator. Doesn't matter for Vexflow for now though
+            if (voiceEntry.notes && voiceEntry.notes.length > 1) {
+                const type: Vex.Flow.Stroke.Type = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
+                const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
+                    all_voices: this.rules.ArpeggiosGoAcrossVoices
+                    // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
+                    // also, this can cause infinite height of stroke, see #546
+                });
+                //if (arpeggio.notes.length === vexFlowVoiceEntry.notes.length) { // different workaround for endless y bug
+                if (this.rules.RenderArpeggios) {
+                    (voiceEntry as VexFlowVoiceEntry).vfStaveNote.addStroke(0, stroke);
+                }
+            } else {
+                log.debug(`[OSMD] arpeggio in measure ${this.MeasureNumber} could not be drawn.
+                voice entry had less than two notes, arpeggio is likely between voice entries, not currently supported in Vexflow.`);
+                // TODO: create new arpeggio with all the arpeggio's notes (arpeggio.notes), perhaps with GhostNotes in a new vfStaveNote. not easy.
+            }
+        }
     }
 
     /**

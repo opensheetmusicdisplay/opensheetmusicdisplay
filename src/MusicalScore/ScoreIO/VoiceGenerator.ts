@@ -41,7 +41,8 @@ export class VoiceGenerator {
     } else {
       this.voice = new Voice(instrument, voiceId);
     }
-    instrument.Voices.push(this.voice);
+    this.instrument = instrument;
+    this.instrument.Voices.push(this.voice);
     this.lyricsReader = new LyricsReader(this.musicSheet);
     this.articulationReader = new ArticulationReader();
   }
@@ -55,6 +56,7 @@ export class VoiceGenerator {
   private currentNote: Note;
   private currentMeasure: SourceMeasure;
   private currentStaffEntry: SourceStaffEntry;
+  private instrument: Instrument;
   // private lastBeamTag: string = "";
   private openBeams: Beam[] = []; // works like a stack, with push and pop
   private beamNumberOffset: number = 0;
@@ -101,13 +103,13 @@ export class VoiceGenerator {
    * @param measureStartAbsoluteTimestamp
    * @param maxTieNoteFraction
    * @param chord
-   * @param guitarPro
+   * @param octavePlusOne Software like Guitar Pro gives one octave too low, so we need to add one
    * @param printObject whether the note should be rendered (true) or invisible (false)
    * @returns {Note}
    */
   public read(noteNode: IXmlElement, noteDuration: Fraction, typeDuration: Fraction, noteTypeXml: NoteType, normalNotes: number, restNote: boolean,
               parentStaffEntry: SourceStaffEntry, parentMeasure: SourceMeasure,
-              measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, guitarPro: boolean,
+              measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, chord: boolean, octavePlusOne: boolean,
               printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
               stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     this.currentStaffEntry = parentStaffEntry;
@@ -117,7 +119,7 @@ export class VoiceGenerator {
     try {
       this.currentNote = restNote
         ? this.addRestNote(noteNode.element("rest"), noteDuration, noteTypeXml, normalNotes, printObject, isCueNote, noteheadColorXml)
-        : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, guitarPro,
+        : this.addSingleNote(noteNode, noteDuration, noteTypeXml, typeDuration, normalNotes, chord, octavePlusOne,
                              printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml, vibratoStrokes);
       // read lyrics
       const lyricElements: IXmlElement[] = noteNode.elements("lyric");
@@ -147,7 +149,7 @@ export class VoiceGenerator {
         }
         // check for Arpeggios
         const arpeggioNode: IXmlElement = notationNode.element("arpeggiate");
-        if (arpeggioNode !== undefined && !this.currentVoiceEntry.IsGrace) {
+        if (arpeggioNode !== undefined) {
           let currentArpeggio: Arpeggio;
           if (this.currentVoiceEntry.Arpeggio) { // add note to existing Arpeggio
             currentArpeggio = this.currentVoiceEntry.Arpeggio;
@@ -313,18 +315,20 @@ export class VoiceGenerator {
    * @param noteDuration
    * @param divisions
    * @param chord
-   * @param guitarPro
+   * @param octavePlusOne Software like Guitar Pro gives one octave too low, so we need to add one
    * @returns {Note}
    */
   private addSingleNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType, typeDuration: Fraction,
-                        normalNotes: number, chord: boolean, guitarPro: boolean,
+                        normalNotes: number, chord: boolean, octavePlusOne: boolean,
                         printObject: boolean, isCueNote: boolean, isGraceNote: boolean, stemDirectionXml: StemDirectionType, tremoloStrokes: number,
                         stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
+    let displayStepUnpitched: NoteEnum = NoteEnum.C;
     let noteOctave: number = 0;
+    let displayOctaveUnpitched: number = 0;
     let playbackInstrumentId: string = undefined;
     let noteheadShapeXml: string = undefined;
     let noteheadFilledXml: boolean = undefined; // if undefined, the final filled parameter will be calculated from duration
@@ -381,16 +385,23 @@ export class VoiceGenerator {
             noteAccidental = AccidentalEnum.NATURAL;
           }
         } else if (noteElement.name === "unpitched") {
-          const displayStep: IXmlElement = noteElement.element("display-step");
-          if (displayStep) {
-            noteStep = NoteEnum[displayStep.value.toUpperCase()];
-          }
+          const displayStepElement: IXmlElement = noteElement.element("display-step");
           const octave: IXmlElement = noteElement.element("display-octave");
           if (octave) {
             noteOctave = parseInt(octave.value, 10);
-            if (guitarPro) {
+            displayOctaveUnpitched = noteOctave - 3;
+            if (octavePlusOne) {
               noteOctave += 1;
             }
+            if (this.instrument.Staves[0].StafflineCount === 1) {
+              displayOctaveUnpitched += 1;
+            }
+          }
+          if (displayStepElement) {
+            noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
+            let octaveShift: number = 0;
+            [displayStepUnpitched, octaveShift] = Pitch.stepFromNoteEnum(noteStep, -3);
+            displayOctaveUnpitched += octaveShift;
           }
         } else if (noteElement.name === "instrument") {
           if (noteElement.firstAttribute) {
@@ -449,7 +460,9 @@ export class VoiceGenerator {
                          stringNumber, fretNumber, bends, vibratoStrokes);
     }
 
-    this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes, noteheadColorXml, noteheadColorXml);
+    this.addNoteInfo(note, noteTypeXml, printObject, isCueNote, normalNotes,
+                     displayStepUnpitched, displayOctaveUnpitched,
+                     noteheadColorXml, noteheadColorXml);
     note.TypeLength = typeDuration;
     note.IsGraceNote = isGraceNote;
     note.StemDirectionXml = stemDirectionXml; // maybe unnecessary, also in VoiceEntry
@@ -480,15 +493,18 @@ export class VoiceGenerator {
   private addRestNote(node: IXmlElement, noteDuration: Fraction, noteTypeXml: NoteType,
                       normalNotes: number, printObject: boolean, isCueNote: boolean, noteheadColorXml: string): Note {
     const restFraction: Fraction = Fraction.createFromFraction(noteDuration);
-    const displayStep: IXmlElement = node.element("display-step");
-    const octave: IXmlElement = node.element("display-octave");
+    const displayStepElement: IXmlElement = node.element("display-step");
+    const octaveElement: IXmlElement = node.element("display-octave");
+    let displayStep: NoteEnum;
+    let displayOctave: number;
     let pitch: Pitch = undefined;
-    if (displayStep && octave) {
-        const noteStep: NoteEnum = NoteEnum[displayStep.value.toUpperCase()];
-        pitch = new Pitch(noteStep, parseInt(octave.value, 10), AccidentalEnum.NONE);
+    if (displayStepElement && octaveElement) {
+        displayStep = NoteEnum[displayStepElement.value.toUpperCase()];
+        displayOctave = parseInt(octaveElement.value, 10);
+        pitch = new Pitch(displayStep, displayOctave, AccidentalEnum.NONE);
     }
     const restNote: Note = new Note(this.currentVoiceEntry, this.currentStaffEntry, restFraction, pitch, this.currentMeasure, true);
-    this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, noteheadColorXml, noteheadColorXml);
+    this.addNoteInfo(restNote, noteTypeXml, printObject, isCueNote, normalNotes, displayStep, displayOctave, noteheadColorXml, noteheadColorXml);
     this.currentVoiceEntry.Notes.push(restNote);
     if (this.openBeams.length > 0) {
       this.openBeams.last().ExtendedNoteList.push(restNote);
@@ -497,13 +513,16 @@ export class VoiceGenerator {
   }
 
   // common for "normal" notes and rest notes
-  private addNoteInfo(note: Note, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean,
-                      normalNotes: number, noteheadColorXml: string, noteheadColor: string): void {
+  private addNoteInfo(note: Note, noteTypeXml: NoteType, printObject: boolean, isCueNote: boolean, normalNotes: number,
+                      displayStep: NoteEnum, displayOctave: number,
+                      noteheadColorXml: string, noteheadColor: string): void {
       // common for normal notes and rest note
       note.NoteTypeXml = noteTypeXml;
       note.PrintObject = printObject;
-      note.NormalNotes = normalNotes; // how many rhythmical notes the notes replace (e.g. for tuplets), see xml "actual-notes" and "normal-notes"
       note.IsCueNote = isCueNote;
+      note.NormalNotes = normalNotes; // how many rhythmical notes the notes replace (e.g. for tuplets), see xml "actual-notes" and "normal-notes"
+      note.displayStepUnpitched = displayStep;
+      note.displayOctaveUnpitched = displayOctave;
       note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
       note.NoteheadColor = noteheadColorXml; // color currently used
       // add TypeLength for rest notes like with Note?

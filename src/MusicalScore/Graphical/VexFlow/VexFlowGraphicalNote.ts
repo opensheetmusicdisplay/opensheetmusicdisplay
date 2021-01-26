@@ -8,14 +8,16 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
+import { EngravingRules } from "../EngravingRules";
 
 /**
  * The VexFlow version of a [[GraphicalNote]].
  */
 export class VexFlowGraphicalNote extends GraphicalNote {
     constructor(note: Note, parent: GraphicalVoiceEntry, activeClef: ClefInstruction,
-                octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined) {
-        super(note, parent, graphicalNoteLength);
+                octaveShift: OctaveEnum = OctaveEnum.NONE, rules: EngravingRules,
+                graphicalNoteLength: Fraction = undefined) {
+        super(note, parent, rules, graphicalNoteLength);
         this.clef = activeClef;
         this.octaveShift = octaveShift;
         if (note.Pitch) {

@@ -114,6 +114,7 @@ export abstract class MusicSheetCalculator {
     public initialize(graphicalMusicSheet: GraphicalMusicSheet): void {
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = graphicalMusicSheet.ParentMusicSheet.Rules;
+        this.rules.clearMusicSheetObjects();
         this.prepareGraphicalMusicSheet();
         //this.calculate();
     }
@@ -1651,9 +1652,9 @@ export abstract class MusicSheetCalculator {
             }
             let graphicalNote: GraphicalNote;
             if (voiceEntry.IsGrace) {
-                graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, octaveShiftValue);
+                graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, this.rules, octaveShiftValue);
             } else {
-                graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, undefined);
+                graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, this.rules, undefined);
                 MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
             }
             if (note.Pitch) {
@@ -1674,11 +1675,13 @@ export abstract class MusicSheetCalculator {
             // handle TabNotes:
             if (graphicalTabVoiceEntry) {
                 // notes should be either TabNotes or RestNotes -> add all:
-                const graphicalTabNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(  note,
-                                                                                                        graphicalTabVoiceEntry,
-                                                                                                        activeClef,
-                                                                                                        octaveShiftValue,
-                                                                                                        undefined);
+                const graphicalTabNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(
+                    note,
+                    graphicalTabVoiceEntry,
+                    activeClef,
+                    octaveShiftValue,
+                    this.rules,
+                    undefined);
                 tabStaffEntry.addGraphicalNoteToListAtCorrectYPosition(graphicalTabVoiceEntry, graphicalTabNote);
                 graphicalTabNote.PositionAndShape.calculateBoundingBox();
 
@@ -2296,10 +2299,11 @@ export abstract class MusicSheetCalculator {
                 graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
                 const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
                 graphicalStaffEntry.graphicalVoiceEntries.push(gve);
-                const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
-                                                                                                   gve,
-                                                                                                   new ClefInstruction(),
-                                                                                                   OctaveEnum.NONE, undefined);
+                const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(
+                    note,
+                    gve,
+                    new ClefInstruction(),
+                    OctaveEnum.NONE, undefined);
                 MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
                 gve.notes.push(graphicalNote);
             }

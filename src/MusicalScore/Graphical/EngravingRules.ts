@@ -8,7 +8,9 @@ import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
 import { NoteEnum } from "../../Common/DataObjects/Pitch";
-import { ChordSymbolEnum } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
+import { GraphicalNote } from "./GraphicalNote";
+import { Note } from "../VoiceData/Note";
 
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
@@ -59,6 +61,8 @@ export class EngravingRules {
     /** How many unique note positions a percussion score needs to have to not be rendered on one line. */
     public PercussionOneLineCutoff: number;
     public PercussionForceVoicesOneLineCutoff: number;
+    public PercussionOneLineUseXMLDisplayStep: boolean;
+    public PercussionOneLineXMLDisplayStepOctaveOffset: number;
     public BetweenKeySymbolsDistance: number;
     public KeyRightMargin: number;
     public RhythmRightMargin: number;
@@ -98,10 +102,13 @@ export class EngravingRules {
     public BetweenDotsDistance: number;
     public OrnamentAccidentalScalingFactor: number;
     public ChordSymbolTextHeight: number;
+    public ChordSymbolTextAlignment: TextAlignmentEnum;
+    public ChordSymbolRelativeXOffset: number;
     public ChordSymbolXSpacing: number;
     public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
+    public CustomChords: CustomChord[];
     public RepetitionSymbolsYOffset: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
@@ -251,6 +258,7 @@ export class EngravingRules {
     public RenderLyrics: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
+    public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
@@ -268,6 +276,10 @@ export class EngravingRules {
     public RestoreCursorAfterRerender: boolean;
     public StretchLastSystemLine: boolean;
     public SpacingBetweenTextLines: number;
+
+    public NoteToGraphicalNoteMap: Dictionary<number, GraphicalNote>;
+    // this is basically a WeakMap, except we save the id in the Note instead of using a WeakMap.
+    public NoteToGraphicalNoteMapObjectCount: number = 0;
 
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
@@ -337,6 +349,8 @@ export class EngravingRules {
         this.ClefRightMargin = 0.75;
         this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
         this.PercussionForceVoicesOneLineCutoff = 1;
+        this.PercussionOneLineUseXMLDisplayStep = true;
+        this.PercussionOneLineXMLDisplayStepOctaveOffset = 0;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;
         this.RhythmRightMargin = 1.25;
@@ -389,11 +403,15 @@ export class EngravingRules {
         this.BetweenDotsDistance = 0.8;
         this.OrnamentAccidentalScalingFactor = 0.65;
         this.ChordSymbolTextHeight = 2.0;
+        this.ChordSymbolTextAlignment = TextAlignmentEnum.LeftBottom;
+        this.ChordSymbolRelativeXOffset = -1.0;
         this.ChordSymbolXSpacing = 1.0;
         this.ChordOverlapAllowedIntoNextMeasure = 0;
         this.ChordSymbolYOffset = 2.0;
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
+        this.CustomChords = [];
+        this.resetChordNames();
         this.RepetitionSymbolsYOffset = 0;
 
         // Tuplets, MeasureNumber and TupletNumber Labels
@@ -537,6 +555,7 @@ export class EngravingRules {
         this.RenderLyrics = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
+        this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
         this.ArticulationPlacementFromXML = true;
         this.FingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
@@ -555,6 +574,9 @@ export class EngravingRules {
         this.RenderSingleHorizontalStaffline = false;
         this.SpacingBetweenTextLines = 0;
 
+        this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
+        this.NoteToGraphicalNoteMapObjectCount = 0;
+
         // this.populateDictionaries(); // these values aren't used currently
         try {
             this.MaxInstructionsConstValue = this.ClefLeftMargin + this.ClefRightMargin + this.KeyRightMargin + this.RhythmRightMargin + 11;
@@ -566,6 +588,22 @@ export class EngravingRules {
         } catch (ex) {
             log.info("EngravingRules()", ex);
         }
+    }
+
+    public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {
+        note.NoteToGraphicalNoteObjectId = this.NoteToGraphicalNoteMapObjectCount;
+        this.NoteToGraphicalNoteMap.setValue(note.NoteToGraphicalNoteObjectId, graphicalNote);
+        this.NoteToGraphicalNoteMapObjectCount++;
+    }
+
+    public GNote(note: Note): GraphicalNote {
+        return GraphicalNote.FromNote(note, this);
+    }
+
+    /** This should be done before a new sheet is loaded, not each re-render (otherwise the map would end empty). */
+    public clearMusicSheetObjects(): void {
+        this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
+        this.NoteToGraphicalNoteMapObjectCount = 0;
     }
 
     public setChordSymbolLabelText(key: ChordSymbolEnum, value: string): void {
@@ -596,8 +634,58 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.suspendedsecond, "sus2");
         chordtexts.setValue(ChordSymbolEnum.suspendedfourth, "sus4");
         chordtexts.setValue(ChordSymbolEnum.power, "5");
+        chordtexts.setValue(ChordSymbolEnum.none, "N.C.");
 
         return chordtexts;
+    }
+
+    public addChordName(
+        altName: string,
+        chordKindText: string,
+        adds: string[],
+        alts: string[],
+        subs: string[],
+    ): void {
+        if (ChordSymbolEnum[chordKindText] !== undefined) {
+            const degrees: DegreesInfo = {
+                adds,
+                alts,
+                subs,
+            };
+            this.CustomChords.push(CustomChord.createCustomChord(altName, ChordSymbolEnum[chordKindText], degrees));
+        }
+    }
+
+    public renameChord(altName: string, newAltName: string): void {
+        CustomChord.renameCustomChord(altName, newAltName, this.CustomChords);
+    }
+
+    public resetChordNames(): void {
+        // addChordName(alternateName, chordKindText, adds, alters, subtracts)
+        this.addChordName("alt", "major", ["#5", "b9", "#9"], ["b5"], []);
+        this.addChordName("7alt", "dominant", ["#5", "b9", "#9"], ["b5"], []);
+        this.addChordName("7sus4", "dominant", ["4"], [], ["3"]);
+        this.addChordName("7sus4", "suspendedfourth", ["7"], [], []);
+        this.addChordName("9sus4", "dominantninth", ["4"], [], ["3"]);
+        this.addChordName("9sus4", "suspendedfourth", ["9"], [], []);
+        this.addChordName("11sus4", "dominant11th", ["4"], [], ["3"]);
+        this.addChordName("11sus4", "suspendedfourth", ["11"], [], []);
+        this.addChordName("13sus4", "dominant13th", ["4"], [], ["3"]);
+        this.addChordName("13sus4", "suspendedfourth", ["13"], [], []);
+        this.addChordName("7sus2", "dominant", ["2"], [], ["3"]);
+        this.addChordName("7sus2", "suspendedsecond", ["7"], [], []);
+        this.addChordName("m7b5", "minorseventh", [], ["b5"], []);
+        this.addChordName("9sus2", "dominantninth", ["2"], [], ["3"]);
+        this.addChordName("9sus2", "suspendedsecond", ["9"], [], []);
+        this.addChordName("11sus2", "dominant11th", ["2"], [], ["3"]);
+        this.addChordName("11sus2", "suspendedsecond", ["11"], [], []);
+        this.addChordName("13sus2", "dominant13th", ["2"], [], ["3"]);
+        this.addChordName("13sus2", "suspendedsecond", ["13"], [], []);
+        this.addChordName("m(maj9)", "majorminor", ["9"], [], []);
+        this.addChordName("m(maj11)", "majorminor", ["11"], [], []);
+        this.addChordName("m(maj13)", "majorminor", ["13"], [], []);
+        this.addChordName("69", "majorsixth", ["9"], [], []);
+        this.addChordName("mi69", "minorsixth", ["9"], [], []);
     }
 
     /**
