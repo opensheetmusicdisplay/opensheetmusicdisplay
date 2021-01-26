@@ -384,17 +384,20 @@ export class VoiceGenerator {
           }
         } else if (noteElement.name === "unpitched") {
           const displayStepElement: IXmlElement = noteElement.element("display-step");
-          if (displayStepElement) {
-            noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
-            displayStepUnpitched = Pitch.stepFromNoteEnum(noteStep, -3);
-          }
           const octave: IXmlElement = noteElement.element("display-octave");
           if (octave) {
             noteOctave = parseInt(octave.value, 10);
-            displayOctaveUnpitched = noteOctave - 3;
+            displayOctaveUnpitched = noteOctave - 2;
             if (guitarPro) {
               noteOctave += 1;
             }
+          }
+          if (displayStepElement) {
+            noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
+            let octaveShift: number = 0;
+            [displayStepUnpitched, octaveShift] = Pitch.stepFromNoteEnum(noteStep, -3);
+            console.log("octaveshift2: " + octaveShift);
+            displayOctaveUnpitched += octaveShift;
           }
         } else if (noteElement.name === "instrument") {
           if (noteElement.firstAttribute) {

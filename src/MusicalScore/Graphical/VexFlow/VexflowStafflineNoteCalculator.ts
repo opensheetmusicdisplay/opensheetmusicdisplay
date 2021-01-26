@@ -89,8 +89,9 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
             return graphicalNote;
         }
         const currentPitchList: Array<Pitch> = this.staffPitchListMapping.getValue(staffIndex);
-        //Don't need to position notes. We aren't under the cutoff
-        if (currentPitchList.length > this.rules.PercussionOneLineCutoff) {
+        const positionByXml: boolean = this.rules.PercussionOneLineUseXMLDisplayStep && graphicalNote.sourceNote.displayStepUnpitched !== undefined;
+        if (currentPitchList.length > this.rules.PercussionOneLineCutoff && !positionByXml) {
+            //Don't need to position notes. We aren't under the cutoff
             return graphicalNote;
         }
         const vfGraphicalNote: VexFlowGraphicalNote = graphicalNote as VexFlowGraphicalNote;
@@ -115,46 +116,48 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
                     displayOctave = graphicalNote.sourceNote.displayOctaveUnpitched + this.rules.PercussionOneLineXMLDisplayStepOctaveOffset;
                 }
                 const half: number = Math.ceil(currentPitchList.length / 2);
-                //position above
-                if (pitchIndex >= half && !this.rules.PercussionOneLineUseXMLDisplayStep) {
-                    displayOctave = 2;
-                    switch ((pitchIndex - half) % 5) {
-                        case 1:
-                            displayNote = NoteEnum.E;
-                            break;
-                        case 2:
-                            displayNote = NoteEnum.G;
-                            break;
-                        case 3:
-                            displayNote = NoteEnum.B;
-                            break;
-                        case 4:
-                            displayNote = NoteEnum.D;
-                            displayOctave = 3;
-                            break;
-                        default:
-                            displayNote = NoteEnum.C;
-                            break;
-                    }
-                } else if (!this.rules.PercussionOneLineUseXMLDisplayStep) { //position below
-                    switch (pitchIndex % 5) {
-                        case 1:
-                            displayNote = NoteEnum.F;
-                            break;
-                        case 2:
-                            displayNote = NoteEnum.D;
-                            break;
-                        case 3:
-                            displayNote = NoteEnum.B;
-                            displayOctave = 0;
-                            break;
-                        case 4:
-                            displayNote = NoteEnum.G;
-                            displayOctave = 0;
-                            break;
-                        default:
-                            displayNote = NoteEnum.A;
-                            break;
+                if (!this.rules.PercussionOneLineUseXMLDisplayStep) {
+                    if (pitchIndex >= half) {
+                        //position above
+                        displayOctave = 2;
+                        switch ((pitchIndex - half) % 5) {
+                            case 1:
+                                displayNote = NoteEnum.E;
+                                break;
+                            case 2:
+                                displayNote = NoteEnum.G;
+                                break;
+                            case 3:
+                                displayNote = NoteEnum.B;
+                                break;
+                            case 4:
+                                displayNote = NoteEnum.D;
+                                displayOctave = 3;
+                                break;
+                            default:
+                                displayNote = NoteEnum.C;
+                                break;
+                        }
+                    } else { //position below
+                        switch (pitchIndex % 5) {
+                            case 1:
+                                displayNote = NoteEnum.F;
+                                break;
+                            case 2:
+                                displayNote = NoteEnum.D;
+                                break;
+                            case 3:
+                                displayNote = NoteEnum.B;
+                                displayOctave = 0;
+                                break;
+                            case 4:
+                                displayNote = NoteEnum.G;
+                                displayOctave = 0;
+                                break;
+                            default:
+                                displayNote = NoteEnum.A;
+                                break;
+                        }
                     }
                 }
                 const mappedPitch: Pitch = new Pitch(displayNote, displayOctave, notePitch.Accidental);
