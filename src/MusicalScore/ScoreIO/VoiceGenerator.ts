@@ -41,7 +41,8 @@ export class VoiceGenerator {
     } else {
       this.voice = new Voice(instrument, voiceId);
     }
-    instrument.Voices.push(this.voice);
+    this.instrument = instrument;
+    this.instrument.Voices.push(this.voice);
     this.lyricsReader = new LyricsReader(this.musicSheet);
     this.articulationReader = new ArticulationReader();
   }
@@ -55,6 +56,7 @@ export class VoiceGenerator {
   private currentNote: Note;
   private currentMeasure: SourceMeasure;
   private currentStaffEntry: SourceStaffEntry;
+  private instrument: Instrument;
   // private lastBeamTag: string = "";
   private openBeams: Beam[] = []; // works like a stack, with push and pop
   private beamNumberOffset: number = 0;
@@ -387,9 +389,12 @@ export class VoiceGenerator {
           const octave: IXmlElement = noteElement.element("display-octave");
           if (octave) {
             noteOctave = parseInt(octave.value, 10);
-            displayOctaveUnpitched = noteOctave - 2;
-            if (guitarPro) {
+            displayOctaveUnpitched = noteOctave - 3;
+            if (octavePlusOne) {
               noteOctave += 1;
+            }
+            if (this.instrument.Staves[0].StafflineCount === 1) {
+              displayOctaveUnpitched += 1;
             }
           }
           if (displayStepElement) {
