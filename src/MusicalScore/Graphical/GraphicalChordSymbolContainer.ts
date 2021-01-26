@@ -1,4 +1,3 @@
-import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {Label} from "../Label";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
