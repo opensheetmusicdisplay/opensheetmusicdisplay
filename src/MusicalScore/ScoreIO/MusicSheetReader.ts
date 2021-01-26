@@ -134,7 +134,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.initializeReading(partList, partInst, instrumentReaders);
         let couldReadMeasure: boolean = true;
         this.currentFraction = new Fraction(0, 1);
-        let guitarPro: boolean = false;
+        let octavePlusOneEncoding: boolean = false; // GuitarPro and Sibelius give octaves -1 apparently
         let encoding: IXmlElement = root.element("identification");
         if (encoding) {
             encoding = encoding.element("encoding");
@@ -142,8 +142,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (encoding) {
             encoding = encoding.element("software");
         }
-        if (encoding !== undefined && encoding.value === "Guitar Pro 5") {
-            guitarPro = true;
+        if (encoding !== undefined && (encoding.value === "Guitar Pro 5")) { //|| encoding.value.startsWith("Sibelius")
+            octavePlusOneEncoding = true;
         }
 
         while (couldReadMeasure) {
@@ -154,7 +154,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             this.currentMeasure = new SourceMeasure(this.completeNumberOfStaves, this.musicSheet.Rules);
             for (const instrumentReader of instrumentReaders) {
                 try {
-                    couldReadMeasure = couldReadMeasure && instrumentReader.readNextXmlMeasure(this.currentMeasure, this.currentFraction, guitarPro);
+                    couldReadMeasure = couldReadMeasure && instrumentReader.readNextXmlMeasure(
+                        this.currentMeasure, this.currentFraction, octavePlusOneEncoding);
                 } catch (e) {
                     const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/InstrumentError", "Error while reading instruments.");
                     throw new MusicSheetReadingException(errorMsg, e);
