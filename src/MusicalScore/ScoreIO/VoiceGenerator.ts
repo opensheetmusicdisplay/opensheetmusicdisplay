@@ -401,7 +401,6 @@ export class VoiceGenerator {
             noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
             let octaveShift: number = 0;
             [displayStepUnpitched, octaveShift] = Pitch.stepFromNoteEnum(noteStep, -3);
-            console.log("octaveshift2: " + octaveShift);
             displayOctaveUnpitched += octaveShift;
           }
         } else if (noteElement.name === "instrument") {
