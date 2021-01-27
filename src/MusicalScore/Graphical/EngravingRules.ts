@@ -423,7 +423,7 @@ export class EngravingRules {
         this.RepetitionSymbolsYOffset = 0;
         this.RehearsalMarkXOffsetDefault = 10; // avoid collision with metronome number
         this.RehearsalMarkXOffset = 0; // user defined
-        this.RehearsalMarkYOffsetDefault = -15; 
+        this.RehearsalMarkYOffsetDefault = -15;
         this.RehearsalMarkYOffset = 0; // user defined
         this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
 
