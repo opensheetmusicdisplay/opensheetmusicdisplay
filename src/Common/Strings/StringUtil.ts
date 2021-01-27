@@ -1,8 +1,6 @@
 ﻿export class StringUtil {
-  public static StringContainsSeparatedWord(str: string, wordRegExString: string): boolean {
-    if (new RegExp("( |^)" + wordRegExString + "([ .]|$)").test(str)) {
-      return true;
-    }
-    return false;
+  public static StringContainsSeparatedWord(str: string, wordRegExString: string, ignoreCase: boolean = false): boolean {
+    const regExp: RegExp = new RegExp("( |^)" + wordRegExString + "([ .]|$)", ignoreCase ? "i" : undefined);
+    return regExp.test(str);
   }
 }

@@ -40,13 +40,17 @@ export interface IGraphicalSymbolFactory {
         graphicalVoiceEntry: GraphicalVoiceEntry,
         activeClef: ClefInstruction,
         octaveShift: OctaveEnum,
-        graphicalNoteLength: Fraction): GraphicalNote;
+        rules: EngravingRules,
+        graphicalNoteLength?: Fraction,
+    ): GraphicalNote;
 
     createGraceNote(
         note: Note,
         graphicalVoiceEntry: GraphicalVoiceEntry,
         activeClef: ClefInstruction,
-        octaveShift: OctaveEnum): GraphicalNote;
+        rules: EngravingRules,
+        octaveShift?: OctaveEnum,
+    ): GraphicalNote;
 
     addGraphicalAccidental(graphicalNote: GraphicalNote, pitch: Pitch): void;
 

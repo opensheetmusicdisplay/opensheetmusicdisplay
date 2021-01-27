@@ -7,14 +7,14 @@ import { VoiceEntry, Instrument, Note, Staff, Voice, GraphicalStaffEntry, Graphi
 describe("OpenSheetMusicDisplay Main Export", () => {
     let container1: HTMLElement;
 
-    it("no container", (done: MochaDone) => {
+    it("no container", (done: Mocha.Done) => {
         chai.expect(() => {
             return new OpenSheetMusicDisplay(undefined);
         }).to.throw(/container/);
         done();
     });
 
-    it("container", (done: MochaDone) => {
+    it("container", (done: Mocha.Done) => {
         const div: HTMLElement = TestUtils.getDivElement(document);
         chai.expect(() => {
             return new OpenSheetMusicDisplay(div);
@@ -83,7 +83,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
                             });
     });
 
-    it("load MXL from string", (done: MochaDone) => {
+    it("load MXL from string", (done: Mocha.Done) => {
         const mxl: string = TestUtils.getMXL("Mozart_Clarinet_Quintet_Excerpt.mxl");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -96,7 +96,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("load invalid MXL from string", (done: MochaDone) => {
+    it("load invalid MXL from string", (done: Mocha.Done) => {
         const mxl: string = "\x50\x4b\x03\x04";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -114,7 +114,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("load XML string", (done: MochaDone) => {
+    it("load XML string", (done: Mocha.Done) => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         const xml: string = new XMLSerializer().serializeToString(score);
         const div: HTMLElement = TestUtils.getDivElement(document);
@@ -128,7 +128,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("load XML Document", (done: MochaDone) => {
+    it("load XML Document", (done: Mocha.Done) => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -141,7 +141,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it.skip("Timeout from server", (done: MochaDone) => {
+    it.skip("Timeout from server", (done: Mocha.Done) => {
         // TODO this test times out from time to time, even with osmd.loadUrlTimeout set to 5000.
         //   the test is unreliable, which makes it hard to test.
         //   also, it's better not to use OSMD to fetch one's score anyways.
@@ -159,7 +159,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("load MXL Document by URL", (done: MochaDone) => {
+    it("load MXL Document by URL", (done: Mocha.Done) => {
         const url: string = "base/test/data/Mozart_Clarinet_Quintet_Excerpt.mxl";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -172,7 +172,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("load something invalid by URL", (done: MochaDone) => {
+    it("load something invalid by URL", (done: Mocha.Done) => {
         const url: string = "https://www.google.com";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -190,7 +190,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     }).timeout(5000);
 
-    it("load invalid URL", (done: MochaDone) => {
+    it("load invalid URL", (done: Mocha.Done) => {
         const url: string = "https://www.afjkhfjkauu2ui3z2uiu.com";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -208,7 +208,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     }).timeout(5000);
 
-    it("load invalid XML string", (done: MochaDone) => {
+    it("load invalid XML string", (done: Mocha.Done) => {
         const xml: string = "<?xml";
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -226,7 +226,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         );
     });
 
-    it("render without loading", (done: MochaDone) => {
+    it("render without loading", (done: Mocha.Done) => {
         const div: HTMLElement = TestUtils.getDivElement(document);
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
         chai.expect(() => {
@@ -244,7 +244,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         document.body.removeChild(container1);
     });
 
-    it("test width 500", (done: MochaDone) => {
+    it("test width 500", (done: Mocha.Done) => {
         const div: HTMLElement = container1;
         div.style.width = "500px";
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -259,7 +259,7 @@ describe("OpenSheetMusicDisplay Main Export", () => {
         ).catch(done);
     });
 
-    it("test width 200", (done: MochaDone) => {
+    it("test width 200", (done: Mocha.Done) => {
         const div: HTMLElement = container1;
         div.style.width = "200px";
         const opensheetmusicdisplay: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
@@ -294,11 +294,13 @@ describe("OpenSheetMusicDisplay Main Export", () => {
             for (let i: number = 0; i < 100; i++) {
                 osmd.cursor.next();
             }
+            // After 100 steps in the visible score, cursor reached 3rd note from 17, a C
+            chai.expect(osmd.cursor.NotesUnderCursor()[0].halfTone).to.equal(60);
         });
     });
     describe("cursor", () => {
         let opensheetmusicdisplay: OpenSheetMusicDisplay;
-        beforeEach((done: MochaDone) => {
+        beforeEach((done: Mocha.Done) => {
             const div: HTMLElement = container1;
             opensheetmusicdisplay = TestUtils.createOpenSheetMusicDisplay(div);
             const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");

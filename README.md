@@ -3,13 +3,12 @@
 
 # OpenSheetMusicDisplay
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Greenkeeper badge](https://badges.greenkeeper.io/opensheetmusicdisplay/opensheetmusicdisplay.svg)](https://greenkeeper.io/)
 [![Travis Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/r88lnffso55nq1ko?svg=true)](https://ci.appveyor.com/project/sebastianhaas/opensheetmusicdisplay/branch/master)
 [![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay/status.svg)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-
 [opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/)
 
 OpenSheetMusicDisplay renders MusicXML sheet music in the browser. It is the missing link between MusicXML and VexFlow. Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
@@ -27,13 +26,22 @@ See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wi
 If you have further technical questions, you can browse through our [Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue) or open a new one.
 
 Brought to you by [PhonicScore](https://phonicscore.com/)
-(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [PhonicScore for Android](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))<br>
+(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [Android (formerly PhonicScore)](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))<br>
 and [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors)
 
 To contact us directly, you can use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/),
 or<br>
 [join the chat on Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
 
-If you'd like to support OSMD and our ongoing work, you can donate via PayPal:<br>
+<a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">
+<img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors">
+</a><br>
+If you'd like to support OSMD and our ongoing work, and receive additional rewards like early builds (Audio Player, Transposition plugin) or a postcard from Vienna,
+you can support us via Github Sponsors:<br>
+https://github.com/sponsors/opensheetmusicdisplay/
+<br>
+<br>
+Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
+
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FPHCYVV2HH8VU)<br>
 Any support is highly appreciated.

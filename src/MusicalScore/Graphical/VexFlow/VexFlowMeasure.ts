@@ -62,7 +62,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** octaveOffset according to active clef */
     public octaveOffset: number = 3;
     /** The VexFlow Voices in the measure */
-    public vfVoices: { [voiceID: number]: Vex.Flow.Voice; } = {};
+    public vfVoices: { [voiceID: number]: Vex.Flow.Voice } = {};
     /** Call this function (if present) to x-format all the voices in the measure */
     public formatVoices: (width: number, parent: VexFlowMeasure) => void;
     /** The VexFlow Ties in the measure */
@@ -74,17 +74,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** VexFlow StaveConnectors (vertical lines) */
     protected connectors: Vex.Flow.StaveConnector[] = [];
     /** Intermediate object to construct beams */
-    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][]; } = {};
+    private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][] } = {};
     /** Beams created by (optional) autoBeam function. */
     private autoVfBeams: Vex.Flow.Beam[];
     /** Beams of tuplet notes created by (optional) autoBeam function. */
     private autoTupletVfBeams: Vex.Flow.Beam[];
     /** VexFlow Beams */
-    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[]; };
+    private vfbeams: { [voiceID: number]: Vex.Flow.Beam[] };
     /** Intermediate object to construct tuplets */
-    protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][]; } = {};
+    protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][] } = {};
     /** VexFlow Tuplets */
-    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[]; } = {};
+    private vftuplets: { [voiceID: number]: Vex.Flow.Tuplet[] } = {};
     // The engraving rules of OSMD.
     public rules: EngravingRules;
 
@@ -110,6 +110,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0
         });
+        (this.stave as any).MeasureNumber = this.MeasureNumber; // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
 
         if (this.ParentStaff) {
@@ -241,6 +242,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param currentClef the valid clef. Needed to put the accidentals on the right y-positions.
      */
     public addKeyAtBegin(currentKey: KeyInstruction, previousKey: KeyInstruction, currentClef: ClefInstruction): void {
+        if (!this.rules.RenderKeySignatures) {
+            return;
+        }
         this.stave.setKeySignature(
             VexFlowConverter.keySignature(currentKey),
             VexFlowConverter.keySignature(previousKey),
@@ -268,10 +272,43 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * This has to update/increase EndInstructionsWidth.
      * @param clef
      */
-    public addClefAtEnd(clef: ClefInstruction): void {
+    public addClefAtEnd(clef: ClefInstruction, visible: boolean = true): void {
         const vfclef: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clef, "small");
+        if (!visible && (this.stave as any).endClef) {
+            return; // don't overwrite existing clef with invisible clef
+        }
         this.stave.setEndClef(vfclef.type, vfclef.size, vfclef.annotation);
-        this.updateInstructionWidth();
+        for (const modifier of this.stave.getModifiers()) {
+            if (!visible) {
+                // make clef invisible in vexflow. (only rendered to correct layout and staffentry boundingbox)
+                if (modifier.getCategory() === "clefs" && modifier.getPosition() === Vex.Flow.StaveModifier.Position.END) {
+                    if ((modifier as any).type === vfclef.type) { // any = Vex.Flow.Clef
+                        const transparentStyle: string = "#12345600";
+                        const originalStyle: any = (modifier as any).getStyle();
+                        if (originalStyle) {
+                            (modifier as any).originalStrokeStyle = originalStyle.strokeStyle;
+                            (modifier as any).originalFillStyle = originalStyle.fillStyle;
+                        }
+                        (modifier as any).setStyle({strokeStyle: transparentStyle, fillStyle: transparentStyle});
+                    }
+                }
+            } else {
+                // reset invisible style
+                const originalStrokeStyle: any = (modifier as any).originalStrokeStyle;
+                const originalFillStyle: any = (modifier as any).originalFillStyle;
+                if ((modifier as any).getStyle()) {
+                    if (originalStrokeStyle && originalFillStyle) {
+                        ((modifier as any).getStyle() as any).strokeStyle = originalStrokeStyle;
+                        ((modifier as any).getStyle() as any).fillStyle = originalFillStyle;
+                    } else {
+                        ((modifier as any).getStyle() as any).strokeStyle = null;
+                        ((modifier as any).getStyle() as any).fillStyle = null;
+                    }
+                }
+            }
+        }
+        this.parentSourceMeasure.hasEndClef = true;
+        return this.updateInstructionWidth();
     }
 
     // Render initial line is whether or not to render a single bar line at the beginning (if the repeat line we are drawing is
@@ -367,16 +404,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
         let instruction: Vex.Flow.Repetition.type = undefined;
         let position: any = Vex.Flow.StaveModifier.Position.END;
+        const xShift: number = this.beginInstructionsWidth;
         switch (repetitionInstruction.type) {
           case RepetitionInstructionEnum.Segno:
             // create Segno Symbol:
             instruction = Vex.Flow.Repetition.type.SEGNO_LEFT;
-            position = Vex.Flow.StaveModifier.Position.BEGIN;
+            position = Vex.Flow.StaveModifier.Position.LEFT;
             break;
           case RepetitionInstructionEnum.Coda:
             // create Coda Symbol:
             instruction = Vex.Flow.Repetition.type.CODA_LEFT;
-            position = Vex.Flow.StaveModifier.Position.BEGIN;
+            position = Vex.Flow.StaveModifier.Position.LEFT;
             break;
           case RepetitionInstructionEnum.DaCapo:
             instruction = Vex.Flow.Repetition.type.DC;
@@ -388,7 +426,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             instruction = Vex.Flow.Repetition.type.FINE;
             break;
           case RepetitionInstructionEnum.ToCoda:
-            //instruction = "To Coda";
+            instruction = (Vex.Flow.Repetition as any).type.TO_CODA;
             break;
           case RepetitionInstructionEnum.DaCapoAlFine:
             instruction = Vex.Flow.Repetition.type.DC_AL_FINE;
@@ -406,7 +444,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             break;
         }
         if (instruction) {
-            this.stave.addModifier(new Vex.Flow.Repetition(instruction, 0, 0), position);
+            const repetition: Vex.Flow.Repetition = new Vex.Flow.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
+            this.stave.addModifier(repetition, position);
             return;
         }
 
@@ -788,6 +827,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     for (const gve of voiceEntries) {
                         if (gve.parentVoiceEntry.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
                             autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
+                            // if (psBeam.Notes[0].NoteTuplet) {
+                            //     autoStemBeam = true;
+                            //     // this fix seemed temporarily necessary for tuplets with beams, see test_drum_tublet_beams
+                            //     break;
+                            // }
                         }
                     }
 
@@ -823,6 +867,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                                 }
                             }
                             vfBeam.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
+                        }
+                        if (this.rules.FlatBeams) {
+                            (<any>vfBeam).render_options.flat_beams = true;
+                            (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                            (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                         }
                         vfbeams.push(vfBeam);
                     } else {
@@ -921,7 +970,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     } else {
                         if (currentTuplet !== noteTuplet) { // new tuplet, finish old one
                             if (tupletNotesToAutoBeam.length > 1) {
-                                this.autoTupletVfBeams.push(new Vex.Flow.Beam(tupletNotesToAutoBeam, true));
+                                const vfBeam: Vex.Flow.Beam = new Vex.Flow.Beam(tupletNotesToAutoBeam, true);
+                                if (this.rules.FlatBeams) {
+                                    (<any>vfBeam).render_options.flat_beams = true;
+                                    (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                                    (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                                }
+                                this.autoTupletVfBeams.push(vfBeam);
                             }
                             tupletNotesToAutoBeam = [];
                             currentTuplet = noteTuplet;
@@ -939,7 +994,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
         if (tupletNotesToAutoBeam.length >= 2) {
-            this.autoTupletVfBeams.push(new Vex.Flow.Beam(tupletNotesToAutoBeam, true));
+            const vfBeam: Vex.Flow.Beam = new Vex.Flow.Beam(tupletNotesToAutoBeam, true);
+            if (this.rules.FlatBeams) {
+                (<any>vfBeam).render_options.flat_beams = true;
+                (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+            }
+            this.autoTupletVfBeams.push(vfBeam);
         }
         if (consecutiveBeamableNotes.length >= 2) {
             for (const note of consecutiveBeamableNotes) {
@@ -965,8 +1026,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         for (const notesForSeparateAutoBeam of separateAutoBeams) {
             const newBeams: Vex.Flow.Beam[] = Vex.Flow.Beam.generateBeams(notesForSeparateAutoBeam, generateBeamOptions);
-            for (const beam of newBeams) {
-                this.autoVfBeams.push(beam);
+            for (const vfBeam of newBeams) {
+                if (this.rules.FlatBeams) {
+                    (<any>vfBeam).render_options.flat_beams = true;
+                    (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                    (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                }
+                this.autoVfBeams.push(vfBeam);
             }
         }
     }
@@ -1024,6 +1090,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     public graphicalMeasureCreatedCalculations(): void {
         let graceSlur: boolean;
         let graceGVoiceEntriesBefore: GraphicalVoiceEntry[] = [];
+        const graveGVoiceEntriesAdded: GraphicalVoiceEntry[] = [];
         for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
             graceSlur = false;
             graceGVoiceEntriesBefore = [];
@@ -1032,6 +1099,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 if (gve.parentVoiceEntry.IsGrace) {
                     // save grace notes for the next non-grace note
                     graceGVoiceEntriesBefore.push(gve);
+                    graveGVoiceEntriesAdded.push(gve);
                     if (!graceSlur) {
                         graceSlur = gve.parentVoiceEntry.GraceSlur;
                     }
@@ -1097,7 +1165,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         resolution: Vex.Flow.RESOLUTION,
                     }).setMode(Vex.Flow.Voice.Mode.SOFT);
 
-            const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
+            const restFilledEntries: GraphicalVoiceEntry[] = this.getRestFilledVexFlowStaveNotesPerVoice(voice);
+                    // .sort((a,b) => a.)
             // create vex flow voices and add tickables to it:
             for (const voiceEntry of restFilledEntries) {
                 if (voiceEntry.parentVoiceEntry) {
@@ -1134,34 +1203,42 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
 
                 // add Arpeggio
-                if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio) {
-                    const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
-                    // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
-                    // see VoiceGenerator. Doesn't matter for Vexflow for now though
-                    if (voiceEntry.notes && voiceEntry.notes.length > 1) {
-                        const type: Vex.Flow.Stroke.Type = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
-                        const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
-                            all_voices: this.rules.ArpeggiosGoAcrossVoices
-                            // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
-                            // also, this can cause infinite height of stroke, see #546
-                        });
-                        //if (arpeggio.notes.length === vexFlowVoiceEntry.notes.length) { // different workaround for endless y bug
-                        if (this.rules.RenderArpeggios) {
-                            vexFlowVoiceEntry.vfStaveNote.addStroke(0, stroke);
-                        }
-                    } else {
-                        log.debug(`[OSMD] arpeggio in measure ${this.MeasureNumber} could not be drawn.
-                        voice entry had less than two notes, arpeggio is likely between voice entries, not currently supported in Vexflow.`);
-                        // TODO: create new arpeggio with all the arpeggio's notes (arpeggio.notes), perhaps with GhostNotes in a new vfStaveNote. not easy.
-                    }
-                }
+                this.createArpeggio(voiceEntry);
 
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
             }
         }
+        for (const graceGVoiceEntry of graveGVoiceEntriesAdded) {
+            this.createFingerings(graceGVoiceEntry);
+            this.createArpeggio(graceGVoiceEntry);
+        }
         this.createArticulations();
         this.createOrnaments();
         this.setStemDirectionFromVexFlow();
+    }
+
+    private createArpeggio(voiceEntry: GraphicalVoiceEntry): void {
+        if (voiceEntry.parentVoiceEntry && voiceEntry.parentVoiceEntry.Arpeggio) {
+            const arpeggio: Arpeggio = voiceEntry.parentVoiceEntry.Arpeggio;
+            // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
+            // see VoiceGenerator. Doesn't matter for Vexflow for now though
+            if (voiceEntry.notes && voiceEntry.notes.length > 1) {
+                const type: Vex.Flow.Stroke.Type = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
+                const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
+                    all_voices: this.rules.ArpeggiosGoAcrossVoices
+                    // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
+                    // also, this can cause infinite height of stroke, see #546
+                });
+                //if (arpeggio.notes.length === vexFlowVoiceEntry.notes.length) { // different workaround for endless y bug
+                if (this.rules.RenderArpeggios) {
+                    (voiceEntry as VexFlowVoiceEntry).vfStaveNote.addStroke(0, stroke);
+                }
+            } else {
+                log.debug(`[OSMD] arpeggio in measure ${this.MeasureNumber} could not be drawn.
+                voice entry had less than two notes, arpeggio is likely between voice entries, not currently supported in Vexflow.`);
+                // TODO: create new arpeggio with all the arpeggio's notes (arpeggio.notes), perhaps with GhostNotes in a new vfStaveNote. not easy.
+            }
+        }
     }
 
     /**
@@ -1214,7 +1291,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     protected createOrnaments(): void {
         for (let idx: number = 0, len: number = this.staffEntries.length; idx < len; ++idx) {
             const graphicalStaffEntry: VexFlowStaffEntry = (this.staffEntries[idx] as VexFlowStaffEntry);
-            const gvoices: { [voiceID: number]: GraphicalVoiceEntry; } = graphicalStaffEntry.graphicalVoiceEntries;
+            const gvoices: { [voiceID: number]: GraphicalVoiceEntry } = graphicalStaffEntry.graphicalVoiceEntries;
 
             for (const voiceID in gvoices) {
                 if (gvoices.hasOwnProperty(voiceID)) {
@@ -1345,8 +1422,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
 
-        this.beginInstructionsWidth = vfBeginInstructionsWidth / unitInPixels;
-        this.endInstructionsWidth = vfEndInstructionsWidth / unitInPixels;
+        this.beginInstructionsWidth = (vfBeginInstructionsWidth ?? 0) / unitInPixels;
+        this.endInstructionsWidth = (vfEndInstructionsWidth ?? 0) / unitInPixels;
     }
 }
 

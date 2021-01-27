@@ -134,7 +134,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         this.initializeReading(partList, partInst, instrumentReaders);
         let couldReadMeasure: boolean = true;
         this.currentFraction = new Fraction(0, 1);
-        let guitarPro: boolean = false;
+        let octavePlusOneEncoding: boolean = false; // GuitarPro and Sibelius give octaves -1 apparently
         let encoding: IXmlElement = root.element("identification");
         if (encoding) {
             encoding = encoding.element("encoding");
@@ -142,8 +142,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
         if (encoding) {
             encoding = encoding.element("software");
         }
-        if (encoding !== undefined && encoding.value === "Guitar Pro 5") {
-            guitarPro = true;
+        if (encoding !== undefined && (encoding.value === "Guitar Pro 5")) { //|| encoding.value.startsWith("Sibelius")
+            octavePlusOneEncoding = true;
         }
 
         while (couldReadMeasure) {
@@ -154,7 +154,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             this.currentMeasure = new SourceMeasure(this.completeNumberOfStaves, this.musicSheet.Rules);
             for (const instrumentReader of instrumentReaders) {
                 try {
-                    couldReadMeasure = couldReadMeasure && instrumentReader.readNextXmlMeasure(this.currentMeasure, this.currentFraction, guitarPro);
+                    couldReadMeasure = couldReadMeasure && instrumentReader.readNextXmlMeasure(
+                        this.currentMeasure, this.currentFraction, octavePlusOneEncoding);
                 } catch (e) {
                     const errorMsg: string = ITextTranslation.translateText("ReaderErrorMessages/InstrumentError", "Error while reading instruments.");
                     throw new MusicSheetReadingException(errorMsg, e);
@@ -188,14 +189,14 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
          afterSheetReadingModule.calculate(this.musicSheet);
         }
 
-        this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SourceMeasures[0].TempoInBPM;
+        //this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SourceMeasures[0].TempoInBPM;
         this.musicSheet.userStartTempoInBPM = this.musicSheet.userStartTempoInBPM || this.musicSheet.DefaultStartTempoInBpm;
 
         return this.musicSheet;
     }
 
     private initializeReading(partList: IXmlElement[], partInst: IXmlElement[], instrumentReaders: InstrumentReader[]): void {
-        const instrumentDict: { [_: string]: Instrument; } = this.createInstrumentGroups(partList);
+        const instrumentDict: { [_: string]: Instrument } = this.createInstrumentGroups(partList);
         this.completeNumberOfStaves = this.getCompleteNumberOfStavesFromXml(partInst);
         if (partInst.length !== 0) {
             this.repetitionInstructionReader.MusicSheet = this.musicSheet;
@@ -571,6 +572,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                     }
                     const creditJustify: string = creditChild.attribute("justify")?.value;
                     const creditY: string = creditChild.attribute("default-y")?.value;
+                    // eslint-disable-next-line no-null/no-null
                     const creditYGiven: boolean = creditY !== undefined && creditY !== null;
                     const creditYInfo: number = creditYGiven ? parseFloat(creditY) : Number.MIN_VALUE;
                     if (creditYGiven && creditYInfo > systemYCoordinates) {
@@ -711,9 +713,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * @param entryList
      * @returns {{}}
      */
-    private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument; } {
+    private createInstrumentGroups(entryList: IXmlElement[]): { [_: string]: Instrument } {
         let instrumentId: number = 0;
-        const instrumentDict: { [_: string]: Instrument; } = {};
+        const instrumentDict: { [_: string]: Instrument } = {};
         let currentGroup: InstrumentalGroup;
         try {
             const entryArray: IXmlElement[] = entryList;

@@ -73,7 +73,7 @@ export class InstrumentReader {
   private musicSheet: MusicSheet;
   private slurReader: SlurReader;
   private instrument: Instrument;
-  private voiceGeneratorsDict: { [n: number]: VoiceGenerator; } = {};
+  private voiceGeneratorsDict: { [n: number]: VoiceGenerator } = {};
   private staffMainVoiceGeneratorDict: { [staffId: number]: VoiceGenerator } = {};
   private inSourceMeasureInstrumentIndex: number;
   private divisions: number = 0;
@@ -115,10 +115,10 @@ export class InstrumentReader {
    * Main CreateSheet: read the next XML Measure and save all data to the given [[SourceMeasure]].
    * @param currentMeasure
    * @param measureStartAbsoluteTimestamp - Using this instead of currentMeasure.AbsoluteTimestamp as it isn't set yet
-   * @param guitarPro
+   * @param octavePlusOne Software like Guitar Pro gives one octave too low, so we need to add one
    * @returns {boolean}
    */
-  public readNextXmlMeasure(currentMeasure: SourceMeasure, measureStartAbsoluteTimestamp: Fraction, guitarPro: boolean): boolean {
+  public readNextXmlMeasure(currentMeasure: SourceMeasure, measureStartAbsoluteTimestamp: Fraction, octavePlusOne: boolean): boolean {
     if (this.currentXmlMeasureIndex >= this.xmlMeasureList.length) {
       return false;
     }
@@ -154,8 +154,7 @@ export class InstrumentReader {
           }
         } else if (xmlNode.name === "note") {
           let printObject: boolean = true;
-          if (xmlNode.hasAttributes && xmlNode.attribute("print-object") &&
-              xmlNode.attribute("print-object").value === "no") {
+          if (xmlNode.attribute("print-object")?.value === "no") {
               printObject = false; // note will not be rendered, but still parsed for Playback etc.
               // if (xmlNode.attribute("print-spacing")) {
               //   if (xmlNode.attribute("print-spacing").value === "yes" {
@@ -199,10 +198,8 @@ export class InstrumentReader {
               if (xmlNode.element("time-modification")) {
                 noteDuration = this.getNoteDurationForTuplet(xmlNode);
                 const time: IXmlElement = xmlNode.element("time-modification");
-                if (time) {
-                  if (time.element("normal-notes")) {
-                    normalNotes = parseInt(time.element("normal-notes").value, 10);
-                  }
+                if (time?.element("normal-notes")) {
+                  normalNotes = parseInt(time.element("normal-notes").value, 10);
                 }
                 isTuplet = true;
               }
@@ -255,10 +252,8 @@ export class InstrumentReader {
           let noteTypeXml: NoteType = NoteType.UNDEFINED;
           if (typeNode) {
             const sizeAttr: Attr = typeNode.attribute("size");
-            if (sizeAttr !== undefined && sizeAttr !== null) {
-              if (sizeAttr.value === "cue") {
-                isCueNote = true;
-              }
+            if (sizeAttr?.value === "cue") {
+              isCueNote = true;
             }
             noteTypeXml = NoteTypeHandler.StringToNoteType(typeNode.value);
           }
@@ -394,8 +389,8 @@ export class InstrumentReader {
             xmlNode, noteDuration, typeDuration, noteTypeXml, normalNotes, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
-            this.maxTieNoteFraction, isChord, guitarPro,
-            printObject, isCueNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
+            this.maxTieNoteFraction, isChord, octavePlusOne,
+            printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
             vibratoStrokes
           );
 
@@ -443,7 +438,7 @@ export class InstrumentReader {
               throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
             }
           }
-          this.addAbstractInstruction(xmlNode, guitarPro);
+          this.addAbstractInstruction(xmlNode, octavePlusOne);
           if (currentFraction.Equals(new Fraction(0, 1)) &&
             this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveAbstractInstructionList(this.instrument.Staves.length, true);
@@ -555,6 +550,20 @@ export class InstrumentReader {
           // TODO do we need to process bars with left location too?
         } else if (xmlNode.name === "sound") {
           // (*) MetronomeReader.readTempoInstruction(xmlNode, this.musicSheet, this.currentXmlMeasureIndex);
+          try {
+            if (xmlNode.attribute("tempo")) { // can be null, not just undefined!
+
+                const tempo: number = parseFloat(xmlNode.attribute("tempo").value);
+
+                // should set the PlaybackSettings only at first Measure
+                if (this.currentXmlMeasureIndex === 0) {
+                    this.musicSheet.DefaultStartTempoInBpm = tempo;
+                    this.musicSheet.HasBPMInfo = true;
+                }
+            }
+          } catch (e) {
+            log.debug("InstrumentReader.readTempoInstruction", e);
+          }
         } else if (xmlNode.name === "harmony") {
           // new chord, could be second chord on same staffentry/note
           this.openChordSymbolContainers.push(ChordSymbolReader.readChordSymbol(xmlNode, this.musicSheet, this.activeKey));
@@ -588,7 +597,7 @@ export class InstrumentReader {
       // next measures will automatically inherit that value
       if (!this.musicSheet.HasBPMInfo) {
         this.currentMeasure.TempoInBPM = 120;
-      } else if (currentMeasure.TempoInBPM === 0) {
+      } else if (currentMeasure.TempoInBPM === 0 && this.previousMeasure) {
         this.currentMeasure.TempoInBPM = this.previousMeasure.TempoInBPM;
       }
     } catch (e) {

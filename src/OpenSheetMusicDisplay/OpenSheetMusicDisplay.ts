@@ -22,13 +22,14 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.8.6-dev"; // getter: this.Version
+    private version: string = "0.9.1-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -187,11 +188,9 @@ export class OpenSheetMusicDisplay {
         if (!this.graphic) {
             throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
-        if (this.drawer) {
-            this.drawer.clear(); // clear canvas before setting width
-        }
-        // musicSheetCalculator.clearSystemsAndMeasures() // maybe? don't have reference though
-        // musicSheetCalculator.clearRecreatedObjects();
+        this.drawer?.clear(); // clear canvas before setting width
+        // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
+        // this.graphic.GetCalculator.clearRecreatedObjects();
 
         // Set page width
         let width: number = this.container.offsetWidth;
@@ -315,6 +314,16 @@ export class OpenSheetMusicDisplay {
             backend.resize(width, height);
             backend.clear(); // set bgcolor if defined (this.rules.PageBackgroundColor, see OSMDOptions)
             this.drawer.Backends.push(backend);
+        }
+    }
+
+    // for now SVG only, see generateImages_browserless (PNG/SVG)
+    public exportSVG(): void {
+        for (const backend of this.drawer?.Backends) {
+            if (backend instanceof SvgVexFlowBackend) {
+                (backend as SvgVexFlowBackend).export();
+            }
+            // if we add CanvasVexFlowBackend exporting, rename function to export() or exportImages() again
         }
     }
 
@@ -616,6 +625,9 @@ export class OpenSheetMusicDisplay {
             case "error":
                 log.setLevel(log.levels.ERROR);
                 break;
+            case "silent":
+                log.setLevel(log.levels.SILENT);
+                break;
             default:
                 log.warn(`Could not set log level to ${level}. Using warn instead.`);
                 log.setLevel(log.levels.WARN);
@@ -770,7 +782,7 @@ export class OpenSheetMusicDisplay {
             backend = new CanvasVexFlowBackend(this.rules);
         }
         backend.graphicalMusicPage = page; // the page the backend renders on. needed to identify DOM element to extract image/SVG
-        backend.initialize(this.container);
+        backend.initialize(this.container, this.zoom);
         return backend;
     }
 
@@ -852,14 +864,20 @@ export class OpenSheetMusicDisplay {
     public get DrawBottomLine(): boolean {
         return this.drawer.bottomLineVisible;
     }
-
     public set DrawBoundingBox(value: string) {
-        this.drawBoundingBox = value;
-        this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
-        this.render(); // may create new Drawer.
+        this.setDrawBoundingBox(value, true);
     }
     public get DrawBoundingBox(): string {
         return this.drawBoundingBox;
+    }
+    public setDrawBoundingBox(value: string, render: boolean = false): void {
+        this.drawBoundingBox = value;
+        if (this.drawer) {
+            this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
+        }
+        if (render) {
+            this.render(); // may create new Drawer.
+        }
     }
 
     public get AutoResizeEnabled(): boolean {
@@ -869,6 +887,9 @@ export class OpenSheetMusicDisplay {
         this.autoResizeEnabled = value;
     }
 
+    public get Zoom(): number {
+        return this.zoom;
+    }
     public set Zoom(value: number) {
         this.zoom = value;
         this.zoomUpdated = true;

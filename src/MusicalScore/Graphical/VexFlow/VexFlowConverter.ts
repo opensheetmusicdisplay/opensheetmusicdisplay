@@ -40,7 +40,7 @@ export class VexFlowConverter {
      * Mapping from numbers of alterations on the key signature to major keys
      * @type {[alterationsNo: number]: string; }
      */
-    private static majorMap: {[_: number]: string; } = {
+    private static majorMap: {[_: number]: string } = {
         "-1": "F", "-2": "Bb", "-3": "Eb", "-4": "Ab", "-5": "Db", "-6": "Gb", "-7": "Cb", "-8": "Fb",
         "0": "C", "1": "G", "2": "D", "3": "A", "4": "E", "5": "B", "6": "F#", "7": "C#", "8": "G#"
     };
@@ -48,7 +48,7 @@ export class VexFlowConverter {
      * Mapping from numbers of alterations on the key signature to minor keys
      * @type {[alterationsNo: number]: string; }
      */
-    private static minorMap: {[_: number]: string; } = {
+    private static minorMap: {[_: number]: string } = {
         "-1": "D", "-2": "G", "-3": "C", "-4": "F", "-5": "Bb", "-6": "Eb", "-7": "Ab", "-8": "Db",
         "0": "A", "1": "E", "2": "B", "3": "F#", "4": "C#", "5": "G#", "6": "D#", "7": "A#", "8": "E#"
     };
@@ -197,13 +197,17 @@ export class VexFlowConverter {
      * @returns {Vex.Flow.StaveNote}
      */
     public static StaveNote(gve: GraphicalVoiceEntry): Vex.Flow.StaveNote {
-        // sort notes
-        /* seems unnecessary for now
-        if (gve.octaveShiftValue !== undefined && gve.octaveShiftValue !== OctaveEnum.NONE) {
-            gve.sort(); // gves with accidentals in octave shift brackets can be unsorted
-        } */
-        // VexFlow needs the notes ordered vertically in the other direction:
-        const notes: GraphicalNote[] = gve.notes.reverse();
+        // if (gve.octaveShiftValue !== OctaveEnum.NONE) { // gves with accidentals in octave shift brackets can be unsorted
+        gve.sortForVexflow(); // also necessary for some other cases, see test_sorted_notes... sample
+        //   sort and reverse replace the array anyways, so we might as well directly sort them reversely for now.
+        //   otherwise we should copy the array, see the commented GraphicalVoiceEntry.sortedNotesCopyForVexflow()
+        //   another alternative: don't sort gve notes, instead collect and sort tickables in an array,
+        //     then iterate over the array by addTickable() in VexFlowMeasure.graphicalMeasureCreatedCalculations()
+        const notes: GraphicalNote[] = gve.notes;
+        // for (const note of gve.notes) { // debug
+        //     const pitch: Pitch = note.sourceNote.Pitch;
+        //     console.log('note: ' + pitch?.ToString() + ', halftone: ' + pitch?.getHalfTone());
+        // }
         const rules: EngravingRules = gve.parentStaffEntry.parentMeasure.parentSourceMeasure.Rules;
 
         const baseNote: GraphicalNote = notes[0];
@@ -703,8 +707,8 @@ export class VexFlowConverter {
      * Convert a ClefInstruction to a string represention of a clef type in VexFlow.
      *
      * @param clef The OSMD object to be converted representing the clef
-     * @param size The VexFlow size to be used. Can be `default` or `small`. As soon as
-     *             #118 is done, this parameter will be dispensable.
+     * @param size The VexFlow size to be used. Can be `default` or `small`.
+     * As soon as #118 is done, this parameter will be dispensable.
      * @returns    A string representation of a VexFlow clef
      * @see        https://github.com/0xfe/vexflow/blob/master/src/clef.js
      * @see        https://github.com/0xfe/vexflow/blob/master/tests/clef_tests.js
@@ -790,6 +794,8 @@ export class VexFlowConverter {
                 type = "treble";
                 break;
             default:
+                log.info("bad clef type: " + clef.ClefType);
+                type = "treble";
         }
 
         // annotations in vexflow don't allow bass and 8va. No matter the offset :(

@@ -1,7 +1,7 @@
 import {VoiceEntry, StemDirectionType} from "./VoiceEntry";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 import {Fraction} from "../../Common/DataObjects/Fraction";
-import {Pitch} from "../../Common/DataObjects/Pitch";
+import {NoteEnum, Pitch} from "../../Common/DataObjects/Pitch";
 import {Beam} from "./Beam";
 import {Tuplet} from "./Tuplet";
 import {Tie} from "./Tie";
@@ -53,6 +53,8 @@ export class Note {
      * The untransposed (!!!) source data.
      */
     private pitch: Pitch;
+    public displayStepUnpitched: NoteEnum;
+    public displayOctaveUnpitched: number;
     public get NoteAsString(): string {
         return this.pitch.toString();
     }
@@ -68,6 +70,7 @@ export class Note {
     private arpeggio: Arpeggio;
     /** States whether this is a cue note (Stichnote) (smaller size). */
     private isCueNote: boolean;
+    public IsGraceNote: boolean;
     /** The stem direction asked for in XML. Not necessarily final or wanted stem direction. */
     private stemDirectionXml: StemDirectionType;
     /** The number of tremolo strokes this note has (16th tremolo = 2 strokes).
@@ -93,6 +96,8 @@ export class Note {
     private noteheadColor: string;
     private noteheadColorCurrentlyRendered: string;
     public Fingering: TechnicalInstruction; // this is also stored in VoiceEntry.TechnicalInstructions
+    /** Used by GraphicalNote.FromNote(note) and osmd.rules.GNote(note) to get a GraphicalNote from a Note. */
+    public NoteToGraphicalNoteObjectId: number; // used with EngravingRules.NoteToGraphicalNoteMap
 
     public get ParentVoiceEntry(): VoiceEntry {
         return this.voiceEntry;

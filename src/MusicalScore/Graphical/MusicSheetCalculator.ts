@@ -114,6 +114,7 @@ export abstract class MusicSheetCalculator {
     public initialize(graphicalMusicSheet: GraphicalMusicSheet): void {
         this.graphicalMusicSheet = graphicalMusicSheet;
         this.rules = graphicalMusicSheet.ParentMusicSheet.Rules;
+        this.rules.clearMusicSheetObjects();
         this.prepareGraphicalMusicSheet();
         //this.calculate();
     }
@@ -266,6 +267,8 @@ export abstract class MusicSheetCalculator {
         // delete graphicalObjects (currently: ties) that will be recalculated, newly create GraphicalObjects streching over a single StaffEntry
         this.clearRecreatedObjects();
 
+        // this.graphicalMusicSheet.initializeActiveClefs(); // could have been changed since last render?
+
         this.createGraphicalTies();
 
         // calculate SheetLabelBoundingBoxes
@@ -296,13 +299,13 @@ export abstract class MusicSheetCalculator {
             /** list of vertically ordered measures belonging to one bar */
             let measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[0];
             let minimumStaffEntriesWidth: number = this.calculateMeasureXLayout(measures);
-            minimumStaffEntriesWidth = this.calculateMeasureWidthFromLyrics(measures, minimumStaffEntriesWidth);
+            minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
             MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
             // minLength = minimumStaffEntriesWidth * 1.2 + maxInstrNameLabelLength + maxInstructionsLength;
             for (let i: number = 1; i < this.graphicalMusicSheet.MeasureList.length; i++) {
                 measures = this.graphicalMusicSheet.MeasureList[i];
                 minimumStaffEntriesWidth = this.calculateMeasureXLayout(measures);
-                minimumStaffEntriesWidth = this.calculateMeasureWidthFromLyrics(measures, minimumStaffEntriesWidth);
+                minimumStaffEntriesWidth = this.calculateMeasureWidthFromStaffEntries(measures, minimumStaffEntriesWidth);
                 MusicSheetCalculator.setMeasuresMinStaffEntriesWidth(measures, minimumStaffEntriesWidth);
                 // minLength = Math.max(minLength, minimumStaffEntriesWidth * 1.2 + maxInstructionsLength);
             }
@@ -310,7 +313,7 @@ export abstract class MusicSheetCalculator {
         // this.graphicalMusicSheet.MinAllowedSystemWidth = minLength; // currently unused
     }
 
-    public calculateMeasureWidthFromLyrics(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
+    public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
         throw new Error("abstract, not implemented");
     }
 
@@ -906,7 +909,8 @@ export abstract class MusicSheetCalculator {
             }
 
             // calculate TopBottom Borders for all elements recursively
-            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders(); // necessary for composer label (page labels) for high notes in first system
+            //   necessary for composer label (page labels) for high notes in first system
+            graphicalMusicPage.PositionAndShape.calculateTopBottomBorders();
             // TODO how much performance does this cost? can we reduce the amount of calculations, e.g. only checking top?
 
             // calculate all Labels's Positions for the first Page
@@ -1648,9 +1652,9 @@ export abstract class MusicSheetCalculator {
             }
             let graphicalNote: GraphicalNote;
             if (voiceEntry.IsGrace) {
-                graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, octaveShiftValue);
+                graphicalNote = MusicSheetCalculator.symbolFactory.createGraceNote(note, gve, activeClef, this.rules, octaveShiftValue);
             } else {
-                graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, undefined);
+                graphicalNote = MusicSheetCalculator.symbolFactory.createNote(note, gve, activeClef, octaveShiftValue, this.rules, undefined);
                 MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
             }
             if (note.Pitch) {
@@ -1671,11 +1675,13 @@ export abstract class MusicSheetCalculator {
             // handle TabNotes:
             if (graphicalTabVoiceEntry) {
                 // notes should be either TabNotes or RestNotes -> add all:
-                const graphicalTabNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(  note,
-                                                                                                        graphicalTabVoiceEntry,
-                                                                                                        activeClef,
-                                                                                                        octaveShiftValue,
-                                                                                                        undefined);
+                const graphicalTabNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(
+                    note,
+                    graphicalTabVoiceEntry,
+                    activeClef,
+                    octaveShiftValue,
+                    this.rules,
+                    undefined);
                 tabStaffEntry.addGraphicalNoteToListAtCorrectYPosition(graphicalTabVoiceEntry, graphicalTabNote);
                 graphicalTabNote.PositionAndShape.calculateBoundingBox();
 
@@ -1747,6 +1753,7 @@ export abstract class MusicSheetCalculator {
         const defaultColorTitle: string = this.rules.DefaultColorTitle; // can be undefined => black
         if (musicSheet.Title !== undefined && this.rules.RenderTitle) {
             const title: GraphicalLabel = new GraphicalLabel(musicSheet.Title, this.rules.SheetTitleHeight, TextAlignmentEnum.CenterBottom, this.rules);
+            title.Label.IsCreditLabel = true;
             title.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Title = title;
             title.setLabelPositionAndShapeBorders();
@@ -1756,6 +1763,7 @@ export abstract class MusicSheetCalculator {
         if (musicSheet.Subtitle !== undefined && this.rules.RenderSubtitle) {
             const subtitle: GraphicalLabel = new GraphicalLabel(
                 musicSheet.Subtitle, this.rules.SheetSubtitleHeight, TextAlignmentEnum.CenterCenter, this.rules);
+            subtitle.Label.IsCreditLabel = true;
             subtitle.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Subtitle = subtitle;
             subtitle.setLabelPositionAndShapeBorders();
@@ -1765,6 +1773,7 @@ export abstract class MusicSheetCalculator {
         if (musicSheet.Composer !== undefined && this.rules.RenderComposer) {
             const composer: GraphicalLabel = new GraphicalLabel(
                 musicSheet.Composer, this.rules.SheetComposerHeight, TextAlignmentEnum.RightCenter, this.rules);
+            composer.Label.IsCreditLabel = true;
             composer.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Composer = composer;
             composer.setLabelPositionAndShapeBorders();
@@ -1774,6 +1783,7 @@ export abstract class MusicSheetCalculator {
         if (musicSheet.Lyricist !== undefined && this.rules.RenderLyricist) {
             const lyricist: GraphicalLabel = new GraphicalLabel(
                 musicSheet.Lyricist, this.rules.SheetAuthorHeight, TextAlignmentEnum.LeftCenter, this.rules);
+            lyricist.Label.IsCreditLabel = true;
             lyricist.Label.colorDefault = defaultColorTitle;
             this.graphicalMusicSheet.Lyricist = lyricist;
             lyricist.setLabelPositionAndShapeBorders();
@@ -1934,13 +1944,15 @@ export abstract class MusicSheetCalculator {
             subtitle.PositionAndShape.RelativePosition = relative;
             page.Labels.push(subtitle);
         }
-        //Get the first system, first staffline skybottomcalculator
-        const topStaffline: StaffLine = page.MusicSystems[0].StaffLines[0];
-        const skyBottomLineCalculator: SkyBottomLineCalculator = topStaffline.SkyBottomLineCalculator;
+        // Get the first system, first staffline skybottomcalculator
+        // const topStaffline: StaffLine = page.MusicSystems[0].StaffLines[0];
+        // const skyBottomLineCalculator: SkyBottomLineCalculator = topStaffline.SkyBottomLineCalculator;
+        //   we don't need a skybottomcalculator currently, labels are put above system skyline anyways.
         const composer: GraphicalLabel = this.graphicalMusicSheet.Composer;
+        let composerRelativeY: number;
         if (composer) {
             composer.PositionAndShape.Parent = page.PositionAndShape; // if using pageWidth. (which can currently be too wide) TODO fix pageWidth (#578)
-            //composer.PositionAndShape.Parent = firstStaffLine.PositionAndShape; if using firstStaffLine...width.
+            //composer.PositionAndShape.Parent = topStaffline.PositionAndShape; // if using firstStaffLine...width.
             //      y-collision problems, harder to y-align with lyrics
             composer.setLabelPositionAndShapeBorders();
             const relative: PointF2D = new PointF2D();
@@ -1952,25 +1964,30 @@ export abstract class MusicSheetCalculator {
             //relative.x = firstStaffLine.PositionAndShape.Size.width;
             //when this is less, goes higher.
             //So 0 is top of the sheet, 22 or so is touching the music system margin
+
             relative.y = firstSystemAbsoluteTopMargin;
             //relative.y = - this.rules.SystemComposerDistance;
             //relative.y = -firstStaffLine.PositionAndShape.Size.height;
             // TODO only add measure label height if rendering labels and composer measure has label
             // TODO y-align with lyricist? which is harder if they have different bbox parents (page and firstStaffLine).
             // when the pageWidth gets fixed, we could use page as parent again.
-            if (!composer.TextLines || composer.TextLines?.length === 1) {
-                //Don't want to affect existing behavior
-                relative.y -= this.rules.SystemComposerDistance;
-            } else {
-                //Sufficient for now to just use the longest composer entry instead of bottom.
-                //Otherwise we need to construct a 'bottom line' for the text block
-                const endX: number = topStaffline.PositionAndShape.BorderMarginRight;
-                const startX: number = endX - composer.PositionAndShape.Size.width;
 
-                const currentMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
-                relative.y += currentMin - composer.PositionAndShape.BorderBottom;
-                skyBottomLineCalculator.updateSkyLineInRange(startX, endX, currentMin - composer.PositionAndShape.MarginSize.height);
+            //Sufficient for now to just use the longest composer entry instead of bottom.
+            //Otherwise we need to construct a 'bottom line' for the text block
+            // const endX: number = topStaffline.PositionAndShape.BorderMarginRight;
+            // const startX: number = endX - composer.PositionAndShape.Size.width;
+            // const currentMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
+
+            relative.y -= this.rules.SystemComposerDistance;
+            const lines: number = composer.TextLines?.length;
+            if (lines > 1) { //Don't want to affect existing behavior. but this doesn't check bboxes for clip
+                relative.y -= composer.PositionAndShape.BorderBottom * (lines - 1) / (lines);
             }
+            //const newSkylineY: number = currentMin; // don't add composer label height to skyline
+            //- firstSystemAbsoluteTopMargin - this.rules.SystemComposerDistance - composer.PositionAndShape.MarginSize.height;
+            //skyBottomLineCalculator.updateSkyLineInRange(startX, endX, newSkylineY); // this can fix skyline for generateImages for some reason
+            composerRelativeY = relative.y; // for lyricist label
+
             composer.PositionAndShape.RelativePosition = relative;
             page.Labels.push(composer);
         }
@@ -1981,16 +1998,13 @@ export abstract class MusicSheetCalculator {
             const relative: PointF2D = new PointF2D();
             relative.x = this.rules.PageLeftMargin;
             relative.y = firstSystemAbsoluteTopMargin;
-            if (!lyricist.TextLines || lyricist.TextLines?.length === 1) {
-                relative.y -= this.rules.SystemComposerDistance;
-            } else {
-                const startX: number = topStaffline.PositionAndShape.BorderMarginLeft - relative.x;
-                const endX: number = startX + lyricist.PositionAndShape.Size.width;
+            // const startX: number = topStaffline.PositionAndShape.BorderMarginLeft - relative.x;
+            // const endX: number = startX + lyricist.PositionAndShape.Size.width;
+            // const currentMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
 
-                const currentMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
-                relative.y += currentMin - lyricist.PositionAndShape.BorderBottom;
-                skyBottomLineCalculator.updateSkyLineInRange(startX, endX, currentMin - lyricist.PositionAndShape.MarginSize.height);
-            }
+            relative.y += lyricist.PositionAndShape.BorderBottom;
+            relative.y = Math.min(relative.y, composerRelativeY); // same height as composer label (at least not lower)
+            //skyBottomLineCalculator.updateSkyLineInRange(startX, endX, currentMin - lyricist.PositionAndShape.MarginSize.height);
             //relative.y = Math.max(relative.y, composer.PositionAndShape.RelativePosition.y);
             lyricist.PositionAndShape.RelativePosition = relative;
             page.Labels.push(lyricist);
@@ -2024,6 +2038,10 @@ export abstract class MusicSheetCalculator {
     }
 
     private handleTie(tie: Tie, startGraphicalStaffEntry: GraphicalStaffEntry, staffIndex: number, measureIndex: number): void {
+        if (!startGraphicalStaffEntry) {
+            // console.log('tie not found in measure number ' + measureIndex - 1);
+            return;
+        }
         let startGse: GraphicalStaffEntry = startGraphicalStaffEntry;
         let startNote: GraphicalNote = undefined;
         let endGse: GraphicalStaffEntry = undefined;
@@ -2281,10 +2299,11 @@ export abstract class MusicSheetCalculator {
                 graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;
                 const gve: GraphicalVoiceEntry = MusicSheetCalculator.symbolFactory.createVoiceEntry(voiceEntry, graphicalStaffEntry);
                 graphicalStaffEntry.graphicalVoiceEntries.push(gve);
-                const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(note,
-                                                                                                   gve,
-                                                                                                   new ClefInstruction(),
-                                                                                                   OctaveEnum.NONE, undefined);
+                const graphicalNote: GraphicalNote = MusicSheetCalculator.symbolFactory.createNote(
+                    note,
+                    gve,
+                    new ClefInstruction(),
+                    OctaveEnum.NONE, undefined);
                 MusicSheetCalculator.stafflineNoteCalculator.trackNote(graphicalNote);
                 gve.notes.push(graphicalNote);
             }
@@ -2316,11 +2335,7 @@ export abstract class MusicSheetCalculator {
         accidentalCalculator.checkAccidental(graphicalNote, pitch);
     }
 
-    // // needed to disable linter, as it doesn't recognize the existing usage of this method.
-    // // ToDo: check if a newer version doesn't have the problem.
-    // /* tslint:disable:no-unused-variable */
     // private createStaffEntryForTieNote(measure: StaffMeasure, absoluteTimestamp: Fraction, openTie: Tie): GraphicalStaffEntry {
-    //     /* tslint:enable:no-unused-variable */
     //     let graphicalStaffEntry: GraphicalStaffEntry;
     //     graphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(openTie.Start.ParentStaffEntry, measure);
     //     graphicalStaffEntry.relInMeasureTimestamp = Fraction.minus(absoluteTimestamp, measure.parentSourceMeasure.AbsoluteTimestamp);

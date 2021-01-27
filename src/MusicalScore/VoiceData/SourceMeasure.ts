@@ -61,6 +61,7 @@ export class SourceMeasure {
     private measureNumber: number;
     public MeasureNumberXML: number;
     public MeasureNumberPrinted: number; // measureNumber if MeasureNumberXML undefined or NaN. Set in getPrintedMeasureNumber()
+    public RhythmPrinted: boolean = false; // whether this measure prints a rhythm on the score
     public multipleRestMeasures: number; // usually undefined (0), unless "multiple-rest" given in XML (e.g. 4 measure rest)
     // public multipleRestMeasuresPerStaff: Dictionary<number, number>; // key: staffId. value: how many rest measures
     private absoluteTimestamp: Fraction;
@@ -81,6 +82,7 @@ export class SourceMeasure {
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
     private implicitMeasure: boolean;
     private hasEndLine: boolean;
+    public hasEndClef: boolean;
     private graphicalMeasureErrors: boolean[] = [];
     private firstInstructionsStaffEntries: SourceStaffEntry[];
     private lastInstructionsStaffEntries: SourceStaffEntry[];
@@ -302,7 +304,6 @@ export class SourceMeasure {
         }
         if (!ve) {
             ve = new VoiceEntry(sse.Timestamp, voice, sse);
-            sse.VoiceEntries.push(ve);
             createdNewVoiceEntry = true;
         }
         return {createdVoiceEntry: createdNewVoiceEntry, voiceEntry: ve};

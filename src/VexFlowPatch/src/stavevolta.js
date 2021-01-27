@@ -36,6 +36,7 @@ export class Volta extends StaveModifier {
     const ctx = stave.checkContext();
     this.setRendered();
 
+    // VexFlowPatch: don't add x. already merged in Vexflow 3.x
     let width = stave.width - x; // don't add x offset to width
     const top_y = stave.getYForTopText(stave.options.num_lines) + this.y_shift;
     const vert_height = 1.5 * stave.options.spacing_between_lines_px;

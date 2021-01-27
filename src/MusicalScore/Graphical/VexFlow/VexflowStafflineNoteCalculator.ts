@@ -20,7 +20,7 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
     /**
      * This method is called for each note during the calc phase. We want to track all possible positions to make decisions
      * during layout about where notes should be positioned.
-     * This directly notes that share a line to the same position, regardless of voice
+     * This directly puts notes that share a line to the same position, regardless of voice
      * @param graphicalNote The note to be checked/positioned
      * @param staffIndex The staffline the note is on
      */
@@ -89,69 +89,82 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
             return graphicalNote;
         }
         const currentPitchList: Array<Pitch> = this.staffPitchListMapping.getValue(staffIndex);
-        //Don't need to position notes. We aren't under the cutoff
-        if (currentPitchList.length > this.rules.PercussionOneLineCutoff) {
+        const xmlSingleStaffline: boolean = graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1;
+        const positionByXml: boolean = this.rules.PercussionOneLineUseXMLDisplayStep &&
+            graphicalNote.sourceNote.displayStepUnpitched !== undefined &&
+            xmlSingleStaffline;
+        if (currentPitchList.length > this.rules.PercussionOneLineCutoff && !positionByXml) {
+            //Don't need to position notes. We aren't under the cutoff
             return graphicalNote;
         }
         const vfGraphicalNote: VexFlowGraphicalNote = graphicalNote as VexFlowGraphicalNote;
         const notePitch: Pitch = graphicalNote.sourceNote.Pitch;
 
+        let displayNote: NoteEnum = this.baseLineNote;
+        let displayOctave: number = this.baseLineOctave;
+        if (this.rules.PercussionOneLineUseXMLDisplayStep
+            && graphicalNote.sourceNote.displayStepUnpitched !== undefined
+            && xmlSingleStaffline) {
+            displayNote = graphicalNote.sourceNote.displayStepUnpitched;
+            displayOctave = graphicalNote.sourceNote.displayOctaveUnpitched + this.rules.PercussionOneLineXMLDisplayStepOctaveOffset;
+        }
         //If we only need to render on one line
         if (currentPitchList.length <= this.rules.PercussionForceVoicesOneLineCutoff) {
-            vfGraphicalNote.setAccidental(new Pitch(this.baseLineNote, this.baseLineOctave, notePitch.Accidental));
+            vfGraphicalNote.setAccidental(new Pitch(displayNote, displayOctave, notePitch.Accidental));
         } else {
             const pitchIndex: number = VexflowStafflineNoteCalculator.PitchIndexOf(currentPitchList, notePitch);
             if (pitchIndex > -1) {
-                let fundamental: NoteEnum = this.baseLineNote;
-                let octave: number = this.baseLineOctave;
                 const half: number = Math.ceil(currentPitchList.length / 2);
-                //position above
-                if (pitchIndex >= half) {
-                    octave = 2;
-                    switch ((pitchIndex - half) % 5) {
-                        case 1:
-                            fundamental = NoteEnum.E;
-                            break;
-                        case 2:
-                            fundamental = NoteEnum.G;
-                            break;
-                        case 3:
-                            fundamental = NoteEnum.B;
-                            break;
-                        case 4:
-                            fundamental = NoteEnum.D;
-                            octave = 3;
-                            break;
-                        default:
-                            fundamental = NoteEnum.C;
-                            break;
-                    }
-                } else { //position below
-                    switch (pitchIndex % 5) {
-                        case 1:
-                            fundamental = NoteEnum.F;
-                            break;
-                        case 2:
-                            fundamental = NoteEnum.D;
-                            break;
-                        case 3:
-                            fundamental = NoteEnum.B;
-                            octave = 0;
-                            break;
-                        case 4:
-                            fundamental = NoteEnum.G;
-                            octave = 0;
-                            break;
-                        default:
-                            fundamental = NoteEnum.A;
-                            break;
+                if (!this.rules.PercussionOneLineUseXMLDisplayStep) {
+                    if (pitchIndex >= half) {
+                        //position above
+                        displayOctave = 2;
+                        switch ((pitchIndex - half) % 5) {
+                            case 1:
+                                displayNote = NoteEnum.E;
+                                break;
+                            case 2:
+                                displayNote = NoteEnum.G;
+                                break;
+                            case 3:
+                                displayNote = NoteEnum.B;
+                                break;
+                            case 4:
+                                displayNote = NoteEnum.D;
+                                displayOctave = 3;
+                                break;
+                            default:
+                                displayNote = NoteEnum.C;
+                                break;
+                        }
+                    } else { //position below
+                        switch (pitchIndex % 5) {
+                            case 1:
+                                displayNote = NoteEnum.F;
+                                break;
+                            case 2:
+                                displayNote = NoteEnum.D;
+                                break;
+                            case 3:
+                                displayNote = NoteEnum.B;
+                                displayOctave = 0;
+                                break;
+                            case 4:
+                                displayNote = NoteEnum.G;
+                                displayOctave = 0;
+                                break;
+                            default:
+                                displayNote = NoteEnum.A;
+                                break;
+                        }
                     }
                 }
-                const mappedPitch: Pitch = new Pitch(fundamental, octave, notePitch.Accidental);
+                const mappedPitch: Pitch = new Pitch(displayNote, displayOctave, notePitch.Accidental);
                 //Map the pitch, set stems properly
                 vfGraphicalNote.setAccidental(mappedPitch);
                 const parentVoiceEntry: VoiceEntry = vfGraphicalNote.parentVoiceEntry.parentVoiceEntry;
-                if (parentVoiceEntry.Notes.length < 2) { // Only switch stems if we aren't sharing stems with another note
+                // Only switch stems if we aren't sharing stems with another note
+                if (!this.rules.SetWantedStemDirectionByXml && parentVoiceEntry.Notes.length < 2) {
                     if (mappedPitch.Octave > this.baseLineOctave ||
                         (mappedPitch.FundamentalNote === this.baseLineNote && mappedPitch.Octave === this.baseLineOctave)) {
                         vfGraphicalNote.parentVoiceEntry.parentVoiceEntry.WantedStemDirection = StemDirectionType.Up;

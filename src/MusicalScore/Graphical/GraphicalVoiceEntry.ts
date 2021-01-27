@@ -31,11 +31,33 @@ export class GraphicalVoiceEntry extends GraphicalObject {
      * Notes need to be sorted for Vexflow StaveNote creation.
      * Note that Vexflow needs the reverse order, see VexFlowConverter.StaveNote().
      */
-    public sort(): void {
+    public sort(): GraphicalNote[] {
         this.notes.sort((a, b) => {
             return b.sourceNote.Pitch.getHalfTone() - a.sourceNote.Pitch.getHalfTone();
         });
+        // note that this is the reverse order of what vexflow needs
+        return this.notes;
     }
+
+    /** Sort notes for vexflow (bottom to top), which needs them in the reverse order OSMD likes to have them.
+     *  Note that sort() and reverse() replace the array in place,
+     *  so to avoid changing the array one could copy it first, see sortedNotesCopyForVexflow() (commented),
+     *  though copying the array is also unnecessary (time+memory) for now.
+     */
+    public sortForVexflow(): GraphicalNote[] {
+        this.notes.sort((a, b) => {
+            return a.sourceNote.Pitch.getHalfTone() - b.sourceNote.Pitch.getHalfTone();
+        });
+        return this.notes;
+    }
+
+    // probably unnecessary, can just go through the array in reverse
+    // public sortedNotesCopyForVexflow(): GraphicalNote[] {
+    //     // we need a copy since sort replaces the array (in place sorting)
+    //     let sortedArray = Array.from(this.notes.sort());
+    //     sortedArray.reverse();
+    //     return sortedArray;
+    // }
 
     /** (Re-)color notes and stems
      */

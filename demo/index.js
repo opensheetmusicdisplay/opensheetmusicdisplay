@@ -1,6 +1,8 @@
-import { OpenSheetMusicDisplay, BackendType } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
-import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min'
+import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
+import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
+import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
+// import { Fraction } from '../src/Common/DataObjects/Fraction';
 
 /*jslint browser:true */
 (function () {
@@ -30,6 +32,9 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Auto-/Custom-Coloring": "OSMD_function_test_auto-custom-coloring-entchen.musicxml",
             "OSMD Function Test - Bar lines": "OSMD_function_test_bar_lines.musicxml",
             "OSMD Function Test - Chord Symbols": "OSMD_function_test_chord_symbols.musicxml",
+            "OSMD Function Test - Chord Spacing": "OSMD_function_test_chord_spacing.mxl",
+            "OSMD Function Test - Chord Symbols - Various Chords": "OSMD_function_test_chord_tests_various.musicxml",
+            "OSMD Function Test - Chord Symbols - BrookeWestSample": "BrookeWestSample.mxl",
             "OSMD Function Test - Color (from XML)": "OSMD_function_test_color.musicxml",
             "OSMD Function Test - Container height (compacttight mode)": "OSMD_Function_Test_Container_height.musicxml",
             "OSMD Function Test - Drumset": "OSMD_function_test_drumset.musicxml",
@@ -601,7 +606,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 
         openSheetMusicDisplay.load(str).then(
             function () {
-                // This gives you access to the osmd object in the console. Do not use in productive code
+                // This gives you access to the osmd object in the console. Do not use in production code
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
                 return openSheetMusicDisplay.render();
@@ -753,7 +758,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             if (openSheetMusicDisplay.IsReadyToRender()) {
                 openSheetMusicDisplay.render();
             } else {
-                console.log("[OSMD demo] Looses context!"); // TODO not sure that this message is reasonable, renders fine anyways. maybe vexflow context lost?
+                console.log("[OSMD demo] Loses context!"); // TODO not sure that this message is reasonable, renders fine anyways. maybe vexflow context lost?
                 selectSampleOnChange(); // reload sample e.g. after osmd.clear()
             }
             enable();

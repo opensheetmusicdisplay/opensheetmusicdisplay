@@ -7,6 +7,13 @@ export class Beam {
 
     private notes: Note[] = [];
     private extendedNoteList: Note[] = [];
+    public BeamNumber: number;
+    public BeamNumberOffsetToXML: number = 0;
+
+    constructor(beamNumber: number = 1, beamNumberOffsetToXML: number = 0) {
+        this.BeamNumber = beamNumber;
+        this.BeamNumberOffsetToXML = beamNumberOffsetToXML;
+    }
 
     public get Notes(): Note[] {
         return this.notes;

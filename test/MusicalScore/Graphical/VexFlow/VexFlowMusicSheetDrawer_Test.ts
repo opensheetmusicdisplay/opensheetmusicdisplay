@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import {VexFlowMusicSheetDrawer} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import {GraphicalMusicSheet} from "../../../../src/MusicalScore/Graphical/GraphicalMusicSheet";
 import {MusicSheet} from "../../../../src/MusicalScore/MusicSheet";
@@ -8,10 +9,9 @@ import {IXmlElement} from "../../../../src/Common/FileIO/Xml";
 import {VexFlowBackend} from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowBackend";
 import {CanvasVexFlowBackend} from "../../../../src/MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
 
-/* tslint:disable:no-unused-expression */
 describe("VexFlow Music Sheet Drawer", () => {
 
-    it("draws sheet \"Clementi pt. 1\"", (done: MochaDone) => {
+    it("draws sheet \"Clementi pt. 1\"", (done: Mocha.Done) => {
         const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
         chai.expect(score).to.not.be.undefined;
         const partwise: Element = TestUtils.getPartWiseElement(score);
@@ -24,7 +24,7 @@ describe("VexFlow Music Sheet Drawer", () => {
         // Create the canvas in the document:
         const canvas: HTMLCanvasElement = document.createElement("canvas");
         const backend: VexFlowBackend = new CanvasVexFlowBackend(sheet.Rules);
-        backend.initialize(canvas);
+        backend.initialize(canvas, 1.0);
         const drawer: VexFlowMusicSheetDrawer = new VexFlowMusicSheetDrawer();
         drawer.Backends.push(backend);
         drawer.drawSheet(gms);
@@ -33,7 +33,7 @@ describe("VexFlow Music Sheet Drawer", () => {
 
     // Test ignored for now, gms.calculateCursorLineAtTimestamp returns null instead of a GraphicalLine,
     // and in any case, this test doesn't test that the cursor is actually drawn, there are no expects for that etc.
-    // it.only("draws cursor (as rectangle)", (done: MochaDone) => {
+    // it.only("draws cursor (as rectangle)", (done: Mocha.Done) => {
     //     const score: Document = TestUtils.getScore("MuzioClementi_SonatinaOpus36No1_Part1.xml");
     //     chai.expect(score).to.not.be.undefined;
     //     const partwise: Element = TestUtils.getPartWiseElement(score);

@@ -396,11 +396,16 @@ export class MusicSystemBuilder {
                 const graphicalMeasure: GraphicalMeasure = this.graphicalMusicSheet
                     .getGraphicalMeasureFromSourceMeasureAndIndex(firstSourceMeasure, staffIndex);
                 this.activeClefs[i] = <ClefInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[0];
-                let keyInstruction: KeyInstruction = KeyInstruction.copy(
-                    <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1]);
-                keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
-                this.activeKeys[i] = keyInstruction;
-                this.activeRhythm[i] = <RhythmInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
+                const firstKeyInstruction: KeyInstruction = <KeyInstruction>firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[1];
+                if (firstKeyInstruction) {
+                    let keyInstruction: KeyInstruction = KeyInstruction.copy(firstKeyInstruction);
+                    keyInstruction = this.transposeKeyInstruction(keyInstruction, graphicalMeasure);
+                    this.activeKeys[i] = keyInstruction;
+                }
+                const firstRhythmInstruction: RhythmInstruction = <RhythmInstruction>
+                    firstSourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[2];
+                // if (firstRhythmInstruction) {
+                this.activeRhythm[i] = firstRhythmInstruction;
             }
         }
     }
@@ -462,7 +467,7 @@ export class MusicSystemBuilder {
             const measure: GraphicalMeasure = measures[idx];
             const staffIndex: number = this.visibleStaffIndices[idx];
             const endInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
-            const endInstructionLengthX: number = this.addInstructionsAtMeasureEnd(endInstructionsStaffEntry, measure);
+            const endInstructionLengthX: number = this.addInstructionsAtMeasureEnd(endInstructionsStaffEntry, measure, measures);
             totalEndInstructionLengthX = Math.max(totalEndInstructionLengthX, endInstructionLengthX);
         }
         return totalEndInstructionLengthX;
@@ -513,8 +518,20 @@ export class MusicSystemBuilder {
             keyAdded = true;
         }
         if (currentRhythm !== undefined && currentRhythm.PrintObject && this.rules.RenderTimeSignatures) {
-            measure.addRhythmAtBegin(currentRhythm);
-            rhythmAdded = true;
+            let printRhythm: boolean = true;
+            // check for previous pickup measure
+            const pickupMeasureNumber: number = measure.MeasureNumber - 1;
+            if (measure.MeasureNumber - 1 >= 0) {
+                const previousMeasure: SourceMeasure = this.measureList[pickupMeasureNumber][0]?.parentSourceMeasure;
+                if (previousMeasure?.ImplicitMeasure && previousMeasure?.RhythmPrinted) {
+                    printRhythm = false;
+                }
+            }
+            if (printRhythm) {
+                measure.addRhythmAtBegin(currentRhythm);
+                measure.parentSourceMeasure.RhythmPrinted = true;
+                rhythmAdded = true;
+            }
         }
         if (clefAdded || keyAdded || rhythmAdded) {
             instructionsLengthX += measure.beginInstructionsWidth;
@@ -525,7 +542,8 @@ export class MusicSystemBuilder {
         return instructionsLengthX;
     }
 
-    protected addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: GraphicalMeasure): number {
+    protected addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: GraphicalMeasure,
+        measures: GraphicalMeasure[]): number {
         if (!lastEntry || !lastEntry.Instructions || lastEntry.Instructions.length === 0) {
             return 0;
         }
@@ -534,6 +552,11 @@ export class MusicSystemBuilder {
             if (abstractNotationInstruction instanceof ClefInstruction) {
                 const activeClef: ClefInstruction = <ClefInstruction>abstractNotationInstruction;
                 measure.addClefAtEnd(activeClef);
+                for (const otherVerticalMeasure of measures) {
+                    if (otherVerticalMeasure !== measure) {
+                        otherVerticalMeasure.addClefAtEnd(activeClef, false);
+                    }
+                }
             }
         }
         return this.rules.MeasureRightMargin + measure.endInstructionsWidth;
@@ -875,9 +898,8 @@ export class MusicSystemBuilder {
         if (Math.abs(systemVarWidth - 0) < 0.00001 || Math.abs(systemFixWidth - 0) < 0.00001) {
             return 1.0;
         }
-        let systemEndX: number;
         const currentSystem: MusicSystem = this.currentSystemParams.currentSystem;
-        systemEndX = currentSystem.StaffLines[0].PositionAndShape.Size.width;
+        const systemEndX: number = currentSystem.StaffLines[0].PositionAndShape.Size.width;
         const scalingFactor: number = (systemEndX - systemFixWidth) / systemVarWidth;
         return scalingFactor;
     }
@@ -1105,7 +1127,13 @@ export class MusicSystemBuilder {
                     }*/
                 }
                 // now add the border-top: everything that stands out above the staffline:
-                currentYPosition += -currentSystem.PositionAndShape.BorderTop;
+                // note: this is unnecessary. We have PageTopMargin and TitleBottomDistance for this.
+                //   also, this creates a sudden margin spike from PageTopMargin = 0.1 to PageTopMargin = 0.
+                // if (!this.rules.CompactMode) { // don't add extra margins/borders in compact mode
+                //     if (this.rules.PageTopMargin > 0) { // don't add extra margins with PageTopMargin == 0
+                //         currentYPosition += -currentSystem.PositionAndShape.BorderTop;
+                //     }
+                // }
                 const relativePosition: PointF2D = new PointF2D(this.rules.PageLeftMargin + this.rules.SystemLeftMargin,
                                                                 currentYPosition);
                 currentSystem.PositionAndShape.RelativePosition = relativePosition;

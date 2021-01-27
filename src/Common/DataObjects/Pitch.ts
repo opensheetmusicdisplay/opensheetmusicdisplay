@@ -12,7 +12,7 @@ export enum NoteEnum {
 /** Describes Accidental types.
  * Do not use the number values of these enum members directly for calculation anymore.
  * To use these for pitch calculation, use pitch.AccidentalHalfTones()
- *  or Pitch.HalfTonesFromAccidental(accidentalEnum).
+ * or Pitch.HalfTonesFromAccidental(accidentalEnum).
  */
 export enum AccidentalEnum {
     SHARP,
@@ -66,19 +66,37 @@ export class Pitch {
         }
     }
 
+    /** This method goes x steps from a NoteEnum on a keyboard.
+     * E.g. Two steps to the left (-2) from a D is a B.
+     * Two steps to the right from an A is a C. */
+    public static stepFromNoteEnum(noteEnum: NoteEnum, step: number): [NoteEnum, number] {
+        const enums: NoteEnum[] = Pitch.pitchEnumValues;
+        const originalIndex: number = enums.indexOf(noteEnum);
+        let octaveShift: number = 0;
+        let newIndex: number = originalIndex + step % enums.length; // modulo only handles positive overflow
+        if (originalIndex + step > enums.length - 1) {
+            octaveShift = 1;
+        }
+        if (newIndex < 0) {
+            newIndex = enums.length + newIndex; // handle underflow, e.g. - 1: enums.length + (-1) = last element
+            octaveShift = -1;
+        }
+        return [enums[newIndex], octaveShift];
+    }
+
     /**
      * @param the input pitch
      * @param the number of halftones to transpose with
      * @returns ret[0] = the transposed fundamental.
-     *          ret[1] = the octave shift (not the new octave!)
+     * ret[1] = the octave shift (not the new octave!)
      * @constructor
      */
-    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number; overflow: number; } {
+    public static CalculateTransposedHalfTone(pitch: Pitch, transpose: number): { halftone: number, overflow: number } {
         const newHalfTone: number = <number>pitch.fundamentalNote + pitch.AccidentalHalfTones + transpose;
         return Pitch.WrapAroundCheck(newHalfTone, 12);
     }
 
-    public static WrapAroundCheck(value: number, limit: number): { halftone: number; overflow: number; } {
+    public static WrapAroundCheck(value: number, limit: number): { halftone: number, overflow: number } {
         let overflow: number = 0;
 
         while (value < 0) {

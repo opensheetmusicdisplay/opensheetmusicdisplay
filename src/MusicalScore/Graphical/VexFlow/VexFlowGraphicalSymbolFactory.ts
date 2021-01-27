@@ -114,10 +114,10 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param octaveShift   The currently active octave transposition enum, needed for positioning the note vertically
      * @returns {GraphicalNote}
      */
-    public createNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry,
-                      activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined): GraphicalNote {
-        // Creates and returns the note:
-        return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift, graphicalNoteLength);
+    public createNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry, activeClef: ClefInstruction,
+        octaveShift: OctaveEnum = OctaveEnum.NONE, rules: EngravingRules,
+        graphicalNoteLength: Fraction = undefined): GraphicalNote {
+        return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift, rules, graphicalNoteLength);
     }
 
     /**
@@ -130,8 +130,9 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {GraphicalNote}
      */
     public createGraceNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry,
-                           activeClef: ClefInstruction, octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
-        return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift);
+                           activeClef: ClefInstruction, rules: EngravingRules,
+                           octaveShift: OctaveEnum = OctaveEnum.NONE): GraphicalNote {
+        return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift, rules);
     }
 
     /**
@@ -193,7 +194,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
                                                 transposeHalftones,
                                                 graphicalStaffEntry.parentMeasure.parentSourceMeasure.Rules // TODO undefined sometimes
                                                 );
-            const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GetGraphicalLabel;
+            const graphicalLabel: GraphicalLabel = graphicalChordSymbolContainer.GraphicalLabel;
             graphicalLabel.PositionAndShape.RelativePosition.y -= rules.ChordSymbolYOffset;
             graphicalLabel.PositionAndShape.RelativePosition.x += xShift;
             // TODO check for available space until next staffEntry or chord symbol (x direction)

@@ -52,8 +52,11 @@ export class ArticulationReader {
           name = name.replace("-", "");
           const articulationEnum: ArticulationEnum = ArticulationEnum[name];
           if (VoiceEntry.isSupportedArticulation(articulationEnum)) {
-            let placement: PlacementEnum = PlacementEnum.Above;
-            if (childNode.attribute("placement")?.value === "below") {
+            let placement: PlacementEnum = PlacementEnum.NotYetDefined;
+            const placementValue: string = childNode.attribute("placement")?.value;
+            if (placementValue === "above") {
+              placement = PlacementEnum.Above;
+            } else if (placementValue === "below") {
               placement = PlacementEnum.Below;
             }
             const newArticulation: Articulation = new Articulation(articulationEnum, placement);
@@ -155,7 +158,7 @@ export class ArticulationReader {
       currentTechnicalInstruction.value = nodeFingering.value;
       currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
       const placement: Attr = nodeFingering.attribute("placement");
-      if (placement !== undefined && placement !== null) {
+      if (placement) {
         switch (placement.value) {
           case "above":
             currentTechnicalInstruction.placement = PlacementEnum.Above;

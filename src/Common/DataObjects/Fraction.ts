@@ -81,7 +81,7 @@ export class Fraction {
    * @param denominator
    * @param wholeValue - the integer number, needed for values greater than 1
    * @param simplify - If simplify is true, then the fraction is simplified
-   *      to make both the numerator and denominator coprime, and less than maximumAllowedNumber.
+   * to make both the numerator and denominator coprime, and less than maximumAllowedNumber.
    */
   constructor(numerator: number = 0, denominator: number = 1, wholeValue: number = 0, simplify: boolean = true) {
     this.numerator = numerator;
@@ -181,7 +181,7 @@ export class Fraction {
    * Use Fraction.plus() for creating a new Fraction object being the sum of two Fractions.
    * @param fraction the Fraction to add.
    */
-  public Add(fraction: Fraction): void {
+  public Add(fraction: Fraction): Fraction {
     // normally should check if denominator or fraction.denominator is 0 but in our case
     // a zero denominator doesn't make sense
     this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator +
@@ -190,6 +190,7 @@ export class Fraction {
     this.wholeValue = 0;
     this.simplify();
     this.setRealValue();
+    return this;
   }
 
   /**
@@ -198,7 +199,7 @@ export class Fraction {
    * Use Fraction.minus() for creating a new Fraction object being the difference of two Fractions.
    * @param fraction the Fraction to subtract.
    */
-  public Sub(fraction: Fraction): void {
+  public Sub(fraction: Fraction): Fraction {
     // normally should check if denominator or fraction.denominator is 0 but in our case
     // a zero denominator doesn't make sense
     this.numerator = (this.wholeValue * this.denominator + this.numerator) * fraction.denominator -
@@ -207,6 +208,7 @@ export class Fraction {
     this.wholeValue = 0;
     this.simplify();
     this.setRealValue();
+    return this;
   }
   /**
    * Brute Force quanization by searching incremental with the numerator until the denominator is

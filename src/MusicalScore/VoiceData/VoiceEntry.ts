@@ -35,6 +35,14 @@ export class VoiceEntry {
         this.graceAfterMainNote = false;
         this.graceNoteSlash = graceNoteSlash;
         this.graceSlur = graceSlur;
+
+        // add currentVoiceEntry to staff entry:
+        if (parentSourceStaffEntry !== undefined) {
+            const list: VoiceEntry[] = parentSourceStaffEntry.VoiceEntries;
+            if (list.indexOf(this) === -1) {
+                list.push(this);
+            }
+        }
     }
 
     private parentVoice: Voice;

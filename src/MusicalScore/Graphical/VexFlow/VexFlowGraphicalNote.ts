@@ -8,14 +8,16 @@ import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
+import { EngravingRules } from "../EngravingRules";
 
 /**
  * The VexFlow version of a [[GraphicalNote]].
  */
 export class VexFlowGraphicalNote extends GraphicalNote {
     constructor(note: Note, parent: GraphicalVoiceEntry, activeClef: ClefInstruction,
-                octaveShift: OctaveEnum = OctaveEnum.NONE,  graphicalNoteLength: Fraction = undefined) {
-        super(note, parent, graphicalNoteLength);
+                octaveShift: OctaveEnum = OctaveEnum.NONE, rules: EngravingRules,
+                graphicalNoteLength: Fraction = undefined) {
+        super(note, parent, rules, graphicalNoteLength);
         this.clef = activeClef;
         this.octaveShift = octaveShift;
         if (note.Pitch) {
@@ -49,11 +51,17 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         //     }
         // } else {
         // revert octave shift, as the placement of the note is independent of octave brackets
-        const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
+        const drawPitch: Pitch = this.drawPitch(pitch);
         // recalculate the pitch, and this time don't ignore the accidental:
         this.vfpitch = VexFlowConverter.pitch(drawPitch, this.sourceNote.isRest(), this.clef, this.sourceNote.Notehead);
+        this.DrawnAccidental = drawPitch.Accidental;
         //}
     }
+
+    public drawPitch(pitch: Pitch): Pitch {
+        return OctaveShift.getPitchFromOctaveShift(pitch, this.octaveShift);
+    }
+
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         const tranposedPitch: Pitch = super.Transpose(keyInstruction, activeClef, halfTones, octaveEnum);
         const drawPitch: Pitch = OctaveShift.getPitchFromOctaveShift(tranposedPitch, this.octaveShift);

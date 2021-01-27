@@ -1,4 +1,3 @@
-import {TextAlignmentEnum} from "../../Common/Enums/TextAlignment";
 import {Label} from "../Label";
 import {GraphicalLabel} from "./GraphicalLabel";
 import {ChordSymbolContainer} from "../VoiceData/ChordSymbolContainer";
@@ -24,12 +23,12 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
     public get GetChordSymbolContainer(): ChordSymbolContainer {
         return this.chordSymbolContainer;
     }
-    public get GetGraphicalLabel(): GraphicalLabel {
+    public get GraphicalLabel(): GraphicalLabel {
         return this.graphicalLabel;
     }
     private calculateLabel(textHeight: number, transposeHalftones: number, keyInstruction: KeyInstruction): void {
         const text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones, keyInstruction);
-        this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, TextAlignmentEnum.CenterBottom, this.rules, this.boundingBox);
-        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(0.0, 0.0);
+        this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, this.rules.ChordSymbolTextAlignment, this.rules, this.boundingBox);
+        this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(this.rules.ChordSymbolRelativeXOffset, 0.0);
     }
 }

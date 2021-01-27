@@ -393,7 +393,6 @@ export class GraphicalMusicSheet {
         const containers: VerticalGraphicalStaffEntryContainer[] = this.verticalGraphicalStaffEntryContainers;
         let leftIndex: number = 0;
         let rightIndex: number = containers.length - 1;
-        let foundIndex: number;
         let leftTS: Fraction = undefined;
         let rightTS: Fraction = undefined;
         if (musicTimestamp.lte(containers[containers.length - 1].AbsoluteTimestamp)) {
@@ -429,7 +428,7 @@ export class GraphicalMusicSheet {
         const diffTS: number = rightTS.RealValue - musicTimestamp.RealValue;
 
         // estimate the interpolated index
-        foundIndex = rightIndex - (diffTS / diff);
+        const foundIndex: number = rightIndex - (diffTS / diff);
         return Math.min(foundIndex, this.verticalGraphicalStaffEntryContainers.length);
     }
 

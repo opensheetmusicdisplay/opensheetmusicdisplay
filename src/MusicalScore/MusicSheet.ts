@@ -164,12 +164,18 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             return "";
         }
     }
+    public set TitleString(value: string) {
+        this.Title = new Label(value);
+    }
     public get SubtitleString(): string {
         if (this.subtitle) {
             return this.subtitle.text;
         } else {
             return "";
         }
+    }
+    public set SubtitleString(value: string) {
+        this.Subtitle = new Label(value);
     }
     public get ComposerString(): string {
         if (this.composer) {
@@ -178,12 +184,18 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
             return "";
         }
     }
+    public set ComposerString(value: string) {
+        this.Composer = new Label(value);
+    }
     public get LyricistString(): string {
         if (this.lyricist) {
             return this.lyricist.text;
         } else {
             return "";
         }
+    }
+    public set LyricistString(value: string) {
+        this.Lyricist = new Label(value);
     }
     public get Title(): Label {
         return this.title;
@@ -424,18 +436,18 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //    }
     //
     //}
-    //public GetExpressionsStartTempoInBPM(): number {
-    //    if (this.TimestampSortedTempoExpressionsList.length > 0) {
-    //        let me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
-    //        if (me.InstantaneousTempo) {
-    //            return me.InstantaneousTempo.TempoInBpm;
-    //        } else if (me.ContinuousTempo) {
-    //            return me.ContinuousTempo.StartTempo;
-    //        }
-    //    }
-    //    return this.UserStartTempoInBPM;
-    //}
-    public get Errors(): { [n: number]: string[]; } {
+    public getExpressionsStartTempoInBPM(): number {
+        if (this.TimestampSortedTempoExpressionsList.length > 0) {
+            const me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
+            if (me.InstantaneousTempo) {
+                return me.InstantaneousTempo.TempoInBpm;
+            } else if (me.ContinuousTempo) {
+                return me.ContinuousTempo.StartTempo;
+            }
+        }
+        return this.userStartTempoInBPM;
+    }
+    public get Errors(): { [n: number]: string[] } {
         return this.musicSheetErrors.measureErrors;
     }
     public get FirstMeasureNumber(): number {
