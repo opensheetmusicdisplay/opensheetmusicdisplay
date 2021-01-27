@@ -58,6 +58,7 @@ export class SourceMeasure {
     public printNewSystemXml: boolean = false;
     /** Whether the MusicXML says to print a new page (page break). See OSMDOptions.newPageFromXML */
     public printNewPageXml: boolean = false;
+    public IsSystemStartMeasure: boolean = false;
 
     private measureNumber: number;
     public MeasureNumberXML: number;

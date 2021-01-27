@@ -773,7 +773,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffNumber: number = 0;
     const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
     const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
-    const xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
+    let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
+    if (measure.IsSystemStartMeasure) {
+      xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
+    }
     // const section: Vex.Flow.StaveSection = new Vex.Flow.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
     // (vfStave as any).modifiers.push(section);
     const fontSize: number = this.rules.RehearsalMarkFontSize;
