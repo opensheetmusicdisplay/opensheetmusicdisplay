@@ -113,10 +113,10 @@ export class ArticulationReader {
 
   /**
    * This method add a technical Articulation to the currentVoiceEntry.
-   * @param xmlNode
+   * @param technicalNode
    * @param currentVoiceEntry
    */
-  public addTechnicalArticulations(xmlNode: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
+  public addTechnicalArticulations(technicalNode: IXmlElement, currentVoiceEntry: VoiceEntry, currentNote: Note): void {
     interface XMLElementToArticulationEnum {
       [xmlElement: string]: ArticulationEnum;
     }
@@ -135,7 +135,7 @@ export class ArticulationReader {
         continue;
       }
       const articulationEnum: ArticulationEnum = xmlElementToArticulationEnum[xmlArticulation];
-      const node: IXmlElement = xmlNode.element(xmlArticulation);
+      const node: IXmlElement = technicalNode.element(xmlArticulation);
       if (node) {
         let placement: PlacementEnum; // set undefined by default, to not restrict placement
         if (node.attribute("placement")?.value === "above") {
@@ -151,34 +151,50 @@ export class ArticulationReader {
       }
     }
 
-    const nodeFingering: IXmlElement = xmlNode.element("fingering");
+    const nodeFingering: IXmlElement = technicalNode.element("fingering");
     if (nodeFingering) {
-      const currentTechnicalInstruction: TechnicalInstruction = new TechnicalInstruction();
+      const currentTechnicalInstruction: TechnicalInstruction = this.createTechnicalInstruction(nodeFingering, currentNote);
       currentTechnicalInstruction.type = TechnicalInstructionType.Fingering;
-      currentTechnicalInstruction.value = nodeFingering.value;
-      currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
-      const placement: Attr = nodeFingering.attribute("placement");
-      if (placement) {
-        switch (placement.value) {
-          case "above":
-            currentTechnicalInstruction.placement = PlacementEnum.Above;
-            break;
-          case "below":
-            currentTechnicalInstruction.placement = PlacementEnum.Below;
-            break;
-          case "left": // not valid in MusicXML 3.1
-            currentTechnicalInstruction.placement = PlacementEnum.Left;
-            break;
-          case "right": // not valid in MusicXML 3.1
-            currentTechnicalInstruction.placement = PlacementEnum.Right;
-            break;
-          default:
-            currentTechnicalInstruction.placement = PlacementEnum.NotYetDefined;
-        }
-      }
-      currentTechnicalInstruction.sourceNote = currentNote;
       currentNote.Fingering = currentTechnicalInstruction;
       currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
+    }
+    const nodeString: IXmlElement = technicalNode.element("string");
+    if (nodeString) {
+      const currentTechnicalInstruction: TechnicalInstruction = this.createTechnicalInstruction(nodeString, currentNote);
+      currentTechnicalInstruction.type = TechnicalInstructionType.String;
+      currentNote.StringInstruction = currentTechnicalInstruction;
+      currentVoiceEntry.TechnicalInstructions.push(currentTechnicalInstruction);
+    }
+  }
+
+  private createTechnicalInstruction(stringOrFingeringNode: IXmlElement, note: Note): TechnicalInstruction {
+    const technicalInstruction: TechnicalInstruction = new TechnicalInstruction();
+    technicalInstruction.sourceNote = note;
+    technicalInstruction.value = stringOrFingeringNode.value;
+    const placement: Attr = stringOrFingeringNode.attribute("placement");
+    technicalInstruction.placement = this.getPlacement(placement);
+    return technicalInstruction;
+  }
+
+  private getPlacement(placementAttr: Attr, defaultPlacement: PlacementEnum = PlacementEnum.NotYetDefined): PlacementEnum {
+    if (defaultPlacement !== PlacementEnum.NotYetDefined) { // usually from EngravingRules
+      return defaultPlacement;
+    }
+    if (placementAttr) {
+      switch (placementAttr.value) {
+        case "above":
+          return PlacementEnum.Above;
+        case "below":
+          return PlacementEnum.Below;
+        case "left": // not valid in MusicXML 3.1
+          return PlacementEnum.Left;
+        case "right": // not valid in MusicXML 3.1
+          return PlacementEnum.Right;
+        default:
+          return PlacementEnum.NotYetDefined;
+      }
+    } else {
+      return PlacementEnum.NotYetDefined;
     }
   }
 
