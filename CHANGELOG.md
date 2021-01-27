@@ -1,3 +1,21 @@
+## [0.9.2](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.9.1...0.9.2) (2021-01-27)
+
+
+### Bug Fixes
+
+* **Cursor:** Fix bounding box/cursor position when only one vertical measure has an endClef ([#872](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/872)) ([8b40dd3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8b40dd395fe18f3c55d3d0aa1e0585b782241d1e)), closes [#797](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/797)
+
+
+### Features
+
+* **Chords:** Add options for chord alignment, relative x offset ([#948](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/948)) ([143899b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/143899b74226be22c3929b61439fac4ff40c2937))
+* **Rehearsal Marks:** Render Rehearsal Marks ([#919](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/919)), add several RehearsalMarks EngravingRules ([c931341](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/
+* **Rehearsal Marks:** Add osmd.rules.RehearsalMarkXOffsetSystemStartMeasure ([#919](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/919)) (default -20[px]) ([84d60e1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/84d60e149905e5e0c9f2e1526b7c5a50931b9005))
+c93134177fa390914a06a0e2a54599011353d834))
+* **StringNumber:** Display XML String number (e.g. violin) ([#949](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/949)) ([9aba63c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9aba63cebde76398cbca596d7c52ba892ca0c171))
+
+
+
 ## [0.9.1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.9.0...0.9.1) (2021-01-26)
 
 ### Bug Fixes
