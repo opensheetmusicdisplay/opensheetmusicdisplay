@@ -90,7 +90,7 @@ export abstract class MusicSheetCalculator {
     protected rules: EngravingRules;
     protected musicSystems: MusicSystem[];
 
-    private abstractNotImplementedError: string = "abstract, not implemented";
+    private abstractNotImplementedErrorMessage: string = "abstract, not implemented";
 
     public static get TextMeasurer(): ITextMeasurer {
         return MusicSheetCalculator.textMeasurer;
@@ -316,11 +316,11 @@ export abstract class MusicSheetCalculator {
     }
 
     public calculateMeasureWidthFromStaffEntries(measuresVertical: GraphicalMeasure[], oldMinimumStaffEntriesWidth: number): number {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected formatMeasures(): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     /**
@@ -329,18 +329,18 @@ export abstract class MusicSheetCalculator {
      * @param measures - The minimum required x width of the source measure
      */
     protected calculateMeasureXLayout(measures: GraphicalMeasure[]): number {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     /**
      * Called for every source measure when generating the list of staff measures for it.
      */
     protected initGraphicalMeasuresCreation(): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected handleBeam(graphicalNote: GraphicalNote, beam: Beam, openBeams: Beam[]): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     /**
@@ -357,23 +357,23 @@ export abstract class MusicSheetCalculator {
     protected handleTiedGraphicalNote(tiedGraphicalNote: GraphicalNote, beams: Beam[], activeClef: ClefInstruction,
                                       octaveShiftValue: OctaveEnum, graphicalStaffEntry: GraphicalStaffEntry, duration: Fraction,
                                       openTie: Tie, isLastTieNote: boolean): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected handleVoiceEntryLyrics(voiceEntry: VoiceEntry, graphicalStaffEntry: GraphicalStaffEntry,
                                      openLyricWords: LyricWord[]): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected handleVoiceEntryOrnaments(ornamentContainer: OrnamentContainer, voiceEntry: VoiceEntry,
                                         graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected handleVoiceEntryArticulations(articulations: Articulation[],
                                             voiceEntry: VoiceEntry,
                                             staffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     /**
@@ -384,30 +384,30 @@ export abstract class MusicSheetCalculator {
      */
     protected handleVoiceEntryTechnicalInstructions(technicalInstructions: TechnicalInstruction[],
                                                     voiceEntry: VoiceEntry, staffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
 
     protected handleTuplet(graphicalNote: GraphicalNote, tuplet: Tuplet, openTuplets: Tuplet[]): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected layoutVoiceEntry(voiceEntry: VoiceEntry, graphicalNotes: GraphicalNote[],
                                graphicalStaffEntry: GraphicalStaffEntry, hasPitchedNote: boolean): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected layoutStaffEntry(graphicalStaffEntry: GraphicalStaffEntry): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected createGraphicalTie(tie: Tie, startGse: GraphicalStaffEntry, endGse: GraphicalStaffEntry, startNote: GraphicalNote,
                                  endNote: GraphicalNote): GraphicalTie {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected updateStaffLineBorders(staffLine: StaffLine): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     /**
@@ -521,7 +521,7 @@ export abstract class MusicSheetCalculator {
      * @param tieIsAtSystemBreak
      */
     protected layoutGraphicalTie(tie: GraphicalTie, tieIsAtSystemBreak: boolean, isTab: boolean): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     /**
@@ -640,7 +640,7 @@ export abstract class MusicSheetCalculator {
      */
     protected calculateSingleOctaveShift(sourceMeasure: SourceMeasure, multiExpression: MultiExpression,
                                          measureIndex: number, staffIndex: number): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     /**
@@ -650,7 +650,7 @@ export abstract class MusicSheetCalculator {
      */
     protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction,
                                                  measureIndex: number): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     /**
@@ -1572,7 +1572,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected createMetronomeMark(metronomeExpression: InstantaneousTempoExpression): void {
-        throw new Error("abstract, not implemented");
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -2957,7 +2957,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected calculateRehearsalMark(measure: SourceMeasure): void {
-        throw new Error(this.abstractNotImplementedError);
+        throw new Error(this.abstractNotImplementedErrorMessage);
     }
 
     private calculateMoodAndUnknownExpressions(): void {
