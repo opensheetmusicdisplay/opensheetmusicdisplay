@@ -268,6 +268,8 @@ export class EngravingRules {
     public FingeringInsideStafflines: boolean;
     public FingeringLabelFontHeight: number;
     public FingeringOffsetX: number;
+    /** This is not for tabs, but for classical scores, especially violin. */
+    public StringNumberOffsetY: number;
     public NewSystemAtXMLNewSystemAttribute: boolean;
     public NewPageAtXMLNewPageAttribute: boolean;
     public PageFormat: PageFormat;
@@ -562,6 +564,7 @@ export class EngravingRules {
         this.FingeringInsideStafflines = false;
         this.FingeringLabelFontHeight = 1.7;
         this.FingeringOffsetX = 0.0;
+        this.StringNumberOffsetY = 0.0;
         this.NewSystemAtXMLNewSystemAttribute = false;
         this.NewPageAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;
