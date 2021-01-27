@@ -8,6 +8,7 @@ import {Voice} from "./Voice";
 import {MusicSheet} from "../MusicSheet";
 import {MultiExpression} from "./Expressions/MultiExpression";
 import {MultiTempoExpression} from "./Expressions/MultiTempoExpression";
+import {RehearsalExpression} from "./Expressions/RehearsalExpression";
 import {AbstractNotationInstruction} from "./Instructions/AbstractNotationInstruction";
 import {ClefInstruction} from "./Instructions/ClefInstruction";
 import {KeyInstruction} from "./Instructions/KeyInstruction";
@@ -79,6 +80,7 @@ export class SourceMeasure {
     public multipleRestMeasureNumber: number = 0;
     private staffLinkedExpressions: MultiExpression[][] = [];
     private tempoExpressions: MultiTempoExpression[] = [];
+    public rehearsalExpression: RehearsalExpression;
     private verticalSourceStaffEntryContainers: VerticalSourceStaffEntryContainer[] = [];
     private implicitMeasure: boolean;
     private hasEndLine: boolean;

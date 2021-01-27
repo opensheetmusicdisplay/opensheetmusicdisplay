@@ -110,6 +110,11 @@ export class EngravingRules {
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     public CustomChords: CustomChord[];
     public RepetitionSymbolsYOffset: number;
+    public RehearsalMarkXOffset: number;
+    public RehearsalMarkXOffsetDefault: number;
+    public RehearsalMarkYOffset: number;
+    public RehearsalMarkYOffsetDefault: number;
+    public RehearsalMarkFontSize: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -258,6 +263,7 @@ export class EngravingRules {
     public RenderLyrics: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
+    public RenderRehearsalMarks: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
     public DynamicExpressionMaxDistance: number;
@@ -415,6 +421,11 @@ export class EngravingRules {
         this.CustomChords = [];
         this.resetChordNames();
         this.RepetitionSymbolsYOffset = 0;
+        this.RehearsalMarkXOffsetDefault = 10; // avoid collision with metronome number
+        this.RehearsalMarkXOffset = 0; // user defined
+        this.RehearsalMarkYOffsetDefault = -15; 
+        this.RehearsalMarkYOffset = 0; // user defined
+        this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -557,6 +568,7 @@ export class EngravingRules {
         this.RenderLyrics = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
+        this.RenderRehearsalMarks = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
         this.ArticulationPlacementFromXML = true;

@@ -197,8 +197,11 @@ export class Stave extends Element {
   }
 
   // Section functions
-  setSection(section, y) {
-    this.modifiers.push(new StaveSection(section, this.x, y));
+  setSection(section, y, xOffset = 0, fontSize = 12) {
+    const staveSection = new StaveSection(section, this.x + xOffset, y);
+    // staveSection.shift_x = xOffset; // has no effect
+    staveSection.font.size = fontSize;
+    this.modifiers.push(staveSection);
     return this;
   }
 

@@ -90,6 +90,8 @@ export abstract class MusicSheetCalculator {
     protected rules: EngravingRules;
     protected musicSystems: MusicSystem[];
 
+    private abstractNotImplementedError: string = "abstract, not implemented";
+
     public static get TextMeasurer(): ITextMeasurer {
         return MusicSheetCalculator.textMeasurer;
     }
@@ -851,6 +853,7 @@ export abstract class MusicSheetCalculator {
         if (!this.leadSheet) {
             this.calculateTempoExpressions();
         }
+        this.calculateRehearsalMarks();
 
         // calculate all LyricWords Positions
         this.calculateLyricsPosition();
@@ -2942,6 +2945,19 @@ export abstract class MusicSheetCalculator {
                 this.calculateTempoExpressionsForMultiTempoExpression(sourceMeasure, sourceMeasure.TempoExpressions[j], i);
             }
         }
+    }
+
+    private calculateRehearsalMarks(): void {
+        if (!this.rules.RenderRehearsalMarks) {
+            return;
+        }
+        for (const measure of this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures) {
+            this.calculateRehearsalMark(measure);
+        }
+    }
+
+    protected calculateRehearsalMark(measure: SourceMeasure): void {
+        throw new Error(this.abstractNotImplementedError);
     }
 
     private calculateMoodAndUnknownExpressions(): void {
