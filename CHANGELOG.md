@@ -9,7 +9,7 @@
 ### Features
 
 * **Chords:** Add options for chord alignment, relative x offset ([#948](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/948)) ([143899b](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/143899b74226be22c3929b61439fac4ff40c2937))
-* **Rehearsal Marks:** Render Rehearsal Marks ([#919](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/919)), add several RehearsalMarks EngravingRules ([c931341](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/
+* **Rehearsal Marks:** Render Rehearsal Marks ([#919](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/919)), add several RehearsalMarks EngravingRules ([c931341](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/c93134177fa390914a06a0e2a54599011353d834))
 * **Rehearsal Marks:** Add osmd.rules.RehearsalMarkXOffsetSystemStartMeasure ([#919](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/919)) (default -20[px]) ([84d60e1](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/84d60e149905e5e0c9f2e1526b7c5a50931b9005))
 c93134177fa390914a06a0e2a54599011353d834))
 * **StringNumber:** Display XML String number (e.g. violin) ([#949](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/949)) ([9aba63c](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/9aba63cebde76398cbca596d7c52ba892ca0c171))
