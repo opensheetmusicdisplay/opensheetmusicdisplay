@@ -17,9 +17,9 @@
 
 <img width="500" src="https://user-images.githubusercontent.com/33069673/106186552-bd191300-61a4-11eb-8814-07019fcf1d5b.png">
 
-OpenSheetMusicDisplay renders MusicXML sheet music in the browser. It is the missing link between MusicXML and VexFlow. Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
+OpenSheetMusicDisplay renders MusicXML sheet music in the browser. It is the missing link between MusicXML and [VexFlow](https://www.vexflow.com/). Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
 
-MusicXML is the de facto standard for sharing sheet music on the internet. VexFlow is widely used for rendering sheet music. It features an extensive library of musical elements, but each measure and symbol has to be created and positioned by hand in Javascript.
+MusicXML is the de facto standard for sharing sheet music on the internet. [VexFlow](https://www.vexflow.com/) is widely used for rendering sheet music. It features an extensive library of musical elements, but each measure and symbol has to be created and positioned by hand in Javascript.
 
 OpenSheetMusicDisplay brings the two together and offers an open source turnkey solution for your digital sheet music project.
 
@@ -35,7 +35,7 @@ Developers can also build a [local development demo (see Wiki)](https://github.c
 
 ## Key Features
 
-* Displays MusicXML sheet music in a browser environment (Javascript, Typescript, NodeJS command line/server)
+* Displays MusicXML sheet music in a browser environment (Javascript, Typescript, NodeJS command line/server) using [Vexflow](https://www.vexflow.com/) rendering
 * Parses most MusicXML tags and integrates it into an accessible and modifiable data model (e.g. to change a note's color)
 * Offers many options (OSMDOptions / EngravingRules): Page Format, Font Family, Positioning, not rendering certain elements, etc.
 * Allows modification of the displayed score, like hiding parts or instruments, hiding title and composer, a more compact layout, or coloring notes
