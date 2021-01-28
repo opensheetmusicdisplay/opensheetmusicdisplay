@@ -35,7 +35,8 @@ Developers can also build a [local development demo (see Wiki)](https://github.c
 
 ## Key Features
 
-* Displays MusicXML sheet music in a browser environment (Javascript, Typescript, NodeJS command line/server) using [Vexflow](https://www.vexflow.com/) rendering
+* Displays MusicXML sheet music in a browser environment (Javascript, Typescript, NodeJS command line/server)
+* Uses [Vexflow](https://www.vexflow.com/) for rendering and (partly) layout
 * Parses most MusicXML tags and integrates it into an accessible and modifiable data model (e.g. to change a note's color)
 * Offers many options (OSMDOptions / EngravingRules): Page Format, Font Family, Positioning, not rendering certain elements, etc.
 * Allows modification of the displayed score, like hiding parts or instruments, hiding title and composer, a more compact layout, or coloring notes
