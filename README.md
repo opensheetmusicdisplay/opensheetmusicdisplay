@@ -11,7 +11,7 @@
 <!-- [![Greenkeeper badge](https://badges.greenkeeper.io/opensheetmusicdisplay/opensheetmusicdisplay.svg)](https://greenkeeper.io/) --> <!-- move to Snyk -->
 <!-- [![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay/status.svg)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- often returns error "no healthy upstream" -->
 <!-- [![Travis Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- Migrate to travis-ci.com -->
-[Introduction](#introduction) • [Demo](#demo) • [Key Features](#key-features) • [Limitations](#limitations) • [How to Use OSMD](#how-to-use-osmd)
+[Introduction](#introduction) • [Demo](#demo) • [Key Features](#key-features) • [Limitations](#limitations) • [How to Use OSMD](#how-to-use-osmd) • [Sponsor OSMD](#sponsor-osmd)
 
 ## Introduction
 
@@ -54,6 +54,17 @@ Not all MusicXML tags are (fully) supported:
 Available as [NPM module](https://www.npmjs.com/package/opensheetmusicdisplay), can be used with plain javascript or module managers like webpack.
 [Detailed instructions in our Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Getting-Started)
 If you have further technical questions, you can leave a comment in [our Discussions section](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/discussions/950), browse through our [Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue) or, [open a new issue](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/new/choose) (if it's a simple question with a simple answer, it may be moved to Discussions).
+
+## Sponsor OSMD
+
+Sadly free isn’t sustainable on its own. To keep on improving and developing Open Sheet Music Display we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way that would enable us to continue our work, improve and bugfix Open Sheet Music Display. New features currently in the making are:
+* OSMD Audio Player
+* Transposing Plugin
+* Annotations (Add custom text, music symbols, etc. to the score and export to and import from XML)
+
+And there are other ways to contribute to the community - we plan on starting a blog & a newsletter and share our knowledge. We encourage our sponsors to bring up their desired features and pitch blog post ideas.
+Additionally, our awesome sponsors get awesome perks, like early access to features like the Audio Player, or a postcard from Vienna. Check them out at our [GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
+
 
 Brought to you by [PhonicScore](https://phonicscore.com/)
 (Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [Android (formerly PhonicScore)](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))<br>
