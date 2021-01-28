@@ -63,7 +63,12 @@ Sadly free isn’t sustainable on its own. To keep on improving and developing O
 * Annotations (Add custom text, music symbols, etc. to the score and export to and import from XML)
 
 And there are other ways to contribute to the community - we plan on starting a blog & a newsletter and share our knowledge. We encourage our sponsors to bring up their desired features and pitch blog post ideas.
-Additionally, our awesome sponsors get awesome perks, like early access to features like the Audio Player, or a postcard from Vienna. Check them out at our [GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
+
+Additionally, our awesome sponsors get awesome perks, like:
+* Early Access to features like the Audio Player
+* A postcard from Vienna
+
+and others. Check them out at our [GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
 
 
 Brought to you by [PhonicScore](https://phonicscore.com/)
