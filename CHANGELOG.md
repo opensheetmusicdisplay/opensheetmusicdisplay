@@ -3,7 +3,7 @@
 
 ### Bug Fixes
 
-* **Cursor:** Fix bounding box/cursor position when only one vertical measure has an endClef ([#872](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/872)) ([8b40dd3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8b40dd395fe18f3c55d3d0aa1e0585b782241d1e)), closes [#797](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/797)
+* **Cursor:** Fix bounding box/cursor position when only one vertical measure has an endClef ([#872](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/872)) ([8b40dd3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/8b40dd395fe18f3c55d3d0aa1e0585b782241d1e)), related to [#797](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/797)
 
 
 ### Features
