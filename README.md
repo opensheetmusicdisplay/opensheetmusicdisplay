@@ -11,7 +11,7 @@
 <!-- [![Greenkeeper badge](https://badges.greenkeeper.io/opensheetmusicdisplay/opensheetmusicdisplay.svg)](https://greenkeeper.io/) --> <!-- move to Snyk -->
 <!-- [![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay/status.svg)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- often returns error "no healthy upstream" -->
 <!-- [![Travis Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- Migrate to travis-ci.com -->
-[Introduction](#introduction) • [Demo](#demo) • [Key Features](#key-features) • [Limitations](#limitations) • [How to Use OSMD](#how-to-use-osmd) • [Sponsor OSMD](#sponsor-osmd)
+[Introduction](#introduction) • [Demo](#demo) • [Key Features](#key-features) • [Limitations](#limitations) • [How to Use OSMD](#how-to-use-osmd) • [Sponsor OSMD](#sponsor-osmd) • [About Us](#about-us)
 
 ## Introduction
 
@@ -28,7 +28,7 @@ OpenSheetMusicDisplay brings the two together and offers an open source turnkey 
 Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
 [Learn more about the demo](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Exploring-the-Demo) and OSMD in [the OSMD Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki).
 
-Developers can also build a [local development demo (see Wiki)](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Debugging-(VSCode)).
+Developers can also build a [local development demo (see Wiki)](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Debugging-(VSCode)):
 
 <img width="400" alt="Local OSMD Developer Demo" src="https://user-images.githubusercontent.com/33069673/106189263-5695f400-61a8-11eb-901f-aafc853af497.png">
 
@@ -70,10 +70,17 @@ Additionally, our awesome sponsors get awesome perks, like:
 
 and others. Check them out at our [GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
 
+## About Us
 
-Brought to you by [PhonicScore](https://phonicscore.com/)
-(Creators of [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [Android (formerly PhonicScore)](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite))<br>
-and [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors)
+OSMD is made by [Phonicscore](https://phonicscore.com/) - a music-tech company based in Vienna. We create solutions for musicians, sheet music publishers, app developers, music stores and researchers.
+
+* Open source software
+* Sheet Music Rendering Software
+* Native & web browser apps: [PracticeBird for iOS](https://itunes.apple.com/us/app/practice-bird-pro/id1253492926?ls=1&mt=8) and [Android](https://play.google.com/store/apps/details?id=phonicscore.phonicscore_lite)
+
+Our mission is to provide a state of art software solution for building MusicXML apps and to include the community in a constant thrive for improvement. We want to take away the pain of building music software from scratch and offer a shortcut when it comes to building your next MusicXML sheet music application.
+
+We also want to thank [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors), who show with open source many people come together to not only share but improve software.
 
 To contact us directly, you can use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/),
 or<br>
