@@ -57,6 +57,10 @@ If you have further technical questions, you can leave a comment in [our Discuss
 
 ## Sponsor OSMD
 
+<a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">
+<img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors">
+</a><br>
+
 Sadly free isn’t sustainable on its own. To keep on improving and developing Open Sheet Music Display we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way that would enable us to continue our work, improve and bugfix Open Sheet Music Display. New features currently in the making are:
 * OSMD Audio Player
 * Transposing Plugin
@@ -68,7 +72,12 @@ Additionally, our awesome sponsors get awesome perks, like:
 * Early Access to features like the Audio Player
 * A postcard from Vienna
 
-and others. Check them out at our [GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
+and others. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
+
+Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FPHCYVV2HH8VU)<br>
+Any support is highly appreciated.
 
 ## About Us
 
@@ -85,16 +94,3 @@ We also want to thank [our Github Contributors](https://github.com/opensheetmusi
 To contact us directly, you can use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/),
 or<br>
 [join the chat on Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
-
-<a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">
-<img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors">
-</a><br>
-If you'd like to support OSMD and our ongoing work, and receive additional rewards like early builds (Audio Player, Transposition plugin) or a postcard from Vienna,
-you can support us via Github Sponsors:<br>
-https://github.com/sponsors/opensheetmusicdisplay/
-<br>
-<br>
-Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
-
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FPHCYVV2HH8VU)<br>
-Any support is highly appreciated.
