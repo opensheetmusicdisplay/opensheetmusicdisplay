@@ -51,9 +51,12 @@ Not all MusicXML tags are (fully) supported:
 
 ## How to Use OSMD
 
-Available as [NPM module](https://www.npmjs.com/package/opensheetmusicdisplay), can be used with plain javascript or module managers like webpack.
-[Detailed instructions in our Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Getting-Started)
-If you have further technical questions, you can leave a comment in [our Discussions section](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/discussions/950), browse through our [Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue) or, [open a new issue](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/new/choose) (if it's a simple question with a simple answer, it may be moved to Discussions).
+* Available as [NPM module](https://www.npmjs.com/package/opensheetmusicdisplay), can be used with plain javascript or module managers like webpack
+* [Detailed instructions in our Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Getting-Started)
+* If you have further technical questions, you can:
+  * [Leave a comment in our Discussions section](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/discussions/950) (especially for questions of understanding)
+  * [Browse through our Issues](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues?&q=is%3Aissue)
+  * [Open a new issue](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/new/choose) (may be moved to Discussions).
 
 ## Sponsor OSMD
 
@@ -61,18 +64,19 @@ If you have further technical questions, you can leave a comment in [our Discuss
 <img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors">
 </a><br>
 
-Sadly free isn’t sustainable on its own. To keep on improving and developing Open Sheet Music Display we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way that would enable us to continue our work, improve and bugfix Open Sheet Music Display. New features currently in the making are:
+Sadly free isn’t sustainable on its own. To keep on improving and developing Open Sheet Music Display we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way that would enable us to continue our work, improve and bugfix Open Sheet Music Display.<br>
+New features currently in the making are:
 * OSMD Audio Player
 * Transposing Plugin
 * Annotations (Add custom text, music symbols, etc. to the score and export to and import from XML)
 
-And there are other ways to contribute to the community - we plan on starting a blog & a newsletter and share our knowledge. We encourage our sponsors to bring up their desired features and pitch blog post ideas.
-
-Additionally, our awesome sponsors get awesome perks, like:
+Our awesome sponsors get awesome perks, like:
 * Early Access to features like the Audio Player
 * A postcard from Vienna
 
 and others. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
+
+And there are other ways to contribute to the community - we plan on starting a blog & a newsletter and share our knowledge. We encourage our sponsors to bring up their desired features and pitch blog post ideas.
 
 Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
 
