@@ -97,7 +97,7 @@ OSMD is made by [Phonicscore](https://phonicscore.com/) - a music-tech company b
 
 Our mission is to provide a state of art software solution for building MusicXML apps and to include the community in a constant thrive for improvement. We want to take away the pain of building music software from scratch and offer a shortcut when it comes to building your next MusicXML sheet music application.
 
-We also want to thank [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors), who show with open source many people come together to not only share but improve software.
+We also want to thank [our Github Contributors](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/graphs/contributors), who show that with open source many people come together to not only share but improve software.
 
 ## Contact
 
