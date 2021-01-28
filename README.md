@@ -25,7 +25,7 @@ OpenSheetMusicDisplay brings the two together and offers an open source turnkey 
 
 ## Demo
 
-Try the [Public Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
+Try the [Public Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.<br>
 [Learn more about the demo](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Exploring-the-Demo) and OSMD in [the OSMD Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki).
 
 Developers can also build a [local development demo (see Wiki)](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Debugging-(VSCode)):
