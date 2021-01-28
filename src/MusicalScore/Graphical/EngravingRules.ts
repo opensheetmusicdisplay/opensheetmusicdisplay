@@ -275,6 +275,8 @@ export class EngravingRules {
     public FingeringInsideStafflines: boolean;
     public FingeringLabelFontHeight: number;
     public FingeringOffsetX: number;
+    /** Whether to render string numbers in classical scores, i.e. not the string numbers in tabs, but e.g. for violin. */
+    public RenderStringNumbersClassical: boolean;
     /** This is not for tabs, but for classical scores, especially violin. */
     public StringNumberOffsetY: number;
     public NewSystemAtXMLNewSystemAttribute: boolean;
@@ -578,6 +580,7 @@ export class EngravingRules {
         this.FingeringInsideStafflines = false;
         this.FingeringLabelFontHeight = 1.7;
         this.FingeringOffsetX = 0.0;
+        this.RenderStringNumbersClassical = true;
         this.StringNumberOffsetY = 0.0;
         this.NewSystemAtXMLNewSystemAttribute = false;
         this.NewPageAtXMLNewPageAttribute = false;

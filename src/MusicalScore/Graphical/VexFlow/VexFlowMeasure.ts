@@ -1390,6 +1390,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     protected createStringNumber(voiceEntry: GraphicalVoiceEntry): void {
+        if (!this.rules.RenderStringNumbersClassical) {
+            return;
+        }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
         const note: GraphicalNote = voiceEntry.notes[0]; // only display for top note
         const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
