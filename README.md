@@ -11,7 +11,7 @@
 <!-- [![Greenkeeper badge](https://badges.greenkeeper.io/opensheetmusicdisplay/opensheetmusicdisplay.svg)](https://greenkeeper.io/) --> <!-- move to Snyk -->
 <!-- [![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay/status.svg)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- often returns error "no healthy upstream" -->
 <!-- [![Travis Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- Migrate to travis-ci.com -->
-[Introduction](#introduction) • [Demo](#demo)
+[Introduction](#introduction) • [Demo](#demo) • [Key Features](#key-features)
 
 ## Introduction
 
@@ -28,6 +28,18 @@ OpenSheetMusicDisplay brings the two together and offers an open source turnkey 
 Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
 [Learn more about the demo](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Exploring-the-Demo) in [the OSMD Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki).
 
+Developers can also build a [local development demo (see Wiki)](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Debugging-(VSCode)).
+
+<img width="400" alt="Local OSMD Developer Demo" src="https://user-images.githubusercontent.com/33069673/106189263-5695f400-61a8-11eb-901f-aafc853af497.png">
+
+
+## Key Features
+
+* Displays MusicXML sheet music in a browser environment (Javascript, NodeJS)
+* Parses most MusicXML tags and integrates it into an accessible and modifiable data model (e.g. to change a note's color)
+* Offers many options (OSMDOptions / EngravingRules): Page Format, Font Family, Positioning, not rendering certain elements, etc.
+* Allows modification of the displayed score, like hiding parts or instruments, hiding title and composer, a more compact layout, or coloring notes
+* Outputs SVG or PNG, also via nodejs script in the command line, completely browserless
 
 See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki) for information about the source code and how to use OSMD.
 
