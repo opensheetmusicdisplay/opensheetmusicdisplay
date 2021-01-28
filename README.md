@@ -17,9 +17,10 @@
 
 <img width="500" src="https://user-images.githubusercontent.com/33069673/106186552-bd191300-61a4-11eb-8814-07019fcf1d5b.png">
 
-OpenSheetMusicDisplay renders MusicXML sheet music in the browser. It is the missing link between MusicXML and [VexFlow](https://www.vexflow.com/). Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
+OpenSheetMusicDisplay renders MusicXML sheet music in the browser. It is the missing link between [MusicXML](https://www.musicxml.com/) and [VexFlow](https://www.vexflow.com/). Built upon many years of experience in both sheet music interactivity and engraving, it is the perfect solution for app developers seeking to build digital sheet music services.
 
-MusicXML is the de facto standard for sharing sheet music on the internet. [VexFlow](https://www.vexflow.com/) is widely used for rendering sheet music. It features an extensive library of musical elements, but each measure and symbol has to be created and positioned by hand in Javascript.
+[MusicXML](https://www.musicxml.com/) is the de facto standard for sharing sheet music on the internet.<br>
+[VexFlow](https://www.vexflow.com/) is widely used for rendering sheet music. It features an extensive library of musical elements, but each measure and symbol has to be created and positioned by hand in Javascript.
 
 OpenSheetMusicDisplay brings the two together and offers an open source turnkey solution for your digital sheet music project.
 
