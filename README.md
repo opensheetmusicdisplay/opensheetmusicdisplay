@@ -11,6 +11,7 @@
 <!-- [![Greenkeeper badge](https://badges.greenkeeper.io/opensheetmusicdisplay/opensheetmusicdisplay.svg)](https://greenkeeper.io/) --> <!-- move to Snyk -->
 <!-- [![Dependency Status](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay/status.svg)](https://david-dm.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- often returns error "no healthy upstream" -->
 <!-- [![Travis Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- Migrate to travis-ci.com -->
+[Introduction](#introduction) • [Demo](#demo)
 
 ## Introduction
 
@@ -22,9 +23,11 @@ MusicXML is the de facto standard for sharing sheet music on the internet. VexFl
 
 OpenSheetMusicDisplay brings the two together and offers an open source turnkey solution for your digital sheet music project.
 
-Written in [TypeScript](https://www.typescriptlang.org) and released under [BSD license](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/develop/LICENSE).
+## Demo
 
 Try the [Demo](https://opensheetmusicdisplay.github.io/demo/) to see what OSMD can do.
+[Learn more about the demo](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Exploring-the-Demo) in [the OSMD Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki).
+
 
 See the [Wiki](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki) for information about the source code and how to use OSMD.
 
