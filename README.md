@@ -92,6 +92,8 @@ Our awesome sponsors get awesome perks, like:
 
 and others. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
 
+<img title="OSMD Sponsor perks like this t-shirt" src="https://user-images.githubusercontent.com/33069673/106320056-9de8b700-6272-11eb-86ef-1d9ae701f624.jpg" height="200"> <img title="OSMD button sponsor perk" src="https://user-images.githubusercontent.com/33069673/106320576-5a427d00-6273-11eb-96b0-d2c7c4b19927.jpg" height="200">
+
 And there are other ways to contribute to the community - we plan on starting a blog & a newsletter and share our knowledge. We encourage our sponsors to bring up their desired features and pitch blog post ideas.
 
 Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
