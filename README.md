@@ -52,8 +52,10 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 * Parses most MusicXML tags and integrates it into an accessible and modifiable data model (e.g. to change a note's color)
 * Offers many options ([OSMDOptions](https://opensheetmusicdisplay.github.io/classdoc/interfaces/iosmdoptions.html) / [EngravingRules](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/master/src/MusicalScore/Graphical/EngravingRules.ts)): Page Format, Font Family, Positioning, not rendering certain elements, etc.
 * Allows modification of the displayed score, like hiding parts or instruments, hiding title and composer, a more compact layout, or coloring notes
-* Outputs SVG or PNG, also via nodejs script in the command line, completely browserless
+* Outputs SVG or PNG, also via nodejs script in the command line, completely browserless (e.g. for server-side rendering)
 * Written in [Typescript](https://www.typescriptlang.org/) with complete type information, 100% compatible with Javascript (minified build is .js)
+
+<img title="OSMD in the Browser" src="https://user-images.githubusercontent.com/33069673/106321958-64fe1180-6275-11eb-8632-3b22beaa0829.jpg" height="200"> <img title="OSMD on Mobile (or server-side rendering)" src="https://user-images.githubusercontent.com/33069673/106321963-67606b80-6275-11eb-8fdd-2acf273586df.jpg" height="200">
 
 ## Limitations
 
@@ -92,7 +94,7 @@ Our awesome sponsors get awesome perks, like:
 
 and others. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
 
-<img title="OSMD Sponsor perks like this t-shirt" src="https://user-images.githubusercontent.com/33069673/106320056-9de8b700-6272-11eb-86ef-1d9ae701f624.jpg" height="200"> <img title="OSMD button sponsor perk" src="https://user-images.githubusercontent.com/33069673/106320576-5a427d00-6273-11eb-96b0-d2c7c4b19927.jpg" height="200">
+<img title="OSMD Sponsor perks like this t-shirt" src="https://user-images.githubusercontent.com/33069673/106322343-084f2680-6276-11eb-985b-3aaa483db206.jpg" height="200"> <img title="OSMD button sponsor perk" src="https://user-images.githubusercontent.com/33069673/106320576-5a427d00-6273-11eb-96b0-d2c7c4b19927.jpg" height="200">
 
 And there are other ways to contribute to the community - we plan on starting a blog & a newsletter and share our knowledge. We encourage our sponsors to bring up their desired features and pitch blog post ideas.
 
