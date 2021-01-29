@@ -21,7 +21,7 @@
 <!-- [![Travis Build Status](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay.svg?branch=master)](https://travis-ci.org/opensheetmusicdisplay/opensheetmusicdisplay) --> <!-- Migrate to travis-ci.com -->
 [About OSMD](#about-osmd) • [Demo](#demo) • [Key Features](#key-features) • [Limitations](#limitations) • [How to Use OSMD](#how-to-use-osmd) • [Sponsor OSMD](#sponsor-osmd) • [About Us](#about-us) • [Contact](#contact)
 
-:star: - Star us on Github - it really helps us a lot!<br>
+:star: - Star us on Github - It really helps us a lot!<br>
 :pray: - [Become our Sponsor](#sponsor-osmd) - Support our work and receive awesome perks!
 
 ## About OSMD
