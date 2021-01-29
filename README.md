@@ -100,7 +100,7 @@ Any support is highly appreciated.
 
 ## About Us
 
-OSMD is made by [Phonicscore](https://phonicscore.com/) - a music-tech company based in Vienna. We create solutions for musicians, sheet music publishers, app developers, music stores and researchers.
+OSMD is made by [Phonicscore](https://phonicscore.com/) - a music-tech company based in Vienna. We create solutions for musicians, sheet music publishers, app developers, music stores and researchers:
 
 * Open source software
 * Sheet Music Rendering Software
