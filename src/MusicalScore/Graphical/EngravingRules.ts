@@ -12,6 +12,12 @@ import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/Vo
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
 
+/** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
+ *  Not all of these options are meant to be modified by users of the library,
+ *  full support is only given for [[IOSMDOptions]].
+ *  Nevertheless, there are many useful options here,
+ *  like Render* to (not) render certain elements (e.g. osmd.rules.RenderRehearsalMarks = false)
+ */
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
     public static unit: number = 1.0;
