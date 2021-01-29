@@ -1,7 +1,15 @@
 
 <!--img alt="Brought to you by PhonicScore" src="https://phonicscore.com/neu/wp-content/uploads/2018/06/phonicscore_brown.svg"/-->
 
-# <h1> <img alt="OSMD logo" src="https://opensheetmusicdisplay.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg"/> OpenSheetMusicDisplay</h1>
+<!-- # <h1 class="ui centered header"> <img alt="OSMD logo" src="https://opensheetmusicdisplay.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg"/> OpenSheetMusicDisplay</h1>-->
+<table style="table-layout: fixed; width:100%; border: hidden;">
+  <tr>
+    <td><img id="osmdlogo" alt="OpenSheetMusicDisplay (OSMD)" src="https://opensheetmusicdisplay.org/wp-content/uploads/2016/05/OSMD_3_icon_only.svg"/></td>
+   <td style="text-align: center"><h1>OpenSheetMusicDisplay (OSMD)</h1></td>
+    <td></td>
+  </tr>
+</table>
+
 ### A MusicXML renderer for the Browser
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
