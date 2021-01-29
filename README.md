@@ -51,7 +51,7 @@ Not all MusicXML tags are (fully) supported:
 * Wavy-line
 * Etc, see [OSMD 1.0 Project](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/projects/3)
 
-Also, OSMD is not an interactive sheet music editor. Rendering takes some time, and you can't easily/quickly move notes, place new notes, etc.
+Also, **OSMD is a renderer, not an interactive sheet music editor.** Rendering takes some time, and you can't easily/quickly move notes, place new notes, etc.
 
 ## How to Use OSMD
 
