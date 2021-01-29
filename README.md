@@ -53,6 +53,7 @@ Developers can also build a [local development demo (see Wiki)](https://github.c
 * Offers many options (OSMDOptions / EngravingRules): Page Format, Font Family, Positioning, not rendering certain elements, etc.
 * Allows modification of the displayed score, like hiding parts or instruments, hiding title and composer, a more compact layout, or coloring notes
 * Outputs SVG or PNG, also via nodejs script in the command line, completely browserless
+* Written in [Typescript](https://www.typescriptlang.org/) with complete type information, 100% compatible with Javascript (minified build is .js)
 
 ## Limitations
 
