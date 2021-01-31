@@ -10,19 +10,20 @@ export class TabNote extends Note {
                 stringNumber: number, fretNumber: number, bendArray: { bendalter: number, direction: string }[],
                 vibratoStroke: boolean) {
         super(voiceEntry, parentStaffEntry, length, pitch, sourceMeasure);
-        this.stringNumber = stringNumber;
+        this.stringNumberTab = stringNumber;
         this.fretNumber = fretNumber;
         this.bendArray = bendArray;
         this.vibratoStroke = vibratoStroke;
     }
 
-    private stringNumber: number;
+    private stringNumberTab: number; // there can also be string numbers for e.g. violin in treble clef.
     private fretNumber: number;
     private bendArray: { bendalter: number, direction: string }[];
     private vibratoStroke: boolean;
 
-    public get StringNumber(): number {
-        return this.stringNumber;
+    /** Returns the string number the note should be played on. Note there can also be violin string numbers in treble clef. */
+    public get StringNumberTab(): number {
+        return this.stringNumberTab;
     }
 
     public get FretNumber(): number {

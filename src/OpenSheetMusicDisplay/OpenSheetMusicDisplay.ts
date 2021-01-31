@@ -29,7 +29,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.9.1-dev"; // getter: this.Version
+    private version: string = "0.9.2-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -864,14 +864,20 @@ export class OpenSheetMusicDisplay {
     public get DrawBottomLine(): boolean {
         return this.drawer.bottomLineVisible;
     }
-
     public set DrawBoundingBox(value: string) {
-        this.drawBoundingBox = value;
-        this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
-        this.render(); // may create new Drawer.
+        this.setDrawBoundingBox(value, true);
     }
     public get DrawBoundingBox(): string {
         return this.drawBoundingBox;
+    }
+    public setDrawBoundingBox(value: string, render: boolean = false): void {
+        this.drawBoundingBox = value;
+        if (this.drawer) {
+            this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
+        }
+        if (render) {
+            this.render(); // may create new Drawer.
+        }
     }
 
     public get AutoResizeEnabled(): boolean {

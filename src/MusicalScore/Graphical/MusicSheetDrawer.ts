@@ -25,6 +25,8 @@ import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
+import { VexFlowContinuousDynamicExpression, VexFlowGraphicalNote, VexFlowMeasure, VexFlowStaffEntry, VexFlowStaffLine, VexFlowVoiceEntry } from "./VexFlow";
+import { StaffLineActivitySymbol } from "./StaffLineActivitySymbol";
 // import { FontStyles } from "../../Common/Enums/FontStyles";
 
 /**
@@ -503,8 +505,32 @@ export abstract class MusicSheetDrawer {
      * @param type Type of element to show bounding boxes for as string.
      */
     private drawBoundingBoxes(startBox: BoundingBox, layer: number = 0, type: string = "all"): void {
-        const dataObjectString: string = (startBox.DataObject.constructor as any).name;
-        if (dataObjectString === type || type === "all") {
+        const dataObjectString: string = (startBox.DataObject.constructor as any).name; // only works with non-minified build or sourcemap
+        let typeMatch: boolean = false;
+        if (type === "all") {
+            typeMatch = true;
+        } else {
+            if (type === "VexFlowStaffEntry") {
+                typeMatch = startBox.DataObject instanceof VexFlowStaffEntry;
+            } else if (type === "VexFlowMeasure") {
+                typeMatch = startBox.DataObject instanceof VexFlowMeasure;
+            } else if (type === "VexFlowGraphicalNote") {
+                typeMatch = startBox.DataObject instanceof VexFlowGraphicalNote;
+            } else if (type === "VexFlowVoiceEntry") {
+                typeMatch = startBox.DataObject instanceof VexFlowVoiceEntry;
+            } else if (type === "GraphicalLabel") {
+                typeMatch = startBox.DataObject instanceof GraphicalLabel;
+            } else if (type === "VexFlowStaffLine") {
+                typeMatch = startBox.DataObject instanceof VexFlowStaffLine;
+            } else if (type === "SystemLine") {
+                typeMatch = startBox.DataObject instanceof SystemLine;
+            } else if (type === "StaffLineActivitySymbol") {
+                typeMatch = startBox.DataObject instanceof StaffLineActivitySymbol;
+            } else if (type === "VexFlowContinuousDynamicExpression") {
+                typeMatch = startBox.DataObject instanceof VexFlowContinuousDynamicExpression;
+            }
+        }
+        if (typeMatch || dataObjectString === type) {
             let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderMarginLeft,
                                                          startBox.AbsolutePosition.y + startBox.BorderMarginTop,
                                                          startBox.BorderMarginRight - startBox.BorderMarginLeft,

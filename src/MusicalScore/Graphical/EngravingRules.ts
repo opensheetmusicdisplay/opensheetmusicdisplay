@@ -12,6 +12,12 @@ import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/Vo
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
 
+/** Rendering and Engraving options, more fine-grained than [[IOSMDOptions]].
+ *  Not all of these options are meant to be modified by users of the library,
+ *  full support is only given for [[IOSMDOptions]].
+ *  Nevertheless, there are many useful options here,
+ *  like Render* to (not) render certain elements (e.g. osmd.rules.RenderRehearsalMarks = false)
+ */
 export class EngravingRules {
     /** A unit of distance. 1.0 is the distance between lines of a stave for OSMD, which is 10 pixels in Vexflow. */
     public static unit: number = 1.0;
@@ -110,6 +116,12 @@ export class EngravingRules {
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     public CustomChords: CustomChord[];
     public RepetitionSymbolsYOffset: number;
+    public RehearsalMarkXOffset: number;
+    public RehearsalMarkXOffsetDefault: number;
+    public RehearsalMarkXOffsetSystemStartMeasure: number;
+    public RehearsalMarkYOffset: number;
+    public RehearsalMarkYOffsetDefault: number;
+    public RehearsalMarkFontSize: number;
     public MeasureNumberLabelHeight: number;
     public MeasureNumberLabelOffset: number;
     public MeasureNumberLabelXOffset: number;
@@ -258,6 +270,7 @@ export class EngravingRules {
     public RenderLyrics: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
+    public RenderRehearsalMarks: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
     public DynamicExpressionMaxDistance: number;
@@ -268,6 +281,10 @@ export class EngravingRules {
     public FingeringInsideStafflines: boolean;
     public FingeringLabelFontHeight: number;
     public FingeringOffsetX: number;
+    /** Whether to render string numbers in classical scores, i.e. not the string numbers in tabs, but e.g. for violin. */
+    public RenderStringNumbersClassical: boolean;
+    /** This is not for tabs, but for classical scores, especially violin. */
+    public StringNumberOffsetY: number;
     public NewSystemAtXMLNewSystemAttribute: boolean;
     public NewPageAtXMLNewPageAttribute: boolean;
     public PageFormat: PageFormat;
@@ -413,6 +430,12 @@ export class EngravingRules {
         this.CustomChords = [];
         this.resetChordNames();
         this.RepetitionSymbolsYOffset = 0;
+        this.RehearsalMarkXOffsetDefault = 10; // avoid collision with metronome number
+        this.RehearsalMarkXOffset = 0; // user defined
+        this.RehearsalMarkXOffsetSystemStartMeasure = -20; // good test: Haydn Concertante
+        this.RehearsalMarkYOffsetDefault = -15;
+        this.RehearsalMarkYOffset = 0; // user defined
+        this.RehearsalMarkFontSize = 10; // vexflow default: 12, too big with chord symbols
 
         // Tuplets, MeasureNumber and TupletNumber Labels
         this.MeasureNumberLabelHeight = 1.5 * EngravingRules.unit;
@@ -555,6 +578,7 @@ export class EngravingRules {
         this.RenderLyrics = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
+        this.RenderRehearsalMarks = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
         this.ArticulationPlacementFromXML = true;
@@ -562,6 +586,8 @@ export class EngravingRules {
         this.FingeringInsideStafflines = false;
         this.FingeringLabelFontHeight = 1.7;
         this.FingeringOffsetX = 0.0;
+        this.RenderStringNumbersClassical = true;
+        this.StringNumberOffsetY = 0.0;
         this.NewSystemAtXMLNewSystemAttribute = false;
         this.NewPageAtXMLNewPageAttribute = false;
         this.RestoreCursorAfterRerender = true;

@@ -84,6 +84,7 @@ export class MusicSystemBuilder {
             const sourceMeasureEndsPart: boolean = sourceMeasure.HasEndLine;
             const sourceMeasureBreaksSystem: boolean = sourceMeasureEndsPart && this.rules.NewPartAndSystemAfterFinalBarline;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
+            sourceMeasure.IsSystemStartMeasure = isSystemStartMeasure;
             const isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
             let currentMeasureBeginInstructionsWidth: number = this.rules.MeasureLeftMargin;
             let currentMeasureEndInstructionsWidth: number = 0;
@@ -467,7 +468,7 @@ export class MusicSystemBuilder {
             const measure: GraphicalMeasure = measures[idx];
             const staffIndex: number = this.visibleStaffIndices[idx];
             const endInstructionsStaffEntry: SourceStaffEntry = sourceMeasure.LastInstructionsStaffEntries[staffIndex];
-            const endInstructionLengthX: number = this.addInstructionsAtMeasureEnd(endInstructionsStaffEntry, measure);
+            const endInstructionLengthX: number = this.addInstructionsAtMeasureEnd(endInstructionsStaffEntry, measure, measures);
             totalEndInstructionLengthX = Math.max(totalEndInstructionLengthX, endInstructionLengthX);
         }
         return totalEndInstructionLengthX;
@@ -542,7 +543,8 @@ export class MusicSystemBuilder {
         return instructionsLengthX;
     }
 
-    protected addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: GraphicalMeasure): number {
+    protected addInstructionsAtMeasureEnd(lastEntry: SourceStaffEntry, measure: GraphicalMeasure,
+        measures: GraphicalMeasure[]): number {
         if (!lastEntry || !lastEntry.Instructions || lastEntry.Instructions.length === 0) {
             return 0;
         }
@@ -551,6 +553,11 @@ export class MusicSystemBuilder {
             if (abstractNotationInstruction instanceof ClefInstruction) {
                 const activeClef: ClefInstruction = <ClefInstruction>abstractNotationInstruction;
                 measure.addClefAtEnd(activeClef);
+                for (const otherVerticalMeasure of measures) {
+                    if (otherVerticalMeasure !== measure) {
+                        otherVerticalMeasure.addClefAtEnd(activeClef, false);
+                    }
+                }
             }
         }
         return this.rules.MeasureRightMargin + measure.endInstructionsWidth;
