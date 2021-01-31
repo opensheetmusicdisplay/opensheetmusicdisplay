@@ -1200,6 +1200,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // add fingering
                 if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
                     this.createFingerings(voiceEntry);
+                    this.createStringNumber(voiceEntry);
                 }
 
                 // add Arpeggio
@@ -1210,6 +1211,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         for (const graceGVoiceEntry of graveGVoiceEntriesAdded) {
             this.createFingerings(graceGVoiceEntry);
+            this.createStringNumber(graceGVoiceEntry);
             this.createArpeggio(graceGVoiceEntry);
         }
         this.createArticulations();
@@ -1384,6 +1386,26 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
             vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (fretFinger as any));
+        }
+    }
+
+    protected createStringNumber(voiceEntry: GraphicalVoiceEntry): void {
+        if (!this.rules.RenderStringNumbersClassical) {
+            return;
+        }
+        const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
+        const note: GraphicalNote = voiceEntry.notes[0]; // only display for top note
+        const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
+        if (stringInstruction) {
+            const stringNumber: number = Number.parseInt(stringInstruction.value, 10);
+            const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
+            const offsetY: number = -this.rules.StringNumberOffsetY;
+            // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
+            //     // TODO also check for treble clef (adjust for viola, cello, etc)
+            //     offsetY += 10;
+            // }
+            vfStringNumber.setOffsetY(offsetY);
+            vexFlowVoiceEntry.vfStaveNote.addModifier((0 as any), (vfStringNumber as any)); // see addModifier() above
         }
     }
 

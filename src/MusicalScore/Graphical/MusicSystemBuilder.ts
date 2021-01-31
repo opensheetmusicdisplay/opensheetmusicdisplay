@@ -84,6 +84,7 @@ export class MusicSystemBuilder {
             const sourceMeasureEndsPart: boolean = sourceMeasure.HasEndLine;
             const sourceMeasureBreaksSystem: boolean = sourceMeasureEndsPart && this.rules.NewPartAndSystemAfterFinalBarline;
             const isSystemStartMeasure: boolean = this.currentSystemParams.IsSystemStartMeasure();
+            sourceMeasure.IsSystemStartMeasure = isSystemStartMeasure;
             const isFirstSourceMeasure: boolean = sourceMeasure === this.graphicalMusicSheet.ParentMusicSheet.getFirstSourceMeasure();
             let currentMeasureBeginInstructionsWidth: number = this.rules.MeasureLeftMargin;
             let currentMeasureEndInstructionsWidth: number = 0;

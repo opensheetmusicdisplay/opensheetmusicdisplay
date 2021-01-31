@@ -17,6 +17,7 @@ import {TextAlignmentEnum} from "../../../Common/Enums/TextAlignment";
 import {ITextTranslation} from "../../Interfaces/ITextTranslation";
 import log from "loglevel";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
+import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 
 export class ExpressionReader {
     private musicSheet: MusicSheet;
@@ -112,6 +113,13 @@ export class ExpressionReader {
                         const defAttr: IXmlAttribute = wordsNode.attribute("default-y");
                         if (defAttr) {
                             this.readExpressionPlacement(defAttr, "read words y pos");
+                        }
+                    }
+                    const rehearsalNode: IXmlElement = directionTypeNode.element("rehearsal");
+                    if (rehearsalNode) {
+                        const defAttr: IXmlAttribute = rehearsalNode.attribute("default-y");
+                        if (defAttr) {
+                            this.readExpressionPlacement(defAttr, "read rehearsal pos");
                         }
                     }
                 }
@@ -219,6 +227,12 @@ export class ExpressionReader {
         dirContentNode = dirNode.element("wedge");
         if (dirContentNode) {
             this.interpretWedge(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
+            return;
+        }
+
+        dirContentNode = dirNode.element("rehearsal");
+        if (dirContentNode) {
+            this.interpretRehearsalMark(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
             return;
         }
     }
@@ -384,6 +398,12 @@ export class ExpressionReader {
         this.createNewMultiExpressionIfNeeded(currentMeasure);
         this.addWedge(wedgeNode, currentMeasure);
         this.initialize();
+    }
+    private interpretRehearsalMark(
+        rehearsalNode: IXmlElement, currentMeasure: SourceMeasure,
+        inSourceMeasureCurrentFraction: Fraction, currentMeasureIndex: number): void {
+        // TODO create multi expression? for now we just need to have a static rehearsal mark though.
+        currentMeasure.rehearsalExpression = new RehearsalExpression(rehearsalNode.value, this.placement);
     }
     private createNewMultiExpressionIfNeeded(currentMeasure: SourceMeasure, timestamp: Fraction = undefined): void {
         if (!timestamp) {

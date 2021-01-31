@@ -15,11 +15,17 @@ add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option
 
 stave.js (custom addition):
 prevent a bug where a modifier width is NaN, leading to a VexFlow error
+stave.setSection(section, y, xOffset = 0, fontSize = 12):
+add xOffset, fontSize arguments (see stavesection.js)
 
 staverepetition.js (custom addition):
 add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
 fix y-shift
+
+stavesection.js (custom addition):
+stavesection.draw():
+adjust rectangle positioning, make height depend on text height
 
 stavevolta.js (merged Vexflow 3.x):
 Fix the length of voltas for first measures in a system

@@ -55,6 +55,7 @@ import { VexFlowConverter } from "./VexFlowConverter";
 import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions";
 import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer";
+import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
@@ -761,6 +762,25 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
     skyline[0] = Math.min(skyline[0], -4.5 + yShift);
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
+  }
+
+  protected calculateRehearsalMark(measure: SourceMeasure): void {
+    const rehearsalExpression: RehearsalExpression = measure.rehearsalExpression;
+    if (!rehearsalExpression) {
+      return;
+    }
+    const measureNumber: number = Math.max(measure.MeasureNumber - 1, 0);
+    const staffNumber: number = 0;
+    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
+    const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
+    let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
+    if (measure.IsSystemStartMeasure) {
+      xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
+    }
+    // const section: Vex.Flow.StaveSection = new Vex.Flow.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
+    // (vfStave as any).modifiers.push(section);
+    const fontSize: number = this.rules.RehearsalMarkFontSize;
+    (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
   }
 
   /**

@@ -8,4 +8,5 @@ export * from "./InstantaneousTempoExpression";
 export * from "./MoodExpression";
 export * from "./MultiExpression";
 export * from "./MultiTempoExpression";
+export * from "./RehearsalExpression";
 export * from "./UnknownExpression";
