@@ -1394,18 +1394,22 @@ export class VexFlowMeasure extends GraphicalMeasure {
             return;
         }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
-        const note: GraphicalNote = voiceEntry.notes[0]; // only display for top note
-        const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
-        if (stringInstruction) {
-            const stringNumber: number = Number.parseInt(stringInstruction.value, 10);
-            const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
-            const offsetY: number = -this.rules.StringNumberOffsetY;
-            // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
-            //     // TODO also check for treble clef (adjust for viola, cello, etc)
-            //     offsetY += 10;
-            // }
-            vfStringNumber.setOffsetY(offsetY);
-            vexFlowVoiceEntry.vfStaveNote.addModifier((0 as any), (vfStringNumber as any)); // see addModifier() above
+        let stringIndex: number = 0;
+        for (const note of voiceEntry.notes) {
+            const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
+            if (stringInstruction) {
+                const stringNumber: number = Number.parseInt(stringInstruction.value, 10);
+                const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
+                const offsetY: number = -this.rules.StringNumberOffsetY;
+                // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
+                //     // TODO also check for treble clef (adjust for viola, cello, etc)
+                //     offsetY += 10;
+                // }
+                vfStringNumber.setOffsetY(offsetY);
+                vfStringNumber.setPosition((stringIndex % 2) + 1); // alternate left and right so the circles don't overlap
+                vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
+            }
+            stringIndex++;
         }
     }
 
