@@ -16,6 +16,7 @@ import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
 import StemmableNote = Vex.Flow.StemmableNote;
 import NoteSubGroup = Vex.Flow.NoteSubGroup;
+import Position = Vex.Flow.Modifier.Position;
 import log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
@@ -1394,8 +1395,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             return;
         }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
-        let stringIndex: number = 0;
-        for (const note of voiceEntry.notes) {
+        const nNotes: number = voiceEntry.notes.length;
+        voiceEntry.notes.forEach((note, stringIndex) => {
             const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
             if (stringInstruction) {
                 const stringNumber: number = Number.parseInt(stringInstruction.value, 10);
@@ -1406,11 +1407,21 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //     offsetY += 10;
                 // }
                 vfStringNumber.setOffsetY(offsetY);
-                vfStringNumber.setPosition((stringIndex % 2) + 1); // alternate left and right so the circles don't overlap
+                let pos: Position;
+                if (nNotes === 1) {
+                    pos = Position.RIGHT;
+                } else if (stringIndex === nNotes - 1) {
+                    pos = Position.ABOVE;
+                } else if (stringIndex === 0) {
+                    pos = Position.BELOW;
+                } else {
+                    pos = stringIndex % 2 ? Position.RIGHT : Position.LEFT;
+                }
+
+                vfStringNumber.setPosition(pos);
                 vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
             }
-            stringIndex++;
-        }
+        });
     }
 
     /**
