@@ -497,7 +497,7 @@ export class MusicSystemBuilder {
                 currentClef = this.activeClefs[visibleStaffIdx];
             }
             if (!currentKey) {
-                currentKey = this.activeKeys[visibleStaffIdx];
+                currentKey = KeyInstruction.copy(this.activeKeys[visibleStaffIdx]);
             }
             if (isFirstSourceMeasure && !currentRhythm) {
                 currentRhythm = this.activeRhythm[visibleStaffIdx];
