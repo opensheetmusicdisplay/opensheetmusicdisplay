@@ -121,12 +121,12 @@ export class RepetitionInstructionReader {
 
   public handleRepetitionInstructionsFromWordsOrSymbols(directionTypeNode: IXmlElement, relativeMeasurePosition: number): boolean {
     const wordsNode: IXmlElement = directionTypeNode.element("words");
+    const measureIndex: number = this.currentMeasureIndex;
     if (wordsNode) {
       const dsRegEx: string = "d\\s?\\.s\\."; // Input for new RegExp(). TS eliminates the first \
       // must Trim string and ToLower before compare
       const innerText: string = wordsNode.value.trim().toLowerCase();
       if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx + " al fine", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // @correctness i don't think we should manipulate the measure index by relative position [ssch]
         //   it's clearly assigned a measure in the xml
         //   this has misfired in the past, see test_staverepetitions_coda_etc_positioning.musicxml
@@ -140,7 +140,6 @@ export class RepetitionInstructionReader {
       }
       const dcRegEx: string = "d\\.\\s?c\\.";
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition < 0.5) {
         //   measureIndex--;
         // }
@@ -149,7 +148,6 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al fine", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
         //   measureIndex--;
         // }
@@ -158,7 +156,6 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx + " al coda", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition < 0.5) {
         //   measureIndex--;
         // }
@@ -168,7 +165,6 @@ export class RepetitionInstructionReader {
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, dcRegEx) ||
         StringUtil.StringContainsSeparatedWord(innerText, "da\\s?capo", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
         //   measureIndex--;
         // }
@@ -178,7 +174,6 @@ export class RepetitionInstructionReader {
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, dsRegEx, true) ||
         StringUtil.StringContainsSeparatedWord(innerText, "dal\\s?segno", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition < 0.5 && this.currentMeasureIndex < this.xmlMeasureList[0].length - 1) { // not in last measure
         //   measureIndex--;
         // }
@@ -193,7 +188,6 @@ export class RepetitionInstructionReader {
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, "to\\s?coda", true) ||
         StringUtil.StringContainsSeparatedWord(innerText, "a (la )?coda", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition < 0.5) {
         //   measureIndex--;
         // }
@@ -202,7 +196,6 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, "fine", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition < 0.5) {
         //   measureIndex--;
         // }
@@ -211,7 +204,6 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, "coda", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition > 0.5) {
         //   measureIndex++;
         // }
@@ -220,7 +212,6 @@ export class RepetitionInstructionReader {
         return true;
       }
       if (StringUtil.StringContainsSeparatedWord(innerText, "segno", true)) {
-        const measureIndex: number = this.currentMeasureIndex;
         // if (relativeMeasurePosition > 0.5) {
         //   measureIndex++;
         // }
@@ -229,7 +220,6 @@ export class RepetitionInstructionReader {
         return true;
       }
     } else if (directionTypeNode.element("segno")) {
-      const measureIndex: number = this.currentMeasureIndex;
       // if (relativeMeasurePosition > 0.5) {
       //   measureIndex++;
       // }
@@ -237,7 +227,6 @@ export class RepetitionInstructionReader {
       this.addInstruction(this.repetitionInstructions, newInstruction);
       return true;
     } else if (directionTypeNode.element("coda")) {
-      const measureIndex: number = this.currentMeasureIndex;
       // if (relativeMeasurePosition > 0.5) {
       //   measureIndex++;
       // }
