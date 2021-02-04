@@ -37,6 +37,7 @@ module.exports = {
           }
         }
     ],
+    "ignorePatterns": ["webpack*.js"],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
         "@typescript-eslint/explicit-function-return-type": "error",
