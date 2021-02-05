@@ -50,7 +50,7 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 * Displays MusicXML sheet music in a browser(less) environment (Javascript, Typescript, server-side: browserless NodeJS script)
 * Uses [Vexflow](https://www.vexflow.com/) for rendering and (partly) layout
 * Parses most MusicXML tags and integrates it into an accessible and modifiable data model (e.g. to change a note's color)
-* Offers many options ([OSMDOptions](https://opensheetmusicdisplay.github.io/classdoc/interfaces/iosmdoptions.html) / [EngravingRules](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/master/src/MusicalScore/Graphical/EngravingRules.ts)): Page Format, Font Family, Positioning, not rendering certain elements, etc.
+* Offers many options ([OSMDOptions](https://opensheetmusicdisplay.github.io/classdoc/interfaces/iosmdoptions.html) / [EngravingRules](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/blob/master/src/MusicalScore/Graphical/EngravingRules.ts)): Page Format, Font Family, Positioning, not rendering certain elements like title, composer or instrument names, etc.
 * Allows modification of the displayed score, like hiding parts or instruments, hiding title and composer, a more compact layout, or coloring notes
 * Outputs SVG or PNG, also via nodejs script in the command line, completely browserless (e.g. for server-side rendering)
 * Written in [Typescript](https://www.typescriptlang.org/) with complete type information, 100% compatible with Javascript (minified build is .js)
