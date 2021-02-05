@@ -141,8 +141,12 @@ export class InstrumentReader {
             currentMeasure.MeasureNumberXML = measureNumberXml;
         }
       }
+      let previousNode: IXmlElement; // needs a null check when accessed because of node index 0!
       for (let xmlNodeIndex: number = 0; xmlNodeIndex < xmlMeasureListArr.length; xmlNodeIndex++) {
         const xmlNode: IXmlElement = xmlMeasureListArr[xmlNodeIndex];
+        if (xmlNodeIndex > 0) {
+          previousNode = xmlMeasureListArr[xmlNodeIndex - 1];
+        }
         if (xmlNode.name === "print") {
           const newSystemAttr: IXmlAttribute = xmlNode.attribute("new-system");
           if (newSystemAttr?.value === "yes") {
@@ -438,7 +442,7 @@ export class InstrumentReader {
               throw new MusicSheetReadingException(errorMsg + this.instrument.Name);
             }
           }
-          this.addAbstractInstruction(xmlNode, octavePlusOne);
+          this.addAbstractInstruction(xmlNode, octavePlusOne, previousNode);
           if (currentFraction.Equals(new Fraction(0, 1)) &&
             this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveAbstractInstructionList(this.instrument.Staves.length, true);
@@ -893,8 +897,16 @@ export class InstrumentReader {
           }
         }
 
-        const clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
-        this.abstractInstructions.push([staffNumber, clefInstruction]);
+        // TODO problem: in saveAbstractInstructionList, this is always saved in this.currentStaffEntry.
+        //   so when there's a <forward> or <backup> instruction in <attributes> (which is unfortunate encoding), this gets misplaced.
+        //   so for now we skip it.
+        const skipClefInstruction: boolean =
+          previousNode?.elements("forward").length > 0 ||
+          previousNode?.elements("backup").length > 0;
+        if (!skipClefInstruction) {
+          const clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
+          this.abstractInstructions.push([staffNumber, clefInstruction]);
+        }
       }
     }
     if (attrNode.element("key") !== undefined && this.instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
