@@ -2248,7 +2248,7 @@ export abstract class MusicSheetCalculator {
                     const clefInstruction: ClefInstruction = <ClefInstruction>sourceStaffEntry.Instructions[0];
                     MusicSheetCalculator.symbolFactory.createInStaffClef(graphicalStaffEntry, clefInstruction);
                 }
-                if (sourceStaffEntry.ChordContainers && sourceStaffEntry.ChordContainers.length > 0) {
+                if (this.rules.RenderChordSymbols && sourceStaffEntry.ChordContainers?.length > 0) {
                     sourceStaffEntry.ParentStaff.ParentInstrument.HasChordSymbols = true;
                     MusicSheetCalculator.symbolFactory.createChordSymbols(
                         sourceStaffEntry,
