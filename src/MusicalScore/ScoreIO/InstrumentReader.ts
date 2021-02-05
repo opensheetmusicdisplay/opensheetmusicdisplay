@@ -901,8 +901,8 @@ export class InstrumentReader {
         //   so when there's a <forward> or <backup> instruction in <attributes> (which is unfortunate encoding), this gets misplaced.
         //   so for now we skip it.
         const skipClefInstruction: boolean =
-          previousNode?.elements("forward").length > 0 ||
-          previousNode?.elements("backup").length > 0;
+          previousNode?.name === "forward" ||
+          previousNode?.name === "backup";
         if (!skipClefInstruction) {
           const clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
           this.abstractInstructions.push([staffNumber, clefInstruction]);
