@@ -793,23 +793,23 @@ export class InstrumentReader {
 
   /**
    * Add (the three basic) Notation Instructions to a list
-   * @param node
+   * @param attrNode
    * @param guitarPro
    */
-  private addAbstractInstruction(node: IXmlElement, guitarPro: boolean): void {
-    if (node.element("divisions")) {
-      if (node.elements().length === 1) {
+  private addAbstractInstruction(attrNode: IXmlElement, guitarPro: boolean, previousNode: IXmlElement): void {
+    if (attrNode.element("divisions")) {
+      if (attrNode.elements().length === 1) {
         return;
       }
     }
-    const transposeNode: IXmlElement = node.element("transpose");
+    const transposeNode: IXmlElement = attrNode.element("transpose");
     if (transposeNode) {
       const chromaticNode: IXmlElement = transposeNode.element("chromatic");
       if (chromaticNode) {
         this.instrument.PlaybackTranspose = parseInt(chromaticNode.value, 10);
       }
     }
-    const clefList: IXmlElement[] = node.elements("clef");
+    const clefList: IXmlElement[] = attrNode.elements("clef");
     let errorMsg: string;
     if (clefList.length > 0) {
       for (let idx: number = 0, len: number = clefList.length; idx < len; ++idx) {
@@ -897,9 +897,9 @@ export class InstrumentReader {
         this.abstractInstructions.push([staffNumber, clefInstruction]);
       }
     }
-    if (node.element("key") !== undefined && this.instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
+    if (attrNode.element("key") !== undefined && this.instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
       let key: number = 0;
-      const keyNode: IXmlElement = node.element("key").element("fifths");
+      const keyNode: IXmlElement = attrNode.element("key").element("fifths");
       if (keyNode) {
         try {
           key = parseInt(keyNode.value, 10);
@@ -915,7 +915,7 @@ export class InstrumentReader {
 
       }
       let keyEnum: KeyEnum = KeyEnum.none;
-      let modeNode: IXmlElement = node.element("key");
+      let modeNode: IXmlElement = attrNode.element("key");
       if (modeNode) {
         modeNode = modeNode.element("mode");
       }
@@ -935,8 +935,8 @@ export class InstrumentReader {
       const keyInstruction: KeyInstruction = new KeyInstruction(undefined, key, keyEnum);
       this.abstractInstructions.push([1, keyInstruction]);
     }
-    if (node.element("time")) {
-      const timeNode: IXmlElement = node.element("time");
+    if (attrNode.element("time")) {
+      const timeNode: IXmlElement = attrNode.element("time");
       let symbolEnum: RhythmSymbolEnum = RhythmSymbolEnum.NONE;
       let timePrintObject: boolean = true;
       if (timeNode !== undefined && timeNode.hasAttributes) {
@@ -960,7 +960,7 @@ export class InstrumentReader {
       let num: number = 0;
       let denom: number = 0;
       const senzaMisura: boolean = (timeNode && timeNode.element("senza-misura") !== undefined);
-      const timeList: IXmlElement[] = node.elements("time");
+      const timeList: IXmlElement[] = attrNode.elements("time");
       const beatsList: IXmlElement[] = [];
       const typeList: IXmlElement[] = [];
       for (let idx: number = 0, len: number = timeList.length; idx < len; ++idx) {
@@ -999,8 +999,8 @@ export class InstrumentReader {
             }
             denom = maxDenom;
           } else {
-            num = parseInt(node.element("time").element("beats").value, 10);
-            denom = parseInt(node.element("time").element("beat-type").value, 10);
+            num = parseInt(attrNode.element("time").element("beats").value, 10);
+            denom = parseInt(attrNode.element("time").element("beat-type").value, 10);
           }
         } catch (ex) {
           errorMsg = ITextTranslation.translateText("ReaderErrorMessages/RhythmError", "Invalid rhythm found -> set to default.");
