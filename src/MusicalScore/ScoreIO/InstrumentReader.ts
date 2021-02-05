@@ -900,9 +900,9 @@ export class InstrumentReader {
         // TODO problem: in saveAbstractInstructionList, this is always saved in this.currentStaffEntry.
         //   so when there's a <forward> or <backup> instruction in <attributes> (which is unfortunate encoding), this gets misplaced.
         //   so for now we skip it.
-        const skipClefInstruction: boolean =
-          previousNode?.name === "forward" ||
-          previousNode?.name === "backup";
+        const skipClefInstruction: boolean = previousNode?.name === "forward";
+          // || previousNode?.name === "backup") && // necessary for clef at beginning of measure/system,
+          //   see sample test_staverepetitions_coda_etc.musicxml, where the bass clef was placed over a previous treble clef
         if (!skipClefInstruction) {
           const clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
           this.abstractInstructions.push([staffNumber, clefInstruction]);
