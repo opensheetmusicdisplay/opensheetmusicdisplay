@@ -16,7 +16,6 @@ import StaveConnector = Vex.Flow.StaveConnector;
 import StaveNote = Vex.Flow.StaveNote;
 import StemmableNote = Vex.Flow.StemmableNote;
 import NoteSubGroup = Vex.Flow.NoteSubGroup;
-import Position = Vex.Flow.Modifier.Position;
 import log from "loglevel";
 import {unitInPixels} from "./VexFlowMusicSheetDrawer";
 import {Tuplet} from "../../VoiceData/Tuplet";
@@ -1319,6 +1318,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
         let fingeringIndex: number = -1;
+        const xOffsets: number[] =
+            this.calculateModifierXOffsets(voiceEntry.notes.map(n => n.staffLine), 10, 0.5);
         for (const note of voiceEntry.notes) {
             const fingering: TechnicalInstruction = note.sourceNote.Fingering;
             if (!fingering) {
@@ -1330,14 +1331,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (fingering.placement !== PlacementEnum.NotYetDefined) {
                 fingeringPosition = fingering.placement;
             }
-            let modifierPosition: any; // Vex.Flow.Stavemodifier.Position
+            let offsetX: number = this.rules.FingeringOffsetX;
+            let modifierPosition: number; // Vex.Flow.Stavemodifier.Position
             switch (fingeringPosition) {
                 default:
                 case PlacementEnum.Left:
                     modifierPosition = Vex.Flow.StaveModifier.Position.LEFT;
+                    offsetX -= xOffsets[fingeringIndex];
                     break;
                 case PlacementEnum.Right:
                     modifierPosition = Vex.Flow.StaveModifier.Position.RIGHT;
+                    offsetX += xOffsets[fingeringIndex];
                     break;
                 case PlacementEnum.Above:
                     modifierPosition = Vex.Flow.StaveModifier.Position.ABOVE;
@@ -1360,7 +1364,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(fingering.value);
             fretFinger.setPosition(modifierPosition);
-            fretFinger.setOffsetX(this.rules.FingeringOffsetX);
+            fretFinger.setOffsetX(offsetX);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
                 const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
                 const ordering: number = fingeringPosition === PlacementEnum.Above ? fingeringIndex :
@@ -1390,16 +1394,41 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
+    /**
+     * Calculate x offsets for overlapping string and fingering modifiers in a chord.
+     */
+    private calculateModifierXOffsets(staffLines: number[], baseWidth = 15, collisionDistance = 1): number[] {
+        const offsets: number[] = [];
+        for (let i: number = 0; i < staffLines.length; i++) {
+            let offset: number = 0;
+            outerLoop:
+            while (true) {
+                for (let j: number = i; j >= 0; j--) {
+                    if (staffLines[i] - staffLines[j] <= collisionDistance && offset === offsets[j]) {
+                        offset += baseWidth;
+                        continue outerLoop;
+                    }
+                }
+                break;
+            }
+            offsets.push(offset);
+        }
+        return offsets;
+    }
+
     protected createStringNumber(voiceEntry: GraphicalVoiceEntry): void {
         if (!this.rules.RenderStringNumbersClassical) {
             return;
         }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
+        const xOffsets: number[] =
+            this.calculateModifierXOffsets(voiceEntry.notes.map(n => n.staffLine));
         voiceEntry.notes.forEach((note, stringIndex) => {
             const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
             if (stringInstruction) {
                 let stringNumber: string = stringInstruction.value;
                 switch (stringNumber) {
+                    default:
                     case "1":
                         stringNumber = "I";
                         break;
@@ -1412,7 +1441,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     case "4":
                         stringNumber = "IV";
                         break;
-                    default:
                 }
                 const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
                 // Remove circle from string number. Not needed for
@@ -1424,7 +1452,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //     // TODO also check for treble clef (adjust for viola, cello, etc)
                 //     offsetY += 10;
                 // }
-                vfStringNumber.setPosition(Position.RIGHT);
+                vfStringNumber.setOffsetX(xOffsets[stringIndex]);
+                vfStringNumber.setPosition(Vex.Flow.Modifier.Position.RIGHT);
                 vfStringNumber.setOffsetY(offsetY);
 
                 vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
