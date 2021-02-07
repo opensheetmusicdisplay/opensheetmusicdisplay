@@ -1395,30 +1395,38 @@ export class VexFlowMeasure extends GraphicalMeasure {
             return;
         }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
-        const nNotes: number = voiceEntry.notes.length;
         voiceEntry.notes.forEach((note, stringIndex) => {
             const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
             if (stringInstruction) {
-                const stringNumber: number = Number.parseInt(stringInstruction.value, 10);
+                let stringNumber: string = stringInstruction.value;
+                switch (stringNumber) {
+                    case "1":
+                        stringNumber = "I";
+                        break;
+                    case "2":
+                        stringNumber = "II";
+                        break;
+                    case "3":
+                        stringNumber = "III";
+                        break;
+                    case "4":
+                        stringNumber = "IV";
+                        break;
+                    default:
+                }
                 const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
+                // Remove circle from string number. Not needed for
+                // disambiguation from fingerings since we use Roman
+                // Numerals for RenderStringNumbersClassical
+                (<any>vfStringNumber).radius = 0;
                 const offsetY: number = -this.rules.StringNumberOffsetY;
                 // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
                 //     // TODO also check for treble clef (adjust for viola, cello, etc)
                 //     offsetY += 10;
                 // }
+                vfStringNumber.setPosition(Position.RIGHT);
                 vfStringNumber.setOffsetY(offsetY);
-                let pos: Position;
-                if (nNotes === 1) {
-                    pos = Position.RIGHT;
-                } else if (stringIndex === nNotes - 1) {
-                    pos = Position.ABOVE;
-                } else if (stringIndex === 0) {
-                    pos = Position.BELOW;
-                } else {
-                    pos = stringIndex % 2 ? Position.RIGHT : Position.LEFT;
-                }
 
-                vfStringNumber.setPosition(pos);
                 vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
             }
         });
