@@ -38,5 +38,7 @@ tremolo.js (custom addition):
 Add extra_stroke_scale, y_spacing_scale
 
 Currently, we are using Vexflow 1.2.93, because of some formatter advantages
-compared to Vexflow 3.x versions.
-Because of that, we need to patch in a few fixes that came after 1.2.93.
+compared to Vexflow 3.x versions, see this issue:
+https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/915
+
+Because of that, we need to patch in a few fixes that came after 1.2.93, as well as making custom additions for our needs.
