@@ -1,4 +1,5 @@
 import Vex from "vexflow";
+import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
@@ -80,4 +81,39 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         }
         return this.MaxAccidentals = 0;
     }
+
+    // should be called after VexFlowConverter.StaveNote
+    public setModifierXOffsets(): void {
+        const notes: GraphicalNote[] = this.graphicalVoiceEntries.flatMap(gve => gve.notes);
+        const staffLines: number[] = notes.map(n => n.staffLine);
+        const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
+        const fingeringOffsets: number[] = this.calculateModifierXOffsets(staffLines, 0.5);
+        notes.forEach((note, i) => {
+            note.baseFingeringXOffset = fingeringOffsets[i];
+            note.baseStringNumberXOffset = stringNumberOffsets[i];
+        });
+    }
+
+    /**
+     * Calculate x offsets for overlapping string and fingering modifiers in a chord.
+     */
+    private calculateModifierXOffsets(staffLines: number[], collisionDistance: number): number[] {
+        const offsets: number[] = [];
+        for (let i: number = 0; i < staffLines.length; i++) {
+            let offset: number = 0;
+            outerLoop:
+            while (true) {
+                for (let j: number = i; j >= 0; j--) {
+                    if (staffLines[i] - staffLines[j] <= collisionDistance && offset === offsets[j]) {
+                        offset++;
+                        continue outerLoop;
+                    }
+                }
+                break;
+            }
+            offsets.push(offset);
+        }
+        return offsets;
+    }
+
 }

@@ -1152,6 +1152,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
+        // Calculate offsets for fingerings
+        if (this.rules.RenderFingerings) {
+            for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+                graphicalStaffEntry.setModifierXOffsets();
+            }
+        }
+
         for (const voice of voices) {
             if (!voice) {
                 continue;
@@ -1318,8 +1325,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
         let fingeringIndex: number = -1;
-        const xOffsets: number[] =
-            this.calculateModifierXOffsets(voiceEntry.notes.map(n => n.staffLine), 10, 0.5);
         for (const note of voiceEntry.notes) {
             const fingering: TechnicalInstruction = note.sourceNote.Fingering;
             if (!fingering) {
@@ -1337,11 +1342,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 default:
                 case PlacementEnum.Left:
                     modifierPosition = Vex.Flow.StaveModifier.Position.LEFT;
-                    offsetX -= xOffsets[fingeringIndex];
+                    offsetX -= note.baseFingeringXOffset * 10;
                     break;
                 case PlacementEnum.Right:
                     modifierPosition = Vex.Flow.StaveModifier.Position.RIGHT;
-                    offsetX += xOffsets[fingeringIndex];
+                    offsetX += note.baseFingeringXOffset * 10;
                     break;
                 case PlacementEnum.Above:
                     modifierPosition = Vex.Flow.StaveModifier.Position.ABOVE;
@@ -1394,35 +1399,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
     }
 
-    /**
-     * Calculate x offsets for overlapping string and fingering modifiers in a chord.
-     */
-    private calculateModifierXOffsets(staffLines: number[], baseWidth = 15, collisionDistance = 1): number[] {
-        const offsets: number[] = [];
-        for (let i: number = 0; i < staffLines.length; i++) {
-            let offset: number = 0;
-            outerLoop:
-            while (true) {
-                for (let j: number = i; j >= 0; j--) {
-                    if (staffLines[i] - staffLines[j] <= collisionDistance && offset === offsets[j]) {
-                        offset += baseWidth;
-                        continue outerLoop;
-                    }
-                }
-                break;
-            }
-            offsets.push(offset);
-        }
-        return offsets;
-    }
-
     protected createStringNumber(voiceEntry: GraphicalVoiceEntry): void {
         if (!this.rules.RenderStringNumbersClassical) {
             return;
         }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
-        const xOffsets: number[] =
-            this.calculateModifierXOffsets(voiceEntry.notes.map(n => n.staffLine));
         voiceEntry.notes.forEach((note, stringIndex) => {
             const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
             if (stringInstruction) {
@@ -1452,7 +1433,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //     // TODO also check for treble clef (adjust for viola, cello, etc)
                 //     offsetY += 10;
                 // }
-                vfStringNumber.setOffsetX(xOffsets[stringIndex]);
+                vfStringNumber.setOffsetX(note.baseStringNumberXOffset * 15);
                 vfStringNumber.setPosition(Vex.Flow.Modifier.Position.RIGHT);
                 vfStringNumber.setOffsetY(offsetY);
 

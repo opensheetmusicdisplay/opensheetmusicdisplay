@@ -8,7 +8,8 @@
     "outDir": "dist",
     "declaration": true,
     "sourceMap": true,
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"],
+    "lib": ["es2019", "DOM", "ES6", "ScriptHost"]
   },
   "exclude": [
     "node_modules",
