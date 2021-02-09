@@ -6,3 +6,4 @@ export * from "./IQualityFeedbackTone";
 export * from "./ITextMeasurer";
 export * from "./ITextTranslation";
 export * from "./ITransposeCalculator";
+export * from "./IVoiceMeasureReadPlugin";

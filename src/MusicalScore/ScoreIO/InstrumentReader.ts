@@ -26,6 +26,7 @@ import {SlurReader} from "./MusicSymbolModules/SlurReader";
 import {StemDirectionType} from "../VoiceData/VoiceEntry";
 import {NoteType, NoteTypeHandler} from "../VoiceData/NoteType";
 import { SystemLinesEnumHelper } from "../Graphical/SystemLinesEnum";
+import { ReaderPluginManager } from "./ReaderPluginManager";
 // import {Dictionary} from "typescript-collections";
 
 // FIXME: The following classes are missing
@@ -54,7 +55,8 @@ import { SystemLinesEnumHelper } from "../Graphical/SystemLinesEnum";
  */
 export class InstrumentReader {
 
-  constructor(repetitionInstructionReader: RepetitionInstructionReader, xmlMeasureList: IXmlElement[], instrument: Instrument) {
+  constructor(pluginManager: ReaderPluginManager, repetitionInstructionReader: RepetitionInstructionReader,
+    xmlMeasureList: IXmlElement[], instrument: Instrument) {
       this.repetitionInstructionReader = repetitionInstructionReader;
       this.xmlMeasureList = xmlMeasureList;
       this.musicSheet = instrument.GetMusicSheet;
@@ -66,12 +68,14 @@ export class InstrumentReader {
       }
       this.createExpressionGenerators(instrument.Staves.length);
       this.slurReader = new SlurReader(this.musicSheet);
+      this.pluginManager = pluginManager;
   }
 
   private repetitionInstructionReader: RepetitionInstructionReader;
   private xmlMeasureList: IXmlElement[];
   private musicSheet: MusicSheet;
   private slurReader: SlurReader;
+  public pluginManager: ReaderPluginManager;
   private instrument: Instrument;
   private voiceGeneratorsDict: { [n: number]: VoiceGenerator } = {};
   private staffMainVoiceGeneratorDict: { [staffId: number]: VoiceGenerator } = {};
@@ -659,11 +663,11 @@ export class InstrumentReader {
     } else {
       const mainVoiceGenerator: VoiceGenerator = this.staffMainVoiceGeneratorDict[staffId];
       if (mainVoiceGenerator) {
-        voiceGenerator = new VoiceGenerator(this.instrument, voiceId, this.slurReader, mainVoiceGenerator.GetVoice);
+        voiceGenerator = new VoiceGenerator(this.pluginManager, staff, voiceId, this.slurReader, mainVoiceGenerator.GetVoice);
         staff.Voices.push(voiceGenerator.GetVoice);
         this.voiceGeneratorsDict[voiceId] = voiceGenerator;
       } else {
-        voiceGenerator = new VoiceGenerator(this.instrument, voiceId, this.slurReader);
+        voiceGenerator = new VoiceGenerator(this.pluginManager, staff, voiceId, this.slurReader);
         staff.Voices.push(voiceGenerator.GetVoice);
         this.voiceGeneratorsDict[voiceId] = voiceGenerator;
         this.staffMainVoiceGeneratorDict[staffId] = voiceGenerator;

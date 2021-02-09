@@ -22,6 +22,7 @@ import {IAfterSheetReadingModule} from "../Interfaces/IAfterSheetReadingModule";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
 import {EngravingRules} from "../Graphical/EngravingRules";
+import { ReaderPluginManager } from "./ReaderPluginManager";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
@@ -44,7 +45,12 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
     private currentMeasure: SourceMeasure;
     private previousMeasure: SourceMeasure;
     private currentFraction: Fraction;
+    private pluginManager: ReaderPluginManager = new ReaderPluginManager();
     public rules: EngravingRules;
+
+    public get PluginManager(): ReaderPluginManager {
+        return this.pluginManager;
+    }
 
     public get CompleteNumberOfStaves(): number {
         return this.completeNumberOfStaves;
@@ -223,7 +229,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 }
 
                 currentInstrument.createStaves(instrumentNumberOfStaves);
-                instrumentReaders.push(new InstrumentReader(this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
+                instrumentReaders.push(new InstrumentReader(this.pluginManager, this.repetitionInstructionReader, xmlMeasureList, currentInstrument));
                 if (this.repetitionInstructionReader) {
                     this.repetitionInstructionReader.xmlMeasureList[counter] = xmlMeasureList;
                 }
