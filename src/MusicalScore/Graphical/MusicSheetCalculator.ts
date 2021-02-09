@@ -2248,7 +2248,7 @@ export abstract class MusicSheetCalculator {
                     const clefInstruction: ClefInstruction = <ClefInstruction>sourceStaffEntry.Instructions[0];
                     MusicSheetCalculator.symbolFactory.createInStaffClef(graphicalStaffEntry, clefInstruction);
                 }
-                if (sourceStaffEntry.ChordContainers && sourceStaffEntry.ChordContainers.length > 0) {
+                if (this.rules.RenderChordSymbols && sourceStaffEntry.ChordContainers?.length > 0) {
                     sourceStaffEntry.ParentStaff.ParentInstrument.HasChordSymbols = true;
                     MusicSheetCalculator.symbolFactory.createChordSymbols(
                         sourceStaffEntry,
@@ -3017,15 +3017,20 @@ export abstract class MusicSheetCalculator {
 
     /** Sets a voiceEntry's stem direction to one already set in other notes in its beam, if it has one. */
     private setBeamNotesWantedStemDirections(voiceEntry: VoiceEntry): void {
-        if (voiceEntry.WantedStemDirection === StemDirectionType.Undefined &&
-            voiceEntry.Notes.length > 0) {
-            const beam: Beam = voiceEntry.Notes[0].NoteBeam;
-            if (beam) {
-                // if there is a beam, find any already set stemDirection in the beam:
-                for (const note of beam.Notes) {
-                    if (note.ParentVoiceEntry === voiceEntry) {
-                        continue;
-                    } else if (note.ParentVoiceEntry.WantedStemDirection !== StemDirectionType.Undefined) {
+        if (!(voiceEntry.Notes.length > 0)) {
+            return;
+        }
+        // don't just set direction if undefined. if there's a note in the beam with a different stem direction, Vexflow draws it with an unending stem.
+        // if (voiceEntry.WantedStemDirection === StemDirectionType.Undefined) {
+        const beam: Beam = voiceEntry.Notes[0].NoteBeam;
+        if (beam) {
+            // if there is a beam, find any already set stemDirection in the beam:
+            for (const note of beam.Notes) {
+                // if (note.ParentVoiceEntry === voiceEntry) {
+                //     continue; // this could cause a misreading, also potentially in cross-staf beams, in any case it's unnecessary.
+                //} else if
+                if (note.ParentVoiceEntry.WantedStemDirection !== StemDirectionType.Undefined) {
+                    if (note.ParentVoiceEntry.ParentSourceStaffEntry.ParentStaff.Id === voiceEntry.ParentSourceStaffEntry.ParentStaff.Id) {
                         // set the stem direction
                         voiceEntry.WantedStemDirection = note.ParentVoiceEntry.WantedStemDirection;
                         break;

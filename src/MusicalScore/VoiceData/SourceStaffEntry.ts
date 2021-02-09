@@ -266,4 +266,15 @@ export class SourceStaffEntry {
             }
         }
     }
+
+    public get hasOnlyRests(): boolean {
+        for (const voiceEntry of this.voiceEntries) {
+            for (const note of voiceEntry.Notes) {
+                if (!note.isRest) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }
