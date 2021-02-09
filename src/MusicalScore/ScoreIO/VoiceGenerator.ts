@@ -471,6 +471,9 @@ export class VoiceGenerator {
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
+    if (stemDirectionXml === StemDirectionType.None) {
+      stemColorXml = "#00000000";  // just setting this to transparent for now
+    }
     this.currentVoiceEntry.Notes.push(note);
     this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
     if (stemColorXml) {
