@@ -45,6 +45,7 @@ export class VoiceGenerator {
     } else {
       this.voice = new Voice(this.instrument, voiceId);
     }
+    this.instrument.Voices.push(this.voice); // apparently necessary for cursor.next(), for "cursor with hidden instrument" test
     this.staff.Voices.push(this.voice);
     this.lyricsReader = new LyricsReader(this.musicSheet);
     this.articulationReader = new ArticulationReader();
