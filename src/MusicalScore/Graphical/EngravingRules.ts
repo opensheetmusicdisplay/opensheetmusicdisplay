@@ -268,6 +268,7 @@ export class EngravingRules {
     public RenderMeasureNumbersOnlyAtSystemStart: boolean;
     public UseXMLMeasureNumbers: boolean;
     public RenderLyrics: boolean;
+    public RenderChordSymbols: boolean;
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
     public RenderRehearsalMarks: boolean;
@@ -576,6 +577,7 @@ export class EngravingRules {
         this.RenderMeasureNumbersOnlyAtSystemStart = false;
         this.UseXMLMeasureNumbers = true;
         this.RenderLyrics = true;
+        this.RenderChordSymbols = true;
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
         this.RenderRehearsalMarks = true;
