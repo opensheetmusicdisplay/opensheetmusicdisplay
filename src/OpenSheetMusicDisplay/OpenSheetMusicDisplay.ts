@@ -22,6 +22,9 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+import { GraphicalVoiceEntry } from "../MusicalScore/Graphical/GraphicalVoiceEntry";
+import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
+import { PointF2D } from "../Common/DataObjects/PointF2D";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -314,7 +317,27 @@ export class OpenSheetMusicDisplay {
             backend.resize(width, height);
             backend.clear(); // set bgcolor if defined (this.rules.PageBackgroundColor, see OSMDOptions)
             this.drawer.Backends.push(backend);
+            this.graphic.drawer = this.drawer;
         }
+    }
+
+    public getNearestNoteTest(x: number = 22.83, y: number = 33.29): void {
+        //x: number = 30, y: number = 21
+        // for (let x: number = 0; x < 100; x++) {
+        //     for (let y: number = 0; y < 100; y++) {
+        //         const gnote: GraphicalNote = this.graphic.GetNearestNote(new PointF2D(x, y), new PointF2D(50, 50));
+        //         // const gnote: GraphicalVoiceEntry = this.graphic.GetNearestVoiceEntry(new PointF2D(x, y));
+        //         if (gnote) {
+        //             console.log("x,y: (" + x + "," + y + ")");
+        //             console.dir(gnote);
+        //         }
+        //     }
+        // }
+        // try osmd.graphic.GetNearestNote({x: 22.83, y:  33.29}, {x: 10, y:10}).sourceNote.Pitch.ToString()
+        const gve: GraphicalVoiceEntry = this.graphic.GetNearestVoiceEntry(new PointF2D(x, y));
+        console.dir(gve);
+        const gnote: GraphicalNote = this.graphic.GetNearestNote(new PointF2D(x, y), new PointF2D(50, 50));
+        console.dir(gnote);
     }
 
     // for now SVG only, see generateImages_browserless (PNG/SVG)

@@ -33,6 +33,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     public vfpitch: [string, string, ClefInstruction];
     // The corresponding VexFlow StaveNote (plus its index in the chord)
     public vfnote: [Vex.Flow.StemmableNote, number];
+    public vfnoteIndex: number;
     // The current clef
     private clef: ClefInstruction;
 
@@ -77,6 +78,11 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      */
     public setIndex(note: Vex.Flow.StemmableNote, index: number): void {
         this.vfnote = [note, index];
+        this.vfnoteIndex = index;
+    }
+
+    public notehead(): {line: number} {
+        return (this.vfnote[0] as any).note_heads[this.vfnoteIndex];
     }
 
     /**
