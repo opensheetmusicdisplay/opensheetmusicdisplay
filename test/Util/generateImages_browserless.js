@@ -257,6 +257,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     // console.log('typeof loadParameter: ' + typeof loadParameter)
 
     // set sample-specific options for OSMD visual regression testing
+    let includeSkyBottomLine = false;
+    let drawBoundingBoxString;
     if (osmdTestingMode) {
         const isFunctionTestAutobeam = sampleFilename.startsWith("OSMD_function_test_autobeam");
         const isFunctionTestAutoColoring = sampleFilename.startsWith("OSMD_function_test_auto-custom-coloring");
@@ -265,12 +267,12 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const defaultOrCompactTightMode = sampleFilename.startsWith("OSMD_Function_Test_Container_height") ? "compacttight" : "default";
         const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
-        let drawBoundingBoxString;
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
-        }
-        if (options.boundingBoxesGraphicalNote) {
+        } else if (options.boundingBoxesGraphicalNote) {
             drawBoundingBoxString = "VexFlowGraphicalNote";
+        } else {
+            drawBoundingBoxString = undefined;
         }
         osmdInstance.setOptions({
             autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
@@ -286,11 +288,13 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
             pageFormat: pageFormat // reset by drawingparameters default
         });
-        const includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
+        includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine;
         if (drawBoundingBoxString) {
             osmdInstance.setDrawBoundingBox(drawBoundingBoxString, false); // false: don't render (now)
+        } else {
+            osmdInstance.setDrawBoundingBox(undefined, false); // needs reset after it was set above
         }
         if (isTestFlatBeams) {
             osmdInstance.EngravingRules.FlatBeams = true;
@@ -341,8 +345,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     for (let pageIndex = 0; pageIndex < Math.max(dataUrls.length, markupStrings.length); pageIndex++) {
         const pageNumberingString = `${pageIndex + 1}`;
         const skybottomlineString = includeSkyBottomLine ? "skybottomline_" : "";
+        const graphicalNoteBboxesString = drawBoundingBoxString ? drawBoundingBoxString + "_" : "";
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-        const pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.${imageFormat}`;
+        const pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];

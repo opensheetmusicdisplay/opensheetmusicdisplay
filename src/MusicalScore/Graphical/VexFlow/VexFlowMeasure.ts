@@ -625,6 +625,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const connector of this.connectors) {
             connector.setContext(ctx).draw();
         }
+        this.correctNotePositions();
     }
 
     // this currently formats multiple measures, see VexFlowMusicSheetCalculator.formatMeasures()
@@ -637,7 +638,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
             this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
         }
 
-        // correct position / bounding box (note.setIndex() needs to have been called)
+        // this.correctNotePositions(); // now done at the end of draw()
+    }
+
+    // correct position / bounding box (note.setIndex() needs to have been called)
+    public correctNotePositions(): void {
+        if (this.isTabMeasure) {
+            return;
+        }
         for (const voice of this.getVoicesWithinMeasure()) {
             for (const ve of voice.VoiceEntries) {
                 for (const note of ve.Notes) {
@@ -648,7 +656,14 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let relPosY: number = 0;
                     if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
                         relPosY += 3.5; // about 3.5 lines too high. this seems to be related to the default stem height, not actual stem height.
-                        // relPosY += vfnote.getStem().getHeight() / unitInPixels;
+                        // alternate calculation using actual stem height: somehow wildly varying.
+                        // if (ve.Notes.length > 1) {
+                        //     const stemHeight: number = vfnote.getStem().getHeight();
+                        //     // relPosY += shortFactor * stemHeight / unitInPixels - 3.5;
+                        //     relPosY += stemHeight / unitInPixels - 3.5; // for some reason this varies in its correctness between similar notes
+                        // } else {
+                        //     relPosY += 3.5;
+                        // }
                     } else {
                         relPosY += 0.5; // center-align bbox
                     }

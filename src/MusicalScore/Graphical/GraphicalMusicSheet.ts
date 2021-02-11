@@ -574,10 +574,13 @@ export class GraphicalMusicSheet {
 
     public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
         const nearestVoiceEntry: GraphicalVoiceEntry = this.GetNearestVoiceEntry(clickPosition);
+        if (!nearestVoiceEntry) {
+            return undefined;
+        }
         let closestNote: GraphicalNote;
         let closestDist: number = Number.MAX_SAFE_INTEGER;
         // debug: show position in sheet. line starts from the click position, until clickposition.x + 2
-        // (this.drawer as VexFlowMusicSheetDrawer).DrawOverlayLine(
+        // (this.drawer as any).DrawOverlayLine( // as VexFlowMusicSheetDrawer
         //     clickPosition,
         //     new PointF2D(clickPosition.x + 2, clickPosition.y),
         //     this.MusicPages[0]);
@@ -594,7 +597,23 @@ export class GraphicalMusicSheet {
         return closestNote;
     }
 
-    public domToSvg(point: SVGPoint): PointF2D {
+    public domToSvg(point: PointF2D): PointF2D {
+        return this.domToSvgTransform(point, true);
+    }
+
+    public svgToDom(point: PointF2D): PointF2D {
+        return this.domToSvgTransform(point, false);
+    }
+
+    public svgToOsmd(point: PointF2D): PointF2D {
+        const pt: PointF2D = new PointF2D(point.x, point.y);
+        pt.x /= 10; // unitInPixels would need to be imported from VexFlowMusicSheetDrawer
+        pt.y /= 10;
+        return pt;
+    }
+
+    // TODO move to VexFlowMusicSheetDrawer?
+    private domToSvgTransform(point: PointF2D, inverse: boolean): PointF2D {
         const svgBackend: any = (this.drawer as any).Backends[0]; // as SvgVexFlowBackend;
         // TODO importing SvgVexFlowBackend here causes build problems. Importing VexFlowMusicSheetDrawer seems to be fine, but unnecessary.
         // if (!(svgBackend instanceof SvgVexFlowBackend)) {
@@ -604,7 +623,11 @@ export class GraphicalMusicSheet {
         const pt: SVGPoint = svg.createSVGPoint();
         pt.x = point.x;
         pt.y = point.y;
-        const sp: SVGPoint = pt.matrixTransform(svg.getScreenCTM().inverse());
+        let transformMatrix: DOMMatrix = svg.getScreenCTM();
+        if (inverse) {
+            transformMatrix = transformMatrix.inverse();
+        }
+        const sp: SVGPoint = pt.matrixTransform(transformMatrix);
         return new PointF2D(sp.x, sp.y);
     }
 
