@@ -291,11 +291,7 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine;
-        if (drawBoundingBoxString) {
-            osmdInstance.setDrawBoundingBox(drawBoundingBoxString, false); // false: don't render (now)
-        } else {
-            osmdInstance.setDrawBoundingBox(undefined, false); // needs reset after it was set above
-        }
+        osmdInstance.setDrawBoundingBox(drawBoundingBoxString, false); // false: don't render (now). also (re-)set if undefined!
         if (isTestFlatBeams) {
             osmdInstance.EngravingRules.FlatBeams = true;
             // osmdInstance.EngravingRules.FlatBeamOffset = 30;
