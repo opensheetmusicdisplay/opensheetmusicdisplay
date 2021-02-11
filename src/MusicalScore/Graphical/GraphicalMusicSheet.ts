@@ -612,7 +612,7 @@ export class GraphicalMusicSheet {
         return pt;
     }
 
-    // TODO move to VexFlowMusicSheetDrawer?
+    // TODO move to VexFlowMusicSheetDrawer? better fit for imports
     private domToSvgTransform(point: PointF2D, inverse: boolean): PointF2D {
         const svgBackend: any = (this.drawer as any).Backends[0]; // as SvgVexFlowBackend;
         // TODO importing SvgVexFlowBackend here causes build problems. Importing VexFlowMusicSheetDrawer seems to be fine, but unnecessary.
