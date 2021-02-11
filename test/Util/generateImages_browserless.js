@@ -234,7 +234,7 @@ async function init () {
             // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
             await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {skyBottomLine: true}, DEBUG);
             // generate one more testing image with GraphicalNote positions
-            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxesGraphicalNote: true}, DEBUG);
+            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxes: "VexFlowGraphicalNote"}, DEBUG);
         }
     }
 
@@ -269,8 +269,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
-        } else if (options.boundingBoxesGraphicalNote) {
-            drawBoundingBoxString = "VexFlowGraphicalNote";
+        } else if (options.boundingBoxes) {
+            drawBoundingBoxString = options.boundingBoxes;
         } else {
             drawBoundingBoxString = undefined;
         }
