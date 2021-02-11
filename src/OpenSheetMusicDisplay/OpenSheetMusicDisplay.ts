@@ -321,25 +321,6 @@ export class OpenSheetMusicDisplay {
         }
     }
 
-    public getNearestNoteTest(x: number = 22.83, y: number = 33.29): void {
-        //x: number = 30, y: number = 21
-        // for (let x: number = 0; x < 100; x++) {
-        //     for (let y: number = 0; y < 100; y++) {
-        //         const gnote: GraphicalNote = this.graphic.GetNearestNote(new PointF2D(x, y), new PointF2D(50, 50));
-        //         // const gnote: GraphicalVoiceEntry = this.graphic.GetNearestVoiceEntry(new PointF2D(x, y));
-        //         if (gnote) {
-        //             console.log("x,y: (" + x + "," + y + ")");
-        //             console.dir(gnote);
-        //         }
-        //     }
-        // }
-        // try osmd.graphic.GetNearestNote({x: 22.83, y:  33.29}, {x: 10, y:10}).sourceNote.Pitch.ToString()
-        const gve: GraphicalVoiceEntry = this.graphic.GetNearestVoiceEntry(new PointF2D(x, y));
-        console.dir(gve);
-        const gnote: GraphicalNote = this.graphic.GetNearestNote(new PointF2D(x, y), new PointF2D(50, 50));
-        console.dir(gnote);
-    }
-
     // for now SVG only, see generateImages_browserless (PNG/SVG)
     public exportSVG(): void {
         for (const backend of this.drawer?.Backends) {
