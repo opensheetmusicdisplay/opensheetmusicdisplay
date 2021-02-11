@@ -405,9 +405,11 @@ export class VexFlowConverter {
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
                     vfnote.setStemDirection(Vex.Flow.Stem.UP);
+                    gve.parentVoiceEntry.StemDirection = StemDirectionType.Up;
                     break;
                 case (StemDirectionType.Down):
                     vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
+                    gve.parentVoiceEntry.StemDirection = StemDirectionType.Down;
                     break;
                 default:
             }

@@ -314,6 +314,7 @@ export class OpenSheetMusicDisplay {
             backend.resize(width, height);
             backend.clear(); // set bgcolor if defined (this.rules.PageBackgroundColor, see OSMDOptions)
             this.drawer.Backends.push(backend);
+            this.graphic.drawer = this.drawer;
         }
     }
 
