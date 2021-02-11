@@ -25,10 +25,9 @@ import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import { MusicSheetDrawer } from "./MusicSheetDrawer";
 import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
-import { SvgVexFlowBackend, VexFlowGraphicalNote } from "./VexFlow";
+import { SvgVexFlowBackend } from "./VexFlow";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
-import { StemDirectionType } from "../VoiceData";
 
 /**
  * The graphical counterpart of a [[MusicSheet]]
@@ -551,7 +550,6 @@ export class GraphicalMusicSheet {
         let closest: T = undefined;
         for (let idx: number = 0, len: number = foundEntries.length; idx < len; ++idx) {
             const object: T = foundEntries[idx];
-            console.log("y: " + object.PositionAndShape.AbsolutePosition.y);
             if (closest === undefined) {
                 closest = object;
             } else {
@@ -584,21 +582,13 @@ export class GraphicalMusicSheet {
             new PointF2D(clickPosition.x + 2, clickPosition.y),
             this.MusicPages[0]);
         for (const note of nearestVoiceEntry.notes) {
-            let posY: number = note.PositionAndShape.AbsolutePosition.y;
-            if (note.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
-                posY += 3.5; // about 3.5 lines too high TODO fix note absoluteposition to not be same as voiceentry position
-            }
-            const line: any = (note as VexFlowGraphicalNote).notehead().line * (-1);
-            posY += line + (nearestVoiceEntry.notes.last() as VexFlowGraphicalNote).notehead().line; // don't move for first note
+            const posY: number = note.PositionAndShape.AbsolutePosition.y;
             const distX: number = Math.abs(note.PositionAndShape.AbsolutePosition.x - clickPosition.x);
             const distY: number = Math.abs(posY - clickPosition.y);
-            console.log("note: " + note.sourceNote.Pitch.ToString());
-            console.log("distX: " + distX);
-            console.log("distY: " + distY);
+            // console.log("note: " + note.sourceNote.Pitch.ToString());
             if (distX + distY < closestDist) {
                 closestNote = note;
                 closestDist = distX + distY;
-                console.log("closer!");
             }
         }
         return closestNote;
