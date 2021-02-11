@@ -22,9 +22,6 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
-import { GraphicalVoiceEntry } from "../MusicalScore/Graphical/GraphicalVoiceEntry";
-import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
-import { PointF2D } from "../Common/DataObjects/PointF2D";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
