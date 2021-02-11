@@ -269,10 +269,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
         if (isTestEndClefStaffEntryBboxes) {
             drawBoundingBoxString = "VexFlowStaffEntry";
-        } else if (options.boundingBoxes) {
-            drawBoundingBoxString = options.boundingBoxes;
         } else {
-            drawBoundingBoxString = undefined;
+            drawBoundingBoxString = options.boundingBoxes; // undefined is also a valid value: no bboxes
         }
         osmdInstance.setOptions({
             autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
