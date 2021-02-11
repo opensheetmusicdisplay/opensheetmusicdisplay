@@ -228,11 +228,13 @@ async function init () {
         const sampleFilename = samplesToProcess[i];
         debug("sampleFilename: " + sampleFilename, DEBUG);
 
-        await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, false);
+        await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {}, DEBUG);
 
         if (osmdTestingMode && !osmdTestingSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
             // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
-            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, true, DEBUG);
+            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {skyBottomLine: true}, DEBUG);
+            // generate one more testing image with GraphicalNote positions
+            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxesGraphicalNote: true}, DEBUG);
         }
     }
 
@@ -242,7 +244,7 @@ async function init () {
 // eslint-disable-next-line
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
-    includeSkyBottomLine = false, DEBUG = false) {
+    options = {}, DEBUG = false) {
     const samplePath = directory + "/" + sampleFilename;
     let loadParameter = FS.readFileSync(samplePath);
 
@@ -263,6 +265,13 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const defaultOrCompactTightMode = sampleFilename.startsWith("OSMD_Function_Test_Container_height") ? "compacttight" : "default";
         const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
+        let drawBoundingBoxString;
+        if (isTestEndClefStaffEntryBboxes) {
+            drawBoundingBoxString = "VexFlowStaffEntry";
+        }
+        if (options.boundingBoxesGraphicalNote) {
+            drawBoundingBoxString = "VexFlowGraphicalNote";
+        }
         osmdInstance.setOptions({
             autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
             coloringMode: isFunctionTestAutoColoring ? 2 : 0,
@@ -277,10 +286,12 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
             pageFormat: pageFormat // reset by drawingparameters default
         });
+        const includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine;
-        const drawBoundingBoxValue = isTestEndClefStaffEntryBboxes ? "VexFlowStaffEntry" : undefined;
-        osmdInstance.setDrawBoundingBox(drawBoundingBoxValue, false); // false: don't render (now)
+        if (drawBoundingBoxString) {
+            osmdInstance.setDrawBoundingBox(drawBoundingBoxString, false); // false: don't render (now)
+        }
         if (isTestFlatBeams) {
             osmdInstance.EngravingRules.FlatBeams = true;
             // osmdInstance.EngravingRules.FlatBeamOffset = 30;
