@@ -24,10 +24,10 @@ import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import { MusicSheetDrawer } from "./MusicSheetDrawer";
-import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
-import { SvgVexFlowBackend } from "./VexFlow";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
+// import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
+// import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
 /**
  * The graphical counterpart of a [[MusicSheet]]
@@ -577,10 +577,10 @@ export class GraphicalMusicSheet {
         let closestNote: GraphicalNote;
         let closestDist: number = Number.MAX_SAFE_INTEGER;
         // debug: show position in sheet. line starts from the click position, until clickposition.x + 2
-        (this.drawer as VexFlowMusicSheetDrawer).DrawOverlayLine(
-            clickPosition,
-            new PointF2D(clickPosition.x + 2, clickPosition.y),
-            this.MusicPages[0]);
+        // (this.drawer as VexFlowMusicSheetDrawer).DrawOverlayLine(
+        //     clickPosition,
+        //     new PointF2D(clickPosition.x + 2, clickPosition.y),
+        //     this.MusicPages[0]);
         for (const note of nearestVoiceEntry.notes) {
             const posY: number = note.PositionAndShape.AbsolutePosition.y;
             const distX: number = Math.abs(note.PositionAndShape.AbsolutePosition.x - clickPosition.x);
@@ -595,10 +595,11 @@ export class GraphicalMusicSheet {
     }
 
     public domToSvg(point: SVGPoint): PointF2D {
-        const svgBackend: SvgVexFlowBackend = (this.drawer as VexFlowMusicSheetDrawer).Backends[0] as SvgVexFlowBackend;
-        if (!(svgBackend instanceof SvgVexFlowBackend)) {
-            return undefined;
-        }
+        const svgBackend: any = (this.drawer as any).Backends[0]; // as SvgVexFlowBackend;
+        // TODO importing SvgVexFlowBackend here causes build problems. Importing VexFlowMusicSheetDrawer seems to be fine, but unnecessary.
+        // if (!(svgBackend instanceof SvgVexFlowBackend)) {
+        //     return undefined;
+        // }
         const svg: SVGSVGElement = svgBackend.getSvgElement() as SVGSVGElement;
         const pt: SVGPoint = svg.createSVGPoint();
         pt.x = point.x;
