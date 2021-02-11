@@ -362,10 +362,6 @@ export class VexFlowConverter {
         } else {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
-        // correct position / bounding box
-        for (const note of notes) {
-            console.log(note); // TODO move getnearestnote code here
-        }
         if (rules.LedgerLineWidth || rules.LedgerLineStrokeStyle) {
             // FIXME should probably use vfnote.setLedgerLineStyle. this doesn't seem to do anything.
             // however, this is also set in VexFlowVoiceEntry.color() anyways.
@@ -409,9 +405,11 @@ export class VexFlowConverter {
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
                     vfnote.setStemDirection(Vex.Flow.Stem.UP);
+                    gve.parentVoiceEntry.StemDirection = StemDirectionType.Up;
                     break;
                 case (StemDirectionType.Down):
                     vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
+                    gve.parentVoiceEntry.StemDirection = StemDirectionType.Down;
                     break;
                 default:
             }

@@ -636,6 +636,28 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // (The width of the voices does not include the instructions (StaveModifiers))
             this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
         }
+
+        // correct position / bounding box (note.setIndex() needs to have been called)
+        for (const voice of this.getVoicesWithinMeasure()) {
+            for (const ve of voice.VoiceEntries) {
+                for (const note of ve.Notes) {
+                    const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
+                    const vfnote: Vex.Flow.StemmableNote = gNote.vfnote[0];
+                    // if (note.isRest()) // TODO somehow there are never rest notes in ve.Notes
+                    // TODO also, grace notes are not included here, need to be fixed as well. (and a few triple beamed notes in Bach Air)
+                    let relPosY: number = 0;
+                    if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                        relPosY += 3.5; // about 3.5 lines too high. this seems to be related to the default stem height, not actual stem height.
+                        // relPosY += vfnote.getStem().getHeight() / unitInPixels;
+                    } else {
+                        relPosY += 0.5; // center-align bbox
+                    }
+                    const line: any = -gNote.notehead(vfnote).line; // vexflow y direction is opposite of osmd's
+                    relPosY += line + (gNote.parentVoiceEntry.notes.last() as VexFlowGraphicalNote).notehead().line; // don't move for first note: - (-vexline)
+                    gNote.PositionAndShape.RelativePosition.y = relPosY;
+                }
+            }
+        }
     }
 
     /**
