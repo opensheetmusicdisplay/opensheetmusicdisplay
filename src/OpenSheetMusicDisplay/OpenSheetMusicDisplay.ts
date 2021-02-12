@@ -4,7 +4,7 @@ import { VexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/VexFlowBacke
 import { MusicSheetReader } from "./../MusicalScore/ScoreIO/MusicSheetReader";
 import { GraphicalMusicSheet } from "./../MusicalScore/Graphical/GraphicalMusicSheet";
 import { MusicSheetCalculator } from "./../MusicalScore/Graphical/MusicSheetCalculator";
-import { VexFlowMusicSheetDrawer } from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
+import { unitInPixels, VexFlowMusicSheetDrawer } from "./../MusicalScore/Graphical/VexFlow/VexFlowMusicSheetDrawer";
 import { SvgVexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/SvgVexFlowBackend";
 import { CanvasVexFlowBackend } from "./../MusicalScore/Graphical/VexFlow/CanvasVexFlowBackend";
 import { MusicSheet } from "./../MusicalScore/MusicSheet";
@@ -73,9 +73,16 @@ export class OpenSheetMusicDisplay implements IDisplayInteractionListener { // T
     positionTouched(relativePositionX: number, relativePositionY: number): void {
         // TODO debug: positions are very low values.
         console.log("pos: " + relativePositionX + "," + relativePositionY);
-        const point: PointF2D = new PointF2D(relativePositionX, relativePositionY);
+        const point: PointF2D = new PointF2D(
+            relativePositionX * this.interactionManager.displayWidth / unitInPixels,
+            relativePositionY * this.interactionManager.displayHeight / unitInPixels
+        );
+        // TODO refactor so that users don't have to recalculate the position like this
+        console.log("pos2: " + point.x + "," + point.y);
+
         // draw red line at position
-        this.drawer.DrawOverlayLine(point, new PointF2D(point.x + 2, point.y), this.graphic.MusicPages[0]);
+        this.drawer.DrawOverlayLine(new PointF2D(point.x - 0.5, point.y + 0.5), new PointF2D(point.x + 0.5, point.y - 0.5), this.graphic.MusicPages[0]);
+        this.drawer.DrawOverlayLine(new PointF2D(point.x - 0.5, point.y - 0.5), new PointF2D(point.x + 0.5, point.y + 0.5), this.graphic.MusicPages[0]);
         // throw new Error("Method not implemented.");
     }
     positionDoubleTouched(relativePositionX: number, relativePositionY: number): void {

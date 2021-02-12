@@ -10,9 +10,9 @@ export abstract class AbstractDisplayInteractionManager {
     private lastRelPosY: number;
     protected lastPixelX: number;
     protected lastPixelY: number;
-    protected displayWidth: number = 1;
-    protected displayHeight: number = 1;
-    protected displayDpi: number = 96;
+    public displayWidth: number = 1;
+    public displayHeight: number = 1;
+    public displayDpi: number = 96;
     protected maxNumerOfFingers: number = 2;
     protected movementThreshInch: number = 0.075;
     protected interactionWasZoomGesture: boolean = false;
