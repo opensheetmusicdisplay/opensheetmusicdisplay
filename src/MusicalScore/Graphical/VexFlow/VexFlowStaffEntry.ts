@@ -84,7 +84,10 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
 
     // should be called after VexFlowConverter.StaveNote
     public setModifierXOffsets(): void {
-        const notes: GraphicalNote[] = this.graphicalVoiceEntries.flatMap(gve => gve.notes);
+        let notes: GraphicalNote[] = [];
+        for (const gve of this.graphicalVoiceEntries) {
+            notes = notes.concat(gve.notes);
+        }
         const staffLines: number[] = notes.map(n => n.staffLine);
         const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
         const fingeringOffsets: number[] = this.calculateModifierXOffsets(staffLines, 0.5);
@@ -101,13 +104,16 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         const offsets: number[] = [];
         for (let i: number = 0; i < staffLines.length; i++) {
             let offset: number = 0;
-            let j: number = i;
-            while (j >= 0) {
-                if (staffLines[i] - staffLines[j] <= collisionDistance && offset === offsets[j]) {
-                    offset++;
-                    j = i;
-                } else {
-                    j--;
+            let collisionFound: boolean = true;
+            while (collisionFound) {
+                for (let j: number = i; j >= 0; j--) {
+                    const lineDiff: number = Math.abs(staffLines[i] - staffLines[j]);
+                    if (lineDiff <= collisionDistance && offset === offsets[j]) {
+                        offset++;
+                        collisionFound = true;
+                        break;
+                    }
+                    collisionFound = false;
                 }
             }
             offsets.push(offset);
