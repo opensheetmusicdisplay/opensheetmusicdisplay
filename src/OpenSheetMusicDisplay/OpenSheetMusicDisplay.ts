@@ -22,13 +22,17 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+import { WebDisplayInteractionManager } from "../Display/WebDisplayInteractionManager";
+import { AbstractDisplayInteractionManager } from "../Display/AbstractDisplayInteractionManager";
+import { IDisplayInteractionListener } from "../Common/Interfaces/IDisplayInteractionListener";
+import { PointF2D } from "../Common";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
-export class OpenSheetMusicDisplay {
+export class OpenSheetMusicDisplay implements IDisplayInteractionListener { // TODO implements = debug
     private version: string = "0.9.2-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
@@ -60,6 +64,34 @@ export class OpenSheetMusicDisplay {
         }
         this.backendType = BackendType.SVG; // default, can be changed by options
         this.setOptions(options);
+        this.interactionManager = new WebDisplayInteractionManager(this.container);
+        this.interactionManager.addListener(this);
+    }
+    displaySizeChanged(width: number, height: number): void {
+        //
+    }
+    positionTouched(relativePositionX: number, relativePositionY: number): void {
+        // TODO debug: positions are very low values.
+        console.log("pos: " + relativePositionX + "," + relativePositionY);
+        const point: PointF2D = new PointF2D(relativePositionX, relativePositionY);
+        // draw red line at position
+        this.drawer.DrawOverlayLine(point, new PointF2D(point.x + 2, point.y), this.graphic.MusicPages[0]);
+        // throw new Error("Method not implemented.");
+    }
+    positionDoubleTouched(relativePositionX: number, relativePositionY: number): void {
+        throw new Error("Method not implemented.");
+    }
+    mouseDown(relativePositionX: number, relativePositionY: number, activateZoomOnRightMouseButton: boolean): void {
+        throw new Error("Method not implemented.");
+    }
+    mouseUp(relativePositionX: number, relativePositionY: number): void {
+        throw new Error("Method not implemented.");
+    }
+    mouseMove(relativePositionX: number, relativePositionY: number, deltaX: number, deltaY: number): void {
+        throw new Error("Method not implemented.");
+    }
+    zoomScore(scale: number): void {
+        throw new Error("Method not implemented.");
     }
 
     public cursor: Cursor;
@@ -77,6 +109,7 @@ export class OpenSheetMusicDisplay {
     private drawSkyLine: boolean;
     private drawBottomLine: boolean;
     private graphic: GraphicalMusicSheet;
+    private interactionManager: AbstractDisplayInteractionManager;
     private drawingParameters: DrawingParameters;
     private rules: EngravingRules;
     private autoResizeEnabled: boolean;
@@ -179,6 +212,7 @@ export class OpenSheetMusicDisplay {
         if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
+        this.interactionManager.Initialize();
     }
 
     /**
@@ -243,6 +277,8 @@ export class OpenSheetMusicDisplay {
             this.cursor.update();
         }
         this.zoomUpdated = false;
+        //need to init values
+        this.interactionManager.displaySizeChanged(this.container.clientWidth, this.container.clientHeight);
         //console.log("[OSMD] render finished");
     }
 
