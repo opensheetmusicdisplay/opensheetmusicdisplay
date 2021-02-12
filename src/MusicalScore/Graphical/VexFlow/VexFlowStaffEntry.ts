@@ -101,15 +101,14 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         const offsets: number[] = [];
         for (let i: number = 0; i < staffLines.length; i++) {
             let offset: number = 0;
-            outerLoop:
-            while (true) {
-                for (let j: number = i; j >= 0; j--) {
-                    if (staffLines[i] - staffLines[j] <= collisionDistance && offset === offsets[j]) {
-                        offset++;
-                        continue outerLoop;
-                    }
+            let j: number = i;
+            while (j >= 0) {
+                if (staffLines[i] - staffLines[j] <= collisionDistance && offset === offsets[j]) {
+                    offset++;
+                    j = i;
+                } else {
+                    j--;
                 }
-                break;
             }
             offsets.push(offset);
         }
