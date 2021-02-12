@@ -1433,8 +1433,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //     // TODO also check for treble clef (adjust for viola, cello, etc)
                 //     offsetY += 10;
                 // }
-                vfStringNumber.setOffsetX(note.baseStringNumberXOffset * 15);
-                vfStringNumber.setPosition(Vex.Flow.Modifier.Position.RIGHT);
+                if (voiceEntry.notes.length > 1 || voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
+                    vfStringNumber.setOffsetX(note.baseStringNumberXOffset * 15);
+                    vfStringNumber.setPosition(Vex.Flow.Modifier.Position.RIGHT);
+                } else {
+                    vfStringNumber.setPosition(Vex.Flow.Modifier.Position.ABOVE);
+                }
                 vfStringNumber.setOffsetY(offsetY);
 
                 vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
