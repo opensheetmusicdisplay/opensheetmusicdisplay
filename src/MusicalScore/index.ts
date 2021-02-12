@@ -10,3 +10,4 @@ export * from "./VoiceData";
 export * from "./MusicSource";
 export * from "./ScoreIO";
 export * from "./Graphical";
+export * from "./Interfaces";
