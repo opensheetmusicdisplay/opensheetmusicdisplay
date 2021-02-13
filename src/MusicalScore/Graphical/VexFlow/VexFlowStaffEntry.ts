@@ -1,4 +1,5 @@
 import Vex from "vexflow";
+import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { SourceStaffEntry } from "../../VoiceData/SourceStaffEntry";
@@ -80,4 +81,44 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         }
         return this.MaxAccidentals = 0;
     }
+
+    // should be called after VexFlowConverter.StaveNote
+    public setModifierXOffsets(): void {
+        let notes: GraphicalNote[] = [];
+        for (const gve of this.graphicalVoiceEntries) {
+            notes = notes.concat(gve.notes);
+        }
+        const staffLines: number[] = notes.map(n => n.staffLine);
+        const stringNumberOffsets: number[] = this.calculateModifierXOffsets(staffLines, 1);
+        const fingeringOffsets: number[] = this.calculateModifierXOffsets(staffLines, 0.5);
+        notes.forEach((note, i) => {
+            note.baseFingeringXOffset = fingeringOffsets[i];
+            note.baseStringNumberXOffset = stringNumberOffsets[i];
+        });
+    }
+
+    /**
+     * Calculate x offsets for overlapping string and fingering modifiers in a chord.
+     */
+    private calculateModifierXOffsets(staffLines: number[], collisionDistance: number): number[] {
+        const offsets: number[] = [];
+        for (let i: number = 0; i < staffLines.length; i++) {
+            let offset: number = 0;
+            let collisionFound: boolean = true;
+            while (collisionFound) {
+                for (let j: number = i; j >= 0; j--) {
+                    const lineDiff: number = Math.abs(staffLines[i] - staffLines[j]);
+                    if (lineDiff <= collisionDistance && offset === offsets[j]) {
+                        offset++;
+                        collisionFound = true;
+                        break;
+                    }
+                    collisionFound = false;
+                }
+            }
+            offsets.push(offset);
+        }
+        return offsets;
+    }
+
 }

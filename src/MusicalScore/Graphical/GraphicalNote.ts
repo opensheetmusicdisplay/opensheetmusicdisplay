@@ -37,6 +37,9 @@ export class GraphicalNote extends GraphicalObject {
     public parentVoiceEntry: GraphicalVoiceEntry;
     public numberOfDots: number;
     public rules: EngravingRules;
+    public staffLine: number;
+    public baseFingeringXOffset: number;
+    public baseStringNumberXOffset: number;
 
     public Transpose(keyInstruction: KeyInstruction, activeClef: ClefInstruction, halfTones: number, octaveEnum: OctaveEnum): Pitch {
         let transposedPitch: Pitch = this.sourceNote.Pitch;

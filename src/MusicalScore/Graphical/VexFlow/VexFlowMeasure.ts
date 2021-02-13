@@ -533,7 +533,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             vexFlowVoltaHeight += skylineDifference;
                             newSkylineValueForMeasure = prevMeasureSkyline;
                         } else { //otherwise, we are higher. Need to adjust prev
-                            (nextStaveModifier as any).y_shift = vexFlowVoltaHeight * 10;
+                            (nextStaveModifier as any).y_shift = vexFlowVoltaHeight * unitInPixels;
                             prevMeasure.ParentStaffLine.SkyBottomLineCalculator.updateSkyLineInRange(prevStart, prevEnd, newSkylineValueForMeasure);
                         }
                     }
@@ -1189,6 +1189,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
+        // Calculate offsets for fingerings
+        if (this.rules.RenderFingerings) {
+            for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+                graphicalStaffEntry.setModifierXOffsets();
+            }
+        }
+
         for (const voice of voices) {
             if (!voice) {
                 continue;
@@ -1366,14 +1373,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (fingering.placement !== PlacementEnum.NotYetDefined) {
                 fingeringPosition = fingering.placement;
             }
-            let modifierPosition: any; // Vex.Flow.Stavemodifier.Position
+            let offsetX: number = this.rules.FingeringOffsetX;
+            let modifierPosition: number; // Vex.Flow.Stavemodifier.Position
             switch (fingeringPosition) {
                 default:
                 case PlacementEnum.Left:
                     modifierPosition = Vex.Flow.StaveModifier.Position.LEFT;
+                    offsetX -= note.baseFingeringXOffset * unitInPixels;
                     break;
                 case PlacementEnum.Right:
                     modifierPosition = Vex.Flow.StaveModifier.Position.RIGHT;
+                    offsetX += note.baseFingeringXOffset * unitInPixels;
                     break;
                 case PlacementEnum.Above:
                     modifierPosition = Vex.Flow.StaveModifier.Position.ABOVE;
@@ -1396,7 +1406,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(fingering.value);
             fretFinger.setPosition(modifierPosition);
-            fretFinger.setOffsetX(this.rules.FingeringOffsetX);
+            fretFinger.setOffsetX(offsetX);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
                 const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
                 const ordering: number = fingeringPosition === PlacementEnum.Above ? fingeringIndex :
@@ -1431,19 +1441,46 @@ export class VexFlowMeasure extends GraphicalMeasure {
             return;
         }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
-        const note: GraphicalNote = voiceEntry.notes[0]; // only display for top note
-        const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
-        if (stringInstruction) {
-            const stringNumber: number = Number.parseInt(stringInstruction.value, 10);
-            const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
-            const offsetY: number = -this.rules.StringNumberOffsetY;
-            // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
-            //     // TODO also check for treble clef (adjust for viola, cello, etc)
-            //     offsetY += 10;
-            // }
-            vfStringNumber.setOffsetY(offsetY);
-            vexFlowVoiceEntry.vfStaveNote.addModifier((0 as any), (vfStringNumber as any)); // see addModifier() above
-        }
+        voiceEntry.notes.forEach((note, stringIndex) => {
+            const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
+            if (stringInstruction) {
+                let stringNumber: string = stringInstruction.value;
+                switch (stringNumber) {
+                    default:
+                    case "1":
+                        stringNumber = "I";
+                        break;
+                    case "2":
+                        stringNumber = "II";
+                        break;
+                    case "3":
+                        stringNumber = "III";
+                        break;
+                    case "4":
+                        stringNumber = "IV";
+                        break;
+                }
+                const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
+                // Remove circle from string number. Not needed for
+                // disambiguation from fingerings since we use Roman
+                // Numerals for RenderStringNumbersClassical
+                (<any>vfStringNumber).radius = 0;
+                const offsetY: number = -this.rules.StringNumberOffsetY;
+                // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
+                //     // TODO also check for treble clef (adjust for viola, cello, etc)
+                //     offsetY += 10;
+                // }
+                if (voiceEntry.notes.length > 1 || voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
+                    vfStringNumber.setOffsetX(note.baseStringNumberXOffset * 15);
+                    vfStringNumber.setPosition(Vex.Flow.Modifier.Position.RIGHT);
+                } else {
+                    vfStringNumber.setPosition(Vex.Flow.Modifier.Position.ABOVE);
+                }
+                vfStringNumber.setOffsetY(offsetY);
+
+                vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
+            }
+        });
     }
 
     /**
