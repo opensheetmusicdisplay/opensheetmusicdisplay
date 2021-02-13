@@ -143,13 +143,13 @@ export abstract class MusicSheetDrawer {
         throw new Error("not implemented");
     }
 
-    public drawLabel(graphicalLabel: GraphicalLabel, layer: number): void {
+    public drawLabel(graphicalLabel: GraphicalLabel, layer: number): Node[] {
         if (!this.isVisible(graphicalLabel.PositionAndShape)) {
-            return;
+            return [];
         }
         const label: Label = graphicalLabel.Label;
         if (label.text.trim() === "") {
-            return;
+            return [];
         }
         const screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
         const fontHeightInPixel: number = this.calculatePixelDistance(label.fontHeight);
@@ -195,7 +195,7 @@ export abstract class MusicSheetDrawer {
                 throw new ArgumentOutOfRangeException("");
         }
 
-        this.renderLabel(graphicalLabel, layer, bitmapWidth, bitmapHeight, fontHeightInPixel, screenPosition);
+        return this.renderLabel(graphicalLabel, layer, bitmapWidth, bitmapHeight, fontHeightInPixel, screenPosition);
     }
 
     protected applyScreenTransformation(point: PointF2D): PointF2D {
@@ -218,7 +218,7 @@ export abstract class MusicSheetDrawer {
         // empty
     }
 
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string = undefined, alpha: number = 1): void {
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string = undefined, alpha: number = 1): Node {
         throw new Error("not implemented");
     }
 
@@ -235,7 +235,7 @@ export abstract class MusicSheetDrawer {
     }
 
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): void {
+                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): Node[] {
         throw new Error("not implemented");
     }
 
@@ -399,17 +399,18 @@ export abstract class MusicSheetDrawer {
         // implemented by subclass (VexFlowMusicSheetDrawer)
     }
 
-    protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): void {
+    protected drawGraphicalLine(graphicalLine: GraphicalLine, lineWidth: number, colorOrStyle: string = "black"): Node {
         /* TODO similar checks as in drawLabel
         if (!this.isVisible(new BoundingBox(graphicalLine.Start,)) {
             return;
         }
         */
-        this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
+        return this.drawLine(graphicalLine.Start, graphicalLine.End, colorOrStyle, lineWidth);
     }
 
-    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): void {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number): Node {
         // implemented by subclass (VexFlowMusicSheetDrawer)
+        return undefined;
     }
 
     /**
@@ -539,7 +540,7 @@ export abstract class MusicSheetDrawer {
 
     public drawBoundingBox(bbox: BoundingBox,
         color: string = undefined, drawCross: boolean = false, labelText: string = undefined, layer: number = 0
-    ): void {
+    ): Node {
         let tmpRect: RectangleF2D = new RectangleF2D(bbox.AbsolutePosition.x + bbox.BorderMarginLeft,
             bbox.AbsolutePosition.y + bbox.BorderMarginTop,
             bbox.BorderMarginRight - bbox.BorderMarginLeft,
@@ -563,12 +564,14 @@ export abstract class MusicSheetDrawer {
         }
 
         tmpRect = this.applyScreenTransformationForRect(tmpRect);
-        this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, color, 0.5);
+        const rectNode: Node = this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, color, 0.5);
         if (labelText) {
             const label: Label = new Label(labelText);
             this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
                 layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
+            // theoretically we should return the nodes from renderLabel here as well, so they can also be removed later
         }
+        return rectNode;
     }
 
     private drawMarkedAreas(system: MusicSystem): void {
