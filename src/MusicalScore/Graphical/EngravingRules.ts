@@ -248,6 +248,7 @@ export class EngravingRules {
     public DefaultColorStem: string;
     public DefaultColorLabel: string;
     public DefaultColorTitle: string;
+    public DefaultColorCursor: string;
     public DefaultFontFamily: string;
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
@@ -559,6 +560,7 @@ export class EngravingRules {
         this.DefaultColorStem = this.DefaultColorNotehead;
         this.DefaultColorLabel = this.DefaultColorNotehead;
         this.DefaultColorTitle = this.DefaultColorNotehead;
+        this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
