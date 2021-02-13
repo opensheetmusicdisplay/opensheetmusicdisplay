@@ -531,15 +531,15 @@ export abstract class MusicSheetDrawer {
             }
         }
         if (typeMatch || dataObjectString === type) {
-            this.drawBoundingBox(startBox, true, dataObjectString, layer, undefined);
+            this.drawBoundingBox(startBox, undefined, true, dataObjectString, layer);
         }
         layer++;
         startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
     }
 
     public drawBoundingBox(bbox: BoundingBox,
-        drawCross: boolean = false, labelText: string = undefined, layer: number = 0,
-        color: string = undefined): void {
+        color: string = undefined, drawCross: boolean = false, labelText: string = undefined, layer: number = 0
+    ): void {
         let tmpRect: RectangleF2D = new RectangleF2D(bbox.AbsolutePosition.x + bbox.BorderMarginLeft,
             bbox.AbsolutePosition.y + bbox.BorderMarginTop,
             bbox.BorderMarginRight - bbox.BorderMarginLeft,
