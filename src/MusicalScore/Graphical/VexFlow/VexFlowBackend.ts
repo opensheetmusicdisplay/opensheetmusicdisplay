@@ -99,7 +99,7 @@ public abstract getContext(): Vex.IRenderContext;
    * @param styleId the style id
    * @param alpha alpha value between 0 and 1
    */
-  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number): void;
+  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number): void;
 
   public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number): void;
 

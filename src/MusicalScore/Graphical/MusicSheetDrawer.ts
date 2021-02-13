@@ -103,7 +103,7 @@ export abstract class MusicSheetDrawer {
     public drawLineAsHorizontalRectangle(line: GraphicalLine, layer: number): void {
         let rectangle: RectangleF2D = new RectangleF2D(line.Start.x, line.End.y - line.Width / 2, line.End.x - line.Start.x, line.Width);
         rectangle = this.applyScreenTransformationForRect(rectangle);
-        this.renderRectangle(rectangle, layer, line.styleId);
+        this.renderRectangle(rectangle, layer, line.styleId, line.colorHex);
     }
 
     public drawLineAsVerticalRectangle(line: GraphicalLine, layer: number): void {
@@ -218,7 +218,7 @@ export abstract class MusicSheetDrawer {
         // empty
     }
 
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, alpha: number = 1): void {
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string = undefined, alpha: number = 1): void {
         throw new Error("not implemented");
     }
 
@@ -531,32 +531,42 @@ export abstract class MusicSheetDrawer {
             }
         }
         if (typeMatch || dataObjectString === type) {
-            let tmpRect: RectangleF2D = new RectangleF2D(startBox.AbsolutePosition.x + startBox.BorderMarginLeft,
-                                                         startBox.AbsolutePosition.y + startBox.BorderMarginTop,
-                                                         startBox.BorderMarginRight - startBox.BorderMarginLeft,
-                                                         startBox.BorderMarginBottom - startBox.BorderMarginTop);
-            this.drawLineAsHorizontalRectangle(new GraphicalLine(
-                                                             new PointF2D(startBox.AbsolutePosition.x - 1, startBox.AbsolutePosition.y),
-                                                             new PointF2D(startBox.AbsolutePosition.x + 1, startBox.AbsolutePosition.y),
-                                                             0.1,
-                                                             OutlineAndFillStyleEnum.BaseWritingColor),
-                                               layer - 1);
-
-            this.drawLineAsVerticalRectangle(new GraphicalLine(
-                                                                 new PointF2D(startBox.AbsolutePosition.x, startBox.AbsolutePosition.y - 1),
-                                                                 new PointF2D(startBox.AbsolutePosition.x, startBox.AbsolutePosition.y + 1),
-                                                                 0.1,
-                                                                 OutlineAndFillStyleEnum.BaseWritingColor),
-                                             layer - 1);
-
-            tmpRect = this.applyScreenTransformationForRect(tmpRect);
-            this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, 0.5);
-            const label: Label = new Label(dataObjectString);
-            this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
-                             layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
+            this.drawBoundingBox(startBox, true, dataObjectString, layer, undefined);
         }
         layer++;
         startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
+    }
+
+    public drawBoundingBox(bbox: BoundingBox, drawCross: boolean = false, labelText: string = undefined, layer: number = 0, color: string = undefined) {
+        let tmpRect: RectangleF2D = new RectangleF2D(bbox.AbsolutePosition.x + bbox.BorderMarginLeft,
+            bbox.AbsolutePosition.y + bbox.BorderMarginTop,
+            bbox.BorderMarginRight - bbox.BorderMarginLeft,
+            bbox.BorderMarginBottom - bbox.BorderMarginTop);
+        if (drawCross) {
+            this.drawLineAsHorizontalRectangle(new GraphicalLine(
+                new PointF2D(bbox.AbsolutePosition.x - 1, bbox.AbsolutePosition.y),
+                new PointF2D(bbox.AbsolutePosition.x + 1, bbox.AbsolutePosition.y),
+                0.1,
+                OutlineAndFillStyleEnum.BaseWritingColor,
+                color),
+                layer - 1);
+            
+            this.drawLineAsVerticalRectangle(new GraphicalLine(
+                new PointF2D(bbox.AbsolutePosition.x, bbox.AbsolutePosition.y - 1),
+                new PointF2D(bbox.AbsolutePosition.x, bbox.AbsolutePosition.y + 1),
+                0.1,
+                OutlineAndFillStyleEnum.BaseWritingColor,
+                color),
+                layer - 1);
+        }
+
+        tmpRect = this.applyScreenTransformationForRect(tmpRect);
+        this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, color, 0.5);
+        if (labelText) {
+            const label: Label = new Label(labelText);
+            this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
+                layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
+        }
     }
 
     private drawMarkedAreas(system: MusicSystem): void {
