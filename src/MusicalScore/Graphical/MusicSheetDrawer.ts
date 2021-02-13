@@ -218,7 +218,7 @@ export abstract class MusicSheetDrawer {
         // empty
     }
 
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string = undefined, alpha: number = 1): void {
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string = undefined, alpha: number = 1): Node {
         throw new Error("not implemented");
     }
 
@@ -539,7 +539,7 @@ export abstract class MusicSheetDrawer {
 
     public drawBoundingBox(bbox: BoundingBox,
         color: string = undefined, drawCross: boolean = false, labelText: string = undefined, layer: number = 0
-    ): void {
+    ): Node {
         let tmpRect: RectangleF2D = new RectangleF2D(bbox.AbsolutePosition.x + bbox.BorderMarginLeft,
             bbox.AbsolutePosition.y + bbox.BorderMarginTop,
             bbox.BorderMarginRight - bbox.BorderMarginLeft,
@@ -563,12 +563,13 @@ export abstract class MusicSheetDrawer {
         }
 
         tmpRect = this.applyScreenTransformationForRect(tmpRect);
-        this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, color, 0.5);
+        const rectNode: Node = this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, color, 0.5);
         if (labelText) {
             const label: Label = new Label(labelText);
             this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
                 layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
         }
+        return rectNode;
     }
 
     private drawMarkedAreas(system: MusicSystem): void {

@@ -8,6 +8,7 @@ import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
 import {PointF2D} from "../../../Common/DataObjects/PointF2D";
 import {BackendType} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {EngravingRules} from "../EngravingRules";
+import log from "loglevel";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
@@ -51,6 +52,22 @@ export class SvgVexFlowBackend extends VexFlowBackend {
 
     public getSvgElement(): SVGElement {
         return this.ctx.svg;
+    }
+
+    removeNode(node: Node): boolean {
+        const svg: SVGElement = this.ctx?.svg;
+        if (!svg) {
+            return false;
+        }
+        // unfortunately there's no method svg.hasChild(node). traversing all nodes seems inefficient.
+        try {
+            svg.removeChild(node);
+        } catch (ex) {
+            // log.error("SvgVexFlowBackend.removeNode: error:"); // unnecessary, stacktrace is in exception
+            log.error(ex);
+            return false;
+        }
+        return true;
     }
 
     public clear(): void {
@@ -124,8 +141,9 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
         this.ctx.restore();
     }
-    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): void {
+    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): Node {
         this.ctx.save();
+        const node: Node = this.ctx.openGroup();
         if (colorHex) {
             this.ctx.attributes.fill = colorHex;
         } else {
@@ -135,6 +153,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         this.ctx.restore();
         this.ctx.attributes["fill-opacity"] = 1;
+        this.ctx.closeGroup();
+        return node;
     }
 
     public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2): void {

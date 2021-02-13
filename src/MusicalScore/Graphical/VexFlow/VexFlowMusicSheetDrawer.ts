@@ -445,8 +445,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param styleId the style id
      * @param alpha alpha value between 0 and 1
      */
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): void {
-        this.backend.renderRectangle(rectangle, styleId, colorHex, alpha);
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): Node {
+        return this.backend.renderRectangle(rectangle, styleId, colorHex, alpha);
     }
 
     /**

@@ -112,7 +112,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.CanvasRenderingCtx.restore();
         this.CanvasRenderingCtx.font = old;
     }
-    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): void {
+    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): Node {
         const old: string | CanvasGradient | CanvasPattern = this.CanvasRenderingCtx.fillStyle;
         if (colorHex) {
             this.CanvasRenderingCtx.fillStyle = colorHex;
@@ -123,6 +123,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         this.CanvasRenderingCtx.fillStyle = old;
         this.CanvasRenderingCtx.globalAlpha = 1;
+        return undefined; // can't return dom node like with SVG
     }
 
     public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number= 2): void {
