@@ -88,7 +88,6 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         this.backend = this.backends[page.PageNumber - 1]; // TODO we may need to set this in a couple of other places. this.pageIdx is a bad solution
         super.drawPage(page);
         this.pageIdx += 1;
-        this.backend = this.backends[this.pageIdx];
     }
 
     public clear(): void {
@@ -446,8 +445,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param styleId the style id
      * @param alpha alpha value between 0 and 1
      */
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, alpha: number): void {
-        this.backend.renderRectangle(rectangle, styleId, alpha);
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): void {
+        this.backend.renderRectangle(rectangle, styleId, colorHex, alpha);
     }
 
     /**

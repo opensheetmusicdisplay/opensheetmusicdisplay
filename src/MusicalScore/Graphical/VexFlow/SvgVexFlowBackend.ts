@@ -124,9 +124,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
         this.ctx.restore();
     }
-    public renderRectangle(rectangle: RectangleF2D, styleId: number, alpha: number = 1): void {
+    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): void {
         this.ctx.save();
-        this.ctx.attributes.fill = VexFlowConverter.style(styleId);
+        if (colorHex) {
+            this.ctx.attributes.fill = colorHex;
+        } else {
+            this.ctx.attributes.fill = VexFlowConverter.style(styleId);
+        }
         this.ctx.attributes["fill-opacity"] = alpha;
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         this.ctx.restore();
