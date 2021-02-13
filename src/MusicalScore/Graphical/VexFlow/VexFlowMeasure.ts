@@ -1446,7 +1446,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (stringInstruction) {
                 let stringNumber: string = stringInstruction.value;
                 switch (stringNumber) {
-                    default:
                     case "1":
                         stringNumber = "I";
                         break;
@@ -1459,6 +1458,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     case "4":
                         stringNumber = "IV";
                         break;
+                    case "5":
+                        stringNumber = "V";
+                        break;
+                    case "6":
+                        stringNumber = "VI";
+                        break;
+                    default:
+                        // log.warn("stringNumber > 6 not supported"); // TODO do we need to support more?
+                        // leave stringNumber as is, warning not really necessary
                 }
                 const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
                 // Remove circle from string number. Not needed for
@@ -1471,7 +1479,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //     offsetY += 10;
                 // }
                 if (voiceEntry.notes.length > 1 || voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
-                    vfStringNumber.setOffsetX(note.baseStringNumberXOffset * 15);
+                    vfStringNumber.setOffsetX(note.baseStringNumberXOffset * 13);
                     vfStringNumber.setPosition(Vex.Flow.Modifier.Position.RIGHT);
                 } else {
                     vfStringNumber.setPosition(Vex.Flow.Modifier.Position.ABOVE);
