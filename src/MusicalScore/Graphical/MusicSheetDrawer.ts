@@ -537,7 +537,9 @@ export abstract class MusicSheetDrawer {
         startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
     }
 
-    public drawBoundingBox(bbox: BoundingBox, drawCross: boolean = false, labelText: string = undefined, layer: number = 0, color: string = undefined) {
+    public drawBoundingBox(bbox: BoundingBox,
+        drawCross: boolean = false, labelText: string = undefined, layer: number = 0,
+        color: string = undefined): void {
         let tmpRect: RectangleF2D = new RectangleF2D(bbox.AbsolutePosition.x + bbox.BorderMarginLeft,
             bbox.AbsolutePosition.y + bbox.BorderMarginTop,
             bbox.BorderMarginRight - bbox.BorderMarginLeft,
@@ -550,7 +552,7 @@ export abstract class MusicSheetDrawer {
                 OutlineAndFillStyleEnum.BaseWritingColor,
                 color),
                 layer - 1);
-            
+
             this.drawLineAsVerticalRectangle(new GraphicalLine(
                 new PointF2D(bbox.AbsolutePosition.x, bbox.AbsolutePosition.y - 1),
                 new PointF2D(bbox.AbsolutePosition.x, bbox.AbsolutePosition.y + 1),
