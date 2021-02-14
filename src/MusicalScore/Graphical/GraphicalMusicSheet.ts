@@ -23,6 +23,11 @@ import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
+import { MusicSheetDrawer } from "./MusicSheetDrawer";
+import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
+import { GraphicalObject } from "./GraphicalObject";
+// import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
+// import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
 /**
  * The graphical counterpart of a [[MusicSheet]]
@@ -38,6 +43,7 @@ export class GraphicalMusicSheet {
     private musicSheet: MusicSheet;
     //private fontInfo: FontInfo = FontInfo.Info;
     private calculator: MusicSheetCalculator;
+    public drawer: MusicSheetDrawer;
     private musicPages: GraphicalMusicPage[] = [];
     /** measures (i,j) where i is the measure number and j the staff index (e.g. staff indices 0, 1 for two piano parts) */
     private measureList: GraphicalMeasure[][] = [];
@@ -495,59 +501,134 @@ export class GraphicalMusicSheet {
         return false;
     }
 
-    public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
-        const initialSearchArea: number = 10;
-        const foundNotes: GraphicalNote[] = [];
-
-        // Prepare search area
-        const region: BoundingBox = new BoundingBox();
-        region.BorderLeft = clickPosition.x - initialSearchArea;
-        region.BorderTop = clickPosition.y - initialSearchArea;
-        region.BorderRight = clickPosition.x + initialSearchArea;
-        region.BorderBottom = clickPosition.y + initialSearchArea;
-        region.AbsolutePosition = new PointF2D(0, 0);
-
-        // Search for StaffEntries in region
-        for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
-            const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
-            const entries: GraphicalNote[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<GraphicalNote>(region);
-            //let entriesArr: GraphicalNote[] = __as__<GraphicalNote[]>(entries, GraphicalNote[]) ? ? entries;
-            if (!entries) {
-                continue;
-            } else {
-                for (let idx2: number = 0, len2: number = entries.length; idx2 < len2; ++idx2) {
-                    const note: GraphicalNote = entries[idx2];
-                    if (Math.abs(note.PositionAndShape.AbsolutePosition.x - clickPosition.x) < maxClickDist.x
-                        && Math.abs(note.PositionAndShape.AbsolutePosition.y - clickPosition.y) < maxClickDist.y) {
-                        foundNotes.push(note);
+    /**
+     * Generic method to find graphical objects on the sheet at a given location.
+     * @param clickPosition Position in units where we are searching on the sheet
+     * @param className String representation of the class we want to find. Must extend GraphicalObject
+     * @param startSearchArea The area in units around our point to look for our graphical object, default 5
+     * @param maxSearchArea The max area we want to search around our point
+     * @param searchAreaIncrement The amount we expand our search area for each iteration that we don't find an object of the given type
+     * @param shouldBeIncludedTest A callback that determines if the object should be included in our results- return false for no, true for yes
+     */
+    private GetNearestGraphicalObject<T extends GraphicalObject>(
+        clickPosition: PointF2D, className: string = GraphicalObject.name,
+        startSearchArea: number = 5, maxSearchArea: number = 20, searchAreaIncrement: number = 5,
+        shouldBeIncludedTest: (objectToTest: T) => boolean = undefined): T {
+        const foundEntries: T[] = [];
+        //Loop until we find some, or our search area is out of bounds
+        while (foundEntries.length === 0 && startSearchArea <= maxSearchArea) {
+            //Prepare search area
+            const region: BoundingBox = new BoundingBox(undefined);
+            region.BorderLeft = clickPosition.x - startSearchArea;
+            region.BorderTop = clickPosition.y - startSearchArea;
+            region.BorderRight = clickPosition.x + startSearchArea;
+            region.BorderBottom = clickPosition.y + startSearchArea;
+            region.AbsolutePosition = new PointF2D(clickPosition.x, clickPosition.y);
+            region.calculateAbsolutePosition();
+            //Loop through music pages
+            for (let idx: number = 0, len: number = this.MusicPages.length; idx < len; ++idx) {
+                const graphicalMusicPage: GraphicalMusicPage = this.MusicPages[idx];
+                const entries: T[] = graphicalMusicPage.PositionAndShape.getObjectsInRegion<T>(region, false, className);
+                //If we have no entries on this page, skip to next (if exists)
+                if (!entries || entries.length === 0) {
+                    continue;
+                } else {
+                    //Otherwise test all our entries if applicable, store on our found list
+                    for (let idx2: number = 0, len2: number = entries.length; idx2 < len2; ++idx2) {
+                        if (!shouldBeIncludedTest) {
+                            foundEntries.push(entries[idx2]);
+                        } else if (shouldBeIncludedTest(entries[idx2])) {
+                            foundEntries.push(entries[idx2]);
+                        }
                     }
                 }
             }
+            //Expand search area, we haven't found anything yet
+            startSearchArea += searchAreaIncrement;
         }
-
         // Get closest entry
-        let closest: GraphicalNote = undefined;
-        for (let idx: number = 0, len: number = foundNotes.length; idx < len; ++idx) {
-            const note: GraphicalNote = foundNotes[idx];
+        let closest: T = undefined;
+        for (let idx: number = 0, len: number = foundEntries.length; idx < len; ++idx) {
+            const object: T = foundEntries[idx];
             if (closest === undefined) {
-                closest = note;
+                closest = object;
             } else {
-                if (!note.parentVoiceEntry.parentStaffEntry.relInMeasureTimestamp) {
-                    continue;
-                }
-                const deltaNew: number = this.CalculateDistance(note.PositionAndShape.AbsolutePosition, clickPosition);
+                const deltaNew: number = this.CalculateDistance(object.PositionAndShape.AbsolutePosition, clickPosition);
                 const deltaOld: number = this.CalculateDistance(closest.PositionAndShape.AbsolutePosition, clickPosition);
                 if (deltaNew < deltaOld) {
-                    closest = note;
+                    closest = object;
                 }
             }
         }
         if (closest) {
             return closest;
         }
-        // TODO No staff entry was found. Feedback?
-        // throw new ArgumentException("No staff entry found");
         return undefined;
+    }
+
+    public GetNearestVoiceEntry(clickPosition: PointF2D): GraphicalVoiceEntry {
+        return this.GetNearestGraphicalObject<GraphicalVoiceEntry>(clickPosition, GraphicalVoiceEntry.name, 5, 20, 5,
+                                                                   (object: GraphicalVoiceEntry) =>
+                                                                        object.parentStaffEntry.relInMeasureTimestamp !== undefined);
+    }
+
+    public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
+        const nearestVoiceEntry: GraphicalVoiceEntry = this.GetNearestVoiceEntry(clickPosition);
+        if (!nearestVoiceEntry) {
+            return undefined;
+        }
+        let closestNote: GraphicalNote;
+        let closestDist: number = Number.MAX_SAFE_INTEGER;
+        // debug: show position in sheet. line starts from the click position, until clickposition.x + 2
+        // (this.drawer as any).DrawOverlayLine( // as VexFlowMusicSheetDrawer
+        //     clickPosition,
+        //     new PointF2D(clickPosition.x + 2, clickPosition.y),
+        //     this.MusicPages[0]);
+        for (const note of nearestVoiceEntry.notes) {
+            const posY: number = note.PositionAndShape.AbsolutePosition.y;
+            const distX: number = Math.abs(note.PositionAndShape.AbsolutePosition.x - clickPosition.x);
+            const distY: number = Math.abs(posY - clickPosition.y);
+            // console.log("note: " + note.sourceNote.Pitch.ToString());
+            if (distX + distY < closestDist) {
+                closestNote = note;
+                closestDist = distX + distY;
+            }
+        }
+        return closestNote;
+    }
+
+    public domToSvg(point: PointF2D): PointF2D {
+        return this.domToSvgTransform(point, true);
+    }
+
+    public svgToDom(point: PointF2D): PointF2D {
+        return this.domToSvgTransform(point, false);
+    }
+
+    public svgToOsmd(point: PointF2D): PointF2D {
+        const pt: PointF2D = new PointF2D(point.x, point.y);
+        pt.x /= 10; // unitInPixels would need to be imported from VexFlowMusicSheetDrawer
+        pt.y /= 10;
+        return pt;
+    }
+
+    // TODO move to VexFlowMusicSheetDrawer? better fit for imports
+    private domToSvgTransform(point: PointF2D, inverse: boolean): PointF2D {
+        const svgBackend: any = (this.drawer as any).Backends[0]; // as SvgVexFlowBackend;
+        // TODO importing SvgVexFlowBackend here causes build problems. Importing VexFlowMusicSheetDrawer seems to be fine, but unnecessary.
+        // if (!(svgBackend instanceof SvgVexFlowBackend)) {
+        //     return undefined;
+        // }
+        const svg: SVGSVGElement = svgBackend.getSvgElement() as SVGSVGElement;
+        const pt: SVGPoint = svg.createSVGPoint();
+        pt.x = point.x;
+        pt.y = point.y;
+        let transformMatrix: DOMMatrix = svg.getScreenCTM();
+        if (inverse) {
+            transformMatrix = transformMatrix.inverse();
+        }
+        const sp: SVGPoint = pt.matrixTransform(transformMatrix);
+        return new PointF2D(sp.x, sp.y);
     }
 
     public GetClickableLabel(clickPosition: PointF2D): GraphicalLabel {

@@ -533,7 +533,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             vexFlowVoltaHeight += skylineDifference;
                             newSkylineValueForMeasure = prevMeasureSkyline;
                         } else { //otherwise, we are higher. Need to adjust prev
-                            (nextStaveModifier as any).y_shift = vexFlowVoltaHeight * 10;
+                            (nextStaveModifier as any).y_shift = vexFlowVoltaHeight * unitInPixels;
                             prevMeasure.ParentStaffLine.SkyBottomLineCalculator.updateSkyLineInRange(prevStart, prevEnd, newSkylineValueForMeasure);
                         }
                     }
@@ -625,6 +625,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const connector of this.connectors) {
             connector.setContext(ctx).draw();
         }
+        this.correctNotePositions();
     }
 
     // this currently formats multiple measures, see VexFlowMusicSheetCalculator.formatMeasures()
@@ -635,6 +636,42 @@ export class VexFlowMeasure extends GraphicalMeasure {
             // set the width of the voices to the current measure width:
             // (The width of the voices does not include the instructions (StaveModifiers))
             this.formatVoices((this.PositionAndShape.Size.width - this.beginInstructionsWidth - this.endInstructionsWidth) * unitInPixels, this);
+        }
+
+        // this.correctNotePositions(); // now done at the end of draw()
+    }
+
+    // correct position / bounding box (note.setIndex() needs to have been called)
+    public correctNotePositions(): void {
+        if (this.isTabMeasure) {
+            return;
+        }
+        for (const voice of this.getVoicesWithinMeasure()) {
+            for (const ve of voice.VoiceEntries) {
+                for (const note of ve.Notes) {
+                    const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
+                    const vfnote: Vex.Flow.StemmableNote = gNote.vfnote[0];
+                    // if (note.isRest()) // TODO somehow there are never rest notes in ve.Notes
+                    // TODO also, grace notes are not included here, need to be fixed as well. (and a few triple beamed notes in Bach Air)
+                    let relPosY: number = 0;
+                    if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
+                        relPosY += 3.5; // about 3.5 lines too high. this seems to be related to the default stem height, not actual stem height.
+                        // alternate calculation using actual stem height: somehow wildly varying.
+                        // if (ve.Notes.length > 1) {
+                        //     const stemHeight: number = vfnote.getStem().getHeight();
+                        //     // relPosY += shortFactor * stemHeight / unitInPixels - 3.5;
+                        //     relPosY += stemHeight / unitInPixels - 3.5; // for some reason this varies in its correctness between similar notes
+                        // } else {
+                        //     relPosY += 3.5;
+                        // }
+                    } else {
+                        relPosY += 0.5; // center-align bbox
+                    }
+                    const line: any = -gNote.notehead(vfnote).line; // vexflow y direction is opposite of osmd's
+                    relPosY += line + (gNote.parentVoiceEntry.notes.last() as VexFlowGraphicalNote).notehead().line; // don't move for first note: - (-vexline)
+                    gNote.PositionAndShape.RelativePosition.y = relPosY;
+                }
+            }
         }
     }
 
@@ -1152,6 +1189,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         const voices: Voice[] = this.getVoicesWithinMeasure();
 
+        // Calculate offsets for fingerings
+        if (this.rules.RenderFingerings) {
+            for (const graphicalStaffEntry of this.staffEntries as VexFlowStaffEntry[]) {
+                graphicalStaffEntry.setModifierXOffsets();
+            }
+        }
+
         for (const voice of voices) {
             if (!voice) {
                 continue;
@@ -1329,14 +1373,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (fingering.placement !== PlacementEnum.NotYetDefined) {
                 fingeringPosition = fingering.placement;
             }
-            let modifierPosition: any; // Vex.Flow.Stavemodifier.Position
+            let offsetX: number = this.rules.FingeringOffsetX;
+            let modifierPosition: number; // Vex.Flow.Stavemodifier.Position
             switch (fingeringPosition) {
                 default:
                 case PlacementEnum.Left:
                     modifierPosition = Vex.Flow.StaveModifier.Position.LEFT;
+                    offsetX -= note.baseFingeringXOffset * unitInPixels;
                     break;
                 case PlacementEnum.Right:
                     modifierPosition = Vex.Flow.StaveModifier.Position.RIGHT;
+                    offsetX += note.baseFingeringXOffset * unitInPixels;
                     break;
                 case PlacementEnum.Above:
                     modifierPosition = Vex.Flow.StaveModifier.Position.ABOVE;
@@ -1359,7 +1406,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
             const fretFinger: Vex.Flow.FretHandFinger = new Vex.Flow.FretHandFinger(fingering.value);
             fretFinger.setPosition(modifierPosition);
-            fretFinger.setOffsetX(this.rules.FingeringOffsetX);
+            fretFinger.setOffsetX(offsetX);
             if (fingeringPosition === PlacementEnum.Above || fingeringPosition === PlacementEnum.Below) {
                 const offsetYSign: number = fingeringPosition === PlacementEnum.Above ? -1 : 1; // minus y is up
                 const ordering: number = fingeringPosition === PlacementEnum.Above ? fingeringIndex :
@@ -1394,19 +1441,54 @@ export class VexFlowMeasure extends GraphicalMeasure {
             return;
         }
         const vexFlowVoiceEntry: VexFlowVoiceEntry = voiceEntry as VexFlowVoiceEntry;
-        const note: GraphicalNote = voiceEntry.notes[0]; // only display for top note
-        const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
-        if (stringInstruction) {
-            const stringNumber: number = Number.parseInt(stringInstruction.value, 10);
-            const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
-            const offsetY: number = -this.rules.StringNumberOffsetY;
-            // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
-            //     // TODO also check for treble clef (adjust for viola, cello, etc)
-            //     offsetY += 10;
-            // }
-            vfStringNumber.setOffsetY(offsetY);
-            vexFlowVoiceEntry.vfStaveNote.addModifier((0 as any), (vfStringNumber as any)); // see addModifier() above
-        }
+        voiceEntry.notes.forEach((note, stringIndex) => {
+            const stringInstruction: TechnicalInstruction = note.sourceNote.StringInstruction;
+            if (stringInstruction) {
+                let stringNumber: string = stringInstruction.value;
+                switch (stringNumber) {
+                    case "1":
+                        stringNumber = "I";
+                        break;
+                    case "2":
+                        stringNumber = "II";
+                        break;
+                    case "3":
+                        stringNumber = "III";
+                        break;
+                    case "4":
+                        stringNumber = "IV";
+                        break;
+                    case "5":
+                        stringNumber = "V";
+                        break;
+                    case "6":
+                        stringNumber = "VI";
+                        break;
+                    default:
+                        // log.warn("stringNumber > 6 not supported"); // TODO do we need to support more?
+                        // leave stringNumber as is, warning not really necessary
+                }
+                const vfStringNumber: Vex.Flow.StringNumber = new Vex.Flow.StringNumber(stringNumber);
+                // Remove circle from string number. Not needed for
+                // disambiguation from fingerings since we use Roman
+                // Numerals for RenderStringNumbersClassical
+                (<any>vfStringNumber).radius = 0;
+                const offsetY: number = -this.rules.StringNumberOffsetY;
+                // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
+                //     // TODO also check for treble clef (adjust for viola, cello, etc)
+                //     offsetY += 10;
+                // }
+                if (voiceEntry.notes.length > 1 || voiceEntry.parentStaffEntry.graphicalVoiceEntries.length > 1) {
+                    vfStringNumber.setOffsetX(note.baseStringNumberXOffset * 13);
+                    vfStringNumber.setPosition(Vex.Flow.Modifier.Position.RIGHT);
+                } else {
+                    vfStringNumber.setPosition(Vex.Flow.Modifier.Position.ABOVE);
+                }
+                vfStringNumber.setOffsetY(offsetY);
+
+                vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
+            }
+        });
     }
 
     /**

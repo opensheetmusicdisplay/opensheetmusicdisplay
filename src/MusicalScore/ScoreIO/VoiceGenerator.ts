@@ -1,4 +1,3 @@
-import { Instrument } from "../Instrument";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { Voice } from "../VoiceData/Voice";
 import { MusicSheet } from "../MusicSheet";
@@ -31,22 +30,28 @@ import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
 import { NoteType, NoteTypeHandler } from "../VoiceData/NoteType";
 import { TabNote } from "../VoiceData/TabNote";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { ReaderPluginManager } from "./ReaderPluginManager";
+import { Instrument } from "../Instrument";
 
 export class VoiceGenerator {
-  constructor(instrument: Instrument, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
-    this.musicSheet = instrument.GetMusicSheet;
+  constructor(pluginManager: ReaderPluginManager, staff: Staff, voiceId: number, slurReader: SlurReader, mainVoice: Voice = undefined) {
+    this.staff = staff;
+    this.instrument = staff.ParentInstrument;
+    this.musicSheet = this.instrument.GetMusicSheet;
     this.slurReader = slurReader;
+    this.pluginManager = pluginManager;
     if (mainVoice) {
-      this.voice = new LinkedVoice(instrument, voiceId, mainVoice);
+      this.voice = new LinkedVoice(this.instrument, voiceId, mainVoice);
     } else {
-      this.voice = new Voice(instrument, voiceId);
+      this.voice = new Voice(this.instrument, voiceId);
     }
-    this.instrument = instrument;
-    this.instrument.Voices.push(this.voice);
+    this.instrument.Voices.push(this.voice); // apparently necessary for cursor.next(), for "cursor with hidden instrument" test
+    this.staff.Voices.push(this.voice);
     this.lyricsReader = new LyricsReader(this.musicSheet);
     this.articulationReader = new ArticulationReader();
   }
 
+  public pluginManager: ReaderPluginManager; // currently only used in audio player
   private slurReader: SlurReader;
   private lyricsReader: LyricsReader;
   private articulationReader: ArticulationReader;
@@ -56,6 +61,7 @@ export class VoiceGenerator {
   private currentNote: Note;
   private currentMeasure: SourceMeasure;
   private currentStaffEntry: SourceStaffEntry;
+  private staff: Staff;
   private instrument: Instrument;
   // private lastBeamTag: string = "";
   private openBeams: Beam[] = []; // works like a stack, with push and pop
@@ -471,6 +477,9 @@ export class VoiceGenerator {
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
+    if (stemDirectionXml === StemDirectionType.None) {
+      stemColorXml = "#00000000";  // just setting this to transparent for now
+    }
     this.currentVoiceEntry.Notes.push(note);
     this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
     if (stemColorXml) {

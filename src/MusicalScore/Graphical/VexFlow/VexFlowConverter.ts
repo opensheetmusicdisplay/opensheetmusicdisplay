@@ -362,6 +362,10 @@ export class VexFlowConverter {
         } else {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
         }
+
+        // Annotate GraphicalNote with which line of the staff it appears on
+        vfnote.getKeyProps().forEach(({ line }, i) => gve.notes[i].staffLine = line);
+
         if (rules.LedgerLineWidth || rules.LedgerLineStrokeStyle) {
             // FIXME should probably use vfnote.setLedgerLineStyle. this doesn't seem to do anything.
             // however, this is also set in VexFlowVoiceEntry.color() anyways.
@@ -405,9 +409,11 @@ export class VexFlowConverter {
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
                     vfnote.setStemDirection(Vex.Flow.Stem.UP);
+                    gve.parentVoiceEntry.StemDirection = StemDirectionType.Up;
                     break;
                 case (StemDirectionType.Down):
                     vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
+                    gve.parentVoiceEntry.StemDirection = StemDirectionType.Down;
                     break;
                 default:
             }

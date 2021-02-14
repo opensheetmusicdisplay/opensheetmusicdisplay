@@ -228,11 +228,13 @@ async function init () {
         const sampleFilename = samplesToProcess[i];
         debug("sampleFilename: " + sampleFilename, DEBUG);
 
-        await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, false);
+        await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {}, DEBUG);
 
         if (osmdTestingMode && !osmdTestingSingleMode && sampleFilename.startsWith("Beethoven") && sampleFilename.includes("Geliebte")) {
             // generate one more testing image with skyline and bottomline. (startsWith 'Beethoven' don't catch the function test)
-            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, true, DEBUG);
+            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {skyBottomLine: true}, DEBUG);
+            // generate one more testing image with GraphicalNote positions
+            await generateSampleImage(sampleFilename, sampleDir, osmdInstance, osmdTestingMode, {boundingBoxes: "VexFlowGraphicalNote"}, DEBUG);
         }
     }
 
@@ -242,7 +244,7 @@ async function init () {
 // eslint-disable-next-line
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
-    includeSkyBottomLine = false, DEBUG = false) {
+    options = {}, DEBUG = false) {
     const samplePath = directory + "/" + sampleFilename;
     let loadParameter = FS.readFileSync(samplePath);
 
@@ -255,6 +257,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     // console.log('typeof loadParameter: ' + typeof loadParameter)
 
     // set sample-specific options for OSMD visual regression testing
+    let includeSkyBottomLine = false;
+    let drawBoundingBoxString;
     if (osmdTestingMode) {
         const isFunctionTestAutobeam = sampleFilename.startsWith("OSMD_function_test_autobeam");
         const isFunctionTestAutoColoring = sampleFilename.startsWith("OSMD_function_test_auto-custom-coloring");
@@ -263,6 +267,11 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         const defaultOrCompactTightMode = sampleFilename.startsWith("OSMD_Function_Test_Container_height") ? "compacttight" : "default";
         const isTestFlatBeams = sampleFilename.startsWith("test_drum_tuplet_beams");
         const isTestEndClefStaffEntryBboxes = sampleFilename.startsWith("test_end_measure_clefs_staffentry_bbox");
+        if (isTestEndClefStaffEntryBboxes) {
+            drawBoundingBoxString = "VexFlowStaffEntry";
+        } else {
+            drawBoundingBoxString = options.boundingBoxes; // undefined is also a valid value: no bboxes
+        }
         osmdInstance.setOptions({
             autoBeam: isFunctionTestAutobeam, // only set to true for function test autobeam
             coloringMode: isFunctionTestAutoColoring ? 2 : 0,
@@ -277,10 +286,10 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
             pageFormat: pageFormat // reset by drawingparameters default
         });
+        includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
         osmdInstance.drawBottomLine = includeSkyBottomLine;
-        const drawBoundingBoxValue = isTestEndClefStaffEntryBboxes ? "VexFlowStaffEntry" : undefined;
-        osmdInstance.setDrawBoundingBox(drawBoundingBoxValue, false); // false: don't render (now)
+        osmdInstance.setDrawBoundingBox(drawBoundingBoxString, false); // false: don't render (now). also (re-)set if undefined!
         if (isTestFlatBeams) {
             osmdInstance.EngravingRules.FlatBeams = true;
             // osmdInstance.EngravingRules.FlatBeamOffset = 30;
@@ -330,8 +339,9 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
     for (let pageIndex = 0; pageIndex < Math.max(dataUrls.length, markupStrings.length); pageIndex++) {
         const pageNumberingString = `${pageIndex + 1}`;
         const skybottomlineString = includeSkyBottomLine ? "skybottomline_" : "";
+        const graphicalNoteBboxesString = drawBoundingBoxString ? "bbox" + drawBoundingBoxString + "_" : "";
         // pageNumberingString = dataUrls.length > 0 ? pageNumberingString : '' // don't put '_1' at the end if only one page. though that may cause more work
-        const pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${pageNumberingString}.${imageFormat}`;
+        const pageFilename = `${imageDir}/${sampleFilename}_${skybottomlineString}${graphicalNoteBboxesString}${pageNumberingString}.${imageFormat}`;
 
         if (imageFormat === "png") {
             const dataUrl = dataUrls[pageIndex];
