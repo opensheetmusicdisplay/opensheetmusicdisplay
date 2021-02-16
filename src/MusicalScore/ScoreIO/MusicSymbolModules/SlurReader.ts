@@ -37,6 +37,14 @@ export class SlurReader {
                                 slurPlacementXml = PlacementEnum.Below;
                             }
                         }
+                        const orientationAttr: Attr = slurNode.attribute("orientation"); // alternative for placement, used by Sibelius
+                        if (orientationAttr && orientationAttr.value) {
+                            if (orientationAttr.value === "over") {
+                                slurPlacementXml = PlacementEnum.Above;
+                            } else if (orientationAttr.value === "under") {
+                                slurPlacementXml = PlacementEnum.Below;
+                            }
+                        }
                         if (type === "start") {
                             let slur: Slur = this.openSlurDict[slurNumber];
                             if (!slur) {
