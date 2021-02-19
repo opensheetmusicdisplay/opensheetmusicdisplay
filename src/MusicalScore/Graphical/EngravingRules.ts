@@ -474,10 +474,10 @@ export class EngravingRules {
         this.SlurTangentMinAngle = 30.0;
         this.SlurTangentMaxAngle = 80.0;
         this.SlurHeightFactor = 1; // 1 = 100% (standard height). 2 = 100% flattening of all slurs.
-        this.SlurHeightFlattenLongSlursFactorByWidth = 0.9; // additional flattening for long slurs the longer they are.
-        this.SlurHeightFlattenLongSlursFactorByAngle = 0.1; // this has a very strong effect on the curve, even with small increases.
-        this.SlurHeightFlattenLongSlursCutoffAngle = 55;
-        this.SlurHeightFlattenLongSlursCutoffWidth = 15;
+        this.SlurHeightFlattenLongSlursFactorByWidth = 0.24; // additional flattening for long slurs the longer they are.
+        this.SlurHeightFlattenLongSlursFactorByAngle = 0.36; // when one of these factors is high, increasing the other has a very strong effect.
+        this.SlurHeightFlattenLongSlursCutoffAngle = 47;
+        this.SlurHeightFlattenLongSlursCutoffWidth = 16; // 15 ~ slur between measure's first notes in 4/4. 14 -> problem with test_slurs_highNotes
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
 
         // Repetitions

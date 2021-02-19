@@ -876,6 +876,7 @@ export class GraphicalSlur extends GraphicalCurve {
         let widthFlattenFactor: number = 1;
         const cutoffAngle: number = this.rules.SlurHeightFlattenLongSlursCutoffAngle;
         const cutoffWidth: number = this.rules.SlurHeightFlattenLongSlursCutoffWidth;
+        // console.log("width: " + endX);
         if (startAngle > cutoffAngle && endX > cutoffWidth) { // steep and wide slurs
             // console.log("steep angle: " + startAngle);
             widthFlattenFactor += endX / 70 * this.rules.SlurHeightFlattenLongSlursFactorByWidth; // double flattening for width = 70, factorByWidth = 1
