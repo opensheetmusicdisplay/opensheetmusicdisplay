@@ -241,7 +241,7 @@ export interface IOSMDOptions {
     autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
     cursorsOptions?: CursorOptions[];
     /**
-     * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used. 
+     * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used.
      */
 }
 
@@ -303,7 +303,7 @@ export interface CursorOptions {
      * Type of cursor:
      * 0: Standard highlighting current notes
      * 1: Thin line left to the current notes
-     * 2: Short thin line on top of stave and left to the current notes 
+     * 2: Short thin line on top of stave and left to the current notes
      * 3: Current compass
      * 4: Current compass to left of current notes
      */

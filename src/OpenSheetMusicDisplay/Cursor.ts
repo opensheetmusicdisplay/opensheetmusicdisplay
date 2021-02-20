@@ -14,6 +14,7 @@ import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import { CursorOptions } from "./OSMDOptions";
+import { BoundingBox } from "../MusicalScore";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -39,7 +40,7 @@ export class Cursor {
     const curs: HTMLElement = document.createElement("img");
     curs.id = this.cursorElementId;
     curs.style.position = "absolute";
-    if (this.cursorOptions.follow==true) {
+    if (this.cursorOptions.follow === true) {
       curs.style.zIndex = "-1";
     } else {
       curs.style.zIndex = "-2";
@@ -171,40 +172,41 @@ export class Cursor {
     // This the current HTML Cursor:
     const cursorElement: HTMLImageElement = this.cursorElement;
 
-    var newWidth = 0;
+    let newWidth: number = 0;
+    const meassurePositionAndShape: BoundingBox = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape;
     switch (this.cursorOptions.type) {
       case 1:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
-        newWidth = 5 * this.openSheetMusicDisplay.zoom; 
+        newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
       case 2:
         cursorElement.style.top = ((y-2.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = (x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.height = (1.5 * 10.0 * this.openSheetMusicDisplay.zoom);
-        newWidth = 5 * this.openSheetMusicDisplay.zoom; 
+        newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
       case 3:
-        cursorElement.style.top = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";//((y-1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.style.left = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";//(x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.top = meassurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.style.left = meassurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
-        newWidth = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape.Size.width * 10 * this.openSheetMusicDisplay.zoom; 
+        newWidth = meassurePositionAndShape.Size.width * 10 * this.openSheetMusicDisplay.zoom;
         break;
       case 4:
-        cursorElement.style.top = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";//((y-1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.style.left = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";//(x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.top = meassurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.style.left = meassurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
         cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
-        newWidth = (x-this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape.AbsolutePosition.x) * 10 * this.openSheetMusicDisplay.zoom; 
+        newWidth = (x-meassurePositionAndShape.AbsolutePosition.x) * 10 * this.openSheetMusicDisplay.zoom;
         break;
         default:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
-        newWidth = 3 * 10.0 * this.openSheetMusicDisplay.zoom; 
-        break;  
+        newWidth = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
+        break;
     }
-    
+
     if (newWidth !== cursorElement.width) {
       cursorElement.width = newWidth;
       this.updateStyle(newWidth, this.cursorOptions);
@@ -278,7 +280,7 @@ export class Cursor {
         gradient.addColorStop(0.2, this.cursorOptions.color);
         gradient.addColorStop(0.8, this.cursorOptions.color);
         gradient.addColorStop(1, "white"); // it was: "transparent"
-      break;  
+      break;
     }
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, 1);

@@ -181,7 +181,7 @@ export class OpenSheetMusicDisplay {
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
         if (this.drawingParameters.drawCursors) {
             this.cursors.forEach(cursor => {
-                cursor.init(this.sheet.MusicPartManager, this.graphic);                
+                cursor.init(this.sheet.MusicPartManager, this.graphic);
             });
         }
     }
@@ -246,7 +246,7 @@ export class OpenSheetMusicDisplay {
         if (this.drawingParameters.drawCursors) {
             // Update the cursor position
             this.cursors.forEach(cursor => {
-                cursor.update(); 
+                cursor.update();
             });
         }
         this.zoomUpdated = false;
@@ -579,7 +579,7 @@ export class OpenSheetMusicDisplay {
         {
             this.cursorsOptions = options.cursorsOptions;
         } else {
-            this.cursorsOptions = [{type:0, color:this.EngravingRules.DefaultColorCursor,alpha:0.5,follow:options.followCursor}]
+            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: options.followCursor}];
         }
     }
 
@@ -664,7 +664,7 @@ export class OpenSheetMusicDisplay {
     protected reset(): void {
         if (this.drawingParameters.drawCursors) {
             this.cursors.forEach(cursor => {
-                cursor.hide(); 
+                cursor.hide();
             });
         }
         this.sheet = undefined;
@@ -756,7 +756,7 @@ export class OpenSheetMusicDisplay {
     public enableOrDisableCursors(enable: boolean): void {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
-            for (let i=0; i< this.cursorsOptions.length; i++){
+            for (let i: number = 0; i< this.cursorsOptions.length; i++){
                 // save previous cursor state
                 const hidden: boolean = this.cursors[i]?.Hidden;
                 const previousIterator: MusicPartManagerIterator = this.cursors[i]?.Iterator;
