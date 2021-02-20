@@ -239,6 +239,10 @@ export interface IOSMDOptions {
      * This works across instruments- If all instruments have subsequent measures with nothing but rests, multirest measures are generated
      */
     autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
+    cursorsOptions?: CursorOptions[];
+    /**
+     * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used. 
+     */
 }
 
 export enum AlignRestOption {
@@ -292,4 +296,28 @@ export interface AutoBeamOptions {
      * E.g. [[3,4],[1,4]] will beam the first 3 quarters of a measure, then the last quarter.
      */
     groups?: [number[]];
+}
+
+export interface CursorOptions {
+    /**
+     * Type of cursor:
+     * 0: Standard highlighting current notes
+     * 1: Thin line left to the current notes
+     * 2: Short thin line on top of stave and left to the current notes 
+     * 3: Current compass
+     * 4: Current compass to left of current notes
+     */
+    type: number;
+    /**
+     * Color to draw the cursor
+     */
+    color: string;
+    /**
+     * If true, this cursor will be followed.
+     */
+    alpha: number;
+    /**
+     * alpha value to be used with color (0.0 transparent, 0.5 medium, 1.0 opaque).
+     */
+    follow: boolean;
 }
