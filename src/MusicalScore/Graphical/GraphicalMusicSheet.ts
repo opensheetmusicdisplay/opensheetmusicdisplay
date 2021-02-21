@@ -18,11 +18,13 @@ import {Instrument} from "../Instrument";
 import {BoundingBox} from "./BoundingBox";
 import {MusicSheetCalculator} from "./MusicSheetCalculator";
 import log from "loglevel";
-//import { Dictionary } from "typescript-collections"; // unused for now
+
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import {SelectionStartSymbol} from "./SelectionStartSymbol";
 import {SelectionEndSymbol} from "./SelectionEndSymbol";
 import {OutlineAndFillStyleEnum} from "./DrawingEnums";
+import { Clickable } from "./Clickable";
+import { StaffLine } from ".";
 import { MusicSheetDrawer } from "./MusicSheetDrawer";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
@@ -569,7 +571,7 @@ export class GraphicalMusicSheet {
     public GetNearestVoiceEntry(clickPosition: PointF2D): GraphicalVoiceEntry {
         return this.GetNearestGraphicalObject<GraphicalVoiceEntry>(clickPosition, GraphicalVoiceEntry.name, 5, 20, 5,
                                                                    (object: GraphicalVoiceEntry) =>
-                                                                        object.parentStaffEntry.relInMeasureTimestamp !== undefined);
+                                                                        object?.parentStaffEntry?.relInMeasureTimestamp !== undefined);
     }
 
     public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
@@ -705,14 +707,14 @@ export class GraphicalMusicSheet {
     }
 
     public GetPossibleCommentAnchor(clickPosition: PointF2D): SourceStaffEntry {
-        const entry: GraphicalStaffEntry = this.GetNearestStaffEntry(clickPosition);
+        const entry: GraphicalVoiceEntry = this.GetNearestVoiceEntry(clickPosition);
         if (!entry) {
             return undefined;
         }
-        return entry.sourceStaffEntry;
+        return entry.parentStaffEntry.sourceStaffEntry;
     }
 
-    public getClickedObjectOfType<T>(positionOnMusicSheet: PointF2D): T {
+    public GetClickedObjectOfType<T>(positionOnMusicSheet: PointF2D): T {
         for (let idx: number = 0, len: number = this.musicPages.length; idx < len; ++idx) {
             const page: GraphicalMusicPage = this.musicPages[idx];
             const o: Object = page.PositionAndShape.getClickedObjectOfType<T>(positionOnMusicSheet);
@@ -723,8 +725,23 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
+    //Comment copied from Bounding box method:
+    //Generics don't work like this in TS. Casting doesn't filter out objects.
+    //instanceof doesn't work either with generic types. Hopefully instanceof becomes available at some point, for now we have to do annoyingly
+    //specific implementations after calling this to filter the objects.
+    public GetClickedClickable(positionOnMusicSheet: PointF2D): Clickable {
+        for (let idx: number = 0, len: number = this.musicPages.length; idx < len; ++idx) {
+            const page: GraphicalMusicPage = this.musicPages[idx];
+            const o: Object = page.PositionAndShape.getClickedClickable(positionOnMusicSheet);
+            if (o && o instanceof Clickable) {
+                return o;
+            }
+        }
+        return undefined;
+    }
+
     public tryGetTimestampFromPosition(positionOnMusicSheet: PointF2D): Fraction {
-        const entry: GraphicalStaffEntry = this.getClickedObjectOfType<GraphicalStaffEntry>(positionOnMusicSheet);
+        const entry: GraphicalStaffEntry = this.GetClickedObjectOfType<GraphicalStaffEntry>(positionOnMusicSheet);
         if (!entry) {
             return undefined;
         }
@@ -743,11 +760,11 @@ export class GraphicalMusicSheet {
 
     public tryGetTimeStampFromPosition(positionOnMusicSheet: PointF2D): Fraction {
         try {
-            const entry: GraphicalStaffEntry = this.GetNearestStaffEntry(positionOnMusicSheet);
+            const entry: GraphicalVoiceEntry = this.GetNearestVoiceEntry(positionOnMusicSheet);
             if (!entry) {
                 return undefined;
             }
-            return entry.getAbsoluteTimestamp();
+            return entry.parentStaffEntry.getAbsoluteTimestamp();
         } catch (ex) {
             log.info(
                 "GraphicalMusicSheet.tryGetTimeStampFromPosition",
@@ -947,6 +964,17 @@ export class GraphicalMusicSheet {
             return [interpolatedXPosition, currentMusicSystem];
         }
     }
+    public calculateCursorPoints(xPos: number, correspondingSystem: MusicSystem): [PointF2D, PointF2D] {
+        if (correspondingSystem === undefined || correspondingSystem.StaffLines.length === 0) {
+            return [new PointF2D(), new PointF2D()];
+        }
+
+        const yCoordinate: number = correspondingSystem.PositionAndShape.AbsolutePosition.y;
+        const lastStaffLine: StaffLine = correspondingSystem.StaffLines.last();
+        const height: number = lastStaffLine.PositionAndShape.RelativePosition.y + lastStaffLine.StaffHeight;
+
+        return [new PointF2D(xPos, yCoordinate), new PointF2D(xPos, yCoordinate + height)];
+      }
 
     public GetNumberOfVisibleInstruments(): number {
         let visibleInstrumentCount: number = 0;

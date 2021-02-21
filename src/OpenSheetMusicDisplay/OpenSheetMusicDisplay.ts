@@ -22,6 +22,9 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+import { AbstractDisplayInteractionManager } from "../Display/AbstractDisplayInteractionManager";
+import { AbstractSheetRenderingManager } from "../Common/Interfaces/AbstractSheetRenderingManager";
+
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -77,11 +80,25 @@ export class OpenSheetMusicDisplay {
     private drawSkyLine: boolean;
     private drawBottomLine: boolean;
     private graphic: GraphicalMusicSheet;
+    private renderingManager: AbstractSheetRenderingManager;
+    private interactionManager: AbstractDisplayInteractionManager;
     private drawingParameters: DrawingParameters;
     private rules: EngravingRules;
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
     private followCursor: boolean;
+    public set RenderingManager(manager: AbstractSheetRenderingManager){
+        this.renderingManager = manager;
+    }
+    public get RenderingManager(): AbstractSheetRenderingManager{
+        return this.renderingManager;
+    }
+    public set InteractionManager(manager: AbstractDisplayInteractionManager){
+        this.interactionManager = manager;
+    }
+    public get InteractionManager(): AbstractDisplayInteractionManager{
+        return this.interactionManager;
+    }
 
     /**
      * Load a MusicXML file
@@ -179,6 +196,8 @@ export class OpenSheetMusicDisplay {
         if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
+        this.renderingManager?.setMusicSheet(this.graphic);
+        this.interactionManager?.Initialize();
     }
 
     /**
@@ -203,6 +222,9 @@ export class OpenSheetMusicDisplay {
         // log.debug("[OSMD] render width: " + width);
 
         this.sheet.pageWidth = width / this.zoom / 10.0;
+        if(this.renderingManager?.MainViewingRegion){
+            this.renderingManager.MainViewingRegion.WidthInUnits = this.sheet.pageWidth;
+        }
         if (this.rules.PageFormat && !this.rules.PageFormat.IsUndefined) {
             this.rules.PageHeight = this.sheet.pageWidth / this.rules.PageFormat.aspectRatio;
             log.debug("[OSMD] PageHeight: " + this.rules.PageHeight);
@@ -243,6 +265,8 @@ export class OpenSheetMusicDisplay {
             this.cursor.update();
         }
         this.zoomUpdated = false;
+        //need to init values
+        this.interactionManager?.displaySizeChanged(this.container.clientWidth, this.container.clientHeight);
         //console.log("[OSMD] render finished");
     }
 

@@ -5,6 +5,7 @@ import {SizeF2D} from "../../Common/DataObjects/SizeF2D";
 import {RectangleF2D} from "../../Common/DataObjects/RectangleF2D";
 import { StaffLineActivitySymbol } from "./StaffLineActivitySymbol";
 import { EngravingRules } from "./EngravingRules";
+import { Clickable } from "./Clickable";
 import { GraphicalObject } from "./GraphicalObject";
 
 /**
@@ -213,11 +214,11 @@ export class BoundingBox {
         }
         this.parent = value;
         // add to new parent
-        if (this.parent.ChildElements.indexOf(this) > -1) {
+        if (this.parent?.ChildElements?.indexOf(this) > -1) {
             log.error("BoundingBox of " + (this.dataObject.constructor as any).name +
             " already in children list of " + (this.parent.dataObject.constructor as any).name + "'s BoundingBox");
         } else {
-            this.parent.ChildElements.push(this);
+            this.parent?.ChildElements?.push(this);
         }
     }
 
@@ -568,6 +569,22 @@ export class BoundingBox {
             const innerObject: Object = psi.getClickedObjectOfType<T>(clickPosition);
             if (innerObject) {
                 return (innerObject as T);
+            }
+        }
+        return undefined;
+    }
+
+    //See below method. Have to implement specific due to current Typescript limitations
+    public getClickedClickable(clickPosition: PointF2D): Clickable {
+        const obj: Object = this.dataObject;
+        if (this.pointLiesInsideBorders(clickPosition) && obj && obj instanceof Clickable) {
+            return obj;
+        }
+        for (let idx: number = 0, len: number = this.childElements.length; idx < len; ++idx) {
+            const psi: BoundingBox = this.childElements[idx];
+            const innerObject: Object = psi.getClickedClickable(clickPosition);
+            if (innerObject && innerObject instanceof Clickable) {
+                return innerObject;
             }
         }
         return undefined;

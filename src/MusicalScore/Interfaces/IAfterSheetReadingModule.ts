@@ -1,4 +1,4 @@
-import {MusicSheet} from "../MusicSheet";
+import {MusicSheet} from "../../MusicalScore/MusicSheet";
 /**
  * Created by Matthias on 22.02.2017.
  */

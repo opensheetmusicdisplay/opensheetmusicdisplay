@@ -1,4 +1,4 @@
-import { Note } from "../VoiceData/Note";
+import { Note } from "../../MusicalScore/VoiceData/Note";
 
 export interface IQualityFeedbackTone {
     ParentNote: Note;

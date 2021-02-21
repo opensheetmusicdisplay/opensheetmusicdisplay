@@ -18,11 +18,11 @@ import {MidiInstrument} from "../VoiceData/Instructions/ClefInstruction";
 import {AbstractNotationInstruction} from "../VoiceData/Instructions/AbstractNotationInstruction";
 import {Label} from "../Label";
 import {MusicSymbolModuleFactory} from "./MusicSymbolModuleFactory";
-import {IAfterSheetReadingModule} from "../Interfaces/IAfterSheetReadingModule";
 import {RepetitionInstructionReader} from "./MusicSymbolModules/RepetitionInstructionReader";
 import {RepetitionCalculator} from "./MusicSymbolModules/RepetitionCalculator";
 import {EngravingRules} from "../Graphical/EngravingRules";
 import { ReaderPluginManager } from "./ReaderPluginManager";
+import { IAfterSheetReadingModule } from "../Interfaces/IAfterSheetReadingModule";
 
 export class MusicSheetReader /*implements IMusicSheetReader*/ {
 

@@ -1,4 +1,4 @@
-import { AClassHierarchyTrackable } from "../Interfaces/AClassHierarchyTrackable";
+import { AClassHierarchyTrackable } from "../../Common/Interfaces/AClassHierarchyTrackable";
 import {BoundingBox} from "./BoundingBox";
 
 export class GraphicalObject extends AClassHierarchyTrackable {
