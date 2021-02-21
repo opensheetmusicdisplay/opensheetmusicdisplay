@@ -22,8 +22,8 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
-import { AbstractDisplayInteractionManager } from "../Display/AbstractDisplayInteractionManager";
-import { AbstractSheetRenderingManager } from "../Common/Interfaces/AbstractSheetRenderingManager";
+import { ISheetRenderingManager } from "../Common/Interfaces/ISheetRenderingManager";
+import { IDisplayInteractionManager } from "../Common/Interfaces/IDisplayInteractionManager";
 
 
 /**
@@ -80,23 +80,23 @@ export class OpenSheetMusicDisplay {
     private drawSkyLine: boolean;
     private drawBottomLine: boolean;
     private graphic: GraphicalMusicSheet;
-    private renderingManager: AbstractSheetRenderingManager;
-    private interactionManager: AbstractDisplayInteractionManager;
+    private renderingManager: ISheetRenderingManager;
+    private interactionManager: IDisplayInteractionManager;
     private drawingParameters: DrawingParameters;
     private rules: EngravingRules;
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
     private followCursor: boolean;
-    public set RenderingManager(manager: AbstractSheetRenderingManager){
+    public set RenderingManager(manager: ISheetRenderingManager){
         this.renderingManager = manager;
     }
-    public get RenderingManager(): AbstractSheetRenderingManager{
+    public get RenderingManager(): ISheetRenderingManager{
         return this.renderingManager;
     }
-    public set InteractionManager(manager: AbstractDisplayInteractionManager){
+    public set InteractionManager(manager: IDisplayInteractionManager){
         this.interactionManager = manager;
     }
-    public get InteractionManager(): AbstractDisplayInteractionManager{
+    public get InteractionManager(): IDisplayInteractionManager{
         return this.interactionManager;
     }
 
@@ -222,8 +222,8 @@ export class OpenSheetMusicDisplay {
         // log.debug("[OSMD] render width: " + width);
 
         this.sheet.pageWidth = width / this.zoom / 10.0;
-        if(this.renderingManager?.MainViewingRegion){
-            this.renderingManager.MainViewingRegion.WidthInUnits = this.sheet.pageWidth;
+        if(this.renderingManager){
+            this.renderingManager.WidthInUnits = this.sheet.pageWidth;
         }
         if (this.rules.PageFormat && !this.rules.PageFormat.IsUndefined) {
             this.rules.PageHeight = this.sheet.pageWidth / this.rules.PageFormat.aspectRatio;
