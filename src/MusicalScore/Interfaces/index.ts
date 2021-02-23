@@ -7,3 +7,5 @@ export * from "./ITextMeasurer";
 export * from "./ITextTranslation";
 export * from "./ITransposeCalculator";
 export * from "./IVoiceMeasureReadPlugin";
+export * from "./AClassHierarchyTrackable";
+export * from "./IStafflineNoteCalculator";

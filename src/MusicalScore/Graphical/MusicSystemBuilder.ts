@@ -412,7 +412,7 @@ export class MusicSystemBuilder {
     }
 
     protected transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: GraphicalMeasure): KeyInstruction {
-        if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0
+        if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== keyInstruction.isTransposedBy
             && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
             && MusicSheetCalculator.transposeCalculator !== undefined
         ) {
@@ -422,6 +422,10 @@ export class MusicSystemBuilder {
             );
         }
         return keyInstruction;
+        // TODO we probably need to call initializeActiveInstructions() after this has been executed
+        //   (though we need to call it from where this is called)
+        //   since the accidentals are messed up after changing from transpose to 1 then to 0 again,
+        //   probably because this.activeKeys doesn't get updated. or maybe the issue is somewhere else
     }
 
     /**

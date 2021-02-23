@@ -210,7 +210,10 @@ export class Cursor {
     this.update();
   }
 
-  private updateStyle(width: number, color: string = "#33e02f"): void {
+  private updateStyle(width: number, color: string = undefined): void {
+    if (!color) {
+      color = this.rules.DefaultColorCursor;
+    }
     // Create a dummy canvas to generate the gradient for the cursor
     // FIXME This approach needs to be improved
     const c: HTMLCanvasElement = document.createElement("canvas");

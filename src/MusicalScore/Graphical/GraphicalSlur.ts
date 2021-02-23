@@ -233,6 +233,8 @@ export class GraphicalSlur extends GraphicalCurve {
             endControlPoint = transposeMatrix.vectorMultiplication(endControlPoint);
             endControlPoint.x += startX;
             endControlPoint.y = -endControlPoint.y + startY;
+            // middleControlPoint.x = (startControlPoint.x + endControlPoint.x) / 2;
+            // middleControlPoint.y = (startControlPoint.y + endControlPoint.y) / 2 + 1.0;
 
             /* for DEBUG only */
             // this.intersection = transposeMatrix.vectorMultiplication(intersectionPoint);
@@ -868,14 +870,39 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param points
      */
     private calculateControlPoints(endX: number, startAngle: number, endAngle: number,
-                                   points: PointF2D[], heightWidthRatio: number): { startControlPoint: PointF2D, endControlPoint: PointF2D } {
+                                   points: PointF2D[], heightWidthRatio: number
+    ): { startControlPoint: PointF2D, endControlPoint: PointF2D } {
+        let heightFactor: number = this.rules.SlurHeightFactor;
+        let widthFlattenFactor: number = 1;
+        const cutoffAngle: number = this.rules.SlurHeightFlattenLongSlursCutoffAngle;
+        const cutoffWidth: number = this.rules.SlurHeightFlattenLongSlursCutoffWidth;
+        // console.log("width: " + endX);
+        if (startAngle > cutoffAngle && endX > cutoffWidth) { // steep and wide slurs
+            // console.log("steep angle: " + startAngle);
+            widthFlattenFactor += endX / 70 * this.rules.SlurHeightFlattenLongSlursFactorByWidth; // double flattening for width = 70, factorByWidth = 1
+            widthFlattenFactor *= 1 + (startAngle / 30 * this.rules.SlurHeightFlattenLongSlursFactorByAngle); // flatten more for higher angles.
+            // TODO use sin or cos instead of startAngle directly
+            heightFactor /= widthFlattenFactor; // flatten long slurs more
+        }
+        // TODO also offer a widthFlattenFactor for smaller slurs?
+
+        // debug:
+        // const measureNumber: number = this.staffEntries[0].parentMeasure.MeasureNumber; // debug
+        // if (measureNumber === 10) {
+        //     console.log("endX: " + endX);
+        //     console.log("widthFlattenFactor: " + widthFlattenFactor);
+        //     console.log("heightFactor: " + heightFactor);
+        //     console.log("startAngle: " + startAngle);
+        //     console.log("heightWidthRatio: " + heightWidthRatio);
+        // }
+
         // calculate HeightWidthRatio between the MaxYpoint (from the points between StartPoint and EndPoint)
         // and the X-distance from StartPoint to EndPoint
         // use this HeightWidthRatio to get a "normalized" Factor (based on tested parameters)
         // this Factor denotes the Length of the TangentLine of the Curve (a proportion of the X-distance from StartPoint to EndPoint)
         // finally from this Length and the calculated Angles we get the coordinates of the Control Points
-        const factorStart: number = Math.min(0.5, Math.max(0.1, 1.7 * (startAngle / 80) * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
-        const factorEnd: number = Math.min(0.5, Math.max(0.1, 1.7 * (-endAngle / 80) * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
+        const factorStart: number = Math.min(0.5, Math.max(0.1, 1.7 * startAngle / 80 * heightFactor * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
+        const factorEnd: number = Math.min(0.5, Math.max(0.1, 1.7 * (-endAngle) / 80 * heightFactor * Math.pow(Math.max(heightWidthRatio, 0.05), 0.4)));
 
         const startControlPoint: PointF2D = new PointF2D();
         startControlPoint.x = endX * factorStart * Math.cos(startAngle * GraphicalSlur.degreesToRadiansFactor);

@@ -11,6 +11,7 @@ export class KeyInstruction extends AbstractNotationInstruction {
     constructor(sourceStaffEntry: SourceStaffEntry = undefined, key: number = 0, mode: KeyEnum = KeyEnum.major) {
         super(sourceStaffEntry);
         this.Key = key;
+        this.keyTypeOriginal = key;
         this.mode = mode;
         this.alteratedNotes = this.calcAlteratedNotes();
     }
@@ -19,11 +20,16 @@ export class KeyInstruction extends AbstractNotationInstruction {
     private static flatPositionList: NoteEnum[] = [NoteEnum.B, NoteEnum.E, NoteEnum.A, NoteEnum.D, NoteEnum.G, NoteEnum.C, NoteEnum.F];
 
     private keyType: number;
+    public keyTypeOriginal: number;
     private mode: KeyEnum;
     private alteratedNotes: NoteEnum[];
+    /** The halftones this instruction was transposed by, compared to the original. */
+    public isTransposedBy: number = 0;
 
     public static copy(keyInstruction: KeyInstruction): KeyInstruction {
         const newKeyInstruction: KeyInstruction = new KeyInstruction(keyInstruction.parent, keyInstruction.Key, keyInstruction.Mode);
+        // note that newKeyInstruction.keyTypeOriginal is set incorrectly in the constructor, but we fix that here:
+        newKeyInstruction.keyTypeOriginal = keyInstruction.keyTypeOriginal;
         return newKeyInstruction;
     }
 
@@ -80,7 +86,9 @@ export class KeyInstruction extends AbstractNotationInstruction {
 
     public getAlterationForPitch(pitch: Pitch): AccidentalEnum {
         if (this.keyType > 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) <= this.keyType) {
+        // if (this.keyType > 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) > -1) {
             return AccidentalEnum.SHARP;
+        // } else if (this.keyType < 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) > -1) {
         } else if (this.keyType < 0 && this.alteratedNotes.indexOf(pitch.FundamentalNote) <= Math.abs(this.keyType)) {
             return AccidentalEnum.FLAT;
         }

@@ -182,6 +182,11 @@ export class EngravingRules {
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
     public SlurTangentMaxAngle: number;
+    public SlurHeightFactor: number;
+    public SlurHeightFlattenLongSlursFactorByWidth: number;
+    public SlurHeightFlattenLongSlursFactorByAngle: number;
+    public SlurHeightFlattenLongSlursCutoffAngle: number;
+    public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
@@ -248,6 +253,7 @@ export class EngravingRules {
     public DefaultColorStem: string;
     public DefaultColorLabel: string;
     public DefaultColorTitle: string;
+    public DefaultColorCursor: string;
     public DefaultFontFamily: string;
     public DefaultFontStyle: FontStyles;
     public DefaultVexFlowNoteFont: string;
@@ -467,6 +473,11 @@ export class EngravingRules {
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;
         this.SlurTangentMaxAngle = 80.0;
+        this.SlurHeightFactor = 1; // 1 = 100% (standard height). 2 = 100% flattening of all slurs.
+        this.SlurHeightFlattenLongSlursFactorByWidth = 0.24; // additional flattening for long slurs the longer they are.
+        this.SlurHeightFlattenLongSlursFactorByAngle = 0.36; // when one of these factors is high, increasing the other has a very strong effect.
+        this.SlurHeightFlattenLongSlursCutoffAngle = 47;
+        this.SlurHeightFlattenLongSlursCutoffWidth = 16; // 15 ~ slur between measure's first notes in 4/4. 14 -> problem with test_slurs_highNotes
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
 
         // Repetitions
@@ -559,6 +570,7 @@ export class EngravingRules {
         this.DefaultColorStem = this.DefaultColorNotehead;
         this.DefaultColorLabel = this.DefaultColorNotehead;
         this.DefaultColorTitle = this.DefaultColorNotehead;
+        this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.DefaultFontStyle = FontStyles.Regular;
         this.DefaultVexFlowNoteFont = "gonville"; // was the default vexflow font up to vexflow 1.2.93, now it's Bravura, which is more cursive/bold
