@@ -99,7 +99,7 @@ export class OpenSheetMusicDisplay {
     public get InteractionManager(): IDisplayInteractionManager{
         return this.interactionManager;
     }
-    private pluginManager: OpenSheetMusicDisplayPluginManager = new OpenSheetMusicDisplayPluginManager();
+    private pluginManager: OpenSheetMusicDisplayPluginManager = new OpenSheetMusicDisplayPluginManager(this);
 
     /**
      * Load a MusicXML file
