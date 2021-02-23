@@ -87,7 +87,19 @@ export class OpenSheetMusicDisplay {
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
     private followCursor: boolean;
-    private pluginManager: OpenSheetMusicDisplayPluginManager = new OpenSheetMusicDisplayPluginManager();
+    public set RenderingManager(manager: ISheetRenderingManager){
+        this.renderingManager = manager;
+    }
+    public get RenderingManager(): ISheetRenderingManager{
+        return this.renderingManager;
+    }
+    public set InteractionManager(manager: IDisplayInteractionManager){
+        this.interactionManager = manager;
+    }
+    public get InteractionManager(): IDisplayInteractionManager{
+        return this.interactionManager;
+    }
+    private pluginManager: OpenSheetMusicDisplayPluginManager = new OpenSheetMusicDisplayPluginManager(this);
 
     /**
      * Load a MusicXML file

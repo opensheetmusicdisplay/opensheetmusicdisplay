@@ -3,12 +3,19 @@ import { GraphicalMusicSheet, IAfterSheetReadingModule, MusicSheet } from "../Mu
 import { IPluginEventResult, MessageSeverity } from "./Interfaces/IPluginEventResult";
 import { OpenSheetMusicDisplayPlugin } from "./Interfaces/OpenSheetMusicDisplayPlugin";
 import log from "loglevel";
+import { OpenSheetMusicDisplay } from "../OpenSheetMusicDisplay";
 
 //TODO: This is a very basic starter framework.
 //Ideally we will have generic events and a lot more interfaces available to create plugins
 //SEE: Sebastians pluginInfrastructure branch
 export class OpenSheetMusicDisplayPluginManager {
-    private pluginMap: Dictionary<string, OpenSheetMusicDisplayPlugin> = new Dictionary<string, OpenSheetMusicDisplayPlugin>();
+    protected osmd: OpenSheetMusicDisplay;
+
+    constructor(osmd: OpenSheetMusicDisplay){
+        this.osmd = osmd;
+    }
+
+    protected pluginMap: Dictionary<string, OpenSheetMusicDisplayPlugin> = new Dictionary<string, OpenSheetMusicDisplayPlugin>();
     //private loadQueue: Array<OpenSheetMusicDisplayPlugin> = new Array<OpenSheetMusicDisplayPlugin>();
     public RegisterPlugin(plugin: OpenSheetMusicDisplayPlugin): void {
         //TODO: Use Kahns Algorithm for dependency load sorting.
@@ -16,13 +23,16 @@ export class OpenSheetMusicDisplayPluginManager {
         //    console.log(plugin.Dependencies[i]);
         //}
         this.pluginMap.setValue(plugin.Name, plugin);
-        plugin.Initialize();
+        plugin.Initialize(this.osmd);
         if(plugin.AfterSheetReadingModules && plugin.AfterSheetReadingModules.length > 0){
             this.AfterSheetReadingModules.concat(plugin.AfterSheetReadingModules);
         }
     }
 
     protected static handlePluginEventResult(result: IPluginEventResult): void{
+        if (!result) {
+            return;
+        }
         switch(result.Severity){
             case MessageSeverity.INFO:
                 log.info(result.Message);
@@ -45,25 +55,25 @@ export class OpenSheetMusicDisplayPluginManager {
 
     public BeforeLoad(): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.BeforeLoad();
+            const result: IPluginEventResult = plugin.BeforeLoad(this.osmd);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
     public AfterLoad(): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.AfterLoad();
+            const result: IPluginEventResult = plugin.AfterLoad(this.osmd);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
     public BeforeRender(): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.BeforeRender();
+            const result: IPluginEventResult = plugin.BeforeRender(this.osmd);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
     public AfterRender(): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.AfterRender();
+            const result: IPluginEventResult = plugin.AfterRender(this.osmd);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
