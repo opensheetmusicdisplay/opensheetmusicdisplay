@@ -9,3 +9,4 @@ export * from "./IPlaybackEntry";
 export * from "./IPlaybackNote";
 export * from "./IPlaybackFactory";
 export * from "./IRepetition";
+export * from "./IPlaybackListener";
