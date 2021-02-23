@@ -22,7 +22,7 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
-import { OpenSheetMusicDisplayPluginManager } from "../Plugin";
+import { OpenSheetMusicDisplayPlugin, OpenSheetMusicDisplayPluginManager } from "../Plugin";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -84,7 +84,9 @@ export class OpenSheetMusicDisplay {
     private resizeHandlerAttached: boolean;
     private followCursor: boolean;
     private pluginManager: OpenSheetMusicDisplayPluginManager = new OpenSheetMusicDisplayPluginManager(this);
-
+    public RegisterPlugin(plugin: OpenSheetMusicDisplayPlugin): void {
+        this.pluginManager.RegisterPlugin(plugin);
+    }
     /**
      * Load a MusicXML file
      * @param content is either the url of a file, or the root node of a MusicXML document, or the string content of a .xml/.mxl file
