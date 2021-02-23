@@ -22,6 +22,7 @@ import { GraphicalMusicPage } from "../MusicalScore/Graphical/GraphicalMusicPage
 import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
+import { OpenSheetMusicDisplayPluginManager } from "../Plugin";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -82,12 +83,14 @@ export class OpenSheetMusicDisplay {
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
     private followCursor: boolean;
+    private pluginManager: OpenSheetMusicDisplayPluginManager = new OpenSheetMusicDisplayPluginManager();
 
     /**
      * Load a MusicXML file
      * @param content is either the url of a file, or the root node of a MusicXML document, or the string content of a .xml/.mxl file
      */
     public load(content: string | Document): Promise<{}> {
+        this.pluginManager.BeforeLoad();
         // Warning! This function is asynchronous! No error handling is done here.
         this.reset();
         //console.log("typeof content: " + typeof content);
@@ -156,8 +159,10 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
         const score: IXmlElement = new IXmlElement(scorePartwiseElement);
-        const reader: MusicSheetReader = new MusicSheetReader(undefined, this.rules);
+        this.pluginManager.AfterLoad();
+        const reader: MusicSheetReader = new MusicSheetReader(this.pluginManager.AfterSheetReadingModules, this.rules);
         this.sheet = reader.createMusicSheet(score, "Untitled Score");
+        this.pluginManager.SetMusicSheet(this.sheet);
         if (this.sheet === undefined) {
             // error loading sheet, probably already logged, do nothing
             return Promise.reject(new Error("given music sheet was incomplete or could not be loaded."));
@@ -176,6 +181,7 @@ export class OpenSheetMusicDisplay {
     public updateGraphic(): void {
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(this.rules);
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
+        this.pluginManager.SetGraphicalMusicSheet(this.graphic);
         if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
@@ -188,6 +194,7 @@ export class OpenSheetMusicDisplay {
         if (!this.graphic) {
             throw new Error("OpenSheetMusicDisplay: Before rendering a music sheet, please load a MusicXML file");
         }
+        this.pluginManager.BeforeRender();
         this.drawer?.clear(); // clear canvas before setting width
         // this.graphic.GetCalculator.clearSystemsAndMeasures(); // maybe?
         // this.graphic.GetCalculator.clearRecreatedObjects();
@@ -244,6 +251,7 @@ export class OpenSheetMusicDisplay {
         }
         this.zoomUpdated = false;
         //console.log("[OSMD] render finished");
+        this.pluginManager.AfterRender();
     }
 
     private createOrRefreshRenderBackend(): void {
