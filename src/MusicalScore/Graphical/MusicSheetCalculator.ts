@@ -2028,7 +2028,8 @@ export abstract class MusicSheetCalculator {
                             const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
                             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                                 const note: Note = voiceEntry.Notes[idx2];
-                                if (note.NoteTie) {
+                                if (note.NoteTie &&
+                                    note === note.NoteTie.StartNote) {
                                     const tie: Tie = note.NoteTie;
                                     this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
                                 }
@@ -2296,7 +2297,7 @@ export abstract class MusicSheetCalculator {
                 const note: Note = new Note(voiceEntry, sourceStaffEntry, Fraction.createFromFraction(sourceMeasure.Duration), undefined, sourceMeasure);
                 note.PrintObject = this.rules.FillEmptyMeasuresWithWholeRest === FillEmptyMeasuresWithWholeRests.YesVisible;
                   // don't display whole rest that wasn't given in XML, only for layout/voice completion
-                voiceEntry.Notes.push(note);
+                voiceEntry.addNote(note);
                 const graphicalStaffEntry: GraphicalStaffEntry = MusicSheetCalculator.symbolFactory.createStaffEntry(sourceStaffEntry, measure);
                 measure.addGraphicalStaffEntry(graphicalStaffEntry);
                 graphicalStaffEntry.relInMeasureTimestamp = voiceEntry.Timestamp;

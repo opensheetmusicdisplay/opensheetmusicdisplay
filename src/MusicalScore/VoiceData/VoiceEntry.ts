@@ -1,23 +1,22 @@
-import {Fraction} from "../../Common/DataObjects/Fraction";
+import { Fraction } from "../../Common/DataObjects/Fraction";
 import {Voice} from "./Voice";
 import {SourceStaffEntry} from "./SourceStaffEntry";
 import {Note} from "./Note";
-import {Pitch} from "../../Common/DataObjects/Pitch";
 import {LyricsEntry} from "./Lyrics/LyricsEntry";
 import {TechnicalInstruction} from "./Instructions/TechnicalInstruction";
 import {OrnamentContainer} from "./OrnamentContainer";
-import {KeyInstruction} from "./Instructions/KeyInstruction";
-import {OrnamentEnum} from "./OrnamentContainer";
-import {AccidentalEnum} from "../../Common/DataObjects/Pitch";
 import { Dictionary } from "typescript-collections";
 import {Arpeggio} from "./Arpeggio";
-import { SourceMeasure } from "./SourceMeasure";
 import { Articulation } from "./Articulation";
+import { IPlaybackEntry } from "../../Common/Interfaces/IPlaybackEntry";
+import { IPlaybackFactory } from "../../Common/Interfaces/IPlaybackFactory";
 
 /**
  * A [[VoiceEntry]] contains the notes in a voice at a timestamp.
  */
 export class VoiceEntry {
+    public static playbackFactory: IPlaybackFactory = undefined;
+
     /**
      *
      * @param timestamp The relative timestamp within the source measure.
@@ -26,7 +25,7 @@ export class VoiceEntry {
      * @param isGrace States whether the VoiceEntry has (only) grace notes.
      * @param graceNoteSlash States whether the grace note(s) have a slash (Acciaccatura, played before the beat)
      */
-    constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry,
+    constructor(timestamp: Fraction, parentVoice: Voice, parentSourceStaffEntry: SourceStaffEntry, addToStaffEntry: boolean = true,
                 isGrace: boolean = false, graceNoteSlash: boolean = false, graceSlur: boolean = false) {
         this.timestamp = timestamp;
         this.parentVoice = parentVoice;
@@ -36,12 +35,22 @@ export class VoiceEntry {
         this.graceNoteSlash = graceNoteSlash;
         this.graceSlur = graceSlur;
 
+        if (!isGrace) {
+            parentVoice.VoiceEntries.push(this);
+        }
+
         // add currentVoiceEntry to staff entry:
-        if (parentSourceStaffEntry !== undefined) {
+        if (addToStaffEntry && parentSourceStaffEntry !== undefined) {
             const list: VoiceEntry[] = parentSourceStaffEntry.VoiceEntries;
             if (list.indexOf(this) === -1) {
                 list.push(this);
             }
+        }
+
+        if(VoiceEntry.playbackFactory){
+            // ToDo: at this moment there are no notes added to the voice entry
+            this.mainPlaybackEntry = VoiceEntry.playbackFactory.createPlaybackEntry(this);
+            this.PlaybackEntries.push(this.mainPlaybackEntry);
         }
     }
 
@@ -49,12 +58,17 @@ export class VoiceEntry {
     private parentSourceStaffEntry: SourceStaffEntry;
     private timestamp: Fraction;
     private notes: Note[] = [];
+
+    private graceVoiceEntriesBefore: VoiceEntry[] = [];
+    private graceVoiceEntriesAfter: VoiceEntry[] = [];
     private isGrace: boolean;
     /** States whether the grace notes come after a main note (at end of measure). */
     private graceAfterMainNote: boolean;
     private graceNoteSlash: boolean;
     private graceSlur: boolean; // TODO grace slur system could be refined to be non-binary
     private articulations: Articulation[] = [];
+    private playbackEntries: IPlaybackEntry[] = [];
+    private fermata: Articulation;
     private technicalInstructions: TechnicalInstruction[] = [];
     private lyricsEntries: Dictionary<number, LyricsEntry> = new Dictionary<number, LyricsEntry>();
     /** The Arpeggio consisting of this VoiceEntry's notes. Undefined if no arpeggio exists. */
@@ -69,9 +83,14 @@ export class VoiceEntry {
     /** Color of the stem currently set. RGB Hexadecimal, like #00FF00. */
     private stemColor: string;
 
+    private mainPlaybackEntry: IPlaybackEntry;
+    private volumeModifier: Articulation;
+    private durationModifier: Articulation;
+
     public get ParentSourceStaffEntry(): SourceStaffEntry {
         return this.parentSourceStaffEntry;
     }
+
     public get ParentVoice(): Voice {
         return this.parentVoice;
     }
@@ -84,6 +103,36 @@ export class VoiceEntry {
     public get Notes(): Note[] {
         return this.notes;
     }
+
+    public addNote(note: Note): void {
+        this.notes.push(note);
+        // only add playback notes when these are no rests and are not tied notes (besides the first note of a tie)
+        if (!note.isRest() && VoiceEntry.playbackFactory &&
+            (note.NoteTie === undefined || note.NoteTie.StartNote === note)) {
+            this.MainPlaybackEntry.Notes.push(VoiceEntry.playbackFactory.createPlaybackNote(this.MainPlaybackEntry, note));
+        }
+    }
+
+    public get GraceVoiceEntriesBefore(): VoiceEntry[] {
+        return this.graceVoiceEntriesBefore;
+    }
+    public set GraceVoiceEntriesBefore(value: VoiceEntry[] ) {
+        this.graceVoiceEntriesBefore = value;
+        for (const ve of this.graceVoiceEntriesBefore) {
+            ve.parentSourceStaffEntry = this.ParentSourceStaffEntry;
+        }
+    }
+
+    public get GraceVoiceEntriesAfter(): VoiceEntry[] {
+        return this.graceVoiceEntriesAfter;
+    }
+    public set GraceVoiceEntriesAfter(value: VoiceEntry[] ) {
+        this.graceVoiceEntriesAfter = value;
+        for (const ve of this.graceVoiceEntriesAfter) {
+            ve.parentSourceStaffEntry = this.ParentSourceStaffEntry;
+        }
+    }
+
     public get IsGrace(): boolean {
         return this.isGrace;
     }
@@ -111,6 +160,41 @@ export class VoiceEntry {
     public get Articulations(): Articulation[] {
         return this.articulations;
     }
+    /** Stores all playback entries (e.g. extra grace and ornament entries).
+     * Also holds the main playback entry.
+     * The entries are sorted in ascending timestamp.
+     */
+    public get PlaybackEntries(): IPlaybackEntry[] {
+        return this.playbackEntries;
+    }
+    public get Fermata(): Articulation {
+        return this.fermata;
+    }
+    public get MainPlaybackEntry(): IPlaybackEntry {
+        return this.mainPlaybackEntry;
+    }
+
+    public set MainPlaybackEntry(value: IPlaybackEntry)  {
+        this.mainPlaybackEntry = value;
+    }
+
+    public removeMainPlaybackEntry(): void {
+        if (this.mainPlaybackEntry !== undefined) {
+            this.removePlaybackEntry(this.mainPlaybackEntry);
+        }
+    }
+
+    public removePlaybackEntry(value: IPlaybackEntry): void {
+        if (this.mainPlaybackEntry === value) {
+            this.mainPlaybackEntry = undefined;
+        }
+
+        const index: number = this.playbackEntries.indexOf(value);
+        if (index > -1) {
+            this.playbackEntries.splice(index, 1);
+        }
+    }
+
     public get TechnicalInstructions(): TechnicalInstruction[] {
         return this.technicalInstructions;
     }
@@ -163,6 +247,18 @@ export class VoiceEntry {
     public set StemColor(value: string) {
         this.stemColor = value;
     }
+    public get VolumeModifier(): Articulation {
+        return this.volumeModifier;
+    }
+    public set VolumeModifier(value: Articulation) {
+        this.volumeModifier = value;
+    }
+    public get DurationModifier(): Articulation {
+        return this.durationModifier;
+    }
+    public set DurationModifier(value: Articulation) {
+        this.durationModifier = value;
+    }
 
     public hasArticulation(articulation: Articulation): boolean {
         for (const existingArticulation of this.articulations) {
@@ -214,7 +310,7 @@ export class VoiceEntry {
         for (const articulation of this.Articulations) {
             if (articulation.articulationEnum === ArticulationEnum.staccato) {
                 return true;
-            }
+        }
         }
         return false;
     }
@@ -235,164 +331,6 @@ export class VoiceEntry {
         });
         return verseNumber;
     }
-    //public createVoiceEntriesForOrnament(activeKey: KeyInstruction): VoiceEntry[] {
-    //    return this.createVoiceEntriesForOrnament(this, activeKey);
-    //}
-    public createVoiceEntriesForOrnament(voiceEntryWithOrnament: VoiceEntry, activeKey: KeyInstruction): VoiceEntry[] {
-        if (!voiceEntryWithOrnament) {
-            voiceEntryWithOrnament = this;
-        }
-        const voiceEntries: VoiceEntry[] = [];
-        if (!voiceEntryWithOrnament.ornamentContainer) {
-            return;
-        }
-        const baseNote: Note = this.notes[0];
-        const baselength: Fraction = baseNote.Length;
-        const baseVoice: Voice = voiceEntryWithOrnament.ParentVoice;
-        const baseTimestamp: Fraction = voiceEntryWithOrnament.Timestamp;
-        let currentTimestamp: Fraction = Fraction.createFromFraction(baseTimestamp);
-        //let length: Fraction;
-        switch (voiceEntryWithOrnament.ornamentContainer.GetOrnament) {
-            case OrnamentEnum.Trill: {
-                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 8);
-                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                let alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
-                if (voiceEntryWithOrnament.OrnamentContainer.AccidentalAbove !== AccidentalEnum.NONE) {
-                    alteration = voiceEntryWithOrnament.ornamentContainer.AccidentalAbove;
-                }
-                for (let i: number = 0; i < 8; i++) {
-                    currentTimestamp = Fraction.plus(baseTimestamp, new Fraction(i * length.Numerator, length.Denominator));
-                    if ((i % 2) === 0) {
-                        this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                    } else {
-                        this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, baseNote.SourceMeasure, higherPitch, alteration, voiceEntries);
-                    }
-                }
-                break;
-            }
-            case OrnamentEnum.Turn: {
-                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
-                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                const lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                const higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
-                this.createAlteratedVoiceEntry(
-                    currentTimestamp, length, baseVoice, baseNote.SourceMeasure, higherPitch, higherAlteration, voiceEntries
-                );
-                currentTimestamp.Add(length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createAlteratedVoiceEntry(
-                    currentTimestamp, length, baseVoice, baseNote.SourceMeasure, lowerPitch, lowerAlteration, voiceEntries
-                );
-                currentTimestamp.Add(length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                break;
-            }
-            case OrnamentEnum.InvertedTurn: {
-                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
-                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                const lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                const higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
-                this.createAlteratedVoiceEntry(
-                    currentTimestamp, length, baseVoice, baseNote.SourceMeasure, lowerPitch, lowerAlteration, voiceEntries
-                );
-                currentTimestamp.Add(length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createAlteratedVoiceEntry(
-                    currentTimestamp, length, baseVoice, baseNote.SourceMeasure, higherPitch, higherAlteration, voiceEntries
-                );
-                currentTimestamp.Add(length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                break;
-            }
-            case OrnamentEnum.DelayedTurn: {
-                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 2);
-                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                const lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                const higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp = Fraction.plus(baseTimestamp, length);
-                length.Denominator = baselength.Denominator * 8;
-                this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, baseNote.SourceMeasure, higherPitch, higherAlteration, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, baseNote.SourceMeasure, lowerPitch, lowerAlteration, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                break;
-            }
-            case OrnamentEnum.DelayedInvertedTurn: {
-                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 2);
-                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                const lowerAlteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                const higherAlteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp = Fraction.plus(baseTimestamp, length);
-                length.Denominator = baselength.Denominator * 8;
-                this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, baseNote.SourceMeasure, lowerPitch, lowerAlteration, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, baseNote.SourceMeasure, higherPitch, higherAlteration, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                break;
-            }
-            case OrnamentEnum.Mordent: {
-                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
-                const higherPitch: Pitch = baseNote.Pitch.getTransposedPitch(1);
-                const alteration: AccidentalEnum = activeKey.getAlterationForPitch(higherPitch);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, baseNote.SourceMeasure, higherPitch, alteration, voiceEntries);
-                length.Denominator = baselength.Denominator * 2;
-                currentTimestamp = Fraction.plus(baseTimestamp, length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                break;
-            }
-            case OrnamentEnum.InvertedMordent: {
-                const length: Fraction = new Fraction(baselength.Numerator, baselength.Denominator * 4);
-                const lowerPitch: Pitch = baseNote.Pitch.getTransposedPitch(-1);
-                const alteration: AccidentalEnum = activeKey.getAlterationForPitch(lowerPitch);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                currentTimestamp.Add(length);
-                this.createAlteratedVoiceEntry(currentTimestamp, length, baseVoice, baseNote.SourceMeasure, lowerPitch, alteration, voiceEntries);
-                length.Denominator = baselength.Denominator * 2;
-                currentTimestamp = Fraction.plus(baseTimestamp, length);
-                this.createBaseVoiceEntry(currentTimestamp, length, baseVoice, baseNote, voiceEntries);
-                break;
-            }
-            default:
-                throw new RangeError();
-        }
-        return voiceEntries;
-    }
-    private createBaseVoiceEntry(
-        currentTimestamp: Fraction, length: Fraction, baseVoice: Voice, baseNote: Note, voiceEntries: VoiceEntry[]
-    ): void {
-        const voiceEntry: VoiceEntry = new VoiceEntry(currentTimestamp, baseVoice, baseNote.ParentStaffEntry);
-        const pitch: Pitch = new Pitch(baseNote.Pitch.FundamentalNote, baseNote.Pitch.Octave, baseNote.Pitch.Accidental);
-        const note: Note = new Note(voiceEntry, undefined, length, pitch, baseNote.SourceMeasure);
-        voiceEntry.Notes.push(note);
-        voiceEntries.push(voiceEntry);
-    }
-    private createAlteratedVoiceEntry(
-        currentTimestamp: Fraction, length: Fraction, baseVoice: Voice, sourceMeasure: SourceMeasure, higherPitch: Pitch,
-        alteration: AccidentalEnum, voiceEntries: VoiceEntry[]
-    ): void {
-        const voiceEntry: VoiceEntry = new VoiceEntry(currentTimestamp, baseVoice, undefined);
-        const pitch: Pitch = new Pitch(higherPitch.FundamentalNote, higherPitch.Octave, alteration);
-        const note: Note = new Note(voiceEntry, undefined, length, pitch, sourceMeasure);
-        voiceEntry.Notes.push(note);
-        voiceEntries.push(voiceEntry);
-    }
-
 }
 
 export enum ArticulationEnum {

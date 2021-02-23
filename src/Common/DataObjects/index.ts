@@ -8,3 +8,5 @@ export * from "./Pitch";
 export * from "./PointF2D";
 export * from "./RectangleF2D";
 export * from "./SizeF2D";
+export * from "./CursorPosChangedData";
+export * from "./PlaybackSettings";

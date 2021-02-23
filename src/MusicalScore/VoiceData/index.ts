@@ -24,3 +24,6 @@ export * from "./SourceMeasure";
 export * from "./SourceStaffEntry";
 export * from "./VerticalSourceStaffEntryContainer";
 export * from "./Tie";
+export * from "./Expressions";
+export * from "./HelperObjects";
+export * from "./Instructions";

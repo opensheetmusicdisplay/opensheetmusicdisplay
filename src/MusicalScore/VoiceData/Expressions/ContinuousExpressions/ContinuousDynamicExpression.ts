@@ -2,17 +2,21 @@ import {PlacementEnum, AbstractExpression} from "../AbstractExpression";
 import {MultiExpression} from "../MultiExpression";
 import {Fraction} from "../../../../Common/DataObjects/Fraction";
 import {SourceMeasure} from "../../SourceMeasure";
+import {InstantaneousDynamicExpression} from "../InstantaneousDynamicExpression";
 
 export class ContinuousDynamicExpression extends AbstractExpression {
-    constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number, measure: SourceMeasure,
+    constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number,
+                measure: SourceMeasure, activeInstantaneousDynamic: InstantaneousDynamicExpression,
                 label: string = "") {
         super(placement);
         super.parentMeasure = measure;
         this.dynamicType = dynamicType;
         this.label = label;
         this.staffNumber = staffNumber;
-        this.startVolume = -1;
-        this.endVolume = -1;
+        this.activeInstantaneousDynamic = activeInstantaneousDynamic;
+        this.startVolume = 1;
+        this.endVolume = 1;
+        this.setStartAndEndVolume();
         if (label !== "") {
             this.setType();
         }
@@ -28,6 +32,20 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     private endVolume: number;
     private staffNumber: number;
     private label: string;
+    private activeInstantaneousDynamic: InstantaneousDynamicExpression;
+
+    public setStartAndEndVolume(): void {
+        if (this.activeInstantaneousDynamic) {
+            if (this.dynamicType === ContDynamicEnum.crescendo) {
+                this.startVolume = this.activeInstantaneousDynamic.Volume;
+                this.endVolume = this.activeInstantaneousDynamic.Volume * 1.2;
+            }
+            if (this.dynamicType === ContDynamicEnum.diminuendo) {
+                this.startVolume = this.activeInstantaneousDynamic.Volume;
+                this.endVolume = this.activeInstantaneousDynamic.Volume * 0.8;
+            }
+        }
+    }
 
     public get DynamicType(): ContDynamicEnum {
         return this.dynamicType;

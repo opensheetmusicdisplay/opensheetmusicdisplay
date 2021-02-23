@@ -412,7 +412,7 @@ export class MusicSystemBuilder {
     }
 
     protected transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: GraphicalMeasure): KeyInstruction {
-        if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0
+        if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== keyInstruction.isTransposedBy
             && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
             && MusicSheetCalculator.transposeCalculator !== undefined
         ) {

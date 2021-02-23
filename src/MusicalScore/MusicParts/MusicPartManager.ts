@@ -34,7 +34,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         let curTransform: TimestampTransform = undefined;
         for (let i: number = this.timestamps.length - 1; i >= 0; i--) {
             curTransform = this.timestamps[i];
-            if (curEnrolledTimestamp.gte(curTransform.$from)) {
+            if (curEnrolledTimestamp.gte(curTransform.from)) {
                 return curTransform;
             }
         }
@@ -45,7 +45,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
             return timestamp;
         }
         const transform: TimestampTransform = this.getCurrentRepetitionTimestampTransform(timestamp);
-        return Fraction.plus(timestamp, Fraction.minus(transform.to, transform.$from)); // FIXME
+        return Fraction.plus(timestamp, Fraction.minus(transform.to, transform.from)); // FIXME
     }
     public get Parts(): PartListEntry[] {
         return this.parts;
@@ -68,7 +68,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
         this.musicSheet.SelectionEnd = end ?? this.sheetEnd;
     }
     private calcMapping(): void {
-        const timestamps: TimestampTransform[] = [];
+        this.timestamps = [];
         const iterator: MusicPartManagerIterator = this.getIterator();
         let currentRepetition: Repetition = iterator.CurrentRepetition;
         let curTimestampTransform: TimestampTransform = new TimestampTransform(
@@ -77,7 +77,7 @@ export class MusicPartManager /*implements ISelectionListener*/ {
             undefined,
             0
         );
-        timestamps.push(curTimestampTransform);
+        this.timestamps.push(curTimestampTransform);
         while (!iterator.EndReached) {
             if (iterator.JumpOccurred || currentRepetition !== iterator.CurrentRepetition) {
                 currentRepetition = iterator.CurrentRepetition;
@@ -89,12 +89,12 @@ export class MusicPartManager /*implements ISelectionListener*/ {
                     curTimestampTransform.curRepetition = jumpRep;
                     curTimestampTransform.curRepetitionIteration = iterator.CurrentJumpResponsibleRepetitionIterationBeforeJump;
                     for (let i: number = this.timestamps.length - 2; i >= 0; i--) {
-                        if (timestamps[i].to.lt(jumpRep.AbsoluteTimestamp) || timestamps[i].curRepetition) {
+                        if (jumpRep.AbsoluteTimestamp.gt(this.timestamps[i].to) || this.timestamps[i].curRepetition) {
                             break;
                         }
-                        timestamps[i].nextBackJump = curTimestampTransform.nextBackJump;
-                        timestamps[i].curRepetition = jumpRep;
-                        timestamps[i].curRepetitionIteration = curTimestampTransform.curRepetitionIteration;
+                        this.timestamps[i].nextBackJump = curTimestampTransform.nextBackJump;
+                        this.timestamps[i].curRepetition = jumpRep;
+                        this.timestamps[i].curRepetitionIteration = curTimestampTransform.curRepetitionIteration;
                     }
                 }
                 curTimestampTransform = new TimestampTransform(
@@ -103,25 +103,24 @@ export class MusicPartManager /*implements ISelectionListener*/ {
                     undefined,
                     0
                 );
-                timestamps.push(curTimestampTransform);
+                this.timestamps.push(curTimestampTransform);
             }
             iterator.moveToNext();
         }
-        this.timestamps = timestamps;
     }
 }
 
 
 export class TimestampTransform {
     constructor(sourceTimestamp: Fraction, enrolledTimestamp: Fraction, repetition: Repetition, curRepetitionIteration: number) {
-        this.$from = sourceTimestamp;
+        this.from = sourceTimestamp;
         this.to = enrolledTimestamp;
         this.curRepetition = repetition;
         this.curRepetitionIteration = curRepetitionIteration;
         this.nextBackJump = undefined;
         this.nextForwardJump = undefined;
     }
-    public $from: Fraction;
+    public from: Fraction;
     public to: Fraction;
     public nextBackJump: Fraction;
     public nextForwardJump: Fraction;

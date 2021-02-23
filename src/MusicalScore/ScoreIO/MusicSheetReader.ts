@@ -187,6 +187,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                 this.repetitionCalculator.calculateRepetitions(this.musicSheet, this.repetitionInstructionReader.repetitionInstructions);
             }
         }
+        if (this.musicSheet.DefaultStartTempoInBpm === 0) {
+            this.musicSheet.DefaultStartTempoInBpm = 100;
+        }
         this.musicSheet.checkForInstrumentWithNoVoice();
         this.musicSheet.fillStaffList();
         //this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SheetPlaybackSetting.BeatsPerMinute;
@@ -197,7 +200,8 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
 
         //this.musicSheet.DefaultStartTempoInBpm = this.musicSheet.SourceMeasures[0].TempoInBPM;
         this.musicSheet.userStartTempoInBPM = this.musicSheet.userStartTempoInBPM || this.musicSheet.DefaultStartTempoInBpm;
-
+        this.musicSheet.InitializeStartTempoInBPM(this.musicSheet.userStartTempoInBPM);
+        this.musicSheet.MusicPartManager.init();
         return this.musicSheet;
     }
 

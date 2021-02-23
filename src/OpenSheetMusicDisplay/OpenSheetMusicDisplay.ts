@@ -24,6 +24,7 @@ import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalcu
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 import { ISheetRenderingManager } from "../Common/Interfaces/ISheetRenderingManager";
 import { IDisplayInteractionManager } from "../Common/Interfaces/IDisplayInteractionManager";
+import { IAfterSheetReadingModule } from "../MusicalScore";
 
 
 /**
@@ -80,24 +81,17 @@ export class OpenSheetMusicDisplay {
     private drawSkyLine: boolean;
     private drawBottomLine: boolean;
     private graphic: GraphicalMusicSheet;
-    private renderingManager: ISheetRenderingManager;
-    private interactionManager: IDisplayInteractionManager;
+    public RenderingManager: ISheetRenderingManager;
+    public InteractionManager: IDisplayInteractionManager;
     private drawingParameters: DrawingParameters;
     private rules: EngravingRules;
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
     private followCursor: boolean;
-    public set RenderingManager(manager: ISheetRenderingManager){
-        this.renderingManager = manager;
-    }
-    public get RenderingManager(): ISheetRenderingManager{
-        return this.renderingManager;
-    }
-    public set InteractionManager(manager: IDisplayInteractionManager){
-        this.interactionManager = manager;
-    }
-    public get InteractionManager(): IDisplayInteractionManager{
-        return this.interactionManager;
+    private afterSheetReadingModules: IAfterSheetReadingModule[] = [];
+    //TODO: Might be good to have this named, can reg dereg easily
+    public RegisterAfterSheetReadingModule(module: IAfterSheetReadingModule): void {
+        this.afterSheetReadingModules.push(module);
     }
 
     /**
@@ -173,7 +167,7 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
         const score: IXmlElement = new IXmlElement(scorePartwiseElement);
-        const reader: MusicSheetReader = new MusicSheetReader(undefined, this.rules);
+        const reader: MusicSheetReader = new MusicSheetReader(this.afterSheetReadingModules, this.rules);
         this.sheet = reader.createMusicSheet(score, "Untitled Score");
         if (this.sheet === undefined) {
             // error loading sheet, probably already logged, do nothing
@@ -196,8 +190,8 @@ export class OpenSheetMusicDisplay {
         if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
-        this.renderingManager?.setMusicSheet(this.graphic);
-        this.interactionManager?.Initialize();
+        this.RenderingManager?.setMusicSheet(this.graphic);
+        this.InteractionManager?.Initialize();
     }
 
     /**
@@ -222,8 +216,8 @@ export class OpenSheetMusicDisplay {
         // log.debug("[OSMD] render width: " + width);
 
         this.sheet.pageWidth = width / this.zoom / 10.0;
-        if(this.renderingManager){
-            this.renderingManager.WidthInUnits = this.sheet.pageWidth;
+        if(this.RenderingManager){
+            this.RenderingManager.WidthInUnits = this.sheet.pageWidth;
         }
         if (this.rules.PageFormat && !this.rules.PageFormat.IsUndefined) {
             this.rules.PageHeight = this.sheet.pageWidth / this.rules.PageFormat.aspectRatio;
@@ -266,7 +260,7 @@ export class OpenSheetMusicDisplay {
         }
         this.zoomUpdated = false;
         //need to init values
-        this.interactionManager?.displaySizeChanged(this.container.clientWidth, this.container.clientHeight);
+        this.InteractionManager?.displaySizeChanged(this.container.clientWidth, this.container.clientHeight);
         //console.log("[OSMD] render finished");
     }
 
@@ -762,7 +756,7 @@ export class OpenSheetMusicDisplay {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
             // save previous cursor state
-            const hidden: boolean = this.cursor?.Hidden;
+            //const hidden: boolean = this.cursor?.Hidden;
             const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
             this.cursor?.hide();
 
@@ -779,10 +773,10 @@ export class OpenSheetMusicDisplay {
             if (this.sheet && this.graphic && this.cursor) { // else init is called in load()
                 this.cursor.init(this.sheet.MusicPartManager, this.graphic);
             }
-
+            this.cursor.show();
             // restore old cursor state
             if (this.rules.RestoreCursorAfterRerender) {
-                this.cursor.hidden = hidden;
+                //this.cursor.hidden = hidden;
                 if (previousIterator) {
                     this.cursor.iterator = previousIterator;
                     this.cursor.update();

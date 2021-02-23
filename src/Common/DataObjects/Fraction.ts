@@ -210,6 +210,14 @@ export class Fraction {
     this.setRealValue();
     return this;
   }
+
+  /**
+   * Creates a new Fraction which is half as long as this Fraction
+   */
+  public getHalfLength(): Fraction {
+    return new Fraction(this.WholeValue, 2).Add(new Fraction(this.Numerator, this.Denominator * 2));
+  }
+
   /**
    * Brute Force quanization by searching incremental with the numerator until the denominator is
    * smaller/equal than the desired one.

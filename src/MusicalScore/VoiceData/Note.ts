@@ -13,6 +13,7 @@ import {Arpeggio} from "./Arpeggio";
 import {NoteType} from "./NoteType";
 import { SourceMeasure } from "./SourceMeasure";
 import { TechnicalInstruction } from "./Instructions";
+import { IPlaybackNote } from "../../Common/Interfaces/IPlaybackNote";
 
 /**
  * Represents a single pitch with a duration (length)
@@ -41,6 +42,7 @@ export class Note {
     private voiceEntry: VoiceEntry;
     private parentStaffEntry: SourceStaffEntry;
     private length: Fraction;
+    private playbackNote: IPlaybackNote;
     private sourceMeasure: SourceMeasure;
     /** The length/duration given in the <type> tag. different from length for tuplets/tremolos. */
     private typeLength: Fraction;
@@ -115,6 +117,12 @@ export class Note {
     }
     public get Length(): Fraction {
         return this.length;
+    }
+    public set PlaybackNote(value: IPlaybackNote) {
+        this.playbackNote = value;
+    }
+    public get PlaybackNote(): IPlaybackNote {
+        return this.playbackNote;
     }
     public set Length(value: Fraction) {
         this.length = value;

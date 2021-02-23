@@ -360,8 +360,8 @@ export class InstrumentReader {
             || (isGraceNote && !isChord)
             || (!isGraceNote && lastNoteWasGrace)
           ) {
-            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, !restNote && !isGraceNote,
-                                                        isGraceNote, graceNoteSlash, graceSlur);
+            this.currentVoiceGenerator.createVoiceEntry(musicTimestamp, this.currentStaffEntry, this.activeKey,
+                                                        this.ActiveRhythm, isGraceNote, graceNoteSlash, graceSlur);
           }
           if (!isGraceNote && !isChord) {
             previousFraction = currentFraction.clone();
@@ -600,6 +600,12 @@ export class InstrumentReader {
           }
         }
       }
+
+      // iterate through all voice generators:
+      Object.keys(this.voiceGeneratorsDict).forEach(voiceId => {
+        const vg: VoiceGenerator = this.voiceGeneratorsDict[voiceId];
+        vg.finalizeReadingMeasure();
+      });
 
       // if this is the first measure and no BPM info found, we set it to 120
       // next measures will automatically inherit that value

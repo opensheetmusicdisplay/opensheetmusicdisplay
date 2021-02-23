@@ -20,6 +20,7 @@ export class Staff {
     private volume: number = 1;
     private id: number;
     private stafflineCount: number = 5;
+    private solo: boolean;
 
     public get ParentInstrument(): Instrument {
         return this.parentInstrument;
@@ -29,6 +30,12 @@ export class Staff {
     }
     public get Voices(): Voice[] {
         return this.voices;
+    }
+    public get Solo(): boolean {
+        return this.solo;
+    }
+    public set Solo(value: boolean) {
+        this.solo = value;
     }
     public get Id(): number {
         return this.id;
@@ -44,5 +51,9 @@ export class Staff {
     }
     public set StafflineCount(value: number) {
         this.stafflineCount = value;
+    }
+
+    public toString(): string {
+        return "Staff " + this.idInMusicSheet.toString();
     }
 }

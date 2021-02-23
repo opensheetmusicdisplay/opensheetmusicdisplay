@@ -79,6 +79,18 @@ export class ArticulationReader {
             // don't add the same articulation twice
             if (!currentVoiceEntry.hasArticulation(newArticulation)) {
               currentVoiceEntry.Articulations.push(newArticulation);
+              switch (newArticulation.articulationEnum) {
+                case ArticulationEnum.staccato:
+                case ArticulationEnum.staccatissimo:
+                  currentVoiceEntry.DurationModifier = newArticulation;
+                  break;
+                case ArticulationEnum.accent:
+                case ArticulationEnum.strongaccent:
+                  currentVoiceEntry.VolumeModifier = newArticulation;
+                  break;
+                default:
+                  break;
+              }
             }
           }
         } catch (ex) {

@@ -11,11 +11,13 @@ export class Voice {
     private visible: boolean;
     private audible: boolean;
     private following: boolean;
+    private solo: boolean;
     /**
      * The Id given in the MusicXMl file to distinguish the different voices. It is unique per instrument.
      */
     private voiceId: number;
     private volume: number = 1;
+    private uniqueVoiceId: string;
 
     constructor(parent: Instrument, voiceId: number) {
         this.parent = parent;
@@ -23,6 +25,9 @@ export class Voice {
         this.audible = true;
         this.following = true;
         this.voiceId = voiceId;
+
+        // This is used for using the Voice as a key in a dictionary:
+        this.uniqueVoiceId = "I:" + this.parent.Id + " V: " + this.voiceId;
     }
 
     public get VoiceEntries(): VoiceEntry[] {
@@ -49,6 +54,12 @@ export class Voice {
     public set Following(value: boolean) {
         this.following = value;
     }
+    public get Solo(): boolean {
+        return this.solo;
+    }
+    public set Solo(value: boolean) {
+        this.solo = value;
+    }
     public get VoiceId(): number {
         return this.voiceId;
     }
@@ -59,4 +70,11 @@ export class Voice {
         this.volume = value;
     }
 
+    /**
+     * This is needed for using the Voice as a key in a dictionary,
+     * where a unique identifier is expected.
+     */
+    public toString(): string {
+        return this.uniqueVoiceId;
+    }
 }

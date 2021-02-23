@@ -12,6 +12,10 @@ export class DynamicsContainer /*implements IComparable<DynamicsContainer>*/ {
         this.staffNumber = staffNumber;
     }
 
+    public static Compare(a: DynamicsContainer, b: DynamicsContainer): number {
+        return a.parMultiExpression().AbsoluteTimestamp.CompareTo(b.parMultiExpression().AbsoluteTimestamp);
+    }
+
     public continuousDynamicExpression: ContinuousDynamicExpression;
     public instantaneousDynamicExpression: InstantaneousDynamicExpression;
     public staffNumber: number;

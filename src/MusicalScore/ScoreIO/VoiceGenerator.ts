@@ -30,6 +30,7 @@ import { Arpeggio, ArpeggioType } from "../VoiceData/Arpeggio";
 import { NoteType, NoteTypeHandler } from "../VoiceData/NoteType";
 import { TabNote } from "../VoiceData/TabNote";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import { KeyInstruction, RhythmInstruction } from "../VoiceData/Instructions";
 import { ReaderPluginManager } from "./ReaderPluginManager";
 import { Instrument } from "../Instrument";
 
@@ -58,7 +59,10 @@ export class VoiceGenerator {
   private musicSheet: MusicSheet;
   private voice: Voice;
   private currentVoiceEntry: VoiceEntry;
+  private currentNormalVoiceEntry: VoiceEntry;
   private currentNote: Note;
+  private activeKey: KeyInstruction;
+  private activeRhythm: RhythmInstruction;
   private currentMeasure: SourceMeasure;
   private currentStaffEntry: SourceStaffEntry;
   private staff: Staff;
@@ -70,6 +74,8 @@ export class VoiceGenerator {
   private currentOctaveShift: number = 0;
   private tupletDict: { [_: number]: Tuplet } = {};
   private openTupletNumber: number = 0;
+  private currMeasureVoiceEntries: VoiceEntry[] = [];
+  private graceVoiceEntriesTempList: VoiceEntry[] = [];
 
   public get GetVoice(): Voice {
     return this.voice;
@@ -90,11 +96,42 @@ export class VoiceGenerator {
    * @param addToVoice
    * @param isGrace States whether the new VoiceEntry (only) has grace notes
    */
-  public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, addToVoice: boolean,
-                          isGrace: boolean = false, graceNoteSlash: boolean = false, graceSlur: boolean = false): void {
-    this.currentVoiceEntry = new VoiceEntry(musicTimestamp.clone(), this.voice, parentStaffEntry, isGrace, graceNoteSlash, graceSlur);
-    if (addToVoice) {
-      this.voice.VoiceEntries.push(this.currentVoiceEntry);
+  public createVoiceEntry(musicTimestamp: Fraction, parentStaffEntry: SourceStaffEntry, activeKey: KeyInstruction, activeRhythm: RhythmInstruction,
+                          isGrace: boolean = false, hasGraceSlash: boolean = false, graceSlur: boolean = false): void {
+    this.activeKey = activeKey;
+    this.activeRhythm = activeRhythm;
+    this.currentVoiceEntry = new VoiceEntry(Fraction.createFromFraction(musicTimestamp), this.voice, parentStaffEntry, true, isGrace, hasGraceSlash, graceSlur);
+    if (isGrace) {
+      // if grace voice entry, add to temp list
+      this.graceVoiceEntriesTempList.push(this.currentVoiceEntry);
+    } else {
+      // remember new main VE -> needed for grace voice entries
+      this.currentNormalVoiceEntry = this.currentVoiceEntry;
+      // add ve to list of voice entries of this measure:
+      this.currMeasureVoiceEntries.push(this.currentNormalVoiceEntry);
+      // add grace VE temp list to normal voice entry:
+      if (this.graceVoiceEntriesTempList.length > 0) {
+          this.currentVoiceEntry.GraceVoiceEntriesBefore = this.graceVoiceEntriesTempList;
+          this.graceVoiceEntriesTempList = [];
+      }
+    }
+  }
+
+  public finalizeReadingMeasure(): void {
+    // store floating grace notes, if any:
+    if (this.graceVoiceEntriesTempList.length > 0 &&
+        this.currentNormalVoiceEntry !== undefined) {
+        this.currentNormalVoiceEntry.GraceVoiceEntriesAfter.concat(this.graceVoiceEntriesTempList);
+
+    }
+    this.graceVoiceEntriesTempList = [];
+
+    this.pluginManager.processVoiceMeasureReadPlugins(this.currMeasureVoiceEntries, this.activeKey, this.activeRhythm);
+
+    this.currMeasureVoiceEntries.length = 0;
+    // possibly (eventuell) close an already opened beam:
+    if (this.openBeams.length > 1) {
+        this.handleOpenBeam();
     }
   }
 
@@ -477,10 +514,13 @@ export class VoiceGenerator {
     if ((noteheadShapeXml !== undefined && noteheadShapeXml !== "normal") || noteheadFilledXml !== undefined) {
       note.Notehead = new Notehead(note, noteheadShapeXml, noteheadFilledXml);
     } // if normal, leave note head undefined to save processing/runtime
+    note.NoteheadColorXml = noteheadColorXml; // color set in Xml, shouldn't be changed.
+    note.NoteheadColor = noteheadColorXml; // color currently used
+    note.PlaybackInstrumentId = playbackInstrumentId;
+    this.currentVoiceEntry.addNote(note);
     if (stemDirectionXml === StemDirectionType.None) {
       stemColorXml = "#00000000";  // just setting this to transparent for now
     }
-    this.currentVoiceEntry.Notes.push(note);
     this.currentVoiceEntry.StemDirectionXml = stemDirectionXml;
     if (stemColorXml) {
       this.currentVoiceEntry.StemColorXml = stemColorXml;

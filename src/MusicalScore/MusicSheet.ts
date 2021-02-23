@@ -17,12 +17,13 @@ import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
 import log from "loglevel";
+import { Dictionary } from "typescript-collections";
+import { PlaybackSettings } from "../Common/DataObjects/PlaybackSettings";
+import { IPlaybackEntry } from "../Common/Interfaces/IPlaybackEntry";
 
 // FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
-export class PlaybackSettings {
-    public rhythm: Fraction;
-}
+
 
 /**
  * This is the representation of a complete piece of sheet music.
@@ -67,6 +68,8 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     private musicPartManager: MusicPartManager = undefined;
     private musicSheetErrors: MusicSheetErrors = new MusicSheetErrors();
     private staves: Staff[] = [];
+    private playbackDataDict: Dictionary<Voice, { enrolledTimestamp: Fraction, playbackEntry: IPlaybackEntry }[]>
+        = new Dictionary<Voice, { enrolledTimestamp: Fraction, playbackEntry: IPlaybackEntry }[]>();
     private selectionStart: Fraction;
     private selectionEnd: Fraction;
     private transpose: number = 0;
@@ -138,7 +141,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
         this.hasBeenOpenedForTheFirstTime = value;
     }
     public InitializeStartTempoInBPM(startTempo: number): void {
-        // (*) this.playbackSettings.BeatsPerMinute = startTempo;
+        this.playbackSettings.BeatsPerMinute = startTempo;
         this.userStartTempoInBPM = startTempo;
     }
     public get DefaultStartTempoInBpm(): number {
@@ -233,6 +236,9 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public get SheetErrors(): MusicSheetErrors {
         return this.musicSheetErrors;
+    }
+    public get PlaybackDataDict(): Dictionary<Voice, { enrolledTimestamp: Fraction, playbackEntry: IPlaybackEntry}[]> {
+        return this.playbackDataDict;
     }
     public get SelectionStart(): Fraction {
         return this.selectionStart;
@@ -437,15 +443,15 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     //
     //}
     public getExpressionsStartTempoInBPM(): number {
-        if (this.TimestampSortedTempoExpressionsList.length > 0) {
-            const me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
-            if (me.InstantaneousTempo) {
-                return me.InstantaneousTempo.TempoInBpm;
-            } else if (me.ContinuousTempo) {
-                return me.ContinuousTempo.StartTempo;
-            }
-        }
-        return this.userStartTempoInBPM;
+       if (this.TimestampSortedTempoExpressionsList.length > 0) {
+           const me: MultiTempoExpression = this.TimestampSortedTempoExpressionsList[0];
+           if (me.InstantaneousTempo) {
+               return me.InstantaneousTempo.TempoInBpm;
+           } else if (me.ContinuousTempo) {
+               return me.ContinuousTempo.StartTempo;
+           }
+       }
+       return this.userStartTempoInBPM;
     }
     public get Errors(): { [n: number]: string[] } {
         return this.musicSheetErrors.measureErrors;

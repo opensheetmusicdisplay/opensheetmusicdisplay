@@ -436,7 +436,8 @@ export class ExpressionReader {
                             ContDynamicEnum[type],
                             this.placement,
                             this.staffNumber,
-                            currentMeasure);
+                            currentMeasure,
+                            this.activeInstantaneousDynamic);
                     if (this.openContinuousDynamicExpression) {
                         this.closeOpenContinuousDynamic();
                     }
@@ -559,6 +560,7 @@ export class ExpressionReader {
                         this.placement,
                         this.staffNumber,
                         currentMeasure,
+                        this.activeInstantaneousDynamic,
                         stringTrimmed);
                 if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
                     this.closeOpenContinuousDynamic();

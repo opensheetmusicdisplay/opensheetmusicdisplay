@@ -7,7 +7,7 @@ import {PartListEntry} from "./PartListEntry";
 import log from "loglevel";
 
 export class Repetition extends PartListEntry /*implements IRepetition*/ {
-    constructor(musicSheet: MusicSheet, virtualOverallRepetition: boolean) {
+    constructor(musicSheet: MusicSheet, virtualOverallRepetition: boolean = false) {
         super(musicSheet);
         this.musicSheet2 = musicSheet;
         this.virtualOverallRepetition = virtualOverallRepetition;
@@ -73,7 +73,7 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
     public getBackwardJumpTarget(): number {
         return this.startMarker.measureIndex;
     }
-    public SetEndingStartIndex(endingNumbers: number[], startIndex: number): void {
+    public setEndingsStartIndex(endingNumbers: number[], startIndex: number): void {
         const part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
         this.endingParts.push(part);
         for (const endingNumber of endingNumbers) {
@@ -86,18 +86,20 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
             } catch (err) {
                 log.error("Repetition: Exception.", err);
             }
-
         }
     }
-    //public SetEndingStartIndex(endingNumber: number, startIndex: number): void {
-    //    let part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
-    //    this.endingParts.push(part);
-    //    this.endingIndexDict[endingNumber] = part;
-    //    part.endingIndices.push(endingNumber);
-    //    if (this.numberOfEndings < endingNumber) {
-    //        this.numberOfEndings = endingNumber;
-    //    }
-    //}
+    public setEndingStartIndex(endingNumber: number, startIndex: number): void {
+        const part: RepetitionEndingPart = new RepetitionEndingPart(new SourceMusicPart(this.musicSheet2, startIndex, startIndex));
+
+        this.EndingIndexDict[endingNumber] = part;
+
+        this.endingParts.push(part);
+        part.endingIndices.push(endingNumber);
+
+        if (this.numberOfEndings < endingNumber) {
+            this.numberOfEndings = endingNumber;
+        }
+    }
     public setEndingEndIndex(endingNumber: number, endIndex: number): void {
         if (this.endingIndexDict[endingNumber]) {
             this.endingIndexDict[endingNumber].part.setEndIndex(endIndex);
@@ -135,13 +137,15 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         for (let measureIndex: number = start; measureIndex <= end; measureIndex++) {
             const sourceMeasure: SourceMeasure = this.musicSheet2.SourceMeasures[measureIndex];
             for (let i: number = 0; i < sourceMeasure.CompleteNumberOfStaves; i++) {
-                for (const sourceStaffEntry of sourceMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries) {
-                    if (sourceStaffEntry) {
-                        let verses: number = 0;
-                        for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
-                            verses += Object.keys(voiceEntry.LyricsEntries).length;
+                if (sourceMeasure.VerticalSourceStaffEntryContainers[i]) {
+                    for (const sourceStaffEntry of sourceMeasure.VerticalSourceStaffEntryContainers[i].StaffEntries) {
+                        if (sourceStaffEntry) {
+                            let verses: number = 0;
+                            for (const voiceEntry of sourceStaffEntry.VoiceEntries) {
+                                verses += voiceEntry.LyricsEntries.keys.length;
+                            }
+                            lyricVerses = Math.max(lyricVerses, verses);
                         }
-                        lyricVerses = Math.max(lyricVerses, verses);
                     }
                 }
             }
@@ -155,6 +159,26 @@ export class Repetition extends PartListEntry /*implements IRepetition*/ {
         return this.getLastSourceMeasure().MeasureNumber;
     }
 
+    public  coversIdenticalMeasures(other: Repetition): boolean {
+        if (this.StartIndex === other.StartIndex &&
+            this.EndIndex === other.EndIndex) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public removeFromRepetitionInstructions(): void {
+        if (this.startMarker !== undefined) {
+            this.startMarker.parentRepetition = undefined;
+        }
+        if (this.endMarker !== undefined) {
+            this.endMarker.parentRepetition = undefined;
+        }
+        for (const backJump of this.BackwardJumpInstructions) {
+            backJump.parentRepetition = undefined;
+        }
+    }
 }
 
 export class RepetitionEndingPart {

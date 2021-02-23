@@ -11,3 +11,4 @@ export * from "./MusicSource";
 export * from "./ScoreIO";
 export * from "./Graphical";
 export * from "./Interfaces";
+export * from "./MusicParts";

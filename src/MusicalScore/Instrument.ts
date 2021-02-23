@@ -25,7 +25,7 @@ export class Instrument extends InstrumentalGroup {
     private id: number;
     private hasLyrics: boolean = false;
     private hasChordSymbols: boolean = false;
-    private playbackTranspose: number;
+    private playbackTranspose: number = 0;
 
     private lyricVersesNumbers: number[] = [];
     private subInstruments: SubInstrument[] = [];
@@ -140,6 +140,24 @@ export class Instrument extends InstrumentalGroup {
         for (let idx: number = 0, len: number = this.staves.length; idx < len; ++idx) {
             const staff: Staff = this.staves[idx];
             staff.audible = value;
+        }
+    }
+    public get Solo(): boolean {
+        let result: boolean = false;
+        for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
+            const v: Voice = this.Voices[idx];
+            result = result || v.Solo;
+        }
+        return result;
+    }
+    public set Solo(value: boolean) {
+        for (let idx: number = 0, len: number = this.Voices.length; idx < len; ++idx) {
+            const v: Voice = this.Voices[idx];
+            v.Solo = value;
+        }
+        for (let idx: number = 0, len: number = this.Staves.length; idx < len; ++idx) {
+            const staff: Staff = this.Staves[idx];
+            staff.Solo = value;
         }
     }
     public get Following(): boolean {

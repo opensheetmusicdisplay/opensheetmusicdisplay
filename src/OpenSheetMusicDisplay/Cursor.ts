@@ -13,11 +13,14 @@ import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
 import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import { IPlaybackListener } from "../Common/Interfaces/IPlaybackListener";
+import { CursorPosChangedData } from "../Common/DataObjects/CursorPosChangedData";
+import { PointF2D } from "../Common/DataObjects";
 
 /**
  * A cursor which can iterate through the music sheet.
  */
-export class Cursor {
+export class Cursor implements IPlaybackListener {
   constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay) {
     this.container = container;
     this.openSheetMusicDisplay = openSheetMusicDisplay;
@@ -40,6 +43,30 @@ export class Cursor {
     this.cursorElement = <HTMLImageElement>curs;
     this.container.appendChild(curs);
   }
+  public cursorPositionChanged(timestamp: Fraction, data: CursorPosChangedData): void {
+    // if (this.iterator.CurrentEnrolledTimestamp.lt(timestamp)) {
+    //   this.iterator.moveToNext();
+    //   while (this.iterator.CurrentEnrolledTimestamp.lt(timestamp)) {
+    //     this.iterator.moveToNext();
+    //   }
+    // } else if (this.iterator.CurrentEnrolledTimestamp.gt(timestamp)) {
+    //   this.iterator = new MusicPartManagerIterator(this.manager.MusicSheet, timestamp);
+    // }
+
+    this.updateWithTimestamp(data.PredictedPosition);
+  }
+  public pauseOccurred(o: object): void {
+    // throw new Error("Method not implemented.");
+  }
+  public selectionEndReached(o: object): void {
+    // throw new Error("Method not implemented.");
+  }
+  public resetOccurred(o: object): void {
+    this.reset();
+  }
+  public notesPlaybackEventOccurred(o: object): void {
+    // throw new Error("Method not implemented.");
+  }
 
   private container: HTMLElement;
   public cursorElement: HTMLImageElement;
@@ -53,7 +80,7 @@ export class Cursor {
   private manager: MusicPartManager;
   public iterator: MusicPartManagerIterator;
   private graphic: GraphicalMusicSheet;
-  public hidden: boolean = true;
+  public hidden: boolean = false;
   public currentPageNumber: number = 1;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
@@ -61,8 +88,7 @@ export class Cursor {
     this.manager = manager;
     this.graphic = graphic;
     this.reset();
-    this.hidden = true;
-    this.hide();
+    this.hidden = false;
   }
 
   /**
@@ -70,7 +96,7 @@ export class Cursor {
    */
   public show(): void {
     this.hidden = false;
-    this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
+    //this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
     this.update();
   }
 
@@ -87,7 +113,8 @@ export class Cursor {
     let endMeasureIndex: number = this.rules.MaxMeasureToDrawIndex;
     endMeasureIndex = Math.min(endMeasureIndex, lastSheetMeasureIndex);
 
-    if (this.openSheetMusicDisplay.Sheet && this.openSheetMusicDisplay.Sheet.SourceMeasures.length > startMeasureIndex) {
+    if (!this.openSheetMusicDisplay.Sheet.SelectionStart && this.openSheetMusicDisplay.Sheet &&
+       this.openSheetMusicDisplay.Sheet.SourceMeasures.length > startMeasureIndex) {
       this.openSheetMusicDisplay.Sheet.SelectionStart = this.openSheetMusicDisplay.Sheet.SourceMeasures[startMeasureIndex].AbsoluteTimestamp;
     }
     if (this.openSheetMusicDisplay.Sheet && this.openSheetMusicDisplay.Sheet.SourceMeasures.length > endMeasureIndex) {
@@ -102,6 +129,37 @@ export class Cursor {
     const measureIndex: number = voiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.measureListIndex;
     const staffIndex: number = voiceEntry.ParentSourceStaffEntry.ParentStaff.idInMusicSheet;
     return <VexFlowStaffEntry>this.graphic.findGraphicalStaffEntryFromMeasureList(staffIndex, measureIndex, voiceEntry.ParentSourceStaffEntry);
+  }
+
+  public updateWithTimestamp(timestamp: Fraction): void {
+    const sheetTimestamp: Fraction = this.manager.absoluteEnrolledToSheetTimestamp(timestamp);
+
+    const values: [number, MusicSystem] = this.graphic.calculateXPositionFromTimestamp(sheetTimestamp);
+    const x: number = values[0];
+    const currentSystem: MusicSystem = values[1];
+    this.updateCurrentPageFromSystem(currentSystem);
+
+    const points: [PointF2D, PointF2D] = this.graphic.calculateCursorPoints(x, currentSystem);
+    const y: number = points[0].y;
+    const height: number = points[1].y - y;
+
+    // This the current HTML Cursor:
+    const cursorElement: HTMLImageElement = this.cursorElement;
+    cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+    cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+    cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+    const newWidth: number = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
+    if (newWidth !== cursorElement.width) {
+      cursorElement.width = newWidth;
+      this.updateStyle(newWidth);
+    }
+    if (this.openSheetMusicDisplay.FollowCursor) {
+      const diff: number = this.cursorElement.getBoundingClientRect().top;
+      this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
+    }
+    // Show cursor
+    // // Old cursor: this.graphic.Cursors.push(cursor);
+    this.cursorElement.style.display = "";
   }
 
   public update(): void {
@@ -207,7 +265,8 @@ export class Cursor {
   public reset(): void {
     this.resetIterator();
     //this.iterator.moveToNext();
-    this.update();
+    const iterTmp: MusicPartManagerIterator = this.manager.getIterator(this.graphic.ParentMusicSheet.SelectionStart);
+    this.updateWithTimestamp(iterTmp.CurrentEnrolledTimestamp);
   }
 
   private updateStyle(width: number, color: string = undefined): void {
@@ -224,8 +283,8 @@ export class Cursor {
     // Generate the gradient
     const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
     gradient.addColorStop(0, "white"); // it was: "transparent"
-    gradient.addColorStop(0.2, color);
-    gradient.addColorStop(0.8, color);
+    gradient.addColorStop(0.4, color);
+    gradient.addColorStop(0.6, color);
     gradient.addColorStop(1, "white"); // it was: "transparent"
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, 1);
@@ -276,6 +335,22 @@ export class Cursor {
         }
         return this.currentPageNumber = newPageNumber;
       }
+    }
+    return 1;
+  }
+
+  public updateCurrentPageFromSystem(system: MusicSystem): number {
+    if (system !== undefined) {
+      const newPageNumber: number = system.Parent.PageNumber;
+      if (newPageNumber !== this.currentPageNumber) {
+        this.container.removeChild(this.cursorElement);
+        this.container = document.getElementById("osmdCanvasPage" + newPageNumber);
+        this.container.appendChild(this.cursorElement);
+        // TODO maybe store this.pageCurrentlyAttachedTo, though right now it isn't necessary
+        // alternative to remove/append:
+        // this.openSheetMusicDisplay.enableOrDisableCursor(true);
+      }
+      return this.currentPageNumber = newPageNumber;
     }
     return 1;
   }

@@ -26,7 +26,7 @@ export class DrawingParameters {
     public drawErrors: boolean;
     public drawSelectionStartSymbol: boolean;
     public drawSelectionEndSymbol: boolean;
-    public drawCursors: boolean;
+    public drawCursors: boolean = true;
     public drawActivitySymbols: boolean;
     public drawScrollIndicator: boolean;
     public drawComments: boolean;
