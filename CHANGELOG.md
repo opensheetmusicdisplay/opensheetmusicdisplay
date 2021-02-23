@@ -1,3 +1,10 @@
+## [0.9.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.9.3...0.9.4) (2021-02-22)
+
+### Bug Fixes
+
+* **Slurs:** The parameters for slur flattening were fine tuned to not flatten mid-length, mid-angle slurs ([#971](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/971))
+* **Transposing:** Some necessary changes for the transposition plugin hotfix (Sponsor early access build)
+
 ## [0.9.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.9.2...0.9.3) (2021-02-18)
 
 
