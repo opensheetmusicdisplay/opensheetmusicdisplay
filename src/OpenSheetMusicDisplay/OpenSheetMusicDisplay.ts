@@ -165,7 +165,6 @@ export class OpenSheetMusicDisplay {
             return Promise.reject(new Error("OpenSheetMusicDisplay: Document is not a valid 'partwise' MusicXML"));
         }
         const score: IXmlElement = new IXmlElement(scorePartwiseElement);
-        this.pluginManager.AfterLoad();
         const reader: MusicSheetReader = new MusicSheetReader(this.pluginManager.AfterSheetReadingModules, this.rules);
         this.sheet = reader.createMusicSheet(score, "Untitled Score");
         this.pluginManager.SetMusicSheet(this.sheet);
@@ -177,7 +176,7 @@ export class OpenSheetMusicDisplay {
 
         this.needBackendUpdate = true;
         this.updateGraphic();
-
+        this.pluginManager.AfterLoad();
         return Promise.resolve({});
     }
 

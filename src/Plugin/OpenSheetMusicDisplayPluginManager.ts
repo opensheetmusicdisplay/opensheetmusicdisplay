@@ -25,7 +25,7 @@ export class OpenSheetMusicDisplayPluginManager {
         this.pluginMap.setValue(plugin.Name, plugin);
         plugin.Initialize(this.osmd);
         if(plugin.AfterSheetReadingModules && plugin.AfterSheetReadingModules.length > 0){
-            this.AfterSheetReadingModules.concat(plugin.AfterSheetReadingModules);
+            this.AfterSheetReadingModules = this.AfterSheetReadingModules.concat(plugin.AfterSheetReadingModules);
         }
     }
 
