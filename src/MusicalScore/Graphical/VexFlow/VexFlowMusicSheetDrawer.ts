@@ -403,11 +403,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param screenPosition the position of the lower left corner of the text in screen coordinates
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): Node[] {
+                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): Node {
         if (!graphicalLabel.Label.print) {
-            return [];
+            return undefined;
         }
-        const nodes: Node[] = [];
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { font } = graphicalLabel.Label;
         let color: string;
@@ -425,20 +424,25 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             fontFamily = this.rules.DefaultFontFamily;
         }
 
+        let node: Node;
         for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
             const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
             const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
             const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
-            nodes.push(
-                this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily)
-            );
+            const newNode: Node =
+                this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
+            if (!node) {
+                node = newNode;
+            } else {
+                node.appendChild(newNode);
+            }
             screenPosition.y = screenPosition.y + fontHeightInPixel;
             if (graphicalLabel.TextLines.length > 1) {
-             screenPosition.y += this.rules.SpacingBetweenTextLines;
+                screenPosition.y += this.rules.SpacingBetweenTextLines;
             }
         }
         // font currently unused, replaced by fontFamily
-        return nodes;
+        return node; // alternatively, return Node[] and refactor annotationElementMap to handle node array instead of single node
     }
 
     /**
