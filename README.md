@@ -42,7 +42,7 @@ Try the [Public Demo](https://opensheetmusicdisplay.github.io/demo/) to see what
 
 Developers can also run a [local development demo (see Wiki)](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki/Debugging-(VSCode)):
 
-<img title="Local OSMD Development/Debug demo" height="550" alt="Local OSMD Developer Demo" src="https://user-images.githubusercontent.com/33069673/106189263-5695f400-61a8-11eb-901f-aafc853af497.png">
+<img title="Local OSMD Development/Debug demo" height="450" alt="Local OSMD Developer Demo" src="https://user-images.githubusercontent.com/33069673/106189263-5695f400-61a8-11eb-901f-aafc853af497.png">
 
 
 ## Key Features
