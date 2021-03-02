@@ -105,7 +105,7 @@ and others. Check them out at [our GitHub sponsors page](https://github.com/spon
   <img title="OSMD button sponsor perk" src="https://user-images.githubusercontent.com/33069673/106320576-5a427d00-6273-11eb-96b0-d2c7c4b19927.jpg" width="28.5%">
 </p>
 
-And there are other ways to contribute to the community - we plan on starting a blog & a newsletter and share our knowledge. We encourage our sponsors to bring up their desired features and pitch blog post ideas.
+And there are other ways to contribute to the community - we plan on starting a blog and newsletter, and sharing our knowledge. We encourage our sponsors to bring up their desired features and pitch blog post ideas.
 
 Though we highly recommend the sponsor route, you can also donate via Paypal:<br>
 
