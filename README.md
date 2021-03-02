@@ -56,9 +56,9 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 * Written in [Typescript](https://www.typescriptlang.org/) with complete type information, 100% compatible with Javascript (minified build is .js)
 
 <p align="left">
-  <img title="OSMD in the Browser"  src="https://user-images.githubusercontent.com/33069673/106321958-64fe1180-6275-11eb-8632-3b22beaa0829.jpg" width="75%">
+  <img title="OSMD in the Browser"  src="https://user-images.githubusercontent.com/33069673/106321958-64fe1180-6275-11eb-8632-3b22beaa0829.jpg" width="66.4%">
 &nbsp;
-  <img title="OSMD on Mobile (or server-side rendering)" src="https://user-images.githubusercontent.com/33069673/106321963-67606b80-6275-11eb-8fdd-2acf273586df.jpg" width="20%">
+  <img title="OSMD on Mobile (or server-side rendering)" src="https://user-images.githubusercontent.com/33069673/106321963-67606b80-6275-11eb-8fdd-2acf273586df.jpg" width="25%">
 </p>
 
 ## Limitations
