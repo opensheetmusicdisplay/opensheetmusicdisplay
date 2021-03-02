@@ -83,10 +83,10 @@ Also, **OSMD is a renderer, not an interactive sheet music editor.** Rendering t
 ## Sponsor OSMD
 
 <a href="https://github.com/sponsors/opensheetmusicdisplay/" alt="OSMD on Github Sponsors">
-<!--img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors"--><img src="https://user-images.githubusercontent.com/33069673/109203612-a9150100-77a4-11eb-9b91-6692850dccab.png" height="270">
+<!--img src="https://user-images.githubusercontent.com/33069673/104042293-99ccfa80-51da-11eb-9dc9-fac075a33224.png" height="200" alt="OSMD on Github Sponsors"--><img src="https://user-images.githubusercontent.com/33069673/109203612-a9150100-77a4-11eb-9b91-6692850dccab.png" style="max-width: 100%; max-height: 100vh; width: auto; margin: auto;">
 </a><br>
 
-Sadly free isn’t sustainable on its own. To keep on improving and developing Open Sheet Music Display we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way that would enable us to continue our work, and improve and expand Open Sheet Music Display.<br>
+It would be gerat if free software were sustainable on its own. But to keep on improving and developing Open Sheet Music Display we need your support. Your monthly sponsorship subscription - especially if you are already actively using OSMD - would mean everything to us - it’s a stable way that would enable us to continue our work, and improve and expand Open Sheet Music Display.<br>
 New features currently in the making are:
 * OSMD Audio Player
 * Transposing Plugin
