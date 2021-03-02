@@ -94,7 +94,7 @@ New features currently in the making are:
 * Annotations (Add custom text, music symbols, etc. to the score and export to and import from XML)
 
 Our awesome sponsors get awesome perks, like:
-* Early Access to features like the Audio Player
+* Early Access to features like the Audio Player and a transposition plugin for OSMD
 * A postcard from Vienna
 
 and others. Check them out at [our GitHub sponsors page](https://github.com/sponsors/opensheetmusicdisplay).
