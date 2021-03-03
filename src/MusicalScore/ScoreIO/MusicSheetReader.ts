@@ -423,7 +423,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
      * @returns {boolean}
      */
     private checkIfMeasureIsImplicit(maxInstrumentDuration: Fraction, activeRhythm: Fraction): boolean {
-        if (!this.previousMeasure && maxInstrumentDuration.lt(activeRhythm)) {
+        if (!this.previousMeasure && maxInstrumentDuration.lt(new Fraction(0))){
             return true;
         }
         if (this.previousMeasure) {
