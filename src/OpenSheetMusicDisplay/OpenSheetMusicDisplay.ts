@@ -82,6 +82,7 @@ export class OpenSheetMusicDisplay {
     private autoResizeEnabled: boolean;
     private resizeHandlerAttached: boolean;
     private followCursor: boolean;
+    private OnXMLRead: Function;
 
     /**
      * Load a MusicXML file
@@ -119,10 +120,11 @@ export class OpenSheetMusicDisplay {
                 trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc
             }
             if (trimmedStr.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
-                log.debug("[OSMD] Finally parsing XML content, length: " + trimmedStr.length);
+                const modifiedXml: string = this.OnXMLRead(trimmedStr); // by default just returns trimmedStr unless a function options.OnXMLRead was set.
+                log.debug("[OSMD] Finally parsing XML content, length: " + modifiedXml.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
-                content = parser.parseFromString(trimmedStr, "application/xml");
+                content = parser.parseFromString(modifiedXml, "application/xml");
             } else if (trimmedStr.length < 2083) { // TODO do proper URL format check
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
@@ -355,6 +357,11 @@ export class OpenSheetMusicDisplay {
             log.warn("warning: osmd.setOptions() called without an options parameter, has no effect."
                 + "\n" + "example usage: osmd.setOptions({drawCredits: false, drawPartNames: false})");
             return;
+        }
+        this.OnXMLRead = function(xml): string {return xml;};
+        if (options.onXMLRead)
+        {
+            this.OnXMLRead = options.onXMLRead;
         }
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum =
