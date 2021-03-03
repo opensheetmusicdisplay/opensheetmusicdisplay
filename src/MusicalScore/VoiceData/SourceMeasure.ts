@@ -600,7 +600,33 @@ export class SourceMeasure {
     }
 
     public canBeReducedToMultiRest(): boolean {
-        if (!this.allRests || this.hasLyrics || this.hasMoodExpressions || this.tempoExpressions.length > 0) {
+        let allRestsOrInvisible: boolean = true;
+        let visibleLyrics: boolean = false;
+        for (const container of this.verticalSourceStaffEntryContainers) {
+            if (!container) {
+                continue;
+            }
+            for (const staffEntry of container.StaffEntries) {
+                if (!staffEntry || !staffEntry.ParentStaff.ParentInstrument.Visible) {
+                    continue; // ignore notes in invisible instruments (instruments not shown)
+                }
+                if (staffEntry.ParentStaff.hasLyrics) {
+                    visibleLyrics = true;
+                }
+                for (const voiceEntry of staffEntry.VoiceEntries) {
+                    for (const note of voiceEntry.Notes) {
+                        if (!note.isRest()) {
+                            allRestsOrInvisible = false;
+                            break;
+                        }
+                    }
+                    if (!allRestsOrInvisible) {
+                        break;
+                    }
+                }
+            }
+        }
+        if (!allRestsOrInvisible || visibleLyrics || this.hasMoodExpressions || this.tempoExpressions.length > 0) {
             return false;
         }
         // check for StaffLinkedExpressions (e.g. MultiExpression, StaffText) (per staff)
