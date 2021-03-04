@@ -172,6 +172,8 @@ export interface IOSMDOptions {
      * So this option may result in a page break after a single measure on a page.
      */
     newPageFromXML?: boolean;
+    /** A custom function that is executed when the xml is read, modifies it, and returns a new xml string that OSMD then parses. */
+    onXMLRead?(xml: string): string;
     /** The cutoff number for rendering percussion clef stafflines as a single line. Default is 4.
      *  This is number of instruments specified, e.g. a drumset:
      *     <score-part id="P1">

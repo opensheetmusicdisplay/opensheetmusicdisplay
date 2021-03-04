@@ -21,6 +21,7 @@ export class Staff {
     private id: number;
     private stafflineCount: number = 5;
     private solo: boolean;
+    public hasLyrics: boolean = false;
 
     public get ParentInstrument(): Instrument {
         return this.parentInstrument;

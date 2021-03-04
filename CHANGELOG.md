@@ -1,3 +1,20 @@
+## [0.9.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.9.4...0.9.5) (2021-03-03)
+
+
+### Bug Fixes
+
+* **Array.prototype:** Ease Array.prototype pollution by using Object.defineProperty, potentially solving library conflicts like with pdf.js ([#980](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/980)) ([ecc1d8f](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/ecc1d8fa5704e860c8d50c28280139e0355e9720))
+* **AutoMultiRest:** Enable multiple rest measure when invisible instrument would have prevented it ([#981](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/981)) ([d406341](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/d40634105df6fcf229441d42c1f1dcdc46a904fd))
+* **Build:** Add missing MusicParts exports (MusicPartManager etc) ([5349f30](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5349f303d500b88bb79f383711a39cebab4b5893))
+* **Rehearsal Marks:** Fix shifted position when sheet has a pickup measure ([#983](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/983)) ([5c4343d](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/5c4343d45a1f98784fa70c1108c8a5aad6fb5db4)), closes [#985](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/985) [#985](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/985)
+
+
+### Features
+
+* **Options:** Add options.OnXMLRead ([#982](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/982)), a function to modify the XML after reading, before parsing ([b2be3e8](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/b2be3e898deb1a24f40c4f8253a938cde526708b))
+
+
+
 ## [0.9.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/0.9.3...0.9.4) (2021-02-22)
 
 ### Bug Fixes

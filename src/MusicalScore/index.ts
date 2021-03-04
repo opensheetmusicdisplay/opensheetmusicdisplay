@@ -8,6 +8,7 @@ export * from "./MusicSheet";
 export * from "./SubInstrument";
 export * from "./VoiceData";
 export * from "./MusicSource";
+export * from "./MusicParts";
 export * from "./ScoreIO";
 export * from "./Graphical";
 export * from "./Interfaces";
