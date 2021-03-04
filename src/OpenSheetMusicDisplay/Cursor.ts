@@ -223,9 +223,11 @@ export class Cursor implements IPlaybackListener {
     cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
     cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
     cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+    cursorElement.style.height = cursorElement.height + "px";
     const newWidth: number = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
     if (newWidth !== cursorElement.width) {
       cursorElement.width = newWidth;
+      cursorElement.style.width = newWidth + "px";
       this.updateStyle(newWidth);
     }
     if (this.openSheetMusicDisplay.FollowCursor) {
