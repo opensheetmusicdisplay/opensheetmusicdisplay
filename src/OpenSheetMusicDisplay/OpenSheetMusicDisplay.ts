@@ -91,6 +91,9 @@ export class OpenSheetMusicDisplay {
     public RegisterPlugin(plugin: OpenSheetMusicDisplayPlugin): void {
         this.pluginManager.RegisterPlugin(plugin);
     }
+    public DeregisterPlugin(plugin: OpenSheetMusicDisplayPlugin|string): void {
+        this.pluginManager.DeregisterPlugin(plugin);
+    }
     private OnXMLRead: Function;
 
     /**
@@ -194,7 +197,6 @@ export class OpenSheetMusicDisplay {
             this.cursor.init(this.sheet.MusicPartManager, this.graphic);
         }
         this.RenderingManager?.setMusicSheet(this.graphic);
-        this.InteractionManager?.Initialize();
     }
 
     /**
@@ -439,6 +441,8 @@ export class OpenSheetMusicDisplay {
         }
         if (options.disableCursor) {
             this.drawingParameters.drawCursors = false;
+        } else {
+            this.drawingParameters.drawCursors = true;
         }
 
         // alternative to if block: this.drawingsParameters.drawCursors = options.drawCursors !== false. No if, but always sets drawingParameters.

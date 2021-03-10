@@ -29,6 +29,26 @@ export class OpenSheetMusicDisplayPluginManager {
         }
     }
 
+    public DeregisterPlugin(plugin: OpenSheetMusicDisplayPlugin | string): void {
+        if(plugin instanceof OpenSheetMusicDisplayPlugin){
+            plugin = plugin.Name;
+        }
+        if(!plugin || plugin.length < 1){
+            return;
+        }
+
+        //ensure we are referencing the same plugin object.
+        const ourReference: OpenSheetMusicDisplayPlugin = this.pluginMap.getValue(plugin);
+        //dereg sheet reading modules
+        if(ourReference.AfterSheetReadingModules && ourReference.AfterSheetReadingModules.length > 0){
+            this.AfterSheetReadingModules = this.AfterSheetReadingModules.filter(function(value: IAfterSheetReadingModule){
+                return !ourReference.AfterSheetReadingModules.includes(value);
+            });
+        }
+        ourReference.Dispose(this.osmd);
+        this.pluginMap.remove(plugin);
+    }
+
     protected static handlePluginEventResult(result: IPluginEventResult): void{
         if (!result) {
             return;

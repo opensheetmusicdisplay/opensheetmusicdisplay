@@ -147,10 +147,13 @@ export class Cursor implements IPlaybackListener {
     const cursorElement: HTMLImageElement = this.cursorElement;
     cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
     cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-    cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+    const newHeight: number = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+    cursorElement.height = newHeight;
+    cursorElement.style.height = newHeight + "px";
     const newWidth: number = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
     if (newWidth !== cursorElement.width) {
       cursorElement.width = newWidth;
+      cursorElement.style.width = cursorElement.width + "px";
       this.updateStyle(newWidth);
     }
     if (this.openSheetMusicDisplay.FollowCursor) {
@@ -222,8 +225,9 @@ export class Cursor implements IPlaybackListener {
     const cursorElement: HTMLImageElement = this.cursorElement;
     cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
     cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-    cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
-    cursorElement.style.height = cursorElement.height + "px";
+    const newHeight: number = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+    cursorElement.height = newHeight;
+    cursorElement.style.height = newHeight + "px";
     const newWidth: number = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
     if (newWidth !== cursorElement.width) {
       cursorElement.width = newWidth;

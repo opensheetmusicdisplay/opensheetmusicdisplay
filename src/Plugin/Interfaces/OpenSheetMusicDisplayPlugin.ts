@@ -9,6 +9,7 @@ export abstract class OpenSheetMusicDisplayPlugin {
     public abstract get AfterSheetReadingModules(): Array<IAfterSheetReadingModule>;
     //TODO: more events, maybe more generic as well
     public abstract Initialize(osmd: OpenSheetMusicDisplay): IPluginEventResult;
+    public abstract Dispose(osmd: OpenSheetMusicDisplay): IPluginEventResult;
     public abstract BeforeLoad(osmd: OpenSheetMusicDisplay): IPluginEventResult;
     public abstract AfterLoad(osmd: OpenSheetMusicDisplay): IPluginEventResult;
     public abstract BeforeRender(osmd: OpenSheetMusicDisplay): IPluginEventResult;
