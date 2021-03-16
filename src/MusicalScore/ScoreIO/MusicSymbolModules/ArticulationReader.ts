@@ -7,7 +7,13 @@ import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Note } from "../../VoiceData/Note";
+import { EngravingRules } from "../../Graphical/EngravingRules";
 export class ArticulationReader {
+  private rules: EngravingRules;
+
+  constructor(rules: EngravingRules) {
+    this.rules = rules;
+  }
 
   private getAccEnumFromString(input: string): AccidentalEnum {
     switch (input) {
@@ -172,7 +178,9 @@ export class ArticulationReader {
     technicalInstruction.sourceNote = note;
     technicalInstruction.value = stringOrFingeringNode.value;
     const placement: Attr = stringOrFingeringNode.attribute("placement");
-    technicalInstruction.placement = this.getPlacement(placement);
+    if (this.rules.FingeringPositionFromXML) {
+      technicalInstruction.placement = this.getPlacement(placement);
+    }
     return technicalInstruction;
   }
 

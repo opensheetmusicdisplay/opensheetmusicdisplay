@@ -48,7 +48,7 @@ export class VoiceGenerator {
     this.instrument.Voices.push(this.voice); // apparently necessary for cursor.next(), for "cursor with hidden instrument" test
     this.staff.Voices.push(this.voice);
     this.lyricsReader = new LyricsReader(this.musicSheet);
-    this.articulationReader = new ArticulationReader();
+    this.articulationReader = new ArticulationReader(this.musicSheet.Rules);
   }
 
   public pluginManager: ReaderPluginManager; // currently only used in audio player
