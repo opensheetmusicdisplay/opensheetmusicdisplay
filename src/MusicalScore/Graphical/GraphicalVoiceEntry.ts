@@ -33,7 +33,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
      */
     public sort(): GraphicalNote[] {
         this.notes.sort((a, b) => {
-            return b.sourceNote.Pitch.getHalfTone() - a.sourceNote.Pitch.getHalfTone();
+            return (b.sourceNote.Pitch?.getHalfTone() ?? 0) - (a.sourceNote.Pitch?.getHalfTone() ?? 0);
         });
         // note that this is the reverse order of what vexflow needs
         return this.notes;
@@ -46,7 +46,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
      */
     public sortForVexflow(): GraphicalNote[] {
         this.notes.sort((a, b) => {
-            return a.sourceNote.Pitch.getHalfTone() - b.sourceNote.Pitch.getHalfTone();
+            return (a.sourceNote.Pitch?.getHalfTone() ?? 0) - (b.sourceNote.Pitch.getHalfTone() ?? 0);
         });
         return this.notes;
     }
