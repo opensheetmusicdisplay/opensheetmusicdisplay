@@ -3,16 +3,21 @@ import { GraphicalMusicSheet, IAfterSheetReadingModule, MusicSheet } from "../Mu
 import { IPluginEventResult, MessageSeverity } from "./Interfaces/IPluginEventResult";
 import { OpenSheetMusicDisplayPlugin } from "./Interfaces/OpenSheetMusicDisplayPlugin";
 import log from "loglevel";
-import { OpenSheetMusicDisplay } from "../OpenSheetMusicDisplay";
+import { OpenSheetMusicDisplay, IOSMDOptions, OSMDOptions } from "../OpenSheetMusicDisplay";
 
 //TODO: This is a very basic starter framework.
 //Ideally we will have generic events and a lot more interfaces available to create plugins
 //SEE: Sebastians pluginInfrastructure branch
 export class OpenSheetMusicDisplayPluginManager {
     protected osmd: OpenSheetMusicDisplay;
+    protected options: IOSMDOptions = OSMDOptions.OSMDOptionsStandard();
 
     constructor(osmd: OpenSheetMusicDisplay){
         this.osmd = osmd;
+    }
+
+    public setOptions(options: IOSMDOptions): void {
+        this.options = options;
     }
 
     protected pluginMap: Dictionary<string, OpenSheetMusicDisplayPlugin> = new Dictionary<string, OpenSheetMusicDisplayPlugin>();
@@ -23,7 +28,7 @@ export class OpenSheetMusicDisplayPluginManager {
         //    console.log(plugin.Dependencies[i]);
         //}
         this.pluginMap.setValue(plugin.Name, plugin);
-        plugin.Initialize(this.osmd);
+        plugin.Initialize(this.osmd, this.options);
         if(plugin.AfterSheetReadingModules && plugin.AfterSheetReadingModules.length > 0){
             this.AfterSheetReadingModules = this.AfterSheetReadingModules.concat(plugin.AfterSheetReadingModules);
         }
@@ -45,7 +50,7 @@ export class OpenSheetMusicDisplayPluginManager {
                 return !ourReference.AfterSheetReadingModules.includes(value);
             });
         }
-        ourReference.Dispose(this.osmd);
+        ourReference.Dispose(this.osmd, this.options);
         this.pluginMap.remove(plugin);
     }
 
@@ -75,37 +80,37 @@ export class OpenSheetMusicDisplayPluginManager {
 
     public BeforeLoad(): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.BeforeLoad(this.osmd);
+            const result: IPluginEventResult = plugin.BeforeLoad(this.osmd, this.options);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
     public AfterLoad(): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.AfterLoad(this.osmd);
+            const result: IPluginEventResult = plugin.AfterLoad(this.osmd, this.options);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
     public BeforeRender(): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.BeforeRender(this.osmd);
+            const result: IPluginEventResult = plugin.BeforeRender(this.osmd, this.options);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
     public AfterRender(): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.AfterRender(this.osmd);
+            const result: IPluginEventResult = plugin.AfterRender(this.osmd, this.options);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
     public SetMusicSheet(sheet: MusicSheet): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.SetMusicSheet(sheet);
+            const result: IPluginEventResult = plugin.SetMusicSheet(sheet, this.options);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }
     public SetGraphicalMusicSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         for(const plugin of this.pluginMap.values()){
-            const result: IPluginEventResult = plugin.SetGraphicalMusicSheet(graphicalMusicSheet);
+            const result: IPluginEventResult = plugin.SetGraphicalMusicSheet(graphicalMusicSheet, this.options);
             OpenSheetMusicDisplayPluginManager.handlePluginEventResult(result);
         }
     }

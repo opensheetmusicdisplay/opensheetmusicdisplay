@@ -369,6 +369,7 @@ export class OpenSheetMusicDisplay {
      *  For example, setOptions({autoResize: false}) will disable autoResize even during runtime.
      */
     public setOptions(options: IOSMDOptions): void {
+        this.pluginManager?.setOptions(options);
         if (!this.rules) {
             this.rules = new EngravingRules();
         }
