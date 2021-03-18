@@ -285,6 +285,7 @@ export class EngravingRules {
     public ArticulationPlacementFromXML: boolean;
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     public FingeringPosition: PlacementEnum;
+    public FingeringPositionFromXML: boolean;
     public FingeringInsideStafflines: boolean;
     public FingeringLabelFontHeight: number;
     public FingeringOffsetX: number;
@@ -597,6 +598,7 @@ export class EngravingRules {
         this.RenderTimeSignatures = true;
         this.ArticulationPlacementFromXML = true;
         this.FingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
+        this.FingeringPositionFromXML = true;
         this.FingeringInsideStafflines = false;
         this.FingeringLabelFontHeight = 1.7;
         this.FingeringOffsetX = 0.0;

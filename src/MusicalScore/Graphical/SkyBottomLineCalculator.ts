@@ -113,6 +113,11 @@ export class SkyBottomLineCalculator {
                     tmpSkyLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpSkyLine), this.findNextValidNumber(idx, tmpSkyLine));
                 }
             }
+            for (let idx: number = 0; idx < tmpBottomLine.length; idx++) {
+                if (tmpBottomLine[idx] === undefined) {
+                    tmpBottomLine[idx] = Math.max(this.findPreviousValidNumber(idx, tmpBottomLine), this.findNextValidNumber(idx, tmpBottomLine));
+                }
+            }
 
             this.mSkyLine.push(...tmpSkyLine);
             this.mBottomLine.push(...tmpBottomLine);

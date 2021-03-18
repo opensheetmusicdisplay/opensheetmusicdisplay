@@ -106,6 +106,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * This is for low-level rendering hacks and should be used with caution.
      */
     public getSVGId(): string {
+        if (!this.vfnote) {
+            return undefined; // e.g. MultiRestMeasure
+        }
         return this.vfnote[0].getAttribute("id");
     }
 
@@ -114,6 +117,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * This is for low-level rendering hacks and should be used with caution.
      */
     public getSVGGElement(): SVGGElement {
+        if (!this.vfnote) {
+            return undefined; // e.g. MultiRestMeasure
+        }
         return this.vfnote[0].getAttribute("el");
     }
 }

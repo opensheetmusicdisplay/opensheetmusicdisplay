@@ -32,6 +32,7 @@
     "generate:current:singletest": "node test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/current png 0 0 ^Beethoven --osmdtestingsingle",
     "generate:blessed": "node ./test/Util/generateImages_browserless.js ../../build ./test/data ./visual_regression/blessed png 0 0 allSmall --osmdtesting",
     "test:visual": "bash ./test/Util/visual_regression.sh ./visual_regression",
+    "test:visual:build": "npm run build:webpack && npm run generate:current && npm run test:visual",
     "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven",
     "fix-memory-limit": "cross-env NODE_OPTIONS=--max_old_space_size=4096"
   },
