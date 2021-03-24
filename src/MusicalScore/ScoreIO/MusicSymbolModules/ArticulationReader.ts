@@ -20,7 +20,7 @@ export class ArticulationReader {
       case "sharp":
         return AccidentalEnum.SHARP;
       case "flat":
-          return AccidentalEnum.FLAT;
+        return AccidentalEnum.FLAT;
       case "natural":
         return AccidentalEnum.NATURAL;
       case "double-sharp":
@@ -29,14 +29,26 @@ export class ArticulationReader {
       case "double-flat":
       case "flat-flat":
         return AccidentalEnum.DOUBLEFLAT;
+      case "triple-sharp":
+        return AccidentalEnum.TRIPLESHARP;
+      case "triple-flat":
+        return AccidentalEnum.TRIPLEFLAT;
       case "quarter-sharp":
         return AccidentalEnum.QUARTERTONESHARP;
       case "quarter-flat":
         return AccidentalEnum.QUARTERTONEFLAT;
-      case "triple-sharp":
-          return AccidentalEnum.TRIPLESHARP;
-      case "triple-flat":
-        return AccidentalEnum.TRIPLEFLAT;
+      case "three-quarters-sharp":
+        return AccidentalEnum.THREEQUARTERSSHARP;
+      case "three-quarters-flat":
+        return AccidentalEnum.THREEQUARTERSFLAT;
+      case "five-commas-sharp":
+        return AccidentalEnum.FIVECOMMASSHARP
+      case "five-commas-flat":
+        return AccidentalEnum.FIVECOMMASFLAT;
+      case "eight-commas-sharp":
+        return AccidentalEnum.EIGHTCOMMASSHARP;
+      case "eight-commas-flat":
+        return AccidentalEnum.EIGHTCOMMASFLAT;
       default:
         return AccidentalEnum.NONE;
     }
