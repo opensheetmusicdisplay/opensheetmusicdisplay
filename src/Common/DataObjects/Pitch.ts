@@ -328,16 +328,16 @@ export class Pitch {
                 break;
             case AccidentalEnum.FIVECOMMASSHARP:
                 acc = "+-";
-                break
+                break;
             case AccidentalEnum.FIVECOMMASFLAT:
                 acc = "bs";
-                break
+                break;
             case AccidentalEnum.EIGHTCOMMASSHARP:
                 acc = "++-";
-                break
+                break;
             case AccidentalEnum.EIGHTCOMMASFLAT:
                 acc = "bss";
-                break
+                break;
             default:
         }
         return acc;

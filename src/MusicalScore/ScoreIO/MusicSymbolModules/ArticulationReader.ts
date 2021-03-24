@@ -42,7 +42,7 @@ export class ArticulationReader {
       case "three-quarters-flat":
         return AccidentalEnum.THREEQUARTERSFLAT;
       case "five-commas-sharp":
-        return AccidentalEnum.FIVECOMMASSHARP
+        return AccidentalEnum.FIVECOMMASSHARP;
       case "five-commas-flat":
         return AccidentalEnum.FIVECOMMASFLAT;
       case "eight-commas-sharp":
