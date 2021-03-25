@@ -25,6 +25,8 @@ export enum AccidentalEnum {
     TRIPLEFLAT,
     QUARTERTONESHARP,
     QUARTERTONEFLAT,
+    THREEQUARTERSSHARP,
+    THREEQUARTERSFLAT,
 }
 
 // This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.
@@ -208,14 +210,18 @@ export class Pitch {
                 return 2;
             case AccidentalEnum.DOUBLEFLAT:
                 return -2;
-            case AccidentalEnum.QUARTERTONESHARP:
-                return 0.5;
-            case AccidentalEnum.QUARTERTONEFLAT:
-                return -0.5;
             case AccidentalEnum.TRIPLESHARP: // very rare, in some classical pieces
                 return 3;
             case AccidentalEnum.TRIPLEFLAT:
                 return -3;
+            case AccidentalEnum.QUARTERTONESHARP:
+                return 0.5;
+            case AccidentalEnum.QUARTERTONEFLAT:
+                return -0.5;
+            case AccidentalEnum.THREEQUARTERSSHARP:
+                return 1.5;
+            case AccidentalEnum.THREEQUARTERSFLAT:
+                return -1.5;
             default:
                 throw new Error("Unhandled AccidentalEnum value");
                 // return 0;
@@ -235,14 +241,18 @@ export class Pitch {
                 return AccidentalEnum.DOUBLESHARP;
             case -2:
                 return AccidentalEnum.DOUBLEFLAT;
-            case 0.5:
-                return AccidentalEnum.QUARTERTONESHARP;
-            case -0.5:
-                return AccidentalEnum.QUARTERTONEFLAT;
             case 3:
                 return AccidentalEnum.TRIPLESHARP;
             case -3:
                 return AccidentalEnum.TRIPLEFLAT;
+            case 0.5:
+                return AccidentalEnum.QUARTERTONESHARP;
+            case -0.5:
+                return AccidentalEnum.QUARTERTONEFLAT;
+            case 1.5:
+                return AccidentalEnum.THREEQUARTERSSHARP;
+            case -1.5:
+                return AccidentalEnum.THREEQUARTERSFLAT;
             default:
                 if (halfTones > 0 && halfTones < 1) {
                     return AccidentalEnum.QUARTERTONESHARP;
@@ -276,7 +286,7 @@ export class Pitch {
                 acc = "##";
                 break;
             case AccidentalEnum.TRIPLESHARP:
-                acc = "++";
+                acc = "###";
                 break;
             case AccidentalEnum.DOUBLEFLAT:
                 acc = "bb";
@@ -289,6 +299,12 @@ export class Pitch {
                 break;
             case AccidentalEnum.QUARTERTONEFLAT:
                 acc = "d";
+                break;
+            case AccidentalEnum.THREEQUARTERSSHARP:
+                acc = "++";
+                break;
+            case AccidentalEnum.THREEQUARTERSFLAT:
+                acc = "db";
                 break;
             default:
         }
