@@ -25,6 +25,7 @@ export class Cursor implements IPlaybackListener {
     this.container = container;
     this.openSheetMusicDisplay = openSheetMusicDisplay;
     this.rules = this.openSheetMusicDisplay.EngravingRules;
+    this.color = this.rules.DefaultColorCursor;
 
     // set cursor id
     // TODO add this for the OSMD object as well and refactor this into a util method?
@@ -275,9 +276,13 @@ export class Cursor implements IPlaybackListener {
     this.updateWithTimestamp(iterTmp.CurrentEnrolledTimestamp);
   }
 
-  private updateStyle(width: number, color: string = undefined): void {
-    if (!color) {
-      color = this.rules.DefaultColorCursor;
+  protected color: string = "";
+
+  public updateStyle(width: number, color: string = this.color): void {
+    if(color) {
+      this.color = color;
+    } else if(!this.color) {
+      this.color = this.rules.DefaultColorCursor;
     }
     // Create a dummy canvas to generate the gradient for the cursor
     // FIXME This approach needs to be improved
@@ -289,8 +294,8 @@ export class Cursor implements IPlaybackListener {
     // Generate the gradient
     const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
     gradient.addColorStop(0, "white"); // it was: "transparent"
-    gradient.addColorStop(0.4, color);
-    gradient.addColorStop(0.6, color);
+    gradient.addColorStop(0.4, this.color);
+    gradient.addColorStop(0.6, this.color);
     gradient.addColorStop(1, "white"); // it was: "transparent"
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, 1);
