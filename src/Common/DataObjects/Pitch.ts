@@ -68,7 +68,7 @@ export class Pitch {
         }
     }
 
-    /** Changes a note x lines/steps up (+) or down (-) from a NoteEnum on a staffline/keyboard.
+    /** Changes a note x lines/steps up (+) or down (-) from a NoteEnum on a staffline/keyboard (white keys).
      * E.g. Two lines down (-2) from a D is a B.
      * Two lines up from an A is a C.
      *   (e.g. in the treble/violin clef, going one line up: E -> F (semitone), F -> G (2 semitones)).
