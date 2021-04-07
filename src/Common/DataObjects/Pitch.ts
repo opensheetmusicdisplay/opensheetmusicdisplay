@@ -68,19 +68,20 @@ export class Pitch {
         }
     }
 
-    /** This method goes x steps from a NoteEnum on a keyboard.
-     * E.g. Two steps to the left (-2) from a D is a B.
-     * Two steps to the right from an A is a C.
+    /** Changes a note x lines/steps up (+) or down (-) from a NoteEnum on a staffline/keyboard.
+     * E.g. Two lines down (-2) from a D is a B.
+     * Two lines up from an A is a C.
+     *   (e.g. in the treble/violin clef, going one line up: E -> F (semitone), F -> G (2 semitones)).
      * Returns new NoteEnum and the octave shift (e.g. -1 = new octave is one octave down). */
-    public static stepFromNoteEnum(noteEnum: NoteEnum, step: number): [NoteEnum, number] {
-        if (step === 0) {
+    public static lineShiftFromNoteEnum(noteEnum: NoteEnum, lines: number): [NoteEnum, number] {
+        if (lines === 0) {
             return [noteEnum, 0];
         }
         const enums: NoteEnum[] = Pitch.pitchEnumValues;
         const originalIndex: number = enums.indexOf(noteEnum);
         let octaveShift: number = 0;
-        let newIndex: number = originalIndex + step % enums.length; // modulo only handles positive overflow
-        if (originalIndex + step > enums.length - 1) {
+        let newIndex: number = originalIndex + lines % enums.length; // modulo only handles positive overflow
+        if (originalIndex + lines > enums.length - 1) {
             octaveShift = 1;
         }
         if (newIndex < 0) {

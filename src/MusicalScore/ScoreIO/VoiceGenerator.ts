@@ -410,7 +410,7 @@ export class VoiceGenerator {
             if (this.instrument.Staves[0].StafflineCount === 1) {
               noteValueShift -= 3; // for percussion one line scores, we need to set the notes 3 lines lower
             }
-            [displayStepUnpitched, octaveShift] = Pitch.stepFromNoteEnum(noteStep, noteValueShift);
+            [displayStepUnpitched, octaveShift] = Pitch.lineShiftFromNoteEnum(noteStep, noteValueShift);
             displayOctaveUnpitched += octaveShift;
           }
         } else if (noteElement.name === "instrument") {
