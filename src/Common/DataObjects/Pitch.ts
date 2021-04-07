@@ -70,8 +70,12 @@ export class Pitch {
 
     /** This method goes x steps from a NoteEnum on a keyboard.
      * E.g. Two steps to the left (-2) from a D is a B.
-     * Two steps to the right from an A is a C. */
+     * Two steps to the right from an A is a C.
+     * Returns new NoteEnum and the octave shift (e.g. -1 = new octave is one octave down). */
     public static stepFromNoteEnum(noteEnum: NoteEnum, step: number): [NoteEnum, number] {
+        if (step === 0) {
+            return [noteEnum, 0];
+        }
         const enums: NoteEnum[] = Pitch.pitchEnumValues;
         const originalIndex: number = enums.indexOf(noteEnum);
         let octaveShift: number = 0;

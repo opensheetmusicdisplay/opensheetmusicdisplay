@@ -89,10 +89,9 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
             return graphicalNote;
         }
         const currentPitchList: Array<Pitch> = this.staffPitchListMapping.getValue(staffIndex);
-        const xmlSingleStaffline: boolean = graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1;
-        const positionByXml: boolean = this.rules.PercussionOneLineUseXMLDisplayStep &&
-            graphicalNote.sourceNote.displayStepUnpitched !== undefined &&
-            xmlSingleStaffline;
+        //const xmlSingleStaffline: boolean = graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentStaff.StafflineCount === 1;
+        const positionByXml: boolean = this.rules.PercussionUseXMLDisplayStep &&
+            graphicalNote.sourceNote.displayStepUnpitched !== undefined;
         if (currentPitchList.length > this.rules.PercussionOneLineCutoff && !positionByXml) {
             //Don't need to position notes. We aren't under the cutoff
             return graphicalNote;
@@ -102,9 +101,9 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
 
         let displayNote: NoteEnum = this.baseLineNote;
         let displayOctave: number = this.baseLineOctave;
-        if (this.rules.PercussionOneLineUseXMLDisplayStep
-            && graphicalNote.sourceNote.displayStepUnpitched !== undefined
-            && xmlSingleStaffline) {
+        if (this.rules.PercussionUseXMLDisplayStep
+            && graphicalNote.sourceNote.displayStepUnpitched !== undefined) {
+            //&& xmlSingleStaffline) {
             displayNote = graphicalNote.sourceNote.displayStepUnpitched;
             displayOctave = graphicalNote.sourceNote.displayOctaveUnpitched + this.rules.PercussionOneLineXMLDisplayStepOctaveOffset;
         }
@@ -115,7 +114,7 @@ export class VexflowStafflineNoteCalculator implements IStafflineNoteCalculator 
             const pitchIndex: number = VexflowStafflineNoteCalculator.PitchIndexOf(currentPitchList, notePitch);
             if (pitchIndex > -1) {
                 const half: number = Math.ceil(currentPitchList.length / 2);
-                if (!this.rules.PercussionOneLineUseXMLDisplayStep) {
+                if (!this.rules.PercussionUseXMLDisplayStep) {
                     if (pitchIndex >= half) {
                         //position above
                         displayOctave = 2;

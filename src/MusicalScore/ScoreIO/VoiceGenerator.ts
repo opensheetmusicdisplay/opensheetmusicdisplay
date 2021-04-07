@@ -406,7 +406,11 @@ export class VoiceGenerator {
           if (displayStepElement) {
             noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
             let octaveShift: number = 0;
-            [displayStepUnpitched, octaveShift] = Pitch.stepFromNoteEnum(noteStep, -3);
+            let noteValueShift: number = this.musicSheet.Rules.PercussionXMLDisplayStepNoteValueShift;
+            if (this.instrument.Staves[0].StafflineCount === 1) {
+              noteValueShift -= 3; // for percussion one line scores, we need to set the notes 3 lines lower
+            }
+            [displayStepUnpitched, octaveShift] = Pitch.stepFromNoteEnum(noteStep, noteValueShift);
             displayOctaveUnpitched += octaveShift;
           }
         } else if (noteElement.name === "instrument") {
