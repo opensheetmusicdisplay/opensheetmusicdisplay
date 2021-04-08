@@ -248,7 +248,7 @@ export class OpenSheetMusicDisplay {
         //console.log("[OSMD] render finished");
     }
 
-    private createOrRefreshRenderBackend(): void {
+    protected createOrRefreshRenderBackend(): void {
         // console.log("[OSMD] createOrRefreshRenderBackend()");
 
         // Remove old backends
@@ -651,7 +651,7 @@ export class OpenSheetMusicDisplay {
      * Initialize this object to default values
      * FIXME: Probably unnecessary
      */
-    private reset(): void {
+    protected reset(): void {
         if (this.drawingParameters.drawCursors && this.cursor) {
             this.cursor.hide();
         }
@@ -663,7 +663,7 @@ export class OpenSheetMusicDisplay {
     /**
      * Attach the appropriate handler to the window.onResize event
      */
-    private autoResize(): void {
+    protected autoResize(): void {
 
         const self: OpenSheetMusicDisplay = this;
         this.handleResize(
@@ -698,7 +698,7 @@ export class OpenSheetMusicDisplay {
      * @param startCallback is the function called when resizing starts
      * @param endCallback is the function called when resizing (kind-of) ends
      */
-    private handleResize(startCallback: () => void, endCallback: () => void): void {
+    protected handleResize(startCallback: () => void, endCallback: () => void): void {
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;
