@@ -29,7 +29,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.9.5-dev"; // getter: this.Version
+    protected version: string = "0.9.5-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -64,25 +64,25 @@ export class OpenSheetMusicDisplay {
 
     public cursor: Cursor;
     public zoom: number = 1.0;
-    private zoomUpdated: boolean = false;
+    protected zoomUpdated: boolean = false;
     /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
     public loadUrlTimeout: number = 5000;
 
-    private container: HTMLElement;
-    private backendType: BackendType;
-    private needBackendUpdate: boolean;
-    private sheet: MusicSheet;
-    private drawer: VexFlowMusicSheetDrawer;
-    private drawBoundingBox: string;
-    private drawSkyLine: boolean;
-    private drawBottomLine: boolean;
-    private graphic: GraphicalMusicSheet;
-    private drawingParameters: DrawingParameters;
-    private rules: EngravingRules;
-    private autoResizeEnabled: boolean;
-    private resizeHandlerAttached: boolean;
-    private followCursor: boolean;
-    private OnXMLRead: Function;
+    protected container: HTMLElement;
+    protected backendType: BackendType;
+    protected needBackendUpdate: boolean;
+    protected sheet: MusicSheet;
+    protected drawer: VexFlowMusicSheetDrawer;
+    protected drawBoundingBox: string;
+    protected drawSkyLine: boolean;
+    protected drawBottomLine: boolean;
+    protected graphic: GraphicalMusicSheet;
+    protected drawingParameters: DrawingParameters;
+    protected rules: EngravingRules;
+    protected autoResizeEnabled: boolean;
+    protected resizeHandlerAttached: boolean;
+    protected followCursor: boolean;
+    protected OnXMLRead: Function;
 
     /**
      * Load a MusicXML file
