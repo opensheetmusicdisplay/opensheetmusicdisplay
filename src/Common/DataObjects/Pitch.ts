@@ -80,7 +80,7 @@ export class Pitch {
         const enums: NoteEnum[] = Pitch.pitchEnumValues;
         const originalIndex: number = enums.indexOf(noteEnum);
         let octaveShift: number = 0;
-        let newIndex: number = originalIndex + lines % enums.length; // modulo only handles positive overflow
+        let newIndex: number = (originalIndex + lines) % enums.length; // modulo only handles positive overflow
         if (originalIndex + lines > enums.length - 1) {
             octaveShift = 1;
         }
