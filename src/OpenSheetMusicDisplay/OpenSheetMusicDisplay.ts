@@ -359,8 +359,7 @@ export class OpenSheetMusicDisplay {
             return;
         }
         this.OnXMLRead = function(xml): string {return xml;};
-        if (options.onXMLRead)
-        {
+        if (options.onXMLRead) {
             this.OnXMLRead = options.onXMLRead;
         }
         if (options.drawingParameters) {
