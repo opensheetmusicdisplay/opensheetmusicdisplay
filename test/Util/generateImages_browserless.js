@@ -300,7 +300,12 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
         }
     }
 
-    await osmdInstance.load(loadParameter); // if using load.then() without await, memory will not be freed up between renders
+    try {
+        await osmdInstance.load(loadParameter); // if using load.then() without await, memory will not be freed up between renders
+    } catch (ex) {
+        console.log("couldn't load sample " + sampleFilename + ", skipping. Error: \n" + ex);
+        return;
+    }
     debug("xml loaded", DEBUG);
     try {
         osmdInstance.render();
