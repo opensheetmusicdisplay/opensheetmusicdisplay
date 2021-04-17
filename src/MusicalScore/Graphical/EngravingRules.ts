@@ -67,7 +67,8 @@ export class EngravingRules {
     /** How many unique note positions a percussion score needs to have to not be rendered on one line. */
     public PercussionOneLineCutoff: number;
     public PercussionForceVoicesOneLineCutoff: number;
-    public PercussionOneLineUseXMLDisplayStep: boolean;
+    public PercussionUseXMLDisplayStep: boolean;
+    public PercussionXMLDisplayStepNoteValueShift: number;
     public PercussionOneLineXMLDisplayStepOctaveOffset: number;
     public BetweenKeySymbolsDistance: number;
     public KeyRightMargin: number;
@@ -374,7 +375,8 @@ export class EngravingRules {
         this.ClefRightMargin = 0.75;
         this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
         this.PercussionForceVoicesOneLineCutoff = 1;
-        this.PercussionOneLineUseXMLDisplayStep = true;
+        this.PercussionUseXMLDisplayStep = true;
+        this.PercussionXMLDisplayStepNoteValueShift = 0;
         this.PercussionOneLineXMLDisplayStepOctaveOffset = 0;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;

@@ -71,22 +71,22 @@ export class OpenSheetMusicDisplay {
     /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
     public loadUrlTimeout: number = 5000;
 
-    private container: HTMLElement;
-    private backendType: BackendType;
-    private needBackendUpdate: boolean;
-    private sheet: MusicSheet;
-    private drawer: VexFlowMusicSheetDrawer;
-    private drawBoundingBox: string;
-    private drawSkyLine: boolean;
-    private drawBottomLine: boolean;
-    private graphic: GraphicalMusicSheet;
+    protected container: HTMLElement;
+    protected backendType: BackendType;
+    protected needBackendUpdate: boolean;
+    protected sheet: MusicSheet;
+    protected drawer: VexFlowMusicSheetDrawer;
+    protected drawBoundingBox: string;
+    protected drawSkyLine: boolean;
+    protected drawBottomLine: boolean;
+    protected graphic: GraphicalMusicSheet;
     public RenderingManager: ISheetRenderingManager;
     public InteractionManager: IDisplayInteractionManager;
-    private drawingParameters: DrawingParameters;
-    private rules: EngravingRules;
-    private autoResizeEnabled: boolean;
-    private resizeHandlerAttached: boolean;
-    private followCursor: boolean;
+    protected drawingParameters: DrawingParameters;
+    protected rules: EngravingRules;
+    protected autoResizeEnabled: boolean;
+    protected resizeHandlerAttached: boolean;
+    protected followCursor: boolean;
     private pluginManager: OpenSheetMusicDisplayPluginManager = new OpenSheetMusicDisplayPluginManager(this);
     public RegisterPlugin(plugin: OpenSheetMusicDisplayPlugin): void {
         this.pluginManager.RegisterPlugin(plugin);
@@ -94,7 +94,7 @@ export class OpenSheetMusicDisplay {
     public DeregisterPlugin(plugin: OpenSheetMusicDisplayPlugin|string): void {
         this.pluginManager.DeregisterPlugin(plugin);
     }
-    private OnXMLRead: Function;
+    protected OnXMLRead: Function;
 
     /**
      * Load a MusicXML file

@@ -443,7 +443,11 @@ export class VoiceGenerator {
           if (displayStepElement) {
             noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
             let octaveShift: number = 0;
-            [displayStepUnpitched, octaveShift] = Pitch.stepFromNoteEnum(noteStep, -3);
+            let noteValueShift: number = this.musicSheet.Rules.PercussionXMLDisplayStepNoteValueShift;
+            if (this.instrument.Staves[0].StafflineCount === 1) {
+              noteValueShift -= 3; // for percussion one line scores, we need to set the notes 3 lines lower
+            }
+            [displayStepUnpitched, octaveShift] = Pitch.lineShiftFromNoteEnum(noteStep, noteValueShift);
             displayOctaveUnpitched += octaveShift;
           }
         } else if (noteElement.name === "instrument") {
@@ -895,6 +899,8 @@ export class VoiceGenerator {
               const newTieNumber: number = this.getNextAvailableNumberForTie();
               const tie: Tie = new Tie(this.currentNote, tieType);
               this.openTieDict[newTieNumber] = tie;
+              tie.TieNumber = newTieNumber;
+              this.setTieDirections();
             } else if (type === "stop") {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
               const tie: Tie = this.openTieDict[tieNumber];
@@ -915,6 +921,28 @@ export class VoiceGenerator {
           const tie: Tie = this.openTieDict[tieNumber];
           tie.AddNote(this.currentNote);
         }
+      }
+    }
+  }
+
+  // TODO do same for slurs, optimize.
+  /** Sets the directions of open ties: up for the top one, down for the others. */
+  private setTieDirections(): void {
+    const tieKeys: string[] = Object.keys(this.openTieDict);
+    let highestNote: Note = undefined;
+    for (const tieKey of tieKeys) {
+      const tie: Tie = this.openTieDict[tieKey];
+      const tieNote: Note = tie.Notes[0];
+      if (!highestNote || tieNote.Pitch.OperatorFundamentalGreaterThan(highestNote.Pitch)) {
+        highestNote = tieNote;
+      }
+    }
+    for (const tieKey of tieKeys) {
+      const tie: Tie = this.openTieDict[tieKey];
+      if (tie.Notes[0] === highestNote) {
+        tie.TieDirection = PlacementEnum.Above;
+      } else {
+        tie.TieDirection = PlacementEnum.Below;
       }
     }
   }
