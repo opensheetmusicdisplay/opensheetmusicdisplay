@@ -250,7 +250,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         transpose = document.getElementById('transpose');
         transposeBtn = document.getElementById('transpose-btn');
 
-
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
         var devDemoRunning = process.env.OSMD_DEBUG_CONTROLS;
