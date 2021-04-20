@@ -63,7 +63,7 @@
             </div>
             <div class="item">
                 <div class="ui toggle checkbox">
-                    <input type="checkbox" name="public" id="follow-cursor-checkbox">
+                    <input type="checkbox" name="public" id="follow-cursor-checkbox" checked="true">
                     <label>Follow Cursor</label>
                 </div>
             </div>
@@ -140,6 +140,13 @@
             <option value="Letter L">Letter Landscape</option>
         </select>
         <div class="ui button" id="print-pdf-btn">Print to Pdf</div>
+    </div>
+    <div class="column">
+        <h3 class="ui header">Transpose by Semitone(s):</h3>
+        <div class="ui action input">
+            <input type="number" id="transpose" value="0"/>
+            <button class="ui button" id="transpose-btn">Transpose</button>
+        </div>
     </div>
 </div>
 <div id="optionalControls" style="opacity: 0.0; width: 95%; display: block">
