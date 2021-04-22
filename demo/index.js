@@ -58,6 +58,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             "OSMD Function Test - Auto Multirest Measures Single Staff": "Test_Auto_Multirest_1.musicxml",
             "OSMD Function Test - Auto Multirest Measures Multiple Staves": "Test_Auto_Multirest_2.musicxml",
             "OSMD Function Test - String number collisions": "test_string_number_collisions.musicxml",
+            "OSMD Function Test - Repeat Stave Connectors": "OSMD_function_Test_Repeat.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
             "Actor, L. - Prelude (Large, No Print Part Names)": "ActorPreludeSample_PartName.xml",
