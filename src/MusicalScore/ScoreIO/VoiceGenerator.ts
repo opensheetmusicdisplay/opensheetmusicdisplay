@@ -673,7 +673,15 @@ export class VoiceGenerator {
             bracketed = true;
           }
           const placementAttr: Attr = tupletNode.attribute("placement");
-          const placementBelow: boolean = placementAttr && placementAttr.value === "below";
+          let placement: PlacementEnum = PlacementEnum.Above;
+          if (placementAttr) {
+            if (placementAttr.value === "below") {
+              placement = PlacementEnum.Below;
+            }
+          } else if (this.currentNote.StemDirectionXml === StemDirectionType.Down) {
+            placement = PlacementEnum.Below;
+          }
+
           const type: Attr = tupletNode.attribute("type");
           if (type && type.value === "start") {
             let tupletNumber: number = 1;
@@ -693,7 +701,7 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
-            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
+            tuplet.tupletLabelNumberPlacement = placement;
             if (this.tupletDict[tupletNumber]) {
               delete this.tupletDict[tupletNumber];
               if (Object.keys(this.tupletDict).length === 0) {
@@ -746,8 +754,14 @@ export class VoiceGenerator {
           bracketed = true;
         }
         const placementAttr: Attr = n.attribute("placement");
-        const placementBelow: boolean = placementAttr && placementAttr.value === "below";
-
+        let placement: PlacementEnum = PlacementEnum.Above;
+        if (placementAttr) {
+          if (placementAttr.value === "below") {
+            placement = PlacementEnum.Below;
+          }
+        } else if (this.currentNote.StemDirectionXml === StemDirectionType.Down) {
+          placement = PlacementEnum.Below;
+        }
         if (type === "start") {
           let tupletLabelNumber: number = 0;
           let timeModNode: IXmlElement = node.element("time-modification");
@@ -772,7 +786,7 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
-            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
+            tuplet.tupletLabelNumberPlacement = placement;
           }
           const subnotelist: Note[] = [];
           subnotelist.push(this.currentNote);
