@@ -171,8 +171,12 @@ export class Cursor {
       this.updateStyle(newWidth);
     }
     if (this.openSheetMusicDisplay.FollowCursor) {
-      const diff: number = this.cursorElement.getBoundingClientRect().top;
-      this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
+      if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
+        const diff: number = this.cursorElement.getBoundingClientRect().top;
+        this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
+      } else {
+        this.cursorElement.scrollIntoView({behavior: "smooth", inline: "center"});
+      }
     }
     // Show cursor
     // // Old cursor: this.graphic.Cursors.push(cursor);
