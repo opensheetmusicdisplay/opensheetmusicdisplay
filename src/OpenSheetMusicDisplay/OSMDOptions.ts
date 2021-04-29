@@ -1,6 +1,14 @@
 import { DrawingParametersEnum, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
 import { FontStyles } from "../Common/Enums/FontStyles";
 
+export enum CursorType {
+    Standard = 0,
+    ThinLeft = 1,
+    ShortThinTopLeft = 2,
+    CurrentArea = 3,
+    CurrentAreaLeft = 4,
+}
+
 /** Possible options for the OpenSheetMusicDisplay constructor and osmd.setOptions(). None are mandatory.
  *  Note that after using setOptions(), you have to call osmd.render() again to make changes visible.
  *  Example: osmd.setOptions({defaultColorRest: "#AAAAAA", drawSubtitle: false}); osmd.render();
@@ -239,10 +247,10 @@ export interface IOSMDOptions {
      * This works across instruments- If all instruments have subsequent measures with nothing but rests, multirest measures are generated
      */
     autoGenerateMutipleRestMeasuresFromRestMeasures?: boolean;
-    cursorsOptions?: CursorOptions[];
     /**
      * Defines multiple simultaneous cursors. If left undefined the standard cursor will be used.
      */
+    cursorsOptions?: CursorOptions[];
 }
 
 export enum AlignRestOption {
@@ -304,10 +312,10 @@ export interface CursorOptions {
      * 0: Standard highlighting current notes
      * 1: Thin line left to the current notes
      * 2: Short thin line on top of stave and left to the current notes
-     * 3: Current compass
-     * 4: Current compass to left of current notes
+     * 3: Current measure
+     * 4: Current measure to left of current notes
      */
-    type: number;
+    type: CursorType;
     /**
      * Color to draw the cursor
      */

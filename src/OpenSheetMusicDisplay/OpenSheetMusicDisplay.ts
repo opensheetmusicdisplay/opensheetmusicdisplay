@@ -575,8 +575,7 @@ export class OpenSheetMusicDisplay {
         if (options.autoGenerateMutipleRestMeasuresFromRestMeasures !== undefined) {
             this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures = options.autoGenerateMutipleRestMeasuresFromRestMeasures;
         }
-        if (options.cursorsOptions !== undefined)
-        {
+        if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;
         } else {
             this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: options.followCursor}];
@@ -756,7 +755,7 @@ export class OpenSheetMusicDisplay {
     public enableOrDisableCursors(enable: boolean): void {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
-            for (let i: number = 0; i< this.cursorsOptions.length; i++){
+            for (let i: number = 0; i < this.cursorsOptions.length; i++){
                 // save previous cursor state
                 const hidden: boolean = this.cursors[i]?.Hidden;
                 const previousIterator: MusicPartManagerIterator = this.cursors[i]?.Iterator;
@@ -894,11 +893,11 @@ export class OpenSheetMusicDisplay {
     public setDrawBoundingBox(value: string, render: boolean = false): void {
         this.drawBoundingBox = value;
         if (this.drawer) {
-        this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
+            this.drawer.drawableBoundingBoxElement = value; // drawer is sometimes created anew, losing this value, so it's saved in OSMD now.
         }
         if (render) {
-        this.render(); // may create new Drawer.
-    }
+            this.render(); // may create new Drawer.
+        }
     }
 
     public get AutoResizeEnabled(): boolean {
