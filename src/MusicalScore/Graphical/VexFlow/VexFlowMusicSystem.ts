@@ -60,10 +60,19 @@ export class VexFlowMusicSystem extends MusicSystem {
 
         if (bottomMeasure) {
             renderInitialLine = true;
-            // ToDo: feature/Repetitions
             // create here the correct lines according to the given lineType.
             (bottomMeasure as VexFlowMeasure).lineTo(topMeasure as VexFlowMeasure, VexFlowConverter.line(lineType, linePosition));
             (bottomMeasure as VexFlowMeasure).addMeasureLine(lineType, linePosition);
+            //Double repeat. VF doesn't have concept of double repeat. Need to add stave connector to begin of next measure
+            if (lineType === SystemLinesEnum.DotsBoldBoldDots) {
+                const nextIndex: number = bottomMeasure.ParentStaffLine.Measures.indexOf(bottomMeasure) + 1;
+                const nextBottomMeasure: VexFlowMeasure = bottomMeasure.ParentStaffLine.Measures[nextIndex] as VexFlowMeasure;
+                const nextTopMeasure: VexFlowMeasure = topMeasure.ParentStaffLine.Measures[nextIndex] as VexFlowMeasure;
+                if (nextBottomMeasure && nextTopMeasure) {
+                    nextBottomMeasure.lineTo(nextTopMeasure, VexFlowConverter.line(SystemLinesEnum.BoldThinDots, linePosition));
+                    nextBottomMeasure.addMeasureLine(SystemLinesEnum.BoldThinDots, linePosition);
+                }
+            }
         }
         if (vfTopMeasure) {
             vfTopMeasure.addMeasureLine(lineType, linePosition, renderInitialLine);
