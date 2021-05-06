@@ -13,15 +13,19 @@ import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
 import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
+import { CursorOptions } from "./OSMDOptions";
+import { BoundingBox } from "../MusicalScore";
 
 /**
  * A cursor which can iterate through the music sheet.
  */
 export class Cursor {
-  constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay) {
+  constructor(container: HTMLElement, openSheetMusicDisplay: OpenSheetMusicDisplay, cursorOptions: CursorOptions) {
     this.container = container;
     this.openSheetMusicDisplay = openSheetMusicDisplay;
     this.rules = this.openSheetMusicDisplay.EngravingRules;
+    this.cursorOptions = cursorOptions;
+
 
     // set cursor id
     // TODO add this for the OSMD object as well and refactor this into a util method?
@@ -36,7 +40,11 @@ export class Cursor {
     const curs: HTMLElement = document.createElement("img");
     curs.id = this.cursorElementId;
     curs.style.position = "absolute";
-    curs.style.zIndex = "-1";
+    if (this.cursorOptions.follow === true) {
+      curs.style.zIndex = "-1";
+    } else {
+      curs.style.zIndex = "-2";
+    }
     this.cursorElement = <HTMLImageElement>curs;
     this.container.appendChild(curs);
   }
@@ -55,6 +63,7 @@ export class Cursor {
   private graphic: GraphicalMusicSheet;
   public hidden: boolean = true;
   public currentPageNumber: number = 1;
+  private cursorOptions: CursorOptions;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
@@ -70,7 +79,7 @@ export class Cursor {
    */
   public show(): void {
     this.hidden = false;
-    this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
+    //this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
     this.update();
   }
 
@@ -162,13 +171,45 @@ export class Cursor {
 
     // This the current HTML Cursor:
     const cursorElement: HTMLImageElement = this.cursorElement;
-    cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-    cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-    cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
-    const newWidth: number = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
+
+    let newWidth: number = 0;
+    const meassurePositionAndShape: BoundingBox = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape;
+    switch (this.cursorOptions.type) {
+      case 1:
+        cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = 5 * this.openSheetMusicDisplay.zoom;
+        break;
+      case 2:
+        cursorElement.style.top = ((y-2.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.left = (x * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.height = (1.5 * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = 5 * this.openSheetMusicDisplay.zoom;
+        break;
+      case 3:
+        cursorElement.style.top = meassurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.style.left = meassurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = meassurePositionAndShape.Size.width * 10 * this.openSheetMusicDisplay.zoom;
+        break;
+      case 4:
+        cursorElement.style.top = meassurePositionAndShape.AbsolutePosition.y * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.style.left = meassurePositionAndShape.AbsolutePosition.x * 10.0 * this.openSheetMusicDisplay.zoom +"px";
+        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = (x-meassurePositionAndShape.AbsolutePosition.x) * 10 * this.openSheetMusicDisplay.zoom;
+        break;
+        default:
+        cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
+        newWidth = 3 * 10.0 * this.openSheetMusicDisplay.zoom;
+        break;
+    }
+
     if (newWidth !== cursorElement.width) {
       cursorElement.width = newWidth;
-      this.updateStyle(newWidth);
+      this.updateStyle(newWidth, this.cursorOptions);
     }
     if (this.openSheetMusicDisplay.FollowCursor) {
       if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
@@ -214,9 +255,9 @@ export class Cursor {
     this.update();
   }
 
-  private updateStyle(width: number, color: string = undefined): void {
-    if (!color) {
-      color = this.rules.DefaultColorCursor;
+  private updateStyle(width: number, cursorOptions: CursorOptions = undefined): void {
+    if (cursorOptions !== undefined) {
+      this.cursorOptions = cursorOptions;
     }
     // Create a dummy canvas to generate the gradient for the cursor
     // FIXME This approach needs to be improved
@@ -224,13 +265,23 @@ export class Cursor {
     c.width = this.cursorElement.width;
     c.height = 1;
     const ctx: CanvasRenderingContext2D = c.getContext("2d");
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = this.cursorOptions.alpha;
     // Generate the gradient
     const gradient: CanvasGradient = ctx.createLinearGradient(0, 0, this.cursorElement.width, 0);
-    gradient.addColorStop(0, "white"); // it was: "transparent"
-    gradient.addColorStop(0.2, color);
-    gradient.addColorStop(0.8, color);
-    gradient.addColorStop(1, "white"); // it was: "transparent"
+    switch (this.cursorOptions.type) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+        gradient.addColorStop(1, this.cursorOptions.color);
+        break;
+      default:
+        gradient.addColorStop(0, "white"); // it was: "transparent"
+        gradient.addColorStop(0.2, this.cursorOptions.color);
+        gradient.addColorStop(0.8, this.cursorOptions.color);
+        gradient.addColorStop(1, "white"); // it was: "transparent"
+      break;
+    }
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, 1);
     // Set the actual image
