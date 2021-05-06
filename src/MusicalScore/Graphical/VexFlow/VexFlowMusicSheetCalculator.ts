@@ -652,6 +652,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           });
           if (tie.Tie.TieDirection === PlacementEnum.Below) {
             vfTie.setDirection(1); // + is down in vexflow
+          } else if (tie.Tie.TieDirection === PlacementEnum.Above) {
+            vfTie.setDirection(-1);
           }
         }
 
