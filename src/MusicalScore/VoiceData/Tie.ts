@@ -17,7 +17,7 @@ export class Tie {
     private notes: Note[] = [];
     private type: TieTypes;
     public TieNumber: number = 1;
-    public TieDirection: PlacementEnum = PlacementEnum.Above;
+    public TieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
 
     public get Notes(): Note[] {
         return this.notes;
