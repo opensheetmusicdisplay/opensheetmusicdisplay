@@ -26,7 +26,6 @@ export class Cursor {
     this.rules = this.openSheetMusicDisplay.EngravingRules;
     this.cursorOptions = cursorOptions;
 
-
     // set cursor id
     // TODO add this for the OSMD object as well and refactor this into a util method?
     let id: number = 0;

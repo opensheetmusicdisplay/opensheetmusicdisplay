@@ -64,6 +64,9 @@ export class OpenSheetMusicDisplay {
 
     private cursorsOptions: CursorOptions[] = [];
     public cursors: Cursor[] = [];
+    public get cursor(): Cursor { // lowercase for backwards compatibility since cursor -> cursors change
+        return this.cursors[0];
+    }
     public zoom: number = 1.0;
     protected zoomUpdated: boolean = false;
     /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
