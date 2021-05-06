@@ -928,6 +928,26 @@ export class VoiceGenerator {
       if (tieNodeList.length === 1) {
         const tieNode: IXmlElement = tieNodeList[0];
         if (tieNode !== undefined && tieNode.attributes()) {
+          let tieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
+          // read tie direction/placement from XML
+          const placementAttr: IXmlAttribute = tieNode.attribute("placement");
+          if (placementAttr) {
+            if (placementAttr.value === "above") {
+              tieDirection = PlacementEnum.Above;
+            } else if (placementAttr.value === "below") {
+              tieDirection = PlacementEnum.Below;
+            }
+          }
+          // tie direction also be given like this:
+          const orientationAttr: IXmlAttribute = tieNode.attribute("orientation");
+          if (orientationAttr) {
+            if (orientationAttr.value === "over") {
+              tieDirection = PlacementEnum.Above;
+            } else if (orientationAttr.value === "under") {
+              tieDirection = PlacementEnum.Below;
+            }
+          }
+
           const type: string = tieNode.attribute("type").value;
           try {
             if (type === "start") {
@@ -939,7 +959,7 @@ export class VoiceGenerator {
               const tie: Tie = new Tie(this.currentNote, tieType);
               this.openTieDict[newTieNumber] = tie;
               tie.TieNumber = newTieNumber;
-              this.setTieDirections();
+              tie.TieDirection = tieDirection;
             } else if (type === "stop") {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
               const tie: Tie = this.openTieDict[tieNumber];
@@ -960,28 +980,6 @@ export class VoiceGenerator {
           const tie: Tie = this.openTieDict[tieNumber];
           tie.AddNote(this.currentNote);
         }
-      }
-    }
-  }
-
-  // TODO do same for slurs, optimize.
-  /** Sets the directions of open ties: up for the top one, down for the others. */
-  private setTieDirections(): void {
-    const tieKeys: string[] = Object.keys(this.openTieDict);
-    let highestNote: Note = undefined;
-    for (const tieKey of tieKeys) {
-      const tie: Tie = this.openTieDict[tieKey];
-      const tieNote: Note = tie.Notes[0];
-      if (!highestNote || tieNote.Pitch.OperatorFundamentalGreaterThan(highestNote.Pitch)) {
-        highestNote = tieNote;
-      }
-    }
-    for (const tieKey of tieKeys) {
-      const tie: Tie = this.openTieDict[tieKey];
-      if (tie.Notes[0] === highestNote) {
-        tie.TieDirection = PlacementEnum.Above;
-      } else {
-        tie.TieDirection = PlacementEnum.Below;
       }
     }
   }

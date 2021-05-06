@@ -2062,6 +2062,7 @@ export abstract class MusicSheetCalculator {
                                 }
                             }
                         }
+                        this.setTieDirections(startStaffEntry);
                     }
                 }
             }
@@ -2073,6 +2074,8 @@ export abstract class MusicSheetCalculator {
             // console.log('tie not found in measure number ' + measureIndex - 1);
             return;
         }
+        startGraphicalStaffEntry.ties.push(tie);
+
         let startGse: GraphicalStaffEntry = startGraphicalStaffEntry;
         let startNote: GraphicalNote = undefined;
         let endGse: GraphicalStaffEntry = undefined;
@@ -2095,6 +2098,31 @@ export abstract class MusicSheetCalculator {
                 }
             }
             startGse = endGse;
+        }
+    }
+
+    private setTieDirections(staffEntry: GraphicalStaffEntry): void {
+        if (!staffEntry) {
+            return;
+        }
+        const ties: Tie[] = staffEntry.ties;
+        if (ties.length > 1) {
+            let highestNote: Note = undefined;
+            for (const gseTie of ties) {
+                const tieNote: Note = gseTie.Notes[0];
+                if (!highestNote || tieNote.Pitch.getHalfTone() > highestNote.Pitch.getHalfTone()) {
+                    highestNote = tieNote;
+                }
+            }
+            for (const gseTie of ties) {
+                if (gseTie.TieDirection === PlacementEnum.NotYetDefined) { // only set/change if not already set by xml
+                    if (gseTie.Notes[0] === highestNote) {
+                        gseTie.TieDirection = PlacementEnum.Above;
+                    } else {
+                        gseTie.TieDirection = PlacementEnum.Below;
+                    }
+                }
+            }
         }
     }
 
