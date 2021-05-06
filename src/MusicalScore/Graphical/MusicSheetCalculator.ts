@@ -1064,10 +1064,35 @@ export abstract class MusicSheetCalculator {
         }
 
         const endAbsoluteTimestamp: Fraction = Fraction.createFromFraction(graphicalContinuousDynamic.ContinuousDynamic.EndMultiExpression.AbsoluteTimestamp);
-
+        const container: VerticalGraphicalStaffEntryContainer = this.graphicalMusicSheet.GetVerticalContainerFromTimestamp(endAbsoluteTimestamp);
+        const parentMeasure: GraphicalMeasure = container.getFirstNonNullStaffEntry().parentMeasure;
+        const endOfMeasure: number = parentMeasure.PositionAndShape.AbsolutePosition.x + parentMeasure.PositionAndShape.BorderRight;
+        let maxNoteLength: Fraction = new Fraction(0, 0, 0);
+        for (const staffEntry of container.StaffEntries) {
+            const currentMaxLength: Fraction = staffEntry?.sourceStaffEntry?.calculateMaxNoteLength();
+            if ( currentMaxLength?.gt(maxNoteLength) ) {
+                maxNoteLength = currentMaxLength;
+            }
+        }
         const endPosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
             endAbsoluteTimestamp, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0);
 
+        const beginOfNextNote: Fraction = Fraction.plus(endAbsoluteTimestamp, maxNoteLength);
+        const nextNotePosInStaffLine: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+            beginOfNextNote, staffIndex, endStaffLine, isPartOfMultiStaffInstrument, 0);
+        //If the next note position is not on the next staffline
+        //extend close to the next note
+        if (nextNotePosInStaffLine.x > endPosInStaffLine.x && nextNotePosInStaffLine.x < endOfMeasure) {
+            endPosInStaffLine.x += (nextNotePosInStaffLine.x - endPosInStaffLine.x) / this.rules.WedgeEndDistanceBetweenTimestampsFactor;
+        } else { //Otherwise extend to the end of the measure
+            endPosInStaffLine.x = endOfMeasure - this.rules.WedgeHorizontalMargin;
+        }
+
+        const startCollideBox: BoundingBox =
+            this.dynamicExpressionMap.get(graphicalContinuousDynamic.ContinuousDynamic.StartMultiExpression.AbsoluteTimestamp.RealValue);
+        if (startCollideBox) {
+            startPosInStaffline.x = startCollideBox.RelativePosition.x + startCollideBox.BorderMarginRight + this.rules.WedgeHorizontalMargin;
+        }
         //currentMusicSystem and currentStaffLine
         const musicSystem: MusicSystem = staffLine.ParentMusicSystem;
         const currentStaffLineIndex: number = musicSystem.StaffLines.indexOf(staffLine);
@@ -1315,6 +1340,7 @@ export abstract class MusicSheetCalculator {
                 secondGraphicalContinuousDynamic.calcPsi();
             }
         } //End Diminuendo
+        this.dynamicExpressionMap.set(endAbsoluteTimestamp.RealValue, graphicalContinuousDynamic.PositionAndShape);
     }
 
     /**
@@ -1323,12 +1349,13 @@ export abstract class MusicSheetCalculator {
      * @param startPosInStaffline Starting point in staff line
      */
     protected calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic: GraphicalInstantaneousDynamicExpression,
-                                                               startPosInStaffline: PointF2D): void {
+                                                               startPosInStaffline: PointF2D, timestamp: Fraction): void {
         // get Margin Dimensions
         const staffLine: StaffLine = graphicalInstantaneousDynamic.ParentStaffLine;
         if (!staffLine) {
             return; // TODO can happen when drawing range modified (osmd.setOptions({drawFromMeasureNumber...}))
         }
+
         const left: number = startPosInStaffline.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginLeft;
         const right: number = startPosInStaffline.x + graphicalInstantaneousDynamic.PositionAndShape.BorderMarginRight;
         const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
@@ -2848,11 +2875,16 @@ export abstract class MusicSheetCalculator {
         return (rightDash.PositionAndShape.RelativePosition.x - leftDash.PositionAndShape.RelativePosition.x);
     }
 
+    //So we can track shared notes bounding boxes to avoid collision + skyline issues
+    protected dynamicExpressionMap: Map<number, BoundingBox> = new Map<number, BoundingBox>();
+
     private calculateDynamicExpressions(): void {
         const maxIndex: number = Math.min(this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length - 1, this.rules.MaxMeasureToDrawIndex);
         const minIndex: number = Math.min(this.rules.MinMeasureToDrawIndex, this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length);
         for (let i: number = minIndex; i <= maxIndex; i++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[i];
+            //Reset, beginning of new measure
+            this.dynamicExpressionMap.clear();
             for (let j: number = 0; j < sourceMeasure.StaffLinkedExpressions.length; j++) {
                 if (!this.graphicalMusicSheet.MeasureList[i] || !this.graphicalMusicSheet.MeasureList[i][j]) {
                     continue;
@@ -2871,6 +2903,7 @@ export abstract class MusicSheetCalculator {
                 }
             }
         }
+        this.dynamicExpressionMap.clear();
     }
 
     private calculateOctaveShifts(): void {

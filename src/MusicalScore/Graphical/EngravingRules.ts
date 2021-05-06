@@ -102,6 +102,7 @@ export class EngravingRules {
     public WedgeVerticalMargin: number;
     public DistanceOffsetBetweenTwoHorizontallyCrossedWedges: number;
     public WedgeMinLength: number;
+    public WedgeEndDistanceBetweenTimestampsFactor: number;
     public DistanceBetweenAdjacentDynamics: number;
     public TempoChangeMeasureValidity: number;
     public TempoContinousFactor: number;
@@ -419,6 +420,7 @@ export class EngravingRules {
         this.WedgeVerticalMargin = 0.5;
         this.DistanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.WedgeMinLength = 2.0;
+        this.WedgeEndDistanceBetweenTimestampsFactor = 1.75;
         this.DistanceBetweenAdjacentDynamics = 0.75;
 
         // Tempo Variables
