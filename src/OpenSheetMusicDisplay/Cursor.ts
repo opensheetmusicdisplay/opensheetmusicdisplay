@@ -176,7 +176,7 @@ export class Cursor {
     switch (this.cursorOptions.type) {
       case 1:
         cursorElement.style.top = (y * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
-        cursorElement.style.left = ((x - 1.5) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
+        cursorElement.style.left = ((x - 0.25) * 10.0 * this.openSheetMusicDisplay.zoom) + "px";
         cursorElement.height = (height * 10.0 * this.openSheetMusicDisplay.zoom);
         newWidth = 5 * this.openSheetMusicDisplay.zoom;
         break;
