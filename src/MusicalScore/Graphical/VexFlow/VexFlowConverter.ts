@@ -876,7 +876,7 @@ export class VexFlowConverter {
                 }
                 return Vex.Flow.StaveConnector.type.SINGLE_RIGHT;
             case SystemLinesEnum.DoubleThin:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.THIN_DOUBLE;
             case SystemLinesEnum.ThinBold:
                 return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.BoldThinDots:

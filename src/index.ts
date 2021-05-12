@@ -3,3 +3,4 @@ export * from "./MusicalScore";
 export * from "./Util";
 export * from "./Common";
 export * from "./Plugin";
+export * from "./Plugins";

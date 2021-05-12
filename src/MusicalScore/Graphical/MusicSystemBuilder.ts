@@ -534,7 +534,7 @@ export class MusicSystemBuilder {
             }
             if (printRhythm) {
                 measure.addRhythmAtBegin(currentRhythm);
-                measure.parentSourceMeasure.RhythmPrinted = true;
+                measure.parentSourceMeasure.RhythmPrinted = currentRhythm;
                 rhythmAdded = true;
             }
         }

@@ -535,7 +535,7 @@ export class InstrumentReader {
              expressionReader.readExpressionParameters(
                xmlNode, this.instrument, this.divisions, currentFraction, previousFraction, this.currentMeasure.MeasureNumber, false
              );
-             expressionReader.read(xmlNode, this.currentMeasure, currentFraction);
+             expressionReader.read(xmlNode, this.currentMeasure, currentFraction, previousFraction.clone());
            }
           }
         } else if (xmlNode.name === "barline") {

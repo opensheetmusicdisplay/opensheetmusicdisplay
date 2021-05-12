@@ -140,7 +140,8 @@ export class ExpressionReader {
                  } else { this.placement = PlacementEnum.Below; }
         }
     }
-    public read(directionNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
+    public read(directionNode: IXmlElement, currentMeasure: SourceMeasure,
+                inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined): void {
         let isTempoInstruction: boolean = false;
         let isDynamicInstruction: boolean = false;
         const n: IXmlElement = directionNode.element("sound");
@@ -226,7 +227,7 @@ export class ExpressionReader {
 
         dirContentNode = dirNode.element("wedge");
         if (dirContentNode) {
-            this.interpretWedge(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
+            this.interpretWedge(dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
             return;
         }
 
@@ -395,7 +396,13 @@ export class ExpressionReader {
         if (wedgeNode !== undefined && wedgeNode.hasAttributes && wedgeNode.attribute("default-x")) {
             this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
         }
-        this.createNewMultiExpressionIfNeeded(currentMeasure);
+        //Ending needs to use previous fraction, not current.
+        //If current is used, when there is a system break it will mess up
+        if (wedgeNode?.attribute("type")?.value?.toLowerCase() === "stop") {
+            this.createNewMultiExpressionIfNeeded(currentMeasure, inSourceMeasureCurrentFraction);
+        } else {
+            this.createNewMultiExpressionIfNeeded(currentMeasure);
+        }
         this.addWedge(wedgeNode, currentMeasure);
         this.initialize();
     }
