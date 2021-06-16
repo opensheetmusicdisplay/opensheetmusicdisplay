@@ -617,6 +617,9 @@ export class SourceMeasure {
                 if (staffEntry.ParentStaff.hasLyrics) {
                     visibleLyrics = true;
                 }
+                if (this.firstRepetitionInstructions.length > 0 || this.lastRepetitionInstructions.length > 0) {
+                    return false;
+                }
                 for (const voiceEntry of staffEntry.VoiceEntries) {
                     for (const note of voiceEntry.Notes) {
                         if (!note.isRest()) {
