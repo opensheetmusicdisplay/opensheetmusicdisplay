@@ -611,8 +611,14 @@ export class SourceMeasure {
                 if (!staffEntry || !staffEntry.ParentStaff.ParentInstrument.Visible) {
                     continue; // ignore notes in invisible instruments (instruments not shown)
                 }
+                if (staffEntry.ChordContainers.length > 0) {
+                    return false;
+                }
                 if (staffEntry.ParentStaff.hasLyrics) {
                     visibleLyrics = true;
+                }
+                if (this.firstRepetitionInstructions.length > 0 || this.lastRepetitionInstructions.length > 0) {
+                    return false;
                 }
                 for (const voiceEntry of staffEntry.VoiceEntries) {
                     for (const note of voiceEntry.Notes) {
