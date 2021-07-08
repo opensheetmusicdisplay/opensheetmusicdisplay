@@ -454,8 +454,8 @@ export class InstrumentReader {
           if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveClefInstructionAtEndOfMeasure();
           }
-          const staffDetailsNode: IXmlElement = xmlNode.element("staff-details");
-          if (staffDetailsNode) {
+          const staffDetailsNodes: IXmlElement[] = xmlNode.elements("staff-details"); // there can be multiple, even if redundant. see #1041
+          for (const staffDetailsNode of staffDetailsNodes) {
             const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
             if (staffLinesNode) {
               let staffNumber: number = 1;
