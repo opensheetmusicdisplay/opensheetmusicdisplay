@@ -220,7 +220,7 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate Curve's Control Points
             const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
-                this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio);
+                this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio, startY, endY);
 
             let startControlPoint: PointF2D = controlPoints.startControlPoint;
             let endControlPoint: PointF2D = controlPoints.endControlPoint;
@@ -389,7 +389,7 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate Curve's Control Points
             const controlPoints: {startControlPoint: PointF2D, endControlPoint: PointF2D} =
-                this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio);
+                this.calculateControlPoints(end2.x, startAngle, endAngle, transformedPoints, heightWidthRatio, startY, endY);
             let startControlPoint: PointF2D = controlPoints.startControlPoint;
             let endControlPoint: PointF2D = controlPoints.endControlPoint;
 
@@ -503,7 +503,7 @@ export class GraphicalSlur extends GraphicalCurve {
             //     }
             // }
         } else {
-            startX = staffLine.Measures[0].beginInstructionsWidth;
+            startX = 0;
         }
 
         if (slurEndNote) {
@@ -562,14 +562,22 @@ export class GraphicalSlur extends GraphicalCurve {
 
         // if GraphicalSlur breaks over System, then the end/start of the curve is at the corresponding height with the known start/end
         if (!slurStartNote && !slurEndNote) {
-            startY = 0;
-            endY = 0;
+            startY = -1.5;
+            endY = -1.5;
         }
         if (!slurStartNote) {
-            startY = endY;
+            if (this.placement === PlacementEnum.Above) {
+                startY = endY - 1;
+            } else {
+                startY = endY + 1;
+            }
         }
         if (!slurEndNote) {
-            endY = startY;
+            if (this.placement === PlacementEnum.Above) {
+                endY = startY - 1;
+            } else {
+                endY = startY + 1;
+            }
         }
 
         // if two slurs start/end at the same GraphicalNote, then the second gets an offset
@@ -870,7 +878,8 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param points
      */
     private calculateControlPoints(endX: number, startAngle: number, endAngle: number,
-                                   points: PointF2D[], heightWidthRatio: number
+                                   points: PointF2D[], heightWidthRatio: number,
+                                   startY: number, endY: number
     ): { startControlPoint: PointF2D, endControlPoint: PointF2D } {
         let heightFactor: number = this.rules.SlurHeightFactor;
         let widthFlattenFactor: number = 1;
@@ -911,6 +920,19 @@ export class GraphicalSlur extends GraphicalCurve {
         const endControlPoint: PointF2D = new PointF2D();
         endControlPoint.x = endX - (endX * factorEnd * Math.cos(endAngle * GraphicalSlur.degreesToRadiansFactor));
         endControlPoint.y = -(endX * factorEnd * Math.sin(endAngle * GraphicalSlur.degreesToRadiansFactor));
+        //Soften the slur in a "brute-force" way
+        let controlPointYDiff: number = startControlPoint.y - endControlPoint.y;
+        while (this.rules.SlurMaximumYControlPointDistance &&
+               Math.abs(controlPointYDiff) > this.rules.SlurMaximumYControlPointDistance) {
+            if (controlPointYDiff < 0) {
+                startControlPoint.y += 1;
+                endControlPoint.y -= 1;
+            } else {
+                startControlPoint.y -= 1;
+                endControlPoint.y += 1;
+            }
+            controlPointYDiff = startControlPoint.y - endControlPoint.y;
+        }
         return {startControlPoint: startControlPoint, endControlPoint: endControlPoint};
     }
 

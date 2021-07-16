@@ -190,6 +190,7 @@ export class EngravingRules {
     public SlurHeightFlattenLongSlursCutoffAngle: number;
     public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
+    public SlurMaximumYControlPointDistance: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
     public MoodTextHeight: number;
@@ -484,6 +485,8 @@ export class EngravingRules {
         this.SlurHeightFlattenLongSlursCutoffAngle = 47;
         this.SlurHeightFlattenLongSlursCutoffWidth = 16; // 15 ~ slur between measure's first notes in 4/4. 14 -> problem with test_slurs_highNotes
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
+        //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
+        this.SlurMaximumYControlPointDistance = undefined;
 
         // Repetitions
         this.RepetitionEndingLabelHeight = 2.0;

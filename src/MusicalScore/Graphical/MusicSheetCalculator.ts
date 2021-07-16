@@ -511,9 +511,20 @@ export abstract class MusicSheetCalculator {
         relativeY = Math.min(0, relativeY);
 
         graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(relativeX, relativeY);
-
-        skyBottomLineCalculator.updateSkyLineInRange(start, end, relativeY + graphicalLabel.PositionAndShape.BorderMarginTop);
         musicSystem.MeasureNumberLabels.push(graphicalLabel);
+    }
+    //So we can apply slurs first, then do these
+    private calculateMeasureNumberSkyline(musicSystem: MusicSystem): void {
+        const staffLine: StaffLine = musicSystem.StaffLines[0];
+        for(const measureNumberLabel of musicSystem.MeasureNumberLabels) {
+            // and the corresponding SkyLine indices
+            let start: number = measureNumberLabel.PositionAndShape.RelativePosition.x;
+            let end: number = start - measureNumberLabel.PositionAndShape.BorderLeft + measureNumberLabel.PositionAndShape.BorderRight;
+            start -= staffLine.PositionAndShape.RelativePosition.x;
+            end -= staffLine.PositionAndShape.RelativePosition.x;
+            staffLine.SkyBottomLineCalculator.updateSkyLineInRange(start, end,
+                measureNumberLabel.PositionAndShape.RelativePosition.y + measureNumberLabel.PositionAndShape.BorderMarginTop);
+        }
     }
 
     /**
@@ -828,6 +839,13 @@ export abstract class MusicSheetCalculator {
         // calculate Slurs
         if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
+        }
+        //Calculate measure number skyline AFTER slurs
+        if (this.rules.RenderMeasureNumbers) {
+            for (let idx: number = 0, len: number = this.musicSystems.length; idx < len; ++idx) {
+                const musicSystem: MusicSystem = this.musicSystems[idx];
+                this.calculateMeasureNumberSkyline(musicSystem);
+            }
         }
         // calculate StaffEntry Ornaments
         // (must come after Slurs)

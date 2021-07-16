@@ -140,6 +140,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         curvePointsInPixels.push(this.applyScreenTransformation(p2));
         curvePointsInPixels.push(this.applyScreenTransformation(p3));
         curvePointsInPixels.push(this.applyScreenTransformation(p4));
+        //DEBUG: Render control points
+        /*
+        for (const point of curvePointsInPixels) {
+            const pointRect: RectangleF2D = new RectangleF2D(point.x - 2, point.y - 2, 4, 4);
+            this.backend.renderRectangle(pointRect, 3, "#000000", 1);
+        }*/
 
         // 2) create second outer curve to create a thickness for the curve:
         if (graphicalSlur.placement === PlacementEnum.Above) {
