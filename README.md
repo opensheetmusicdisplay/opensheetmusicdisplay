@@ -67,9 +67,9 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 ## Limitations
 
 Not all MusicXML tags are (fully) supported:
-* Pedal marks
+* Pedal marks (currently in early access for sponsors)
 * Glissando lines
-* Wavy-line
+* Wavy-line (currently in early access for sponsors)
 * Etc, see [OSMD 1.0 Project](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/projects/3)
 
 Also, **OSMD is a renderer, not an interactive sheet music editor.** Rendering takes some time, and you can't easily/quickly move notes, place new notes, etc.
