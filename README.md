@@ -57,6 +57,9 @@ Developers can also run a [local development demo (see Wiki)](https://github.com
 * Allows modification of the displayed score, like hiding parts or instruments, hiding instrument names, title or composer, a more compact layout, or coloring notes
 * Outputs SVG or PNG, also via nodejs script in the command line, completely browserless (e.g. for server-side rendering)
 * Written in [Typescript](https://www.typescriptlang.org/) with complete type information, 100% compatible with Javascript (minified build is .js)
+* Can display tablature (guitar tabs) from MusicXML, including effects like bends and glissandi. Can be combined with treble clef.
+<img src="https://user-images.githubusercontent.com/33069673/127324371-b7c5f137-a1b8-4127-95b0-38e6a185c906.png" height="130">
+
 
 <p align="left">
   <img title="OSMD in the Browser"  src="https://user-images.githubusercontent.com/33069673/106321958-64fe1180-6275-11eb-8632-3b22beaa0829.jpg" width="66.4%">
