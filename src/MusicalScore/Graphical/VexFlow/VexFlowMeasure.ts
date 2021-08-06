@@ -650,7 +650,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             for (const ve of voice.VoiceEntries) {
                 for (const note of ve.Notes) {
                     const gNote: VexFlowGraphicalNote = this.rules.GNote(note) as VexFlowGraphicalNote;
-                    if (!gNote.vfnote) { // can happen were invisible, then multi rest measure. TODO fix multi rest measure not removed
+                    if (!gNote?.vfnote) { // can happen were invisible, then multi rest measure. TODO fix multi rest measure not removed
                         return;
                     }
                     const vfnote: Vex.Flow.StemmableNote = gNote.vfnote[0];

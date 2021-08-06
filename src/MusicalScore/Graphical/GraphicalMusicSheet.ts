@@ -975,6 +975,9 @@ export class GraphicalMusicSheet {
     }*/
 
     public GetGraphicalFromSourceStaffEntry(sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
+        if (!sourceStaffEntry.VerticalContainerParent.ParentMeasure?.VerticalMeasureList) {
+            return undefined;
+        }
         const graphicalMeasure: GraphicalMeasure = sourceStaffEntry.VerticalContainerParent.ParentMeasure.VerticalMeasureList
             [sourceStaffEntry.ParentStaff.idInMusicSheet];
         return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);
