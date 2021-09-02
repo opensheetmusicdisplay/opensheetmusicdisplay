@@ -15,7 +15,10 @@ module.exports = {
     resolve: {
         // Add '.ts' and '.tsx' as a resolvable extension.
         extensions: ['.ts', '.tsx', '.js'],
-        fallback: { stream: false }
+        fallback: {
+            stream: require.resolve("stream-browserify"),
+            buffer: require.resolve("buffer/"),
+        },
     },
     module: {
         rules: [
