@@ -103,7 +103,7 @@
     "karma-firefox-launcher": "^1.0.0",
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.0.4",
-    "karma-webpack": "^4.0.2",
+    "karma-webpack": "^5.0.0",
     "karma-xml2js-preprocessor": "^0.1.0",
     "mocha": "^7.0.1",
     "ncp": "^2.0.0",
