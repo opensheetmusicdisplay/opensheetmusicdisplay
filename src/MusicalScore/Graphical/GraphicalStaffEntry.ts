@@ -17,6 +17,7 @@ import {GraphicalStaffEntryLink} from "./GraphicalStaffEntryLink";
 import {CollectionUtil} from "../../Util/CollectionUtil";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { MusicSheetCalculator } from "./MusicSheetCalculator";
+import { Tie } from "../VoiceData/Tie";
 
 /**
  * The graphical counterpart of a [[SourceStaffEntry]].
@@ -53,6 +54,7 @@ export abstract class GraphicalStaffEntry extends GraphicalObject {
     public MaxAccidentals: number = 0;
 
     private graphicalInstructions: AbstractGraphicalInstruction[] = [];
+    public ties: Tie[] = [];
     private graphicalTies: GraphicalTie[] = [];
     private lyricsEntries: GraphicalLyricEntry[] = [];
 

@@ -134,6 +134,7 @@ export class LyricsReader {
                                     currentVoiceEntry.LyricsEntries.setValue(currentLyricVerseNumber, lyricsEntry);
                                     if (currentVoiceEntry.ParentSourceStaffEntry?.VerticalContainerParent?.ParentMeasure) {
                                         currentVoiceEntry.ParentSourceStaffEntry.VerticalContainerParent.ParentMeasure.hasLyrics = true;
+                                        // currentVoiceEntry.ParentSourceStaffEntry.ParentStaff.hasLyrics = true; // TODO enable, though rarely lyrics on rests
                                     }
                                 }
                                 // save in currentInstrument the verseNumber (only once)

@@ -107,7 +107,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     }
                 }
                 if (colorBeam) {
-                    if (vfStaveNote.beam?.setStyle) {
+                    if (vfStaveNote?.beam?.setStyle) {
                         vfStaveNote.beam.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor});
                     }
                 }

@@ -7,14 +7,20 @@ import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {AccidentalEnum} from "../../../Common/DataObjects/Pitch";
 import { Articulation } from "../../VoiceData/Articulation";
 import { Note } from "../../VoiceData/Note";
+import { EngravingRules } from "../../Graphical/EngravingRules";
 export class ArticulationReader {
+  private rules: EngravingRules;
+
+  constructor(rules: EngravingRules) {
+    this.rules = rules;
+  }
 
   private getAccEnumFromString(input: string): AccidentalEnum {
     switch (input) {
       case "sharp":
         return AccidentalEnum.SHARP;
       case "flat":
-          return AccidentalEnum.FLAT;
+        return AccidentalEnum.FLAT;
       case "natural":
         return AccidentalEnum.NATURAL;
       case "double-sharp":
@@ -23,14 +29,18 @@ export class ArticulationReader {
       case "double-flat":
       case "flat-flat":
         return AccidentalEnum.DOUBLEFLAT;
+      case "triple-sharp":
+        return AccidentalEnum.TRIPLESHARP;
+      case "triple-flat":
+        return AccidentalEnum.TRIPLEFLAT;
       case "quarter-sharp":
         return AccidentalEnum.QUARTERTONESHARP;
       case "quarter-flat":
         return AccidentalEnum.QUARTERTONEFLAT;
-      case "triple-sharp":
-          return AccidentalEnum.TRIPLESHARP;
-      case "triple-flat":
-        return AccidentalEnum.TRIPLEFLAT;
+      case "three-quarters-sharp":
+        return AccidentalEnum.THREEQUARTERSSHARP;
+      case "three-quarters-flat":
+        return AccidentalEnum.THREEQUARTERSFLAT;
       default:
         return AccidentalEnum.NONE;
     }
@@ -172,7 +182,9 @@ export class ArticulationReader {
     technicalInstruction.sourceNote = note;
     technicalInstruction.value = stringOrFingeringNode.value;
     const placement: Attr = stringOrFingeringNode.attribute("placement");
-    technicalInstruction.placement = this.getPlacement(placement);
+    if (this.rules.FingeringPositionFromXML) {
+      technicalInstruction.placement = this.getPlacement(placement);
+    }
     return technicalInstruction;
   }
 

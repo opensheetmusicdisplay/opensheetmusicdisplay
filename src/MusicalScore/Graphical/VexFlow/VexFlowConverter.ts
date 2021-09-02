@@ -423,7 +423,7 @@ export class VexFlowConverter {
         for (let i: number = 0, len: number = notes.length; i < len; i += 1) {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
-                if (accidentals[i] === "++") { // triple sharp
+                if (accidentals[i] === "###") { // triple sharp
                     vfnote.addAccidental(i, new Vex.Flow.Accidental("##"));
                     vfnote.addAccidental(i, new Vex.Flow.Accidental("#"));
                     continue;
@@ -876,7 +876,7 @@ export class VexFlowConverter {
                 }
                 return Vex.Flow.StaveConnector.type.SINGLE_RIGHT;
             case SystemLinesEnum.DoubleThin:
-                return Vex.Flow.StaveConnector.type.DOUBLE;
+                return Vex.Flow.StaveConnector.type.THIN_DOUBLE;
             case SystemLinesEnum.ThinBold:
                 return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.BoldThinDots:

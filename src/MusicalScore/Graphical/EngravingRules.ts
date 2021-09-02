@@ -67,7 +67,8 @@ export class EngravingRules {
     /** How many unique note positions a percussion score needs to have to not be rendered on one line. */
     public PercussionOneLineCutoff: number;
     public PercussionForceVoicesOneLineCutoff: number;
-    public PercussionOneLineUseXMLDisplayStep: boolean;
+    public PercussionUseXMLDisplayStep: boolean;
+    public PercussionXMLDisplayStepNoteValueShift: number;
     public PercussionOneLineXMLDisplayStepOctaveOffset: number;
     public BetweenKeySymbolsDistance: number;
     public KeyRightMargin: number;
@@ -101,6 +102,7 @@ export class EngravingRules {
     public WedgeVerticalMargin: number;
     public DistanceOffsetBetweenTwoHorizontallyCrossedWedges: number;
     public WedgeMinLength: number;
+    public WedgeEndDistanceBetweenTimestampsFactor: number;
     public DistanceBetweenAdjacentDynamics: number;
     public TempoChangeMeasureValidity: number;
     public TempoContinousFactor: number;
@@ -182,7 +184,13 @@ export class EngravingRules {
     public SlurSlopeMaxAngle: number;
     public SlurTangentMinAngle: number;
     public SlurTangentMaxAngle: number;
+    public SlurHeightFactor: number;
+    public SlurHeightFlattenLongSlursFactorByWidth: number;
+    public SlurHeightFlattenLongSlursFactorByAngle: number;
+    public SlurHeightFlattenLongSlursCutoffAngle: number;
+    public SlurHeightFlattenLongSlursCutoffWidth: number;
     public SlursStartingAtSameStaffEntryYOffset: number;
+    public SlurMaximumYControlPointDistance: number;
     public InstantaneousTempoTextHeight: number;
     public ContinuousDynamicTextHeight: number;
     public MoodTextHeight: number;
@@ -280,6 +288,7 @@ export class EngravingRules {
     public ArticulationPlacementFromXML: boolean;
     /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
     public FingeringPosition: PlacementEnum;
+    public FingeringPositionFromXML: boolean;
     public FingeringInsideStafflines: boolean;
     public FingeringLabelFontHeight: number;
     public FingeringOffsetX: number;
@@ -368,7 +377,8 @@ export class EngravingRules {
         this.ClefRightMargin = 0.75;
         this.PercussionOneLineCutoff = 3; // percussion parts with <3 unique note positions rendered on one line
         this.PercussionForceVoicesOneLineCutoff = 1;
-        this.PercussionOneLineUseXMLDisplayStep = true;
+        this.PercussionUseXMLDisplayStep = true;
+        this.PercussionXMLDisplayStepNoteValueShift = 0;
         this.PercussionOneLineXMLDisplayStepOctaveOffset = 0;
         this.BetweenKeySymbolsDistance = 0.2;
         this.KeyRightMargin = 0.75;
@@ -411,6 +421,7 @@ export class EngravingRules {
         this.WedgeVerticalMargin = 0.5;
         this.DistanceOffsetBetweenTwoHorizontallyCrossedWedges = 0.3;
         this.WedgeMinLength = 2.0;
+        this.WedgeEndDistanceBetweenTimestampsFactor = 1.75;
         this.DistanceBetweenAdjacentDynamics = 0.75;
 
         // Tempo Variables
@@ -468,7 +479,14 @@ export class EngravingRules {
         this.SlurSlopeMaxAngle = 15.0;
         this.SlurTangentMinAngle = 30.0;
         this.SlurTangentMaxAngle = 80.0;
+        this.SlurHeightFactor = 1; // 1 = 100% (standard height). 2 = 100% flattening of all slurs.
+        this.SlurHeightFlattenLongSlursFactorByWidth = 0.24; // additional flattening for long slurs the longer they are.
+        this.SlurHeightFlattenLongSlursFactorByAngle = 0.36; // when one of these factors is high, increasing the other has a very strong effect.
+        this.SlurHeightFlattenLongSlursCutoffAngle = 47;
+        this.SlurHeightFlattenLongSlursCutoffWidth = 16; // 15 ~ slur between measure's first notes in 4/4. 14 -> problem with test_slurs_highNotes
         this.SlursStartingAtSameStaffEntryYOffset = 0.8;
+        //Maximum y difference between control points. Forces slurs to have less 'weight' either way in the x direction
+        this.SlurMaximumYControlPointDistance = undefined;
 
         // Repetitions
         this.RepetitionEndingLabelHeight = 2.0;
@@ -587,6 +605,7 @@ export class EngravingRules {
         this.RenderTimeSignatures = true;
         this.ArticulationPlacementFromXML = true;
         this.FingeringPosition = PlacementEnum.Left; // easier to get bounding box, and safer for vertical layout
+        this.FingeringPositionFromXML = true;
         this.FingeringInsideStafflines = false;
         this.FingeringLabelFontHeight = 1.7;
         this.FingeringOffsetX = 0.0;

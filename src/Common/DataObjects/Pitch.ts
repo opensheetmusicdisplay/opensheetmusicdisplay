@@ -25,6 +25,8 @@ export enum AccidentalEnum {
     TRIPLEFLAT,
     QUARTERTONESHARP,
     QUARTERTONEFLAT,
+    THREEQUARTERSSHARP,
+    THREEQUARTERSFLAT,
 }
 
 // This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.
@@ -66,15 +68,20 @@ export class Pitch {
         }
     }
 
-    /** This method goes x steps from a NoteEnum on a keyboard.
-     * E.g. Two steps to the left (-2) from a D is a B.
-     * Two steps to the right from an A is a C. */
-    public static stepFromNoteEnum(noteEnum: NoteEnum, step: number): [NoteEnum, number] {
+    /** Changes a note x lines/steps up (+) or down (-) from a NoteEnum on a staffline/keyboard (white keys).
+     * E.g. Two lines down (-2) from a D is a B.
+     * Two lines up from an A is a C.
+     *   (e.g. in the treble/violin clef, going one line up: E -> F (semitone), F -> G (2 semitones)).
+     * Returns new NoteEnum and the octave shift (e.g. -1 = new octave is one octave down). */
+    public static lineShiftFromNoteEnum(noteEnum: NoteEnum, lines: number): [NoteEnum, number] {
+        if (lines === 0) {
+            return [noteEnum, 0];
+        }
         const enums: NoteEnum[] = Pitch.pitchEnumValues;
         const originalIndex: number = enums.indexOf(noteEnum);
         let octaveShift: number = 0;
-        let newIndex: number = originalIndex + step % enums.length; // modulo only handles positive overflow
-        if (originalIndex + step > enums.length - 1) {
+        let newIndex: number = (originalIndex + lines) % enums.length; // modulo only handles positive overflow
+        if (originalIndex + lines > enums.length - 1) {
             octaveShift = 1;
         }
         if (newIndex < 0) {
@@ -208,14 +215,18 @@ export class Pitch {
                 return 2;
             case AccidentalEnum.DOUBLEFLAT:
                 return -2;
-            case AccidentalEnum.QUARTERTONESHARP:
-                return 0.5;
-            case AccidentalEnum.QUARTERTONEFLAT:
-                return -0.5;
             case AccidentalEnum.TRIPLESHARP: // very rare, in some classical pieces
                 return 3;
             case AccidentalEnum.TRIPLEFLAT:
                 return -3;
+            case AccidentalEnum.QUARTERTONESHARP:
+                return 0.5;
+            case AccidentalEnum.QUARTERTONEFLAT:
+                return -0.5;
+            case AccidentalEnum.THREEQUARTERSSHARP:
+                return 1.5;
+            case AccidentalEnum.THREEQUARTERSFLAT:
+                return -1.5;
             default:
                 throw new Error("Unhandled AccidentalEnum value");
                 // return 0;
@@ -235,14 +246,18 @@ export class Pitch {
                 return AccidentalEnum.DOUBLESHARP;
             case -2:
                 return AccidentalEnum.DOUBLEFLAT;
-            case 0.5:
-                return AccidentalEnum.QUARTERTONESHARP;
-            case -0.5:
-                return AccidentalEnum.QUARTERTONEFLAT;
             case 3:
                 return AccidentalEnum.TRIPLESHARP;
             case -3:
                 return AccidentalEnum.TRIPLEFLAT;
+            case 0.5:
+                return AccidentalEnum.QUARTERTONESHARP;
+            case -0.5:
+                return AccidentalEnum.QUARTERTONEFLAT;
+            case 1.5:
+                return AccidentalEnum.THREEQUARTERSSHARP;
+            case -1.5:
+                return AccidentalEnum.THREEQUARTERSFLAT;
             default:
                 if (halfTones > 0 && halfTones < 1) {
                     return AccidentalEnum.QUARTERTONESHARP;
@@ -276,7 +291,7 @@ export class Pitch {
                 acc = "##";
                 break;
             case AccidentalEnum.TRIPLESHARP:
-                acc = "++";
+                acc = "###";
                 break;
             case AccidentalEnum.DOUBLEFLAT:
                 acc = "bb";
@@ -289,6 +304,12 @@ export class Pitch {
                 break;
             case AccidentalEnum.QUARTERTONEFLAT:
                 acc = "d";
+                break;
+            case AccidentalEnum.THREEQUARTERSSHARP:
+                acc = "++";
+                break;
+            case AccidentalEnum.THREEQUARTERSFLAT:
+                acc = "db";
                 break;
             default:
         }

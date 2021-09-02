@@ -18,6 +18,10 @@ prevent a bug where a modifier width is NaN, leading to a VexFlow error
 stave.setSection(section, y, xOffset = 0, fontSize = 12):
 add xOffset, fontSize arguments (see stavesection.js)
 
+stavenote.js (custom addition):
+Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
+Only offset if a note is the same voice, same note.
+
 staverepetition.js (custom addition):
 add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
@@ -30,6 +34,9 @@ adjust rectangle positioning, make height depend on text height
 stavevolta.js (merged Vexflow 3.x):
 Fix the length of voltas for first measures in a system
 (whose lengths were wrongly extended by the width of the clef, key signature, etc. (beginInstructions) in Vexflow 1.2.93)
+
+stemmablenote.js (custom addition):
+Add manual flag rendering variable so we can choose not to render flags if notes are sharing a stem.
 
 tabnote.js (merged Vexflow 3.x):
 Add a context group for each tabnote, so that it can be found in the SVG DOM ("vf-tabnote")

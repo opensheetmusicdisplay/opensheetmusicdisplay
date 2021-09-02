@@ -140,7 +140,8 @@ export class ExpressionReader {
                  } else { this.placement = PlacementEnum.Below; }
         }
     }
-    public read(directionNode: IXmlElement, currentMeasure: SourceMeasure, inSourceMeasureCurrentFraction: Fraction): void {
+    public read(directionNode: IXmlElement, currentMeasure: SourceMeasure,
+                inSourceMeasureCurrentFraction: Fraction, inSourceMeasurePreviousFraction: Fraction = undefined): void {
         let isTempoInstruction: boolean = false;
         let isDynamicInstruction: boolean = false;
         const n: IXmlElement = directionNode.element("sound");
@@ -148,7 +149,7 @@ export class ExpressionReader {
             const tempoAttr: IXmlAttribute = n.attribute("tempo");
             const dynAttr: IXmlAttribute = n.attribute("dynamics");
             if (tempoAttr) {
-                const match: string[] = tempoAttr.value.match(/\d+/);
+                const match: string[] = tempoAttr.value.match(/^(\d+\.?\d{0,9}|\.\d{1,9})$/);
                 this.soundTempo = match !== undefined ? parseInt(match[0], 10) : 100;
                 currentMeasure.TempoInBPM = this.soundTempo;
                 if (this.musicSheet.DefaultStartTempoInBpm === 0) {
@@ -179,7 +180,7 @@ export class ExpressionReader {
                 if (useCurrentFractionForPositioning) {
                     this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
                 }
-                const bpmNumber: number = parseInt(bpm.value, 10);
+                const bpmNumber: number = parseFloat(bpm.value);
                 this.createNewTempoExpressionIfNeeded(currentMeasure);
                 const instantaneousTempoExpression: InstantaneousTempoExpression =
                     new InstantaneousTempoExpression(undefined,
@@ -190,7 +191,8 @@ export class ExpressionReader {
                                                      true);
                 instantaneousTempoExpression.parentMeasure = currentMeasure;
                 this.soundTempo = bpmNumber;
-                currentMeasure.TempoInBPM = this.soundTempo;
+                // make sure take dotted beats into account
+                currentMeasure.TempoInBPM = this.soundTempo * (dotted?1.5:1);
                 if (this.musicSheet.DefaultStartTempoInBpm === 0) {
                     this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
                 }
@@ -226,7 +228,7 @@ export class ExpressionReader {
 
         dirContentNode = dirNode.element("wedge");
         if (dirContentNode) {
-            this.interpretWedge(dirContentNode, currentMeasure, inSourceMeasureCurrentFraction, currentMeasure.MeasureNumber);
+            this.interpretWedge(dirContentNode, currentMeasure, inSourceMeasurePreviousFraction, currentMeasure.MeasureNumber);
             return;
         }
 
@@ -395,7 +397,13 @@ export class ExpressionReader {
         if (wedgeNode !== undefined && wedgeNode.hasAttributes && wedgeNode.attribute("default-x")) {
             this.directionTimestamp = Fraction.createFromFraction(inSourceMeasureCurrentFraction);
         }
-        this.createNewMultiExpressionIfNeeded(currentMeasure);
+        //Ending needs to use previous fraction, not current.
+        //If current is used, when there is a system break it will mess up
+        if (wedgeNode?.attribute("type")?.value?.toLowerCase() === "stop") {
+            this.createNewMultiExpressionIfNeeded(currentMeasure, inSourceMeasureCurrentFraction);
+        } else {
+            this.createNewMultiExpressionIfNeeded(currentMeasure);
+        }
         this.addWedge(wedgeNode, currentMeasure);
         this.initialize();
     }

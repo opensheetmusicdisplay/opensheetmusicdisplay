@@ -143,13 +143,13 @@ export abstract class MusicSheetDrawer {
         throw new Error("not implemented");
     }
 
-    public drawLabel(graphicalLabel: GraphicalLabel, layer: number): Node[] {
+    public drawLabel(graphicalLabel: GraphicalLabel, layer: number): Node {
         if (!this.isVisible(graphicalLabel.PositionAndShape)) {
-            return [];
+            return undefined;
         }
         const label: Label = graphicalLabel.Label;
         if (label.text.trim() === "") {
-            return [];
+            return undefined;
         }
         const screenPosition: PointF2D = this.applyScreenTransformation(graphicalLabel.PositionAndShape.AbsolutePosition);
         const fontHeightInPixel: number = this.calculatePixelDistance(label.fontHeight);
@@ -235,7 +235,7 @@ export abstract class MusicSheetDrawer {
     }
 
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): Node[] {
+                          bitmapHeight: number, heightInPixel: number, screenPosition: PointF2D): Node {
         throw new Error("not implemented");
     }
 

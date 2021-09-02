@@ -13,7 +13,7 @@ import { MXLHelper } from "../Common/FileIO/Mxl";
 import { AJAX } from "./AJAX";
 import log from "loglevel";
 import { DrawingParametersEnum, DrawingParameters, ColoringModes } from "../MusicalScore/Graphical/DrawingParameters";
-import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType } from "./OSMDOptions";
+import { IOSMDOptions, OSMDOptions, AutoBeamOptions, BackendType, CursorOptions } from "./OSMDOptions";
 import { EngravingRules, PageFormat } from "../MusicalScore/Graphical/EngravingRules";
 import { AbstractExpression } from "../MusicalScore/VoiceData/Expressions/AbstractExpression";
 import { Dictionary } from "typescript-collections";
@@ -29,7 +29,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    private version: string = "0.9.2-dev"; // getter: this.Version
+    protected version: string = "1.1.0-dev"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -62,26 +62,31 @@ export class OpenSheetMusicDisplay {
         this.setOptions(options);
     }
 
-    public cursor: Cursor;
+    private cursorsOptions: CursorOptions[] = [];
+    public cursors: Cursor[] = [];
+    public get cursor(): Cursor { // lowercase for backwards compatibility since cursor -> cursors change
+        return this.cursors[0];
+    }
     public zoom: number = 1.0;
-    private zoomUpdated: boolean = false;
+    protected zoomUpdated: boolean = false;
     /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
     public loadUrlTimeout: number = 5000;
 
-    private container: HTMLElement;
-    private backendType: BackendType;
-    private needBackendUpdate: boolean;
-    private sheet: MusicSheet;
-    private drawer: VexFlowMusicSheetDrawer;
-    private drawBoundingBox: string;
-    private drawSkyLine: boolean;
-    private drawBottomLine: boolean;
-    private graphic: GraphicalMusicSheet;
-    private drawingParameters: DrawingParameters;
-    private rules: EngravingRules;
-    private autoResizeEnabled: boolean;
-    private resizeHandlerAttached: boolean;
-    private followCursor: boolean;
+    protected container: HTMLElement;
+    protected backendType: BackendType;
+    protected needBackendUpdate: boolean;
+    protected sheet: MusicSheet;
+    protected drawer: VexFlowMusicSheetDrawer;
+    protected drawBoundingBox: string;
+    protected drawSkyLine: boolean;
+    protected drawBottomLine: boolean;
+    protected graphic: GraphicalMusicSheet;
+    protected drawingParameters: DrawingParameters;
+    protected rules: EngravingRules;
+    protected autoResizeEnabled: boolean;
+    protected resizeHandlerAttached: boolean;
+    protected followCursor: boolean;
+    protected OnXMLRead: Function;
 
     /**
      * Load a MusicXML file
@@ -119,10 +124,11 @@ export class OpenSheetMusicDisplay {
                 trimmedStr = trimmedStr.trim(); // trim away empty lines at beginning etc
             }
             if (trimmedStr.substr(0, 6).includes("<?xml")) { // first character is sometimes null, making first five characters '<?xm'.
-                log.debug("[OSMD] Finally parsing XML content, length: " + trimmedStr.length);
+                const modifiedXml: string = this.OnXMLRead(trimmedStr); // by default just returns trimmedStr unless a function options.OnXMLRead was set.
+                log.debug("[OSMD] Finally parsing XML content, length: " + modifiedXml.length);
                 // Parse the string representing an xml file
                 const parser: DOMParser = new DOMParser();
-                content = parser.parseFromString(trimmedStr, "application/xml");
+                content = parser.parseFromString(modifiedXml, "application/xml");
             } else if (trimmedStr.length < 2083) { // TODO do proper URL format check
                 log.debug("[OSMD] Retrieve the file at the given URL: " + trimmedStr);
                 // Assume now "str" is a URL
@@ -176,8 +182,10 @@ export class OpenSheetMusicDisplay {
     public updateGraphic(): void {
         const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(this.rules);
         this.graphic = new GraphicalMusicSheet(this.sheet, calc);
-        if (this.drawingParameters.drawCursors && this.cursor) {
-            this.cursor.init(this.sheet.MusicPartManager, this.graphic);
+        if (this.drawingParameters.drawCursors) {
+            this.cursors.forEach(cursor => {
+                cursor.init(this.sheet.MusicPartManager, this.graphic);
+            });
         }
     }
 
@@ -236,17 +244,19 @@ export class OpenSheetMusicDisplay {
         // Finally, draw
         this.drawer.drawSheet(this.graphic);
 
-        this.enableOrDisableCursor(this.drawingParameters.drawCursors);
+        this.enableOrDisableCursors(this.drawingParameters.drawCursors);
 
-        if (this.drawingParameters.drawCursors && this.cursor) {
+        if (this.drawingParameters.drawCursors) {
             // Update the cursor position
-            this.cursor.update();
+            this.cursors.forEach(cursor => {
+                cursor.update();
+            });
         }
         this.zoomUpdated = false;
         //console.log("[OSMD] render finished");
     }
 
-    private createOrRefreshRenderBackend(): void {
+    protected createOrRefreshRenderBackend(): void {
         // console.log("[OSMD] createOrRefreshRenderBackend()");
 
         // Remove old backends
@@ -355,6 +365,10 @@ export class OpenSheetMusicDisplay {
             log.warn("warning: osmd.setOptions() called without an options parameter, has no effect."
                 + "\n" + "example usage: osmd.setOptions({drawCredits: false, drawPartNames: false})");
             return;
+        }
+        this.OnXMLRead = function(xml): string {return xml;};
+        if (options.onXMLRead) {
+            this.OnXMLRead = options.onXMLRead;
         }
         if (options.drawingParameters) {
             this.drawingParameters.DrawingParametersEnum =
@@ -564,6 +578,11 @@ export class OpenSheetMusicDisplay {
         if (options.autoGenerateMutipleRestMeasuresFromRestMeasures !== undefined) {
             this.rules.AutoGenerateMutipleRestMeasuresFromRestMeasures = options.autoGenerateMutipleRestMeasuresFromRestMeasures;
         }
+        if (options.cursorsOptions !== undefined) {
+            this.cursorsOptions = options.cursorsOptions;
+        } else {
+            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: options.followCursor}];
+        }
     }
 
     public setColoringMode(options: IOSMDOptions): void {
@@ -644,9 +663,11 @@ export class OpenSheetMusicDisplay {
      * Initialize this object to default values
      * FIXME: Probably unnecessary
      */
-    private reset(): void {
-        if (this.drawingParameters.drawCursors && this.cursor) {
-            this.cursor.hide();
+    protected reset(): void {
+        if (this.drawingParameters.drawCursors) {
+            this.cursors.forEach(cursor => {
+                cursor.hide();
+            });
         }
         this.sheet = undefined;
         this.graphic = undefined;
@@ -656,7 +677,7 @@ export class OpenSheetMusicDisplay {
     /**
      * Attach the appropriate handler to the window.onResize event
      */
-    private autoResize(): void {
+    protected autoResize(): void {
 
         const self: OpenSheetMusicDisplay = this;
         this.handleResize(
@@ -691,7 +712,7 @@ export class OpenSheetMusicDisplay {
      * @param startCallback is the function called when resizing starts
      * @param endCallback is the function called when resizing (kind-of) ends
      */
-    private handleResize(startCallback: () => void, endCallback: () => void): void {
+    protected handleResize(startCallback: () => void, endCallback: () => void): void {
         let rtime: number;
         let timeout: number = undefined;
         const delta: number = 200;
@@ -734,41 +755,42 @@ export class OpenSheetMusicDisplay {
     /** Enable or disable (hide) the cursor.
      * @param enable whether to enable (true) or disable (false) the cursor
      */
-    public enableOrDisableCursor(enable: boolean): void {
+    public enableOrDisableCursors(enable: boolean): void {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
-            // save previous cursor state
-            const hidden: boolean = this.cursor?.Hidden;
-            const previousIterator: MusicPartManagerIterator = this.cursor?.Iterator;
-            this.cursor?.hide();
+            for (let i: number = 0; i < this.cursorsOptions.length; i++){
+                // save previous cursor state
+                const hidden: boolean = this.cursors[i]?.Hidden;
+                const previousIterator: MusicPartManagerIterator = this.cursors[i]?.Iterator;
+                this.cursors[i]?.hide();
 
-            // check which page/backend to draw the cursor on (the pages may have changed since last cursor)
-            let backendToDrawOn: VexFlowBackend = this.drawer?.Backends[0];
-            if (backendToDrawOn && this.rules.RestoreCursorAfterRerender && this.cursor) {
-                const newPageNumber: number = this.cursor.updateCurrentPage();
-                backendToDrawOn = this.drawer.Backends[newPageNumber - 1];
-            }
-            // create new cursor
-            if (backendToDrawOn && backendToDrawOn.getRenderElement()) {
-                this.cursor = new Cursor(backendToDrawOn.getRenderElement(), this);
-            }
-            if (this.sheet && this.graphic && this.cursor) { // else init is called in load()
-                this.cursor.init(this.sheet.MusicPartManager, this.graphic);
-            }
+                // check which page/backend to draw the cursor on (the pages may have changed since last cursor)
+                let backendToDrawOn: VexFlowBackend = this.drawer?.Backends[0];
+                if (backendToDrawOn && this.rules.RestoreCursorAfterRerender && this.cursors[i]) {
+                    const newPageNumber: number = this.cursors[i].updateCurrentPage();
+                    backendToDrawOn = this.drawer.Backends[newPageNumber - 1];
+                }
+                // create new cursor
+                if (backendToDrawOn && backendToDrawOn.getRenderElement()) {
+                    this.cursors[i] = new Cursor(backendToDrawOn.getRenderElement(), this, this.cursorsOptions[i]);
+                }
+                if (this.sheet && this.graphic && this.cursors[i]) { // else init is called in load()
+                    this.cursors[i].init(this.sheet.MusicPartManager, this.graphic);
+                }
 
-            // restore old cursor state
-            if (this.rules.RestoreCursorAfterRerender) {
-                this.cursor.hidden = hidden;
-                if (previousIterator) {
-                    this.cursor.iterator = previousIterator;
-                    this.cursor.update();
+                // restore old cursor state
+                if (this.rules.RestoreCursorAfterRerender) {
+                    this.cursors[i].hidden = hidden;
+                    if (previousIterator) {
+                        this.cursors[i].iterator = previousIterator;
+                        this.cursors[i].update();
+                    }
                 }
             }
         } else { // disable cursor
-            if (!this.cursor) {
-                return;
-            }
-            this.cursor.hide();
+            this.cursors.forEach(cursor => {
+                cursor.hide();
+            });
             // this.cursor = undefined;
             // TODO cursor should be disabled, not just hidden. otherwise user can just call osmd.cursor.hide().
             // however, this could cause null calls (cursor.next() etc), maybe that needs some solution.

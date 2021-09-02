@@ -20,6 +20,7 @@ export class Staff {
     private volume: number = 1;
     private id: number;
     private stafflineCount: number = 5;
+    public hasLyrics: boolean = false;
 
     public get ParentInstrument(): Instrument {
         return this.parentInstrument;

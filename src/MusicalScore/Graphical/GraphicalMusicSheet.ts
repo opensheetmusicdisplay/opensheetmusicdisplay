@@ -569,7 +569,7 @@ export class GraphicalMusicSheet {
     public GetNearestVoiceEntry(clickPosition: PointF2D): GraphicalVoiceEntry {
         return this.GetNearestGraphicalObject<GraphicalVoiceEntry>(clickPosition, GraphicalVoiceEntry.name, 5, 20, 5,
                                                                    (object: GraphicalVoiceEntry) =>
-                                                                        object.parentStaffEntry.relInMeasureTimestamp !== undefined);
+                                                                        object.parentStaffEntry?.relInMeasureTimestamp !== undefined);
     }
 
     public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
@@ -975,6 +975,9 @@ export class GraphicalMusicSheet {
     }*/
 
     public GetGraphicalFromSourceStaffEntry(sourceStaffEntry: SourceStaffEntry): GraphicalStaffEntry {
+        if (!sourceStaffEntry.VerticalContainerParent.ParentMeasure?.VerticalMeasureList) {
+            return undefined;
+        }
         const graphicalMeasure: GraphicalMeasure = sourceStaffEntry.VerticalContainerParent.ParentMeasure.VerticalMeasureList
             [sourceStaffEntry.ParentStaff.idInMusicSheet];
         return graphicalMeasure.findGraphicalStaffEntryFromTimestamp(sourceStaffEntry.Timestamp);

@@ -186,11 +186,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     let minStaffEntriesWidth: number = 12; // a typical measure has roughly a length of 3*StaffHeight (3*4 = 12)
     const parentSourceMeasure: SourceMeasure = measures[0].parentSourceMeasure;
+    // the voicing space bonus addition makes the voicing more relaxed. With a bonus of 0 the notes are basically completely squeezed together.
+    const staffEntryFactor: number = 0.3;
 
     if (allVoices.length > 0) {
-      // the voicing space bonus addition makes the voicing more relaxed. With a bonus of 0 the notes are basically completely squeezed together.
-      const staffEntryFactor: number = 0.3;
-
       minStaffEntriesWidth = formatter.preCalculateMinTotalWidth(allVoices) / unitInPixels
       * this.rules.VoiceSpacingMultiplierVexflow
       + this.rules.VoiceSpacingAddendVexflow
@@ -293,6 +292,29 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         (<VexFlowStaffEntry>staffEntry).calculateXPosition();
       }
     }
+    //Can't quite figure out why, but this is the calculation that needs redone to have consistent rendering.
+    //The first render of a sheet vs. subsequent renders are calculated differently by vexflow without this re-joining of the voices
+    for (const measure of measures) {
+      if (!measure) {
+        continue;
+      }
+      const mvoices: { [voiceID: number]: Vex.Flow.Voice } = (measure as VexFlowMeasure).vfVoices;
+      const voices: Vex.Flow.Voice[] = [];
+      for (const voiceID in mvoices) {
+        if (mvoices.hasOwnProperty(voiceID)) {
+          voices.push(mvoices[voiceID]);
+        }
+      }
+
+      if (voices.length === 0) {
+        log.debug("Found a measure with no voices. Continuing anyway.", mvoices);
+        // no need to log this, measures with no voices/notes are fine. see OSMDOptions.fillEmptyMeasuresWithWholeRest
+        continue;
+      }
+      // all voices that belong to one stave are collectively added to create a common context in VexFlow.
+      formatter.joinVoices(voices);
+    }
+
     // calculateMeasureWidthFromLyrics() will be called from MusicSheetCalculator after this
     return minStaffEntriesWidth;
   }
@@ -650,6 +672,11 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             last_indices: [endNoteIndexInTie],
             last_note: vfEndNote
           });
+          if (tie.Tie.TieDirection === PlacementEnum.Below) {
+            vfTie.setDirection(1); // + is down in vexflow
+          } else if (tie.Tie.TieDirection === PlacementEnum.Above) {
+            vfTie.setDirection(-1);
+          }
         }
 
         const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
@@ -664,7 +691,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // we do already use the min/max in MusicSheetCalculator.calculateDynamicsExpressions,
       // but this may be necessary for StaffLinkedExpressions, not tested.
     }
-
     // calculate absolute Timestamp
     const absoluteTimestamp: Fraction = multiExpression.AbsoluteTimestamp;
     const measures: GraphicalMeasure[] = this.graphicalMusicSheet.MeasureList[measureIndex];
@@ -687,7 +713,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         multiExpression.InstantaneousDynamic,
         staffLine,
         startMeasure);
-      this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, dynamicStartPosition);
+      this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, dynamicStartPosition, absoluteTimestamp);
+      this.dynamicExpressionMap.set(absoluteTimestamp.RealValue, graphicalInstantaneousDynamic.PositionAndShape);
     }
     if (multiExpression.StartingContinuousDynamic) {
       const continuousDynamic: ContinuousDynamicExpression = multiExpression.StartingContinuousDynamic;
@@ -700,6 +727,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
         try {
         this.calculateGraphicalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
+        graphicalContinuousDynamic.updateSkyBottomLine();
         } catch (e) {
           // TODO this sometimes fails when the measure range to draw doesn't include all the dynamic's measures, method needs to be adjusted
           //   see calculateGraphicalContinuousDynamic(), also in MusicSheetCalculator.
@@ -769,7 +797,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (!rehearsalExpression) {
       return;
     }
-    const measureNumber: number = Math.max(measure.MeasureNumber - 1, 0);
+    const firstMeasureNumber: number = this.graphicalMusicSheet.MeasureList[0][0].MeasureNumber; // 0 for pickup, 1 otherwise
+    const measureNumber: number = Math.max(measure.MeasureNumber - firstMeasureNumber, 0);
     const staffNumber: number = 0;
     const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
     const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;

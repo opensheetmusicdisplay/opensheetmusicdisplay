@@ -2,7 +2,7 @@ import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMus
 import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
 import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min';
 import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
-// import { Fraction } from '../src/Common/DataObjects/Fraction';
+import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
 
 /*jslint browser:true */
 (function () {
@@ -58,6 +58,8 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             "OSMD Function Test - Auto Multirest Measures Single Staff": "Test_Auto_Multirest_1.musicxml",
             "OSMD Function Test - Auto Multirest Measures Multiple Staves": "Test_Auto_Multirest_2.musicxml",
             "OSMD Function Test - String number collisions": "test_string_number_collisions.musicxml",
+            "OSMD Function Test - Repeat Stave Connectors": "OSMD_function_Test_Repeat.musicxml",
+            "OSMD Function Test - Voice Alignment": "OSMD_Function_Test_Voice_Alignment.musicxml",
             "Schubert, F. - An Die Musik": "Schubert_An_die_Musik.xml",
             "Actor, L. - Prelude (Large Sample, loading time)": "ActorPreludeSample.xml",
             "Actor, L. - Prelude (Large, No Print Part Names)": "ActorPreludeSample_PartName.xml",
@@ -95,7 +97,9 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
         debugReRenderBtn,
         debugClearBtn,
         selectPageSizes,
-        printPdfBtns;
+        printPdfBtns,
+        transpose,
+        transposeBtn;
     
     // manage option setting and resetting for specific samples, e.g. in the autobeam sample autobeam is set to true, otherwise reset to previous state
     // TODO design a more elegant option state saving & restoring system, though that requires saving the options state in OSMD
@@ -245,6 +249,8 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
         printPdfBtns = [];
         printPdfBtns.push(document.getElementById("print-pdf-btn"));
         printPdfBtns.push(document.getElementById("print-pdf-btn-optional"));
+        transpose = document.getElementById('transpose');
+        transposeBtn = document.getElementById('transpose-btn');
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
@@ -432,6 +438,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             autoResize: true,
             backend: backendType,
             //backend: "canvas",
+            //cursorsOptions: [{type: 3, color: "#2bb8cd", alpha: 0.6, follow: true}], // highlight current measure instead of just a small vertical bar over approximate notes
             disableCursor: false,
             drawingParameters: compactMode ? "compact" : "default", // try compact (instead of default)
             drawPartNames: true, // try false
@@ -520,6 +527,16 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
             console.log("[OSMD] selectSampleOnChange addEventListener change");
             // selectSampleOnChange();
         });
+        if(transposeBtn && transpose){
+            openSheetMusicDisplay.TransposeCalculator = new TransposeCalculator();
+
+            transposeBtn.onclick = function(){
+                var transposeValue = parseInt(transpose.value);
+                openSheetMusicDisplay.Sheet.Transpose = transposeValue;
+                openSheetMusicDisplay.updateGraphic();
+                rerender();
+            }
+        }
 
         // TODO after selectSampleOnChange, the resize handler triggers immediately,
         //   so we render twice at the start of the demo.
@@ -610,6 +627,7 @@ import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
                 // This gives you access to the osmd object in the console. Do not use in production code
                 window.osmd = openSheetMusicDisplay;
                 openSheetMusicDisplay.zoom = zoom;
+                //openSheetMusicDisplay.Sheet.Transpose = 3; // try transposing between load and first render if you have transpose issues with F# etc
                 return openSheetMusicDisplay.render();
             },
             function (e) {

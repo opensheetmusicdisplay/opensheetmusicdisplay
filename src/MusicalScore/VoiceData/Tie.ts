@@ -2,6 +2,7 @@ import {Note} from "./Note";
 import { Fraction } from "../../Common/DataObjects/Fraction";
 import { Pitch } from "../../Common/DataObjects/Pitch";
 import { TieTypes } from "../../Common/Enums/";
+import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 
 /**
  * A [[Tie]] connects two notes of the same pitch and name, indicating that they have to be played as a single note.
@@ -15,6 +16,8 @@ export class Tie {
 
     private notes: Note[] = [];
     private type: TieTypes;
+    public TieNumber: number = 1;
+    public TieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
 
     public get Notes(): Note[] {
         return this.notes;

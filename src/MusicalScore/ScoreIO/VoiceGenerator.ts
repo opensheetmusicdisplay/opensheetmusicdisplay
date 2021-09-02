@@ -48,7 +48,7 @@ export class VoiceGenerator {
     this.instrument.Voices.push(this.voice); // apparently necessary for cursor.next(), for "cursor with hidden instrument" test
     this.staff.Voices.push(this.voice);
     this.lyricsReader = new LyricsReader(this.musicSheet);
-    this.articulationReader = new ArticulationReader();
+    this.articulationReader = new ArticulationReader(this.musicSheet.Rules);
   }
 
   public pluginManager: ReaderPluginManager; // currently only used in audio player
@@ -406,7 +406,11 @@ export class VoiceGenerator {
           if (displayStepElement) {
             noteStep = NoteEnum[displayStepElement.value.toUpperCase()];
             let octaveShift: number = 0;
-            [displayStepUnpitched, octaveShift] = Pitch.stepFromNoteEnum(noteStep, -3);
+            let noteValueShift: number = this.musicSheet.Rules.PercussionXMLDisplayStepNoteValueShift;
+            if (this.instrument.Staves[0].StafflineCount === 1) {
+              noteValueShift -= 3; // for percussion one line scores, we need to set the notes 3 lines lower
+            }
+            [displayStepUnpitched, octaveShift] = Pitch.lineShiftFromNoteEnum(noteStep, noteValueShift);
             displayOctaveUnpitched += octaveShift;
           }
         } else if (noteElement.name === "instrument") {
@@ -668,8 +672,7 @@ export class VoiceGenerator {
           if (bracketAttr && bracketAttr.value === "yes") {
             bracketed = true;
           }
-          const placementAttr: Attr = tupletNode.attribute("placement");
-          const placementBelow: boolean = placementAttr && placementAttr.value === "below";
+
           const type: Attr = tupletNode.attribute("type");
           if (type && type.value === "start") {
             let tupletNumber: number = 1;
@@ -689,7 +692,17 @@ export class VoiceGenerator {
 
             }
             const tuplet: Tuplet = new Tuplet(tupletLabelNumber, bracketed);
-            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
+            //Default to above
+            tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+            //If we ever encounter a placement attribute for this tuplet, should override.
+            //Even previous placement attributes for the tuplet
+            const placementAttr: Attr = tupletNode.attribute("placement");
+            if (placementAttr) {
+              if (placementAttr.value === "below") {
+                tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+              }
+              tuplet.PlacementFromXml = true;
+            }
             if (this.tupletDict[tupletNumber]) {
               delete this.tupletDict[tupletNumber];
               if (Object.keys(this.tupletDict).length === 0) {
@@ -712,9 +725,39 @@ export class VoiceGenerator {
             }
             const tuplet: Tuplet = this.tupletDict[tupletNumber];
             if (tuplet) {
+              const placementAttr: Attr = tupletNode.attribute("placement");
+              if (placementAttr) {
+                if (placementAttr.value === "below") {
+                  tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+                }  else {
+                  tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+                }
+                tuplet.PlacementFromXml = true;
+              }
               const subnotelist: Note[] = [];
               subnotelist.push(this.currentNote);
               tuplet.Notes.push(subnotelist);
+              //If our placement hasn't been from XML, check all the notes in the tuplet
+              //Search for the first non-rest and use it's stem direction
+              if (!tuplet.PlacementFromXml) {
+                let foundNonRest: boolean = false;
+                for (const subList of tuplet.Notes) {
+                  for (const note of subList) {
+                    if (!note.isRest()) {
+                      if(note.StemDirectionXml === StemDirectionType.Down) {
+                        tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+                      } else {
+                        tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+                      }
+                      foundNonRest = true;
+                      break;
+                    }
+                  }
+                  if (foundNonRest) {
+                    break;
+                  }
+                }
+              }
               tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
               this.currentNote.NoteTuplet = tuplet;
               delete this.tupletDict[tupletNumber];
@@ -741,9 +784,6 @@ export class VoiceGenerator {
         if (bracketAttr && bracketAttr.value === "yes") {
           bracketed = true;
         }
-        const placementAttr: Attr = n.attribute("placement");
-        const placementBelow: boolean = placementAttr && placementAttr.value === "below";
-
         if (type === "start") {
           let tupletLabelNumber: number = 0;
           let timeModNode: IXmlElement = node.element("time-modification");
@@ -768,7 +808,20 @@ export class VoiceGenerator {
           let tuplet: Tuplet = this.tupletDict[tupletnumber];
           if (!tuplet) {
             tuplet = this.tupletDict[tupletnumber] = new Tuplet(tupletLabelNumber, bracketed);
-            tuplet.tupletLabelNumberPlacement = placementBelow ? PlacementEnum.Below : PlacementEnum.Above;
+            //Default to above
+            tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+          }
+          //If we ever encounter a placement attribute for this tuplet, should override.
+          //Even previous placement attributes for the tuplet
+          const placementAttr: Attr = n.attribute("placement");
+          if (placementAttr) {
+            if (placementAttr.value === "below") {
+              tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+            } else {
+              //Just in case
+              tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+            }
+            tuplet.PlacementFromXml = true;
           }
           const subnotelist: Note[] = [];
           subnotelist.push(this.currentNote);
@@ -782,9 +835,39 @@ export class VoiceGenerator {
           }
           const tuplet: Tuplet = this.tupletDict[this.openTupletNumber];
           if (tuplet) {
+            const placementAttr: Attr = n.attribute("placement");
+            if (placementAttr) {
+              if (placementAttr.value === "below") {
+                tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+              } else {
+                tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+              }
+              tuplet.PlacementFromXml = true;
+            }
             const subnotelist: Note[] = [];
             subnotelist.push(this.currentNote);
             tuplet.Notes.push(subnotelist);
+            //If our placement hasn't been from XML, check all the notes in the tuplet
+            //Search for the first non-rest and use it's stem direction
+            if (!tuplet.PlacementFromXml) {
+              let foundNonRest: boolean = false;
+              for (const subList of tuplet.Notes) {
+                for (const note of subList) {
+                  if (!note.isRest()) {
+                    if(note.StemDirectionXml === StemDirectionType.Down) {
+                      tuplet.tupletLabelNumberPlacement = PlacementEnum.Below;
+                    } else {
+                      tuplet.tupletLabelNumberPlacement = PlacementEnum.Above;
+                    }
+                    foundNonRest = true;
+                    break;
+                  }
+                }
+                if (foundNonRest) {
+                  break;
+                }
+              }
+            }
             tuplet.Fractions.push(this.getTupletNoteDurationFromType(node));
             this.currentNote.NoteTuplet = tuplet;
             if (Object.keys(this.tupletDict).length === 0) {
@@ -845,6 +928,26 @@ export class VoiceGenerator {
       if (tieNodeList.length === 1) {
         const tieNode: IXmlElement = tieNodeList[0];
         if (tieNode !== undefined && tieNode.attributes()) {
+          let tieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
+          // read tie direction/placement from XML
+          const placementAttr: IXmlAttribute = tieNode.attribute("placement");
+          if (placementAttr) {
+            if (placementAttr.value === "above") {
+              tieDirection = PlacementEnum.Above;
+            } else if (placementAttr.value === "below") {
+              tieDirection = PlacementEnum.Below;
+            }
+          }
+          // tie direction also be given like this:
+          const orientationAttr: IXmlAttribute = tieNode.attribute("orientation");
+          if (orientationAttr) {
+            if (orientationAttr.value === "over") {
+              tieDirection = PlacementEnum.Above;
+            } else if (orientationAttr.value === "under") {
+              tieDirection = PlacementEnum.Below;
+            }
+          }
+
           const type: string = tieNode.attribute("type").value;
           try {
             if (type === "start") {
@@ -855,6 +958,8 @@ export class VoiceGenerator {
               const newTieNumber: number = this.getNextAvailableNumberForTie();
               const tie: Tie = new Tie(this.currentNote, tieType);
               this.openTieDict[newTieNumber] = tie;
+              tie.TieNumber = newTieNumber;
+              tie.TieDirection = tieDirection;
             } else if (type === "stop") {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
               const tie: Tie = this.openTieDict[tieNumber];

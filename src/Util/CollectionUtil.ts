@@ -12,21 +12,31 @@ declare global {
 }
 
 if (!Array.prototype.last) {
-    Array.prototype.last = function<T>(): T {
-        return this[this.length - 1];
-    };
+    // using Object.defineProperty instead of assigning Array.prototype.x directly prevents prototype pollution, see #980
+    Object.defineProperty(Array.prototype, "last", {
+        enumerable: false,
+        value: function<T>(): T {
+            return this[this.length - 1];
+        }
+    });
 }
 
 if (!Array.prototype.clear) {
-    Array.prototype.clear = function<T>(): void {
-        this.length = 0;
-    };
+    Object.defineProperty(Array.prototype, "clear", {
+        enumerable: false,
+        value: function<T>(): void {
+            this.length = 0;
+        }
+    });
 }
 
 if (!Array.prototype.contains) {
-    Array.prototype.contains = function<T>(elem: T): boolean {
-        return this.indexOf(elem) !== -1;
-    };
+    Object.defineProperty(Array.prototype, "contains", {
+        enumerable: false,
+        value: function<T>(elem: T): boolean {
+            return this.indexOf(elem) !== -1;
+        }
+    });
 }
 
 /**
@@ -40,7 +50,6 @@ export class CollectionUtil {
                 return true;
             }
         }
-
         return false;
     }
 
