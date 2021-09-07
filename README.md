@@ -135,7 +135,8 @@ We also want to thank [our Github Contributors](https://github.com/opensheetmusi
 <!-- the social button images were created via https://shields.io, search twitter in the top search bar, click on twitter url, set named logo e.g. to facebook -->
 
 To contact us directly, you can:
-* Use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/) to send a mail
+* Send a mail to support@opensheetmusicdisplay.org
 * Leave a (public) comment in our [Discussions section](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/discussions)
 * [Join our Discord (chat) Server](https://osmd.org/discord)
 * [Join the chat on Gitter](https://gitter.im/opensheetmusicdisplay/opensheetmusicdisplay).
+<!-- * Use the [Contact form on opensheetmusicdisplay.org](https://opensheetmusicdisplay.org/contact/) to send a mail -->
