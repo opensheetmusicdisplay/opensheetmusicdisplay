@@ -215,6 +215,7 @@ export class EngravingRules {
     public MultipleRestMeasureDefaultWidth: number;
     public DistanceBetweenVerticalSystemLines: number;
     public DistanceBetweenDotAndLine: number;
+    public DotsBoldBoldDotsPadding: number;
     public OctaveShiftLineWidth: number;
     public OctaveShiftVerticalLineLength: number;
     public GraceLineWidth: number;
@@ -534,9 +535,10 @@ export class EngravingRules {
         this.SystemThinLineWidth = 0.12;
         this.SystemBoldLineWidth = EngravingRules.unit / 2.0;
         this.SystemRepetitionEndingLineWidth = 0.12;
-        this.SystemDotWidth = EngravingRules.unit / 5.0;
+        this.SystemDotWidth = EngravingRules.unit / 2.0;
         this.DistanceBetweenVerticalSystemLines = 0.35;
         this.DistanceBetweenDotAndLine = 0.7;
+        this.DotsBoldBoldDotsPadding = 2.0;
         this.OctaveShiftLineWidth = 0.12;
         this.OctaveShiftVerticalLineLength = EngravingRules.unit;
         this.GraceLineWidth = this.StaffLineWidth * this.GraceNoteScalingFactor;

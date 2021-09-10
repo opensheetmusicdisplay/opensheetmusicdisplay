@@ -50,7 +50,7 @@ export class SystemLine extends GraphicalObject {
                     rules.DistanceBetweenDotAndLine;
             case SystemLinesEnum.DotsBoldBoldDots:
                 return 2 * rules.SystemBoldLineWidth + 2 * rules.SystemDotWidth + 2 * rules.DistanceBetweenDotAndLine +
-                    rules.DistanceBetweenVerticalSystemLines;
+                    rules.DistanceBetweenVerticalSystemLines + rules.DotsBoldBoldDotsPadding;
             default:
                 return 0;
         }

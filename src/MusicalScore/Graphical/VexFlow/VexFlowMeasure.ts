@@ -154,7 +154,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             case SystemLinesEnum.DotsThinBold:
                 return 10.0 / unitInPixels;
             case SystemLinesEnum.DotsBoldBoldDots:
-                return 10.0 / unitInPixels;
+                return 30.0 / unitInPixels;
             default:
                 return 0;
         }
