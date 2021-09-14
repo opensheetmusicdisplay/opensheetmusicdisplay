@@ -191,7 +191,7 @@ export class ExpressionReader {
                                                      true);
                 instantaneousTempoExpression.parentMeasure = currentMeasure;
                 this.soundTempo = bpmNumber;
-                // make sure take dotted beats into account
+                // make sure to take dotted beats into account
                 currentMeasure.TempoInBPM = this.soundTempo * (dotted?1.5:1);
                 if (this.musicSheet.DefaultStartTempoInBpm === 0) {
                     this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
