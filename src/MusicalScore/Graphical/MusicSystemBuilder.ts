@@ -246,8 +246,8 @@ export class MusicSystemBuilder {
         if (systemMeasures.length >= 1) {
             const measures: GraphicalMeasure[] =
                 this.currentSystemParams.currentSystem.GraphicalMeasures[this.currentSystemParams.currentSystem.GraphicalMeasures.length - 1];
-            const measureParams: MeasureBuildParameters = systemMeasures[systemMeasures.length - 1];
             let diff: number = 0.0;
+            const measureParams: MeasureBuildParameters = systemMeasures[systemMeasures.length - 1];
             if (measureParams.endLine === SystemLinesEnum.DotsBoldBoldDots) {
                 measureParams.endLine = SystemLinesEnum.DotsThinBold;
                 diff = measures[0].getLineWidth(SystemLinesEnum.DotsBoldBoldDots) / 2 - measures[0].getLineWidth(SystemLinesEnum.DotsThinBold);

@@ -153,8 +153,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             case SystemLinesEnum.BoldThinDots:
             case SystemLinesEnum.DotsThinBold:
                 return 10.0 / unitInPixels;
-            case SystemLinesEnum.DotsBoldBoldDots:
-                return 10.0 / unitInPixels;
+            case SystemLinesEnum.DotsBoldBoldDots: // :||: = repeat ends, another repeat starts in next measure
+                return 10.0 / unitInPixels + this.rules.RepeatEndStartPadding;
             default:
                 return 0;
         }
