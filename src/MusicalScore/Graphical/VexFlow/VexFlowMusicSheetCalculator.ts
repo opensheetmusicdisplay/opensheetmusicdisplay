@@ -166,7 +166,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         maxStaffEntries = Math.max(measure.staffEntries.length, maxStaffEntries);
         maxStaffEntriesPlusAccidentals = Math.max(measure.staffEntries.length + measureAccidentals, maxStaffEntriesPlusAccidentals);
       }
-      //if (measure.parentSourceMeasure.LastRepetitionInstructions)
       const mvoices: { [voiceID: number]: Vex.Flow.Voice } = (measure as VexFlowMeasure).vfVoices;
       const voices: Vex.Flow.Voice[] = [];
       for (const voiceID in mvoices) {
