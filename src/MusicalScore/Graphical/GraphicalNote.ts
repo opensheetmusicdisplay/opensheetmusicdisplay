@@ -56,9 +56,9 @@ export class GraphicalNote extends GraphicalObject {
      */
     private calculateNumberOfNeededDots(fraction: Fraction): number {
       if (!this.sourceNote || !this.sourceNote.NoteTuplet) {
-        return 0;
+        return fraction.calculateNumberOfNeededDots();
       }
-      return fraction.calculateNumberOfNeededDots();
+      return 0;
     }
 
     public get ParentMusicPage(): GraphicalMusicPage {
