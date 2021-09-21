@@ -153,6 +153,17 @@ export class Fraction {
     return this.wholeValue * this.denominator + this.numerator;
   }
 
+  public calculateNumberOfNeededDots(): number {
+    let num: number = 1;
+    let product: number = 2;
+    const expandedNumerator: number = this.GetExpandedNumerator();
+    while (product < expandedNumerator) {
+      num++;
+      product = Math.pow(2, num);
+    }
+    return Math.min(3, num - 1);
+  }
+
   public IsNegative(): boolean {
     return this.realValue < 0;
   }
