@@ -140,7 +140,7 @@ export class VexFlowConverter {
         //   } else {
         //     dots = fraction.calculateNumberOfNeededDots();
         //   }
-      return durations;
+        return durations;
     }
 
     /**
@@ -254,7 +254,9 @@ export class VexFlowConverter {
         const baseNoteLength: Fraction = baseNote.graphicalNoteLength;
         const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
         let duration: string = VexFlowConverter.durations(baseNoteLength, isTuplet)[0];
-        if (baseNote.sourceNote.TypeLength !== undefined && baseNote.sourceNote.TypeLength !== baseNoteLength) {
+        if (baseNote.sourceNote.TypeLength !== undefined &&
+            baseNote.sourceNote.TypeLength !== baseNoteLength &&
+            baseNote.sourceNote.TypeLength.RealValue !== 0) {
             duration = VexFlowConverter.durations(baseNote.sourceNote.TypeLength, isTuplet)[0];
         }
         let vfClefType: string = undefined;
