@@ -54,61 +54,93 @@ export class VexFlowConverter {
     };
 
     /**
-     * Convert a fraction to a string which represents a duration in VexFlow
+     * Convert a fraction to Vexflow string durations.
+     * A duration like 5/16 (5 16th notes) can't be represented by a single (dotted) note,
+     *   so we need to return multiple durations (e.g. for 5/16th ghost notes).
+     * Currently, for a dotted quarter ghost note, we return a quarter and an eighth ghost note.
+     *   We could return a dotted quarter instead, but then the code would need to distinguish between
+     *   notes that can be represented as dotted notes and notes that can't, which would complicate things.
+     *   We could e.g. add a parameter "allowSingleDottedNote" which makes it possible to return single dotted notes instead.
+     * But currently, this is only really used for Ghost notes, so it doesn't make a difference visually.
+     *   (for other uses like StaveNotes, we calculate the dots separately)
      * @param fraction a fraction representing the duration of a note
-     * @returns {string}
+     * @returns {string[]} Vexflow note type strings (e.g. "h" = half note)
      */
-    public static duration(fraction: Fraction, isTuplet: boolean): string {
-      const dur: number = fraction.RealValue;
-
-      if (dur === 2) { // Breve
-        return "1/2";
-      }
-      // TODO consider long (dur=4) and maxima (dur=8), though Vexflow doesn't seem to support them
-      if (dur >= 1) {
-          return "w";
-      } else if (dur < 1 && dur >= 0.5) {
-        // change to the next higher straight note to get the correct note display type
-        if (isTuplet && dur > 0.5) {
-          return "w";
+    public static durations(fraction: Fraction, isTuplet: boolean): string[] {
+        const durations: string[] = [];
+        const remainingFraction: Fraction = fraction.clone();
+        while (remainingFraction.RealValue > 0) {
+            const dur: number = remainingFraction.RealValue;
+            // TODO consider long (dur=4) and maxima (dur=8), though Vexflow doesn't seem to support them
+            if (dur >= 2) { // Breve
+                durations.push("1/2");
+                remainingFraction.Sub(new Fraction(2, 1));
+            } else if (dur >= 1) {
+                durations.push("w");
+                remainingFraction.Sub(new Fraction(1, 1));
+            } else if (dur < 1 && dur >= 0.5) {
+                // change to the next higher straight note to get the correct note display type
+                if (isTuplet && dur > 0.5) {
+                    return ["w"];
+                } else {
+                    durations.push("h");
+                    remainingFraction.Sub(new Fraction(1, 2));
+                }
+            } else if (dur < 0.5 && dur >= 0.25) {
+                // change to the next higher straight note to get the correct note display type
+                if (isTuplet && dur > 0.25) {
+                    return ["h"];
+                } else {
+                    durations.push("q");
+                    remainingFraction.Sub(new Fraction(1, 4));
+                }
+            } else if (dur < 0.25 && dur >= 0.125) {
+                // change to the next higher straight note to get the correct note display type
+                if (isTuplet && dur > 0.125) {
+                    return ["q"];
+                } else {
+                    durations.push("8");
+                    remainingFraction.Sub(new Fraction(1, 8));
+                }
+            } else if (dur < 0.125 && dur >= 0.0625) {
+                // change to the next higher straight note to get the correct note display type
+                if (isTuplet && dur > 0.0625) {
+                    return ["8"];
+                } else {
+                    durations.push("16");
+                    remainingFraction.Sub(new Fraction(1, 16));
+                }
+            } else if (dur < 0.0625 && dur >= 0.03125) {
+                // change to the next higher straight note to get the correct note display type
+                if (isTuplet && dur > 0.03125) {
+                    return ["16"];
+                } else {
+                    durations.push("32");
+                    remainingFraction.Sub(new Fraction(1, 32));
+                }
+            } else if (dur < 0.03125 && dur >= 0.015625) {
+                // change to the next higher straight note to get the correct note display type
+                if (isTuplet && dur > 0.015625) {
+                    return ["32"];
+                } else {
+                    durations.push("64");
+                    remainingFraction.Sub(new Fraction(1, 64));
+                }
+            } else {
+                if (isTuplet) {
+                    return ["64"];
+                } else {
+                    durations.push("128");
+                    remainingFraction.Sub(new Fraction(1, 128));
+                }
+            }
         }
-        return "h";
-      } else if (dur < 0.5 && dur >= 0.25) {
-        // change to the next higher straight note to get the correct note display type
-        if (isTuplet && dur > 0.25) {
-          return "h";
-        }
-        return "q";
-      } else if (dur < 0.25 && dur >= 0.125) {
-        // change to the next higher straight note to get the correct note display type
-        if (isTuplet && dur > 0.125) {
-          return "q";
-        }
-        return "8";
-      } else if (dur < 0.125 && dur >= 0.0625) {
-        // change to the next higher straight note to get the correct note display type
-        if (isTuplet && dur > 0.0625) {
-          return "8";
-        }
-        return "16";
-      } else if (dur < 0.0625 && dur >= 0.03125) {
-        // change to the next higher straight note to get the correct note display type
-        if (isTuplet && dur > 0.03125) {
-          return "16";
-        }
-        return "32";
-      } else if (dur < 0.03125 && dur >= 0.015625) {
-        // change to the next higher straight note to get the correct note display type
-        if (isTuplet && dur > 0.015625) {
-          return "32";
-        }
-        return "64";
-      }
-
-      if (isTuplet) {
-        return "64";
-      }
-      return "128";
+        //   if (isTuplet) {
+        //     dots = 0; // TODO (different) calculation?
+        //   } else {
+        //     dots = fraction.calculateNumberOfNeededDots();
+        //   }
+        return durations;
     }
 
     /**
@@ -185,10 +217,16 @@ export class VexFlowConverter {
         }
     }
 
-    public static GhostNote(frac: Fraction): Vex.Flow.GhostNote {
-        return new Vex.Flow.GhostNote({
-            duration: VexFlowConverter.duration(frac, false),
-        });
+    public static GhostNotes(frac: Fraction): Vex.Flow.GhostNote[] {
+        const ghostNotes: Vex.Flow.GhostNote[] = [];
+        const durations: string[] = VexFlowConverter.durations(frac, false);
+        for (const duration of durations) {
+            ghostNotes.push(new Vex.Flow.GhostNote({
+                duration: duration,
+                //dots: dots
+            }));
+        }
+        return ghostNotes;
     }
 
     /**
@@ -215,9 +253,11 @@ export class VexFlowConverter {
         const accidentals: string[] = [];
         const baseNoteLength: Fraction = baseNote.graphicalNoteLength;
         const isTuplet: boolean = baseNote.sourceNote.NoteTuplet !== undefined;
-        let duration: string = VexFlowConverter.duration(baseNoteLength, isTuplet);
-        if (baseNote.sourceNote.TypeLength !== undefined && baseNote.sourceNote.TypeLength !== baseNoteLength) {
-            duration = VexFlowConverter.duration(baseNote.sourceNote.TypeLength, isTuplet);
+        let duration: string = VexFlowConverter.durations(baseNoteLength, isTuplet)[0];
+        if (baseNote.sourceNote.TypeLength !== undefined &&
+            baseNote.sourceNote.TypeLength !== baseNoteLength &&
+            baseNote.sourceNote.TypeLength.RealValue !== 0) {
+            duration = VexFlowConverter.durations(baseNote.sourceNote.TypeLength, isTuplet)[0];
         }
         let vfClefType: string = undefined;
         let numDots: number = baseNote.numberOfDots;
@@ -648,7 +688,7 @@ export class VexFlowConverter {
         const tabPhrases: { type: number, text: string, width: number }[] = [];
         const frac: Fraction = gve.notes[0].graphicalNoteLength;
         const isTuplet: boolean = gve.notes[0].sourceNote.NoteTuplet !== undefined;
-        let duration: string = VexFlowConverter.duration(frac, isTuplet);
+        let duration: string = VexFlowConverter.durations(frac, isTuplet)[0];
         let numDots: number = 0;
         let tabVibrato: boolean = false;
         for (const note of gve.notes) {

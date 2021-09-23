@@ -43,7 +43,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             // create vex flow Notes:
             for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
                 if (gve.notes[0].sourceNote.isRest()) {
-                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNote(gve.notes[0].sourceNote.Length);
+                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNotes(gve.notes[0].sourceNote.Length)[0];
                 } else {
                     (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.CreateTabNote(gve);
                 }

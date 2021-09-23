@@ -751,7 +751,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     let vexflowDuration: string = "q";
     if (metronomeExpression.beatUnit) {
       const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
-      vexflowDuration = VexFlowConverter.duration(duration, false);
+      vexflowDuration = VexFlowConverter.durations(duration, false)[0];
     }
 
     let yShift: number = this.rules.MetronomeMarkYShift;

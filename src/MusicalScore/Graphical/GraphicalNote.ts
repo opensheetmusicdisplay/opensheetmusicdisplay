@@ -55,16 +55,10 @@ export class GraphicalNote extends GraphicalObject {
      * @returns {number}
      */
     private calculateNumberOfNeededDots(fraction: Fraction): number {
-      let num: number = 1;
-      let product: number = 2;
-      const expandedNumerator: number = fraction.GetExpandedNumerator();
       if (!this.sourceNote || !this.sourceNote.NoteTuplet) {
-        while (product < expandedNumerator) {
-          num++;
-          product = Math.pow(2, num);
-        }
+        return fraction.calculateNumberOfNeededDots();
       }
-      return Math.min(3, num - 1);
+      return 0;
     }
 
     public get ParentMusicPage(): GraphicalMusicPage {
