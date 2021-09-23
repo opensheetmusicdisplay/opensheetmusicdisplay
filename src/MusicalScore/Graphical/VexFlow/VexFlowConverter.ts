@@ -61,6 +61,8 @@ export class VexFlowConverter {
      *   We could return a dotted quarter instead, but then the code would need to distinguish between
      *   notes that can be represented as dotted notes and notes that can't, which would complicate things.
      *   We could e.g. add a parameter "allowSingleDottedNote" which makes it possible to return single dotted notes instead.
+     * But currently, this is only really used for Ghost notes, so it doesn't make a difference visually.
+     *   (for other uses like StaveNotes, we calculate the dots separately)
      * @param fraction a fraction representing the duration of a note
      * @returns {string[]} Vexflow note type strings (e.g. "h" = half note)
      */
