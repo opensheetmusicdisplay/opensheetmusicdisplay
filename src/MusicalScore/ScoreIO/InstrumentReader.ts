@@ -98,6 +98,8 @@ export class InstrumentReader {
   private currentVoiceGenerator: VoiceGenerator;
   //private openSlurDict: { [n: number]: Slur; } = {};
   private maxTieNoteFraction: Fraction;
+  private currentMultirestStartMeasure: SourceMeasure;
+  private followingMultirestMeasures: number;
 
   public get ActiveKey(): KeyInstruction {
     return this.activeKey;
@@ -127,6 +129,7 @@ export class InstrumentReader {
       return false;
     }
     this.currentMeasure = currentMeasure;
+    this.followingMultirestMeasures = Math.max(this.followingMultirestMeasures - 1, 0);
     this.inSourceMeasureInstrumentIndex = this.musicSheet.getGlobalStaffIndexOfFirstStaff(this.instrument);
     if (this.repetitionInstructionReader) {
      this.repetitionInstructionReader.prepareReadingMeasure(currentMeasure, this.currentXmlMeasureIndex);
@@ -487,6 +490,8 @@ export class InstrumentReader {
                   //   issue: currentStaff can be undefined for first measure
                 } else {
                   currentMeasure.multipleRestMeasures = multipleRestNumber;
+                  this.currentMultirestStartMeasure = currentMeasure;
+                  this.followingMultirestMeasures = multipleRestNumber + 1; // will be decremented at the start of the loop
                 }
               } catch (e) {
                 console.log("multirest parse error: " + e);
@@ -1097,8 +1102,12 @@ export class InstrumentReader {
                 firstStaffEntry.Instructions.splice(0, 0, newClefInstruction);
                 this.activeClefsHaveBeenInitialized[key - 1] = true;
               } else {
+                let previousPrintedMeasure: SourceMeasure = this.previousMeasure;
+                if (this.followingMultirestMeasures > 0 && this.currentMeasure.Rules.RenderMultipleRestMeasures) {
+                  previousPrintedMeasure = this.currentMultirestStartMeasure;
+                }
                 const lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
-                this.previousMeasure.LastInstructionsStaffEntries[sseIndex] = lastStaffEntry;
+                previousPrintedMeasure.LastInstructionsStaffEntries[sseIndex] = lastStaffEntry;
                 newClefInstruction.Parent = lastStaffEntry;
                 lastStaffEntry.Instructions.push(newClefInstruction);
               }
