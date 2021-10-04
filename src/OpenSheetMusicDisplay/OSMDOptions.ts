@@ -321,11 +321,11 @@ export interface CursorOptions {
      */
     color: string;
     /**
-     * If true, this cursor will be followed.
+     * alpha value to be used with color (0.0 transparent, 0.5 medium, 1.0 opaque).
      */
     alpha: number;
     /**
-     * alpha value to be used with color (0.0 transparent, 0.5 medium, 1.0 opaque).
+     * If true, this cursor will be followed.
      */
     follow: boolean;
 }
