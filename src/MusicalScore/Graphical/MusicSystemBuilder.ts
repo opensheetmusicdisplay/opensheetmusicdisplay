@@ -525,9 +525,12 @@ export class MusicSystemBuilder {
         if (currentRhythm !== undefined && currentRhythm.PrintObject && this.rules.RenderTimeSignatures) {
             let printRhythm: boolean = true;
             // check for previous pickup measure
-            const pickupMeasureNumber: number = measure.MeasureNumber - 1;
-            if (measure.MeasureNumber - 1 >= 0) {
-                const previousMeasure: SourceMeasure = this.measureList[pickupMeasureNumber][0]?.parentSourceMeasure;
+            // TODO this does not need to be a pickup measure, see #1069
+            const pickupMeasureIndex: number = measure.MeasureNumber - 1;
+            const measureIndex: number = pickupMeasureIndex - this.rules.MinMeasureToDrawIndex;
+            if (measure.MeasureNumber - 1 >= 0 && this.measureList[measureIndex]) {
+                const previousMeasureList: GraphicalMeasure[] = this.measureList[measureIndex];
+                const previousMeasure: SourceMeasure = previousMeasureList[0]?.parentSourceMeasure;
                 if (previousMeasure?.ImplicitMeasure && previousMeasure?.RhythmPrinted) {
                     printRhythm = false;
                 }
