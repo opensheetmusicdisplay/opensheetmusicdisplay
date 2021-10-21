@@ -389,6 +389,8 @@ export class VoiceGenerator {
           const accidentalValue: string = noteElement.value;
           if (accidentalValue === "natural") {
             noteAccidental = AccidentalEnum.NATURAL;
+          } else if (accidentalValue === "slash-flat") {
+            noteAccidental = AccidentalEnum.SLASHFLAT;
           }
         } else if (noteElement.name === "unpitched") {
           const displayStepElement: IXmlElement = noteElement.element("display-step");

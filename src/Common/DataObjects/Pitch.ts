@@ -25,6 +25,7 @@ export enum AccidentalEnum {
     TRIPLEFLAT,
     QUARTERTONESHARP,
     QUARTERTONEFLAT,
+    SLASHFLAT,
     THREEQUARTERSSHARP,
     THREEQUARTERSFLAT,
 }
@@ -223,6 +224,8 @@ export class Pitch {
                 return 0.5;
             case AccidentalEnum.QUARTERTONEFLAT:
                 return -0.5;
+            case AccidentalEnum.SLASHFLAT:
+                return -0.51; // TODO currently necessary for quarter tone flat rendering after slash flat
             case AccidentalEnum.THREEQUARTERSSHARP:
                 return 1.5;
             case AccidentalEnum.THREEQUARTERSFLAT:
@@ -304,6 +307,9 @@ export class Pitch {
                 break;
             case AccidentalEnum.QUARTERTONEFLAT:
                 acc = "d";
+                break;
+            case AccidentalEnum.SLASHFLAT:
+                acc = "bs";
                 break;
             case AccidentalEnum.THREEQUARTERSSHARP:
                 acc = "++";
