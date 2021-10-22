@@ -355,6 +355,9 @@ export class VexFlowConverter {
                             noteMaxHalftone += rules.RestCollisionYPadding * stemDirectionMultiplier; // padding TODO make EngravingRule
                             if (!duration.includes("8")) { // except for 8th rests, rests are middle-aligned in vexflow (?)
                                 noteMaxHalftone += 3 * stemDirectionMultiplier;
+                                if (stemDirectionMultiplier === -1) {
+                                    noteMaxHalftone -= 1; // quarter rests need a little more below upwards stems. over downwards stems it's fine.
+                                }
                             }
 
                             if (!maxHalftone) {
