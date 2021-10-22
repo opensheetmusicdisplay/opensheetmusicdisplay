@@ -370,6 +370,9 @@ export class VexFlowConverter {
                                         linesShift += 1; // quarter rests need a little more below upwards stems. over downwards stems it's fine.
                                     }
                                 }
+                                if (duration.includes("w")) {
+                                    linesShift /= 2; // TODO maybe a different fix, whole notes may need another look
+                                }
                                 linesShift += (Math.ceil(rules.RestCollisionYPadding) * 0.5); // 0.5 is smallest unit
                                 linesShift *= lineShiftDirection;
                                 note.lineShift = linesShift;
