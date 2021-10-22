@@ -242,6 +242,7 @@ export class EngravingRules {
     public DurationScalingDistanceDict: {[_: number]: number } = {};
 
     public AlignRests: number; // 0 = false, 1 = true, 2 = auto
+    public RestCollisionYPadding: number;
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
     public ArpeggiosGoAcrossVoices: boolean;
     public RenderArpeggios: boolean;
@@ -566,6 +567,7 @@ export class EngravingRules {
 
         // Render options (whether to render specific or invisible elements)
         this.AlignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
+        this.RestCollisionYPadding = 0.0; // 1.0 = half distance between staff lines (e.g. E to F). will be rounded to whole numbers.
         this.FillEmptyMeasuresWithWholeRest = FillEmptyMeasuresWithWholeRests.No;
         this.ArpeggiosGoAcrossVoices = false; // safe option, as otherwise arpeggios will always go across all voices in Vexflow, which is often unwanted
         this.RenderArpeggios = true;

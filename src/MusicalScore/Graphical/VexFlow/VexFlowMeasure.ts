@@ -1259,6 +1259,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 this.vfVoices[voice.VoiceId].addTickable(vexFlowVoiceEntry.vfStaveNote);
             }
         }
+        this.setStemDirectionFromVexFlow();
         for (const graceGVoiceEntry of graveGVoiceEntriesAdded) {
             this.createFingerings(graceGVoiceEntry);
             this.createStringNumber(graceGVoiceEntry);
@@ -1266,7 +1267,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
         this.createArticulations();
         this.createOrnaments();
-        this.setStemDirectionFromVexFlow();
     }
 
     private createArpeggio(voiceEntry: GraphicalVoiceEntry): void {

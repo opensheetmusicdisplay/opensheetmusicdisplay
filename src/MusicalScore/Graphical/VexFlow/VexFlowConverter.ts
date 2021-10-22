@@ -150,24 +150,27 @@ export class VexFlowConverter {
      * @returns {string[]}
      */
     public static pitch(pitch: Pitch, isRest: boolean, clef: ClefInstruction,
-                        notehead: Notehead = undefined): [string, string, ClefInstruction] {
+                        notehead: Notehead = undefined, octaveOffsetGiven: number = undefined): [string, string, ClefInstruction] {
         //FIXME: The octave seems to need a shift of three?
         //FIXME: Also rests seem to use different offsets depending on the clef.
-        let fixmeOffset: number = 3;
-        if (isRest) {
-            fixmeOffset = 0;
+        let octaveOffset: number = octaveOffsetGiven;
+        if (octaveOffsetGiven === undefined) {
+            octaveOffset = 3;
+        }
+        if (isRest && octaveOffsetGiven === undefined) {
+            octaveOffset = 0;
             if (clef.ClefType === ClefEnum.F) {
-                fixmeOffset = 2;
+                octaveOffset = 2;
             }
             if (clef.ClefType === ClefEnum.C) {
-                fixmeOffset = 2;
+                octaveOffset = 2;
             }
             // TODO the pitch for rests will be the start position, for eights rests it will be the bottom point
             // maybe we want to center on the display position instead of having the bottom there?
         }
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
-        const octave: number = pitch.Octave - clef.OctaveOffset + fixmeOffset;
+        const octave: number = pitch.Octave - clef.OctaveOffset + octaveOffset;
         let noteheadCode: string = "";
         if (notehead) {
             noteheadCode = this.NoteHeadCode(notehead);
@@ -265,6 +268,7 @@ export class VexFlowConverter {
         let xShift: number = 0;
         let slashNoteHead: boolean = false;
         let isRest: boolean = false;
+        let restYPitch: Pitch;
         for (const note of notes) {
             if (numDots < note.numberOfDots) {
                 numDots = note.numberOfDots;
@@ -303,7 +307,7 @@ export class VexFlowConverter {
                                     const clef: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
                                     const vfpitch: [string, string, ClefInstruction] = VexFlowConverter.pitch(
                                         VexFlowConverter.restToNotePitch(previousNotePitch.getTransposedPitch(-2), clef.ClefType),
-                                        false, clef, undefined);
+                                        false, clef);
                                     keys = [vfpitch[0]];
                                 }
                             }
@@ -327,28 +331,85 @@ export class VexFlowConverter {
                     xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
                     // affects VexFlowStaffEntry.calculateXPosition()
                 }
+                //If we have more than one visible voice entry, shift the rests so no collision occurs
                 if (note.sourceNote.ParentStaff.Voices.length > 1) {
-                    let visibleVoiceEntries: number = 0;
+                    const staffGves: GraphicalVoiceEntry[] = note.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries;
                     //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
-                    for (let idx: number = 0; idx < note.sourceNote.ParentStaffEntry.VoiceEntries.length ; idx++) {
-                        if (note.sourceNote.ParentStaffEntry.VoiceEntries[idx].Notes[0].PrintObject) {
-                            visibleVoiceEntries++;
+                    const restVoiceId: number = note.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
+                    let maxHalftone: number;
+                    let linesShift: number;
+                    for (const staffGve of staffGves) {
+                        for (const gveNote of staffGve.notes) {
+                            if (gveNote === note || gveNote.sourceNote.isRest() || !gveNote.sourceNote.PrintObject) {
+                                continue;
+                            }
+                            // unfortunately, we don't have functional note bounding boxes at this point,
+                            //   so we have to infer the note positions and sizes manually.
+                            const wantedStemDirection: StemDirectionType = gveNote.parentVoiceEntry.parentVoiceEntry.WantedStemDirection;
+                            const lineShiftDirection: number = restVoiceId === 1 ? 1 : -1; // voice 1: put rest above (-y). other voices: below
+                            const gveNotePitch: Pitch = gveNote.sourceNote.Pitch;
+                            const noteHalftone: number = gveNotePitch.getHalfTone();
+                            const newHigh: boolean = lineShiftDirection === 1 && noteHalftone > maxHalftone;
+                            const newLow: boolean = lineShiftDirection === -1 && noteHalftone < maxHalftone;
+                            if (!maxHalftone || newHigh || newLow) {
+                                maxHalftone = noteHalftone;
+                                linesShift = 0;
+                                // add stem length if necessary
+                                if (restVoiceId === 1 && wantedStemDirection === StemDirectionType.Up) {
+                                    linesShift += 7; // rest should be above notes with up stem
+                                } else if (restVoiceId > 1 && wantedStemDirection === StemDirectionType.Down) {
+                                    linesShift += 7; // rest should be below notes with down stem
+                                } else if (restVoiceId === 1) {
+                                    linesShift += 1;
+                                } else {
+                                    linesShift += 2;
+                                }
+                                if (!duration.includes("8")) { // except for 8th rests, rests are middle-aligned in vexflow (?)
+                                    //linesShift += 3;
+                                    if (wantedStemDirection === StemDirectionType.Up && lineShiftDirection === -1) {
+                                        linesShift += 1; // quarter rests need a little more below upwards stems. over downwards stems it's fine.
+                                    }
+                                }
+                                if (gveNote.sourceNote.NoteBeam) {
+                                    linesShift += 1; // TODO this is of course rather a workaround, but the beams aren't completed yet here.
+                                    // instead, we could calculate how many lines are between the notes of the beam,
+                                    //   and which stem of which note is longer, so its rest needs that many lines more.
+                                    //   this is more of "reverse engineering" or rather "advance engineering" the graphical notes,
+                                    //   which are unfortunately not built/drawn yet here.
+                                }
+                                if (duration.includes("w")) {
+                                    linesShift /= 2; // TODO maybe a different fix, whole notes may need another look
+                                }
+                                linesShift += (Math.ceil(rules.RestCollisionYPadding) * 0.5); // 0.5 is smallest unit
+                                linesShift *= lineShiftDirection;
+                                note.lineShift = linesShift;
+                            }
                         }
                     }
-                    //If we have more than one visible voice entry, shift the rests so no collision occurs
-                    if (visibleVoiceEntries > 1) {
-                        switch (note.sourceNote.ParentVoiceEntry?.ParentVoice?.VoiceId) {
-                            case 1:
-                                keys = ["e/5"];
+                    if (maxHalftone > 0) {
+                        let octaveOffset: number = 3;
+                        const restClefInstruction: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
+                        switch (restClefInstruction.ClefType) {
+                            case ClefEnum.F:
+                                octaveOffset = 5;
                                 break;
-                            case 2:
-                                keys = ["f/4"];
+                            case ClefEnum.C:
+                                octaveOffset = 4;
+                                // if (restClefInstruction.Line == 4) // tenor clef quarter rests can be off
                                 break;
                             default:
                                 break;
                         }
+                        restYPitch = Pitch.fromHalftone(maxHalftone);
+                        keys = [VexFlowConverter.pitch(restYPitch, true, restClefInstruction, undefined, octaveOffset)[0]];
                     }
                 }
+                // vfClefType seems to be undefined for rest notes, but setting it seems to break rest positioning.
+                // if (!vfClefType) {
+                //     const clef = (note as VexFlowGraphicalNote).Clef();
+                //     const vexClef: any = VexFlowConverter.Clef(clef);
+                //     vfClefType = vexClef.type;
+                // }
                 break;
             }
 
@@ -381,7 +442,6 @@ export class VexFlowConverter {
         }
 
         let vfnote: Vex.Flow.StaveNote;
-
         const vfnoteStruct: any = {
             align_center: alignCenter,
             auto_stem: true,
@@ -401,6 +461,10 @@ export class VexFlowConverter {
             vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
         } else {
             vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
+        }
+        const lineShift: number = gve.notes[0].lineShift;
+        if (lineShift !== 0) {
+            vfnote.getKeyProps()[0].line += lineShift;
         }
 
         // Annotate GraphicalNote with which line of the staff it appears on
