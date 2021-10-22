@@ -338,7 +338,7 @@ export class VexFlowConverter {
                     let maxHalftone: number;
                     for (const staffGve of staffGves) {
                         for (const gveNote of staffGve.notes) {
-                            if (note === gveNote || !note.sourceNote.PrintObject) {
+                            if (note === gveNote || note.sourceNote.isRest() || !note.sourceNote.PrintObject) {
                                 continue;
                             }
                             // unfortunately, we don't have functional note bounding boxes at this point,
