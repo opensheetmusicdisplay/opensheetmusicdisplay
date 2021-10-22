@@ -150,24 +150,23 @@ export class VexFlowConverter {
      * @returns {string[]}
      */
     public static pitch(pitch: Pitch, isRest: boolean, clef: ClefInstruction,
-                        notehead: Notehead = undefined): [string, string, ClefInstruction] {
+                        notehead: Notehead = undefined, octaveOffset: number = undefined): [string, string, ClefInstruction] {
         //FIXME: The octave seems to need a shift of three?
         //FIXME: Also rests seem to use different offsets depending on the clef.
-        let fixmeOffset: number = 3;
-        if (isRest) {
-            fixmeOffset = 0;
+        if (isRest && octaveOffset === undefined) {
+            octaveOffset = 0;
             if (clef.ClefType === ClefEnum.F) {
-                fixmeOffset = 2;
+                octaveOffset = 2;
             }
             if (clef.ClefType === ClefEnum.C) {
-                fixmeOffset = 2;
+                octaveOffset = 2;
             }
             // TODO the pitch for rests will be the start position, for eights rests it will be the bottom point
             // maybe we want to center on the display position instead of having the bottom there?
         }
         const fund: string = NoteEnum[pitch.FundamentalNote].toLowerCase();
         const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
-        const octave: number = pitch.Octave - clef.OctaveOffset + fixmeOffset;
+        const octave: number = pitch.Octave - clef.OctaveOffset + octaveOffset;
         let noteheadCode: string = "";
         if (notehead) {
             noteheadCode = this.NoteHeadCode(notehead);
@@ -303,7 +302,7 @@ export class VexFlowConverter {
                                     const clef: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
                                     const vfpitch: [string, string, ClefInstruction] = VexFlowConverter.pitch(
                                         VexFlowConverter.restToNotePitch(previousNotePitch.getTransposedPitch(-2), clef.ClefType),
-                                        false, clef, undefined);
+                                        false, clef);
                                     keys = [vfpitch[0]];
                                 }
                             }
@@ -327,26 +326,58 @@ export class VexFlowConverter {
                     xShift = rules.WholeRestXShiftVexflow * unitInPixels; // TODO find way to make dependent on the modifiers
                     // affects VexFlowStaffEntry.calculateXPosition()
                 }
+                //If we have more than one visible voice entry, shift the rests so no collision occurs
                 if (note.sourceNote.ParentStaff.Voices.length > 1) {
-                    let visibleVoiceEntries: number = 0;
+                    const staffGves: GraphicalVoiceEntry[] = note.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries;
                     //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
-                    for (let idx: number = 0; idx < note.sourceNote.ParentStaffEntry.VoiceEntries.length ; idx++) {
-                        if (note.sourceNote.ParentStaffEntry.VoiceEntries[idx].Notes[0].PrintObject) {
-                            visibleVoiceEntries++;
+                    const restVoiceId: number = note.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
+                    let maxHalftone: number;
+                    for (const staffGve of staffGves) {
+                        for (const gveNote of staffGve.notes) {
+                            if (note === gveNote || !note.sourceNote.PrintObject) {
+                                continue;
+                            }
+                            // unfortunately, we don't have functional note bounding boxes at this point,
+                            //   so we have to infer the note positions and sizes manually.
+                            const wantedStemDirection: StemDirectionType = gveNote.parentVoiceEntry.parentVoiceEntry.WantedStemDirection;
+                            const stemDirectionMultiplier: number = wantedStemDirection === StemDirectionType.Up ? -1 : 1;
+                            const gveNotePitch: Pitch = gveNote.sourceNote.Pitch;
+                            let noteMaxHalftone: number = gveNotePitch.getHalfTone();
+                            if (restVoiceId === 1 && stemDirectionMultiplier === -1) {
+                                noteMaxHalftone -= 4; // rest should be above notes with up stem
+                            } else if (restVoiceId > 1 && stemDirectionMultiplier === 1) {
+                                noteMaxHalftone += 4; // rest should be below notes with down stem
+                            }
+                            noteMaxHalftone += rules.RestCollisionYPadding * stemDirectionMultiplier; // padding TODO make EngravingRule
+                            if (!duration.includes("8")) { // except for 8th rests, rests are middle-aligned in vexflow (?)
+                                noteMaxHalftone += 3 * stemDirectionMultiplier;
+                            }
+
+                            if (!maxHalftone) {
+                                maxHalftone = noteMaxHalftone;
+                            } else if (stemDirectionMultiplier === -1) { // upwards
+                                maxHalftone = Math.max(maxHalftone, noteMaxHalftone);
+                            } else { // downwards
+                                maxHalftone = Math.min(maxHalftone, noteMaxHalftone); // lower halftone = downwards
+                            }
                         }
                     }
-                    //If we have more than one visible voice entry, shift the rests so no collision occurs
-                    if (visibleVoiceEntries > 1) {
-                        switch (note.sourceNote.ParentVoiceEntry?.ParentVoice?.VoiceId) {
-                            case 1:
-                                keys = ["e/5"];
+                    if (maxHalftone > 0) {
+                        let octaveOffset: number = 3;
+                        const restClefInstruction: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
+                        switch (restClefInstruction.ClefType) {
+                            case ClefEnum.F:
+                                octaveOffset = 5;
                                 break;
-                            case 2:
-                                keys = ["f/4"];
+                            case ClefEnum.C:
+                                octaveOffset = 4;
+                                // if (restClefInstruction.Line == 4) // tenor clef quarter rests can be off
                                 break;
                             default:
                                 break;
                         }
+                        const maxYPitch: Pitch = Pitch.fromHalftone(maxHalftone);
+                        keys = [VexFlowConverter.pitch(maxYPitch, true, restClefInstruction, undefined, octaveOffset)[0]];
                     }
                 }
                 break;
