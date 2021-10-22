@@ -359,10 +359,10 @@ export class VexFlowConverter {
 
                             if (!maxHalftone) {
                                 maxHalftone = noteMaxHalftone;
-                            } else if (stemDirectionMultiplier === -1) { // upwards
-                                maxHalftone = Math.max(maxHalftone, noteMaxHalftone);
+                            } else if (stemDirectionMultiplier === -1) { // upwards stems -> lowest note
+                                maxHalftone = Math.min(maxHalftone, noteMaxHalftone);
                             } else { // downwards
-                                maxHalftone = Math.min(maxHalftone, noteMaxHalftone); // lower halftone = downwards
+                                maxHalftone = Math.max(maxHalftone, noteMaxHalftone); // lower halftone = downwards
                             }
                         }
                     }
