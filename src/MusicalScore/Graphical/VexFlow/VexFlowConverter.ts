@@ -343,9 +343,6 @@ export class VexFlowConverter {
                             if (gveNote === note || gveNote.sourceNote.isRest() || !gveNote.sourceNote.PrintObject) {
                                 continue;
                             }
-                            if (gveNote.sourceNote.Pitch.FundamentalNote === 0) {
-                                console.log("here");
-                            }
                             // unfortunately, we don't have functional note bounding boxes at this point,
                             //   so we have to infer the note positions and sizes manually.
                             const wantedStemDirection: StemDirectionType = gveNote.parentVoiceEntry.parentVoiceEntry.WantedStemDirection;
