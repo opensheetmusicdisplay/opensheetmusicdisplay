@@ -1150,18 +1150,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     continue;
                 }
-                if (gve.notes[0].sourceNote.PrintObject) {
-                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
-                } else {
+                (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
+                //if (!gve.notes[0].sourceNote.PrintObject) {
                     // note can now also be added as StaveNote instead of GhostNote, because we set it to transparent
-                    (gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.StaveNote(gve);
 
                     // previous method: add as GhostNote instead of StaveNote. Can cause formatting issues if critical notes are missing in the measure
                     // don't render note. add ghost note, otherwise Vexflow can have issues with layouting when voices not complete.
                     //(gve as VexFlowVoiceEntry).vfStaveNote = VexFlowConverter.GhostNote(gve.notes[0].sourceNote.Length);
                     //graceGVoiceEntriesBefore = []; // if note is not rendered, its grace notes shouldn't be rendered, might need to be removed
                     //continue;
-                }
+                //}
                 if (graceGVoiceEntriesBefore.length > 0) {
                     // add grace notes that came before this main note to a GraceNoteGroup in Vexflow, attached to the main note
                     const graceNotes: Vex.Flow.GraceNote[] = [];
