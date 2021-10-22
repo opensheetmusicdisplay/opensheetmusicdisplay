@@ -2,10 +2,9 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>Title</work-title>
+    <work-title>test_rest_positioning_16th</work-title>
     </work>
   <identification>
-    <creator type="composer">Composer</creator>
     <encoding>
       <software>MuseScore 3.6.2</software>
       <encoding-date>2021-10-22</encoding-date>
