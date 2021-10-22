@@ -150,10 +150,14 @@ export class VexFlowConverter {
      * @returns {string[]}
      */
     public static pitch(pitch: Pitch, isRest: boolean, clef: ClefInstruction,
-                        notehead: Notehead = undefined, octaveOffset: number = undefined): [string, string, ClefInstruction] {
+                        notehead: Notehead = undefined, octaveOffsetGiven: number = undefined): [string, string, ClefInstruction] {
         //FIXME: The octave seems to need a shift of three?
         //FIXME: Also rests seem to use different offsets depending on the clef.
-        if (isRest && octaveOffset === undefined) {
+        let octaveOffset: number = octaveOffsetGiven;
+        if (octaveOffsetGiven === undefined) {
+            octaveOffset = 3;
+        }
+        if (isRest && octaveOffsetGiven === undefined) {
             octaveOffset = 0;
             if (clef.ClefType === ClefEnum.F) {
                 octaveOffset = 2;
