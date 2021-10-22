@@ -370,15 +370,15 @@ export class VexFlowConverter {
                                         linesShift += 1; // quarter rests need a little more below upwards stems. over downwards stems it's fine.
                                     }
                                 }
-                                if (duration.includes("w")) {
-                                    linesShift /= 2; // TODO maybe a different fix, whole notes may need another look
-                                }
                                 if (gveNote.sourceNote.NoteBeam) {
                                     linesShift += 1; // TODO this is of course rather a workaround, but the beams aren't completed yet here.
                                     // instead, we could calculate how many lines are between the notes of the beam,
                                     //   and which stem of which note is longer, so its rest needs that many lines more.
                                     //   this is more of "reverse engineering" or rather "advance engineering" the graphical notes,
                                     //   which are unfortunately not built/drawn yet here.
+                                }
+                                if (duration.includes("w")) {
+                                    linesShift /= 2; // TODO maybe a different fix, whole notes may need another look
                                 }
                                 linesShift += (Math.ceil(rules.RestCollisionYPadding) * 0.5); // 0.5 is smallest unit
                                 linesShift *= lineShiftDirection;
