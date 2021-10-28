@@ -346,7 +346,8 @@ export class VexFlowConverter {
                             // unfortunately, we don't have functional note bounding boxes at this point,
                             //   so we have to infer the note positions and sizes manually.
                             const wantedStemDirection: StemDirectionType = gveNote.parentVoiceEntry.parentVoiceEntry.WantedStemDirection;
-                            const lineShiftDirection: number = restVoiceId === 1 ? 1 : -1; // voice 1: put rest above (-y). other voices: below
+                            const isUpperVoiceRest: boolean = restVoiceId === 1 || restVoiceId === 5;
+                            const lineShiftDirection: number = isUpperVoiceRest ? 1 : -1; // voice 1: put rest above (-y). other voices: below
                             const gveNotePitch: Pitch = gveNote.sourceNote.Pitch;
                             const noteHalftone: number = gveNotePitch.getHalfTone();
                             const newHigh: boolean = lineShiftDirection === 1 && noteHalftone > maxHalftone;
@@ -355,11 +356,11 @@ export class VexFlowConverter {
                                 maxHalftone = noteHalftone;
                                 linesShift = 0;
                                 // add stem length if necessary
-                                if (restVoiceId === 1 && wantedStemDirection === StemDirectionType.Up) {
+                                if (isUpperVoiceRest && wantedStemDirection === StemDirectionType.Up) {
                                     linesShift += 7; // rest should be above notes with up stem
-                                } else if (restVoiceId > 1 && wantedStemDirection === StemDirectionType.Down) {
+                                } else if (!isUpperVoiceRest && wantedStemDirection === StemDirectionType.Down) {
                                     linesShift += 7; // rest should be below notes with down stem
-                                } else if (restVoiceId === 1) {
+                                } else if (isUpperVoiceRest) {
                                     linesShift += 1;
                                 } else {
                                     linesShift += 2;
