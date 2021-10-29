@@ -45,6 +45,7 @@ export class Pitch {
     private octave: number;
     private fundamentalNote: NoteEnum;
     private accidental: AccidentalEnum = AccidentalEnum.NONE;
+    private accidentalXml: string;
     private frequency: number;
     private halfTone: number;
 
@@ -187,10 +188,11 @@ export class Pitch {
         return fundamentalNote;
     }
 
-    constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum) {
+    constructor(fundamentalNote: NoteEnum, octave: number, accidental: AccidentalEnum, accidentalXml: string = undefined) {
         this.fundamentalNote = fundamentalNote;
         this.octave = octave;
         this.accidental = accidental;
+        this.accidentalXml = accidentalXml;
         this.halfTone = <number>(fundamentalNote) + (octave + Pitch.octXmlDiff) * 12 +
             Pitch.HalfTonesFromAccidental(accidental);
         this.frequency = Pitch.calcFrequency(this);
@@ -336,6 +338,10 @@ export class Pitch {
 
     public get Accidental(): AccidentalEnum {
         return this.accidental;
+    }
+
+    public get AccidentalXml(): string {
+        return this.accidentalXml;
     }
 
     public get Frequency(): number {

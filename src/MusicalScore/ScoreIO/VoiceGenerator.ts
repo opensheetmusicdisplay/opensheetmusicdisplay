@@ -330,6 +330,7 @@ export class VoiceGenerator {
                         stemColorXml: string, noteheadColorXml: string, vibratoStrokes: boolean): Note {
     //log.debug("addSingleNote called");
     let noteAlter: number = 0;
+    let accidentalValue: string;
     let noteAccidental: AccidentalEnum = AccidentalEnum.NONE;
     let noteStep: NoteEnum = NoteEnum.C;
     let displayStepUnpitched: NoteEnum = NoteEnum.C;
@@ -386,7 +387,7 @@ export class VoiceGenerator {
 
           }
         } else if (noteElement.name === "accidental") {
-          const accidentalValue: string = noteElement.value;
+          accidentalValue = noteElement.value;
           if (accidentalValue === "natural") {
             noteAccidental = AccidentalEnum.NATURAL;
           } else if (accidentalValue === "slash-flat") {
@@ -431,7 +432,7 @@ export class VoiceGenerator {
     }
 
     noteOctave -= Pitch.OctaveXmlDifference;
-    const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental);
+    const pitch: Pitch = new Pitch(noteStep, noteOctave, noteAccidental, accidentalValue);
     const noteLength: Fraction = Fraction.createFromFraction(noteDuration);
     let note: Note = undefined;
     let stringNumber: number = -1;
