@@ -24,7 +24,6 @@ import { Notehead, NoteHeadShape } from "../../VoiceData/Notehead";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { EngravingRules } from "../EngravingRules";
 import { Note } from "../../../MusicalScore/VoiceData/Note";
-import StaveNote = Vex.Flow.StaveNote;
 import { ArpeggioType } from "../../VoiceData/Arpeggio";
 import { TabNote } from "../../VoiceData/TabNote";
 import { PlacementEnum } from "../../VoiceData/Expressions/AbstractExpression";
@@ -220,8 +219,8 @@ export class VexFlowConverter {
         }
     }
 
-    public static GhostNotes(frac: Fraction): Vex.Flow.GhostNote[] {
-        const ghostNotes: Vex.Flow.GhostNote[] = [];
+    public static GhostNotes(frac: Fraction): typeof Vex.Flow.GhostNote[] {
+        const ghostNotes: any[] = [];
         const durations: string[] = VexFlowConverter.durations(frac, false);
         for (const duration of durations) {
             ghostNotes.push(new Vex.Flow.GhostNote({
@@ -237,7 +236,7 @@ export class VexFlowConverter {
      * @param gve the GraphicalVoiceEntry which can hold a note or a chord on the staff belonging to one voice
      * @returns {Vex.Flow.StaveNote}
      */
-    public static StaveNote(gve: GraphicalVoiceEntry): Vex.Flow.StaveNote {
+    public static StaveNote(gve: GraphicalVoiceEntry): typeof Vex.Flow.StaveNote {
         // if (gve.octaveShiftValue !== OctaveEnum.NONE) { // gves with accidentals in octave shift brackets can be unsorted
         gve.sortForVexflow(); // also necessary for some other cases, see test_sorted_notes... sample
         //   sort and reverse replace the array anyways, so we might as well directly sort them reversely for now.
@@ -442,7 +441,7 @@ export class VexFlowConverter {
             duration += "r";
         }
 
-        let vfnote: Vex.Flow.StaveNote;
+        let vfnote: any;
         const vfnoteStruct: any = {
             align_center: alignCenter,
             auto_stem: true,
@@ -454,7 +453,7 @@ export class VexFlowConverter {
 
         const firstNote: Note = gve.notes[0].sourceNote;
         if (firstNote.IsCueNote) {
-            vfnoteStruct.glyph_font_scale = Vex.Flow.DEFAULT_NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
+            vfnoteStruct.glyph_font_scale = Vex.Flow.NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
             vfnoteStruct.stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
         }
 
@@ -543,7 +542,7 @@ export class VexFlowConverter {
             // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
             const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
             if (tremoloStrokes > 0) {
-                const tremolo: Vex.Flow.Tremolo = new Vex.Flow.Tremolo(tremoloStrokes);
+                const tremolo: any = new Vex.Flow.Tremolo(tremoloStrokes);
                 (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
                 (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
                 vfnote.addModifier(i, tremolo);
@@ -564,7 +563,7 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: Vex.Flow.StemmableNote, articulations: Articulation[],
+    public static generateArticulations(vfnote: any, articulations: Articulation[],
                                         rules: EngravingRules): void {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
@@ -576,7 +575,7 @@ export class VexFlowConverter {
             if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
                 vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
             }
-            let vfArt: Vex.Flow.Articulation = undefined;
+            let vfArt: any = undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;
             if (rules.ArticulationPlacementFromXML) {
                 if (articulation.placement === PlacementEnum.Above) {
@@ -656,18 +655,18 @@ export class VexFlowConverter {
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
-                (vfnote as StaveNote).addModifier(0, vfArt);
+                (vfnote).addModifier(0, vfArt);
             }
         }
     }
 
-    public static generateOrnaments(vfnote: Vex.Flow.StemmableNote, oContainer: OrnamentContainer): void {
+    public static generateOrnaments(vfnote: any, oContainer: OrnamentContainer): void {
         let vfPosition: number = Vex.Flow.Modifier.Position.ABOVE;
         if (oContainer.placement === PlacementEnum.Below) {
             vfPosition = Vex.Flow.Modifier.Position.BELOW;
         }
 
-        let vfOrna: Vex.Flow.Ornament = undefined;
+        let vfOrna: any = undefined;
         switch (oContainer.GetOrnament) {
             case OrnamentEnum.DelayedInvertedTurn: {
                 vfOrna = new Vex.Flow.Ornament("turn_inverted");
@@ -717,11 +716,11 @@ export class VexFlowConverter {
                 vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
             vfOrna.setPosition(vfPosition); // Vexflow draws it above right now in any case, never below
-            (vfnote as StaveNote).addModifier(0, vfOrna);
+            (vfnote).addModifier(0, vfOrna);
         }
     }
 
-    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): Vex.Flow.Stroke.Type {
+    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): any {
         switch (arpeggioType) {
             case ArpeggioType.ARPEGGIO_DIRECTIONLESS:
                 return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
@@ -747,7 +746,7 @@ export class VexFlowConverter {
      * @param notes form a chord on the staff
      * @returns {Vex.Flow.StaveNote}
      */
-    public static CreateTabNote(gve: GraphicalVoiceEntry): Vex.Flow.TabNote {
+    public static CreateTabNote(gve: GraphicalVoiceEntry): typeof Vex.Flow.TabNote {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
         const tabPhrases: { type: number, text: string, width: number }[] = [];
@@ -791,7 +790,7 @@ export class VexFlowConverter {
             duration += "d";
         }
 
-        const vfnote: Vex.Flow.TabNote = new Vex.Flow.TabNote({
+        const vfnote: any = new Vex.Flow.TabNote({
             duration: duration,
             positions: tabPositions,
         });
@@ -924,7 +923,7 @@ export class VexFlowConverter {
      * @returns {Vex.Flow.TimeSignature}
      * @constructor
      */
-    public static TimeSignature(rhythm: RhythmInstruction): Vex.Flow.TimeSignature {
+    public static TimeSignature(rhythm: RhythmInstruction): any {
         let timeSpec: string;
         switch (rhythm.SymbolEnum) {
             case RhythmSymbolEnum.NONE:

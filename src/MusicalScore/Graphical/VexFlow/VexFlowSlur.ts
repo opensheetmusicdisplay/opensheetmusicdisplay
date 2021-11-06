@@ -36,10 +36,10 @@ export class VexFlowSlur {
 
     private parentSlur: Slur;
 
-    public vfStartNote: Vex.Flow.StemmableNote = undefined;
-    public vfEndNote: Vex.Flow.StemmableNote = undefined;
+    public vfStartNote: any = undefined;
+    public vfEndNote: any = undefined;
 
-    public vfCurve: Vex.Flow.Curve;
+    public vfCurve: any;
 
     public curve_Options(): ICurveOptions {
         return {

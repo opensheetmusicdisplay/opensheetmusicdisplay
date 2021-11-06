@@ -36,16 +36,14 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
         this.resetLayout();
 
-        this.multiRestElement = new Vex.Flow.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
-            // number_line: 3
-        });
+        this.multiRestElement = new Vex.Flow.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {number_of_measures:1});
     }
 
     /**
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.IRenderContext): void {
+    public draw(ctx: any): void {
         // Draw stave lines
         this.stave.setContext(ctx).draw();
 
@@ -149,7 +147,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
      * Return the VexFlow Stave corresponding to this graphicalMeasure
      * @returns {Vex.Flow.Stave}
      */
-    public getVFStave(): Vex.Flow.Stave {
+    public getVFStave(): typeof Vex.Flow.Stave {
         return this.stave;
     }
 }

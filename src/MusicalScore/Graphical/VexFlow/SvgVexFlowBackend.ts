@@ -12,7 +12,7 @@ import log from "loglevel";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
-    private ctx: Vex.Flow.SVGContext;
+    private ctx: any;
     private zoom: number;
 
     constructor(rules: EngravingRules) {
@@ -20,7 +20,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.rules = rules;
     }
 
-    public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
+    public getVexflowBackendType(): number {
         return Vex.Flow.Renderer.Backends.SVG;
     }
 
@@ -42,11 +42,11 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.canvas.style.zIndex = "0";
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
-        this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
+        this.ctx = this.renderer.getContext();
         this.ctx.svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
     }
 
-    public getContext(): Vex.Flow.SVGContext {
+    public getContext(): typeof Vex.Flow.RenderContext {
         return this.ctx;
     }
 
