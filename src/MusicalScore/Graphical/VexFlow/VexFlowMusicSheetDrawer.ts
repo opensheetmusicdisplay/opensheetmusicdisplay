@@ -352,8 +352,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalOctaveShift of staffLine.OctaveShifts) {
             if (graphicalOctaveShift) {
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const textBracket: Vex.Flow.TextBracket = vexFlowOctaveShift.getTextBracket();
+                const ctx: any = this.backend.getContext();
+                const textBracket: any = vexFlowOctaveShift.getTextBracket();
                 textBracket.setContext(ctx);
                 try {
                     textBracket.draw();

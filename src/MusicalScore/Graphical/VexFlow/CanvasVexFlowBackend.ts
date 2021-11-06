@@ -18,7 +18,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.rules = rules;
     }
 
-    public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
+    public getVexflowBackendType(): number {
         return Vex.Flow.Renderer.Backends.CANVAS;
     }
 
@@ -48,7 +48,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.inner.appendChild(this.canvas);
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
-        this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
+        this.ctx = this.renderer.getContext();
     }
 
     /**
@@ -66,10 +66,10 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         (this.canvas as any).width = width;
         (this.canvas as any).height = height;
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
-        this.ctx = <Vex.Flow.CanvasContext>this.renderer.getContext();
+        this.ctx = this.renderer.getContext();
     }
 
-    public getContext(): Vex.Flow.CanvasContext {
+    public getContext(): typeof Vex.Flow.RenderContext {
         return this.ctx;
     }
 
@@ -164,7 +164,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.ctx.fill();
     }
 
-    private ctx: Vex.Flow.CanvasContext;
+    private ctx: any;
 
     public get CanvasRenderingCtx(): CanvasRenderingContext2D {
         // This clusterfuck is only there to counter act my favorite vexflow line:

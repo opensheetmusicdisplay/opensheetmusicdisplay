@@ -12,11 +12,11 @@ import log from "loglevel";
 export class VexFlowOctaveShift extends GraphicalOctaveShift {
 
     /** Defines the note where the octave shift starts */
-    public startNote: Vex.Flow.StemmableNote;
+    public startNote: any;
     /** Defines the note where the octave shift ends */
-    public endNote: Vex.Flow.StemmableNote;
+    public endNote: any;
     /** Top or bottom of the staffline */
-    private position: Vex.Flow.TextBracket.Positions;
+    private position: any;
     /** Supscript is a smaller text after the regular text (e.g. va after 8) */
     private supscript: string;
     /** Main text element */
@@ -90,7 +90,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     /**
      * Get the actual vexflow text bracket used for drawing
      */
-    public getTextBracket(): Vex.Flow.TextBracket {
+    public getTextBracket(): any {
         return new Vex.Flow.TextBracket({
             position: this.position,
             start: this.startNote,
