@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import { RenderContext, TextBracket, Vex } from "vexflow";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -37,7 +37,7 @@ import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
-    private backend: VexFlowBackend;
+    private backend!: VexFlowBackend;
     private backends: VexFlowBackend[] = [];
     private zoom: number = 1.0;
     private pageIdx: number = 0; // this is a bad solution, should use MusicPage.PageNumber instead.
@@ -53,15 +53,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // vexflow 3.x: change default font
         if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+            Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
         } // else keep new vexflow default Bravura (more cursive, bold).
 
         // sizing defaults in Vexflow
-        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
-        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        Vex.Flow.STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        Vex.Flow.STEM_WIDTH = this.rules.StemWidth * unitInPixels;
         // sets scale/size of notes/rest notes:
-        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
-        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+        Vex.Flow.NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        Vex.Flow.TABLATURE_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
 
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
@@ -198,14 +198,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     /** Draws a line in the current backend. Only usable while pages are drawn sequentially, because backend reference is updated in that process.
      *  To add your own lines after rendering, use DrawOverlayLine.
      */
-    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): Node {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): void {
         // TODO maybe the backend should be given as an argument here as well, otherwise this can't be used after rendering of multiple pages is done.
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
         /*if (!this.backend) {
             this.backend = this.backends[0];
         }*/
-        return this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
+        this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
     }
 
     /** Lets a user/developer draw an overlay line on the score. Use this instead of drawLine, which is for OSMD internally only.
@@ -214,7 +214,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      *  To get a MusicPage, use GraphicalNote.ParentMusicPage.
      */
     public DrawOverlayLine(start: PointF2D, stop: PointF2D, musicPage: GraphicalMusicPage,
-                           color: string = "#FF0000FF", lineWidth: number = 0.2): Node {
+                           color: string = "#FF0000FF", lineWidth: number = 0.2): void {
         if (!musicPage.PageNumber || musicPage.PageNumber > this.backends.length || musicPage.PageNumber < 1) {
             console.log("VexFlowMusicSheetDrawer.drawOverlayLine: invalid page number / music page number doesn't correspond to an existing backend.");
             return;
@@ -224,7 +224,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
-        return backendToUse.renderLine(start, stop, color, lineWidth * unitInPixels);
+        backendToUse.renderLine(start, stop, color, lineWidth * unitInPixels);
     }
 
     protected drawSkyLine(staffline: StaffLine): void {
@@ -352,8 +352,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalOctaveShift of staffLine.OctaveShifts) {
             if (graphicalOctaveShift) {
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
-                const ctx: any = this.backend.getContext();
-                const textBracket: any = vexFlowOctaveShift.getTextBracket();
+                const ctx: RenderContext = this.backend.getContext();
+                const textBracket: TextBracket = vexFlowOctaveShift.getTextBracket();
                 textBracket.setContext(ctx);
                 try {
                     textBracket.draw();
@@ -424,18 +424,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param screenPosition the position of the lower left corner of the text in screen coordinates
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): Node {
+                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): void {
         if (!graphicalLabel.Label.print) {
-            return undefined;
+            return;
         }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { font } = graphicalLabel.Label;
-        let color: string;
+        let color: string = this.rules.DefaultColorLabel;
         if (this.rules.ColoringEnabled) {
             color = graphicalLabel.Label.colorDefault;
-            if (!color) {
-                color = this.rules.DefaultColorLabel;
-            }
         }
         let { fontStyle, fontFamily } = graphicalLabel.Label;
         if (!fontStyle) {
@@ -445,25 +442,25 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             fontFamily = this.rules.DefaultFontFamily;
         }
 
-        let node: Node;
+        // rvilarl let node: Node;
         for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
             const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
             const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
             const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
-            const newNode: Node =
+            // rvilarl const newNode: Node =
                 this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
-            if (!node) {
-                node = newNode;
-            } else {
-                node.appendChild(newNode);
-            }
+            // rvilarl if (!node) {
+            // rvilarl    node = newNode;
+            // rvilarl } else {
+            // rvilarl    node.appendChild(newNode);
+            // rvilarl }
             screenPosition.y = screenPosition.y + fontHeightInPixel;
             if (graphicalLabel.TextLines.length > 1) {
                 screenPosition.y += this.rules.SpacingBetweenTextLines;
             }
         }
         // font currently unused, replaced by fontFamily
-        return node; // alternatively, return Node[] and refactor annotationElementMap to handle node array instead of single node
+        // rvilarl return node; // alternatively, return Node[] and refactor annotationElementMap to handle node array instead of single node
     }
 
     /**
@@ -474,8 +471,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param styleId the style id
      * @param alpha alpha value between 0 and 1
      */
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): Node {
-        return this.backend.renderRectangle(rectangle, styleId, colorHex, alpha);
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): void {
+        this.backend.renderRectangle(rectangle, styleId, colorHex, alpha);
     }
 
     /**

@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import { MultiMeasureRest, RenderContext, Stave, Vex } from "vexflow";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
@@ -17,9 +17,9 @@ import {VexFlowMeasure} from "./VexFlowMeasure";
  *  Even though most of those functions aren't needed, apparently you can't remove the layoutStaffEntry function.
  */
 export class VexFlowMultiRestMeasure extends VexFlowMeasure {
-    private multiRestElement: any; // VexFlow: Element
+    private multiRestElement: MultiMeasureRest; // VexFlow: Element
 
-    constructor(staff: Staff, sourceMeasure: SourceMeasure = undefined, staffLine: StaffLine = undefined) {
+    constructor(staff: Staff, sourceMeasure?: SourceMeasure, staffLine?: StaffLine) {
         super(staff, sourceMeasure, staffLine);
         this.minimumStaffEntriesWidth = -1;
 
@@ -36,14 +36,14 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
         this.resetLayout();
 
-        this.multiRestElement = new Vex.Flow.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {number_of_measures:1});
+        this.multiRestElement = new Vex.Flow.MultiMeasureRest(sourceMeasure?.multipleRestMeasures || 0, {number_of_measures:1});
     }
 
     /**
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: any): void {
+    public draw(ctx: RenderContext): void {
         // Draw stave lines
         this.stave.setContext(ctx).draw();
 
@@ -147,7 +147,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
      * Return the VexFlow Stave corresponding to this graphicalMeasure
      * @returns {Vex.Flow.Stave}
      */
-    public getVFStave(): typeof Vex.Flow.Stave {
+    public getVFStave(): Stave {
         return this.stave;
     }
 }

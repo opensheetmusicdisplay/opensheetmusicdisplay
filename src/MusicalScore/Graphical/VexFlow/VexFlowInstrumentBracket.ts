@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import { Stave, StaveConnector, RenderContext, Vex } from "vexflow";
 import { GraphicalObject } from "../GraphicalObject";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { BoundingBox } from "../BoundingBox";
@@ -10,7 +10,7 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
  */
 export class VexFlowInstrumentBracket extends GraphicalObject {
 
-    protected vexflowConnector: any;
+    protected vexflowConnector: StaveConnector;
 
     constructor(firstVexFlowStaffLine: VexFlowStaffLine, lastVexFlowStaffLine: VexFlowStaffLine, depth: number = 0) {
         super();
@@ -24,16 +24,19 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
      * Render the bracket using the given backend
      * @param ctx Render Vexflow context
      */
-    public draw(ctx: any): void {
+    public draw(ctx: RenderContext): void {
         // Draw vexflow brace. This sets the positions inside the connector.
         this.vexflowConnector.setContext(ctx).draw();
         // Set bounding box
-        const con: any = this.vexflowConnector;
+        const con: StaveConnector = this.vexflowConnector;
         // First line in first stave
+        // @ts-ignore
         const topY: number = con.top_stave.getYForLine(0);
         // Last line in last stave
+        // @ts-ignore
         const botY: number = con.bottom_stave.getYForLine(con.bottom_stave.getNumLines() - 1) + con.thickness;
         // Set bounding box position and size in OSMD units
+        // @ts-ignore
         this.PositionAndShape.AbsolutePosition.x = (con.top_stave.getX() - 2 + con.x_shift) / unitInPixels;
         this.PositionAndShape.AbsolutePosition.y = topY / unitInPixels;
         this.PositionAndShape.Size.height = (botY - topY) / unitInPixels;
@@ -46,7 +49,7 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
      * @param {Stave} stave2: Second stave
      * @param {Flow.StaveConnector.type} type: Type of connector
      */
-    private addConnector(stave1: any, stave2: any, type: any, depth: number): void {
+    private addConnector(stave1: Stave, stave2: Stave, type: number, depth: number): void {
         this.vexflowConnector = new Vex.Flow.StaveConnector(stave1, stave2)
         .setType(type)
         .setXShift(depth * -5);

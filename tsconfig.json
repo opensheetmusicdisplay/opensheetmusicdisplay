@@ -9,6 +9,7 @@
     "declaration": true,
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types"],
+    //"strict": true /* Enable all strict type-checking options. */,
   },
   "exclude": [
     "node_modules",

@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import { Stroke, Vex } from "vexflow";
 import { Staff } from "../../VoiceData/Staff";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -95,8 +95,8 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                     // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
                     // see VoiceGenerator. Doesn't matter for Vexflow for now though
                     if (voiceEntry.notes && voiceEntry.notes.length > 1) {
-                        const type: any = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
-                        const stroke: any = new Vex.Flow.Stroke(type, {
+                        const type: number = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
+                        const stroke: Stroke = new Vex.Flow.Stroke(type, {
                             all_voices: this.rules.ArpeggiosGoAcrossVoices
                             // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
                             // also, this can cause infinite height of stroke, see #546

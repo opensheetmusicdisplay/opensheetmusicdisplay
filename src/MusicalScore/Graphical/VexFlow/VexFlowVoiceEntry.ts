@@ -1,3 +1,4 @@
+import { BoundingBox, NoteHead, StaveNote, StemmableNote } from "vexflow";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -8,32 +9,32 @@ import { ColoringModes } from "./../DrawingParameters";
 import { GraphicalNote } from "../GraphicalNote";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
-    private mVexFlowStaveNote: any;
+    private mVexFlowStaveNote!: StemmableNote;
 
-    constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry) {
+    constructor(parentVoiceEntry?: VoiceEntry, parentStaffEntry?: GraphicalStaffEntry) {
         super(parentVoiceEntry, parentStaffEntry);
     }
 
     public applyBordersFromVexflow(): void {
-        const staveNote: any = (this.vfStaveNote as any);
-        if (!staveNote.getNoteHeadBeginX) {
+        const staveNote: StemmableNote = this.vfStaveNote;
+        if (!(staveNote instanceof StaveNote)) {
             return;
         }
-        const boundingBox: any = staveNote.getBoundingBox();
-        const modifierWidth: number = staveNote.getNoteHeadBeginX() - boundingBox.x;
+        const boundingBox: BoundingBox = staveNote.getBoundingBox();
+        const modifierWidth: number = staveNote.getNoteHeadBeginX() - boundingBox.getX();
 
-        this.PositionAndShape.RelativePosition.y = boundingBox.y / unitInPixels;
+        this.PositionAndShape.RelativePosition.y = boundingBox.getY() / unitInPixels;
         this.PositionAndShape.BorderTop = 0;
-        this.PositionAndShape.BorderBottom = boundingBox.h / unitInPixels;
-        this.PositionAndShape.BorderLeft = -(modifierWidth + staveNote.width / 2) / unitInPixels; // Left of our X origin is the modifier
-        this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
+        this.PositionAndShape.BorderBottom = boundingBox.getH() / unitInPixels;
+        this.PositionAndShape.BorderLeft = -(modifierWidth + staveNote.getWidth() / 2) / unitInPixels; // Left of our X origin is the modifier
+        this.PositionAndShape.BorderRight = (boundingBox.getW() - modifierWidth) / unitInPixels; // Right of x origin is the note
     }
 
-    public set vfStaveNote(value: any) {
+    public set vfStaveNote(value: StemmableNote) {
         this.mVexFlowStaveNote = value;
     }
 
-    public get vfStaveNote(): any {
+    public get vfStaveNote(): StemmableNote {
         return this.mVexFlowStaveNote;
     }
 
@@ -46,10 +47,10 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         const defaultColorRest: string = this.rules.DefaultColorRest;
         const defaultColorStem: string = this.rules.DefaultColorStem;
         const transparentColor: string = "#00000000"; // transparent color in vexflow
-        let noteheadColor: string; // if null: no noteheadcolor to set (stays black)
+        let noteheadColor: string | undefined; // if null: no noteheadcolor to set (stays black)
         let sourceNoteNoteheadColor: string;
 
-        const vfStaveNote: any = (<VexFlowVoiceEntry>(this as any)).vfStaveNote;
+        const vfStaveNote: StemmableNote = this.vfStaveNote;
         for (let i: number = 0; i < this.notes.length; i++) {
             const note: GraphicalNote = this.notes[i];
 
@@ -106,26 +107,25 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
                     }
                 }
                 if (colorBeam) {
-                    if (vfStaveNote?.beam?.setStyle) {
-                        vfStaveNote.beam.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor});
+                    if (vfStaveNote.hasBeam()) {
+                        vfStaveNote.getBeam()!.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor});
                     }
                 }
             }
 
             if (vfStaveNote) {
-                if (vfStaveNote.note_heads) { // see VexFlowConverter, needs Vexflow PR
-                    const notehead: any = vfStaveNote.note_heads[i];
+                if (vfStaveNote instanceof StaveNote) { // see VexFlowConverter, needs Vexflow PR
+                    // @ts-ignore
+                    const notehead: NoteHead = vfStaveNote.note_heads[i];
                     if (notehead) {
                         notehead.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });
                     }
-                }
                 // set ledger line color. TODO coordinate this with VexFlowConverter.StaveNote(), where there's also still code for this, maybe unnecessarily.
-                if ((vfStaveNote as any).setLedgerLineStyle) { // setLedgerLineStyle doesn't exist on TabNote or rest, would throw error.
                     if (noteheadColor === transparentColor) {
-                        (vfStaveNote as any).setLedgerLineStyle(
+                        vfStaveNote.setLedgerLineStyle(
                             { fillStyle: noteheadColor, strokeStyle: noteheadColor, lineWidth: this.rules.LedgerLineWidth });
                     } else {
-                        (vfStaveNote as any).setLedgerLineStyle({
+                        vfStaveNote.setLedgerLineStyle({
                             fillStyle: this.rules.LedgerLineColorDefault,
                             lineWidth: this.rules.LedgerLineWidth,
                             strokeStyle: this.rules.LedgerLineColorDefault
@@ -162,12 +162,12 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         }
         const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
 
-        if (vfStaveNote && vfStaveNote.setStemStyle) {
+        if (vfStaveNote instanceof StaveNote) {
             if (!stemTransparent) {
                 this.parentVoiceEntry.StemColor = stemColor;
             }
             vfStaveNote.setStemStyle(stemStyle);
-            if (vfStaveNote.flag && vfStaveNote.setFlagStyle && this.rules.ColorFlags) {
+            if (vfStaveNote.hasFlag() && vfStaveNote.setFlagStyle && this.rules.ColorFlags) {
                 vfStaveNote.setFlagStyle(stemStyle);
             }
         }

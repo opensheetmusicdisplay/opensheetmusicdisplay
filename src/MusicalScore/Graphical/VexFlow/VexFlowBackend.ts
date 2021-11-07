@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import { RenderContext, Renderer, Vex } from "vexflow";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
@@ -19,10 +19,10 @@ export class VexFlowBackends {
 export abstract class VexFlowBackend {
 
   /** The GraphicalMusicPage the backend is drawing from. Each backend only renders one GraphicalMusicPage, to which the coordinates are relative. */
-  public graphicalMusicPage: GraphicalMusicPage;
-  protected rules: EngravingRules;
-  public width: number; // read-only
-  public height: number; // read-only
+  public graphicalMusicPage?: GraphicalMusicPage;
+  protected rules?: EngravingRules;
+  public width?: number; // read-only
+  public height?: number; // read-only
 
   public abstract initialize(container: HTMLElement, zoom: number): void;
 
@@ -30,7 +30,7 @@ export abstract class VexFlowBackend {
     return this.inner;
   }
 
-  public getCanvas(): HTMLElement {
+  public getCanvas(): HTMLCanvasElement | HTMLDivElement | string {
     return this.canvas;
   }
 
@@ -38,7 +38,7 @@ export abstract class VexFlowBackend {
 
   public getRenderElement(): HTMLElement {
     //console.log("backend type: " + this.getVexflowBackendType());
-    let renderingHtmlElement: HTMLElement = this.canvas; // for SVGBackend
+    let renderingHtmlElement: HTMLElement = this.canvas as HTMLElement; // for SVGBackend
     if (this.getVexflowBackendType() === Vex.Flow.Renderer.Backends.CANVAS) {
       renderingHtmlElement = this.inner;
       // usage in removeFromContainer:
@@ -48,13 +48,13 @@ export abstract class VexFlowBackend {
     return renderingHtmlElement;
   }
 
-  public getRenderer(): typeof Vex.Flow.Renderer {
+  public getRenderer(): Renderer {
     return this.renderer;
   }
 
   public removeAllChildrenFromContainer(container: HTMLElement): void {
     while (container.children.length !== 0) {
-      container.removeChild(container.children.item(0));
+      container.removeChild(container.children.item(0) as Element);
     }
   }
 
@@ -72,7 +72,7 @@ export abstract class VexFlowBackend {
     // there is unfortunately no built-in container.hasChild(child) method.
   }
 
-public abstract getContext(): typeof Vex.Flow.RenderContext;
+  public abstract getContext(): RenderContext;
 
   // public abstract setWidth(width: number): void;
   // public abstract setHeight(height: number): void;
@@ -90,7 +90,7 @@ public abstract getContext(): typeof Vex.Flow.RenderContext;
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                              heightInPixel: number, screenPosition: PointF2D,
-                             color?: string, fontFamily?: string): Node;
+                             color?: string, fontFamily?: string): void;
   /**
    * Renders a rectangle with the given style to the screen.
    * It is given in screen coordinates.
@@ -99,9 +99,9 @@ public abstract getContext(): typeof Vex.Flow.RenderContext;
    * @param styleId the style id
    * @param alpha alpha value between 0 and 1
    */
-  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number): Node;
+  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number): void;
 
-  public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number): Node;
+  public abstract renderLine(start: PointF2D, stop: PointF2D, color?: string, lineWidth?: number): void;
 
   public abstract renderCurve(points: PointF2D[]): void;
 
@@ -112,7 +112,7 @@ public abstract getContext(): typeof Vex.Flow.RenderContext;
    */
   public abstract getOSMDBackendType(): BackendType;
 
-  protected renderer: any;
-  protected inner: HTMLElement;
-  protected canvas: any;
+  protected renderer!: Renderer;
+  protected inner!: HTMLElement;
+  protected canvas!: HTMLCanvasElement | HTMLDivElement | string;
 }

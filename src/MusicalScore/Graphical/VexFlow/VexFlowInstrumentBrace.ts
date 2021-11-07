@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import { Vex } from "vexflow";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 
