@@ -1,3 +1,4 @@
+import { ClefNote, Stave } from "vexflow";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -8,13 +9,13 @@ import { Note } from "../../VoiceData/Note";
 import { AccidentalEnum } from "../../../Common/DataObjects/Pitch";
 
 export class VexFlowStaffEntry extends GraphicalStaffEntry {
-    constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent: VexFlowStaffEntry) {
+    constructor(measure: VexFlowMeasure, sourceStaffEntry: SourceStaffEntry, staffEntryParent?: VexFlowStaffEntry) {
         super(measure, sourceStaffEntry, staffEntryParent);
     }
 
     // if there is a in-measure clef given before this staffEntry,
     // it will be converted to a Vex.Flow.ClefNote and assigned to this variable:
-    public vfClefBefore: any;
+    public vfClefBefore?: ClefNote;
 
     /**
      * Calculates the staff entry positions from the VexFlow stave information and the tickabels inside the staff.
@@ -22,7 +23,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
      * It is also needed to be done after formatting!
      */
     public calculateXPosition(): void {
-        const stave: any = (this.parentMeasure as VexFlowMeasure).getVFStave();
+        const stave: Stave = (this.parentMeasure as VexFlowMeasure).getVFStave();
 
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions
@@ -30,6 +31,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
                 gve.vfStaveNote.setStave(stave);
+                // @ts-ignore
                 if (!gve.vfStaveNote.preFormatted) {
                     continue;
                 }
@@ -37,9 +39,10 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (this.parentMeasure.ParentStaff.isTab) {
                     // the x-position could be finetuned for the cursor.
                     // somehow, gve.vfStaveNote.getBoundingBox() is null for a TabNote (which is a StemmableNote).
-                    this.PositionAndShape.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + (<any>gve.vfStaveNote).glyph.getWidth()) / unitInPixels;
+                    // @ts-ignore
+                    this.PositionAndShape.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + gve.vfStaveNote.glyph.getWidth()) / unitInPixels;
                 } else {
-                    this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox().getX() / unitInPixels;
+                    this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox()?.getX() || 0/ unitInPixels;
                 }
                 const sourceNote: Note = gve.notes[0].sourceNote;
                 if (sourceNote.isRest() && sourceNote.Length.RealValue === this.parentMeasure.parentSourceMeasure.ActiveTimeSignature.RealValue) {

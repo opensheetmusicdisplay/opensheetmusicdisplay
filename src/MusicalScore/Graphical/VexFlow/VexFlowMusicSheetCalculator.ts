@@ -20,7 +20,7 @@ import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import Vex from "vexflow";
+import { Formatter, Stave, StemmableNote, TextBracket, Voice as VexVoice, Vex, StaveTie } from "vexflow";
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
@@ -59,7 +59,7 @@ import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpres
 
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
-  private dashSpace: number;
+  private dashSpace?: number;
   public beamsNeedUpdate: boolean = false;
 
   constructor(rules: EngravingRules) {
@@ -72,9 +72,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
     //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
     if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+      Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
     } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Petaluma, (Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura];
+      Vex.Flow.setMusicFont("Petaluma", "Gonville","Bravura");
     }
     // else keep new vexflow default Bravura (more cursive, bold)
   }
@@ -145,8 +145,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     measures = visibleMeasures;
 
     // Format the voices
-    const allVoices: any[] = [];
-    const formatter: any = new Vex.Flow.Formatter({
+    const allVoices: VexVoice[] = [];
+    const formatter: Formatter = new Vex.Flow.Formatter({
       // maxIterations: 2,
       softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
     });
@@ -166,8 +166,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         maxStaffEntries = Math.max(measure.staffEntries.length, maxStaffEntries);
         maxStaffEntriesPlusAccidentals = Math.max(measure.staffEntries.length + measureAccidentals, maxStaffEntriesPlusAccidentals);
       }
-      const mvoices: { [voiceID: number]: any } = (measure as VexFlowMeasure).vfVoices;
-      const voices: any[] = [];
+      const mvoices: { [voiceID: number]: VexVoice } = (measure as VexFlowMeasure).vfVoices;
+      const voices: VexVoice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
           voices.push(mvoices[voiceID]);
@@ -298,7 +298,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!measure) {
         continue;
       }
-      const mvoices: { [voiceID: number]: any } = (measure as VexFlowMeasure).vfVoices;
+      const mvoices: { [voiceID: number]: VexVoice } = (measure as VexFlowMeasure).vfVoices;
       const voices: any[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
@@ -598,14 +598,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
     const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
 
-    let vfStartNote: any  = undefined;
+    let vfStartNote: StemmableNote  = undefined;
     let startNoteIndexInTie: number = 0;
     if (startNote && startNote.vfnote && startNote.vfnote.length >= 2) {
       vfStartNote = startNote.vfnote[0];
       startNoteIndexInTie = startNote.vfnote[1];
     }
 
-    let vfEndNote: any = undefined;
+    let vfEndNote: StemmableNote = undefined;
     let endNoteIndexInTie: number = 0;
     if (endNote && endNote.vfnote && endNote.vfnote.length >= 2) {
       vfEndNote = endNote.vfnote[0];
@@ -615,13 +615,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
       if (vfStartNote) { // first_note or last_note must be not null in Vexflow
-        const vfTie1: any = new Vex.Flow.StaveTie(vfStartNote);
+        const vfTie1: StaveTie = new Vex.Flow.StaveTie({
+          first_indices: [startNoteIndexInTie],
+          first_note: vfStartNote,
+          last_note: null
+        });
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure1.vfTies.push(vfTie1);
       }
-
       if (vfEndNote) {
-        const vfTie2: any = new Vex.Flow.StaveTie(vfEndNote);
+        const vfTie2: StaveTie = new Vex.Flow.StaveTie({
+          last_indices: [endNoteIndexInTie],
+          last_note: vfEndNote,
+          first_note: null
+        });
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure2.vfTies.push(vfTie2);
       }
@@ -740,7 +747,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
     const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
-    const vfStave: any = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
+    const vfStave: Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
     //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
     let vexflowDuration: string = "q";
     if (metronomeExpression.beatUnit) {
@@ -771,14 +778,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
-          dots: metronomeExpression.dotted,
+          dots: metronomeExpression.dotted === true? 1: undefined,
           duration: vexflowDuration
       },
       yShift * unitInPixels);
        // -50, -30), 0); //needs Vexflow PR
        //.setShiftX(-50);
     const xShift: number = firstMetronomeMark ? this.rules.MetronomeMarkXShift * unitInPixels : 0;
-    (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
+    (vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setX(
       xShift
     );
     // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
@@ -794,16 +801,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const firstMeasureNumber: number = this.graphicalMusicSheet.MeasureList[0][0].MeasureNumber; // 0 for pickup, 1 otherwise
     const measureNumber: number = Math.max(measure.MeasureNumber - firstMeasureNumber, 0);
     const staffNumber: number = 0;
-    const vfStave: any = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
+    const vfStave: Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
     const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
-    let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
-    if (measure.IsSystemStartMeasure) {
-      xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
-    }
+    // rvilarl let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
+    // rvilarl if (measure.IsSystemStartMeasure) {
+    // rvilarl   xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
+    // rvilarl }
     // const section: Vex.Flow.StaveSection = new Vex.Flow.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
-    // (vfStave as any).modifiers.push(section);
-    const fontSize: number = this.rules.RehearsalMarkFontSize;
-    (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
+    // vfStave.modifiers.push(section);
+    // rvilarl const fontSize: number = this.rules.RehearsalMarkFontSize;
+    vfStave.setSection(rehearsalExpression.label, yOffset); // rvilarl fontSize is an extra argument from VexFlowPatch
   }
 
   /**
@@ -828,7 +835,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       startStaffLine = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex].ParentStaffLine;
     }
 
-    let endMeasure: GraphicalMeasure = undefined;
+    let endMeasure: GraphicalMeasure | undefined = undefined;
     if (octaveShift.ParentEndMultiExpression) {
       endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
                                                                                          staffIndex);
@@ -838,7 +845,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) { // octaveshift ends in measure not rendered
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
-    let startMeasure: GraphicalMeasure = undefined;
+    let startMeasure: GraphicalMeasure | undefined = undefined;
     if (octaveShift.ParentEndMultiExpression) {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
                                                                                            staffIndex);
@@ -866,7 +873,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // calculate GraphicalOctaveShift and RelativePositions
       const graphicalOctaveShift: VexFlowOctaveShift = new VexFlowOctaveShift(octaveShift, startStaffLine.PositionAndShape);
       if (!graphicalOctaveShift.startNote) { // fix for rendering range set
-        let startGse: GraphicalStaffEntry;
+        let startGse: GraphicalStaffEntry | undefined;
         for (const gse of startMeasure.staffEntries) {
           if (gse) {
             startGse = gse;
@@ -882,7 +889,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
       }
       if (!graphicalOctaveShift.endNote) { // fix for rendering range set
-        let endGse: GraphicalStaffEntry;
+        let endGse: GraphicalStaffEntry | undefined;
         for (let i: number = endMeasure.staffEntries.length - 1; i >= 0; i++) {
           // search backwards from end of measure
           if (endMeasure.staffEntries[i]) {
@@ -983,22 +990,25 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startXOffset;
     const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
     vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
-    const textBracket: any = vfOctaveShift.getTextBracket();
-    const fontSize: number = (textBracket as any).font.size / 10;
+    const textBracket: TextBracket = vfOctaveShift.getTextBracket();
+    const fontSize: number = textBracket.getFontInfo().size as number / 10;
 
-    if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
+    // @ts-ignore
+    if (textBracket.position === Vex.Flow.TextBracket.Positions.TOP) {
       const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
-      (textBracket.start.getStave().options as any).top_text_position = Math.abs(headroom);
+      // @ts-ignore
+      textBracket.start.getStave().options.top_text_position = Math.abs(headroom);
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
     } else {
       const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
       if (footroom === Infinity) { // will cause Vexflow error
         return;
       }
-      (textBracket.start.getStave().options as any).bottom_text_position = footroom;
+      // @ts-ignore
+      textBracket.start.getStave().options.bottom_text_position = footroom;
       //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
       parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
     }
@@ -1011,7 +1021,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
    */
   protected calculateWordRepetitionInstruction(repetitionInstruction: RepetitionInstruction, measureIndex: number): void {
     // find first visible StaffLine
-    let uppermostMeasure: VexFlowMeasure = undefined;
+    let uppermostMeasure: VexFlowMeasure | undefined;
     const measures: VexFlowMeasure[] = <VexFlowMeasure[]>this.graphicalMusicSheet.MeasureList[measureIndex];
     for (let idx: number = 0, len: number = measures.length; idx < len; ++idx) {
       const graphicalMeasure: VexFlowMeasure = measures[idx];

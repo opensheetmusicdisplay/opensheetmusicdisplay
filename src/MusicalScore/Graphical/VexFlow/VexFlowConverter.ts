@@ -1,4 +1,5 @@
-import Vex from "vexflow";
+import { Articulation as VexArticulation, GraceNoteStruct, GhostNote, Ornament,
+    StaveNote, StemmableNote, TabNote as VexTabNote, TimeSignature, Tremolo, Vex } from "vexflow";
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
@@ -149,13 +150,10 @@ export class VexFlowConverter {
      * @returns {string[]}
      */
     public static pitch(pitch: Pitch, isRest: boolean, clef: ClefInstruction,
-                        notehead: Notehead = undefined, octaveOffsetGiven: number = undefined): [string, string, ClefInstruction] {
+                        notehead?: Notehead, octaveOffsetGiven?: number): [string, string, ClefInstruction] {
         //FIXME: The octave seems to need a shift of three?
         //FIXME: Also rests seem to use different offsets depending on the clef.
-        let octaveOffset: number = octaveOffsetGiven;
-        if (octaveOffsetGiven === undefined) {
-            octaveOffset = 3;
-        }
+        let octaveOffset: number = octaveOffsetGiven || 3;
         if (isRest && octaveOffsetGiven === undefined) {
             octaveOffset = 0;
             if (clef.ClefType === ClefEnum.F) {
@@ -219,8 +217,8 @@ export class VexFlowConverter {
         }
     }
 
-    public static GhostNotes(frac: Fraction): typeof Vex.Flow.GhostNote[] {
-        const ghostNotes: any[] = [];
+    public static GhostNotes(frac: Fraction): GhostNote[] {
+        const ghostNotes: GhostNote[] = [];
         const durations: string[] = VexFlowConverter.durations(frac, false);
         for (const duration of durations) {
             ghostNotes.push(new Vex.Flow.GhostNote({
@@ -236,7 +234,7 @@ export class VexFlowConverter {
      * @param gve the GraphicalVoiceEntry which can hold a note or a chord on the staff belonging to one voice
      * @returns {Vex.Flow.StaveNote}
      */
-    public static StaveNote(gve: GraphicalVoiceEntry): typeof Vex.Flow.StaveNote {
+    public static StaveNote(gve: GraphicalVoiceEntry): StaveNote {
         // if (gve.octaveShiftValue !== OctaveEnum.NONE) { // gves with accidentals in octave shift brackets can be unsorted
         gve.sortForVexflow(); // also necessary for some other cases, see test_sorted_notes... sample
         //   sort and reverse replace the array anyways, so we might as well directly sort them reversely for now.
@@ -261,7 +259,7 @@ export class VexFlowConverter {
             baseNote.sourceNote.TypeLength.RealValue !== 0) {
             duration = VexFlowConverter.durations(baseNote.sourceNote.TypeLength, isTuplet)[0];
         }
-        let vfClefType: string = undefined;
+        let vfClefType: string = "";
         let numDots: number = baseNote.numberOfDots;
         let alignCenter: boolean = false;
         let xShift: number = 0;
@@ -335,8 +333,8 @@ export class VexFlowConverter {
                     const staffGves: GraphicalVoiceEntry[] = note.parentVoiceEntry.parentStaffEntry.graphicalVoiceEntries;
                     //Find all visible voice entries (don't want invisible rests/notes causing visible shift)
                     const restVoiceId: number = note.parentVoiceEntry.parentVoiceEntry.ParentVoice.VoiceId;
-                    let maxHalftone: number;
-                    let linesShift: number;
+                    let maxHalftone: number | undefined;
+                    let linesShift: number | undefined;
                     for (const staffGve of staffGves) {
                         for (const gveNote of staffGve.notes) {
                             if (gveNote === note || gveNote.sourceNote.isRest() || !gveNote.sourceNote.PrintObject) {
@@ -349,8 +347,8 @@ export class VexFlowConverter {
                             const lineShiftDirection: number = isUpperVoiceRest ? 1 : -1; // voice 1: put rest above (-y). other voices: below
                             const gveNotePitch: Pitch = gveNote.sourceNote.Pitch;
                             const noteHalftone: number = gveNotePitch.getHalfTone();
-                            const newHigh: boolean = lineShiftDirection === 1 && noteHalftone > maxHalftone;
-                            const newLow: boolean = lineShiftDirection === -1 && noteHalftone < maxHalftone;
+                            const newHigh: boolean = maxHalftone !== undefined && lineShiftDirection === 1 && noteHalftone > maxHalftone;
+                            const newLow: boolean = maxHalftone !== undefined &&lineShiftDirection === -1 && noteHalftone < maxHalftone;
                             if (!maxHalftone || newHigh || newLow) {
                                 maxHalftone = noteHalftone;
                                 linesShift = 0;
@@ -386,7 +384,7 @@ export class VexFlowConverter {
                             }
                         }
                     }
-                    if (maxHalftone > 0) {
+                    if (maxHalftone) {
                         let octaveOffset: number = 3;
                         const restClefInstruction: ClefInstruction = (note as VexFlowGraphicalNote).Clef();
                         switch (restClefInstruction.ClefType) {
@@ -441,8 +439,8 @@ export class VexFlowConverter {
             duration += "r";
         }
 
-        let vfnote: any;
-        const vfnoteStruct: any = {
+        let vfnote: StaveNote;
+        const vfnoteStruct: GraceNoteStruct = {
             align_center: alignCenter,
             auto_stem: true,
             clef: vfClefType,
@@ -473,14 +471,14 @@ export class VexFlowConverter {
         if (rules.LedgerLineWidth || rules.LedgerLineStrokeStyle) {
             // FIXME should probably use vfnote.setLedgerLineStyle. this doesn't seem to do anything.
             // however, this is also set in VexFlowVoiceEntry.color() anyways.
-            if (!((vfnote as any).ledgerLineStyle)) {
-                (vfnote as any).ledgerLineStyle = {};
+            if (!(vfnote.getLedgerLineStyle())) {
+                vfnote.setLedgerLineStyle({});
             }
             if (rules.LedgerLineWidth) {
-                (vfnote as any).ledgerLineStyle.lineWidth = rules.LedgerLineWidth;
+                vfnote.setLedgerLineStyle({...vfnote.getLedgerLineStyle(), lineWidth: rules.LedgerLineWidth});
             }
             if (rules.LedgerLineStrokeStyle) {
-                (vfnote as any).ledgerLineStyle.strokeStyle = rules.LedgerLineStrokeStyle;
+                vfnote.setLedgerLineStyle({...vfnote.getLedgerLineStyle(), strokeStyle: rules.LedgerLineStrokeStyle});
             }
         }
 
@@ -495,13 +493,13 @@ export class VexFlowConverter {
             if (stemColor) {
                 gve.parentVoiceEntry.StemColor = stemColor;
                 vfnote.setStemStyle(stemStyle);
-                if (vfnote.flag && rules.ColorFlags) {
+                if (vfnote.hasFlag() && rules.ColorFlags) {
                     vfnote.setFlagStyle(stemStyle);
                 }
             }
         }
 
-        vfnote.x_shift = xShift;
+        vfnote.setXShift(xShift);
 
         if (gve.parentVoiceEntry.IsGrace && gve.notes[0].sourceNote.NoteBeam) {
             // Vexflow seems to have issues with wanted stem direction for beamed grace notes,
@@ -542,10 +540,10 @@ export class VexFlowConverter {
             // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
             const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
             if (tremoloStrokes > 0) {
-                const tremolo: any = new Vex.Flow.Tremolo(tremoloStrokes);
-                (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
-                (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
-                vfnote.addModifier(i, tremolo);
+                const tremolo: Tremolo = new Tremolo(tremoloStrokes);
+                // rvilarl tremolo.extra_stroke_scale = rules.TremoloStrokeScale;
+                // rvilarl tremolo.y_spacing_scale = rules.TremoloYSpacingScale;
+                vfnote.addModifier(tremolo, i);
             }
         }
 
@@ -563,7 +561,7 @@ export class VexFlowConverter {
         return vfnote;
     }
 
-    public static generateArticulations(vfnote: any, articulations: Articulation[],
+    public static generateArticulations(vfnote: StemmableNote, articulations: Articulation[],
                                         rules: EngravingRules): void {
         if (!vfnote || vfnote.getAttribute("type") === "GhostNote") {
             return;
@@ -575,7 +573,7 @@ export class VexFlowConverter {
             if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
                 vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
             }
-            let vfArt: any = undefined;
+            let vfArt: VexArticulation | undefined = undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;
             if (rules.ArticulationPlacementFromXML) {
                 if (articulation.placement === PlacementEnum.Above) {
@@ -655,18 +653,18 @@ export class VexFlowConverter {
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
-                (vfnote).addModifier(0, vfArt);
+                vfnote.addModifier(vfArt, 0);
             }
         }
     }
 
-    public static generateOrnaments(vfnote: any, oContainer: OrnamentContainer): void {
+    public static generateOrnaments(vfnote: StemmableNote, oContainer: OrnamentContainer): void {
         let vfPosition: number = Vex.Flow.Modifier.Position.ABOVE;
         if (oContainer.placement === PlacementEnum.Below) {
             vfPosition = Vex.Flow.Modifier.Position.BELOW;
         }
 
-        let vfOrna: any = undefined;
+        let vfOrna: Ornament | undefined = undefined;
         switch (oContainer.GetOrnament) {
             case OrnamentEnum.DelayedInvertedTurn: {
                 vfOrna = new Vex.Flow.Ornament("turn_inverted");
@@ -716,11 +714,11 @@ export class VexFlowConverter {
                 vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
             vfOrna.setPosition(vfPosition); // Vexflow draws it above right now in any case, never below
-            (vfnote).addModifier(0, vfOrna);
+            vfnote.addModifier(vfOrna, 0);
         }
     }
 
-    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): any {
+    public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): number {
         switch (arpeggioType) {
             case ArpeggioType.ARPEGGIO_DIRECTIONLESS:
                 return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
@@ -746,7 +744,7 @@ export class VexFlowConverter {
      * @param notes form a chord on the staff
      * @returns {Vex.Flow.StaveNote}
      */
-    public static CreateTabNote(gve: GraphicalVoiceEntry): typeof Vex.Flow.TabNote {
+    public static CreateTabNote(gve: GraphicalVoiceEntry): VexTabNote {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
         const tabPhrases: { type: number, text: string, width: number }[] = [];
@@ -790,7 +788,7 @@ export class VexFlowConverter {
             duration += "d";
         }
 
-        const vfnote: any = new Vex.Flow.TabNote({
+        const vfnote: VexTabNote = new VexTabNote({
             duration: duration,
             positions: tabPositions,
         });
@@ -825,7 +823,7 @@ export class VexFlowConverter {
      */
     public static Clef(clef: ClefInstruction, size: string = "default"): { type: string, size: string, annotation: string } {
         let type: string;
-        let annotation: string;
+        let annotation: string = "";
 
         // Make sure size is either "default" or "small"
         if (size !== "default" && size !== "small") {
@@ -923,8 +921,8 @@ export class VexFlowConverter {
      * @returns {Vex.Flow.TimeSignature}
      * @constructor
      */
-    public static TimeSignature(rhythm: RhythmInstruction): any {
-        let timeSpec: string;
+    public static TimeSignature(rhythm: RhythmInstruction): TimeSignature {
+        let timeSpec: string = "";
         switch (rhythm.SymbolEnum) {
             case RhythmSymbolEnum.NONE:
                 timeSpec = rhythm.Rhythm.Numerator + "/" + rhythm.Rhythm.Denominator;
@@ -945,7 +943,7 @@ export class VexFlowConverter {
      * @param key
      * @returns {string}
      */
-    public static keySignature(key: KeyInstruction): string {
+    public static keySignature(key: KeyInstruction): string | undefined {
         if (!key) {
             return undefined;
         }
@@ -972,7 +970,7 @@ export class VexFlowConverter {
      * @param lineType
      * @returns {any}
      */
-    public static line(lineType: SystemLinesEnum, linePosition: SystemLinePosition): any {
+    public static line(lineType: SystemLinesEnum, linePosition: SystemLinePosition): number {
         switch (lineType) {
             case SystemLinesEnum.SingleThin:
                 if (linePosition === SystemLinePosition.MeasureBegin) {
@@ -992,6 +990,7 @@ export class VexFlowConverter {
             case SystemLinesEnum.None:
                 return Vex.Flow.StaveConnector.type.NONE;
             default:
+                return Vex.Flow.StaveConnector.type.NONE;
         }
     }
 
@@ -1003,7 +1002,7 @@ export class VexFlowConverter {
      * @returns {string}
      */
     public static font(fontSize: number, fontStyle: FontStyles = FontStyles.Regular,
-                       font: Fonts = Fonts.TimesNewRoman, rules: EngravingRules, fontFamily: string = undefined): string {
+                       font: Fonts = Fonts.TimesNewRoman, rules: EngravingRules, fontFamily?: string): string {
         let style: string = "normal";
         let weight: string = "normal";
         let family: string = `'${rules.DefaultFontFamily}'`; // default "'Times New Roman'"
@@ -1062,8 +1061,8 @@ export class VexFlowConverter {
      * @param styleId
      * @returns {string}
      */
-    public static style(styleId: OutlineAndFillStyleEnum): string {
-        const ret: string = OUTLINE_AND_FILL_STYLE_DICT.getValue(styleId);
+    public static style(styleId: OutlineAndFillStyleEnum): string | undefined {
+        const ret: string | undefined = OUTLINE_AND_FILL_STYLE_DICT.getValue(styleId);
         return ret;
     }
 }
