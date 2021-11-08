@@ -1,4 +1,5 @@
-import { RenderContext, TextBracket, Vex } from "vexflow";
+import { RenderContext, TextBracket } from "vexflow";
+import Vex from "vexflow";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -53,7 +54,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // vexflow 3.x: change default font
         if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
+            // rvilarl Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
         } // else keep new vexflow default Bravura (more cursive, bold).
 
         // sizing defaults in Vexflow

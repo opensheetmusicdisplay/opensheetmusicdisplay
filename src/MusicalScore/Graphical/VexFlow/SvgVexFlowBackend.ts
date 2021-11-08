@@ -1,5 +1,5 @@
-import { SVGContext, RenderContext, Vex } from "vexflow";
-
+import { SVGContext, RenderContext } from "vexflow";
+import Vex from "vexflow";
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {FontStyles} from "../../../Common/Enums/FontStyles";

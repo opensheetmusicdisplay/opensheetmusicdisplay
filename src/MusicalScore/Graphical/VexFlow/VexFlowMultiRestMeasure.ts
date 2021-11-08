@@ -1,4 +1,5 @@
-import { MultiMeasureRest, RenderContext, Stave, Vex } from "vexflow";
+import { MultiMeasureRest, RenderContext, Stave } from "vexflow";
+import Vex from "vexflow";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";

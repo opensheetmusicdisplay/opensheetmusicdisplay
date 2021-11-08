@@ -1,4 +1,5 @@
-import { Stave, StaveConnector, RenderContext, Vex } from "vexflow";
+import { Stave, StaveConnector, RenderContext } from "vexflow";
+import Vex from "vexflow";
 import { GraphicalObject } from "../GraphicalObject";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { BoundingBox } from "../BoundingBox";

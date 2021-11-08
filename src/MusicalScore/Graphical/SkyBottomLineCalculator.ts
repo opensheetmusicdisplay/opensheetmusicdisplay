@@ -6,6 +6,7 @@ import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
 import { unitInPixels } from "./VexFlow/VexFlowMusicSheetDrawer";
 import log from "loglevel";
 import { BoundingBox } from "./BoundingBox";
+import { RenderContext } from "vexflow";
 /**
  * This class calculates and holds the skyline and bottom line information.
  * It also has functions to update areas of the two lines if new elements are
@@ -40,7 +41,7 @@ export class SkyBottomLineCalculator {
         this.mBottomLine = [];
 
         // Create a temporary canvas outside the DOM to draw the measure in.
-        const tmpCanvas: any = new CanvasVexFlowBackend(this.StaffLineParent.ParentMusicSystem.rules);
+        const tmpCanvas: CanvasVexFlowBackend = new CanvasVexFlowBackend(this.StaffLineParent.ParentMusicSystem.rules);
         // search through all Measures
         for (const measure of this.StaffLineParent.Measures as VexFlowMeasure[]) {
             // must calculate first AbsolutePositions
@@ -55,7 +56,7 @@ export class SkyBottomLineCalculator {
             }
             // Headless because we are outside the DOM
             tmpCanvas.initializeHeadless(width);
-            const ctx: any = tmpCanvas.getContext();
+            const ctx: RenderContext = tmpCanvas.getContext();
             const canvas: any = tmpCanvas.getCanvas();
             width = canvas.width;
             const height: number = canvas.height;
@@ -80,7 +81,7 @@ export class SkyBottomLineCalculator {
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
             // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
             // Since we are only interested in black or white we can take 32bit words at once
-            const imageData: any = ctx.getImageData(0, 0, width, height);
+            const imageData: any = tmpCanvas.CanvasRenderingCtx.getImageData(0, 0, width, height);
             const rgbaLength: number = 4;
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * this.mRules.SamplingUnit), 1);
             const tmpSkyLine: number[] = new Array(measureArrayLength);

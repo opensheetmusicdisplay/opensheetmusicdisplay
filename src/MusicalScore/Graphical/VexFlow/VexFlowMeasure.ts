@@ -1,6 +1,7 @@
 import { Beam as VexBeam, Fraction as VexFraction, FretHandFinger, GhostNote, GraceNote, GraceNoteGroup, NoteSubGroup, RenderContext, Repetition,
     Stave, StaveConnector, StaveNote, StaveModifier, StaveTie, StemmableNote, StringNumber, Stroke,
-    TimeSignature, Tuplet as VexTuplet, Voice as VexVoice, Vex } from "vexflow";
+    TimeSignature, Tuplet as VexTuplet, Voice as VexVoice } from "vexflow";
+import Vex from "vexflow";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
@@ -905,7 +906,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     if (notes.length > 1) {
-                        const vfBeam: VexBeam = new VexBeam(notes, autoStemBeam);
+                        const vfBeam: VexBeam = new Vex.Flow.Beam(notes, autoStemBeam);
                         if (isGraceBeam) {
                             // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
                             (<any>vfBeam).render_options.beam_width = 3;

@@ -1,4 +1,5 @@
-import { Stroke, Vex } from "vexflow";
+import { Stroke } from "vexflow";
+import Vex from "vexflow";
 import { Staff } from "../../VoiceData/Staff";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
