@@ -1,4 +1,5 @@
-import { StemmableNote, TextBracket, Vex } from "vexflow";
+import { StemmableNote, TextBracket } from "vexflow";
+import Vex from "vexflow";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";

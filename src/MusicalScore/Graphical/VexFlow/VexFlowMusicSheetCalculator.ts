@@ -20,7 +20,8 @@ import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import { Formatter, Stave, StemmableNote, TextBracket, Voice as VexVoice, Vex, StaveTie } from "vexflow";
+import { Formatter, Stave, StemmableNote, TextBracket, Voice as VexVoice, StaveTie } from "vexflow";
+import Vex from "vexflow";
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
@@ -72,9 +73,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
     //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
     if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
+      // rvilarl Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
     } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      Vex.Flow.setMusicFont("Petaluma", "Gonville","Bravura");
+      // rvilarl Vex.Flow.setMusicFont("Petaluma", "Gonville","Bravura");
     }
     // else keep new vexflow default Bravura (more cursive, bold)
   }

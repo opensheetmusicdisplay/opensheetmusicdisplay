@@ -1,4 +1,5 @@
-import { Curve, StemmableNote, Vex } from "vexflow";
+import { Curve, StemmableNote } from "vexflow";
+import Vex from "vexflow";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 
 export interface ICurveOptions {

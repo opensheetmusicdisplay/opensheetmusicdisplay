@@ -1,4 +1,5 @@
-import { BoundingBox, NoteHead, StaveNote, StemmableNote } from "vexflow";
+import { BoundingBox, NoteHead, StemmableNote } from "vexflow";
+import Vex from "vexflow";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -17,7 +18,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
     public applyBordersFromVexflow(): void {
         const staveNote: StemmableNote = this.vfStaveNote;
-        if (!(staveNote instanceof StaveNote)) {
+        if (!(staveNote instanceof Vex.Flow.StaveNote)) {
             return;
         }
         const boundingBox: BoundingBox = staveNote.getBoundingBox();
@@ -114,7 +115,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             }
 
             if (vfStaveNote) {
-                if (vfStaveNote instanceof StaveNote) { // see VexFlowConverter, needs Vexflow PR
+                if (vfStaveNote instanceof Vex.Flow.StaveNote) { // see VexFlowConverter, needs Vexflow PR
                     // @ts-ignore
                     const notehead: NoteHead = vfStaveNote.note_heads[i];
                     if (notehead) {
@@ -162,7 +163,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         }
         const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
 
-        if (vfStaveNote instanceof StaveNote) {
+        if (vfStaveNote instanceof Vex.Flow.StaveNote) {
             if (!stemTransparent) {
                 this.parentVoiceEntry.StemColor = stemColor;
             }

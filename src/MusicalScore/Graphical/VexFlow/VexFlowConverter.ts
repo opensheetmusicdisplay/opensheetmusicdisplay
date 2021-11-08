@@ -1,5 +1,6 @@
 import { Articulation as VexArticulation, GraceNoteStruct, GhostNote, Ornament,
-    StaveNote, StemmableNote, TabNote as VexTabNote, TimeSignature, Tremolo, Vex } from "vexflow";
+    StaveNote, StemmableNote, TabNote as VexTabNote, TimeSignature, Tremolo } from "vexflow";
+import Vex from "vexflow";
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
@@ -259,7 +260,7 @@ export class VexFlowConverter {
             baseNote.sourceNote.TypeLength.RealValue !== 0) {
             duration = VexFlowConverter.durations(baseNote.sourceNote.TypeLength, isTuplet)[0];
         }
-        let vfClefType: string = "";
+        let vfClefType: string | undefined;
         let numDots: number = baseNote.numberOfDots;
         let alignCenter: boolean = false;
         let xShift: number = 0;
@@ -348,7 +349,7 @@ export class VexFlowConverter {
                             const gveNotePitch: Pitch = gveNote.sourceNote.Pitch;
                             const noteHalftone: number = gveNotePitch.getHalfTone();
                             const newHigh: boolean = maxHalftone !== undefined && lineShiftDirection === 1 && noteHalftone > maxHalftone;
-                            const newLow: boolean = maxHalftone !== undefined &&lineShiftDirection === -1 && noteHalftone < maxHalftone;
+                            const newLow: boolean = maxHalftone !== undefined && lineShiftDirection === -1 && noteHalftone < maxHalftone;
                             if (!maxHalftone || newHigh || newLow) {
                                 maxHalftone = noteHalftone;
                                 linesShift = 0;
@@ -823,7 +824,7 @@ export class VexFlowConverter {
      */
     public static Clef(clef: ClefInstruction, size: string = "default"): { type: string, size: string, annotation: string } {
         let type: string;
-        let annotation: string = "";
+        let annotation: string | undefined;
 
         // Make sure size is either "default" or "small"
         if (size !== "default" && size !== "small") {
