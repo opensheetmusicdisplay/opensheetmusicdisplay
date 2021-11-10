@@ -2552,7 +2552,7 @@ export abstract class MusicSheetCalculator {
                         for (const voiceEntry of gse.graphicalVoiceEntries) {
                             for (const note of voiceEntry.notes) {
                                 const sourceNote: Note = note.sourceNote;
-                                if (sourceNote.Fingering) {
+                                if (sourceNote.Fingering && !sourceNote.IsGraceNote) {
                                     fingerings.push(sourceNote.Fingering);
                                 }
                             }
