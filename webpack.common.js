@@ -46,7 +46,7 @@ module.exports = {
         })
     ],
     devServer: {
-        static: [
+        contentBase: [
             path.join(__dirname, 'test/data'),
             path.join(__dirname, 'build'),
             path.join(__dirname, 'demo')
