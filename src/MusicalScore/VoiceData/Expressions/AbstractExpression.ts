@@ -27,6 +27,8 @@ export class AbstractExpression {
                 return PlacementEnum.Above;
             case "below":
                 return PlacementEnum.Below;
+            case "aboveorbelow":
+                return PlacementEnum.AboveOrBelow;
             case "left":
                 return PlacementEnum.Left;
             case "right":
@@ -43,5 +45,6 @@ export enum PlacementEnum {
     Below = 1,
     Left = 2,
     Right = 3,
-    NotYetDefined = 4
+    NotYetDefined = 4,
+    AboveOrBelow = 5, // for piano scores, above for right hand, below for left hand
 }

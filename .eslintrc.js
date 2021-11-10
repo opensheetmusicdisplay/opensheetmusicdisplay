@@ -37,7 +37,7 @@ module.exports = {
           }
         }
     ],
-    "ignorePatterns": ["webpack*.js"],
+    "ignorePatterns": ["webpack*.js","karma.conf.js"],
     "rules": {
         "@typescript-eslint/dot-notation": "error",
         "@typescript-eslint/explicit-function-return-type": "error",
