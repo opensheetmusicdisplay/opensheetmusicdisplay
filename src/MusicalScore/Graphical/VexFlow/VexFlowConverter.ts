@@ -1,5 +1,5 @@
 import { Articulation as VexArticulation, GraceNoteStruct, GhostNote, Ornament,
-    StaveNote, StemmableNote, TabNote as VexTabNote, TimeSignature, Tremolo } from "vexflow";
+    StaveNote, StemmableNote, TabNote as VexTabNote, TimeSignature, Tremolo, KeyProps } from "vexflow";
 import Vex from "vexflow";
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
@@ -550,9 +550,9 @@ export class VexFlowConverter {
 
         // half note tremolo: set notehead to half note (Vexflow otherwise takes the notehead from duration) (Hack)
         if (firstNote.Length.RealValue === 0.25 && firstNote.Notehead && firstNote.Notehead.Filled === false) {
-            const keyProps: Object[] = vfnote.getKeyProps();
+            const keyProps: KeyProps[] = vfnote.getKeyProps();
             for (let i: number = 0; i < keyProps.length; i++) {
-                (<any>keyProps[i]).code = "v81";
+                keyProps[i].code = "v81";
             }
         }
 
@@ -574,7 +574,7 @@ export class VexFlowConverter {
             if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
                 vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
             }
-            let vfArt: VexArticulation | undefined = undefined;
+            let vfArt: VexArticulation | undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;
             if (rules.ArticulationPlacementFromXML) {
                 if (articulation.placement === PlacementEnum.Above) {
@@ -665,7 +665,7 @@ export class VexFlowConverter {
             vfPosition = Vex.Flow.Modifier.Position.BELOW;
         }
 
-        let vfOrna: Ornament | undefined = undefined;
+        let vfOrna: Ornament | undefined;
         switch (oContainer.GetOrnament) {
             case OrnamentEnum.DelayedInvertedTurn: {
                 vfOrna = new Vex.Flow.Ornament("turn_inverted");

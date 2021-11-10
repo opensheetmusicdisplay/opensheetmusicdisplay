@@ -909,8 +909,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         const vfBeam: VexBeam = new Vex.Flow.Beam(notes, autoStemBeam);
                         if (isGraceBeam) {
                             // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
-                            (<any>vfBeam).render_options.beam_width = 3;
-                            (<any>vfBeam).render_options.partial_beam_length = 4;
+                            vfBeam.render_options.beam_width = 3;
+                            vfBeam.render_options.partial_beam_length = 4;
                         }
                         if (stemColors.length >= 2 && this.rules.ColorBeams) {
                             beamColor = stemColors[0];
@@ -923,9 +923,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             vfBeam.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
                         }
                         if (this.rules.FlatBeams) {
-                            (<any>vfBeam).render_options.flat_beams = true;
-                            (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                            (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                            vfBeam.render_options.flat_beams = true;
+                            vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                            // rvilarl invalid render_option
+                            // vfBeam.render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                         }
                         vfbeams.push(vfBeam);
                     } else {
@@ -1026,9 +1027,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             if (tupletNotesToAutoBeam.length > 1) {
                                 const vfBeam: VexBeam = new VexBeam(tupletNotesToAutoBeam, true);
                                 if (this.rules.FlatBeams) {
-                                    (<any>vfBeam).render_options.flat_beams = true;
-                                    (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                                    (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                                    vfBeam.render_options.flat_beams = true;
+                                    vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                                    // rvilarl invlaid render_option
+                                    // vfBeam.render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                                 }
                                 this.autoTupletVfBeams.push(vfBeam);
                             }
@@ -1050,9 +1052,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (tupletNotesToAutoBeam.length >= 2) {
             const vfBeam: VexBeam = new VexBeam(tupletNotesToAutoBeam, true);
             if (this.rules.FlatBeams) {
-                (<any>vfBeam).render_options.flat_beams = true;
-                (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                vfBeam.render_options.flat_beams = true;
+                vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                // rvilarl invlaid render_option
+                // vfBeam.render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
             }
             this.autoTupletVfBeams.push(vfBeam);
         }
@@ -1082,9 +1085,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
             const newBeams: VexBeam[] = VexBeam.generateBeams(notesForSeparateAutoBeam, generateBeamOptions);
             for (const vfBeam of newBeams) {
                 if (this.rules.FlatBeams) {
-                    (<any>vfBeam).render_options.flat_beams = true;
-                    (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                    (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                    vfBeam.render_options.flat_beams = true;
+                    vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                    // rvilarl invlaid render_option
+                    // vfBeam.render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                 }
                 this.autoVfBeams.push(vfBeam);
             }
@@ -1450,7 +1454,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     fretFinger.setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: StringNumber = new Vex.Flow.StringNumber(fingering.value);
-                    (<any>stringNumber).radius = 0; // hack to remove the circle around the number
+                    // @ts-ignore
+                    stringNumber.radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
                     // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
@@ -1503,7 +1508,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // Remove circle from string number. Not needed for
                 // disambiguation from fingerings since we use Roman
                 // Numerals for RenderStringNumbersClassical
-                (<any>vfStringNumber).radius = 0;
+                // @ts-ignore
+                vfStringNumber.radius = 0;
                 const offsetY: number = -this.rules.StringNumberOffsetY;
                 // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff
                 //     // TODO also check for treble clef (adjust for viola, cello, etc)

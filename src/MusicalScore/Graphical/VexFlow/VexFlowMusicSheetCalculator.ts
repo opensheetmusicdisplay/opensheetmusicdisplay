@@ -58,6 +58,21 @@ import { PlacementEnum } from "../../VoiceData/Expressions";
 import { GraphicalChordSymbolContainer } from "../GraphicalChordSymbolContainer";
 import { RehearsalExpression } from "../../VoiceData/Expressions/RehearsalExpression";
 
+interface EntryInfo {
+  cumulativeOverlap: number;
+  extend: boolean;
+  labelWidth: number;
+  xPosition: number;
+  sourceNoteDuration?: Fraction;
+  text: string;
+  measureNumber: number;
+}
+
+// holds lyrics entries for verses i
+interface EntryDict {
+  [i: number]: EntryInfo;
+}
+
 export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
   /** space needed for a dash for lyrics spacing, calculated once */
   private dashSpace?: number;
@@ -300,7 +315,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         continue;
       }
       const mvoices: { [voiceID: number]: VexVoice } = (measure as VexFlowMeasure).vfVoices;
-      const voices: any[] = [];
+      const voices: VexVoice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
           voices.push(mvoices[voiceID]);
@@ -320,7 +335,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     return minStaffEntriesWidth;
   }
 
-  private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[], staffEntry: GraphicalStaffEntry, lastEntryDict: any,
+  private calculateElongationFactor(containers: (GraphicalLyricEntry|GraphicalChordSymbolContainer)[],
+                                    staffEntry: GraphicalStaffEntry, lastEntryDict: EntryDict,
                                     oldMinimumStaffEntriesWidth: number, elongationFactorForMeasureWidth: number,
                                     measureNumber: number, oldMinSpacing: number, nextMeasureOverlap: number): number {
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
@@ -439,7 +455,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         extend: container instanceof GraphicalLyricEntry ? container.LyricsEntry.extend : false,
         labelWidth: labelWidth,
         measureNumber: measureNumber,
-        sourceNoteDuration: container instanceof GraphicalLyricEntry ? (container.LyricsEntry && container.LyricsEntry.Parent.Notes[0].Length) : false,
+        sourceNoteDuration: container instanceof GraphicalLyricEntry ? (container.LyricsEntry && container.LyricsEntry.Parent.Notes[0].Length) : undefined,
         text: container instanceof GraphicalLyricEntry ? container.LyricsEntry.Text : container.GraphicalLabel.Label.text,
         xPosition: xPosition,
       };
@@ -452,20 +468,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   public calculateElongationFactorFromStaffEntries(staffEntries: GraphicalStaffEntry[], oldMinimumStaffEntriesWidth: number,
                                                   elongationFactorForMeasureWidth: number, measureNumber: number): number {
-    interface EntryInfo {
-      cumulativeOverlap: number;
-      extend: boolean;
-      labelWidth: number;
-      xPosition: number;
-      sourceNoteDuration: Fraction;
-      text: string;
-      measureNumber: number;
-    }
-    // holds lyrics entries for verses i
-    interface EntryDict {
-      [i: number]: EntryInfo;
-    }
-
     let newElongationFactorForMeasureWidth: number = elongationFactorForMeasureWidth;
 
     const lastLyricEntryDict: EntryDict = {}; // holds info about last lyric entries for all verses j???
@@ -636,7 +638,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     } else {
       // normal case
       if (vfStartNote || vfEndNote) { // one of these must be not null in Vexflow
-        let vfTie: any;
+        let vfTie: StaveTie;
         if (isTab) {
           if (tie.Tie.Type === "S") {
             //calculate direction
@@ -836,7 +838,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       startStaffLine = this.graphicalMusicSheet.MeasureList[minMeasureToDrawIndex][staffIndex].ParentStaffLine;
     }
 
-    let endMeasure: GraphicalMeasure | undefined = undefined;
+    let endMeasure: GraphicalMeasure | undefined;
     if (octaveShift.ParentEndMultiExpression) {
       endMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentEndMultiExpression.SourceMeasureParent,
                                                                                          staffIndex);
@@ -846,7 +848,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (endMeasure.MeasureNumber > maxMeasureToDrawIndex + 1) { // octaveshift ends in measure not rendered
       endMeasure = this.graphicalMusicSheet.getLastGraphicalMeasureFromIndex(staffIndex, true);
     }
-    let startMeasure: GraphicalMeasure | undefined = undefined;
+    let startMeasure: GraphicalMeasure | undefined;
     if (octaveShift.ParentEndMultiExpression) {
       startMeasure = this.graphicalMusicSheet.getGraphicalMeasureFromSourceMeasureAndIndex(octaveShift.ParentStartMultiExpression.SourceMeasureParent,
                                                                                            staffIndex);
