@@ -16,7 +16,7 @@ import { EngravingRules } from "../EngravingRules";
 export class VexFlowGraphicalNote extends GraphicalNote {
     constructor(note: Note, parent: GraphicalVoiceEntry, activeClef: ClefInstruction,
                 octaveShift: OctaveEnum = OctaveEnum.NONE, rules: EngravingRules,
-                graphicalNoteLength: Fraction | undefined = undefined) {
+                graphicalNoteLength?: Fraction) {
         super(note, parent, rules, graphicalNoteLength);
         this.clef = activeClef;
         this.octaveShift = octaveShift;
