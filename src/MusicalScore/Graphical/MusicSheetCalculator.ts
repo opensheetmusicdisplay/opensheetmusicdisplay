@@ -836,6 +836,7 @@ export abstract class MusicSheetCalculator {
                 this.calculateMeasureNumberPlacement(musicSystem);
             }
         }
+        this.calculateFingerings(); // if this is done after slurs, fingerings can be on top of slurs
         // calculate Slurs
         if (!this.leadSheet && this.rules.RenderSlurs) {
             this.calculateSlurs();
@@ -2525,6 +2526,81 @@ export abstract class MusicSheetCalculator {
                                 if (!(this.staffEntriesWithOrnaments.indexOf(graphicalStaffEntry) !== -1)) {
                                     this.staffEntriesWithOrnaments.push(graphicalStaffEntry);
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public calculateFingerings(): void {
+        if (this.rules.FingeringPosition === PlacementEnum.Left ||
+            this.rules.FingeringPosition === PlacementEnum.Right) {
+                return;
+        }
+        for (const system of this.musicSystems) {
+            for (const line of system.StaffLines) {
+                for (const measure of line.Measures) {
+                    const placement: PlacementEnum = measure.isUpperStaffOfInstrument() ? PlacementEnum.Above : PlacementEnum.Below;
+                    for (const gse of measure.staffEntries) {
+                        gse.FingeringEntries = [];
+                        const skybottomcalculator: SkyBottomLineCalculator = line.SkyBottomLineCalculator;
+                        const staffEntryPositionX: number = gse.PositionAndShape.RelativePosition.x +
+                            measure.PositionAndShape.RelativePosition.x;
+                        const fingerings: TechnicalInstruction[] = [];
+                        for (const voiceEntry of gse.graphicalVoiceEntries) {
+                            for (const note of voiceEntry.notes) {
+                                const sourceNote: Note = note.sourceNote;
+                                if (sourceNote.Fingering) {
+                                    fingerings.push(sourceNote.Fingering);
+                                }
+                            }
+                        }
+                        if (placement === PlacementEnum.Below) {
+                            fingerings.reverse();
+                        }
+                        for (let i: number = 0; i < fingerings.length; i++) {
+                            const fingering: TechnicalInstruction = fingerings[i];
+                            const alignment: TextAlignmentEnum =
+                                placement === PlacementEnum.Above ? TextAlignmentEnum.CenterBottom : TextAlignmentEnum.CenterTop;
+                            const label: Label = new Label(fingering.value, alignment);
+                            const gLabel: GraphicalLabel = new GraphicalLabel(
+                                label, this.rules.FingeringTextSize, label.textAlignment, this.rules, line.PositionAndShape);
+                            const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
+                            const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
+                            let skybottomFurthest: number = undefined;
+                            if (placement === PlacementEnum.Above) {
+                                skybottomFurthest = skybottomcalculator.getSkyLineMinInRange(marginLeft, marginRight);
+                            } else {
+                                skybottomFurthest = skybottomcalculator.getBottomLineMaxInRange(marginLeft, marginRight);
+                            }
+                            let yShift: number = 0;
+                            if (i === 0) {
+                                yShift += this.rules.FingeringOffsetY;
+                                if (placement === PlacementEnum.Above) {
+                                    yShift += 0.1; // above fingerings are a bit closer to the notes than below ones for some reason
+                                }
+                            } else {
+                                yShift += this.rules.FingeringPaddingY;
+                            }
+                            if (placement === PlacementEnum.Above) {
+                                yShift *= -1;
+                            }
+                            gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
+                            gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
+                            gLabel.setLabelPositionAndShapeBorders();
+                            gLabel.PositionAndShape.calculateBoundingBox();
+                            gse.FingeringEntries.push(gLabel);
+                            const start: number = gLabel.PositionAndShape.RelativePosition.x + gLabel.PositionAndShape.BorderLeft;
+                            //start -= line.PositionAndShape.RelativePosition.x;
+                            const end: number = start - gLabel.PositionAndShape.BorderLeft + gLabel.PositionAndShape.BorderRight;
+                            if (placement === PlacementEnum.Above) {
+                                skybottomcalculator.updateSkyLineInRange(
+                                    start, end, gLabel.PositionAndShape.RelativePosition.y + gLabel.PositionAndShape.BorderTop); // BorderMarginTop too much
+                            } else if (placement === PlacementEnum.Below) {
+                                skybottomcalculator.updateBottomLineInRange(
+                                    start, end, gLabel.PositionAndShape.RelativePosition.y + gLabel.PositionAndShape.BorderBottom);
                             }
                         }
                     }

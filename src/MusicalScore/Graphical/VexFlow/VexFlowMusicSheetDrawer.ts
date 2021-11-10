@@ -307,6 +307,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
 
     private drawStaffEntry(staffEntry: GraphicalStaffEntry): void {
+        if (staffEntry.FingeringEntries.length > 0) {
+            for (const fingeringEntry of staffEntry.FingeringEntries) {
+                this.drawLabel(fingeringEntry, GraphicalLayers.Notes);
+            }
+        }
         // Draw ChordSymbols
         if (staffEntry.graphicalChordContainers !== undefined && staffEntry.graphicalChordContainers.length > 0) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {

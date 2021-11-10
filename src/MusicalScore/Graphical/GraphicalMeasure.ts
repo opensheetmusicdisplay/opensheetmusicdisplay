@@ -313,6 +313,29 @@ export abstract class GraphicalMeasure extends GraphicalObject {
         }
     }
 
+    public isPianoRightHand(): boolean {
+        return this.isUpperStaffOfInstrument();
+    }
+
+    public isPianoLeftHand(): boolean {
+        return this.isLowerStaffOfInstrument();
+    }
+
+    public isUpperStaffOfInstrument(): boolean {
+        if (this.parentStaff.ParentInstrument.Staves.length === 1) {
+            return true;
+        }
+        return this.ParentStaff === this.parentStaff.ParentInstrument.Staves[0];
+    }
+
+    public isLowerStaffOfInstrument(): boolean {
+        if (this.parentStaff.ParentInstrument.Staves.length === 1) {
+            return false; // technically this could be true as well, but we want this to be treated as upper and not return the same value.
+            // e.g. for a violin, fingerings should go above.
+        }
+        return this.ParentStaff === this.ParentStaff.ParentInstrument.Staves.last();
+    }
+
     public beginsWithLineRepetition(): boolean {
         const sourceMeasure: SourceMeasure = this.parentSourceMeasure;
         if (!sourceMeasure) {
