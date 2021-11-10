@@ -199,14 +199,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     /** Draws a line in the current backend. Only usable while pages are drawn sequentially, because backend reference is updated in that process.
      *  To add your own lines after rendering, use DrawOverlayLine.
      */
-    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): void {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): Node | undefined {
         // TODO maybe the backend should be given as an argument here as well, otherwise this can't be used after rendering of multiple pages is done.
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
         /*if (!this.backend) {
             this.backend = this.backends[0];
         }*/
-        this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
+        return this.backend.renderLine(start, stop, color, lineWidth * unitInPixels);
     }
 
     /** Lets a user/developer draw an overlay line on the score. Use this instead of drawLine, which is for OSMD internally only.
@@ -215,7 +215,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      *  To get a MusicPage, use GraphicalNote.ParentMusicPage.
      */
     public DrawOverlayLine(start: PointF2D, stop: PointF2D, musicPage: GraphicalMusicPage,
-                           color: string = "#FF0000FF", lineWidth: number = 0.2): void {
+                           color: string = "#FF0000FF", lineWidth: number = 0.2): Node | undefined {
         if (!musicPage.PageNumber || musicPage.PageNumber > this.backends.length || musicPage.PageNumber < 1) {
             console.log("VexFlowMusicSheetDrawer.drawOverlayLine: invalid page number / music page number doesn't correspond to an existing backend.");
             return;
@@ -225,7 +225,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
 
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
-        backendToUse.renderLine(start, stop, color, lineWidth * unitInPixels);
+        return backendToUse.renderLine(start, stop, color, lineWidth * unitInPixels);
     }
 
     protected drawSkyLine(staffline: StaffLine): void {
@@ -410,9 +410,9 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param screenPosition the position of the lower left corner of the text in screen coordinates
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): void {
+                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): Node | undefined {
         if (!graphicalLabel.Label.print) {
-            return;
+            return undefined;
         }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { font } = graphicalLabel.Label;
@@ -428,25 +428,25 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             fontFamily = this.rules.DefaultFontFamily;
         }
 
-        // rvilarl let node: Node;
+        let node: Node;
         for (let i: number = 0; i < graphicalLabel.TextLines?.length; i++) {
             const currLine: {text: string, xOffset: number, width: number} = graphicalLabel.TextLines[i];
             const xOffsetInPixel: number = this.calculatePixelDistance(currLine.xOffset);
             const linePosition: PointF2D = new PointF2D(screenPosition.x + xOffsetInPixel, screenPosition.y);
-            // rvilarl const newNode: Node =
+            const newNode: Node =
                 this.backend.renderText(height, fontStyle, font, currLine.text, fontHeightInPixel, linePosition, color, graphicalLabel.Label.fontFamily);
-            // rvilarl if (!node) {
-            // rvilarl    node = newNode;
-            // rvilarl } else {
-            // rvilarl    node.appendChild(newNode);
-            // rvilarl }
+            if (!node) {
+                node = newNode;
+            } else {
+                node.appendChild(newNode);
+            }
             screenPosition.y = screenPosition.y + fontHeightInPixel;
             if (graphicalLabel.TextLines.length > 1) {
                 screenPosition.y += this.rules.SpacingBetweenTextLines;
             }
         }
         // font currently unused, replaced by fontFamily
-        // rvilarl return node; // alternatively, return Node[] and refactor annotationElementMap to handle node array instead of single node
+        return node; // alternatively, return Node[] and refactor annotationElementMap to handle node array instead of single node
     }
 
     /**
@@ -457,8 +457,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param styleId the style id
      * @param alpha alpha value between 0 and 1
      */
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): void {
-        this.backend.renderRectangle(rectangle, styleId, colorHex, alpha);
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): Node | undefined {
+        return this.backend.renderRectangle(rectangle, styleId, colorHex, alpha);
     }
 
     /**

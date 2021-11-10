@@ -104,9 +104,9 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                       heightInPixel: number, screenPosition: PointF2D,
-                      color?: string, fontFamily?: string): void {
+                      color?: string, fontFamily?: string): Node | undefined {
         this.ctx.save();
-        this.ctx.openGroup("text");
+        const node: Node = this.ctx.openGroup("text");
 
         if (color) {
             (this.ctx as SVGContext).attributes.fill = color;
@@ -145,11 +145,12 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
         this.ctx.closeGroup();
         this.ctx.restore();
+    return node;
     }
 
-    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): void {
+    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): Node | undefined {
         this.ctx.save();
-        this.ctx.openGroup("rectangle");
+        const node: Node = this.ctx.openGroup("rectangle");
         if (colorHex) {
             (this.ctx as SVGContext).attributes.fill = colorHex;
         } else {
@@ -160,11 +161,12 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.restore();
         (this.ctx as SVGContext).attributes["fill-opacity"] = 1;
         this.ctx.closeGroup();
+        return node;
     }
 
-    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2): void {
+    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2): Node | undefined {
         this.ctx.save();
-        this.ctx.openGroup("line");
+        const node: Node = this.ctx.openGroup("line");
         this.ctx.beginPath();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(stop.x, stop.y);
@@ -179,6 +181,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.stroke();
         this.ctx.closeGroup();
         this.ctx.restore();
+        return node;
     }
 
     public renderCurve(points: PointF2D[]): void {

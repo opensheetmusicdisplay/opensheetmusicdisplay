@@ -91,7 +91,7 @@ export abstract class VexFlowBackend {
   public abstract translate(x: number, y: number): void;
   public abstract renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                              heightInPixel: number, screenPosition: PointF2D,
-                             color?: string, fontFamily?: string): void;
+                             color?: string, fontFamily?: string): Node | undefined;
   /**
    * Renders a rectangle with the given style to the screen.
    * It is given in screen coordinates.
@@ -100,9 +100,9 @@ export abstract class VexFlowBackend {
    * @param styleId the style id
    * @param alpha alpha value between 0 and 1
    */
-  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number): void;
+  public abstract renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number): Node | undefined;
 
-  public abstract renderLine(start: PointF2D, stop: PointF2D, color?: string, lineWidth?: number): void;
+  public abstract renderLine(start: PointF2D, stop: PointF2D, color?: string, lineWidth?: number): Node | undefined;
 
   public abstract renderCurve(points: PointF2D[]): void;
 
