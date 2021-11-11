@@ -978,20 +978,15 @@ export abstract class MusicSheetCalculator {
                         if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                             continue;
                         }
-                        //const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +
-                            //measure.PositionAndShape.RelativePosition.x;
                         for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
                             const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
-                            // const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
-                            // const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
                             const sps: BoundingBox = staffEntry.PositionAndShape;
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                             const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
                             const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
                             if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
-                                minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
-                            } else if (!this.rules.ChordSymbolYAlignment) {
-                                minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end);
+                                //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
+                                minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
                             }
                             let yShift: number = 0;
                             if (i === 0) {
@@ -1003,7 +998,6 @@ export abstract class MusicSheetCalculator {
                             yShift *= -1;
                             const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
                             gLabel.PositionAndShape.RelativePosition.y = minimumOffset + yShift;
-                            //gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
                             gLabel.setLabelPositionAndShapeBorders();
                             gLabel.PositionAndShape.calculateBoundingBox();
                             skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
@@ -1018,8 +1012,6 @@ export abstract class MusicSheetCalculator {
         let minimumOffset: number = Number.MAX_SAFE_INTEGER;
         for (const staffEntry of staffEntries) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
-                // const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
-                // const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
                 const sps: BoundingBox = staffEntry.PositionAndShape;
                 const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                 const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
