@@ -18,7 +18,7 @@ describe("Music Sheet Calculator", () => {
 
     it("calculates music sheet", (done: Mocha.Done) => {
         // @ts-ignore
-        this.timeout = 10000;
+        this.timeout = 20000;
         MusicSheetCalculator.TextMeasurer = new VexFlowTextMeasurer(new EngravingRules());
         // Load the XML file
         const xml: Document = TestUtils.getScore(filename);
