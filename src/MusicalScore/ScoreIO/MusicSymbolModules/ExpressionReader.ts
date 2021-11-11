@@ -543,42 +543,42 @@ export class ExpressionReader {
                 return true;
             }
         }
-        if (InstantaneousDynamicExpression.isInputStringInstantaneousDynamic(stringTrimmed) ||
-            ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
+        if (ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
+            // || InstantaneousDynamicExpression.isInputStringInstantaneousDynamic(stringTrimmed)
+            //   looks like <words> never has instantaneous dynamics like p or sf, those are in <dynamics>.
             this.createNewMultiExpressionIfNeeded(currentMeasure);
-            if (InstantaneousDynamicExpression.isInputStringInstantaneousDynamic(stringTrimmed)) {
-                if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
-                    this.closeOpenContinuousDynamic();
-                }
-                const instantaneousDynamicExpression: InstantaneousDynamicExpression =
-                    new InstantaneousDynamicExpression(
-                        stringTrimmed,
-                        this.soundDynamic,
-                        this.placement,
-                        this.staffNumber,
-                        currentMeasure);
-                this.getMultiExpression.addExpression(instantaneousDynamicExpression, prefix);
-                return true;
+            // if (InstantaneousDynamicExpression.isInputStringInstantaneousDynamic(stringTrimmed)) {
+            //     if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
+            //         this.closeOpenContinuousDynamic();
+            //     }
+            //     const instantaneousDynamicExpression: InstantaneousDynamicExpression =
+            //         new InstantaneousDynamicExpression(
+            //             stringTrimmed,
+            //             this.soundDynamic,
+            //             this.placement,
+            //             this.staffNumber,
+            //             currentMeasure);
+            //     this.getMultiExpression.addExpression(instantaneousDynamicExpression, prefix);
+            //     return true;
+            // }
+            // if (ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
+            const continuousDynamicExpression: ContinuousDynamicExpression =
+                new ContinuousDynamicExpression(
+                    undefined,
+                    this.placement,
+                    this.staffNumber,
+                    currentMeasure,
+                    stringTrimmed);
+            if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
+                this.closeOpenContinuousDynamic();
             }
-            if (ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
-                const continuousDynamicExpression: ContinuousDynamicExpression =
-                    new ContinuousDynamicExpression(
-                        undefined,
-                        this.placement,
-                        this.staffNumber,
-                        currentMeasure,
-                        stringTrimmed);
-                if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
-                    this.closeOpenContinuousDynamic();
-                }
-                if (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.StaffNumber === continuousDynamicExpression.StaffNumber) {
-                    this.activeInstantaneousDynamic = undefined;
-                }
-                this.openContinuousDynamicExpression = continuousDynamicExpression;
-                continuousDynamicExpression.StartMultiExpression = this.getMultiExpression;
-                this.getMultiExpression.addExpression(continuousDynamicExpression, prefix);
-                return true;
+            if (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.StaffNumber === continuousDynamicExpression.StaffNumber) {
+                this.activeInstantaneousDynamic = undefined;
             }
+            this.openContinuousDynamicExpression = continuousDynamicExpression;
+            continuousDynamicExpression.StartMultiExpression = this.getMultiExpression;
+            this.getMultiExpression.addExpression(continuousDynamicExpression, prefix);
+            return true;
         }
         if (MoodExpression.isInputStringMood(stringTrimmed)) {
             this.createNewMultiExpressionIfNeeded(currentMeasure);
