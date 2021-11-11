@@ -379,6 +379,9 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
             sourceMeasureCounter++;
         }
         this.currentMeasure.Duration = maxInstrumentDuration; // can be 1/1 in a 4/4 time signature
+        // if (this.currentMeasure.Duration.Numerator === 0) {
+        //     this.currentMeasure.Duration = activeRhythm; // might be related to #1073
+        // }
         this.currentMeasure.ActiveTimeSignature = activeRhythm;
         this.currentMeasure.MeasureNumber = sourceMeasureCounter;
         for (let i: number = 0; i < instrumentsDurations.length; i++) {
