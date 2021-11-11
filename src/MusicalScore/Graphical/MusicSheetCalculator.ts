@@ -69,6 +69,7 @@ import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynam
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
+import { GraphicalChordSymbolContainer } from ".";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -959,23 +960,66 @@ export abstract class MusicSheetCalculator {
     protected calculateChordSymbols(): void {
         for (const musicSystem of this.musicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
-                const sbc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+                const skybottomcalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+                let minimumOffset: number = Number.MAX_SAFE_INTEGER; // only calculated if option set
+                if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "staffline") {
+                    // get the max y position of all chord symbols in the staffline in advance
+                    const alignmentScopedStaffEntries: GraphicalStaffEntry[] = [];
+                    for (const measure of staffLine.Measures) {
+                        alignmentScopedStaffEntries.push(...measure.staffEntries);
+                    }
+                    minimumOffset = this.calculateAlignedChordSymbolsOffset(alignmentScopedStaffEntries, skybottomcalculator);
+                }
                 for (const measure of staffLine.Measures) {
+                    if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "measure") {
+                        minimumOffset = this.calculateAlignedChordSymbolsOffset(measure.staffEntries, skybottomcalculator);
+                    }
                     for (const staffEntry of measure.staffEntries) {
                         if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                             continue;
                         }
-                        for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
+                        for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
+                            const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
                             const sps: BoundingBox = staffEntry.PositionAndShape;
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                             const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
                             const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
-                            sbc.updateSkyLineInRange(start, end, sps.BorderMarginTop);
+                            if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
+                                //minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
+                                minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end); // same as above, less code executed
+                            }
+                            let yShift: number = 0;
+                            if (i === 0) {
+                                yShift += this.rules.ChordSymbolYOffset;
+                                yShift += 0.1; // above is a bit closer to the notes than below ones for some reason
+                            } else {
+                                yShift += this.rules.ChordSymbolYPadding;
+                            }
+                            yShift *= -1;
+                            const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
+                            gLabel.PositionAndShape.RelativePosition.y = minimumOffset + yShift;
+                            gLabel.setLabelPositionAndShapeBorders();
+                            gLabel.PositionAndShape.calculateBoundingBox();
+                            skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
                         }
                     }
                 }
             }
         }
+    }
+
+    protected calculateAlignedChordSymbolsOffset(staffEntries: GraphicalStaffEntry[], sbc: SkyBottomLineCalculator): number {
+        let minimumOffset: number = Number.MAX_SAFE_INTEGER;
+        for (const staffEntry of staffEntries) {
+            for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
+                const sps: BoundingBox = staffEntry.PositionAndShape;
+                const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
+                const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
+                const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
+                minimumOffset = Math.min(minimumOffset, sbc.getSkyLineMinInRange(start, end));
+            }
+        }
+        return minimumOffset;
     }
 
     /**
