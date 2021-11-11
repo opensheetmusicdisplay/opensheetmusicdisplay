@@ -46,6 +46,7 @@ export class Note {
     private typeLength: Fraction;
     /** The NoteType given in the XML, e.g. quarter, which can be a normal quarter or tuplet quarter -> can have different length/fraction */
     private noteTypeXml: NoteType;
+    public DotsXml: number;
     /** The amount of notes the tuplet of this note (if there is one) replaces. */
     private normalNotes: number;
     private isRestFlag: boolean;
