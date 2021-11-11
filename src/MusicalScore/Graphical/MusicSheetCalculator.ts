@@ -961,30 +961,19 @@ export abstract class MusicSheetCalculator {
         for (const musicSystem of this.musicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
                 const skybottomcalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
-                let stafflineMinimum: number = Number.MAX_SAFE_INTEGER; // only calculated if option set
-                if (this.rules.ChordSymbolYAlignment) {
-                    // get the max y position of all chord symbols in the staffline in advance,
-                    //   similar to when it's added in the second loop over staffentries
+                let minimumOffset: number = Number.MAX_SAFE_INTEGER; // only calculated if option set
+                if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "staffline") {
+                    // get the max y position of all chord symbols in the staffline in advance
+                    const alignmentScopedStaffEntries: GraphicalStaffEntry[] = [];
                     for (const measure of staffLine.Measures) {
-                        for (const staffEntry of measure.staffEntries) {
-                            if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
-                                continue;
-                            }
-                            for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
-                                const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
-                                // const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
-                                // const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
-                                const sps: BoundingBox = staffEntry.PositionAndShape;
-                                const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
-                                const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
-                                const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
-                                const skybottomFurthest: number = skybottomcalculator.getSkyLineMinInRange(start, end);
-                                stafflineMinimum = Math.min(skybottomFurthest, stafflineMinimum);
-                            }
-                        }
+                        alignmentScopedStaffEntries.push(...measure.staffEntries);
                     }
+                    minimumOffset = this.calculateAlignedChordSymbolsOffset(alignmentScopedStaffEntries, skybottomcalculator);
                 }
                 for (const measure of staffLine.Measures) {
+                    if (this.rules.ChordSymbolYAlignment && this.rules.ChordSymbolYAlignmentScope === "measure") {
+                        minimumOffset = this.calculateAlignedChordSymbolsOffset(measure.staffEntries, skybottomcalculator);
+                    }
                     for (const staffEntry of measure.staffEntries) {
                         if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                             continue;
@@ -999,9 +988,10 @@ export abstract class MusicSheetCalculator {
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                             const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
                             const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
-                            let skybottomFurthest: number = skybottomcalculator.getSkyLineMinInRange(start, end);
-                            if (this.rules.ChordSymbolYAlignment) {
-                                skybottomFurthest = stafflineMinimum;
+                            if (!this.rules.ChordSymbolYAlignment || minimumOffset > 0) {
+                                minimumOffset = this.calculateAlignedChordSymbolsOffset([staffEntry], skybottomcalculator);
+                            } else if (!this.rules.ChordSymbolYAlignment) {
+                                minimumOffset = skybottomcalculator.getSkyLineMinInRange(start, end);
                             }
                             let yShift: number = 0;
                             if (i === 0) {
@@ -1012,16 +1002,32 @@ export abstract class MusicSheetCalculator {
                             }
                             yShift *= -1;
                             const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
-                            gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
+                            gLabel.PositionAndShape.RelativePosition.y = minimumOffset + yShift;
                             //gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
                             gLabel.setLabelPositionAndShapeBorders();
                             gLabel.PositionAndShape.calculateBoundingBox();
-                            skybottomcalculator.updateSkyLineInRange(start, end, sps.BorderMarginTop);
+                            skybottomcalculator.updateSkyLineInRange(start, end, minimumOffset + gLabel.PositionAndShape.BorderMarginTop);
                         }
                     }
                 }
             }
         }
+    }
+
+    protected calculateAlignedChordSymbolsOffset(staffEntries: GraphicalStaffEntry[], sbc: SkyBottomLineCalculator): number {
+        let minimumOffset: number = Number.MAX_SAFE_INTEGER;
+        for (const staffEntry of staffEntries) {
+            for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
+                // const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
+                // const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
+                const sps: BoundingBox = staffEntry.PositionAndShape;
+                const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
+                const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
+                const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
+                minimumOffset = Math.min(minimumOffset, sbc.getSkyLineMinInRange(start, end));
+            }
+        }
+        return minimumOffset;
     }
 
     /**
