@@ -12,6 +12,11 @@ export class GraphicalLabel extends Clickable {
     private label: Label;
     private rules: EngravingRules;
     public TextLines: {text: string, xOffset: number, width: number}[];
+    /** A reference to the Node in the SVG, if SVGBackend, otherwise undefined.
+     *  Allows manipulation without re-rendering, e.g. for dynamics, lyrics, etc.
+     *  For the Canvas backend, this is unfortunately not possible.
+     */
+    public SVGNode: Node;
 
     /**
      * Creates a new GraphicalLabel from a Label

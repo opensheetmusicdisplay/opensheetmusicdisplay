@@ -304,18 +304,17 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
-
-
     private drawStaffEntry(staffEntry: GraphicalStaffEntry): void {
         if (staffEntry.FingeringEntries.length > 0) {
             for (const fingeringEntry of staffEntry.FingeringEntries) {
-                this.drawLabel(fingeringEntry, GraphicalLayers.Notes);
+                fingeringEntry.SVGNode = this.drawLabel(fingeringEntry, GraphicalLayers.Notes);
             }
         }
         // Draw ChordSymbols
         if (staffEntry.graphicalChordContainers !== undefined && staffEntry.graphicalChordContainers.length > 0) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
-                this.drawLabel(graphicalChordContainer.GraphicalLabel, <number>GraphicalLayers.Notes);
+                const label: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
+                label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
         }
         if (this.rules.RenderLyrics) {
@@ -331,7 +330,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param layer Number of the layer that the lyrics should be drawn in
      */
     private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
-        lyricEntries.forEach(lyricsEntry => this.drawLabel(lyricsEntry.GraphicalLabel, layer));
+        lyricEntries.forEach(lyricsEntry => {
+            const label: GraphicalLabel = lyricsEntry.GraphicalLabel;
+            label.SVGNode = this.drawLabel(label, layer);
+        });
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
@@ -366,7 +368,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 this.drawInstantaneousDynamic((abstractGraphicalExpression as VexFlowInstantaneousDynamicExpression));
                 // Draw InstantaniousTempo
             } else if (abstractGraphicalExpression instanceof GraphicalInstantaneousTempoExpression) {
-                this.drawLabel((abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
+                const label: GraphicalLabel = (abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel;
+                label.SVGNode = this.drawLabel(label, GraphicalLayers.Notes);
                 // Draw ContinuousDynamics
             } else if (abstractGraphicalExpression instanceof GraphicalContinuousDynamicExpression) {
                 this.drawContinuousDynamic((abstractGraphicalExpression as VexFlowContinuousDynamicExpression));
@@ -379,7 +382,8 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 //     drawLabel(graphicalMood.GetGraphicalLabel, <number>GraphicalLayers.Notes);
             // Draw Unknown
             } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
-                this.drawLabel(abstractGraphicalExpression.Label, <number>GraphicalLayers.Notes);
+                const label: GraphicalLabel = abstractGraphicalExpression.Label;
+                label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
             } else {
                 log.warn("Unkown type of expression!");
             }
@@ -387,12 +391,14 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawInstantaneousDynamic(instantaneousDynamic: GraphicalInstantaneousDynamicExpression): void {
-        this.drawLabel((instantaneousDynamic as VexFlowInstantaneousDynamicExpression).Label, <number>GraphicalLayers.Notes);
+        const label: GraphicalLabel = (instantaneousDynamic as VexFlowInstantaneousDynamicExpression).Label;
+        label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
     }
 
     protected drawContinuousDynamic(graphicalExpression: VexFlowContinuousDynamicExpression): void {
         if (graphicalExpression.IsVerbal) {
-            this.drawLabel(graphicalExpression.Label, <number>GraphicalLayers.Notes);
+            const label: GraphicalLabel = graphicalExpression.Label;
+            label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
         } else {
             for (const line of graphicalExpression.Lines) {
                 const start: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.Start.x,
