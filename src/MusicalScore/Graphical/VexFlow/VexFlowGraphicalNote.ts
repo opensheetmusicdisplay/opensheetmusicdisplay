@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import { NoteHead, StaveNote, StemmableNote } from "vexflow";
 import {GraphicalNote} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
@@ -16,7 +16,7 @@ import { EngravingRules } from "../EngravingRules";
 export class VexFlowGraphicalNote extends GraphicalNote {
     constructor(note: Note, parent: GraphicalVoiceEntry, activeClef: ClefInstruction,
                 octaveShift: OctaveEnum = OctaveEnum.NONE, rules: EngravingRules,
-                graphicalNoteLength: Fraction = undefined) {
+                graphicalNoteLength?: Fraction) {
         super(note, parent, rules, graphicalNoteLength);
         this.clef = activeClef;
         this.octaveShift = octaveShift;
@@ -30,10 +30,10 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
     public octaveShift: OctaveEnum;
     // The pitch of this note as given by VexFlowConverter.pitch
-    public vfpitch: [string, string, ClefInstruction];
+    public vfpitch?: [string, string | undefined, ClefInstruction];
     // The corresponding VexFlow StaveNote (plus its index in the chord)
-    public vfnote: [Vex.Flow.StemmableNote, number];
-    public vfnoteIndex: number;
+    public vfnote!: [StemmableNote, number];
+    public vfnoteIndex!: number;
     // The current clef
     private clef: ClefInstruction;
 
@@ -76,19 +76,16 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * @param note
      * @param index
      */
-    public setIndex(note: Vex.Flow.StemmableNote, index: number): void {
+    public setIndex(note: StemmableNote, index: number): void {
         this.vfnote = [note, index];
         this.vfnoteIndex = index;
     }
 
-    public notehead(vfNote: Vex.Flow.StemmableNote = undefined): {line: number} {
-        let vfnote: any = vfNote;
-        if (!vfnote) {
-            vfnote = (this.vfnote[0] as any);
-        }
-        const noteheads: any = vfnote.note_heads;
+    public notehead(vfNote?: StemmableNote): {line: number} {
+        const vfnote: StemmableNote = vfNote || this.vfnote[0];
+        const noteheads: NoteHead[] = (vfnote as StaveNote).noteHeads;
         if (noteheads && noteheads.length > this.vfnoteIndex && noteheads[this.vfnoteIndex]) {
-            return vfnote.note_heads[this.vfnoteIndex];
+            return { line: (vfnote as StaveNote).noteHeads[this.vfnoteIndex].getLine() };
         } else {
             return { line: 0 };
         }
@@ -105,7 +102,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * Gets the id of the SVGGElement containing this note, given the SVGRenderer is used.
      * This is for low-level rendering hacks and should be used with caution.
      */
-    public getSVGId(): string {
+    public getSVGId(): string | undefined {
         if (!this.vfnote) {
             return undefined; // e.g. MultiRestMeasure
         }
@@ -116,7 +113,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * Gets the SVGGElement containing this note, given the SVGRenderer is used.
      * This is for low-level rendering hacks and should be used with caution.
      */
-    public getSVGGElement(): SVGGElement {
+    public getSVGGElement(): SVGGElement | undefined {
         if (!this.vfnote) {
             return undefined; // e.g. MultiRestMeasure
         }

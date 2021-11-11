@@ -1,3 +1,4 @@
+import { StemmableNote, TextBracket } from "vexflow";
 import Vex from "vexflow";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
@@ -12,15 +13,15 @@ import log from "loglevel";
 export class VexFlowOctaveShift extends GraphicalOctaveShift {
 
     /** Defines the note where the octave shift starts */
-    public startNote: Vex.Flow.StemmableNote;
+    public startNote!: StemmableNote;
     /** Defines the note where the octave shift ends */
-    public endNote: Vex.Flow.StemmableNote;
+    public endNote!: StemmableNote;
     /** Top or bottom of the staffline */
-    private position: Vex.Flow.TextBracket.Positions;
+    private position!: number;
     /** Supscript is a smaller text after the regular text (e.g. va after 8) */
-    private supscript: string;
+    private supscript!: string;
     /** Main text element */
-    private text: string;
+    private text!: string;
 
     /**
      * Create a new vexflow ocatve shift
@@ -75,7 +76,8 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      * Set an end note using a staff entry
      * @param graphicalStaffEntry the staff entry that holds the end note
      */
-    public setEndNote(graphicalStaffEntry: GraphicalStaffEntry): boolean {
+    public setEndNote(graphicalStaffEntry?: GraphicalStaffEntry): boolean {
+        if (!graphicalStaffEntry) {return false;}
         // this is duplicate code from setStartNote, but if we make one general method, we add a lot of branching.
         for (const gve of graphicalStaffEntry.graphicalVoiceEntries) {
             const vve: VexFlowVoiceEntry = (gve as VexFlowVoiceEntry);
@@ -90,7 +92,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     /**
      * Get the actual vexflow text bracket used for drawing
      */
-    public getTextBracket(): Vex.Flow.TextBracket {
+    public getTextBracket(): TextBracket {
         return new Vex.Flow.TextBracket({
             position: this.position,
             start: this.startNote,

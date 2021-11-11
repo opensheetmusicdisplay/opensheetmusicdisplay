@@ -1,5 +1,5 @@
+import { SVGContext, RenderContext } from "vexflow";
 import Vex from "vexflow";
-
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
@@ -12,15 +12,16 @@ import log from "loglevel";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
-    private ctx: Vex.Flow.SVGContext;
+    private ctx!: RenderContext;
     private zoom: number;
 
     constructor(rules: EngravingRules) {
         super();
         this.rules = rules;
+        this.zoom = 1.0;
     }
 
-    public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
+    public getVexflowBackendType(): number {
         return Vex.Flow.Renderer.Backends.SVG;
     }
 
@@ -29,7 +30,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
 
     public getCanvasSize(): number {
-        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight;
+        return document.getElementById("osmdCanvasPage" + this.graphicalMusicPage.PageNumber)?.offsetHeight || 0;
     }
 
     public initialize(container: HTMLElement, zoom: number): void {
@@ -42,20 +43,20 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.canvas.style.zIndex = "0";
         container.appendChild(this.inner);
         this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
-        this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
-        this.ctx.svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
+        this.ctx = this.renderer.getContext();
+        (this.ctx as SVGContext).svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
     }
 
-    public getContext(): Vex.Flow.SVGContext {
+    public getContext(): RenderContext {
         return this.ctx;
     }
 
     public getSvgElement(): SVGElement {
-        return this.ctx.svg;
+        return (this.ctx as SVGContext).svg;
     }
 
     removeNode(node: Node): boolean {
-        const svg: SVGElement = this.ctx?.svg;
+        const svg: SVGElement = (this.ctx as SVGContext)?.svg;
         if (!svg) {
             return false;
         }
@@ -75,7 +76,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             return;
         }
         //const { svg } = this.ctx; // seems to make svg static between osmd instances.
-        const svg: SVGElement = this.ctx.svg;
+        const svg: SVGElement = (this.ctx as SVGContext).svg;
         // removes all children from the SVG element,
         // effectively clearing the SVG viewport
         while (svg.lastChild) {
@@ -89,7 +90,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             this.ctx.setFillStyle(this.rules.PageBackgroundColor);
             this.ctx.setStrokeStyle("#12345600"); // transparent
 
-            this.ctx.fillRect(0, 0, this.canvas.offsetWidth / this.zoom, this.canvas.offsetHeight / this.zoom);
+            this.ctx.fillRect(0, 0, (this.canvas as HTMLDivElement).offsetWidth / this.zoom, (this.canvas as HTMLDivElement).offsetHeight / this.zoom);
             this.ctx.restore();
         }
     }
@@ -103,22 +104,24 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
     public renderText(fontHeight: number, fontStyle: FontStyles, font: Fonts, text: string,
                       heightInPixel: number, screenPosition: PointF2D,
-                      color: string = undefined, fontFamily: string = undefined): Node {
+                      color?: string, fontFamily?: string): Node | undefined {
         this.ctx.save();
-        const node: Node = this.ctx.openGroup();
+        const node: Node = this.ctx.openGroup("text");
 
         if (color) {
-            this.ctx.attributes.fill = color;
-            this.ctx.attributes.stroke = color;
+            (this.ctx as SVGContext).attributes.fill = color;
+            (this.ctx as SVGContext).attributes.stroke = color;
         }
-        let fontFamilyVexFlow: string = fontFamily;
+        let fontFamilyVexFlow: string = "";
         if (!fontFamily || fontFamily === "default") {
             fontFamilyVexFlow = this.rules.DefaultFontFamily;
+        } else {
+            fontFamilyVexFlow = fontFamily;
         }
         this.ctx.setFont(fontFamilyVexFlow, fontHeight, VexFlowConverter.fontStyle(fontStyle));
         // font size is set by VexFlow in `pt`. This overwrites the font so it's set to px instead
-        this.ctx.attributes["font-size"] = `${fontHeight}px`;
-        this.ctx.state["font-size"] = `${fontHeight}px`;
+        (this.ctx as SVGContext).attributes["font-size"] = `${fontHeight}px`;
+        (this.ctx as SVGContext).state["font-size"] = `${fontHeight}px`;
         let fontWeightVexflow: string = "normal";
         let fontStyleVexflow: string = "normal";
         switch (fontStyle) {
@@ -135,44 +138,45 @@ export class SvgVexFlowBackend extends VexFlowBackend {
             default:
                 fontWeightVexflow = "normal";
         }
-        this.ctx.attributes["font-weight"] = fontWeightVexflow;
-        this.ctx.state["font-weight"] = fontWeightVexflow;
-        this.ctx.attributes["font-style"] = fontStyleVexflow;
-        this.ctx.state["font-style"] = fontStyleVexflow;
+        (this.ctx as SVGContext).attributes["font-weight"] = fontWeightVexflow;
+        (this.ctx as SVGContext).state["font-weight"] = fontWeightVexflow;
+        (this.ctx as SVGContext).attributes["font-style"] = fontStyleVexflow;
+        (this.ctx as SVGContext).state["font-style"] = fontStyleVexflow;
         this.ctx.fillText(text, screenPosition.x, screenPosition.y + heightInPixel);
         this.ctx.closeGroup();
         this.ctx.restore();
-        return node;
+    return node;
     }
-    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): Node {
+
+    public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): Node | undefined {
         this.ctx.save();
-        const node: Node = this.ctx.openGroup();
+        const node: Node = this.ctx.openGroup("rectangle");
         if (colorHex) {
-            this.ctx.attributes.fill = colorHex;
+            (this.ctx as SVGContext).attributes.fill = colorHex;
         } else {
-            this.ctx.attributes.fill = VexFlowConverter.style(styleId);
+            (this.ctx as SVGContext).attributes.fill = VexFlowConverter.style(styleId);
         }
-        this.ctx.attributes["fill-opacity"] = alpha;
+        (this.ctx as SVGContext).attributes["fill-opacity"] = alpha;
         this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         this.ctx.restore();
-        this.ctx.attributes["fill-opacity"] = 1;
+        (this.ctx as SVGContext).attributes["fill-opacity"] = 1;
         this.ctx.closeGroup();
         return node;
     }
 
-    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2): Node {
+    public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2): Node | undefined {
         this.ctx.save();
-        const node: Node = this.ctx.openGroup();
+        const node: Node = this.ctx.openGroup("line");
         this.ctx.beginPath();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(stop.x, stop.y);
 
-        this.ctx.attributes.stroke = color;
+        (this.ctx as SVGContext).attributes.stroke = color;
         //this.ctx.attributes.strokeStyle = color;
         //this.ctx.attributes["font-weight"] = "bold";
         //this.ctx.attributes["stroke-linecap"] = "round";
 
-        this.ctx.lineWidth = lineWidth;
+        (this.ctx as SVGContext).lineWidth = lineWidth;
 
         this.ctx.stroke();
         this.ctx.closeGroup();
@@ -210,7 +214,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         // See: https://stackoverflow.com/questions/38477972/javascript-save-svg-element-to-file-on-disk
 
         // first create a clone of our svg node so we don't mess the original one
-        const clone: SVGElement = (this.ctx.svg.cloneNode(true) as SVGElement);
+        const clone: SVGElement = ((this.ctx as SVGContext).svg.cloneNode(true) as SVGElement);
 
         // create a doctype that is SVG
         const svgDocType: DocumentType = document.implementation.createDocumentType(

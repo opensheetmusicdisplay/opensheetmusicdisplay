@@ -88,10 +88,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowMeasure}
      */
     public createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure {
-        const extraGraphicalMeasure: GraphicalMeasure = new VexFlowMeasure(staffLine.ParentStaff, undefined, staffLine);
-        extraGraphicalMeasure.IsExtraGraphicalMeasure = true; // this also means that MeasureNumber < 0 because unchanged
-        extraGraphicalMeasure.ExtraGraphicalMeasurePreviousMeasure = staffLine.Measures.last();
-        return extraGraphicalMeasure;
+        return new VexFlowMeasure(staffLine.ParentStaff, undefined, staffLine);
     }
 
     /**
@@ -101,7 +98,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @returns {VexFlowStaffEntry}
      */
     public createStaffEntry(sourceStaffEntry: SourceStaffEntry, measure: GraphicalMeasure): GraphicalStaffEntry {
-        return new VexFlowStaffEntry(<VexFlowMeasure>measure, sourceStaffEntry, undefined);
+        return new VexFlowStaffEntry(<VexFlowMeasure>measure, sourceStaffEntry);
     }
 
     public createVoiceEntry(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry): GraphicalVoiceEntry {
@@ -119,7 +116,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      */
     public createNote(note: Note, graphicalVoiceEntry: GraphicalVoiceEntry, activeClef: ClefInstruction,
         octaveShift: OctaveEnum = OctaveEnum.NONE, rules: EngravingRules,
-        graphicalNoteLength: Fraction = undefined): GraphicalNote {
+        graphicalNoteLength?: Fraction): GraphicalNote {
         return new VexFlowGraphicalNote(note, graphicalVoiceEntry, activeClef, octaveShift, rules, graphicalNoteLength);
     }
 

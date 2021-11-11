@@ -10,7 +10,7 @@ import { EngravingRules } from "../EngravingRules";
 export class VexFlowTextMeasurer implements ITextMeasurer {
     constructor(rules: EngravingRules) {
         const canvas: HTMLCanvasElement = document.createElement("canvas");
-        this.context = canvas.getContext("2d");
+        this.context = canvas.getContext("2d") as CanvasRenderingContext2D;
         this.rules = rules;
     }
     // The context of a canvas used internally to compute font sizes
@@ -27,7 +27,7 @@ export class VexFlowTextMeasurer implements ITextMeasurer {
      * @returns {number}
      */
     public computeTextWidthToHeightRatio(text: string, font: Fonts, style: FontStyles,
-                                         fontFamily: string = undefined,
+                                         fontFamily?: string,
                                          fontSize: number = this.fontSize): number {
         this.context.font = VexFlowConverter.font(fontSize, style, font, this.rules, fontFamily);
         return this.context.measureText(text).width / fontSize;

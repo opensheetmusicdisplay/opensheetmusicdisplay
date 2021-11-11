@@ -86,8 +86,8 @@ export class AlignmentManager {
                     }
                     // Squeeze wedges
                     if ((expr as VexFlowContinuousDynamicExpression).squeeze) {
-                        const nextExpression: AbstractGraphicalExpression = exprIdx < aes.length - 1 ? aes[exprIdx + 1] : undefined;
-                        const prevExpression: AbstractGraphicalExpression = exprIdx > 0 ? aes[exprIdx - 1] : undefined;
+                        const nextExpression: AbstractGraphicalExpression | undefined = exprIdx < aes.length - 1 ? aes[exprIdx + 1] : undefined;
+                        const prevExpression: AbstractGraphicalExpression | undefined = exprIdx > 0 ? aes[exprIdx - 1] : undefined;
                         if (nextExpression) {
                             const overlapRight: PointF2D = this.getOverlap(expr.PositionAndShape, nextExpression.PositionAndShape);
                             (expr as VexFlowContinuousDynamicExpression).squeeze(-(overlapRight.x + this.rules.DynamicExpressionSpacer));

@@ -1,3 +1,4 @@
+import { RenderContext, TextBracket } from "vexflow";
 import Vex from "vexflow";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
@@ -37,7 +38,7 @@ import { GraphicalUnknownExpression } from "../GraphicalUnknownExpression";
 export const unitInPixels: number = 10;
 
 export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
-    private backend: VexFlowBackend;
+    private backend!: VexFlowBackend;
     private backends: VexFlowBackend[] = [];
     private zoom: number = 1.0;
     private pageIdx: number = 0; // this is a bad solution, should use MusicPage.PageNumber instead.
@@ -53,15 +54,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // vexflow 3.x: change default font
         if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            (Vex.Flow as any).DEFAULT_FONT_STACK = [(Vex.Flow as any).Fonts?.Gonville, (Vex.Flow as any).Fonts?.Bravura, (Vex.Flow as any).Fonts?.Custom];
+            // rvilarl Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
         } // else keep new vexflow default Bravura (more cursive, bold).
 
         // sizing defaults in Vexflow
-        (Vex.Flow as any).STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
-        (Vex.Flow as any).STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        Vex.Flow.STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        Vex.Flow.STEM_WIDTH = this.rules.StemWidth * unitInPixels;
         // sets scale/size of notes/rest notes:
-        (Vex.Flow as any).DEFAULT_NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
-        (Vex.Flow as any).DEFAULT_TAB_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+        Vex.Flow.NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        Vex.Flow.TABLATURE_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
 
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {
@@ -198,7 +199,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     /** Draws a line in the current backend. Only usable while pages are drawn sequentially, because backend reference is updated in that process.
      *  To add your own lines after rendering, use DrawOverlayLine.
      */
-    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): Node {
+    protected drawLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 0.2): Node | undefined {
         // TODO maybe the backend should be given as an argument here as well, otherwise this can't be used after rendering of multiple pages is done.
         start = this.applyScreenTransformation(start);
         stop = this.applyScreenTransformation(stop);
@@ -214,7 +215,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      *  To get a MusicPage, use GraphicalNote.ParentMusicPage.
      */
     public DrawOverlayLine(start: PointF2D, stop: PointF2D, musicPage: GraphicalMusicPage,
-                           color: string = "#FF0000FF", lineWidth: number = 0.2): Node {
+                           color: string = "#FF0000FF", lineWidth: number = 0.2): Node | undefined {
         if (!musicPage.PageNumber || musicPage.PageNumber > this.backends.length || musicPage.PageNumber < 1) {
             console.log("VexFlowMusicSheetDrawer.drawOverlayLine: invalid page number / music page number doesn't correspond to an existing backend.");
             return;
@@ -304,22 +305,18 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         }
     }
 
+
+
     private drawStaffEntry(staffEntry: GraphicalStaffEntry): void {
-        if (staffEntry.FingeringEntries.length > 0) {
-            for (const fingeringEntry of staffEntry.FingeringEntries) {
-                fingeringEntry.SVGNode = this.drawLabel(fingeringEntry, GraphicalLayers.Notes);
-            }
-        }
         // Draw ChordSymbols
         if (staffEntry.graphicalChordContainers !== undefined && staffEntry.graphicalChordContainers.length > 0) {
             for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
-                const label: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
-                label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+                this.drawLabel(graphicalChordContainer.GraphicalLabel, GraphicalLayers.Notes);
             }
         }
         if (this.rules.RenderLyrics) {
             if (staffEntry.LyricsEntries.length > 0) {
-                this.drawLyrics(staffEntry.LyricsEntries, <number>GraphicalLayers.Notes);
+                this.drawLyrics(staffEntry.LyricsEntries, GraphicalLayers.Notes);
             }
         }
     }
@@ -330,10 +327,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param layer Number of the layer that the lyrics should be drawn in
      */
     private drawLyrics(lyricEntries: GraphicalLyricEntry[], layer: number): void {
-        lyricEntries.forEach(lyricsEntry => {
-            const label: GraphicalLabel = lyricsEntry.GraphicalLabel;
-            label.SVGNode = this.drawLabel(label, layer);
-        });
+        lyricEntries.forEach(lyricsEntry => this.drawLabel(lyricsEntry.GraphicalLabel, layer));
     }
 
     protected drawInstrumentBrace(brace: GraphicalObject, system: MusicSystem): void {
@@ -352,14 +346,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         for (const graphicalOctaveShift of staffLine.OctaveShifts) {
             if (graphicalOctaveShift) {
                 const vexFlowOctaveShift: VexFlowOctaveShift = graphicalOctaveShift as VexFlowOctaveShift;
-                const ctx: Vex.IRenderContext = this.backend.getContext();
-                const textBracket: Vex.Flow.TextBracket = vexFlowOctaveShift.getTextBracket();
+                const ctx: RenderContext = this.backend.getContext();
+                const textBracket: TextBracket = vexFlowOctaveShift.getTextBracket();
                 textBracket.setContext(ctx);
-                try {
-                    textBracket.draw();
-                } catch (ex) {
-                    log.warn(ex);
-                }
+                textBracket.draw();
             }
         }
     }
@@ -372,8 +362,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 this.drawInstantaneousDynamic((abstractGraphicalExpression as VexFlowInstantaneousDynamicExpression));
                 // Draw InstantaniousTempo
             } else if (abstractGraphicalExpression instanceof GraphicalInstantaneousTempoExpression) {
-                const label: GraphicalLabel = (abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel;
-                label.SVGNode = this.drawLabel(label, GraphicalLayers.Notes);
+                this.drawLabel((abstractGraphicalExpression as GraphicalInstantaneousTempoExpression).GraphicalLabel, GraphicalLayers.Notes);
                 // Draw ContinuousDynamics
             } else if (abstractGraphicalExpression instanceof GraphicalContinuousDynamicExpression) {
                 this.drawContinuousDynamic((abstractGraphicalExpression as VexFlowContinuousDynamicExpression));
@@ -383,11 +372,10 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 // // Draw Mood
                 // } else if (abstractGraphicalExpression instanceof GraphicalMoodExpression) {
                 //     GraphicalMoodExpression; graphicalMood = (GraphicalMoodExpression); abstractGraphicalExpression;
-                //     drawLabel(graphicalMood.GetGraphicalLabel, <number>GraphicalLayers.Notes);
+                //     drawLabel(graphicalMood.GetGraphicalLabel, GraphicalLayers.Notes);
             // Draw Unknown
             } else if (abstractGraphicalExpression instanceof GraphicalUnknownExpression) {
-                const label: GraphicalLabel = abstractGraphicalExpression.Label;
-                label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+                this.drawLabel(abstractGraphicalExpression.Label, GraphicalLayers.Notes);
             } else {
                 log.warn("Unkown type of expression!");
             }
@@ -395,14 +383,12 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     }
 
     protected drawInstantaneousDynamic(instantaneousDynamic: GraphicalInstantaneousDynamicExpression): void {
-        const label: GraphicalLabel = (instantaneousDynamic as VexFlowInstantaneousDynamicExpression).Label;
-        label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+        this.drawLabel((instantaneousDynamic as VexFlowInstantaneousDynamicExpression).Label, GraphicalLayers.Notes);
     }
 
     protected drawContinuousDynamic(graphicalExpression: VexFlowContinuousDynamicExpression): void {
         if (graphicalExpression.IsVerbal) {
-            const label: GraphicalLabel = graphicalExpression.Label;
-            label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
+            this.drawLabel(graphicalExpression.Label, GraphicalLayers.Notes);
         } else {
             for (const line of graphicalExpression.Lines) {
                 const start: PointF2D = new PointF2D(graphicalExpression.ParentStaffLine.PositionAndShape.AbsolutePosition.x + line.Start.x,
@@ -424,18 +410,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param screenPosition the position of the lower left corner of the text in screen coordinates
      */
     protected renderLabel(graphicalLabel: GraphicalLabel, layer: number, bitmapWidth: number,
-                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): Node {
+                          bitmapHeight: number, fontHeightInPixel: number, screenPosition: PointF2D): Node | undefined {
         if (!graphicalLabel.Label.print) {
             return undefined;
         }
         const height: number = graphicalLabel.Label.fontHeight * unitInPixels;
         const { font } = graphicalLabel.Label;
-        let color: string;
+        let color: string = this.rules.DefaultColorLabel;
         if (this.rules.ColoringEnabled) {
             color = graphicalLabel.Label.colorDefault;
-            if (!color) {
-                color = this.rules.DefaultColorLabel;
-            }
         }
         let { fontStyle, fontFamily } = graphicalLabel.Label;
         if (!fontStyle) {
@@ -474,7 +457,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
      * @param styleId the style id
      * @param alpha alpha value between 0 and 1
      */
-    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): Node {
+    protected renderRectangle(rectangle: RectangleF2D, layer: number, styleId: number, colorHex: string, alpha: number): Node | undefined {
         return this.backend.renderRectangle(rectangle, styleId, colorHex, alpha);
     }
 
