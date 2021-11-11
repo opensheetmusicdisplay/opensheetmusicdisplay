@@ -33,11 +33,6 @@ module.exports = {
             $: 'jquery',
             jQuery: 'jquery'
         }),
-        new webpack.EnvironmentPlugin({
-            STATIC_FILES_SUBFOLDER: false, // Set to other directory if NOT using webpack-dev-server
-            DEBUG: false,
-            DRAW_BOUNDING_BOX_ELEMENT: false //  Specifies the element to draw bounding boxes for (e.g. 'GraphicalLabels'). If 'all', bounding boxes are drawn for all elements.
-        }),
         // add a demo page to the build folder
         new HtmlWebpackPlugin({
             template: 'demo/index.html',
