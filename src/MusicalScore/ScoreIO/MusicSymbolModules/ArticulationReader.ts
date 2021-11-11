@@ -41,6 +41,16 @@ export class ArticulationReader {
         return AccidentalEnum.THREEQUARTERSSHARP;
       case "three-quarters-flat":
         return AccidentalEnum.THREEQUARTERSFLAT;
+      case "slash-quarter-sharp":
+        return AccidentalEnum.SLASHQUARTERSHARP;
+      case "slash-sharp":
+        return AccidentalEnum.SLASHSHARP;
+      case "double-slash-flat":
+        return AccidentalEnum.DOUBLESLASHFLAT;
+      case "sori":
+        return AccidentalEnum.SORI;
+      case "koron":
+        return AccidentalEnum.KORON;
       default:
         return AccidentalEnum.NONE;
     }

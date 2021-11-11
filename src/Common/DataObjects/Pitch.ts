@@ -28,6 +28,11 @@ export enum AccidentalEnum {
     SLASHFLAT,
     THREEQUARTERSSHARP,
     THREEQUARTERSFLAT,
+    SLASHQUARTERSHARP,
+    SLASHSHARP,
+    DOUBLESLASHFLAT,
+    SORI,
+    KORON
 }
 
 // This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.
@@ -232,6 +237,18 @@ export class Pitch {
                 return 1.5;
             case AccidentalEnum.THREEQUARTERSFLAT:
                 return -1.5;
+            case AccidentalEnum.SLASHQUARTERSHARP:
+                return 0.0013; // tmp for identification
+            case AccidentalEnum.SLASHSHARP:
+                return 0.0014; // tmp for identification
+            case AccidentalEnum.SLASHFLAT:
+                return 0.0010; // tmp for identification
+            case AccidentalEnum.DOUBLESLASHFLAT:
+                return -0.0015; // tmp for identification
+            case AccidentalEnum.SORI:
+                return 0.0016; // tmp for identification
+            case AccidentalEnum.KORON:
+                return 0.0017; // tmp for identification
             default:
                 throw new Error("Unhandled AccidentalEnum value");
                 // return 0;
@@ -318,6 +335,21 @@ export class Pitch {
                 break;
             case AccidentalEnum.THREEQUARTERSFLAT:
                 acc = "db";
+                break;
+            case AccidentalEnum.SLASHQUARTERSHARP:
+                acc = "+-";
+                break;
+            case AccidentalEnum.SLASHSHARP:
+                acc = "++-";
+                break;
+            case AccidentalEnum.DOUBLESLASHFLAT:
+                acc = "bss";
+                break;
+            case AccidentalEnum.SORI:
+                acc = "o";
+                break;
+            case AccidentalEnum.KORON:
+                acc = "k";
                 break;
             default:
         }

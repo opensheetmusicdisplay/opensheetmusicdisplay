@@ -238,10 +238,12 @@ export class VoiceGenerator {
         this.handleTimeModificationNode(noteNode);
       }
     } catch (err) {
+      log.warn(err);
       const errorMsg: string = ITextTranslation.translateText(
         "ReaderErrorMessages/NoteError", "Ignored erroneous Note."
       );
       this.musicSheet.SheetErrors.pushMeasureError(errorMsg);
+      this.musicSheet.SheetErrors.pushMeasureError(err);
     }
 
     return this.currentNote;
@@ -392,8 +394,19 @@ export class VoiceGenerator {
           accidentalValue = noteElement.value;
           if (accidentalValue === "natural") {
             noteAccidental = AccidentalEnum.NATURAL;
+            // following accidentals: ambiguous in alter value
           } else if (accidentalValue === "slash-flat") {
             noteAccidental = AccidentalEnum.SLASHFLAT;
+          } else if (accidentalValue === "slash-quarter-sharp") {
+            noteAccidental = AccidentalEnum.SLASHQUARTERSHARP;
+          } else if (accidentalValue === "slash-sharp") {
+            noteAccidental = AccidentalEnum.SLASHSHARP;
+          } else if (accidentalValue === "double-slash-flat") {
+            noteAccidental = AccidentalEnum.DOUBLESLASHFLAT;
+          } else if (accidentalValue === "sori") {
+            noteAccidental = AccidentalEnum.SORI;
+          } else if (accidentalValue === "koron") {
+            noteAccidental = AccidentalEnum.KORON;
           }
         } else if (noteElement.name === "unpitched") {
           const displayStepElement: IXmlElement = noteElement.element("display-step");
