@@ -355,7 +355,11 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
                 const ctx: Vex.IRenderContext = this.backend.getContext();
                 const textBracket: Vex.Flow.TextBracket = vexFlowOctaveShift.getTextBracket();
                 textBracket.setContext(ctx);
-                textBracket.draw();
+                try {
+                    textBracket.draw();
+                } catch (ex) {
+                    log.warn(ex);
+                }
             }
         }
     }

@@ -69,6 +69,9 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     private parentMusicSystem: MusicSystem;
     private measureNumber: number = -1;
     private parentStaffLine: StaffLine;
+    /** Used to show key, rhythm changes at the end of the system, has MeasureNumber < 0, because never set. */
+    public IsExtraGraphicalMeasure: boolean;
+    public ExtraGraphicalMeasurePreviousMeasure: GraphicalMeasure;
 
     public get ParentStaff(): Staff {
         return this.parentStaff;

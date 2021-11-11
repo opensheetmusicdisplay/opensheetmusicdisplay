@@ -49,7 +49,7 @@ export class SkyBottomLineCalculator {
             // Pre initialize and get stuff for more performance
             const vsStaff: any = measure.getVFStave();
             let width: number = vsStaff.getWidth();
-            if (!(width > 0)) {
+            if (!(width > 0) && !measure.IsExtraGraphicalMeasure) {
                 log.warn("SkyBottomLineCalculator: width not > 0 in measure " + measure.MeasureNumber);
                 width = 50;
             }
