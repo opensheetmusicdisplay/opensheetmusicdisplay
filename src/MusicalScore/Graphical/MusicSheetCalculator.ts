@@ -69,6 +69,7 @@ import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynam
 import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
+import { GraphicalChordSymbolContainer } from ".";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -959,18 +960,63 @@ export abstract class MusicSheetCalculator {
     protected calculateChordSymbols(): void {
         for (const musicSystem of this.musicSystems) {
             for (const staffLine of musicSystem.StaffLines) {
-                const sbc: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+                const skybottomcalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+                let stafflineMinimum: number = Number.MAX_SAFE_INTEGER; // only calculated if option set
+                if (this.rules.ChordSymbolYAlignment) {
+                    // get the max y position of all chord symbols in the staffline in advance,
+                    //   similar to when it's added in the second loop over staffentries
+                    for (const measure of staffLine.Measures) {
+                        for (const staffEntry of measure.staffEntries) {
+                            if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
+                                continue;
+                            }
+                            for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
+                                const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
+                                // const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
+                                // const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
+                                const sps: BoundingBox = staffEntry.PositionAndShape;
+                                const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
+                                const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
+                                const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
+                                const skybottomFurthest: number = skybottomcalculator.getSkyLineMinInRange(start, end);
+                                stafflineMinimum = Math.min(skybottomFurthest, stafflineMinimum);
+                            }
+                        }
+                    }
+                }
                 for (const measure of staffLine.Measures) {
                     for (const staffEntry of measure.staffEntries) {
                         if (!staffEntry.graphicalChordContainers || staffEntry.graphicalChordContainers.length === 0) {
                             continue;
                         }
-                        for (const graphicalChordContainer of staffEntry.graphicalChordContainers) {
+                        //const staffEntryPositionX: number = staffEntry.PositionAndShape.RelativePosition.x +
+                            //measure.PositionAndShape.RelativePosition.x;
+                        for (let i: number = 0; i < staffEntry.graphicalChordContainers.length; i++) {
+                            const graphicalChordContainer: GraphicalChordSymbolContainer = staffEntry.graphicalChordContainers[i];
+                            // const marginLeft: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginLeft;
+                            // const marginRight: number = staffEntryPositionX + gLabel.PositionAndShape.BorderMarginRight;
                             const sps: BoundingBox = staffEntry.PositionAndShape;
                             const gps: BoundingBox = graphicalChordContainer.PositionAndShape;
                             const start: number = gps.BorderMarginLeft + sps.AbsolutePosition.x;
                             const end: number = gps.BorderMarginRight + sps.AbsolutePosition.x;
-                            sbc.updateSkyLineInRange(start, end, sps.BorderMarginTop);
+                            let skybottomFurthest: number = skybottomcalculator.getSkyLineMinInRange(start, end);
+                            if (this.rules.ChordSymbolYAlignment) {
+                                skybottomFurthest = stafflineMinimum;
+                            }
+                            let yShift: number = 0;
+                            if (i === 0) {
+                                yShift += this.rules.ChordSymbolYOffset;
+                                yShift += 0.1; // above is a bit closer to the notes than below ones for some reason
+                            } else {
+                                yShift += this.rules.ChordSymbolYPadding;
+                            }
+                            yShift *= -1;
+                            const gLabel: GraphicalLabel = graphicalChordContainer.GraphicalLabel;
+                            gLabel.PositionAndShape.RelativePosition.y += skybottomFurthest + yShift;
+                            //gLabel.PositionAndShape.RelativePosition.x = staffEntryPositionX;
+                            gLabel.setLabelPositionAndShapeBorders();
+                            gLabel.PositionAndShape.calculateBoundingBox();
+                            skybottomcalculator.updateSkyLineInRange(start, end, sps.BorderMarginTop);
                         }
                     }
                 }

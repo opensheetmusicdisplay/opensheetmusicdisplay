@@ -115,6 +115,8 @@ export class EngravingRules {
     public ChordSymbolXSpacing: number;
     public ChordOverlapAllowedIntoNextMeasure: number;
     public ChordSymbolYOffset: number;
+    public ChordSymbolYPadding: number;
+    public ChordSymbolYAlignment: boolean;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
     public CustomChords: CustomChord[];
     public RepetitionSymbolsYOffset: number;
@@ -443,7 +445,9 @@ export class EngravingRules {
         this.ChordSymbolRelativeXOffset = -1.0;
         this.ChordSymbolXSpacing = 1.0;
         this.ChordOverlapAllowedIntoNextMeasure = 0;
-        this.ChordSymbolYOffset = 2.0;
+        this.ChordSymbolYOffset = 0.1;
+        this.ChordSymbolYPadding = 0.0;
+        this.ChordSymbolYAlignment = true;
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
         this.CustomChords = [];
