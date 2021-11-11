@@ -31,7 +31,6 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
         for (const gve of this.graphicalVoiceEntries as VexFlowVoiceEntry[]) {
             if (gve.vfStaveNote) {
                 gve.vfStaveNote.setStave(stave);
-                // @ts-ignore
                 if (!gve.vfStaveNote.preFormatted) {
                     continue;
                 }
@@ -39,7 +38,6 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
                 if (this.parentMeasure.ParentStaff.isTab) {
                     // the x-position could be finetuned for the cursor.
                     // somehow, gve.vfStaveNote.getBoundingBox() is null for a TabNote (which is a StemmableNote).
-                    // @ts-ignore
                     this.PositionAndShape.RelativePosition.x = (gve.vfStaveNote.getAbsoluteX() + gve.vfStaveNote.glyph.getWidth()) / unitInPixels;
                 } else {
                     this.PositionAndShape.RelativePosition.x = gve.vfStaveNote.getBoundingBox()?.getX() || 0/ unitInPixels;

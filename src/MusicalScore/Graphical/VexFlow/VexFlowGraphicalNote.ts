@@ -83,11 +83,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
 
     public notehead(vfNote?: StemmableNote): {line: number} {
         const vfnote: StemmableNote = vfNote || this.vfnote[0];
-        // @ts-ignore
-        const noteheads: NoteHead[] = (vfnote as StaveNote).note_heads;
+        const noteheads: NoteHead[] = (vfnote as StaveNote).noteHeads;
         if (noteheads && noteheads.length > this.vfnoteIndex && noteheads[this.vfnoteIndex]) {
-            // @ts-ignore
-            return (vfnote as StaveNote).note_heads[this.vfnoteIndex];
+            return { line: (vfnote as StaveNote).noteHeads[this.vfnoteIndex].getLine() };
         } else {
             return { line: 0 };
         }

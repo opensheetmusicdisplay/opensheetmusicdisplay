@@ -189,7 +189,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
             } else if (lineNumber === 1) {
                 // Vex.Flow.Stave.setNumLines hides all but the top line.
                 // this is better
-                // @ts-ignore
                 this.stave.options.line_config = [
                     { visible: false },
                     { visible: false },
@@ -204,7 +203,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 //lines (which isn't this case here)
                 //this.stave.options.num_lines = parseInt(lines, 10);
             } else if (lineNumber === 2) {
-                // @ts-ignore
                 this.stave.options.line_config = [
                     { visible: false },
                     { visible: false },
@@ -216,7 +214,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     return this.getYForLine(3);
                 };
             } else if (lineNumber === 3) {
-                // @ts-ignore
                 this.stave.options.line_config = [
                     { visible: false },
                     { visible: true },
@@ -541,8 +538,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             vexFlowVoltaHeight += skylineDifference;
                             newSkylineValueForMeasure = prevMeasureSkyline;
                         } else { //otherwise, we are higher. Need to adjust prev
-                            // @ts-ignore
-                            nextStaveModifier.y_shift = vexFlowVoltaHeight * unitInPixels;
+                            // rvilarl (y_shift does not exist)
+                            // nextStaveModifier.y_shift = vexFlowVoltaHeight * unitInPixels;
                             prevMeasure.ParentStaffLine.SkyBottomLineCalculator.updateSkyLineInRange(prevStart, prevEnd, newSkylineValueForMeasure);
                         }
                     }
@@ -1438,7 +1435,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     fretFinger.setOffsetY(offsetYSign * (ordering + shiftCount) * perFingeringShift);
                 } else if (!this.rules.FingeringInsideStafflines) { // use StringNumber for placement above/below stafflines
                     const stringNumber: StringNumber = new Vex.Flow.StringNumber(fingering.value);
-                    // @ts-ignore
                     stringNumber.radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
@@ -1492,7 +1488,6 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 // Remove circle from string number. Not needed for
                 // disambiguation from fingerings since we use Roman
                 // Numerals for RenderStringNumbersClassical
-                // @ts-ignore
                 vfStringNumber.radius = 0;
                 const offsetY: number = -this.rules.StringNumberOffsetY;
                 // if (note.sourceNote.halfTone < 50) { // place string number a little higher for notes with ledger lines below staff

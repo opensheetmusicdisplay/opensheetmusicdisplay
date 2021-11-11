@@ -116,7 +116,6 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
             if (vfStaveNote) {
                 if (vfStaveNote instanceof Vex.Flow.StaveNote) { // see VexFlowConverter, needs Vexflow PR
-                    // @ts-ignore
                     const notehead: NoteHead = vfStaveNote.note_heads[i];
                     if (notehead) {
                         notehead.setStyle({ fillStyle: noteheadColor, strokeStyle: noteheadColor });

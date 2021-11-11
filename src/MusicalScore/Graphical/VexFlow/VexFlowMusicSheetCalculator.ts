@@ -994,15 +994,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
     vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
     const textBracket: TextBracket = vfOctaveShift.getTextBracket();
-    const fontSize: number = textBracket.getFontInfo().size as number / 10;
+    const fontSize: number = textBracket.fontSizeInPoints / 10;
 
-    // @ts-ignore
     if (textBracket.position === Vex.Flow.TextBracket.Positions.TOP) {
       const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
-      // @ts-ignore
       textBracket.start.getStave().options.top_text_position = Math.abs(headroom);
       parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
     } else {
@@ -1010,7 +1008,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (footroom === Infinity) { // will cause Vexflow error
         return;
       }
-      // @ts-ignore
       textBracket.start.getStave().options.bottom_text_position = footroom;
       //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
       parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);

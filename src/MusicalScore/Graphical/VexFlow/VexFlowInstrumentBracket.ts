@@ -31,14 +31,11 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
         // Set bounding box
         const con: StaveConnector = this.vexflowConnector;
         // First line in first stave
-        // @ts-ignore
         const topY: number = con.top_stave.getYForLine(0);
         // Last line in last stave
-        // @ts-ignore
         const botY: number = con.bottom_stave.getYForLine(con.bottom_stave.getNumLines() - 1) + con.thickness;
         // Set bounding box position and size in OSMD units
-        // @ts-ignore
-        this.PositionAndShape.AbsolutePosition.x = (con.top_stave.getX() - 2 + con.x_shift) / unitInPixels;
+        this.PositionAndShape.AbsolutePosition.x = (con.top_stave.getX() - 2 + con.getXShift()) / unitInPixels;
         this.PositionAndShape.AbsolutePosition.y = topY / unitInPixels;
         this.PositionAndShape.Size.height = (botY - topY) / unitInPixels;
         this.PositionAndShape.Size.width = 12 / unitInPixels; // width is always 12 -> vexflow implementation
