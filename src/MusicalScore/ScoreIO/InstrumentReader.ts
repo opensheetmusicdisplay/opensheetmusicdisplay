@@ -396,13 +396,14 @@ export class InstrumentReader {
           if (!isTuplet && !isGraceNote) {
             noteDuration = new Fraction(noteDivisions, 4 * this.divisions);
           }
+          const dots: number = xmlNode.elements("dot").length;
           this.currentVoiceGenerator.read(
             xmlNode, noteDuration, typeDuration, noteTypeXml, normalNotes, restNote,
             this.currentStaffEntry, this.currentMeasure,
             measureStartAbsoluteTimestamp,
             this.maxTieNoteFraction, isChord, octavePlusOne,
             printObject, isCueNote, isGraceNote, stemDirectionXml, tremoloStrokes, stemColorXml, noteheadColorXml,
-            vibratoStrokes
+            vibratoStrokes, dots
           );
 
           // notationsNode created further up for multiple checks
