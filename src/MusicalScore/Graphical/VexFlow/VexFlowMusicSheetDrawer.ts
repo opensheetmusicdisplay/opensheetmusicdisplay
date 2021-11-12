@@ -54,7 +54,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // vexflow 3.x: change default font
         if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            // rvilarl Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
+            Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
         } // else keep new vexflow default Bravura (more cursive, bold).
 
         // sizing defaults in Vexflow
