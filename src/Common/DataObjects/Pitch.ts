@@ -241,8 +241,6 @@ export class Pitch {
                 return 0.0013; // tmp for identification
             case AccidentalEnum.SLASHSHARP:
                 return 0.0014; // tmp for identification
-            case AccidentalEnum.SLASHFLAT:
-                return 0.0010; // tmp for identification
             case AccidentalEnum.DOUBLESLASHFLAT:
                 return -0.0015; // tmp for identification
             case AccidentalEnum.SORI:
