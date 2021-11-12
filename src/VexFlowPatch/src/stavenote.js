@@ -18,8 +18,8 @@ import { StemmableNote } from './stemmablenote';
 import { Modifier } from './modifier';
 import { Dot } from './dot';
 
-// To enable logging for this class. Set `Vex.Flow.StaveNote.DEBUG` to `true`.
-function L(...args) { if (StaveNote.DEBUG) Vex.L('Vex.Flow.StaveNote', args); }
+// To enable logging for this class. Set `StaveNote.DEBUG` to `true`.
+function L(...args) { if (StaveNote.DEBUG) Vex.L('StaveNote', args); }
 
 const getStemAdjustment = (note) => Stem.WIDTH / (2 * -note.getStemDirection());
 
@@ -291,7 +291,7 @@ export class StaveNote extends StemmableNote {
     if (!hasStave) {
       throw new Vex.RERR(
         'Stave Missing',
-        'All notes must have a stave - Vex.Flow.ModifierContext.formatMultiVoice!'
+        'All notes must have a stave - ModifierContext.formatMultiVoice!'
       );
     }
 

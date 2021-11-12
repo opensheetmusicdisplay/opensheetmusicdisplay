@@ -1,5 +1,4 @@
 import { Stave, StaveConnector, RenderContext } from "vexflow";
-import Vex from "vexflow";
 import { GraphicalObject } from "../GraphicalObject";
 import { VexFlowStaffLine } from "./VexFlowStaffLine";
 import { BoundingBox } from "../BoundingBox";
@@ -18,7 +17,7 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
         this.PositionAndShape = new BoundingBox(this, firstVexFlowStaffLine.ParentMusicSystem.PositionAndShape);
         const firstVexMeasure: VexFlowMeasure = firstVexFlowStaffLine.Measures[0] as VexFlowMeasure;
         const lastVexMeasure: VexFlowMeasure = lastVexFlowStaffLine.Measures[0] as VexFlowMeasure;
-        this.addConnector(firstVexMeasure.getVFStave(), lastVexMeasure.getVFStave(), Vex.Flow.StaveConnector.type.BRACKET, depth);
+        this.addConnector(firstVexMeasure.getVFStave(), lastVexMeasure.getVFStave(), StaveConnector.type.BRACKET, depth);
     }
 
     /**
@@ -48,7 +47,7 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
      * @param {Flow.StaveConnector.type} type: Type of connector
      */
     private addConnector(stave1: Stave, stave2: Stave, type: number, depth: number): void {
-        this.vexflowConnector = new Vex.Flow.StaveConnector(stave1, stave2)
+        this.vexflowConnector = new StaveConnector(stave1, stave2)
         .setType(type)
         .setXShift(depth * -5);
     }

@@ -48,7 +48,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         //     const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
         //     if (acc) {
         //         alert(acc);
-        //         this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
+        //         this.vfnote[0].addAccidental(this.vfnote[1], new Accidental(acc));
         //     }
         // } else {
         // revert octave shift, as the placement of the note is independent of octave brackets

@@ -1,5 +1,4 @@
 import { RenderContext, Renderer } from "vexflow";
-import Vex from "vexflow";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
@@ -40,7 +39,7 @@ export abstract class VexFlowBackend {
   public getRenderElement(): HTMLElement {
     //console.log("backend type: " + this.getVexflowBackendType());
     let renderingHtmlElement: HTMLElement = this.canvas as HTMLElement; // for SVGBackend
-    if (this.getVexflowBackendType() === Vex.Flow.Renderer.Backends.CANVAS) {
+    if (this.getVexflowBackendType() === Renderer.Backends.CANVAS) {
       renderingHtmlElement = this.inner;
       // usage in removeFromContainer:
       // for SVG, this.canvas === this.inner, but for Canvas, removing this.canvas causes an error because it's not a child of container,

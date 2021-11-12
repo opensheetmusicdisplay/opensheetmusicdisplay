@@ -20,8 +20,7 @@ import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import { Formatter, Stave, StemmableNote, TextBracket, Voice as VFVoice, StaveTie } from "vexflow";
-import Vex from "vexflow";
+import { Formatter, Stave, StemmableNote, TextBracket, Voice as VFVoice, StaveTie, Flow, TabSlide, TabTie } from "vexflow";
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
@@ -88,9 +87,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
     //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
     if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
+      Flow.setMusicFont("Gonville","Bravura","Custom");
     } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      Vex.Flow.setMusicFont("Petaluma", "Gonville","Bravura");
+      Flow.setMusicFont("Petaluma", "Gonville","Bravura");
     }
     // else keep new vexflow default Bravura (more cursive, bold)
   }
@@ -162,7 +161,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     // Format the voices
     const allVoices: VFVoice[] = [];
-    const formatter: Formatter = new Vex.Flow.Formatter({
+    const formatter: Formatter = new Formatter({
       // maxIterations: 2,
       softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
     });
@@ -618,7 +617,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
       if (vfStartNote) { // first_note or last_note must be not null in Vexflow
-        const vfTie1: StaveTie = new Vex.Flow.StaveTie({
+        const vfTie1: StaveTie = new StaveTie({
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote,
           last_note: null
@@ -627,7 +626,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         measure1.vfTies.push(vfTie1);
       }
       if (vfEndNote) {
-        const vfTie2: StaveTie = new Vex.Flow.StaveTie({
+        const vfTie2: StaveTie = new StaveTie({
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote,
           first_note: null
@@ -648,7 +647,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (startTieNote.FretNumber > endTieNote.FretNumber) {
               slideDirection = -1;
             }
-            vfTie = new Vex.Flow.TabSlide(
+            vfTie = new TabSlide(
               {
                 first_indices: [startNoteIndexInTie],
                 first_note: vfStartNote,
@@ -658,7 +657,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               slideDirection
             );
           } else {
-            vfTie = new Vex.Flow.TabTie(
+            vfTie = new TabTie(
               {
                 first_indices: [startNoteIndexInTie],
                 first_note: vfStartNote,
@@ -670,7 +669,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
 
         } else { // not Tab (guitar), normal StaveTie
-          vfTie = new Vex.Flow.StaveTie({
+          vfTie = new StaveTie({
             first_indices: [startNoteIndexInTie],
             first_note: vfStartNote,
             last_indices: [endNoteIndexInTie],
@@ -751,7 +750,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
     const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
     const vfStave: Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
-    //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
+    //vfStave.addModifier(new StaveTempo( // needs Vexflow PR
     let vexflowDuration: string = "q";
     if (metronomeExpression.beatUnit) {
       const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
@@ -810,7 +809,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // rvilarl if (measure.IsSystemStartMeasure) {
     // rvilarl   xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
     // rvilarl }
-    // const section: Vex.Flow.StaveSection = new Vex.Flow.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
+    // const section: StaveSection = new StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
     // vfStave.modifiers.push(section);
     // rvilarl const fontSize: number = this.rules.RehearsalMarkFontSize;
     vfStave.setSection(rehearsalExpression.label, yOffset); // rvilarl fontSize is an extra argument from VexFlowPatch
@@ -1009,7 +1008,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const textBracket: TextBracket = vfOctaveShift.getTextBracket();
     const fontSize: number = textBracket.fontSizeInPixels / 10;
 
-    if (textBracket.position === Vex.Flow.TextBracket.Positions.TOP) {
+    if (textBracket.position === TextBracket.Positions.TOP) {
       const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
         return;

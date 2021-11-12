@@ -1,5 +1,4 @@
 import { Curve, StemmableNote } from "vexflow";
-import Vex from "vexflow";
 import { Slur } from "../../VoiceData/Expressions/ContinuousExpressions/Slur";
 
 export interface ICurveOptions {
@@ -57,14 +56,14 @@ export class VexFlowSlur {
 
     // public createVexFlowCurve(): void {
     //     if (this.voiceentrySlurStart || this.voiceentrySlurEnd) {
-    //         this.vfCurve = new Vex.Flow.Curve( (this.voiceentrySlurStart as VexFlowVoiceEntry).vfStaveNote,
+    //         this.vfCurve = new Curve( (this.voiceentrySlurStart as VexFlowVoiceEntry).vfStaveNote,
     //                                            (this.voiceentrySlurEnd as VexFlowVoiceEntry).vfStaveNote,
     //                                            this.curve_Options()
     //                                         );
     //     }
     // }
     public createVexFlowCurve(): void {
-            this.vfCurve = new Vex.Flow.Curve( this.vfStartNote,
+            this.vfCurve = new Curve( this.vfStartNote,
                                                this.vfEndNote,
                                                undefined//this.curve_Options()
                                             );

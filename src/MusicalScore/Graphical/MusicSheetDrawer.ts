@@ -45,7 +45,7 @@ export abstract class MusicSheetDrawer {
     public drawingParameters: DrawingParameters;
     public splitScreenLineColor: number;
     public midiPlaybackAvailable: boolean;
-    public drawableBoundingBoxElement: string = process.env.DRAW_BOUNDING_BOX_ELEMENT;
+    public drawableBoundingBoxElement: string = "None"; // rvilarl(process not defined in CI) process.env.DRAW_BOUNDING_BOX_ELEMENT;
 
     public skyLineVisible: boolean = false;
     public bottomLineVisible: boolean = false;

@@ -1,5 +1,4 @@
 import { StemmableNote, TextBracket } from "vexflow";
-import Vex from "vexflow";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";
@@ -32,22 +31,22 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         super(octaveShift, parent);
         switch (octaveShift.Type) {
             case OctaveEnum.VA8:
-                this.position = Vex.Flow.TextBracket.Positions.TOP;
+                this.position = TextBracket.Position.TOP;
                 this.supscript = "va";
                 this.text = "8";
                 break;
             case OctaveEnum.MA15:
-                this.position = Vex.Flow.TextBracket.Positions.TOP;
+                this.position = TextBracket.Position.TOP;
                 this.supscript = "ma";
                 this.text = "15";
                 break;
             case OctaveEnum.VB8:
-                this.position = Vex.Flow.TextBracket.Positions.BOTTOM;
+                this.position = TextBracket.Position.BOTTOM;
                 this.supscript = "vb";
                 this.text = "8";
                 break;
             case OctaveEnum.MB15:
-                this.position = Vex.Flow.TextBracket.Positions.BOTTOM;
+                this.position = TextBracket.Position.BOTTOM;
                 this.supscript = "mb";
                 this.text = "15";
                 break;
@@ -93,7 +92,7 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
      * Get the actual vexflow text bracket used for drawing
      */
     public getTextBracket(): TextBracket {
-        return new Vex.Flow.TextBracket({
+        return new TextBracket({
             position: this.position,
             start: this.startNote,
             stop: this.endNote,

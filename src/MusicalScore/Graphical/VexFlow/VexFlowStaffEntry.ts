@@ -14,7 +14,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
     }
 
     // if there is a in-measure clef given before this staffEntry,
-    // it will be converted to a Vex.Flow.ClefNote and assigned to this variable:
+    // it will be converted to a ClefNote and assigned to this variable:
     public vfClefBefore?: ClefNote;
 
     /**

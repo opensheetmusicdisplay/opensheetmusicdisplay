@@ -1,5 +1,4 @@
-import { RenderContext, TextBracket } from "vexflow";
-import Vex from "vexflow";
+import { Flow, RenderContext, TextBracket } from "vexflow";
 import { MusicSheetDrawer } from "../MusicSheetDrawer";
 import { RectangleF2D } from "../../../Common/DataObjects/RectangleF2D";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -54,15 +53,15 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
     public drawSheet(graphicalMusicSheet: GraphicalMusicSheet): void {
         // vexflow 3.x: change default font
         if (this.rules.DefaultVexFlowNoteFont === "gonville") {
-            Vex.Flow.setMusicFont("Gonville","Bravura","Custom");
+            Flow.setMusicFont("Gonville","Bravura","Custom");
         } // else keep new vexflow default Bravura (more cursive, bold).
 
         // sizing defaults in Vexflow
-        Vex.Flow.STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
-        Vex.Flow.STEM_WIDTH = this.rules.StemWidth * unitInPixels;
+        Flow.STAVE_LINE_THICKNESS = this.rules.StaffLineWidth * unitInPixels;
+        Flow.STEM_WIDTH = this.rules.StemWidth * unitInPixels;
         // sets scale/size of notes/rest notes:
-        Vex.Flow.NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
-        Vex.Flow.TABLATURE_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
+        Flow.NOTATION_FONT_SCALE = this.rules.VexFlowDefaultNotationFontScale; // default 39
+        Flow.TABLATURE_FONT_SCALE = this.rules.VexFlowDefaultTabFontScale; // default 39 // TODO doesn't seem to do anything
 
         this.pageIdx = 0;
         for (const graphicalMusicPage of graphicalMusicSheet.MusicPages) {

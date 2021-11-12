@@ -1,5 +1,4 @@
-import { SVGContext, RenderContext } from "vexflow";
-import Vex from "vexflow";
+import { SVGContext, RenderContext, Renderer } from "vexflow";
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
@@ -22,7 +21,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
 
     public getVexflowBackendType(): number {
-        return Vex.Flow.Renderer.Backends.SVG;
+        return Renderer.Backends.SVG;
     }
 
     public getOSMDBackendType(): BackendType {
@@ -42,7 +41,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
         container.appendChild(this.inner);
-        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
+        this.renderer = new Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = this.renderer.getContext();
         (this.ctx as SVGContext).svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
     }

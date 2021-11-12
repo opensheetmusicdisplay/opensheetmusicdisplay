@@ -115,7 +115,7 @@ export class Beam extends Element {
   //
   // ```
   // config = {
-  //   groups: [new Vex.Flow.Fraction(2, 8)],
+  //   groups: [new Fraction(2, 8)],
   //   stem_direction: -1,
   //   beam_rests: true,
   //   beam_middle_only: true,
@@ -144,7 +144,7 @@ export class Beam extends Element {
     const tickGroups = config.groups.map(group => {
       if (!group.multiply) {
         throw new Vex.RuntimeError('InvalidBeamGroups',
-          'The beam groups must be an array of Vex.Flow.Fractions');
+          'The beam groups must be an array of Fractions');
       }
       return group.clone().multiply(Flow.RESOLUTION, 1);
     });
@@ -342,7 +342,7 @@ export class Beam extends Element {
     // Get the tuplets in order to format them accurately
     const allTuplets = getTuplets();
 
-    // Create a Vex.Flow.Beam from each group of notes to be beamed
+    // Create a Beam from each group of notes to be beamed
     const beams = [];
     beamedNoteGroups.forEach(group => {
       const beam = new Beam(group);

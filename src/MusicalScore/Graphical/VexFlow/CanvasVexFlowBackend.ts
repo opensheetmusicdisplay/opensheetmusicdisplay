@@ -1,5 +1,4 @@
-import { CanvasContext, RenderContext } from "vexflow";
-import Vex from "vexflow";
+import { CanvasContext, RenderContext, Renderer } from "vexflow";
 import {VexFlowBackend} from "./VexFlowBackend";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
@@ -20,7 +19,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     }
 
     public getVexflowBackendType(): number {
-        return Vex.Flow.Renderer.Backends.CANVAS;
+        return Renderer.Backends.CANVAS;
     }
 
     public getOSMDBackendType(): BackendType {
@@ -48,7 +47,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvas.style.zIndex = "0";
         this.inner.appendChild(this.canvas);
         container.appendChild(this.inner);
-        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
+        this.renderer = new Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = this.renderer.getContext();
     }
 
@@ -66,7 +65,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvas = document.createElement("canvas");
         (this.canvas as HTMLCanvasElement).width = width;
         (this.canvas as HTMLCanvasElement).height = height;
-        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
+        this.renderer = new Renderer(this.canvas, this.getVexflowBackendType());
         this.ctx = this.renderer.getContext();
     }
 
@@ -168,7 +167,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
 
     private ctx!: RenderContext;
 
-    public get CanvasRenderingCtx(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+    public get CanvasRenderingCtx(): CanvasRenderingContext2D  {
         // This clusterfuck is only there to counter act my favorite vexflow line:
         // ctx.vexFlowCanvasContext = ctx;
         // No idea why they are saving the context but we wrap the types here

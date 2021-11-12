@@ -1,6 +1,6 @@
-import { Articulation as VFArticulation, GraceNoteStruct, GhostNote, Ornament,
-    StaveNote, StemmableNote, TabNote as VFTabNote, TimeSignature, Tremolo, KeyProps } from "vexflow";
-import Vex from "vexflow";
+import { Accidental as VFAccidental, Articulation as VFArticulation, GraceNoteStruct, GhostNote, Ornament,
+    StaveNote, StemmableNote, TabNote as VFTabNote, TimeSignature, Tremolo, KeyProps, Flow, GraceNote, Stem,
+    Modifier, Stroke, Bend, Vibrato, StaveConnector } from "vexflow";
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
 import {Pitch} from "../../../Common/DataObjects/Pitch";
@@ -222,7 +222,7 @@ export class VexFlowConverter {
         const ghostNotes: GhostNote[] = [];
         const durations: string[] = VexFlowConverter.durations(frac, false);
         for (const duration of durations) {
-            ghostNotes.push(new Vex.Flow.GhostNote({
+            ghostNotes.push(new GhostNote({
                 duration: duration,
                 //dots: dots
             }));
@@ -233,7 +233,7 @@ export class VexFlowConverter {
     /**
      * Convert a GraphicalVoiceEntry to a VexFlow StaveNote
      * @param gve the GraphicalVoiceEntry which can hold a note or a chord on the staff belonging to one voice
-     * @returns {Vex.Flow.StaveNote}
+     * @returns {StaveNote}
      */
     public static StaveNote(gve: GraphicalVoiceEntry): StaveNote {
         // if (gve.octaveShiftValue !== OctaveEnum.NONE) { // gves with accidentals in octave shift brackets can be unsorted
@@ -453,14 +453,14 @@ export class VexFlowConverter {
 
         const firstNote: Note = gve.notes[0].sourceNote;
         if (firstNote.IsCueNote) {
-            vfnoteStruct.glyph_font_scale = Vex.Flow.NOTATION_FONT_SCALE * Vex.Flow.GraceNote.SCALE;
-            vfnoteStruct.stroke_px = Vex.Flow.GraceNote.LEDGER_LINE_OFFSET;
+            vfnoteStruct.glyph_font_scale = Flow.NOTATION_FONT_SCALE * GraceNote.SCALE;
+            vfnoteStruct.stroke_px = GraceNote.LEDGER_LINE_OFFSET;
         }
 
         if (gve.parentVoiceEntry.IsGrace || gve.notes[0].sourceNote.IsCueNote) {
-            vfnote = new Vex.Flow.GraceNote(vfnoteStruct);
+            vfnote = new GraceNote(vfnoteStruct);
         } else {
-            vfnote = new Vex.Flow.StaveNote(vfnoteStruct);
+            vfnote = new StaveNote(vfnoteStruct);
         }
         const lineShift: number = gve.notes[0].lineShift;
         if (lineShift !== 0) {
@@ -512,11 +512,11 @@ export class VexFlowConverter {
             const wantedStemDirection: StemDirectionType = gve.parentVoiceEntry.WantedStemDirection;
             switch (wantedStemDirection) {
                 case(StemDirectionType.Up):
-                    vfnote.setStemDirection(Vex.Flow.Stem.UP);
+                    vfnote.setStemDirection(Stem.UP);
                     gve.parentVoiceEntry.StemDirection = StemDirectionType.Up;
                     break;
                 case (StemDirectionType.Down):
-                    vfnote.setStemDirection(Vex.Flow.Stem.DOWN);
+                    vfnote.setStemDirection(Stem.DOWN);
                     gve.parentVoiceEntry.StemDirection = StemDirectionType.Down;
                     break;
                 default:
@@ -528,21 +528,21 @@ export class VexFlowConverter {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
                 if (accidentals[i] === "###") { // triple sharp
-                    vfnote.addAccidental(i, new Vex.Flow.Accidental("##"));
-                    vfnote.addAccidental(i, new Vex.Flow.Accidental("#"));
+                    vfnote.addAccidental(i, new VFAccidental("##"));
+                    vfnote.addAccidental(i, new VFAccidental("#"));
                     continue;
                 } else if (accidentals[i] === "bbs") { // triple flat
-                    vfnote.addAccidental(i, new Vex.Flow.Accidental("bb"));
-                    vfnote.addAccidental(i, new Vex.Flow.Accidental("b"));
+                    vfnote.addAccidental(i, new VFAccidental("bb"));
+                    vfnote.addAccidental(i, new VFAccidental("b"));
                     continue;
                 }
-                vfnote.addAccidental(i, new Vex.Flow.Accidental(accidentals[i])); // normal accidental
+                vfnote.addAccidental(i, new VFAccidental(accidentals[i])); // normal accidental
             }
 
             // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
             const tremoloStrokes: number = notes[i].sourceNote.TremoloStrokes;
             if (tremoloStrokes > 0) {
-                const tremolo: Tremolo = new Vex.Flow.Tremolo(tremoloStrokes);
+                const tremolo: Tremolo = new Tremolo(tremoloStrokes);
                 // rvilarl tremolo.extra_stroke_scale = rules.TremoloStrokeScale;
                 // rvilarl tremolo.y_spacing_scale = rules.TremoloYSpacingScale;
                 vfnote.addModifier(tremolo, i);
@@ -570,83 +570,83 @@ export class VexFlowConverter {
         }
 
         for (const articulation of articulations) {
-            let vfArtPosition: number = Vex.Flow.Modifier.Position.ABOVE;
+            let vfArtPosition: number = Modifier.Position.ABOVE;
 
-            if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
-                vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+            if (vfnote.getStemDirection() === Stem.UP) {
+                vfArtPosition = Modifier.Position.BELOW;
             }
             let vfArt: VFArticulation | undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;
             if (rules.ArticulationPlacementFromXML) {
                 if (articulation.placement === PlacementEnum.Above) {
-                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    vfArtPosition = Modifier.Position.ABOVE;
                 } else if (articulation.placement === PlacementEnum.Below) {
-                    vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+                    vfArtPosition = Modifier.Position.BELOW;
                 } // else if undefined: don't change
             }
             switch (articulationEnum) {
                 case ArticulationEnum.accent: {
-                    vfArt = new Vex.Flow.Articulation("a>");
+                    vfArt = new VFArticulation("a>");
                     break;
                 }
                 case ArticulationEnum.downbow: {
-                    vfArt = new Vex.Flow.Articulation("am");
+                    vfArt = new VFArticulation("am");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
-                        vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                        vfArtPosition = Modifier.Position.ABOVE;
                     }
                     break;
                 }
                 case ArticulationEnum.fermata: {
-                    vfArt = new Vex.Flow.Articulation("a@a");
-                    vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                    vfArt = new VFArticulation("a@a");
+                    vfArtPosition = Modifier.Position.ABOVE;
                     break;
                 }
                 case ArticulationEnum.marcatodown: {
-                    vfArt = new Vex.Flow.Articulation("a|"); // Vexflow only knows marcato up, so we use a down stroke here.
+                    vfArt = new VFArticulation("a|"); // Vexflow only knows marcato up, so we use a down stroke here.
                     break;
                 }
                 case ArticulationEnum.marcatoup: {
-                    vfArt = new Vex.Flow.Articulation("a^");
+                    vfArt = new VFArticulation("a^");
                     break;
                 }
                 case ArticulationEnum.invertedfermata: {
-                    vfArt = new Vex.Flow.Articulation("a@u");
-                    vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
+                    vfArt = new VFArticulation("a@u");
+                    vfArtPosition = Modifier.Position.BELOW;
                     break;
                 }
                 case ArticulationEnum.lefthandpizzicato: {
-                    vfArt = new Vex.Flow.Articulation("a+");
+                    vfArt = new VFArticulation("a+");
                     break;
                 }
                 case ArticulationEnum.naturalharmonic: {
-                    vfArt = new Vex.Flow.Articulation("ah");
+                    vfArt = new VFArticulation("ah");
                     break;
                 }
                 case ArticulationEnum.snappizzicato: {
-                    vfArt = new Vex.Flow.Articulation("ao");
+                    vfArt = new VFArticulation("ao");
                     break;
                 }
                 case ArticulationEnum.staccatissimo: {
-                    vfArt = new Vex.Flow.Articulation("av");
+                    vfArt = new VFArticulation("av");
                     break;
                 }
                 case ArticulationEnum.staccato: {
-                    vfArt = new Vex.Flow.Articulation("a.");
+                    vfArt = new VFArticulation("a.");
                     break;
                 }
                 case ArticulationEnum.tenuto: {
-                    vfArt = new Vex.Flow.Articulation("a-");
+                    vfArt = new VFArticulation("a-");
                     break;
                 }
                 case ArticulationEnum.upbow: {
-                    vfArt = new Vex.Flow.Articulation("a|");
+                    vfArt = new VFArticulation("a|");
                     if (articulation.placement === undefined) { // downbow/upbow should be above by default
-                        vfArtPosition = Vex.Flow.Modifier.Position.ABOVE;
+                        vfArtPosition = Modifier.Position.ABOVE;
                     }
                     break;
                 }
                 case ArticulationEnum.strongaccent: {
-                    vfArt = new Vex.Flow.Articulation("a^");
+                    vfArt = new VFArticulation("a^");
                     break;
                 }
                 default: {
@@ -661,45 +661,45 @@ export class VexFlowConverter {
     }
 
     public static generateOrnaments(vfnote: StemmableNote, oContainer: OrnamentContainer): void {
-        let vfPosition: number = Vex.Flow.Modifier.Position.ABOVE;
+        let vfPosition: number = Modifier.Position.ABOVE;
         if (oContainer.placement === PlacementEnum.Below) {
-            vfPosition = Vex.Flow.Modifier.Position.BELOW;
+            vfPosition = Modifier.Position.BELOW;
         }
 
         let vfOrna: Ornament | undefined;
         switch (oContainer.GetOrnament) {
             case OrnamentEnum.DelayedInvertedTurn: {
-                vfOrna = new Vex.Flow.Ornament("turn_inverted");
+                vfOrna = new Ornament("turn_inverted");
                 vfOrna.setDelayed(true);
                 break;
             }
             case OrnamentEnum.DelayedTurn: {
-                vfOrna = new Vex.Flow.Ornament("turn");
+                vfOrna = new Ornament("turn");
                 vfOrna.setDelayed(true);
                 break;
             }
             case OrnamentEnum.InvertedMordent: {
-                vfOrna = new Vex.Flow.Ornament("mordent"); // Vexflow uses baroque, not MusicXML definition
+                vfOrna = new Ornament("mordent"); // Vexflow uses baroque, not MusicXML definition
                 vfOrna.setDelayed(false);
                 break;
             }
             case OrnamentEnum.InvertedTurn: {
-                vfOrna = new Vex.Flow.Ornament("turn_inverted");
+                vfOrna = new Ornament("turn_inverted");
                 vfOrna.setDelayed(false);
                 break;
             }
             case OrnamentEnum.Mordent: {
-                vfOrna = new Vex.Flow.Ornament("mordent_inverted");
+                vfOrna = new Ornament("mordent_inverted");
                 vfOrna.setDelayed(false);
                 break;
             }
             case OrnamentEnum.Trill: {
-                vfOrna = new Vex.Flow.Ornament("tr");
+                vfOrna = new Ornament("tr");
                 vfOrna.setDelayed(false);
                 break;
             }
             case OrnamentEnum.Turn: {
-                vfOrna = new Vex.Flow.Ornament("turn");
+                vfOrna = new Ornament("turn");
                 vfOrna.setDelayed(false);
                 break;
             }
@@ -723,28 +723,28 @@ export class VexFlowConverter {
     public static StrokeTypeFromArpeggioType(arpeggioType: ArpeggioType): number {
         switch (arpeggioType) {
             case ArpeggioType.ARPEGGIO_DIRECTIONLESS:
-                return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+                return Stroke.Type.ARPEGGIO_DIRECTIONLESS;
             case ArpeggioType.BRUSH_DOWN:
-                return Vex.Flow.Stroke.Type.BRUSH_UP; // TODO somehow up and down are mixed up in Vexflow right now
+                return Stroke.Type.BRUSH_UP; // TODO somehow up and down are mixed up in Vexflow right now
             case ArpeggioType.BRUSH_UP:
-                return Vex.Flow.Stroke.Type.BRUSH_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
+                return Stroke.Type.BRUSH_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
             case ArpeggioType.RASQUEDO_DOWN:
-                return Vex.Flow.Stroke.Type.RASQUEDO_UP;
+                return Stroke.Type.RASQUEDO_UP;
             case ArpeggioType.RASQUEDO_UP:
-                return Vex.Flow.Stroke.Type.RASQUEDO_DOWN;
+                return Stroke.Type.RASQUEDO_DOWN;
             case ArpeggioType.ROLL_DOWN:
-                return Vex.Flow.Stroke.Type.ROLL_UP; // TODO somehow up and down are mixed up in Vexflow right now
+                return Stroke.Type.ROLL_UP; // TODO somehow up and down are mixed up in Vexflow right now
             case ArpeggioType.ROLL_UP:
-                return Vex.Flow.Stroke.Type.ROLL_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
+                return Stroke.Type.ROLL_DOWN; // TODO somehow up and down are mixed up in Vexflow right now
             default:
-                return Vex.Flow.Stroke.Type.ARPEGGIO_DIRECTIONLESS;
+                return Stroke.Type.ARPEGGIO_DIRECTIONLESS;
         }
     }
 
     /**
      * Convert a set of GraphicalNotes to a VexFlow StaveNote
      * @param notes form a chord on the staff
-     * @returns {Vex.Flow.StaveNote}
+     * @returns {StaveNote}
      */
     public static CreateTabNote(gve: GraphicalVoiceEntry): VFTabNote {
         const tabPositions: {str: number, fret: number}[] = [];
@@ -771,9 +771,9 @@ export class VexFlowConverter {
                         phraseText = "1/4";
                     }
                     if (bend.direction === "up") {
-                        tabPhrases.push({type: Vex.Flow.Bend.UP, text: phraseText, width: 10});
+                        tabPhrases.push({type: Bend.UP, text: phraseText, width: 10});
                     } else {
-                        tabPhrases.push({type: Vex.Flow.Bend.DOWN, text: phraseText, width: 10});
+                        tabPhrases.push({type: Bend.DOWN, text: phraseText, width: 10});
                     }
                 });
             }
@@ -800,14 +800,14 @@ export class VexFlowConverter {
         }
 
         tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
-            if (phrase.type === Vex.Flow.Bend.UP) {
-                vfnote.addModifier (new Vex.Flow.Bend(phrase.text, false));
+            if (phrase.type === Bend.UP) {
+                vfnote.addModifier (new Bend(phrase.text, false));
             } else {
-                vfnote.addModifier (new Vex.Flow.Bend(phrase.text, true));
+                vfnote.addModifier (new Bend(phrase.text, true));
             }
         });
         if (tabVibrato) {
-            vfnote.addModifier(new Vex.Flow.Vibrato());
+            vfnote.addModifier(new Vibrato());
         }
 
         return vfnote;
@@ -920,7 +920,7 @@ export class VexFlowConverter {
     /**
      * Convert a RhythmInstruction to a VexFlow TimeSignature object
      * @param rhythm
-     * @returns {Vex.Flow.TimeSignature}
+     * @returns {TimeSignature}
      * @constructor
      */
     public static TimeSignature(rhythm: RhythmInstruction): TimeSignature {
@@ -937,7 +937,7 @@ export class VexFlowConverter {
                 break;
             default:
         }
-        return new Vex.Flow.TimeSignature(timeSpec);
+        return new TimeSignature(timeSpec);
     }
 
     /**
@@ -976,23 +976,23 @@ export class VexFlowConverter {
         switch (lineType) {
             case SystemLinesEnum.SingleThin:
                 if (linePosition === SystemLinePosition.MeasureBegin) {
-                    return Vex.Flow.StaveConnector.type.SINGLE;
+                    return StaveConnector.type.SINGLE;
                 }
-                return Vex.Flow.StaveConnector.type.SINGLE_RIGHT;
+                return StaveConnector.type.SINGLE_RIGHT;
             case SystemLinesEnum.DoubleThin:
-                return Vex.Flow.StaveConnector.type.THIN_DOUBLE;
+                return StaveConnector.type.THIN_DOUBLE;
             case SystemLinesEnum.ThinBold:
-                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
+                return StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.BoldThinDots:
-                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_LEFT;
+                return StaveConnector.type.BOLD_DOUBLE_LEFT;
             case SystemLinesEnum.DotsThinBold:
-                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
+                return StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.DotsBoldBoldDots:
-                return Vex.Flow.StaveConnector.type.BOLD_DOUBLE_RIGHT;
+                return StaveConnector.type.BOLD_DOUBLE_RIGHT;
             case SystemLinesEnum.None:
-                return Vex.Flow.StaveConnector.type.NONE;
+                return StaveConnector.type.NONE;
             default:
-                return Vex.Flow.StaveConnector.type.NONE;
+                return StaveConnector.type.NONE;
         }
     }
 
