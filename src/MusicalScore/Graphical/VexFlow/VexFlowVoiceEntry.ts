@@ -1,4 +1,4 @@
-import { BoundingBox, NoteHead, StemmableNote } from "vexflow";
+import { BoundingBox as VFBoundingBox, NoteHead, StemmableNote } from "vexflow";
 import Vex from "vexflow";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
@@ -21,7 +21,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         if (!(staveNote instanceof Vex.Flow.StaveNote)) {
             return;
         }
-        const boundingBox: BoundingBox = staveNote.getBoundingBox();
+        const boundingBox: VFBoundingBox = staveNote.getBoundingBox();
         const modifierWidth: number = staveNote.getNoteHeadBeginX() - boundingBox.getX();
 
         this.PositionAndShape.RelativePosition.y = boundingBox.getY() / unitInPixels;

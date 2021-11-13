@@ -87,8 +87,11 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
      * @param staffLine
      * @returns {VexFlowMeasure}
      */
-    public createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure {
-        return new VexFlowMeasure(staffLine.ParentStaff, undefined, staffLine);
+     public createExtraGraphicalMeasure(staffLine: StaffLine): GraphicalMeasure {
+        const extraGraphicalMeasure: GraphicalMeasure = new VexFlowMeasure(staffLine.ParentStaff, undefined, staffLine);
+        extraGraphicalMeasure.IsExtraGraphicalMeasure = true; // this also means that MeasureNumber < 0 because unchanged
+        extraGraphicalMeasure.ExtraGraphicalMeasurePreviousMeasure = staffLine.Measures.last();
+        return extraGraphicalMeasure;
     }
 
     /**

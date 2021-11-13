@@ -1259,8 +1259,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                 // add fingering
                 if (voiceEntry.parentVoiceEntry && this.rules.RenderFingerings) {
-                    this.createFingerings(voiceEntry);
-                    this.createStringNumber(voiceEntry);
+                    if (this.rules.FingeringPosition === PlacementEnum.Left ||
+                        this.rules.FingeringPosition === PlacementEnum.Right) {
+                            this.createFingerings(voiceEntry);
+                    } // else created in MusicSheetCalculater.createFingerings() as Labels
+                     this.createStringNumber(voiceEntry);
                 }
 
                 // add Arpeggio
@@ -1386,6 +1389,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
             fingeringIndex++; // 0 for first fingering
             let fingeringPosition: PlacementEnum = this.rules.FingeringPosition;
+            //currently only relevant for grace notes, because we create other fingerings above/below in MusicSheetCalculator.createFingerings
+            if (this.rules.FingeringPositionGrace === PlacementEnum.AboveOrBelow) {
+                //if (this.rules.FingeringPosition === PlacementEnum.AboveOrBelow) {
+                if (this.isUpperStaffOfInstrument()) { // (e.g. piano right hand)
+                    fingeringPosition = PlacementEnum.Above;
+                } else if (this.isLowerStaffOfInstrument()) {
+                    fingeringPosition = PlacementEnum.Below;
+                }
+            }
             if (fingering.placement !== PlacementEnum.NotYetDefined) {
                 fingeringPosition = fingering.placement;
             }

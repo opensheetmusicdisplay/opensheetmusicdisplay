@@ -941,6 +941,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             }
 
             let nextShiftLastMeasure: GraphicalMeasure = nextShiftStaffline.Measures[nextShiftStaffline.Measures.length - 1];
+            if (nextShiftLastMeasure.IsExtraGraphicalMeasure) { // key/rhythm change measure
+              nextShiftLastMeasure = nextShiftStaffline.Measures[nextShiftStaffline.Measures.length - 2];
+            }
             const firstNote: GraphicalStaffEntry = nextShiftFirstMeasure.staffEntries[0];
             let lastNote: GraphicalStaffEntry = nextShiftLastMeasure.staffEntries[nextShiftLastMeasure.staffEntries.length - 1];
 
@@ -950,6 +953,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               lastNote = endStaffEntry;
             }
 
+            const logPrefix: string = "VexFlowMusicSheetCalculator.calculateSingleOctaveShift: ";
+            if (!firstNote) {
+              log.warn(logPrefix + "no firstNote found");
+            }
+            if (!lastNote) {
+              log.warn(logPrefix + "no lastNote found");
+            }
             nextOctaveShift.setStartNote(firstNote);
             nextOctaveShift.setEndNote(lastNote);
             nextShiftStaffline.OctaveShifts.push(nextOctaveShift);
@@ -970,7 +980,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
   private calculateOctaveShiftSkyBottomLine(startStaffEntry: GraphicalStaffEntry, endStaffEntry: GraphicalStaffEntry,
                                             vfOctaveShift: VexFlowOctaveShift, parentStaffline: StaffLine): void {
-
+    if (!endStaffEntry) {
+      log.warn("octaveshift: no endStaffEntry");
+      return;
+    }
     let startXOffset: number = startStaffEntry.PositionAndShape.Size.width;
     let endXOffset: number = endStaffEntry.PositionAndShape.Size.width;
 
