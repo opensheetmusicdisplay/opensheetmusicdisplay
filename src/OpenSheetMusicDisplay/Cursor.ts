@@ -14,7 +14,8 @@ import { StaffLine } from "../MusicalScore/Graphical/StaffLine";
 import { GraphicalMeasure } from "../MusicalScore/Graphical/GraphicalMeasure";
 import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure";
 import { CursorOptions } from "./OSMDOptions";
-import { BoundingBox } from "../MusicalScore";
+import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
+import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -305,6 +306,15 @@ export class Cursor {
     const notes: Note[] = [];
     voiceEntries.forEach(voiceEntry => {
       notes.push.apply(notes, voiceEntry.Notes);
+    });
+    return notes;
+  }
+
+  public GNotesUnderCursor(instrument?: Instrument): GraphicalNote[] {
+    const voiceEntries: VoiceEntry[]  = this.VoicesUnderCursor(instrument);
+    const notes: GraphicalNote[] = [];
+    voiceEntries.forEach(voiceEntry => {
+      notes.push(...voiceEntry.Notes.map(note => this.rules.GNote(note)));
     });
     return notes;
   }
