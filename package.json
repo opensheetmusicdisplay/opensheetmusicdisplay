@@ -67,7 +67,7 @@
     "jszip": "3.7.1",
     "loglevel": "^1.6.8",
     "typescript-collections": "^1.3.3",
-    "vexflow": "https://vexflow-demo.surge.sh/vexflow-4.0.0-alpha-6.tgz"
+    "vexflow": "https://vexflow-demo.surge.sh/vexflow-4.0.0-alpha-7.tgz"
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",

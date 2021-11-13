@@ -20,7 +20,7 @@ import { Articulation } from "../../VoiceData/Articulation";
 import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
-import { Formatter, Stave, StemmableNote, TextBracket, Voice as VexVoice, StaveTie } from "vexflow";
+import { Formatter, Stave, StemmableNote, TextBracket, Voice as VFVoice, StaveTie } from "vexflow";
 import Vex from "vexflow";
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
@@ -161,7 +161,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     measures = visibleMeasures;
 
     // Format the voices
-    const allVoices: VexVoice[] = [];
+    const allVoices: VFVoice[] = [];
     const formatter: Formatter = new Vex.Flow.Formatter({
       // maxIterations: 2,
       softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
@@ -182,8 +182,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         maxStaffEntries = Math.max(measure.staffEntries.length, maxStaffEntries);
         maxStaffEntriesPlusAccidentals = Math.max(measure.staffEntries.length + measureAccidentals, maxStaffEntriesPlusAccidentals);
       }
-      const mvoices: { [voiceID: number]: VexVoice } = (measure as VexFlowMeasure).vfVoices;
-      const voices: VexVoice[] = [];
+      const mvoices: { [voiceID: number]: VFVoice } = (measure as VexFlowMeasure).vfVoices;
+      const voices: VFVoice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
           voices.push(mvoices[voiceID]);
@@ -314,8 +314,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!measure) {
         continue;
       }
-      const mvoices: { [voiceID: number]: VexVoice } = (measure as VexFlowMeasure).vfVoices;
-      const voices: VexVoice[] = [];
+      const mvoices: { [voiceID: number]: VFVoice } = (measure as VexFlowMeasure).vfVoices;
+      const voices: VFVoice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
           voices.push(mvoices[voiceID]);

@@ -1,6 +1,6 @@
-import { Beam as VexBeam, Fraction as VexFraction, FretHandFinger, GhostNote, GraceNote, GraceNoteGroup, NoteSubGroup, RenderContext, Repetition,
+import { Beam as VFBeam, Fraction as VFFraction, FretHandFinger, GhostNote, GraceNote, GraceNoteGroup, NoteSubGroup, RenderContext, Repetition,
     Stave, StaveConnector, StaveNote, StaveModifier, StaveTie, StemmableNote, StringNumber, Stroke,
-    TimeSignature, Tuplet as VexTuplet, Voice as VexVoice } from "vexflow";
+    TimeSignature, Tuplet as VFTuplet, Voice as VFVoice } from "vexflow";
 import Vex from "vexflow";
 import {GraphicalMeasure} from "../GraphicalMeasure";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
@@ -61,7 +61,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** octaveOffset according to active clef */
     public octaveOffset: number = 3;
     /** The VexFlow Voices in the measure */
-    public vfVoices: { [voiceID: number]: VexVoice } = {};
+    public vfVoices: { [voiceID: number]: VFVoice } = {};
     /** Call this function (if present) to x-format all the voices in the measure */
     public formatVoices?: (width: number, parent: VexFlowMeasure) => void;
     /** The VexFlow Ties in the measure */
@@ -75,15 +75,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
     /** Intermediate object to construct beams */
     private beams: { [voiceID: number]: [Beam, VexFlowVoiceEntry[]][] } = {};
     /** Beams created by (optional) autoBeam function. */
-    private autoVfBeams?: VexBeam[];
+    private autoVfBeams?: VFBeam[];
     /** Beams of tuplet notes created by (optional) autoBeam function. */
-    private autoTupletVfBeams?: VexBeam[];
+    private autoTupletVfBeams?: VFBeam[];
     /** VexFlow Beams */
-    private vfbeams!: { [voiceID: number]: VexBeam[] };
+    private vfbeams!: { [voiceID: number]: VFBeam[] };
     /** Intermediate object to construct tuplets */
     protected tuplets: { [voiceID: number]: [Tuplet, VexFlowVoiceEntry[]][] } = {};
     /** VexFlow Tuplets */
-    private vftuplets: { [voiceID: number]: VexTuplet[] } = {};
+    private vftuplets: { [voiceID: number]: VFTuplet[] } = {};
     // The engraving rules of OSMD.
     public rules!: EngravingRules;
 
@@ -851,7 +851,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const beamedNotes: StaveNote[] = []; // already beamed notes, will be ignored by this.autoBeamNotes()
         for (const voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
-                let vfbeams: VexBeam[] = this.vfbeams[voiceID];
+                let vfbeams: VFBeam[] = this.vfbeams[voiceID];
                 if (!vfbeams) {
                     vfbeams = this.vfbeams[voiceID] = [];
                 }
@@ -903,7 +903,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     if (notes.length > 1) {
-                        const vfBeam: VexBeam = new Vex.Flow.Beam(notes, autoStemBeam);
+                        const vfBeam: VFBeam = new Vex.Flow.Beam(notes, autoStemBeam);
                         if (isGraceBeam) {
                             // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
                             vfBeam.render_options.beam_width = 3;
@@ -1022,7 +1022,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     } else {
                         if (currentTuplet !== noteTuplet) { // new tuplet, finish old one
                             if (tupletNotesToAutoBeam.length > 1) {
-                                const vfBeam: VexBeam = new VexBeam(tupletNotesToAutoBeam, true);
+                                const vfBeam: VFBeam = new VFBeam(tupletNotesToAutoBeam, true);
                                 if (this.rules.FlatBeams) {
                                     vfBeam.render_options.flat_beams = true;
                                     vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
@@ -1047,7 +1047,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
         if (tupletNotesToAutoBeam.length >= 2) {
-            const vfBeam: VexBeam = new VexBeam(tupletNotesToAutoBeam, true);
+            const vfBeam: VFBeam = new VFBeam(tupletNotesToAutoBeam, true);
             if (this.rules.FlatBeams) {
                 vfBeam.render_options.flat_beams = true;
                 vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
@@ -1071,7 +1071,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             maintain_stem_directions: autoBeamOptions.maintain_stem_directions,
         };
         if (autoBeamOptions.groups && autoBeamOptions.groups.length) {
-            const groups: VexFraction[] = [];
+            const groups: VFFraction[] = [];
             for (const fraction of autoBeamOptions.groups) {
                 groups.push(new Vex.Flow.Fraction(fraction[0], fraction[1]));
             }
@@ -1079,7 +1079,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
 
         for (const notesForSeparateAutoBeam of separateAutoBeams) {
-            const newBeams: VexBeam[] = VexBeam.generateBeams(notesForSeparateAutoBeam, generateBeamOptions);
+            const newBeams: VFBeam[] = VFBeam.generateBeams(notesForSeparateAutoBeam, generateBeamOptions);
             for (const vfBeam of newBeams) {
                 if (this.rules.FlatBeams) {
                     vfBeam.render_options.flat_beams = true;
@@ -1102,7 +1102,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.vftuplets = {};
         for (const voiceID in this.tuplets) {
             if (this.tuplets.hasOwnProperty(voiceID)) {
-                let vftuplets: VexTuplet[] = this.vftuplets[voiceID];
+                let vftuplets: VFTuplet[] = this.vftuplets[voiceID];
                 if (!vftuplets) {
                     vftuplets = this.vftuplets[voiceID] = [];
                 }

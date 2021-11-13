@@ -1,5 +1,5 @@
-import { Articulation as VexArticulation, GraceNoteStruct, GhostNote, Ornament,
-    StaveNote, StemmableNote, TabNote as VexTabNote, TimeSignature, Tremolo, KeyProps } from "vexflow";
+import { Articulation as VFArticulation, GraceNoteStruct, GhostNote, Ornament,
+    StaveNote, StemmableNote, TabNote as VFTabNote, TimeSignature, Tremolo, KeyProps } from "vexflow";
 import Vex from "vexflow";
 import {ClefEnum} from "../../VoiceData/Instructions/ClefInstruction";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
@@ -575,7 +575,7 @@ export class VexFlowConverter {
             if (vfnote.getStemDirection() === Vex.Flow.Stem.UP) {
                 vfArtPosition = Vex.Flow.Modifier.Position.BELOW;
             }
-            let vfArt: VexArticulation | undefined;
+            let vfArt: VFArticulation | undefined;
             const articulationEnum: ArticulationEnum = articulation.articulationEnum;
             if (rules.ArticulationPlacementFromXML) {
                 if (articulation.placement === PlacementEnum.Above) {
@@ -746,7 +746,7 @@ export class VexFlowConverter {
      * @param notes form a chord on the staff
      * @returns {Vex.Flow.StaveNote}
      */
-    public static CreateTabNote(gve: GraphicalVoiceEntry): VexTabNote {
+    public static CreateTabNote(gve: GraphicalVoiceEntry): VFTabNote {
         const tabPositions: {str: number, fret: number}[] = [];
         const notes: GraphicalNote[] = gve.notes.reverse();
         const tabPhrases: { type: number, text: string, width: number }[] = [];
@@ -790,7 +790,7 @@ export class VexFlowConverter {
             duration += "d";
         }
 
-        const vfnote: VexTabNote = new VexTabNote({
+        const vfnote: VFTabNote = new VFTabNote({
             duration: duration,
             positions: tabPositions,
         });
