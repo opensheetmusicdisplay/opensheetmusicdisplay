@@ -1255,12 +1255,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
                     }
                     // add new VexFlowSlur to List
                     if (slur.StartNote === graphicalNote.sourceNote) {
-                      if (graphicalNote.sourceNote.NoteTie) {
-                        if (graphicalNote.parentVoiceEntry.parentStaffEntry.getAbsoluteTimestamp() !==
-                          graphicalNote.sourceNote.NoteTie.StartNote.getAbsoluteTimestamp()) {
-                          break;
-                        }
-                      }
+                      // TODO the following seems to have been intended to prevent unnecessary slurs that overlap ties,
+                      //   but it simply leads to correct slurs being left out where the tie end note is the slur start note.
+                      //   visual regression tests simply show valid slurs being left out in 4 samples.
+                      // if (graphicalNote.sourceNote.NoteTie) {
+                      //   if (graphicalNote.parentVoiceEntry.parentStaffEntry.getAbsoluteTimestamp() !==
+                      //     graphicalNote.sourceNote.NoteTie.StartNote.getAbsoluteTimestamp()) {
+                      //     break;
+                      //   }
+                      // }
 
                       // Add a Graphical Slur to the staffline, if the recent note is the Startnote of a slur
                       const gSlur: GraphicalSlur = new GraphicalSlur(slur, this.rules);
