@@ -1007,7 +1007,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
     vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
     const textBracket: TextBracket = vfOctaveShift.getTextBracket();
-    const fontSize: number = textBracket.fontSizeInPoints / 10;
+    const fontSize: number = textBracket.fontSizeInPixels / 10;
 
     if (textBracket.position === Vex.Flow.TextBracket.Positions.TOP) {
       const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
