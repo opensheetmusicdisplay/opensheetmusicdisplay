@@ -631,6 +631,11 @@ export class VoiceGenerator {
    */
   private handleOpenBeam(): void {
     const openBeam: Beam = this.openBeams.last();
+    if (openBeam.Notes.length === 0) {
+      // TODO why is there such a beam? sample: test_percussion_display_step_from_xml
+      this.endBeam(); // otherwise beamLastNote.ParentStaffEntry will throw an undefined error
+      return;
+    }
     if (openBeam.Notes.length === 1) {
       const beamNote: Note = openBeam.Notes[0];
       beamNote.NoteBeam = undefined;
