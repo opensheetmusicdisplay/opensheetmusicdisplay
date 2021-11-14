@@ -66,7 +66,7 @@ export class VexFlowSlur {
     public createVexFlowCurve(): void {
             this.vfCurve = new Vex.Flow.Curve( this.vfStartNote,
                                                this.vfEndNote,
-                                               this.curve_Options()
+                                               undefined//this.curve_Options()
                                             );
     }
 }

@@ -407,7 +407,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     }
 
     public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
-        let instruction: number = -1;
+        let instruction: number | undefined;
         let position: number = Vex.Flow.StaveModifier.Position.END;
         const xShift: number = this.beginInstructionsWidth;
         switch (repetitionInstruction.type) {
@@ -890,7 +890,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     let beamColor: string;
                     const stemColors: string[] = [];
                     for (const entry of voiceEntries) {
-                        const note: StaveNote = ((<VexFlowVoiceEntry>entry).vfStaveNote as StaveNote);
+                        const note: StaveNote = entry.vfStaveNote as StaveNote;
                         if (note) {
                           notes.push(note);
                           beamedNotes.push(note);
