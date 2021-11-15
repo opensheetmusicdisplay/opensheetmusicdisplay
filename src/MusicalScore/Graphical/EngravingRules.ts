@@ -244,7 +244,9 @@ export class EngravingRules {
     public DurationDistanceDict: {[_: number]: number } = {};
     public DurationScalingDistanceDict: {[_: number]: number } = {};
 
-    public AlignRests: number; // 0 = false, 1 = true, 2 = auto
+    /** Whether to align rests. 0 = Never, 1 = Always, 2 = Auto.
+     * Currently not recommended because rests are now positioned to avoid collisions with notes. */
+    public AlignRests: AlignRestOption; // 0 = false, 1 = true, 2 = auto
     public RestCollisionYPadding: number;
     public FillEmptyMeasuresWithWholeRest: FillEmptyMeasuresWithWholeRests | number;
     public ArpeggiosGoAcrossVoices: boolean;
@@ -291,7 +293,8 @@ export class EngravingRules {
     public DynamicExpressionMaxDistance: number;
     public DynamicExpressionSpacer: number;
     public ArticulationPlacementFromXML: boolean;
-    /** Position of fingering label in relation to corresponding note (left, right supported, above, below experimental) */
+    /** Where to draw fingerings (Above, Below, AboveOrBelow, Left, Right, or Auto).
+     * Default AboveOrBelow. Auto experimental. */
     public FingeringPosition: PlacementEnum;
     public FingeringPositionFromXML: boolean;
     public FingeringPositionGrace: PlacementEnum;
