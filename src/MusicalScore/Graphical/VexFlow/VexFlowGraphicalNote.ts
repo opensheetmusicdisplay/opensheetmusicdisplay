@@ -86,9 +86,9 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         if (!vfnote) {
             vfnote = (this.vfnote[0] as any);
         }
-        const noteheads: any = vfnote.note_heads;
+        const noteheads: any = vfnote.noteHeads;
         if (noteheads && noteheads.length > this.vfnoteIndex && noteheads[this.vfnoteIndex]) {
-            return vfnote.note_heads[this.vfnoteIndex];
+            return vfnote.noteHeads[this.vfnoteIndex];
         } else {
             return { line: 0 };
         }
