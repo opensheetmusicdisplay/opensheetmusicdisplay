@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -14,8 +14,8 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
     }
 
     // if there is a in-measure clef given before this staffEntry,
-    // it will be converted to a Vex.Flow.ClefNote and assigned to this variable:
-    public vfClefBefore: Vex.Flow.ClefNote;
+    // it will be converted to a VF.ClefNote and assigned to this variable:
+    public vfClefBefore: VF.ClefNote;
 
     /**
      * Calculates the staff entry positions from the VexFlow stave information and the tickabels inside the staff.
@@ -23,7 +23,7 @@ export class VexFlowStaffEntry extends GraphicalStaffEntry {
      * It is also needed to be done after formatting!
      */
     public calculateXPosition(): void {
-        const stave: Vex.Flow.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave();
+        const stave: VF.Stave = (this.parentMeasure as VexFlowMeasure).getVFStave();
 
         // sets the vexflow x positions back into the bounding boxes of the staff entries in the osmd object model.
         // The positions are needed for cursor placement and mouse/tap interactions

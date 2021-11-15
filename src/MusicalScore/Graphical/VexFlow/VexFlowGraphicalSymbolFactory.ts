@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 import {IGraphicalSymbolFactory} from "../../Interfaces/IGraphicalSymbolFactory";
 import {MusicSystem} from "../MusicSystem";
 import {VexFlowMusicSystem} from "./VexFlowMusicSystem";
@@ -171,7 +171,7 @@ export class VexFlowGraphicalSymbolFactory implements IGraphicalSymbolFactory {
     public createInStaffClef(graphicalStaffEntry: GraphicalStaffEntry, clefInstruction: ClefInstruction): void {
         const se: VexFlowStaffEntry = graphicalStaffEntry as VexFlowStaffEntry;
         const vfClefParams: { type: string, size: string, annotation: string } = VexFlowConverter.Clef(clefInstruction, "small");
-        se.vfClefBefore = new Vex.Flow.ClefNote(vfClefParams.type, vfClefParams.size, vfClefParams.annotation);
+        se.vfClefBefore = new VF.ClefNote(vfClefParams.type, vfClefParams.size, vfClefParams.annotation);
         return;
     }
 

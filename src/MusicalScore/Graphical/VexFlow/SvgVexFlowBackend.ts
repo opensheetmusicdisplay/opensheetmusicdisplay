@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 
 import {VexFlowBackend} from "./VexFlowBackend";
 import {VexFlowConverter} from "./VexFlowConverter";
@@ -12,7 +12,7 @@ import log from "loglevel";
 
 export class SvgVexFlowBackend extends VexFlowBackend {
 
-    private ctx: Vex.Flow.SVGContext;
+    private ctx: VF.SVGContext;
     public zoom: number; // currently unused
 
     constructor(rules: EngravingRules) {
@@ -20,8 +20,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.rules = rules;
     }
 
-    public getVexflowBackendType(): Vex.Flow.Renderer.Backends {
-        return Vex.Flow.Renderer.Backends.SVG;
+    public getVexflowBackendType(): number {
+        return VF.Renderer.Backends.SVG;
     }
 
     public getOSMDBackendType(): BackendType {
@@ -41,12 +41,13 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.inner.style.position = "relative";
         this.canvas.style.zIndex = "0";
         container.appendChild(this.inner);
-        this.renderer = new Vex.Flow.Renderer(this.canvas, this.getVexflowBackendType());
-        this.ctx = <Vex.Flow.SVGContext>this.renderer.getContext();
+        // @ts-ignore
+        this.renderer = new VF.Renderer(this.canvas, this.getVexflowBackendType());
+        this.ctx = <VF.SVGContext>this.renderer.getContext();
         this.ctx.svg.id = "osmdSvgPage" + this.graphicalMusicPage.PageNumber;
     }
 
-    public getContext(): Vex.Flow.SVGContext {
+    public getContext(): VF.SVGContext {
         return this.ctx;
     }
 

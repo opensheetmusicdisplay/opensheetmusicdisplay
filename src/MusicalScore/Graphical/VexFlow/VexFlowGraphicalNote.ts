@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 import {GraphicalNote} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
@@ -32,7 +32,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     // The pitch of this note as given by VexFlowConverter.pitch
     public vfpitch: [string, string, ClefInstruction];
     // The corresponding VexFlow StaveNote (plus its index in the chord)
-    public vfnote: [Vex.Flow.StemmableNote, number];
+    public vfnote: [VF.StemmableNote, number];
     public vfnoteIndex: number;
     // The current clef
     private clef: ClefInstruction;
@@ -48,7 +48,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         //     const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
         //     if (acc) {
         //         alert(acc);
-        //         this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
+        //         this.vfnote[0].addAccidental(this.vfnote[1], new VF.Accidental(acc));
         //     }
         // } else {
         // revert octave shift, as the placement of the note is independent of octave brackets
@@ -76,12 +76,12 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * @param note
      * @param index
      */
-    public setIndex(note: Vex.Flow.StemmableNote, index: number): void {
+    public setIndex(note: VF.StemmableNote, index: number): void {
         this.vfnote = [note, index];
         this.vfnoteIndex = index;
     }
 
-    public notehead(vfNote: Vex.Flow.StemmableNote = undefined): {line: number} {
+    public notehead(vfNote: VF.StemmableNote = undefined): {line: number} {
         let vfnote: any = vfNote;
         if (!vfnote) {
             vfnote = (this.vfnote[0] as any);
