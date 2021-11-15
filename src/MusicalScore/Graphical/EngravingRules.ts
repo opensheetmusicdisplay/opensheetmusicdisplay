@@ -666,6 +666,9 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMapObjectCount++;
     }
 
+    /** Returns the GraphicalNote corresponding to (its) note. Also used by Cursor.GNotesUnderCursor().
+     *  We don't want to save a GraphicalNote reference in Note, see Note.NoteToGraphicalNoteObjectId.
+     */
     public GNote(note: Note): GraphicalNote {
         return GraphicalNote.FromNote(note, this);
     }
