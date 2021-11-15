@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -9,7 +9,7 @@ import { ColoringModes } from "./../DrawingParameters";
 import { GraphicalNote } from "../GraphicalNote";
 
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
-    private mVexFlowStaveNote: Vex.Flow.StemmableNote;
+    private mVexFlowStaveNote: VF.StemmableNote;
 
     constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry) {
         super(parentVoiceEntry, parentStaffEntry);
@@ -30,11 +30,11 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         this.PositionAndShape.BorderRight = (boundingBox.w - modifierWidth) / unitInPixels; // Right of x origin is the note
     }
 
-    public set vfStaveNote(value: Vex.Flow.StemmableNote) {
+    public set vfStaveNote(value: VF.StemmableNote) {
         this.mVexFlowStaveNote = value;
     }
 
-    public get vfStaveNote(): Vex.Flow.StemmableNote {
+    public get vfStaveNote(): VF.StemmableNote {
         return this.mVexFlowStaveNote;
     }
 

@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 import {FontStyles} from "../../../Common/Enums/FontStyles";
 import {Fonts} from "../../../Common/Enums/Fonts";
 import {RectangleF2D} from "../../../Common/DataObjects/RectangleF2D";
@@ -39,7 +39,7 @@ export abstract class VexFlowBackend {
   public getRenderElement(): HTMLElement {
     //console.log("backend type: " + this.getVexflowBackendType());
     let renderingHtmlElement: HTMLElement = this.canvas; // for SVGBackend
-    if (this.getVexflowBackendType() === Vex.Flow.Renderer.Backends.CANVAS) {
+    if (this.getVexflowBackendType() === VF.Renderer.Backends.CANVAS) {
       renderingHtmlElement = this.inner;
       // usage in removeFromContainer:
       // for SVG, this.canvas === this.inner, but for Canvas, removing this.canvas causes an error because it's not a child of container,
@@ -48,7 +48,7 @@ export abstract class VexFlowBackend {
     return renderingHtmlElement;
   }
 
-  public getRenderer(): Vex.Flow.Renderer {
+  public getRenderer(): VF.Renderer {
     return this.renderer;
   }
 
@@ -72,7 +72,7 @@ export abstract class VexFlowBackend {
     // there is unfortunately no built-in container.hasChild(child) method.
   }
 
-public abstract getContext(): Vex.IRenderContext;
+public abstract getContext(): VF.RenderContext;
 
   // public abstract setWidth(width: number): void;
   // public abstract setHeight(height: number): void;
@@ -105,14 +105,14 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract renderCurve(points: PointF2D[]): Node;
 
-  public abstract getVexflowBackendType(): Vex.Flow.Renderer.Backends;
+  public abstract getVexflowBackendType(): number;
 
   /** The general type of backend: Canvas or SVG.
    * This is not used for now (only VexflowBackendType used), but it may be useful when we don't want to use a Vexflow class.
    */
   public abstract getOSMDBackendType(): BackendType;
 
-  protected renderer: Vex.Flow.Renderer;
+  protected renderer: VF.Renderer;
   protected inner: HTMLElement;
   protected canvas: HTMLElement;
 }

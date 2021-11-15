@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 import { GraphicalOctaveShift } from "../GraphicalOctaveShift";
 import { OctaveShift, OctaveEnum } from "../../VoiceData/Expressions/ContinuousExpressions/OctaveShift";
 import { BoundingBox } from "../BoundingBox";
@@ -12,11 +12,11 @@ import log from "loglevel";
 export class VexFlowOctaveShift extends GraphicalOctaveShift {
 
     /** Defines the note where the octave shift starts */
-    public startNote: Vex.Flow.StemmableNote;
+    public startNote: VF.StemmableNote;
     /** Defines the note where the octave shift ends */
-    public endNote: Vex.Flow.StemmableNote;
+    public endNote: VF.StemmableNote;
     /** Top or bottom of the staffline */
-    private position: Vex.Flow.TextBracket.Positions;
+    private position: number;
     /** Supscript is a smaller text after the regular text (e.g. va after 8) */
     private supscript: string;
     /** Main text element */
@@ -31,22 +31,22 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
         super(octaveShift, parent);
         switch (octaveShift.Type) {
             case OctaveEnum.VA8:
-                this.position = Vex.Flow.TextBracket.Positions.TOP;
+                this.position = VF.TextBracket.Positions.TOP;
                 this.supscript = "va";
                 this.text = "8";
                 break;
             case OctaveEnum.MA15:
-                this.position = Vex.Flow.TextBracket.Positions.TOP;
+                this.position = VF.TextBracket.Positions.TOP;
                 this.supscript = "ma";
                 this.text = "15";
                 break;
             case OctaveEnum.VB8:
-                this.position = Vex.Flow.TextBracket.Positions.BOTTOM;
+                this.position = VF.TextBracket.Positions.BOTTOM;
                 this.supscript = "vb";
                 this.text = "8";
                 break;
             case OctaveEnum.MB15:
-                this.position = Vex.Flow.TextBracket.Positions.BOTTOM;
+                this.position = VF.TextBracket.Positions.BOTTOM;
                 this.supscript = "mb";
                 this.text = "15";
                 break;
@@ -90,8 +90,8 @@ export class VexFlowOctaveShift extends GraphicalOctaveShift {
     /**
      * Get the actual vexflow text bracket used for drawing
      */
-    public getTextBracket(): Vex.Flow.TextBracket {
-        return new Vex.Flow.TextBracket({
+    public getTextBracket(): VF.TextBracket {
+        return new VF.TextBracket({
             position: this.position,
             start: this.startNote,
             stop: this.endNote,

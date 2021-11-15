@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 import { Staff } from "../../VoiceData/Staff";
 import { SourceMeasure } from "../../VoiceData/SourceMeasure";
 import { VexFlowMeasure } from "./VexFlowMeasure";
@@ -27,7 +27,7 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
         //this.beginInstructionsWidth = 20 / UnitInPixels;
         //this.endInstructionsWidth = 20 / UnitInPixels;
         const stafflineCount: number = this.ParentStaff.StafflineCount ?? 6; // if undefined, 6 by default (same as Vexflow default)
-        this.stave = new Vex.Flow.TabStave(0, 0, 0, {
+        this.stave = new VF.TabStave(0, 0, 0, {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0,
             num_lines: stafflineCount
@@ -62,11 +62,11 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
             }
 
             // add a vexFlow voice for this voice:
-            this.vfVoices[voice.VoiceId] = new Vex.Flow.Voice({
+            this.vfVoices[voice.VoiceId] = new VF.Voice({
                         beat_value: this.parentSourceMeasure.Duration.Denominator,
                         num_beats: this.parentSourceMeasure.Duration.Numerator,
-                        resolution: Vex.Flow.RESOLUTION,
-                    }).setMode(Vex.Flow.Voice.Mode.SOFT);
+                        resolution: VF.Flow.RESOLUTION,
+                    }).setMode(VF.Voice.Mode.SOFT);
 
             const restFilledEntries: GraphicalVoiceEntry[] =  this.getRestFilledVexFlowStaveNotesPerVoice(voice);
             // create vex flow voices and add tickables to it:
@@ -95,8 +95,8 @@ export class VexFlowTabMeasure extends VexFlowMeasure {
                     // TODO right now our arpeggio object has all arpeggio notes from arpeggios across all voices.
                     // see VoiceGenerator. Doesn't matter for Vexflow for now though
                     if (voiceEntry.notes && voiceEntry.notes.length > 1) {
-                        const type: Vex.Flow.Stroke.Type = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
-                        const stroke: Vex.Flow.Stroke = new Vex.Flow.Stroke(type, {
+                        const type: number = VexFlowConverter.StrokeTypeFromArpeggioType(arpeggio.type);
+                        const stroke: VF.Stroke = new VF.Stroke(type, {
                             all_voices: this.rules.ArpeggiosGoAcrossVoices
                             // default: false. This causes arpeggios to always go across all voices, which is often unwanted.
                             // also, this can cause infinite height of stroke, see #546

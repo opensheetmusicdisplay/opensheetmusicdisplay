@@ -1,4 +1,4 @@
-import Vex from "vexflow";
+import * as VF from "vexflow";
 import {SourceMeasure} from "../../VoiceData/SourceMeasure";
 import {Staff} from "../../VoiceData/Staff";
 import {StaffLine} from "../StaffLine";
@@ -10,7 +10,7 @@ import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {Voice} from "../../VoiceData/Voice";
 import {VexFlowMeasure} from "./VexFlowMeasure";
 
-// type StemmableNote = Vex.Flow.StemmableNote;
+// type StemmableNote = VF.StemmableNote;
 
 /** A GraphicalMeasure drawing a multiple-rest measure in Vexflow.
  *  Mostly copied from VexFlowMeasure.
@@ -36,7 +36,8 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
         this.resetLayout();
 
-        this.multiRestElement = new Vex.Flow.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
+        // @ts-ignore
+        this.multiRestElement = new VF.MultiMeasureRest(sourceMeasure.multipleRestMeasures, {
             // number_line: 3
         });
     }
@@ -45,7 +46,7 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
      * Draw this measure on a VexFlow CanvasContext
      * @param ctx
      */
-    public draw(ctx: Vex.IRenderContext): void {
+    public draw(ctx: VF.RenderContext): void {
         // Draw stave lines
         this.stave.setContext(ctx).draw();
 
@@ -147,9 +148,9 @@ export class VexFlowMultiRestMeasure extends VexFlowMeasure {
 
     /**
      * Return the VexFlow Stave corresponding to this graphicalMeasure
-     * @returns {Vex.Flow.Stave}
+     * @returns {VF.Stave}
      */
-    public getVFStave(): Vex.Flow.Stave {
+    public getVFStave(): VF.Stave {
         return this.stave;
     }
 }
