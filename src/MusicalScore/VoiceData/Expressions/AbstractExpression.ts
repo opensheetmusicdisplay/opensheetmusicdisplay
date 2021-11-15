@@ -28,6 +28,7 @@ export class AbstractExpression {
             case "below":
                 return PlacementEnum.Below;
             case "aboveorbelow":
+            case "abovebelow":
                 return PlacementEnum.AboveOrBelow;
             case "left":
                 return PlacementEnum.Left;

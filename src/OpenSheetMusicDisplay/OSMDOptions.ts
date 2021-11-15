@@ -115,8 +115,8 @@ export interface IOSMDOptions {
     useXMLMeasureNumbers?: boolean;
     /** Whether to draw fingerings (only left to the note for now). Default true (unless solo part). */
     drawFingerings?: boolean;
-    /** Where to draw fingerings (left, right, above, below, or auto).
-     * Default left. Auto, above, below experimental (potential collisions because bounding box not correct)
+    /** Where to draw fingerings (above, below, aboveorbelow, left, right, or auto).
+     * Default AboveOrBelow. Auto experimental (potential collisions because bounding box not correct)
      */
     fingeringPosition?: string;
     /** For above/below fingerings, whether to draw them directly above/below notes (default), or above/below staffline. */
