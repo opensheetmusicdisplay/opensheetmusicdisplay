@@ -58,7 +58,7 @@ export class SkyBottomLineCalculator {
             const ctx: any = tmpCanvas.getContext();
             const canvas: any = tmpCanvas.getCanvas();
             width = canvas.width;
-            // const height: number = canvas.height;
+            const height: number = canvas.height;
 
             // This magic number is an offset from the top image border so that
             // elements above the staffline can be drawn correctly.
@@ -80,12 +80,11 @@ export class SkyBottomLineCalculator {
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order
             // RGBA is 32 bit word with 8 bits red, 8 bits green, 8 bits blue and 8 bit alpha. Alpha should be 0 for all background colors.
             // Since we are only interested in black or white we can take 32bit words at once
-            // const imageData: any = ctx.getImageData(0, 0, width, height);
-            // const rgbaLength: number = 4;
+            const imageData: any = tmpCanvas.CanvasRenderingCtx.getImageData(0, 0, width, height);
+            const rgbaLength: number = 4;
             const measureArrayLength: number = Math.max(Math.ceil(measure.PositionAndShape.Size.width * this.mRules.SamplingUnit), 1);
             const tmpSkyLine: number[] = new Array(measureArrayLength);
             const tmpBottomLine: number[] = new Array(measureArrayLength);
-            /*
             for (let x: number = 0; x < width; x++) {
                 // SkyLine
                 for (let y: number = 0; y < height; y++) {
@@ -101,14 +100,13 @@ export class SkyBottomLineCalculator {
                 for (let y: number = height; y > 0; y--) {
                     const yOffset: number = y * width * rgbaLength;
                     const bufIndex: number = yOffset + x * rgbaLength;
-                    const alpha: number = 0; imageData.data[bufIndex + 3];
+                    const alpha: number = imageData.data[bufIndex + 3];
                     if (alpha > 0) {
                         tmpBottomLine[x] = y;
                         break;
                     }
                 }
             }
-            */
 
             for (let idx: number = 0; idx < tmpSkyLine.length; idx++) {
                 if (tmpSkyLine[idx] === undefined) {
