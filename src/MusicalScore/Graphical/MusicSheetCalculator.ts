@@ -2297,9 +2297,11 @@ export abstract class MusicSheetCalculator {
             }
         }
         // check for octave shifts
+        const octaveShifts: MultiExpression[] = [];
         for (let idx: number = 0, len: number = sourceMeasure.StaffLinkedExpressions[staffIndex].length; idx < len; ++idx) {
             const multiExpression: MultiExpression = sourceMeasure.StaffLinkedExpressions[staffIndex][idx];
             if (multiExpression.OctaveShiftStart) {
+                octaveShifts.push(multiExpression);
                 const openOctaveShift: OctaveShift = multiExpression.OctaveShiftStart;
                 let absoluteEnd: Fraction = openOctaveShift?.ParentEndMultiExpression?.AbsoluteTimestamp;
                 if (!openOctaveShift?.ParentEndMultiExpression) {
@@ -2348,6 +2350,16 @@ export abstract class MusicSheetCalculator {
                     if (openOctaveShifts[staffIndex].getAbsoluteStartTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
                         sourceStaffEntry.AbsoluteTimestamp.lte(openOctaveShifts[staffIndex].getAbsoluteEndTimestamp)) {
                         octaveShiftValue = openOctaveShifts[staffIndex].getOpenOctaveShift.Type;
+                    }
+                }
+                if (octaveShiftValue === OctaveEnum.NONE) {
+                    // check for existing octave shifts outside openOctaveShifts
+                    for (const octaveShift of octaveShifts) {
+                        if (octaveShift.OctaveShiftStart?.ParentStartMultiExpression?.AbsoluteTimestamp.lte(sourceStaffEntry.AbsoluteTimestamp) &&
+                            !octaveShift.OctaveShiftStart?.ParentEndMultiExpression?.AbsoluteTimestamp.lt(sourceStaffEntry.AbsoluteTimestamp)) {
+                                octaveShiftValue = octaveShift.OctaveShiftStart.Type;
+                                break;
+                            }
                     }
                 }
                 // for each visible Voice create the corresponding GraphicalNotes
