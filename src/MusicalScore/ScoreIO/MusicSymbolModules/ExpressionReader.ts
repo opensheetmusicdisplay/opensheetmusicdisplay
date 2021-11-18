@@ -149,8 +149,10 @@ export class ExpressionReader {
             const tempoAttr: IXmlAttribute = n.attribute("tempo");
             const dynAttr: IXmlAttribute = n.attribute("dynamics");
             if (tempoAttr) {
-                const match: string[] = tempoAttr.value.match(/^(\d+\.?\d{0,9}|\.\d{1,9})$/);
-                this.soundTempo = match !== undefined ? parseInt(match[0], 10) : 100;
+                // const match: string[] = tempoAttr.value.match(/^(\d+\.?\d{0,9}|\.\d{1,9})$/);
+                const match: string[] = tempoAttr.value.match(/^(\d+)(\.\d+)?$/);
+                this.soundTempo = match?.length > 0 ? Math.round(Number.parseFloat(tempoAttr.value)) : 100;
+                //console.log(`value: ${tempoAttr.value}\n  soundTempo: ${this.soundTempo}`);
                 currentMeasure.TempoInBPM = this.soundTempo;
                 if (this.musicSheet.DefaultStartTempoInBpm === 0) {
                     this.musicSheet.DefaultStartTempoInBpm = this.soundTempo;
