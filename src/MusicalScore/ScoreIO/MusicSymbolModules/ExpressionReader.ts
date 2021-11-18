@@ -151,7 +151,12 @@ export class ExpressionReader {
             if (tempoAttr) {
                 // const match: string[] = tempoAttr.value.match(/^(\d+\.?\d{0,9}|\.\d{1,9})$/);
                 const match: string[] = tempoAttr.value.match(/^(\d+)(\.\d+)?$/);
-                this.soundTempo = match?.length > 0 ? Math.round(Number.parseFloat(tempoAttr.value)) : 100;
+                if (match?.length > 0) {
+                    this.soundTempo = Math.round(Number.parseFloat(tempoAttr.value));
+                } else {
+                    log.info("invalid xml tempo: " + tempoAttr.value);
+                    this.soundTempo = 100;
+                }
                 //console.log(`value: ${tempoAttr.value}\n  soundTempo: ${this.soundTempo}`);
                 currentMeasure.TempoInBPM = this.soundTempo;
                 if (this.musicSheet.DefaultStartTempoInBpm === 0) {
