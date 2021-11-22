@@ -874,8 +874,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             });
         }
 
-        //pdf.save(pdfName); // save/download the created pdf
-        pdf.output("pdfobjectnewwindow"); // open PDF in new tab/window
+        pdf.save(pdfName); // save/download the created pdf
+        //pdf.output("pdfobjectnewwindow", {filename: "osmd_createPDF.pdf"}); // open PDF in new tab/window
 
         // note that using jspdf with svg2pdf creates unnecessary console warnings "AcroForm-Classes are not populated into global-namespace..."
         // this will hopefully be fixed with a new jspdf release, see https://github.com/yWorks/jsPDF/pull/32
