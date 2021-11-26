@@ -1048,8 +1048,7 @@ export class InstrumentReader {
    * @param numberOfStaves
    * @param beginOfMeasure
    */
-  private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean,
-    currentFraction: Fraction = undefined, noteStaff: number = undefined): void {
+  private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
     for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
       const pair: [number, AbstractNotationInstruction, Fraction] = this.abstractInstructions[i];
       const key: number = pair[0];
