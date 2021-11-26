@@ -1238,7 +1238,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                 // check for in-measure clefs:
                 // only add clefs in main voice (to not add them twice)
-                if (isMainVoice) {
+                if (true || isMainVoice) {
                     const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
                     if (vfse && vfse.vfClefBefore) {
                         // add clef as NoteSubGroup so that we get modifier layouting
