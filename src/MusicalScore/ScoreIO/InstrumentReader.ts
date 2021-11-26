@@ -1050,10 +1050,10 @@ export class InstrumentReader {
    */
   private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
     for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
-      const pair: [number, AbstractNotationInstruction, Fraction] = this.abstractInstructions[i];
-      const key: number = pair[0];
-      const value: AbstractNotationInstruction = pair[1];
-      const fraction: Fraction = pair[2];
+      const instruction: [number, AbstractNotationInstruction, Fraction] = this.abstractInstructions[i];
+      const key: number = instruction[0];
+      const value: AbstractNotationInstruction = instruction[1];
+      const fraction: Fraction = instruction[2];
       if (value instanceof ClefInstruction) {
         const clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (this.currentXmlMeasureIndex === 0 || (key <= this.activeClefs.length && clefInstruction !== this.activeClefs[key - 1])) {
@@ -1062,12 +1062,7 @@ export class InstrumentReader {
             const newClefInstruction: ClefInstruction = clefInstruction;
             const staffEntry: SourceStaffEntry = this.currentStaffEntry;
             if (fraction && Math.abs(fraction.RealValue - this.currentStaffEntry.Timestamp.RealValue) > 0.01) {
-              //console.log("currentFraction !== in measure " + this.currentMeasure.MeasureNumberXML);
-              console.log("wrong currentStaffEntry.Timestamp: " + this.currentStaffEntry.Timestamp);
-              console.log("fraction: " + fraction);
-              continue;
-            } else {
-              console.log("found staffentry for currentFraction");
+              continue; // this instruction should be at a different timestamp/staffentry
             }
             newClefInstruction.Parent = staffEntry;
             staffEntry.removeFirstInstructionOfTypeClefInstruction();
