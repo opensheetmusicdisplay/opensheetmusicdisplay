@@ -907,16 +907,8 @@ export class InstrumentReader {
           }
         }
 
-        // TODO problem: in saveAbstractInstructionList, this is always saved in this.currentStaffEntry.
-        //   so when there's a <forward> or <backup> instruction in <attributes> (which is unfortunate encoding), this gets misplaced.
-        //   so for now we skip it.
-        const skipClefInstruction: boolean = previousNode?.name === "forward";
-          // || previousNode?.name === "backup") && // necessary for clef at beginning of measure/system,
-          //   see sample test_staverepetitions_coda_etc.musicxml, where the bass clef was placed over a previous treble clef
-        if (true || !skipClefInstruction) {
-          const clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
-          this.abstractInstructions.push([staffNumber, clefInstruction, currentFraction]);
-        }
+        const clefInstruction: ClefInstruction = new ClefInstruction(clefEnum, clefOctaveOffset, line);
+        this.abstractInstructions.push([staffNumber, clefInstruction, currentFraction]);
       }
     }
     if (attrNode.element("key") !== undefined && this.instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
@@ -1053,7 +1045,7 @@ export class InstrumentReader {
       const instruction: [number, AbstractNotationInstruction, Fraction] = this.abstractInstructions[i];
       const key: number = instruction[0];
       const value: AbstractNotationInstruction = instruction[1];
-      const fraction: Fraction = instruction[2];
+      const instructionTimestamp: Fraction = instruction[2];
       if (value instanceof ClefInstruction) {
         const clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (this.currentXmlMeasureIndex === 0 || (key <= this.activeClefs.length && clefInstruction !== this.activeClefs[key - 1])) {
@@ -1061,7 +1053,7 @@ export class InstrumentReader {
             === this.instrument.Staves.indexOf(this.currentStaffEntry.ParentStaff)) {
             const newClefInstruction: ClefInstruction = clefInstruction;
             const staffEntry: SourceStaffEntry = this.currentStaffEntry;
-            if (fraction && Math.abs(fraction.RealValue - this.currentStaffEntry.Timestamp.RealValue) > 0.01) {
+            if (instructionTimestamp && Math.abs(instructionTimestamp.RealValue - this.currentStaffEntry.Timestamp.RealValue) > 0.01) {
               continue; // this instruction should be at a different timestamp/staffentry
             }
             newClefInstruction.Parent = staffEntry;
