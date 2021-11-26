@@ -1237,17 +1237,17 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
 
                 // check for in-measure clefs:
-                // only add clefs in main voice (to not add them twice)
-                if (true || isMainVoice) {
-                    const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
-                    if (vfse && vfse.vfClefBefore) {
-                        // add clef as NoteSubGroup so that we get modifier layouting
-                        const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
-                        // The cast is necesary because...vexflow -> see types
-                        if (vexFlowVoiceEntry.vfStaveNote.getCategory && vexFlowVoiceEntry.vfStaveNote.getCategory() === "stavenotes") {
-                            // GhostNotes and other StemmableNotes don't have this function
-                            (vexFlowVoiceEntry.vfStaveNote as Vex.Flow.StaveNote).addModifier(0, clefModifier);
-                        }
+                // Note: we used to only add clefs in main voice to not add them twice,
+                //   but there are many legitimate clefs e.g. in 2nd voices, and this doesn't seem to cause issues.
+                //if (isMainVoice) {
+                const vfse: VexFlowStaffEntry = vexFlowVoiceEntry.parentStaffEntry as VexFlowStaffEntry;
+                if (vfse && vfse.vfClefBefore) {
+                    // add clef as NoteSubGroup so that we get modifier layouting
+                    const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
+                    // The cast is necesary because...vexflow -> see types
+                    if (vexFlowVoiceEntry.vfStaveNote.getCategory && vexFlowVoiceEntry.vfStaveNote.getCategory() === "stavenotes") {
+                        // GhostNotes and other StemmableNotes don't have this function
+                        (vexFlowVoiceEntry.vfStaveNote as Vex.Flow.StaveNote).addModifier(0, clefModifier);
                     }
                 }
 
