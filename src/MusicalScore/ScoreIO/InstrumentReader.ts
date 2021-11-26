@@ -139,7 +139,6 @@ export class InstrumentReader {
     let divisionsException: boolean = false;
     this.maxTieNoteFraction = new Fraction(0, 1);
     let lastNoteWasGrace: boolean = false;
-    let noteStaff: number = 1;
     try {
       const measureNode: IXmlElement = this.xmlMeasureList[this.currentXmlMeasureIndex];
       const xmlMeasureListArr: IXmlElement[] = measureNode.elements();
@@ -172,6 +171,7 @@ export class InstrumentReader {
               //   if (xmlNode.attribute("print-spacing").value === "yes" {
               //     // TODO give spacing for invisible notes even when not displayed. might be hard with Vexflow formatting
           }
+          let noteStaff: number = 1;
           if (this.instrument.Staves.length > 1) {
             if (xmlNode.element("staff")) {
               noteStaff = parseInt(xmlNode.element("staff").value, 10);
@@ -355,7 +355,6 @@ export class InstrumentReader {
             this.inSourceMeasureInstrumentIndex + noteStaff - 1,
             this.currentStaff
           ).staffEntry;
-          this.currentStaffEntry.VerticalContainerParent.Timestamp = musicTimestamp;
           //log.info("currentStaffEntry", this.currentStaffEntry, this.currentMeasure.VerticalSourceStaffEntryContainers.length);
 
           if (!this.currentVoiceGenerator.hasVoiceEntry()
@@ -379,7 +378,6 @@ export class InstrumentReader {
             this.currentStaffEntry = this.currentVoiceGenerator.checkForStaffEntryLink(
               this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff, this.currentStaffEntry, this.currentMeasure
             );
-            this.currentStaffEntry.VerticalContainerParent.Timestamp = musicTimestamp;
           }
           const beginOfMeasure: boolean = (
             this.currentStaffEntry !== undefined &&
@@ -456,13 +454,10 @@ export class InstrumentReader {
           if (currentFraction.Equals(new Fraction(0, 1)) &&
             this.isAttributesNodeAtBeginOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveAbstractInstructionList(this.instrument.Staves.length, true);
-          } // else if
+          }
           if (this.isAttributesNodeAtEndOfMeasure(this.xmlMeasureList[this.currentXmlMeasureIndex], xmlNode)) {
             this.saveClefInstructionAtEndOfMeasure();
           }
-          // else {
-          //   this.saveAbstractInstructionList(this.instrument.Staves.length, false, currentFraction, noteStaff);
-          // }
           const staffDetailsNodes: IXmlElement[] = xmlNode.elements("staff-details"); // there can be multiple, even if redundant. see #1041
           for (const staffDetailsNode of staffDetailsNodes) {
             const staffLinesNode: IXmlElement = staffDetailsNode.element("staff-lines");
@@ -916,17 +911,6 @@ export class InstrumentReader {
         //   so when there's a <forward> or <backup> instruction in <attributes> (which is unfortunate encoding), this gets misplaced.
         //   so for now we skip it.
         const skipClefInstruction: boolean = previousNode?.name === "forward";
-        if (currentFraction && this.currentStaffEntry && currentFraction !== this.currentStaffEntry?.Timestamp) {
-          console.log("misplaced clef! measure: " + this.currentMeasure.MeasureNumberXML);
-          console.log("currentFraction: " + currentFraction);
-          console.log("staffEntry: ");
-          console.dir(this.currentStaffEntry);
-          for (const container of this.currentMeasure.VerticalSourceStaffEntryContainers) {
-            for (const se of container.StaffEntries) {
-              console.log("se timestamp: " + se?.Timestamp);
-            }
-          }
-        }
           // || previousNode?.name === "backup") && // necessary for clef at beginning of measure/system,
           //   see sample test_staverepetitions_coda_etc.musicxml, where the bass clef was placed over a previous treble clef
         if (true || !skipClefInstruction) {
@@ -1073,19 +1057,16 @@ export class InstrumentReader {
       const fraction: Fraction = pair[2];
       if (value instanceof ClefInstruction) {
         const clefInstruction: ClefInstruction = <ClefInstruction>value;
-        console.log("clef se timestamp: " + this.currentStaffEntry?.Timestamp);
         if (this.currentXmlMeasureIndex === 0 || (key <= this.activeClefs.length && clefInstruction !== this.activeClefs[key - 1])) {
           if (!beginOfMeasure && this.currentStaffEntry !== undefined && !this.currentStaffEntry.hasNotes() && key - 1
             === this.instrument.Staves.indexOf(this.currentStaffEntry.ParentStaff)) {
             const newClefInstruction: ClefInstruction = clefInstruction;
             const staffEntry: SourceStaffEntry = this.currentStaffEntry;
-            if (Math.abs(fraction.RealValue - this.currentStaffEntry.Timestamp.RealValue) > 0.01) {
+            if (fraction && Math.abs(fraction.RealValue - this.currentStaffEntry.Timestamp.RealValue) > 0.01) {
               //console.log("currentFraction !== in measure " + this.currentMeasure.MeasureNumberXML);
               console.log("wrong currentStaffEntry.Timestamp: " + this.currentStaffEntry.Timestamp);
               console.log("fraction: " + fraction);
               continue;
-              // eslint-disable-next-line
-              // staffEntry = this.currentMeasure.findOrCreateStaffEntry(currentFraction, this.inSourceMeasureInstrumentIndex + noteStaff - 1, this.currentStaff)[1];
             } else {
               console.log("found staffentry for currentFraction");
             }
