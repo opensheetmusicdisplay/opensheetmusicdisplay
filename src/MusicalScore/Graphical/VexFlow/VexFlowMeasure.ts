@@ -26,7 +26,6 @@ import {GraphicalVoiceEntry} from "../GraphicalVoiceEntry";
 import {VexFlowVoiceEntry} from "./VexFlowVoiceEntry";
 import {Fraction} from "../../../Common/DataObjects/Fraction";
 import {Voice} from "../../VoiceData/Voice";
-import {LinkedVoice} from "../../VoiceData/LinkedVoice";
 import {EngravingRules} from "../EngravingRules";
 import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
@@ -1206,7 +1205,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             if (!voice) {
                 continue;
             }
-            const isMainVoice: boolean = !(voice instanceof LinkedVoice);
+            //const isMainVoice: boolean = !(voice instanceof LinkedVoice);
 
             // add a vexFlow voice for this voice:
             this.vfVoices[voice.VoiceId] = new Vex.Flow.Voice({
