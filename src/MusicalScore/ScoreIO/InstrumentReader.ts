@@ -1049,12 +1049,14 @@ export class InstrumentReader {
       if (value instanceof ClefInstruction) {
         const clefInstruction: ClefInstruction = <ClefInstruction>value;
         if (this.currentXmlMeasureIndex === 0 || (key <= this.activeClefs.length && clefInstruction !== this.activeClefs[key - 1])) {
-          if (!beginOfMeasure && this.currentStaffEntry !== undefined && !this.currentStaffEntry.hasNotes() && key - 1
-            === this.instrument.Staves.indexOf(this.currentStaffEntry.ParentStaff)) {
+          if (!beginOfMeasure && this.currentStaffEntry !== undefined && !this.currentStaffEntry.hasNotes() &&
+            key - 1 === this.instrument.Staves.indexOf(this.currentStaffEntry.ParentStaff)) {
             const newClefInstruction: ClefInstruction = clefInstruction;
             const staffEntry: SourceStaffEntry = this.currentStaffEntry;
+            // the instructionTimestamp may differ from the current staffentry's when backup/forward tags are used in the XML.
+            //   in this case, we need to skip placing it at the current entry, and save it for later.
             if (instructionTimestamp && Math.abs(instructionTimestamp.RealValue - this.currentStaffEntry.Timestamp.RealValue) > 0.01) {
-              continue; // this instruction should be at a different timestamp/staffentry
+              continue; // this instruction should be at a different staffentry/timestamp.
             }
             newClefInstruction.Parent = staffEntry;
             staffEntry.removeFirstInstructionOfTypeClefInstruction();
