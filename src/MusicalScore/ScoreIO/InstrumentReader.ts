@@ -1062,6 +1062,9 @@ export class InstrumentReader {
             this.activeClefs[key - 1] = clefInstruction;
             this.abstractInstructions.splice(i, 1);
           } else if (beginOfMeasure) {
+            if (instructionTimestamp.RealValue !== 0) {
+              continue;
+            }
             let firstStaffEntry: SourceStaffEntry;
             if (this.currentMeasure) {
               const newClefInstruction: ClefInstruction = clefInstruction;
