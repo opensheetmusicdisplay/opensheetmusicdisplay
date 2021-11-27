@@ -3,13 +3,15 @@
     "target": "es6",
     "module": "esNext",
     "esModuleInterop": true,
-    "lib": ["esNext", "dom", "scripthost"],
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "outDir": "build/dist",
     "declaration": true,
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types"],
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "allowUmdGlobalAccess": true
   },
   "exclude": [
     "node_modules",
