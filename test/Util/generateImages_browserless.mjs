@@ -1,3 +1,7 @@
+import Blob from "cross-blob";
+import FS from "fs";
+import jsdom from "jsdom";
+import OSMD from "../../build/opensheetmusicdisplay.min.js"; // window needs to be available before we can require OSMD
 /*
   Render each OSMD sample, grab the generated images, and
   dump them into a local directory as PNG or SVG files.
@@ -32,10 +36,10 @@ let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filt
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
         // eslint-disable-next-line max-len
-        "node test/Util/generateImages_browserless.js osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
+        "node test/Util/generateImages_browserless.mjs osmdBuildDir sampleDirectory imageDirectory svg|png [width|0] [height|0] [filterRegex|all|allSmall] [--debug|--osmdtesting] [debugSleepTime]");
     console.log("  (use pageWidth and pageHeight 0 to not divide the rendering into pages (endless page))");
     console.log('  (use "all" to skip filterRegex parameter. "allSmall" with --osmdtesting skips two huge OSMD samples that take forever to render)');
-    console.log("example: node test/Util/generateImages_browserless.js ../../build ./test/data/ ./export png 210 297 allSmall --debug 5000");
+    console.log("example: node test/Util/generateImages_browserless.mjs ../../build ./test/data/ ./export png 210 297 allSmall --debug 5000");
     console.log("Error: need osmdBuildDir, sampleDir, imageDir and svg|png arguments. Exiting.");
     process.exit(1);
 }
@@ -48,9 +52,8 @@ if (imageFormat !== "svg") {
     imageFormat = "png";
 }
 
-let OSMD; // can only be required once window was simulated
+// let OSMD; // can only be required once window was simulated
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const FS = require("fs");
 
 async function init () {
     console.log("[OSMD.generateImages] init");
@@ -83,18 +86,17 @@ async function init () {
 
     // ---- hacks to fake Browser elements OSMD and Vexflow need, like window, document, and a canvas HTMLElement ----
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const jsdom = require("jsdom");
     const dom = new jsdom.JSDOM("<!DOCTYPE html></html>");
     // eslint-disable-next-line no-global-assign
-    window = dom.window;
+    // window = dom.window;
     // eslint-disable-next-line no-global-assign
-    document = dom.window.document;
+    // document = dom.window.document;
 
     // eslint-disable-next-line no-global-assign
     global.window = dom.window;
     // eslint-disable-next-line no-global-assign
     global.document = window.document;
-    window.console = console; // probably does nothing
+    //window.console = console; // probably does nothing
     global.HTMLElement = window.HTMLElement;
     global.HTMLAnchorElement = window.HTMLAnchorElement;
     global.XMLHttpRequest = window.XMLHttpRequest;
@@ -105,7 +107,7 @@ async function init () {
     }
 
     // fix Blob not found (to support external modules like is-blob)
-    global.Blob = require("cross-blob");
+    global.Blob = Blob;
 
     const div = document.createElement("div");
     div.id = "browserlessDiv";
@@ -126,11 +128,11 @@ async function init () {
     }
     div.width = width;
     div.height = height;
-    div.offsetWidth = width; // doesn't work, offsetWidth is always 0 from this. see below
-    div.clientWidth = width;
-    div.clientHeight = height;
-    div.scrollHeight = height;
-    div.scrollWidth = width;
+    // div.offsetWidth = width; // doesn't work, offsetWidth is always 0 from this. see below
+    // div.clientWidth = width;
+    // div.clientHeight = height;
+    // div.scrollHeight = height;
+    // div.scrollWidth = width;
     div.setAttribute("width", width);
     div.setAttribute("height", height);
     div.setAttribute("offsetWidth", width);
@@ -157,7 +159,6 @@ async function init () {
     // ---- end browser hacks (hopefully) ----
 
     // load globally
-    OSMD = require(`${osmdBuildDir}/opensheetmusicdisplay.min.js`); // window needs to be available before we can require OSMD
 
     // Create the image directory if it doesn't exist.
     FS.mkdirSync(imageDir, { recursive: true });
