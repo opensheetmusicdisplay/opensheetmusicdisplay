@@ -1,7 +1,7 @@
 import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
 import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
 import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min';
-import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
+import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
 import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
 
 /*jslint browser:true */
