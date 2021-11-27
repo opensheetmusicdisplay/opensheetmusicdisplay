@@ -35,6 +35,139 @@ export enum AccidentalEnum {
     KORON
 }
 
+/** Accidentals database.
+ * This table stores all information needed to correctly display and calculate accidentals.
+ *
+ * VexFlow codes https://github.com/0xfe/vexflow/wiki/Microtonal-Support
+ * MusicXML codes https://w3c.github.io/musicxml/musicxml-reference/data-types/accidental-value/
+ * SMuFL classes https://w3c.github.io/smufl/latest/specification/classes.html
+ */
+export type AccidentalRecord = {
+    osmdCode: AccidentalEnum;
+    vfCode: string;
+    mxmlCode: string;
+    tunings: { smuflClass: string, halfTone: number }[];
+};
+
+export type AccidentalDatabase = AccidentalRecord[];
+export type AccidentalIndex<T> = Map<T, AccidentalRecord>;
+
+export const accidentalDatabase: AccidentalDatabase = [
+    {
+        osmdCode: AccidentalEnum.SHARP,
+        vfCode: "#",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsStandard", halfTone: 1 }],
+    },
+    {
+        osmdCode: AccidentalEnum.FLAT,
+        vfCode: "b",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsStandard", halfTone: -1 }],
+    },
+    {
+        osmdCode: AccidentalEnum.NONE,
+        vfCode: "",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "", halfTone: 0 }],
+    },
+    {
+        osmdCode: AccidentalEnum.NATURAL,
+        vfCode: "n",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsStandard", halfTone: 0 }],
+    },
+    {
+        osmdCode: AccidentalEnum.DOUBLESHARP,
+        vfCode: "##",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsStandard", halfTone: 2 }],
+    },
+    {
+        osmdCode: AccidentalEnum.DOUBLEFLAT,
+        vfCode: "bb",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsStandard", halfTone: -2 }],
+    },
+    {
+        osmdCode: AccidentalEnum.TRIPLESHARP,
+        vfCode: "###",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsStandard", halfTone: 3 }],
+    },
+    {
+        osmdCode: AccidentalEnum.TRIPLEFLAT,
+        vfCode: "bbs",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsStandard", halfTone: -3 }],
+    },
+    {
+        osmdCode: AccidentalEnum.QUARTERTONESHARP,
+        vfCode: "+",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsSteinZimmermann", halfTone: 0.5 }, { smuflClass: "accidentalsAEU", halfTone: 2*1/9 }],
+    },
+    {
+        osmdCode: AccidentalEnum.QUARTERTONEFLAT,
+        vfCode: "d",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsSteinZimmermann", halfTone: -0.5 }, { smuflClass: "accidentalsAEU", halfTone: -2*1/9 }],
+    },
+    {
+        osmdCode: AccidentalEnum.THREEQUARTERSSHARP,
+        vfCode: "++",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsSteinZimmermann", halfTone: 1.5 }],
+    },
+    {
+        osmdCode: AccidentalEnum.THREEQUARTERSFLAT,
+        vfCode: "db",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsSteinZimmermann", halfTone: -1.5 }],
+    },
+    {
+        osmdCode: AccidentalEnum.SLASHQUARTERSHARP,
+        vfCode: "+-",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsAEU", halfTone: 2*5/9 }],
+    },
+    {
+        osmdCode: AccidentalEnum.SLASHFLAT,
+        vfCode: "bs",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsAEU", halfTone: -2*5/9 }],
+    },
+    {
+        osmdCode: AccidentalEnum.SLASHSHARP,
+        vfCode: "++-",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsAEU", halfTone: 2*8/9 }],
+    },
+    {
+        osmdCode: AccidentalEnum.DOUBLESLASHFLAT,
+        vfCode: "bss",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsAEU", halfTone: -2*8/9 }],
+    },
+    {
+        osmdCode: AccidentalEnum.SORI,
+        vfCode: "o",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsPersian", halfTone: -2*2/9 }],
+    },
+    {
+        osmdCode: AccidentalEnum.KORON,
+        vfCode: "k",
+        mxmlCode: "",
+        tunings: [{ smuflClass: "accidentalsPersian", halfTone: 2*2/9 }],
+    }
+];
+
+export const accidentalCodesIndex: AccidentalIndex<AccidentalEnum> = accidentalDatabase.reduce( (index, record) => {
+    index.set(record.osmdCode, record);
+    return index;
+}, new Map<AccidentalEnum, AccidentalRecord>());
+
 // This class represents a musical note. The middle A (440 Hz) lies in the octave with the value 1.
 export class Pitch {
     public static pitchEnumValues: NoteEnum[] = [
