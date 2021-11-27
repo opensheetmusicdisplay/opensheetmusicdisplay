@@ -92,7 +92,6 @@
     "jquery": "^3.6.0",
     "jsdom": "^18.1.1",
     "jspdf": "^2.4.0",
-    "jspdf-yworks": "^2.1.1",
     "karma": "^6.3.9",
     "karma-base64-to-js-preprocessor": "^0.1.0",
     "karma-chai": "^0.1.0",

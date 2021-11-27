@@ -5,7 +5,7 @@ node_js:
 # - '10' # fails on Travis since upgrading to Vexflow 1.2.90 (still passes on AppVeyor), for Mxl_Test. Node 12 works.
 - '12'
 env:
-  - timeout=30000
+  - timeout=15000
 notifications:
   email: false
   slack:
