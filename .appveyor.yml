@@ -1,6 +1,6 @@
 image: Visual Studio 2017
 environment:
-  timeout: 10000
+  timeout: 30000
   matrix:
     # - nodejs_version: "8" 
     # - nodejs_version: "10"
