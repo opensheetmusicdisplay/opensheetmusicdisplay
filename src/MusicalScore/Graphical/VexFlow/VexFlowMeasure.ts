@@ -719,7 +719,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
     protected getRestFilledVexFlowStaveNotesPerVoice(voice: Voice): GraphicalVoiceEntry[] {
         let latestVoiceTimestamp: Fraction = undefined;
         let gvEntries: GraphicalVoiceEntry[] = this.getGraphicalVoiceEntriesPerVoice(voice);
-        for (let idx: number = 0, len: number = gvEntries.length; idx < len; ++idx) {
+        for (let idx: number = 0; idx < gvEntries.length; idx++) {
             const gve: GraphicalVoiceEntry = gvEntries[idx];
             const gNotesStartTimestamp: Fraction = gve.notes[0].sourceNote.getAbsoluteTimestamp();
             // find the voiceEntry end timestamp:
