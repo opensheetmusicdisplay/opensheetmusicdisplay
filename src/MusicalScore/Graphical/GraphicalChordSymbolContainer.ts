@@ -30,5 +30,6 @@ export class GraphicalChordSymbolContainer extends GraphicalObject {
         const text: string = ChordSymbolContainer.calculateChordText(this.chordSymbolContainer, transposeHalftones, keyInstruction);
         this.graphicalLabel = new GraphicalLabel(new Label(text), textHeight, this.rules.ChordSymbolTextAlignment, this.rules, this.boundingBox);
         this.graphicalLabel.PositionAndShape.RelativePosition = new PointF2D(this.rules.ChordSymbolRelativeXOffset, 0.0);
+        this.graphicalLabel.Label.colorDefault = this.rules.DefaultColorChordSymbol;
     }
 }

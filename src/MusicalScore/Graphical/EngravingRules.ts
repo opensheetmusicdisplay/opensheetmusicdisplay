@@ -262,6 +262,7 @@ export class EngravingRules {
     public DefaultColorRest: string;
     public DefaultColorStem: string;
     public DefaultColorLabel: string;
+    public DefaultColorChordSymbol: string;
     public DefaultColorTitle: string;
     public DefaultColorCursor: string;
     public DefaultFontFamily: string;
