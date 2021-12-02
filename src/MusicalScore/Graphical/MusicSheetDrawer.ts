@@ -25,7 +25,8 @@ import {MusicSymbolDrawingStyle, PhonicScoreModes} from "./DrawingMode";
 import {GraphicalObject} from "./GraphicalObject";
 import { GraphicalInstantaneousDynamicExpression } from "./GraphicalInstantaneousDynamicExpression";
 import { GraphicalContinuousDynamicExpression } from "./GraphicalContinuousDynamicExpression";
-import { VexFlowContinuousDynamicExpression, VexFlowGraphicalNote, VexFlowMeasure, VexFlowStaffEntry, VexFlowStaffLine, VexFlowVoiceEntry } from "./VexFlow";
+// eslint-disable-next-line
+import { VexFlowContinuousDynamicExpression, VexFlowGraphicalNote, VexFlowInstrumentBracket, VexFlowMeasure, VexFlowStaffEntry, VexFlowStaffLine, VexFlowVoiceEntry } from "./VexFlow";
 import { StaffLineActivitySymbol } from "./StaffLineActivitySymbol";
 // import { FontStyles } from "../../Common/Enums/FontStyles";
 
@@ -328,12 +329,25 @@ export abstract class MusicSheetDrawer {
                 label.SVGNode = this.drawLabel(label, <number>GraphicalLayers.Notes);
             }
         }
+
+        const instruments: Instrument[] = this.graphicalMusicSheet.ParentMusicSheet.Instruments;
+        const instrumentsVisible: number = instruments.filter((instrument) => instrument.Visible).length;
         for (const bracket of musicSystem.InstrumentBrackets) {
             this.drawInstrumentBrace(bracket, musicSystem);
         }
-        for (const bracket of musicSystem.GroupBrackets) {
-            this.drawGroupBracket(bracket, musicSystem);
+
+        if (instruments.length > 0) {
+            if (instrumentsVisible > 1) {
+                for (const bracket of musicSystem.GroupBrackets) {
+                    this.drawGroupBracket(bracket, musicSystem);
+                }
+            } else {
+                for (const bracket of musicSystem.GroupBrackets) {
+                    (bracket as VexFlowInstrumentBracket).Visible = false; //.setType(Vex.Flow.StaveConnector.type.NONE);
+                }
+            }
         }
+
         if (!this.leadSheet) {
             for (const measureNumberLabel of musicSystem.MeasureNumberLabels) {
                 measureNumberLabel.SVGNode = this.drawLabel(measureNumberLabel, <number>GraphicalLayers.Notes);

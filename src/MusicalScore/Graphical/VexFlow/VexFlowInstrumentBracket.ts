@@ -10,7 +10,8 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
  */
 export class VexFlowInstrumentBracket extends GraphicalObject {
 
-    protected vexflowConnector: Vex.Flow.StaveConnector;
+    public vexflowConnector: Vex.Flow.StaveConnector;
+    public Visible: boolean = true;
 
     constructor(firstVexFlowStaffLine: VexFlowStaffLine, lastVexFlowStaffLine: VexFlowStaffLine, depth: number = 0) {
         super();
@@ -26,7 +27,9 @@ export class VexFlowInstrumentBracket extends GraphicalObject {
      */
     public draw(ctx: Vex.IRenderContext): void {
         // Draw vexflow brace. This sets the positions inside the connector.
-        this.vexflowConnector.setContext(ctx).draw();
+        if (this.Visible) {
+            this.vexflowConnector.setContext(ctx).draw();
+        }
         // Set bounding box
         const con: Vex.Flow.StaveConnector = this.vexflowConnector;
         // First line in first stave
