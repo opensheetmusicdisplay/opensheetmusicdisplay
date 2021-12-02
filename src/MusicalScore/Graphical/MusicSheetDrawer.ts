@@ -337,6 +337,9 @@ export abstract class MusicSheetDrawer {
         }
 
         if (instruments.length > 0) {
+            // TODO instead of this check we could save what instruments are in the group bracket,
+            //   and only draw it if all these instruments are visible.
+            //   Currently the instruments/stafflines aren't saved in the bracket however.
             if (instrumentsVisible > 1) {
                 for (const bracket of musicSystem.GroupBrackets) {
                     this.drawGroupBracket(bracket, musicSystem);
