@@ -47,8 +47,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.canvas.style.zIndex = "0";
         this.inner.appendChild(this.canvas);
         container.appendChild(this.inner);
-        // @ts-expect-error
-        this.renderer = new VF.Renderer(this.canvas, this.getVexflowBackendType());
+        this.renderer = new VF.Renderer(this.canvas as HTMLCanvasElement, this.getVexflowBackendType());
         this.ctx = <VF.CanvasContext>this.renderer.getContext();
     }
 
