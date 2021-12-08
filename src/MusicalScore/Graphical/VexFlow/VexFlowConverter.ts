@@ -450,7 +450,7 @@ export class VexFlowConverter {
             clef: vfClefType,
             duration: duration,
             keys: keys,
-            slash: gve.parentVoiceEntry.GraceNoteSlash,
+            slash: gve.GraceSlash,
         };
 
         const firstNote: Note = gve.notes[0].sourceNote;

@@ -26,6 +26,7 @@ export class GraphicalVoiceEntry extends GraphicalObject {
     /** Contains octave shifts affecting this voice entry, caused by octave brackets. */
     public octaveShiftValue: OctaveEnum;
     protected rules: EngravingRules;
+    public GraceSlash: boolean;
 
     /** Sort this entry's notes by pitch.
      * Notes need to be sorted for Vexflow StaveNote creation.
