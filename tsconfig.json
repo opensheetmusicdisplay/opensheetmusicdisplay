@@ -11,7 +11,10 @@
     "typeRoots": ["./node_modules/@types"],
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "allowUmdGlobalAccess": true
+    "allowUmdGlobalAccess": true,
+    "paths": {
+      "vexflow": ["./node_modules/vexflow/entry/vexflow-core-with-gonville.ts"]
+    }
   },
   "exclude": [
     "node_modules",
