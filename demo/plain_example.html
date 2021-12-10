@@ -1,0 +1,17 @@
+<div id="osmdContainer"/>
+<script src="../build/opensheetmusicdisplay.min.js"></script>
+<script>
+  var osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmdContainer");
+  osmd.setOptions({
+    backend: "svg",
+    drawTitle: true,
+    // drawingParameters: "compacttight" // don't display title, composer etc., smaller margins
+  });
+  osmd
+    .load("http://downloads2.makemusic.com/musicxml/MozaVeilSample.xml")
+    .then(
+      function() {
+        osmd.render();
+      }
+    );
+</script>
