@@ -284,7 +284,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         for (const modifier of this.stave.getModifiers()) {
             if (!visible) {
                 // make clef invisible in vexflow. (only rendered to correct layout and staffentry boundingbox)
-                if (modifier.getCategory() === "clefs" && modifier.getPosition() === VF.StaveModifier.Position.END) {
+                if (modifier.getCategory() === "Clef" && modifier.getPosition() === VF.StaveModifier.Position.END) {
                     if ((modifier as any).type === vfclef.type) { // any = VF.Clef
                         const transparentStyle: string = "#12345600";
                         const originalStyle: any = (modifier as any).getStyle();
@@ -1254,7 +1254,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // add clef as NoteSubGroup so that we get modifier layouting
                     const clefModifier: NoteSubGroup = new NoteSubGroup( [vfse.vfClefBefore] );
                     // The cast is necesary because...vexflow -> see types
-                    if (vexFlowVoiceEntry.vfStaveNote.getCategory && vexFlowVoiceEntry.vfStaveNote.getCategory() === "stavenotes") {
+                    if (vexFlowVoiceEntry.vfStaveNote.getCategory && vexFlowVoiceEntry.vfStaveNote.getCategory() === "StaveNote") {
                         // GhostNotes and other StemmableNotes don't have this function
                         (vexFlowVoiceEntry.vfStaveNote as VF.StaveNote).addModifier(clefModifier, 0);
                     }
