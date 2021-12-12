@@ -581,7 +581,7 @@ export class OpenSheetMusicDisplay {
         if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;
         } else {
-            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: options.followCursor}];
+            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: true}];
         }
     }
 
