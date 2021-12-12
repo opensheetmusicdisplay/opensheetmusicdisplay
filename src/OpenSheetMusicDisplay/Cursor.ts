@@ -169,7 +169,7 @@ export class Cursor {
     const measurePositionAndShape: BoundingBox = this.graphic.findGraphicalMeasure(iterator.CurrentMeasureIndex, 0).PositionAndShape;
     this.updateWidthAndStyle(measurePositionAndShape, x, y, height);
 
-    if (this.openSheetMusicDisplay.FollowCursor) {
+    if (this.openSheetMusicDisplay.FollowCursor || this.cursorOptions.follow) {
       if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
         const diff: number = this.cursorElement.getBoundingClientRect().top;
         this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
