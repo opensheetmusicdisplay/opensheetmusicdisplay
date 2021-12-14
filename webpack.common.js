@@ -12,11 +12,7 @@ module.exports = {
         filename: '[name].js',
         library: 'opensheetmusicdisplay',
         libraryTarget: 'umd',
-        globalObject: 'this',
-        // Set the publicPath to match the location of the chunk files.
-        publicPath: './', 
-        // TODO: The VexFlow ESM output will need to include the magic comments with webpackChunkName for this to work.
-        chunkFilename: '[name].js' 
+        globalObject: 'this' 
     },
     resolve: {
         // Add '.ts' and '.tsx' as a resolvable extension.
@@ -24,7 +20,7 @@ module.exports = {
         alias: {
             // This imports the ESM version of VexFlow.
             // It maps "vexflow" to the "vexflow-core-with-gonville.js" entry file.
-            vexflow: path.resolve(__dirname, "node_modules/vexflow/build/esm/entry/vexflow-core-with-gonville.js")
+            vexflow: path.resolve(__dirname, "node_modules/vexflow/build/esm/entry/vexflow-gonville.js")
             
             // It is also possible to directly import the TS source files.
             // However, we might need to configure webpack loaders to make sure the

@@ -13,7 +13,7 @@
     "allowSyntheticDefaultImports": true,
     "allowUmdGlobalAccess": true,
     "paths": {
-      "vexflow": ["./node_modules/vexflow/entry/vexflow-core-with-gonville.ts"]
+      "vexflow": ["./node_modules/vexflow/entry/vexflow-gonville.ts"]
     }
   },
   "exclude": [
