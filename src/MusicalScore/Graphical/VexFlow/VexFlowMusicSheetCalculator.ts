@@ -72,9 +72,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     // prepare Vexflow font (doesn't affect Vexflow 1.x). It seems like this has to be done here for now, otherwise it's too slow for the generateImages script.
     //   (first image will have the non-updated font, in this case the Vexflow default Bravura, while we want Gonville here)
     if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "gonville") {
-      VF.Flow.setMusicFont("Gonville");
+      VF.Flow.setMusicFont("Gonville", "Custom");
     } else if (this.rules.DefaultVexFlowNoteFont?.toLowerCase() === "petaluma") {
-      VF.Flow.setMusicFont("Gonville");
+      VF.Flow.setMusicFont("Gonville", "Custom");
     }
     // else keep new vexflow default Bravura (more cursive, bold)
   }
