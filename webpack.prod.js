@@ -1,8 +1,8 @@
-var merge = require('webpack-merge')
+const { merge } = require('webpack-merge');
 var webpack = require('webpack')
 var path = require('path')
 var common = require('./webpack.common.js')
-var Visualizer = require('webpack-visualizer-plugin')
+var Visualizer = require('webpack-visualizer-plugin2')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = merge(common, {
