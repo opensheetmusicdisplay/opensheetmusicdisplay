@@ -1,7 +1,7 @@
 import { OpenSheetMusicDisplay } from '../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay';
 import { BackendType } from '../src/OpenSheetMusicDisplay/OSMDOptions';
-import * as jsPDF  from '../node_modules/jspdf/dist/jspdf.es.min';
-import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.umd.min';
+import * as jsPDF  from '../node_modules/jspdf-yworks/dist/jspdf.min';
+import * as svg2pdf from '../node_modules/svg2pdf.js/dist/svg2pdf.min';
 import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculator';
 
 /*jslint browser:true */
@@ -832,7 +832,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
      * Creates a Pdf of the currently rendered MusicXML
      * @param pdfName if no name is given, the composer and title of the piece will be used
      */
-    async function createPdf(pdfName) {
+    function createPdf(pdfName) {
         if (openSheetMusicDisplay.backendType !== BackendType.SVG) {
             console.log("[OSMD] createPdf(): Warning: createPDF is only supported for SVG background for now, not for Canvas." +
                 " Please use osmd.setOptions({backendType: SVG}).");
@@ -858,29 +858,20 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         const orientation = pageHeight > pageWidth ? "p" : "l";
         // create a new jsPDF instance
-        const pdf = new jsPDF.jsPDF({
-            orientation: orientation,
-            unit: "mm",
-            format: [pageWidth, pageHeight]
-        });
-        //const scale = pageWidth / svgElement.clientWidth;
+        const pdf = new jsPDF(orientation, "mm", [pageWidth, pageHeight]);
+        const scale = pageWidth / svgElement.clientWidth;
         for (let idx = 0, len = backends.length; idx < len; ++idx) {
             if (idx > 0) {
                 pdf.addPage();
             }
             svgElement = backends[idx].getSvgElement();
-            
-            if (!pdf.svg && !svg2pdf) { // this line also serves to make the svg2pdf not unused, though it's still necessary
-                // we need svg2pdf to have pdf.svg defined
-                console.log("svg2pdf missing, necessary for jspdf.svg().");
-                return;
-            }
-            await pdf.svg(svgElement, {
-                x: 0,
-                y: 0,
-                width: pageWidth,
-                height: pageHeight,
-            })
+
+            // render the svg element
+            svg2pdf(svgElement, pdf, {
+                scale: scale,
+                xOffset: 0,
+                yOffset: 0
+            });
         }
 
         pdf.save(pdfName); // save/download the created pdf
