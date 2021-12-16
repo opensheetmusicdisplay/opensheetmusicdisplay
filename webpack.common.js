@@ -11,7 +11,8 @@ module.exports = {
         path: path.resolve(__dirname, 'build'),
         filename: '[name].js',
         library: 'opensheetmusicdisplay',
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
+        globalObject: 'this'
     },
     resolve: {
         // Add '.ts' and '.tsx' as a resolvable extension.
@@ -46,7 +47,7 @@ module.exports = {
         })
     ],
     devServer: {
-        contentBase: [
+        static: [
             path.join(__dirname, 'test/data'),
             path.join(__dirname, 'build'),
             path.join(__dirname, 'demo')
