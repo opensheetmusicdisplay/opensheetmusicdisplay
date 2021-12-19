@@ -138,7 +138,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         return undefined; // can't return svg dom node
     }
 
-    public renderCurve(points: PointF2D[]): void {
+    public renderCurve(points: PointF2D[]): Node {
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
         this.ctx.bezierCurveTo(
@@ -162,6 +162,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         //this.ctx.stroke();
         this.ctx.closePath();
         this.ctx.fill();
+        return undefined;
     }
 
     private ctx: Vex.Flow.CanvasContext;

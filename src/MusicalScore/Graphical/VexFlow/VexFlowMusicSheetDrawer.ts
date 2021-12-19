@@ -165,7 +165,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
         curvePointsInPixels.push(this.applyScreenTransformation(p2));
         curvePointsInPixels.push(this.applyScreenTransformation(p3));
         curvePointsInPixels.push(this.applyScreenTransformation(p4));
-        this.backend.renderCurve(curvePointsInPixels);
+        graphicalSlur.SVGElement = this.backend.renderCurve(curvePointsInPixels);
     }
 
     protected drawMeasure(measure: VexFlowMeasure): void {

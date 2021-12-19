@@ -29,6 +29,7 @@ export class GraphicalSlur extends GraphicalCurve {
     public graceStart: boolean;
     public graceEnd: boolean;
     private rules: EngravingRules;
+    public SVGElement: Node;
 
     /**
      * Compares the timespan of two Graphical Slurs

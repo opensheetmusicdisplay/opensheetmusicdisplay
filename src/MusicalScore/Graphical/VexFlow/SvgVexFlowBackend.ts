@@ -180,7 +180,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         return node;
     }
 
-    public renderCurve(points: PointF2D[]): void {
+    public renderCurve(points: PointF2D[]): Node {
+        const node: Node = this.ctx.openGroup();
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
         this.ctx.bezierCurveTo(
@@ -204,6 +205,8 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         //this.ctx.stroke();
         this.ctx.closePath();
         this.ctx.fill();
+        this.ctx.closeGroup();
+        return node;
     }
 
     public export(): void {

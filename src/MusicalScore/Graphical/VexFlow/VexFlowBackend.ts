@@ -103,7 +103,7 @@ public abstract getContext(): Vex.IRenderContext;
 
   public abstract renderLine(start: PointF2D, stop: PointF2D, color: string, lineWidth: number): Node;
 
-  public abstract renderCurve(points: PointF2D[]): void;
+  public abstract renderCurve(points: PointF2D[]): Node;
 
   public abstract getVexflowBackendType(): Vex.Flow.Renderer.Backends;
 
