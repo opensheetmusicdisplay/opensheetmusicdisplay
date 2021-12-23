@@ -773,7 +773,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // }
       // console.log('max skyline: ' + maxSkylineBeginning);
     }
-    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
+    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine?.SkyLine;
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
@@ -787,8 +787,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
       xShift
     );
-    // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
-    skyline[0] = Math.min(skyline[0], -4.5 + yShift);
+    if (skyline) {
+      // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
+      skyline[0] = Math.min(skyline[0], -4.5 + yShift);
+    }
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
   }
 
