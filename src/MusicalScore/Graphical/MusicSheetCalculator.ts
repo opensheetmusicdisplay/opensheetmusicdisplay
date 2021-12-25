@@ -2285,11 +2285,12 @@ export abstract class MusicSheetCalculator {
                 const instruction: AbstractNotationInstruction = sourceMeasure.FirstInstructionsStaffEntries[staffIndex].Instructions[idx];
                 if (instruction instanceof KeyInstruction) {
                     const key: KeyInstruction = KeyInstruction.copy(instruction);
-                    if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== 0 &&
+                    const transposeHalftones: number = measure.getTransposedHalftones();
+                    if (transposeHalftones !== 0 &&
                         measure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion &&
                         MusicSheetCalculator.transposeCalculator) {
                         MusicSheetCalculator.transposeCalculator.transposeKey(
-                            key, this.graphicalMusicSheet.ParentMusicSheet.Transpose
+                            key, transposeHalftones
                         );
                     }
                     accidentalCalculator.ActiveKeyInstruction = key;
@@ -2459,10 +2460,10 @@ export abstract class MusicSheetCalculator {
     private checkNoteForAccidental(graphicalNote: GraphicalNote, accidentalCalculator: AccidentalCalculator, activeClef: ClefInstruction,
                                    octaveEnum: OctaveEnum): void {
         let pitch: Pitch = graphicalNote.sourceNote.Pitch;
-        const transpose: number = this.graphicalMusicSheet.ParentMusicSheet.Transpose;
-        if (transpose !== 0 && graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion) {
+        const transposeHalftones: number = graphicalNote.parentVoiceEntry.parentStaffEntry.parentMeasure.getTransposedHalftones();
+        if (transposeHalftones !== 0 && graphicalNote.sourceNote.ParentStaffEntry.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion) {
             pitch = graphicalNote.Transpose(
-                accidentalCalculator.ActiveKeyInstruction, activeClef, transpose, octaveEnum
+                accidentalCalculator.ActiveKeyInstruction, activeClef, transposeHalftones, octaveEnum
             );
         }
         graphicalNote.sourceNote.halfTone = pitch.getHalfTone();

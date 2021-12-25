@@ -381,5 +381,14 @@ export abstract class GraphicalMeasure extends GraphicalObject {
         }
         return sourceMeasure.endsWithWordRepetition();
     }
+
+    public getTransposedHalftones(): number {
+        const transposeHalftones: number = this.parentStaff.ParentInstrument.GetMusicSheet.Transpose +
+            this.parentStaff.ParentInstrument.Transpose;
+        // if (!transposeHalftones) {
+        //     transposeHalftones = this.parentStaff.ParentInstrument.Transpose;
+        // }
+        return transposeHalftones;
+    }
 }
 

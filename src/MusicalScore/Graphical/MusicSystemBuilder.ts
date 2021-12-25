@@ -412,13 +412,14 @@ export class MusicSystemBuilder {
     }
 
     protected transposeKeyInstruction(keyInstruction: KeyInstruction, graphicalMeasure: GraphicalMeasure): KeyInstruction {
-        if (this.graphicalMusicSheet.ParentMusicSheet.Transpose !== keyInstruction.isTransposedBy
+        const transposeHalftones: number = graphicalMeasure.getTransposedHalftones();
+        if (transposeHalftones !== keyInstruction.isTransposedBy
             && graphicalMeasure.ParentStaff.ParentInstrument.MidiInstrumentId !== MidiInstrument.Percussion
             && MusicSheetCalculator.transposeCalculator !== undefined
         ) {
             MusicSheetCalculator.transposeCalculator.transposeKey(
                 keyInstruction,
-                this.graphicalMusicSheet.ParentMusicSheet.Transpose
+                transposeHalftones
             );
         }
         return keyInstruction;
