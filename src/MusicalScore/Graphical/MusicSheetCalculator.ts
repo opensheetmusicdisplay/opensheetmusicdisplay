@@ -2465,6 +2465,7 @@ export abstract class MusicSheetCalculator {
             pitch = graphicalNote.Transpose(
                 accidentalCalculator.ActiveKeyInstruction, activeClef, transposeHalftones, octaveEnum
             );
+            graphicalNote.sourceNote.TransposedPitch = pitch;
         }
         graphicalNote.sourceNote.halfTone = pitch.getHalfTone();
         accidentalCalculator.checkAccidental(graphicalNote, pitch);
