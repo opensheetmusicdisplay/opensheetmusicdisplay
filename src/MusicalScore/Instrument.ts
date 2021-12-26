@@ -15,7 +15,10 @@ export class Instrument extends InstrumentalGroup {
         this.nameLabel = new Label(idString);
     }
 
-    public transpose: number = 0;
+    /** Transposition halftones for this instrument only.
+     * You need to call osmd.updateGraphic() before the next render() (assuming this is set after load()).
+     */
+    public Transpose: number = 0;
     public highlight: boolean;
 
     private voices: Voice[] = [];
