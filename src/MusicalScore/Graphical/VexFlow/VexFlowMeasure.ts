@@ -914,9 +914,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             vfBeam.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
                         }
                         if (this.rules.FlatBeams) {
-                            (<any>vfBeam).render_options.flat_beams = true;
-                            (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                            (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                            vfBeam.render_options.flat_beams = true;
+                            vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                            //(<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                         }
                         vfbeams.push(vfBeam);
                     } else {
@@ -1017,9 +1017,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             if (tupletNotesToAutoBeam.length > 1) {
                                 const vfBeam: VF.Beam = new VF.Beam(tupletNotesToAutoBeam, true);
                                 if (this.rules.FlatBeams) {
-                                    (<any>vfBeam).render_options.flat_beams = true;
-                                    (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                                    (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                                    vfBeam.render_options.flat_beams = true;
+                                    vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                                    //(<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
                                 }
                                 this.autoTupletVfBeams.push(vfBeam);
                             }
@@ -1041,9 +1041,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
         if (tupletNotesToAutoBeam.length >= 2) {
             const vfBeam: VF.Beam = new VF.Beam(tupletNotesToAutoBeam, true);
             if (this.rules.FlatBeams) {
-                (<any>vfBeam).render_options.flat_beams = true;
-                (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                vfBeam.render_options.flat_beams = true;
+                vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                //(<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
             }
             this.autoTupletVfBeams.push(vfBeam);
         }
@@ -1060,6 +1060,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             beam_middle_only: autoBeamOptions.beam_middle_rests_only,
             beam_rests: autoBeamOptions.beam_rests,
             maintain_stem_directions: autoBeamOptions.maintain_stem_directions,
+            flat_beams: this.rules.FlatBeams? true : false,
+            flat_beam_offset: this.rules.FlatBeamOffset,
         };
         if (autoBeamOptions.groups && autoBeamOptions.groups.length) {
             const groups: VF.Fraction[] = [];
@@ -1070,15 +1072,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         }
 
         for (const notesForSeparateAutoBeam of separateAutoBeams) {
-            const newBeams: VF.Beam[] = VF.Beam.generateBeams(notesForSeparateAutoBeam, generateBeamOptions);
-            for (const vfBeam of newBeams) {
-                if (this.rules.FlatBeams) {
-                    (<any>vfBeam).render_options.flat_beams = true;
-                    (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                    (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
-                }
-                this.autoVfBeams.push(vfBeam);
-            }
+            VF.Beam.generateBeams(notesForSeparateAutoBeam, generateBeamOptions);
         }
     }
 
@@ -1450,7 +1444,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
                     // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-                    vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (stringNumber as any));
+                    vexFlowVoiceEntry.vfStaveNote.addModifier(stringNumber, fingeringIndex);
                     continue;
                 }
             }
@@ -1459,7 +1453,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
               // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
 
             // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-            vexFlowVoiceEntry.vfStaveNote.addModifier((fingeringIndex as any), (fretFinger as any));
+            vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
         }
     }
 
@@ -1513,7 +1507,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
                 vfStringNumber.setOffsetY(offsetY);
 
-                vexFlowVoiceEntry.vfStaveNote.addModifier((stringIndex as any), (vfStringNumber as any)); // see addModifier() above
+                vexFlowVoiceEntry.vfStaveNote.addModifier(vfStringNumber, stringIndex); // see addModifier() above
             }
         });
     }
