@@ -406,18 +406,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
     public addWordRepetition(repetitionInstruction: RepetitionInstruction): void {
         let instruction: number | undefined;
-        let position: any = VF.StaveModifier.Position.END;
         const xShift: number = this.beginInstructionsWidth;
         switch (repetitionInstruction.type) {
           case RepetitionInstructionEnum.Segno:
             // create Segno Symbol:
             instruction = VF.Repetition.type.SEGNO_LEFT;
-            position = VF.StaveModifier.Position.LEFT;
             break;
           case RepetitionInstructionEnum.Coda:
             // create Coda Symbol:
             instruction = VF.Repetition.type.CODA_LEFT;
-            position = VF.StaveModifier.Position.LEFT;
             break;
           case RepetitionInstructionEnum.DaCapo:
             instruction = VF.Repetition.type.DC;
@@ -429,7 +426,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             instruction = VF.Repetition.type.FINE;
             break;
           case RepetitionInstructionEnum.ToCoda:
-            instruction = (VF.Repetition as any).type.TO_CODA;
+            instruction = VF.Repetition.type.TO_CODA;
             break;
           case RepetitionInstructionEnum.DaCapoAlFine:
             instruction = VF.Repetition.type.DC_AL_FINE;
@@ -447,8 +444,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             break;
         }
         if (instruction) {
-            const repetition: VF.Repetition = new VF.Repetition(instruction, xShift, -this.rules.RepetitionSymbolsYOffset);
-            this.stave.addModifier(repetition, position);
+            this.stave.setRepetitionType(instruction, xShift);
             return;
         }
 
