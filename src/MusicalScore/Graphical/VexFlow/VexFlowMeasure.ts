@@ -897,11 +897,16 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     if (notes.length > 1) {
-                        const vfBeam: VF.Beam = new VF.Beam(notes, autoStemBeam);
+                        const vfBeam: VF.Beam[] = VF.Beam.generateBeams(notes, {
+                            flat_beams: this.rules.FlatBeams? true : false,
+                            flat_beam_offset: this.rules.FlatBeamOffset,
+                        });
                         if (isGraceBeam) {
-                            // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
-                            (<any>vfBeam).render_options.beam_width = 3;
-                            (<any>vfBeam).render_options.partial_beam_length = 4;
+                            for (const b of vfBeam) {
+                                // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
+                                b.render_options.beam_width = 3;
+                                b.render_options.partial_beam_length = 4;
+                            }
                         }
                         if (stemColors.length >= 2 && this.rules.ColorBeams) {
                             beamColor = stemColors[0];
@@ -911,14 +916,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                                     break;
                                 }
                             }
-                            vfBeam.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
+                            for (const b of vfBeam) {
+                                b.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
+                            }
                         }
-                        if (this.rules.FlatBeams) {
-                            vfBeam.render_options.flat_beams = true;
-                            vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                            //(<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
-                        }
-                        vfbeams.push(vfBeam);
+                        vfbeams.push(...vfBeam);
                     } else {
                         log.debug("Warning! Beam with no notes!");
                     }
@@ -1015,13 +1017,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     } else {
                         if (currentTuplet !== noteTuplet) { // new tuplet, finish old one
                             if (tupletNotesToAutoBeam.length > 1) {
-                                const vfBeam: VF.Beam = new VF.Beam(tupletNotesToAutoBeam, true);
-                                if (this.rules.FlatBeams) {
-                                    vfBeam.render_options.flat_beams = true;
-                                    vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                                    //(<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
-                                }
-                                this.autoTupletVfBeams.push(vfBeam);
+                                const vfBeam: VF.Beam[] = VF.Beam.generateBeams(tupletNotesToAutoBeam, {
+                                    flat_beams: this.rules.FlatBeams? true : false,
+                                    flat_beam_offset: this.rules.FlatBeamOffset,
+                                });
+                                this.autoTupletVfBeams.push(...vfBeam);
                             }
                             tupletNotesToAutoBeam = [];
                             currentTuplet = noteTuplet;
@@ -1039,13 +1039,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
             }
         }
         if (tupletNotesToAutoBeam.length >= 2) {
-            const vfBeam: VF.Beam = new VF.Beam(tupletNotesToAutoBeam, true);
-            if (this.rules.FlatBeams) {
-                vfBeam.render_options.flat_beams = true;
-                vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
-                //(<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
-            }
-            this.autoTupletVfBeams.push(vfBeam);
+            const vfBeam: VF.Beam []= VF.Beam.generateBeams(tupletNotesToAutoBeam, {
+                flat_beams: this.rules.FlatBeams? true : false,
+                flat_beam_offset: this.rules.FlatBeamOffset,
+            });
+            this.autoTupletVfBeams.push(...vfBeam);
         }
         if (consecutiveBeamableNotes.length >= 2) {
             for (const note of consecutiveBeamableNotes) {
