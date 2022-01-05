@@ -1170,7 +1170,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         graceNotes.push(vfStaveNote);
                     }
                     const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
-                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(graceNoteGroup, 0);
+                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
                     graceGVoiceEntriesBefore = [];
                 }
             }
@@ -1244,7 +1244,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // The cast is necesary because...vexflow -> see types
                     if (vexFlowVoiceEntry.vfStaveNote.getCategory && vexFlowVoiceEntry.vfStaveNote.getCategory() === "StaveNote") {
                         // GhostNotes and other StemmableNotes don't have this function
-                        (vexFlowVoiceEntry.vfStaveNote as VF.StaveNote).addModifier(clefModifier, 0);
+                        (vexFlowVoiceEntry.vfStaveNote as VF.StaveNote).addModifier(0, clefModifier);
                     }
                 }
 
@@ -1442,7 +1442,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
                     // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-                    vexFlowVoiceEntry.vfStaveNote.addModifier(stringNumber, fingeringIndex);
+                    vexFlowVoiceEntry.vfStaveNote.addModifier(fingeringIndex, stringNumber);
                     continue;
                 }
             }
@@ -1451,7 +1451,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
               // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
 
             // Vexflow made a mess with the addModifier signature that changes through each class so we just cast to any :(
-            vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
+            vexFlowVoiceEntry.vfStaveNote.addModifier(fingeringIndex, fretFinger);
         }
     }
 
@@ -1505,7 +1505,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
                 vfStringNumber.setOffsetY(offsetY);
 
-                vexFlowVoiceEntry.vfStaveNote.addModifier(vfStringNumber, stringIndex); // see addModifier() above
+                vexFlowVoiceEntry.vfStaveNote.addModifier(stringIndex, vfStringNumber); // see addModifier() above
             }
         });
     }
