@@ -600,6 +600,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
     let vfStartNote: VF.StemmableNote  = undefined;
     let startNoteIndexInTie: number = 0;
+    console.log(startNote.vfnote.length);
+    console.log(endNote.vfnote.length);
     if (startNote && startNote.vfnote && startNote.vfnote.length >= 2) {
       vfStartNote = startNote.vfnote[0];
       startNoteIndexInTie = startNote.vfnote[1];
