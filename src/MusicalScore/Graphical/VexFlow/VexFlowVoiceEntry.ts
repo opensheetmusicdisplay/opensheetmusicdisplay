@@ -11,7 +11,7 @@ import { GraphicalNote } from "../GraphicalNote";
 export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
     private mVexFlowStaveNote: VF.StemmableNote;
 
-    constructor(parentVoiceEntry: VoiceEntry, parentStaffEntry: GraphicalStaffEntry) {
+    constructor(parentVoiceEntry?: VoiceEntry, parentStaffEntry?: GraphicalStaffEntry) {
         super(parentVoiceEntry, parentStaffEntry);
     }
 
