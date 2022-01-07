@@ -69,9 +69,11 @@ export class StaveNote extends StemmableNote {
     //   * 2 voices can be formatted *with or without* a stave being set but
     //     the output will be different
     //   * 3 voices can only be formatted *without* a stave
-    if (notes[0].getStave()) {
-      //return StaveNote.formatByY(notes, state);
-    }
+
+    // if this is enabled, notes are sometimes not staggered correctly, see setXShift lines below 
+    // if (notes[0].getStave()) {
+    //   return StaveNote.formatByY(notes, state); // 
+    // }
 
     const notesList = [];
 
@@ -156,8 +158,7 @@ export class StaveNote extends StemmableNote {
           //if (noteU.note.glyph.stem && noteL.note.glyph.stem) { // skip this condition: whole notes also relevant
           //If we have different dot values, must offset
           //Or If we have a non-filled in mixed with a filled in notehead, must offset
-          const noteUNonfilled = noteU.note.duration === "h" || noteU.note.duration === "w";
-          const noteLNonfilled = noteL.note.duration === "h" || noteL.note.duration === "w";
+          // const noteUNonfilled = noteU.note.duration === "h" || noteU.note.duration === "w";
           if (noteU.note.duration !== noteL.note.duration ||
                 noteU.note.dots !== noteL.note.dots) {
               noteL.note.setXShift(xShift);
