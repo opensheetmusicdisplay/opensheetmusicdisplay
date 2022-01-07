@@ -8,7 +8,7 @@
   npm i puppeteer --save-dev
   (will download ~100MB for Chromium)
 
-  This script is made obsolete by the ~2x faster generateImages_browserless.js,
+  This script is made obsolete by the ~2x faster generateImages_browserless.mjs,
   but may be useful for comparison.
 
   inspired by Vexflow's generate_png_images and vexflow-tests.js
