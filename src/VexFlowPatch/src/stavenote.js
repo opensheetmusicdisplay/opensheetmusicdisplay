@@ -69,9 +69,11 @@ export class StaveNote extends StemmableNote {
     //   * 2 voices can be formatted *with or without* a stave being set but
     //     the output will be different
     //   * 3 voices can only be formatted *without* a stave
-    if (notes[0].getStave()) {
-      return StaveNote.formatByY(notes, state);
-    }
+
+    // if this is enabled, notes are sometimes not staggered correctly, see setXShift lines below 
+    // if (notes[0].getStave()) {
+    //   return StaveNote.formatByY(notes, state); // 
+    // }
 
     const notesList = [];
 
@@ -153,57 +155,58 @@ export class StaveNote extends StemmableNote {
           //If we are sharing a line, switch one notes stem direction.
           //If we are sharing a line and in the same voice, only then offset one note
           const lineDiff = Math.abs(noteU.line - noteL.line);
-          if (noteU.note.glyph.stem && noteL.note.glyph.stem) {
-            //If we have different dot values, must offset
-            //Or If we have a non-filled in mixed with a filled in notehead, must offset
-            if ((noteU.note.duration === "h" && noteL.note.duration !== "h") || 
-                (noteU.note.duration !== "h" && noteL.note.duration === "h") ||
-                 noteU.note.dots !== noteL.note.dots) {
-                noteL.note.setXShift(xShift);
-                if (noteU.note.dots > 0) {
-                  let foundDots = 0;
-                  for (const modifier of noteU.note.modifiers) {
-                    if (modifier instanceof Dot) {
-                      foundDots++;
-                      //offset dot(s) above the shifted note
-                      //lines + 1 to negative pixels
-                      modifier.setYShift(-10 * (noteL.maxLine - noteU.line + 1));
-                      if (foundDots === noteU.note.dots) {
-                        break;
-                      }
+          //if (noteU.note.glyph.stem && noteL.note.glyph.stem) { // skip this condition: whole notes also relevant
+          //If we have different dot values, must offset
+          //Or If we have a non-filled in mixed with a filled in notehead, must offset
+          // const noteUNonfilled = noteU.note.duration === "h" || noteU.note.duration === "w";
+          if (noteU.note.duration !== noteL.note.duration ||
+                noteU.note.dots !== noteL.note.dots) {
+              noteL.note.setXShift(xShift);
+              if (noteU.note.dots > 0) {
+                let foundDots = 0;
+                for (const modifier of noteU.note.modifiers) {
+                  if (modifier instanceof Dot) {
+                    foundDots++;
+                    //offset dot(s) above the shifted note
+                    //lines + 1 to negative pixels
+                    modifier.setYShift(-10 * (noteL.maxLine - noteU.line + 1));
+                    if (foundDots === noteU.note.dots) {
+                      break;
                     }
                   }
                 }
-            } else if (lineDiff < 1 && lineDiff > 0) {//if the notes are quite close but not on the same line, shift
-              noteL.note.setXShift(xShift);
-            } else if (noteU.note.voice !== noteL.note.voice) {//If we are not in the same voice
-              if (noteU.stemDirection === noteL.stemDirection) {
-                if (noteU.line > noteL.line) {
-                  //noteU is above noteL
-                  if (noteU.stemDirection === 1) {
-                    noteL.note.renderFlag = false;
-                  } else {
-                    noteU.note.renderFlag = false;
-                  }
-                } else if (noteL.line > noteU.line) {
-                  //note L is above noteU
-                  if (noteL.stemDirection === 1) {
-                    noteU.note.renderFlag = false;
-                  } else {
-                    noteL.note.renderFlag = false;
-                  }
+              }
+          } else if (lineDiff < 1 && lineDiff > 0) {//if the notes are quite close but not on the same line, shift
+            noteL.note.setXShift(xShift);
+          } else if (noteU.note.voice !== noteL.note.voice) {//If we are not in the same voice
+            if (noteU.stemDirection === noteL.stemDirection) {
+              if (noteU.line > noteL.line) {
+                //noteU is above noteL
+                if (noteU.stemDirection === 1) {
+                  noteL.note.renderFlag = false;
                 } else {
-                  //same line, swap stem direction for one note
-                  if (noteL.stemDirection === 1) {
-                    noteL.stemDirection = -1;
-                    noteL.note.setStemDirection(-1);
-                  }
+                  noteU.note.renderFlag = false;
+                }
+              } else if (noteL.line > noteU.line) {
+                //note L is above noteU
+                if (noteL.stemDirection === 1) {
+                  noteU.note.renderFlag = false;
+                } else {
+                  noteL.note.renderFlag = false;
+                }
+              } else {
+                //same line, swap stem direction for one note
+                if (noteL.stemDirection === 1) {
+                  noteL.stemDirection = -1;
+                  noteL.note.setStemDirection(-1);
                 }
               }
-            } //Very close whole notes
-          } else if ((!noteU.note.glyph.stem && !noteL.note.glyph.stem && lineDiff < 1.5)) {
-            noteL.note.setXShift(xShift);
+            }
           }
+          //Very close whole notes
+          // } else if ((!noteU.note.glyph.stem && !noteL.note.glyph.stem && lineDiff < 1.5)) {
+          //   noteL.note.setXShift(xShift);
+          // }
         }
       }
 
