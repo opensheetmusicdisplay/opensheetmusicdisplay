@@ -56,7 +56,7 @@ function normalize(filepath) {
   let normalized = filepath.replace(/\\/g, '/');
   // fix Windows paths if not on C:\ drive letter/partition:
   const driveLetterMatches = normalized.match(/.*[A-Z]:\\.*$/g);
-  if (driveLetterMatches.length > 0) {
+  if (driveLetterMatches?.length > 0) {
     normalized = driveLetterMatches.last();
   }
   return normalized;
