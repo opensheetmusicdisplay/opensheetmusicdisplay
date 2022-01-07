@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable @typescript-eslint/quotes */
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/typedef */
 const path = require('path');
 
 const glob = require('glob');
@@ -52,16 +48,6 @@ function configToWebpackEntries(config) {
   return webpackEntries;
 }
 
-function normalize(filepath) {
-  let normalized = filepath.replace(/\\/g, '/');
-  // fix Windows paths if not on C:\ drive letter/partition:
-  const driveLetterMatches = normalized.match(/.*[A-Z]:\\.*$/g);
-  if (driveLetterMatches.length > 0) {
-    normalized = driveLetterMatches.last();
-  }
-  return normalized;
-}
-
 function KW_Preprocessor(config, emitter) {
   const controller = new KW_Controller();
   config.__karmaWebpackController = controller;
@@ -86,6 +72,8 @@ ignoring attempt to set the entry option...
     controller.updateWebpackOptions(config.webpack);
     controller.karmaEmitter = emitter;
   }
+
+  const normalize = (file) => file.replace(/\\/g, '/');
 
   const transformPath =
     config.webpack.transformPath ||
