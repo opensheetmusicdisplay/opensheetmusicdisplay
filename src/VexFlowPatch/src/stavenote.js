@@ -76,6 +76,9 @@ export class StaveNote extends StemmableNote {
     // }
 
     const notesList = [];
+    const stagger_same_whole_notes = notes[0].stagger_same_whole_notes;
+    //   whether to stagger whole notes on the same line but different voice (show 2 instead of 1).
+    //   controlled by EngravingRules.StaggerSameWholeNotes
 
     for (let i = 0; i < notes.length; i++) {
       const props = notes[i].getKeyProps();
@@ -170,8 +173,12 @@ export class StaveNote extends StemmableNote {
           } else if (noteL.note.duration === "w") {
             wholeNoteCount++;
           }
-          // only shift if one of the notes is whole or half note and the other isn't. (or dots different)
-          if (lineDiff === 0 && (halfNoteCount === 1 || wholeNoteCount === 1 || noteU.note.dots !== noteL.note.dots)) {
+          // only stagger/x-shift if one of the notes is whole or half note and the other isn't. (or dots different)
+          let staggerConditions = halfNoteCount === 1 || wholeNoteCount === 1 || noteU.note.dots !== noteL.note.dots;
+          if (stagger_same_whole_notes) { // controlled by EngravingRules.StaggerSameWholeNotes. see declaration above
+            staggerConditions ||= wholeNoteCount === 2;
+          }
+          if (lineDiff === 0 && staggerConditions) {
             noteL.note.setXShift(xShift);
             if (noteU.note.dots > 0) {
               let foundDots = 0;
