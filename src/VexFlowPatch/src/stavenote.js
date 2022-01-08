@@ -158,24 +158,34 @@ export class StaveNote extends StemmableNote {
           //if (noteU.note.glyph.stem && noteL.note.glyph.stem) { // skip this condition: whole notes also relevant
           //If we have different dot values, must offset
           //Or If we have a non-filled in mixed with a filled in notehead, must offset
-          // const noteUNonfilled = noteU.note.duration === "h" || noteU.note.duration === "w";
-          if (noteU.note.duration !== noteL.note.duration ||
-                noteU.note.dots !== noteL.note.dots) {
-              noteL.note.setXShift(xShift);
-              if (noteU.note.dots > 0) {
-                let foundDots = 0;
-                for (const modifier of noteU.note.modifiers) {
-                  if (modifier instanceof Dot) {
-                    foundDots++;
-                    //offset dot(s) above the shifted note
-                    //lines + 1 to negative pixels
-                    modifier.setYShift(-10 * (noteL.maxLine - noteU.line + 1));
-                    if (foundDots === noteU.note.dots) {
-                      break;
-                    }
+          let halfNoteCount = 0;
+          let wholeNoteCount = 0;
+          if (noteU.note.duration === "h") {
+            halfNoteCount++;
+          } else if (noteU.note.duration === "w") {
+            wholeNoteCount++;
+          }
+          if (noteL.note.duration === "h") {
+            halfNoteCount++;
+          } else if (noteL.note.duration === "w") {
+            wholeNoteCount++;
+          }
+          if (halfNoteCount === 1 || wholeNoteCount === 1 || noteU.note.dots !== noteL.note.dots) {
+            noteL.note.setXShift(xShift);
+            if (noteU.note.dots > 0) {
+              let foundDots = 0;
+              for (const modifier of noteU.note.modifiers) {
+                if (modifier instanceof Dot) {
+                  foundDots++;
+                  //offset dot(s) above the shifted note
+                  //lines + 1 to negative pixels
+                  modifier.setYShift(-10 * (noteL.maxLine - noteU.line + 1));
+                  if (foundDots === noteU.note.dots) {
+                    break;
                   }
                 }
               }
+            }
           } else if (lineDiff < 1 && lineDiff > 0) {//if the notes are quite close but not on the same line, shift
             noteL.note.setXShift(xShift);
           } else if (noteU.note.voice !== noteL.note.voice) {//If we are not in the same voice

@@ -94,15 +94,6 @@
  <part id="P1">
   <!--============== Part: P1, Measure: 1 ==============-->
   <measure number="1" width="986">
-   <print new-page="yes">
-    <system-layout>
-     <system-margins>
-      <left-margin>76</left-margin>
-      <right-margin>0</right-margin>
-     </system-margins>
-     <top-system-distance>218</top-system-distance>
-    </system-layout>
-   </print>
    <attributes>
     <divisions>256</divisions>
     <key color="#000000">
@@ -182,25 +173,6 @@
     <notations>
      <tied type="start" orientation="under" />
     </notations>
-   </note>
-   <backup>
-    <duration>768</duration>
-   </backup>
-   <note default-x="402">
-    <rest />
-    <duration>256</duration>
-    <instrument id="P1-I1" />
-    <voice>2</voice>
-    <type>quarter</type>
-    <staff>1</staff>
-   </note>
-   <note default-x="613">
-    <rest />
-    <duration>512</duration>
-    <instrument id="P1-I1" />
-    <voice>2</voice>
-    <type>half</type>
-    <staff>1</staff>
    </note>
   </measure>
  </part>
