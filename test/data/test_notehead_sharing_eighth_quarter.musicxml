@@ -2,38 +2,39 @@
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
   <work>
-    <work-title>test note overlap</work-title>
+    <work-title>test notehead sharing eigth+quarter</work-title>
     </work>
   <identification>
+    <creator type="composer">Composer</creator>
     <encoding>
       <software>MuseScore 3.6.2</software>
-      <encoding-date>2022-01-07</encoding-date>
+      <encoding-date>2022-01-08</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
-      <supports element="print" attribute="new-page" type="no"/>
-      <supports element="print" attribute="new-system" type="no"/>
+      <supports element="print" attribute="new-page" type="yes" value="yes"/>
+      <supports element="print" attribute="new-system" type="yes" value="yes"/>
       <supports element="stem" type="yes"/>
       </encoding>
     </identification>
   <defaults>
     <scaling>
-      <millimeters>7</millimeters>
+      <millimeters>6.99911</millimeters>
       <tenths>40</tenths>
       </scaling>
     <page-layout>
-      <page-height>1697.14</page-height>
-      <page-width>1200</page-width>
+      <page-height>1696.94</page-height>
+      <page-width>1200.48</page-width>
       <page-margins type="even">
-        <left-margin>85.7143</left-margin>
-        <right-margin>85.7143</right-margin>
-        <top-margin>85.7143</top-margin>
-        <bottom-margin>85.7143</bottom-margin>
+        <left-margin>85.7252</left-margin>
+        <right-margin>85.7252</right-margin>
+        <top-margin>85.7252</top-margin>
+        <bottom-margin>85.7252</bottom-margin>
         </page-margins>
       <page-margins type="odd">
-        <left-margin>85.7143</left-margin>
-        <right-margin>85.7143</right-margin>
-        <top-margin>85.7143</top-margin>
-        <bottom-margin>85.7143</bottom-margin>
+        <left-margin>85.7252</left-margin>
+        <right-margin>85.7252</right-margin>
+        <top-margin>85.7252</top-margin>
+        <bottom-margin>85.7252</bottom-margin>
         </page-margins>
       </page-layout>
     <word-font font-family="Edwin" font-size="10"/>
@@ -41,7 +42,11 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600" default-y="1611.43" justify="center" valign="top" font-size="22">test note overlap</credit-words>
+    <credit-words default-x="600.242" default-y="1611.21" justify="center" valign="top" font-size="22">Title</credit-words>
+    </credit>
+  <credit page="1">
+    <credit-type>composer</credit-type>
+    <credit-words default-x="1114.76" default-y="1511.21" justify="right" valign="bottom">Composer</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -60,21 +65,18 @@
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="371.43">
+    <measure number="1" width="407.91">
       <print>
         <system-layout>
           <system-margins>
-            <left-margin>65.90</left-margin>
-            <right-margin>591.24</right-margin>
+            <left-margin>50.00</left-margin>
+            <right-margin>570.79</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
-        <staff-layout number="2">
-          <staff-distance>65.00</staff-distance>
-          </staff-layout>
         </print>
       <attributes>
-        <divisions>1</divisions>
+        <divisions>2</divisions>
         <key>
           <fifths>0</fifths>
           </key>
@@ -82,55 +84,63 @@
           <beats>4</beats>
           <beat-type>4</beat-type>
           </time>
-        <staves>2</staves>
-        <clef number="1">
+        <clef>
           <sign>G</sign>
           <line>2</line>
           </clef>
-        <clef number="2">
-          <sign>F</sign>
-          <line>4</line>
-          </clef>
         </attributes>
-      <note default-x="83.49" default-y="-20.00">
+      <note default-x="80.72" default-y="-40.00">
         <pitch>
-          <step>B</step>
-          <octave>4</octave>
-          </pitch>
-        <duration>4</duration>
-        <voice>1</voice>
-        <type>whole</type>
-        <staff>1</staff>
-        </note>
-      <backup>
-        <duration>4</duration>
-        </backup>
-      <note default-x="101.41" default-y="-20.00">
-        <pitch>
-          <step>B</step>
+          <step>E</step>
           <octave>4</octave>
           </pitch>
         <duration>2</duration>
-        <voice>2</voice>
+        <voice>1</voice>
+        <type>quarter</type>
+        <stem>up</stem>
+        </note>
+      <note>
+        <rest/>
+        <duration>2</duration>
+        <voice>1</voice>
+        <type>quarter</type>
+        </note>
+      <note>
+        <rest/>
+        <duration>4</duration>
+        <voice>1</voice>
         <type>half</type>
+        </note>
+      <backup>
+        <duration>8</duration>
+        </backup>
+      <note default-x="80.72" default-y="-40.00">
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>eighth</type>
         <stem>down</stem>
-        <staff>1</staff>
+        </note>
+      <note>
+        <rest/>
+        <duration>1</duration>
+        <voice>2</voice>
+        <type>eighth</type>
         </note>
       <note>
         <rest/>
         <duration>2</duration>
         <voice>2</voice>
-        <type>half</type>
-        <staff>1</staff>
+        <type>quarter</type>
         </note>
-      <backup>
-        <duration>4</duration>
-        </backup>
       <note>
-        <rest measure="yes"/>
+        <rest/>
         <duration>4</duration>
-        <voice>5</voice>
-        <staff>2</staff>
+        <voice>2</voice>
+        <type>half</type>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
