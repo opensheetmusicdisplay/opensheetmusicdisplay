@@ -171,7 +171,7 @@ export class StaveNote extends StemmableNote {
             wholeNoteCount++;
           }
           // only shift if one of the notes is whole or half note and the other isn't. (or dots different)
-          if (halfNoteCount === 1 || wholeNoteCount === 1 || noteU.note.dots !== noteL.note.dots) {
+          if (lineDiff === 0 && (halfNoteCount === 1 || wholeNoteCount === 1 || noteU.note.dots !== noteL.note.dots)) {
             noteL.note.setXShift(xShift);
             if (noteU.note.dots > 0) {
               let foundDots = 0;
