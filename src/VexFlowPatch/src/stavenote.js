@@ -176,7 +176,8 @@ export class StaveNote extends StemmableNote {
           // only stagger/x-shift if one of the notes is whole or half note and the other isn't. (or dots different)
           let staggerConditions = halfNoteCount === 1 || wholeNoteCount === 1 || noteU.note.dots !== noteL.note.dots;
           if (stagger_same_whole_notes) { // controlled by EngravingRules.StaggerSameWholeNotes. see declaration above
-            staggerConditions ||= wholeNoteCount === 2;
+            staggerConditions = staggerConditions || wholeNoteCount === 2;
+            // should be ||=, but appveyor says syntax error, doesn't know the operator.
           }
           if (lineDiff === 0 && staggerConditions) {
             noteL.note.setXShift(xShift);
