@@ -77,7 +77,7 @@ export class StaveNote extends StemmableNote {
 
     const notesList = [];
     const stagger_same_whole_notes = notes[0].stagger_same_whole_notes;
-    //   whether to stagger whole notes on the same line but different voice (show 2 instead of 1).
+    // whether to stagger whole notes on the same line but different voice (show 2 instead of 1).
     //   controlled by EngravingRules.StaggerSameWholeNotes
 
     for (let i = 0; i < notes.length; i++) {
