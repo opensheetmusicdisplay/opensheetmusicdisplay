@@ -105,7 +105,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
                       heightInPixel: number, screenPosition: PointF2D,
                       color: string = undefined, fontFamily: string = undefined): Node {
         this.ctx.save();
-        const node: Node = this.ctx.openGroup();
+        const node: Node = this.ctx.openGroup(undefined);
 
         if (color) {
             this.ctx.attributes.fill = color;
@@ -146,7 +146,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
     public renderRectangle(rectangle: RectangleF2D, styleId: number, colorHex: string, alpha: number = 1): Node {
         this.ctx.save();
-        const node: Node = this.ctx.openGroup();
+        const node: Node = this.ctx.openGroup(undefined);
         if (colorHex) {
             this.ctx.attributes.fill = colorHex;
         } else {
@@ -162,7 +162,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
 
     public renderLine(start: PointF2D, stop: PointF2D, color: string = "#FF0000FF", lineWidth: number = 2): Node {
         this.ctx.save();
-        const node: Node = this.ctx.openGroup();
+        const node: Node = this.ctx.openGroup(undefined);
         this.ctx.beginPath();
         this.ctx.moveTo(start.x, start.y);
         this.ctx.lineTo(stop.x, stop.y);
@@ -181,7 +181,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
     }
 
     public renderCurve(points: PointF2D[]): Node {
-        const node: Node = this.ctx.openGroup();
+        const node: Node = this.ctx.openGroup(undefined);
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
         this.ctx.bezierCurveTo(
