@@ -448,6 +448,7 @@ export class StaveNote extends StemmableNote {
   // Builds a `Stem` for the note
   buildStem() {
     this.setStem(new Stem({ hide: !!this.isRest(), }));
+    this.stem.id = `vf-${this.getAttribute("id")}-stem`;
   }
 
   // Builds a `NoteHead` for each key in the note
@@ -1179,6 +1180,8 @@ export class StaveNote extends StemmableNote {
     if (stemStruct) {
       this.setStem(new Stem(stemStruct));
     }
+    // seems to not get called here, see this.stem.id above
+    this.stem.id = `vf-${this.getAttribute("id")}-stem`;
 
     if (this.stem) {
       this.context.openGroup('stem', null, { pointerBBox: true });
