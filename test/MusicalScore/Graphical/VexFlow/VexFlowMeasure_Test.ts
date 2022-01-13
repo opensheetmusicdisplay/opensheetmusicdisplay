@@ -47,6 +47,7 @@ describe("VexFlow Measure", () => {
    it("Can get note, stem and beam SVG elements by id", (done: Mocha.Done) => {
       //const url: string = "base/test/data/test_rest_positioning_8th_quarter.musicxml"; // doesn't work, works for Mozart Clarinet Quintet
       const score: Document = TestUtils.getScore("test_rest_positioning_8th_quarter.musicxml");
+      // sample should start with a beamed 8th note, and be simple.
       const div: HTMLElement = TestUtils.getDivElement(document);
       const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
       // we need this way of creating the score to get the SVG elements, doesn't work with creating MusicSheet by hand
