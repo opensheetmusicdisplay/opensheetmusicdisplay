@@ -7,7 +7,6 @@ import {VexFlowMusicSheetCalculator} from "../../../../src/MusicalScore/Graphica
 import {TestUtils} from "../../../Util/TestUtils";
 import {SourceMeasure} from "../../../../src/MusicalScore/VoiceData/SourceMeasure";
 import {SourceStaffEntry} from "../../../../src/MusicalScore/VoiceData/SourceStaffEntry";
-import {GraphicalMeasure} from "../../../../src/MusicalScore/Graphical/GraphicalMeasure";
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import {EngravingRules} from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
@@ -45,7 +44,7 @@ describe("VexFlow Measure", () => {
       done();
    });
 
-   it("Can get stem and beam SVG elements by id", (done: Mocha.Done) => {
+   it("Can get note, stem and beam SVG elements by id", (done: Mocha.Done) => {
       //const url: string = "base/test/data/test_rest_positioning_8th_quarter.musicxml"; // doesn't work, works for Mozart Clarinet Quintet
       const score: Document = TestUtils.getScore("test_rest_positioning_8th_quarter.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);
