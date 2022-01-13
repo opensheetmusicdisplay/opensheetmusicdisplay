@@ -841,7 +841,11 @@ export class Beam extends Element {
         this.context.lineTo(lastBeamX + 1, lastBeamY + beamThickness);
         this.context.lineTo(lastBeamX + 1, lastBeamY);
         this.context.closePath();
-        this.context.fill({class: Vex.Prefix("beam"), id: Vex.Prefix(`${this.notes[0].getAttribute("id")}-beam`)});
+        if (this.context.svg) {
+          this.context.fill({class: Vex.Prefix("beam"), id: Vex.Prefix(`${this.notes[0].getAttribute("id")}-beam`)});
+        } else {
+          this.context.fill();
+        }
       }
 
       beamY += beamThickness * 1.5;

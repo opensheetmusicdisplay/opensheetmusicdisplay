@@ -160,11 +160,15 @@ export class Stem extends Element {
     ctx.setLineWidth(Stem.WIDTH);
     ctx.moveTo(stem_x, stem_y - stemletYOffset);
     ctx.lineTo(stem_x, stem_y - stemHeight - (this.renderHeightAdjustment * stem_direction));
-    const strokeAttributes = {class: Vex.Prefix("stem")};
-    if (this.id) {
-        strokeAttributes.id = this.id;
+    if (ctx.svg) {
+        const strokeAttributes = {class: Vex.Prefix("stem")};
+        if (this.id) {
+            strokeAttributes.id = this.id;
+        }
+        ctx.stroke(strokeAttributes);
+    } else {
+        ctx.stroke();
     }
-    ctx.stroke(strokeAttributes);
     this.restoreStyle(ctx);
     ctx.restore();
   }
