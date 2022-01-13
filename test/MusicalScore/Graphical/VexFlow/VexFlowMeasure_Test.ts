@@ -16,7 +16,7 @@ import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/Ope
 
 describe("VexFlow Measure", () => {
 
-   it("GraphicalMusicSheet", (done: Mocha.Done) => {
+   it("Can create GraphicalMusicSheet", (done: Mocha.Done) => {
       const path: string = "MuzioClementi_SonatinaOpus36No1_Part1.xml";
       const score: Document = TestUtils.getScore(path);
       chai.expect(score).to.not.be.undefined;
@@ -31,22 +31,7 @@ describe("VexFlow Measure", () => {
       done();
    });
 
-   it("Simple Measure", (done: Mocha.Done) => {
-      const sheet: MusicSheet = new MusicSheet();
-      sheet.Rules = new EngravingRules();
-      const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
-      sheet.addMeasure(measure);
-      const calc: MusicSheetCalculator = new VexFlowMusicSheetCalculator(sheet.Rules);
-      const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
-      chai.expect(gms.MeasureList.length).to.equal(1);
-      chai.expect(gms.MeasureList[0].length).to.equal(1);
-      const gm: GraphicalMeasure = gms.MeasureList[0][0];
-      // console.log(gm);
-      chai.expect(gm).to.not.be.undefined; // at least necessary for linter so that variable is not unused
-      done();
-   });
-
-   it("Empty Measure", (done: Mocha.Done) => {
+   it("Can have a single empty Measure", (done: Mocha.Done) => {
       const sheet: MusicSheet = new MusicSheet();
       sheet.Rules = new EngravingRules();
       const measure: SourceMeasure = new SourceMeasure(1, sheet.Rules);
@@ -60,7 +45,7 @@ describe("VexFlow Measure", () => {
       done();
    });
 
-   it("Stem and Beam SVG id", (done: Mocha.Done) => {
+   it("Can get stem and beam SVG elements by id", (done: Mocha.Done) => {
       //const url: string = "base/test/data/test_rest_positioning_8th_quarter.musicxml"; // doesn't work, works for Mozart Clarinet Quintet
       const score: Document = TestUtils.getScore("test_rest_positioning_8th_quarter.musicxml");
       const div: HTMLElement = TestUtils.getDivElement(document);
