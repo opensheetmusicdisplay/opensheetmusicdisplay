@@ -123,10 +123,12 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         return this.vfnote[0].getAttribute("el");
     }
 
+    /** Gets the SVG path element of the note's stem. */
     public getStemSVG(): HTMLElement {
         return document.getElementById("vf-" + this.getSVGId() + "-stem");
     }
 
+    /** Gets the SVG path element of the beam starting on this note, or undefined. */
     public getBeamSVG(): HTMLElement {
         return document.getElementById("vf-" + this.getSVGId() + "-beam");
     }
