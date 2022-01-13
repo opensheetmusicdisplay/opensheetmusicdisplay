@@ -126,6 +126,8 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     /** Gets the SVG path element of the note's stem. */
     public getStemSVG(): HTMLElement {
         return document.getElementById("vf-" + this.getSVGId() + "-stem");
+        // more correct, but Vex.Prefix() is not in the definitions:
+        //return document.getElementById((Vex as any).Prefix(this.getSVGId() + "-stem"));
     }
 
     /** Gets the SVG path element of the beam starting on this note, or undefined. */
