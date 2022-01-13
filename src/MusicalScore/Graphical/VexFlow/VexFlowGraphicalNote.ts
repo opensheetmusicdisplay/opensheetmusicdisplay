@@ -122,4 +122,12 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         }
         return this.vfnote[0].getAttribute("el");
     }
+
+    public getStemSVG(): HTMLElement {
+        return document.getElementById("vf-" + this.getSVGId() + "-stem");
+    }
+
+    public getBeamSVG(): HTMLElement {
+        return document.getElementById("vf-" + this.getSVGId() + "-beam");
+    }
 }
