@@ -11,7 +11,8 @@ import {GraphicalMeasure} from "../../../../src/MusicalScore/Graphical/Graphical
 import {MusicSheetCalculator} from "../../../../src/MusicalScore/Graphical/MusicSheetCalculator";
 import {EngravingRules} from "../../../../src/MusicalScore/Graphical/EngravingRules";
 import { GraphicalStaffEntry } from "../../../../src/MusicalScore/Graphical/GraphicalStaffEntry";
-import { VexFlowGraphicalNote } from "../../../../src";
+import { VexFlowGraphicalNote } from "../../../../src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote";
+import { OpenSheetMusicDisplay } from "../../../../src/OpenSheetMusicDisplay/OpenSheetMusicDisplay";
 
 describe("VexFlow Measure", () => {
 
@@ -60,24 +61,33 @@ describe("VexFlow Measure", () => {
    });
 
    it("Stem and Beam SVG id", (done: Mocha.Done) => {
-      const path: string = "test_rest_positioning_8th_quarter.musicxml";
-      // the test sample should simply be one that starts with a beamed 8th note (and is small).
-      const score: Document = TestUtils.getScore(path);
-      const partwise: Element = TestUtils.getPartWiseElement(score);
-      const reader: MusicSheetReader = new MusicSheetReader();
-      const calc: VexFlowMusicSheetCalculator = new VexFlowMusicSheetCalculator(reader.rules);
-      const sheet: MusicSheet = reader.createMusicSheet(new IXmlElement(partwise), path);
-      const gms: GraphicalMusicSheet = new GraphicalMusicSheet(sheet, calc);
-      const gse: GraphicalStaffEntry = gms.findGraphicalMeasure(0, 0).staffEntries[0];
-      const firstNote: VexFlowGraphicalNote = (gse.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-      const noteSVGId: string = firstNote.getSVGId();
-      const stemSVGId: string = noteSVGId + "-stem";
-      const stemSVG: HTMLElement = document.getElementById(stemSVGId);
-      const beamSVGId: string = noteSVGId + "-beam";
-      const beamSVG: HTMLElement = document.getElementById(beamSVGId);
-      chai.expect(stemSVG).to.not.be.undefined;
-      chai.expect(beamSVG).to.not.be.undefined;
-      done();
+      //const url: string = "base/test/data/test_rest_positioning_8th_quarter.musicxml"; // doesn't work, works for Mozart Clarinet Quintet
+      const score: Document = TestUtils.getScore("test_rest_positioning_8th_quarter.musicxml");
+      const div: HTMLElement = TestUtils.getDivElement(document);
+      const osmd: OpenSheetMusicDisplay = TestUtils.createOpenSheetMusicDisplay(div);
+      // we need this way of creating the score to get the SVG elements, doesn't work with creating MusicSheet by hand
+      osmd.load(score).then(
+          (_: {}) => {
+               osmd.render();
+               const gse: GraphicalStaffEntry = osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries[0];
+               const firstNote: VexFlowGraphicalNote = (gse.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
+               const noteSVGId: string = "vf-" + firstNote.getSVGId();
+               const noteSVG: HTMLElement = document.getElementById(noteSVGId);
+               const stemSVGId: string = noteSVGId + "-stem";
+               const stemSVG: HTMLElement = document.getElementById(stemSVGId);
+               const beamSVGId: string = noteSVGId + "-beam";
+               const beamSVG: HTMLElement = document.getElementById(beamSVGId);
+               const nonexistingSVG: HTMLElement = document.getElementById(stemSVGId + "s");
+               chai.expect(noteSVG?.id).to.equal(noteSVGId);
+               chai.expect(stemSVG).to.not.be.null;
+               chai.expect(stemSVG).to.not.be.undefined;
+               chai.expect(beamSVG).to.not.be.null;
+               chai.expect(beamSVG).to.not.be.undefined;
+               chai.expect(nonexistingSVG).to.be.null;
+               done();
+          },
+          done
+      );
    });
 
 });
