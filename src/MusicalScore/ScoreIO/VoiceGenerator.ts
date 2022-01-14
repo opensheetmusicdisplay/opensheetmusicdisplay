@@ -988,7 +988,7 @@ export class VoiceGenerator {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
               const tie: Tie = this.openTieDict[tieNumber];
               if (tie) {
-                tie.AddNote(this.currentNote);
+                tie.AddNote(this.currentNote, false);
                 delete this.openTieDict[tieNumber];
               }
             }
@@ -999,6 +999,13 @@ export class VoiceGenerator {
 
         }
       }
+      // } else if (tieNodeList.length === 2) {
+      //   const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+      //   if (tieNumber >= 0) {
+      //     const tie: Tie = this.openTieDict[tieNumber];
+      //     tie.AddNote(this.currentNote);
+      //   }
+      // }
     }
   }
 
