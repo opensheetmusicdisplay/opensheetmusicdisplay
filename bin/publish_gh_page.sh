@@ -14,7 +14,7 @@ rsync -a ../build/docs/* ./classdoc/
 
 # Copy demo application
 rsync -a ../build/demo.min.js ./demo/
-rm -rf ./demo/sheets
+#rm -rf ./demo/sheets
 rsync -a ../test/data/* ./demo/
 
 # Commit and push changes
