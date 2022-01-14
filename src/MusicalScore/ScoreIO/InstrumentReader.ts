@@ -1118,6 +1118,16 @@ export class InstrumentReader {
               this.activeClefs[key - 1] = clefInstruction;
               this.abstractInstructions.splice(i, 1);
             }
+          } else {
+            const lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
+            const newClefInstruction: ClefInstruction = clefInstruction;
+            const sseIndex: number = this.inSourceMeasureInstrumentIndex + key - 1;
+            // TODO is this always a last staff entry? or could it be somewhere else like in the middle?
+            this.currentMeasure.LastInstructionsStaffEntries[sseIndex] = lastStaffEntry;
+            newClefInstruction.Parent = lastStaffEntry;
+            lastStaffEntry.Instructions.push(newClefInstruction);
+            this.activeClefs[key - 1] = clefInstruction;
+            this.abstractInstructions.splice(i, 1);
           }
         } else if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
           this.abstractInstructions.splice(i, 1);
