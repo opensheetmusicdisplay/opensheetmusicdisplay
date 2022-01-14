@@ -1128,7 +1128,7 @@ export class InstrumentReader {
                 }
                 lastStaffEntryBefore = this.currentMeasure.LastInstructionsStaffEntries[key - 1];
             }
-            // TODO figure out a more elegant way to do this.
+            // TODO figure out a more elegant way to do this. (see #1120)
             //   the problem is that not all the staffentries in the measure exist yet,
             //   so we can't put the clefInstruction before the correct note.
             //   (if we try that, it's one note too early -> save instruction for later?)
