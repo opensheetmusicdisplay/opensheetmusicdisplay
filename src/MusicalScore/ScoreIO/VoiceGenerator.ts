@@ -949,8 +949,8 @@ export class VoiceGenerator {
 
   private addTie(tieNodeList: IXmlElement[], measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, tieType: TieTypes): void {
     if (tieNodeList) {
-      for (const tieNode of tieNodeList) {
-        //const tieNode: IXmlElement = tieNodeList[0];
+      for (let i: number = 0; i < tieNodeList.length; i++) {
+        const tieNode: IXmlElement = tieNodeList[i];
         if (tieNode !== undefined && tieNode.attributes()) {
           let tieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
           // read tie direction/placement from XML
@@ -973,6 +973,11 @@ export class VoiceGenerator {
           }
 
           const type: string = tieNode.attribute("type").value;
+          if (type === "start" && i === 0) {
+            // handle this after the stop node, so that we don't start a new tie before the old one has ended.
+            tieNodeList.push(tieNode);
+            continue;
+          }
           try {
             if (type === "start") {
               const num: number = this.findCurrentNoteInTieDict(this.currentNote);
