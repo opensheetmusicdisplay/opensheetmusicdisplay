@@ -44,7 +44,7 @@ describe("VexFlow Measure", () => {
       done();
    });
 
-   it("Can get note, stem and beam SVG elements by id", (done: Mocha.Done) => {
+   it("Can get SVG elements for note, stem and beam", (done: Mocha.Done) => {
       //const url: string = "base/test/data/test_rest_positioning_8th_quarter.musicxml"; // doesn't work, works for Mozart Clarinet Quintet
       const score: Document = TestUtils.getScore("test_rest_positioning_8th_quarter.musicxml");
       // sample should start with a beamed 8th note, and be simple.
@@ -56,18 +56,22 @@ describe("VexFlow Measure", () => {
                osmd.render();
                const gse: GraphicalStaffEntry = osmd.GraphicSheet.findGraphicalMeasure(0, 0).staffEntries[0];
                const firstNote: VexFlowGraphicalNote = (gse.graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
-               const noteSVGId: string = "vf-" + firstNote.getSVGId();
-               const noteSVG: HTMLElement = document.getElementById(noteSVGId);
-               const stemSVGId: string = noteSVGId + "-stem";
-               const stemSVG: HTMLElement = document.getElementById(stemSVGId);
-               const beamSVGId: string = noteSVGId + "-beam";
-               const beamSVG: HTMLElement = document.getElementById(beamSVGId);
-               const nonexistingSVG: HTMLElement = document.getElementById(stemSVGId + "s");
-               chai.expect(noteSVG?.id).to.equal(noteSVGId);
+               const noteSVG: SVGGElement = firstNote.getSVGGElement();
+               chai.expect(noteSVG).to.not.be.null;
+               chai.expect(noteSVG).to.not.be.undefined;
+               // const noteSVGId: string = "vf-" + firstNote.getSVGId();
+               // const noteSVG: HTMLElement = document.getElementById(noteSVGId);
+               //const stemSVGId: string = noteSVGId + "-stem";
+               //const stemSVG: HTMLElement = document.getElementById(stemSVGId);
+               const stemSVG: HTMLElement = firstNote.getStemSVG();
                chai.expect(stemSVG).to.not.be.null;
                chai.expect(stemSVG).to.not.be.undefined;
+               // const beamSVGId: string = noteSVGId + "-beam";
+               // const beamSVG: HTMLElement = document.getElementById(beamSVGId);
+               const beamSVG: HTMLElement = firstNote.getBeamSVG();
                chai.expect(beamSVG).to.not.be.null;
                chai.expect(beamSVG).to.not.be.undefined;
+               const nonexistingSVG: HTMLElement = document.getElementById(noteSVG.id + "s");
                chai.expect(nonexistingSVG).to.be.null;
                done();
           },
