@@ -889,9 +889,9 @@ export class InstrumentReader {
           }
 
         }
-        if (nodeList.hasAttributes && nodeList.attributes()[0].name === "number") {
+        if (nodeList.hasAttributes && nodeList.attribute("number")) {
           try {
-            staffNumber = parseInt(nodeList.attributes()[0].value, 10);
+            staffNumber = parseInt(nodeList.attribute("number").value, 10);
             if (staffNumber > this.currentClefNumber) {
               staffNumber = this.currentClefNumber;
             }
