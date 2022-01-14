@@ -209,6 +209,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.ctx.lineTo(points[0].x, points[0].y);
         //this.ctx.stroke();
         this.ctx.closePath();
+        // @ts-ignore
         this.ctx.fill();
         this.ctx.closeGroup();
         return node;
