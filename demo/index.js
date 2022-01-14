@@ -8,7 +8,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 (function () {
     "use strict";
     var openSheetMusicDisplay;
-    var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
+    var sampleFolder = process?.env?.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
         samples = {
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
@@ -126,8 +126,10 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var showHeader = true;
     var showDebugControls = false;
 
-    if (process.env.OSMD_DEMO_TITLE) {
+    if (process?.env?.OSMD_DEMO_TITLE) {
         document.title = process.env.OSMD_DEMO_TITLE;
+    } else {
+        document.title = "OpenSheetMusicDisplay Demo";
     }
 
     // Initialization code
