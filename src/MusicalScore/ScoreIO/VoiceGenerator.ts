@@ -222,15 +222,16 @@ export class VoiceGenerator {
         }
 
         // remove open ties, if there is already a gap between the last tie note and now.
-        const openTieDict: { [_: number]: Tie } = this.openTieDict;
-        for (const key in openTieDict) {
-          if (openTieDict.hasOwnProperty(key)) {
-            const tie: Tie = openTieDict[key];
-            if (Fraction.plus(tie.StartNote.ParentStaffEntry.Timestamp, tie.Duration).lt(this.currentStaffEntry.Timestamp)) {
-              delete openTieDict[key];
-            }
-          }
-        }
+        // TODO this deletes valid ties, see #1097
+        // const openTieDict: { [_: number]: Tie } = this.openTieDict;
+        // for (const key in openTieDict) {
+        //   if (openTieDict.hasOwnProperty(key)) {
+        //     const tie: Tie = openTieDict[key];
+        //     if (Fraction.plus(tie.StartNote.ParentStaffEntry.Timestamp, tie.Duration).lt(this.currentStaffEntry.Timestamp)) {
+        //       delete openTieDict[key];
+        //     }
+        //   }
+        // }
       }
       // time-modification yields tuplet in currentNote
       // mustn't execute method, if this is the Note where the Tuplet has been created
@@ -948,8 +949,8 @@ export class VoiceGenerator {
 
   private addTie(tieNodeList: IXmlElement[], measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, tieType: TieTypes): void {
     if (tieNodeList) {
-      if (tieNodeList.length === 1) {
-        const tieNode: IXmlElement = tieNodeList[0];
+      for (let i: number = 0; i < tieNodeList.length; i++) {
+        const tieNode: IXmlElement = tieNodeList[i];
         if (tieNode !== undefined && tieNode.attributes()) {
           let tieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
           // read tie direction/placement from XML
@@ -972,6 +973,11 @@ export class VoiceGenerator {
           }
 
           const type: string = tieNode.attribute("type").value;
+          if (type === "start" && i === 0) {
+            // handle this after the stop node, so that we don't start a new tie before the old one has ended.
+            tieNodeList.push(tieNode);
+            continue;
+          }
           try {
             if (type === "start") {
               const num: number = this.findCurrentNoteInTieDict(this.currentNote);
@@ -987,7 +993,7 @@ export class VoiceGenerator {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
               const tie: Tie = this.openTieDict[tieNumber];
               if (tie) {
-                tie.AddNote(this.currentNote);
+                tie.AddNote(this.currentNote, false);
                 delete this.openTieDict[tieNumber];
               }
             }
@@ -997,13 +1003,14 @@ export class VoiceGenerator {
           }
 
         }
-      } else if (tieNodeList.length === 2) {
-        const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
-        if (tieNumber >= 0) {
-          const tie: Tie = this.openTieDict[tieNumber];
-          tie.AddNote(this.currentNote);
-        }
       }
+      // } else if (tieNodeList.length === 2) {
+      //   const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+      //   if (tieNumber >= 0) {
+      //     const tie: Tie = this.openTieDict[tieNumber];
+      //     tie.AddNote(this.currentNote);
+      //   }
+      // }
     }
   }
 

@@ -43,8 +43,10 @@ export class Tie {
         return this.StartNote.Pitch;
     }
 
-    public AddNote(note: Note): void {
+    public AddNote(note: Note, isStartNote: boolean = true): void {
         this.notes.push(note);
-        note.NoteTie = this;
+        if (isStartNote) {
+            note.NoteTie = this; // be careful not to overwrite note.NoteTie wrongly, saves only one tie
+        }
     }
 }
