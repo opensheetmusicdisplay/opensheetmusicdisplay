@@ -5,7 +5,7 @@
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "dist/src/OpenSheetMusicDisplay/index.d.ts",
   "scripts": {
-    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --mode file ./src",
+    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay ./src",
     "eslint": "eslint -c .eslintrc.js --ext .ts .",
     "lint": "npm run eslint",
     "test": "karma start --single-run --no-auto-watch",
