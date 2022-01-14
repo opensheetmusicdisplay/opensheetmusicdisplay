@@ -8,7 +8,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 (function () {
     "use strict";
     var openSheetMusicDisplay;
-    var sampleFolder = process.env.STATIC_FILES_SUBFOLDER ? process.env.STATIC_FILES_SUBFOLDER + "/" : "",
+    var sampleFolder = "",
         samples = {
             "Beethoven, L.v. - An die ferne Geliebte": "Beethoven_AnDieFerneGeliebte.xml",
             "Clementi, M. - Sonatina Op.36 No.1 Pt.1": "MuzioClementi_SonatinaOpus36No1_Part1.xml",
@@ -126,9 +126,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
     var showHeader = true;
     var showDebugControls = false;
 
-    if (process.env.OSMD_DEMO_TITLE) {
-        document.title = process.env.OSMD_DEMO_TITLE;
-    }
+    document.title = "OpenSheetMusicDisplay Demo";
 
     // Initialization code
     function init() {
@@ -254,8 +252,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
-        var devDemoRunning = process.env.OSMD_DEBUG_CONTROLS;
-        showDebugControls = paramDebugControls === '1' || (devDemoRunning && paramDebugControls !== '0')
+        showDebugControls = paramDebugControls === '1';
         if (showDebugControls) {
             var elementsToEnable = [
                 selectSample, selectBounding, selectPageSize, backendSelect, backendSelectDiv, divControls
@@ -741,7 +738,6 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
     function errorLoadingOrRenderingSheet(e, loadingOrRenderingString) {
         var errorString = "Error " + loadingOrRenderingString + " sheet: " + e;
-        // if (process.env.DEBUG) { // people may not set a debug environment variable for the demo.
         // Always giving a StackTrace might give us more and better error reports.
         // TODO for a release, StackTrace control could be reenabled
         errorString += "\n" + "StackTrace: \n" + e.stack;

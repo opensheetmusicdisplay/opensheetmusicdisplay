@@ -5,7 +5,7 @@
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "dist/src/OpenSheetMusicDisplay/index.d.ts",
   "scripts": {
-    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay --module commonjs --target ES2017 --ignoreCompilerErrors --mode file ./src",
+    "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay ./src",
     "eslint": "eslint -c .eslintrc.js --ext .ts .",
     "lint": "npm run eslint",
     "test": "karma start --single-run --no-auto-watch",
@@ -15,7 +15,6 @@
     "prebuildKarma": "ncp src/KarmaWebpackPatch/lib/ node_modules/karma-webpack/lib/",
     "prepare": "npm run build",
     "build": "npm-run-all lint build:webpack",
-    "build:doc": "cross-env STATIC_FILES_SUBFOLDER=sheets npm run build",
     "build:webpack": "webpack --progress --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --config webpack.dev.js",
     "build:webpack-sourcemap": "webpack --progress --config webpack.sourcemap.js",

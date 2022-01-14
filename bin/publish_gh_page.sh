@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Prepare files to be published
-npm run build:doc
+npm run build
 npm run docs
 
 # Clone github page
@@ -14,8 +14,8 @@ rsync -a ../build/docs/* ./classdoc/
 
 # Copy demo application
 rsync -a ../build/demo.min.js ./demo/
-rm -rf ./demo/sheets
-rsync -a ../test/data/* ./demo/sheets/
+#rm -rf ./demo/sheets
+rsync -a ../test/data/* ./demo/
 
 # Commit and push changes
 git status
