@@ -1043,7 +1043,7 @@ export class InstrumentReader {
   private saveAbstractInstructionList(numberOfStaves: number, beginOfMeasure: boolean): void {
     for (let i: number = this.abstractInstructions.length - 1; i >= 0; i--) {
       const instruction: [number, AbstractNotationInstruction, Fraction] = this.abstractInstructions[i];
-      const key: number = instruction[0];
+      const key: number = instruction[0]; // staffNumber
       const value: AbstractNotationInstruction = instruction[1];
       const instructionTimestamp: Fraction = instruction[2];
       if (value instanceof ClefInstruction) {
@@ -1119,15 +1119,57 @@ export class InstrumentReader {
               this.abstractInstructions.splice(i, 1);
             }
           } else {
-            const lastStaffEntry: SourceStaffEntry = new SourceStaffEntry(undefined, undefined);
-            const newClefInstruction: ClefInstruction = clefInstruction;
-            const sseIndex: number = this.inSourceMeasureInstrumentIndex + key - 1;
-            // TODO is this always a last staff entry? or could it be somewhere else like in the middle?
-            this.currentMeasure.LastInstructionsStaffEntries[sseIndex] = lastStaffEntry;
-            newClefInstruction.Parent = lastStaffEntry;
-            lastStaffEntry.Instructions.push(newClefInstruction);
-            this.activeClefs[key - 1] = clefInstruction;
-            this.abstractInstructions.splice(i, 1);
+            let lastStaffEntryBefore: SourceStaffEntry;
+            const duration: Fraction = this.activeRhythm.Rhythm;
+            if (duration.RealValue > 0 &&
+              instructionTimestamp.RealValue / duration.RealValue > 0.90) {
+                if (!this.currentMeasure.LastInstructionsStaffEntries[key - 1]) {
+                  this.currentMeasure.LastInstructionsStaffEntries[key - 1] = new SourceStaffEntry(undefined, this.instrument.Staves[key - 1]);
+                }
+                lastStaffEntryBefore = this.currentMeasure.LastInstructionsStaffEntries[key - 1];
+            }
+            // TODO figure out a more elegant way to do this.
+            //   the problem is that not all the staffentries in the measure exist yet,
+            //   so we can't put the clefInstruction before the correct note.
+            //   (if we try that, it's one note too early -> save instruction for later?)
+            //let lastTimestampBefore: Fraction;
+            // for (const vssec of this.currentMeasure.VerticalSourceStaffEntryContainers) {
+            //   for (const sse of vssec.StaffEntries) {
+            //     if (sse?.ParentStaff?.Id !== key) {
+            //       continue;
+            //     }
+            //     // if (!lastTimestampBefore || sse.Timestamp.lte(instructionTimestamp)) {
+            //     //   lastTimestampBefore = sse.Timestamp;
+            //     //   lastStaffEntryBefore = sse;
+            //     // } else {
+            //     //   lastStaffEntryBefore = sse;
+            //     //   break;
+            //     // }
+            //     if (sse.Timestamp.gte(instructionTimestamp)) {
+            //       lastStaffEntryBefore = sse;
+            //       break;
+            //     }
+            //   }
+            // }
+            //const sseIndex: number = this.inSourceMeasureInstrumentIndex + staffNumber - 1;
+            // if (!lastStaffEntryBefore) {
+            //   // this doesn't work for some reason
+            //   const newContainer: VerticalSourceStaffEntryContainer = new VerticalSourceStaffEntryContainer(this.currentMeasure, instructionTimestamp, 1);
+            //   const newStaffEntry: SourceStaffEntry = new SourceStaffEntry(newContainer, this.instrument.Staves[key - 1]);
+            //   newContainer.StaffEntries.push(newStaffEntry);
+            //   this.currentMeasure.VerticalSourceStaffEntryContainers.push(newContainer);
+            //   lastStaffEntryBefore = newStaffEntry;
+            // }
+            // if (!lastStaffEntryBefore) {
+              //   lastStaffEntryBefore = new SourceStaffEntry(undefined, undefined);
+              //   this.currentMeasure.LastInstructionsStaffEntries[sseIndex] = lastStaffEntryBefore;
+              // }
+            if (lastStaffEntryBefore) {
+              clefInstruction.Parent = lastStaffEntryBefore;
+              lastStaffEntryBefore.Instructions.push(clefInstruction);
+              this.activeClefs[key - 1] = clefInstruction;
+              this.abstractInstructions.splice(i, 1);
+            } // else clefinstruction might be processed later (e.g. Haydn Concertante measure 314)
           }
         } else if (key <= this.activeClefs.length && clefInstruction === this.activeClefs[key - 1]) {
           this.abstractInstructions.splice(i, 1);
