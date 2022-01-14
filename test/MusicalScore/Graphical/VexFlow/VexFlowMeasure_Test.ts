@@ -70,9 +70,8 @@ describe("VexFlow Measure", () => {
                // const beamSVG: HTMLElement = document.getElementById(beamSVGId);
                const beamSVGs: HTMLElement[] = note1.getBeamSVGs();
                chai.expect(beamSVGs.length).to.equal(1); // 8th beam start. (16th beam starts on note2)
-               if (beamSVGs.length >= 1) {
-                  chai.expect(beamSVGs[0]).to.not.be.null;
-               }
+               chai.expect(beamSVGs[0]).to.not.be.null;
+               chai.expect(beamSVGs[0]).to.not.be.undefined;
                const note2: VexFlowGraphicalNote = (gm.staffEntries[1].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);
                chai.expect(note2.getBeamSVGs().length).to.equal(1); // start of 16th beam
                const note3: VexFlowGraphicalNote = (gm.staffEntries[2].graphicalVoiceEntries[0].notes[0] as VexFlowGraphicalNote);

@@ -41,11 +41,11 @@
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600.24" default-y="1611.42" justify="center" valign="top" font-size="22">test_beam_svg_double</credit-words>
+    <credit-words default-x="600.24" default-y="1611.63" justify="center" valign="top" font-size="22">test_beam_svg_double</credit-words>
     </credit>
   <credit page="1">
     <credit-type>composer</credit-type>
-    <credit-words default-x="1114.75" default-y="1511.42" justify="right" valign="top">Composer</credit-words>
+    <credit-words default-x="1114.75" default-y="1511.63" justify="right" valign="top">Composer</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">
@@ -64,12 +64,12 @@
       </score-part>
     </part-list>
   <part id="P1">
-    <measure number="1" width="403.83">
+    <measure number="1" width="469.82">
       <print>
         <system-layout>
           <system-margins>
             <left-margin>50.00</left-margin>
-            <right-margin>575.19</right-margin>
+            <right-margin>509.21</right-margin>
             </system-margins>
           <top-system-distance>170.00</top-system-distance>
           </system-layout>
@@ -101,7 +101,7 @@
         <stem>up</stem>
         <beam number="1">begin</beam>
         </note>
-      <note default-x="170.73" default-y="-25.00">
+      <note default-x="168.91" default-y="-25.00">
         <pitch>
           <step>A</step>
           <octave>4</octave>
@@ -113,7 +113,7 @@
         <beam number="1">continue</beam>
         <beam number="2">begin</beam>
         </note>
-      <note default-x="223.69" default-y="-20.00">
+      <note default-x="220.74" default-y="-20.00">
         <pitch>
           <step>B</step>
           <octave>4</octave>
@@ -125,11 +125,35 @@
         <beam number="1">end</beam>
         <beam number="2">end</beam>
         </note>
+      <note default-x="272.58" default-y="-15.00">
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">begin</beam>
+        <beam number="2">begin</beam>
+        </note>
+      <note default-x="324.41" default-y="-10.00">
+        <pitch>
+          <step>D</step>
+          <octave>5</octave>
+          </pitch>
+        <duration>1</duration>
+        <voice>1</voice>
+        <type>16th</type>
+        <stem>down</stem>
+        <beam number="1">end</beam>
+        <beam number="2">end</beam>
+        </note>
       <note>
         <rest/>
-        <duration>4</duration>
+        <duration>2</duration>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>eighth</type>
         </note>
       <barline location="right">
         <bar-style>light-heavy</bar-style>

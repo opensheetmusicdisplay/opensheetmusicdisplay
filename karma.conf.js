@@ -90,7 +90,7 @@ module.exports = function (config) {
         client: {
             captureConsole: true,
             mocha: {
-                timeout: process.env.timeout || 60000
+                timeout: process.env.timeout || 20000
             }
         },
 
