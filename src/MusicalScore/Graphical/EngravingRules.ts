@@ -673,6 +673,7 @@ export class EngravingRules {
         this.DefaultColorStem = this.DefaultColorNotehead;
         this.DefaultColorLabel = this.DefaultColorNotehead;
         this.DefaultColorTitle = this.DefaultColorNotehead;
+        this.LedgerLineColorDefault = this.DefaultColorNotehead;
     }
 
     public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {
