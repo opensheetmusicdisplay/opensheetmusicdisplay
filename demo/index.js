@@ -252,7 +252,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
 
         //var defaultDisplayVisibleValue = "block"; // TODO in some browsers flow could be the better/default value
         var defaultVisibilityValue = "visible";
-        showDebugControls = paramDebugControls === '1';
+        showDebugControls = paramDebugControls !== '0';
         if (showDebugControls) {
             var elementsToEnable = [
                 selectSample, selectBounding, selectPageSize, backendSelect, backendSelectDiv, divControls
