@@ -43,7 +43,6 @@ export class Cursor {
     if (this.cursorOptions.follow === true) {
       this.wantedZIndex = "-1";
       curs.style.zIndex = this.wantedZIndex;
-      console.log("init zindex");
     } else {
       this.wantedZIndex = "-2";
       curs.style.zIndex = this.wantedZIndex;

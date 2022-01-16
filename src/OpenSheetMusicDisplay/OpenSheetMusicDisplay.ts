@@ -506,6 +506,13 @@ export class OpenSheetMusicDisplay {
         if (options.setWantedStemDirectionByXml !== undefined) {
             this.rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
         }
+        if (options.darkMode) {
+            this.rules.applyDefaultColorMusic("#FFFFFF");
+            this.rules.PageBackgroundColor = "#000000";
+        } else if (options.darkMode === false) { // not if undefined!
+            this.rules.applyDefaultColorMusic("#000000");
+            this.rules.PageBackgroundColor = undefined;
+        }
         if (options.defaultColorMusic) {
             this.rules.applyDefaultColorMusic(options.defaultColorMusic);
         }
