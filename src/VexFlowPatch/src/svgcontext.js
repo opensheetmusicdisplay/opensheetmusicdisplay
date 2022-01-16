@@ -538,10 +538,21 @@ export class SVGContext {
     this.glow();
 
     const path = this.create('path');
+    let newAttributes = attributes;
     if (typeof attributes === 'undefined') {
         attributes = {};
         Vex.Merge(attributes, this.attributes);
         attributes.stroke = 'none';
+        newAttributes = attributes;
+    } else {
+      newAttributes = attributes;
+      Vex.Merge(newAttributes, this.attributes); // this overrides attributes either way
+      if (attributes.class) {
+        newAttributes.class = attributes.class;
+      }
+      if (attributes.id) {
+        newAttributes.id = attributes.id;
+      }
     }
     
     attributes.d = this.path;

@@ -165,7 +165,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
         if (vfStaveNote && vfStaveNote.setStemStyle) {
             if (!stemTransparent) {
-                this.parentVoiceEntry.StemColor = stemColor;
+                //this.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
             }
             vfStaveNote.setStemStyle(stemStyle);
             if (vfStaveNote.flag && vfStaveNote.setFlagStyle && this.rules.ColorFlags) {

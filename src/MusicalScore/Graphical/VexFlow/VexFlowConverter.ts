@@ -497,7 +497,7 @@ export class VexFlowConverter {
             const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
 
             if (stemColor) {
-                gve.parentVoiceEntry.StemColor = stemColor;
+                //gve.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
                 vfnote.setStemStyle(stemStyle);
                 if (vfnote.flag && rules.ColorFlags) {
                     vfnote.setFlagStyle(stemStyle);

@@ -506,6 +506,9 @@ export class OpenSheetMusicDisplay {
         if (options.setWantedStemDirectionByXml !== undefined) {
             this.rules.SetWantedStemDirectionByXml = options.setWantedStemDirectionByXml;
         }
+        if (options.defaultColorMusic) {
+            this.rules.applyDefaultColorMusic(options.defaultColorMusic);
+        }
         if (options.defaultColorNotehead) {
             this.rules.DefaultColorNotehead = options.defaultColorNotehead;
         }
@@ -806,6 +809,8 @@ export class OpenSheetMusicDisplay {
         }
         backend.graphicalMusicPage = page; // the page the backend renders on. needed to identify DOM element to extract image/SVG
         backend.initialize(this.container, this.zoom);
+        backend.getContext().setFillStyle(this.rules.DefaultColorMusic);
+        backend.getContext().setStrokeStyle(this.rules.DefaultColorMusic);
         return backend;
     }
 
