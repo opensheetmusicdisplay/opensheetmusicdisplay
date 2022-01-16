@@ -13,7 +13,7 @@ import log from "loglevel";
 export class SvgVexFlowBackend extends VexFlowBackend {
 
     private ctx: Vex.Flow.SVGContext;
-    private zoom: number;
+    public zoom: number; // currently unused
 
     constructor(rules: EngravingRules) {
         super();
@@ -84,13 +84,17 @@ export class SvgVexFlowBackend extends VexFlowBackend {
 
         // set background color if not transparent
         if (this.rules.PageBackgroundColor) {
-            this.ctx.save();
-            // note that this will hide the cursor
-            this.ctx.setFillStyle(this.rules.PageBackgroundColor);
-            this.ctx.setStrokeStyle("#12345600"); // transparent
+        //     this.ctx.save();
+        //     // note that this will hide the cursor if its zIndex is negative.
+        //     this.ctx.setFillStyle(this.rules.PageBackgroundColor);
+        //     this.ctx.setStrokeStyle("#12345600"); // transparent
 
-            this.ctx.fillRect(0, 0, this.canvas.offsetWidth / this.zoom, this.canvas.offsetHeight / this.zoom);
-            this.ctx.restore();
+        //     this.ctx.fillRect(0, 0, this.canvas.offsetWidth / this.zoom, this.canvas.offsetHeight / this.zoom);
+        //     this.ctx.restore();
+            this.ctx.svg.style["background-color"] = this.rules.PageBackgroundColor;
+            // note that the cursor would be invisible if its zIndex remained negative here,
+            //   so we have to push it to a higher layer and make it more transparent.
+            // effectively, setting a background color will make the cursor more transparent.
         }
     }
 

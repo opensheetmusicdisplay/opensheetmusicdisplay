@@ -41,12 +41,25 @@ export class Cursor {
     curs.id = this.cursorElementId;
     curs.style.position = "absolute";
     if (this.cursorOptions.follow === true) {
-      curs.style.zIndex = "-1";
+      this.wantedZIndex = "-1";
+      curs.style.zIndex = this.wantedZIndex;
+      console.log("init zindex");
     } else {
-      curs.style.zIndex = "-2";
+      this.wantedZIndex = "-2";
+      curs.style.zIndex = this.wantedZIndex;
     }
     this.cursorElement = <HTMLImageElement>curs;
     this.container.appendChild(curs);
+  }
+
+  public adjustToBackgroundColor(): void {
+    let zIndex: string;
+    if (!this.rules.PageBackgroundColor) {
+          zIndex = this.wantedZIndex;
+    } else {
+      zIndex = "1";
+    }
+    this.cursorElement.style.zIndex = zIndex;
   }
 
   private container: HTMLElement;
@@ -56,6 +69,10 @@ export class Cursor {
    * but different between different OSMD objects on the same page.
    */
   public cursorElementId: string;
+  /** The desired zIndex (layer) of the cursor when no background color is set.
+   *  When a background color is set, using a negative zIndex would make the cursor invisible.
+   */
+  public wantedZIndex: string;
   private openSheetMusicDisplay: OpenSheetMusicDisplay;
   private rules: EngravingRules;
   private manager: MusicPartManager;
@@ -81,6 +98,7 @@ export class Cursor {
     this.hidden = false;
     //this.resetIterator(); // TODO maybe not here? though setting measure range to draw, rerendering, then handling cursor show is difficult
     this.update();
+    this.adjustToBackgroundColor();
   }
 
   public resetIterator(): void {
