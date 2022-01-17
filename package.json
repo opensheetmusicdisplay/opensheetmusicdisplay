@@ -3,7 +3,7 @@
   "version": "1.4.1",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/opensheetmusicdisplay.min.js",
-  "types": "dist/src/OpenSheetMusicDisplay/index.d.ts",
+  "types": "build/dist/src/OpenSheetMusicDisplay/index.d.ts",
   "scripts": {
     "docs": "typedoc --out ./build/docs --name OpenSheetMusicDisplay ./src",
     "eslint": "eslint -c .eslintrc.js --ext .ts .",
