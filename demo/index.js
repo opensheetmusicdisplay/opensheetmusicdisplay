@@ -255,7 +255,7 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
         showDebugControls = paramDebugControls !== '0';
         if (showDebugControls) {
             var elementsToEnable = [
-                selectSample, selectBounding, selectPageSize, backendSelect, backendSelectDiv, divControls
+                selectSample, selectBounding, selectPageSizes[0], backendSelect, backendSelectDiv, divControls
             ];
             for (var i=0; i<elementsToEnable.length; i++) {
                 if (elementsToEnable[i]) { // make sure this element is not null/exists in the index.html, e.g. github.io demo has different index.html
