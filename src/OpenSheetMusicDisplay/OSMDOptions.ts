@@ -47,6 +47,10 @@ export interface IOSMDOptions {
     coloringEnabled?: boolean;
     /** Whether to color the stems of notes the same as their noteheads. Default false. */
     colorStemsLikeNoteheads?: boolean;
+    /** Dark mode (black background, white notes). Simply sets defaultColorMusic and EngravingRules.PageBackgroundColor. */
+    darkMode?: boolean;
+    /** Default color for all musical elements including key signature etc. Can be used for dark mode etc. Default undefined. */
+    defaultColorMusic?: string;
     /** Default color for a note head (without stem). Default black (undefined).
      * Only considered before loading a sample, not before render.
      * To change the color after loading a sample and before render, use note(.sourceNote).NoteheadColor.

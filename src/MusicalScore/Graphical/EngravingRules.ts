@@ -260,6 +260,8 @@ export class EngravingRules {
     public ColorFlags: boolean;
     public ColorBeams: boolean;
     public ColoringSetCurrent: Dictionary<NoteEnum|number, string>;
+    /** Default color for all musical elements including key signature etc. Default undefined. */
+    public DefaultColorMusic: string;
     public DefaultColorNotehead: string;
     public DefaultColorRest: string;
     public DefaultColorStem: string;
@@ -594,11 +596,7 @@ export class EngravingRules {
         this.ColorStemsLikeNoteheads = false;
         this.ColorBeams = true;
         this.ColorFlags = true;
-        this.DefaultColorNotehead = "#000000"; // black. undefined is only black if a note's color hasn't been changed before.
-        this.DefaultColorRest = this.DefaultColorNotehead;
-        this.DefaultColorStem = this.DefaultColorNotehead;
-        this.DefaultColorLabel = this.DefaultColorNotehead;
-        this.DefaultColorTitle = this.DefaultColorNotehead;
+        this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
         this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.DefaultFontStyle = FontStyles.Regular;
@@ -662,6 +660,20 @@ export class EngravingRules {
         } catch (ex) {
             log.info("EngravingRules()", ex);
         }
+    }
+
+    /** Makes it so that all musical elements (including key/time signature)
+     *  are colored with the given color by default,
+     *  unless an element has a different color set (e.g. VoiceEntry.StemColor).
+     */
+    public applyDefaultColorMusic(color: string): void {
+        this.DefaultColorMusic = color;
+        this.DefaultColorNotehead = this.DefaultColorMusic;
+        this.DefaultColorRest = this.DefaultColorNotehead;
+        this.DefaultColorStem = this.DefaultColorNotehead;
+        this.DefaultColorLabel = this.DefaultColorNotehead;
+        this.DefaultColorTitle = this.DefaultColorNotehead;
+        this.LedgerLineColorDefault = this.DefaultColorNotehead;
     }
 
     public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {

@@ -2097,7 +2097,9 @@ export abstract class MusicSheetCalculator {
             // const currentMin: number = skyBottomLineCalculator.getSkyLineMinInRange(startX, endX);
 
             relative.y += lyricist.PositionAndShape.BorderBottom;
-            relative.y = Math.min(relative.y, composerRelativeY); // same height as composer label (at least not lower)
+            if (composerRelativeY) {
+                relative.y = Math.min(relative.y, composerRelativeY); // same height as composer label (at least not lower)
+            } // else relative.y will be NaN
             //skyBottomLineCalculator.updateSkyLineInRange(startX, endX, currentMin - lyricist.PositionAndShape.MarginSize.height);
             //relative.y = Math.max(relative.y, composer.PositionAndShape.RelativePosition.y);
             lyricist.PositionAndShape.RelativePosition = relative;

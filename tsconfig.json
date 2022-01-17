@@ -5,7 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noUnusedLocals": true,
-    "outDir": "dist",
+    "outDir": "build/dist",
     "declaration": true,
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types"],

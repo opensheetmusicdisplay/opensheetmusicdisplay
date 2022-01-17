@@ -140,6 +140,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
 
         // color stems
         let stemColor: string = defaultColorStem; // reset to black/default when coloring was disabled. maybe needed elsewhere too
+        let setVoiceEntryStemColor: boolean = false;
         if (this.rules.ColoringEnabled) {
             stemColor = this.parentVoiceEntry.StemColor; // TODO: once coloringSetCustom gets stem color, respect it
             if (!stemColor
@@ -149,6 +150,7 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
             if (this.rules.ColorStemsLikeNoteheads && noteheadColor) {
                 // condition could be even more fine-grained by only recoloring if there was no custom StemColor set. will be more complex though
                 stemColor = noteheadColor;
+                setVoiceEntryStemColor = true;
             }
         }
         let stemTransparent: boolean = true;
@@ -164,8 +166,8 @@ export class VexFlowVoiceEntry extends GraphicalVoiceEntry {
         const stemStyle: Object = { fillStyle: stemColor, strokeStyle: stemColor };
 
         if (vfStaveNote && vfStaveNote.setStemStyle) {
-            if (!stemTransparent) {
-                this.parentVoiceEntry.StemColor = stemColor;
+            if (!stemTransparent && setVoiceEntryStemColor) {
+                this.parentVoiceEntry.StemColor = stemColor; // this shouldn't be set by DefaultColorStem
             }
             vfStaveNote.setStemStyle(stemStyle);
             if (vfStaveNote.flag && vfStaveNote.setFlagStyle && this.rules.ColorFlags) {
