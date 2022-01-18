@@ -1,5 +1,6 @@
 import {Tie} from "../VoiceData/Tie";
 import {GraphicalNote} from "./GraphicalNote";
+import Vex from "vexflow";
 
 /**
  * The graphical counterpart of a [[Tie]].
