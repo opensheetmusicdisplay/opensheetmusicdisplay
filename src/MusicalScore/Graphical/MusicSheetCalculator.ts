@@ -2133,7 +2133,7 @@ export abstract class MusicSheetCalculator {
                                     }
                                     for (const gTie of startStaffEntry.GraphicalTies) {
                                         if (gTie.Tie === tie) {
-                                            continue; // don't handle the same tie on the same startStaffentry twice
+                                            continue; // don't handle the same tie on the same startStaffEntry twice
                                         }
                                     }
                                     this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
