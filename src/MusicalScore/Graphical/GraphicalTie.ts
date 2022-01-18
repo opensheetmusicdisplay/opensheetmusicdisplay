@@ -17,7 +17,7 @@ export class GraphicalTie {
     }
 
     public get SVGElement(): HTMLElement {
-        return (this.vfTie as any).getAttribute("el") as HTMLElement;
+        return (this.vfTie as any).getAttribute("el");
     }
 
     public get GetTie(): Tie {
