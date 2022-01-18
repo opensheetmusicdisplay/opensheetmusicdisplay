@@ -55,6 +55,9 @@ Add a context group for each tabnote, so that it can be found in the SVG DOM ("v
 tremolo.js (custom addition):
 Add extra_stroke_scale, y_spacing_scale
 
+timesignature.js (custom addition):
+open group to get SVG group+class for key signature
+
 Currently, we are using Vexflow 1.2.93, because of some formatter advantages
 compared to Vexflow 3.x versions, see this issue:
 https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/915
