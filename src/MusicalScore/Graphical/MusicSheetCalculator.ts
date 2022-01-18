@@ -2117,8 +2117,10 @@ export abstract class MusicSheetCalculator {
                         const startStaffEntry: GraphicalStaffEntry = this.graphicalMusicSheet.findGraphicalStaffEntryFromMeasureList(
                             staffIndex, measureIndex, sourceStaffEntry
                         );
-                        startStaffEntry.GraphicalTies.clear(); // don't duplicate ties when calling render() again
-                        startStaffEntry.ties.clear();
+                        if (startStaffEntry) {
+                            startStaffEntry?.GraphicalTies.clear(); // don't duplicate ties when calling render() again
+                            startStaffEntry?.ties.clear();
+                        }
 
                         for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                             const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
