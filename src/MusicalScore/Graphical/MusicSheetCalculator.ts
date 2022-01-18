@@ -2108,7 +2108,6 @@ export abstract class MusicSheetCalculator {
     }
 
     protected createGraphicalTies(): void {
-        const startStaffEntriesHandled: GraphicalStaffEntry[] = [];
         for (let measureIndex: number = 0; measureIndex < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; measureIndex++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[measureIndex];
             for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
@@ -2130,10 +2129,12 @@ export abstract class MusicSheetCalculator {
                                     if (note === note.NoteTie.Notes.last()) {
                                         continue; // nothing to do on last note. don't create last tie twice.
                                     }
-                                    if (!startStaffEntriesHandled.includes(startStaffEntry)) {
-                                        this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
-                                        startStaffEntriesHandled.push(startStaffEntry);
+                                    for (const gTie of startStaffEntry.GraphicalTies) {
+                                        if (gTie.Tie === tie) {
+                                            continue;
+                                        }
                                     }
+                                    this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
                                 }
                             }
                         }
