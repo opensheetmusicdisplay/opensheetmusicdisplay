@@ -3,6 +3,7 @@ import { Fraction } from "../../Common/DataObjects/Fraction";
 import { Pitch } from "../../Common/DataObjects/Pitch";
 import { TieTypes } from "../../Common/Enums/";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
+import log from "loglevel";
 
 /**
  * A [[Tie]] connects two notes of the same pitch and name, indicating that they have to be played as a single note.
@@ -18,6 +19,31 @@ export class Tie {
     private type: TieTypes;
     public TieNumber: number = 1;
     public TieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
+    /** Can contain tie directions at certain note indices.
+     *  For example, if it contains {2: PlacementEnum.Below}, then
+     *  the tie should go downwards from Tie.Notes[2] onwards,
+     *  even if tie.TieDirection is PlacementEnum.Above (tie starts going up on Notes[0]).
+     */
+    public NoteIndexToTieDirection: NoteIndexToPlacementEnum = {};
+
+    public getTieDirection(startNote?: Note): PlacementEnum {
+        if (!startNote) {
+            return this.TieDirection;
+        }
+        for (let i: number = 0; i < this.Notes.length; i++) {
+            const tieNote: Note = this.Notes[i];
+            if (tieNote === startNote) {
+                const directionAtIndex: PlacementEnum = this.NoteIndexToTieDirection[i];
+                if (directionAtIndex) {
+                    return directionAtIndex;
+                } else {
+                    return this.TieDirection;
+                }
+            }
+        }
+        log.info("tie.getTieDuration called on note not saved in tie.Notes");
+        return this.TieDirection;
+    }
 
     public get Notes(): Note[] {
         return this.notes;
@@ -43,10 +69,12 @@ export class Tie {
         return this.StartNote.Pitch;
     }
 
-    public AddNote(note: Note, isStartNote: boolean = true): void {
+    public AddNote(note: Note): void {
         this.notes.push(note);
-        if (isStartNote) {
-            note.NoteTie = this; // be careful not to overwrite note.NoteTie wrongly, saves only one tie
-        }
+        note.NoteTie = this;
     }
 }
+
+export interface NoteIndexToPlacementEnum {
+    [key: number]: PlacementEnum;
+  }

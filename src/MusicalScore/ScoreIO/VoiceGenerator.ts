@@ -949,35 +949,12 @@ export class VoiceGenerator {
 
   private addTie(tieNodeList: IXmlElement[], measureStartAbsoluteTimestamp: Fraction, maxTieNoteFraction: Fraction, tieType: TieTypes): void {
     if (tieNodeList) {
-      for (let i: number = 0; i < tieNodeList.length; i++) {
-        const tieNode: IXmlElement = tieNodeList[i];
+      if (tieNodeList.length === 1) {
+        const tieNode: IXmlElement = tieNodeList[0];
         if (tieNode !== undefined && tieNode.attributes()) {
-          let tieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
-          // read tie direction/placement from XML
-          const placementAttr: IXmlAttribute = tieNode.attribute("placement");
-          if (placementAttr) {
-            if (placementAttr.value === "above") {
-              tieDirection = PlacementEnum.Above;
-            } else if (placementAttr.value === "below") {
-              tieDirection = PlacementEnum.Below;
-            }
-          }
-          // tie direction also be given like this:
-          const orientationAttr: IXmlAttribute = tieNode.attribute("orientation");
-          if (orientationAttr) {
-            if (orientationAttr.value === "over") {
-              tieDirection = PlacementEnum.Above;
-            } else if (orientationAttr.value === "under") {
-              tieDirection = PlacementEnum.Below;
-            }
-          }
+          const tieDirection: PlacementEnum = this.getTieDirection(tieNode);
 
           const type: string = tieNode.attribute("type").value;
-          if (type === "start" && i === 0) {
-            // handle this after the stop node, so that we don't start a new tie before the old one has ended.
-            tieNodeList.push(tieNode);
-            continue;
-          }
           try {
             if (type === "start") {
               const num: number = this.findCurrentNoteInTieDict(this.currentNote);
@@ -993,7 +970,7 @@ export class VoiceGenerator {
               const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
               const tie: Tie = this.openTieDict[tieNumber];
               if (tie) {
-                tie.AddNote(this.currentNote, false);
+                tie.AddNote(this.currentNote);
                 delete this.openTieDict[tieNumber];
               }
             }
@@ -1003,15 +980,44 @@ export class VoiceGenerator {
           }
 
         }
+      } else if (tieNodeList.length === 2) { // stop+start
+        const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
+        if (tieNumber >= 0) {
+          const tie: Tie = this.openTieDict[tieNumber];
+          tie.AddNote(this.currentNote);
+          for (const tieNode of tieNodeList) {
+            const type: string = tieNode.attribute("type").value;
+            if (type === "start") {
+              const placement: PlacementEnum = this.getTieDirection(tieNode);
+              tie.NoteIndexToTieDirection[tie.Notes.length - 1] = placement;
+            }
+          }
+        }
       }
-      // } else if (tieNodeList.length === 2) {
-      //   const tieNumber: number = this.findCurrentNoteInTieDict(this.currentNote);
-      //   if (tieNumber >= 0) {
-      //     const tie: Tie = this.openTieDict[tieNumber];
-      //     tie.AddNote(this.currentNote);
-      //   }
-      // }
     }
+  }
+
+  private getTieDirection(tieNode: IXmlElement): PlacementEnum {
+    let tieDirection: PlacementEnum = PlacementEnum.NotYetDefined;
+    // read tie direction/placement from XML
+    const placementAttr: IXmlAttribute = tieNode.attribute("placement");
+    if (placementAttr) {
+      if (placementAttr.value === "above") {
+        tieDirection = PlacementEnum.Above;
+      } else if (placementAttr.value === "below") {
+        tieDirection = PlacementEnum.Below;
+      }
+    }
+    // tie direction also be given like this:
+    const orientationAttr: IXmlAttribute = tieNode.attribute("orientation");
+    if (orientationAttr) {
+      if (orientationAttr.value === "over") {
+        tieDirection = PlacementEnum.Above;
+      } else if (orientationAttr.value === "under") {
+        tieDirection = PlacementEnum.Below;
+      }
+    }
+    return tieDirection;
   }
 
   /**
