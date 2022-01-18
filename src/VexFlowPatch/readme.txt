@@ -14,6 +14,9 @@ beam.js (custom addition):
 add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option
 able to add svg node id+class to beam
 
+clef.js (custom addition):
+open group to get SVG group+class for clef
+
 keysignature.js (custom addition):
 open group to get SVG group+class for key signature
 
