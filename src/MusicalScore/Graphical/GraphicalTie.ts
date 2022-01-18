@@ -1,5 +1,6 @@
 import {Tie} from "../VoiceData/Tie";
 import {GraphicalNote} from "./GraphicalNote";
+import Vex from "vexflow";
 
 /**
  * The graphical counterpart of a [[Tie]].
@@ -8,11 +9,16 @@ export class GraphicalTie {
     private tie: Tie;
     private startNote: GraphicalNote;
     private endNote: GraphicalNote;
+    public vfTie: Vex.Flow.StaveTie;
 
     constructor(tie: Tie, start: GraphicalNote = undefined, end: GraphicalNote = undefined) {
         this.tie = tie;
         this.startNote = start;
         this.endNote = end;
+    }
+
+    public get SVGElement(): HTMLElement {
+        return (this.vfTie as any).getAttribute("el");
     }
 
     public get GetTie(): Tie {

@@ -35,6 +35,7 @@ import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
 import { NoteType } from "../../VoiceData/NoteType";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
+import { GraphicalTie } from "../GraphicalTie";
 
 // type StemmableNote = Vex.Flow.StemmableNote;
 
@@ -1553,6 +1554,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
         this.beginInstructionsWidth = (vfBeginInstructionsWidth ?? 0) / unitInPixels;
         this.endInstructionsWidth = (vfEndInstructionsWidth ?? 0) / unitInPixels;
+    }
+
+    public addStaveTie(stavetie: Vex.Flow.StaveTie, graphicalTie: GraphicalTie): void {
+        this.vfTies.push(stavetie);
+        graphicalTie.vfTie = stavetie;
     }
 }
 

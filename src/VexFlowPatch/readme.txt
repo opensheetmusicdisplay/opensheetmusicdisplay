@@ -33,6 +33,9 @@ stavesection.js (custom addition):
 stavesection.draw():
 adjust rectangle positioning, make height depend on text height
 
+stavetie.js (custom addition):
+context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
+
 stavevolta.js (merged Vexflow 3.x):
 Fix the length of voltas for first measures in a system
 (whose lengths were wrongly extended by the width of the clef, key signature, etc. (beginInstructions) in Vexflow 1.2.93)
