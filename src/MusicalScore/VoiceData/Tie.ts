@@ -41,7 +41,8 @@ export class Tie {
                 }
             }
         }
-        log.info("tie.getTieDuration called on note not saved in tie.Notes");
+        log.debug("tie.getTieDuration note not in tie.Notes");
+        // ^ happens in Christbaum measure 19 - probably note sharing stem
         return this.TieDirection;
     }
 
