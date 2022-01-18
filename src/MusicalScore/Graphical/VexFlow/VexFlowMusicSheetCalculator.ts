@@ -672,9 +672,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             last_indices: [endNoteIndexInTie],
             last_note: vfEndNote
           });
-          if (tie.Tie.TieDirection === PlacementEnum.Below) {
+          const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
+          if (tieDirection === PlacementEnum.Below) {
             vfTie.setDirection(1); // + is down in vexflow
-          } else if (tie.Tie.TieDirection === PlacementEnum.Above) {
+          } else if (tieDirection === PlacementEnum.Above) {
             vfTie.setDirection(-1);
           }
         }

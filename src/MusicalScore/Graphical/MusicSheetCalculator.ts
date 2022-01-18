@@ -2117,12 +2117,25 @@ export abstract class MusicSheetCalculator {
                         const startStaffEntry: GraphicalStaffEntry = this.graphicalMusicSheet.findGraphicalStaffEntryFromMeasureList(
                             staffIndex, measureIndex, sourceStaffEntry
                         );
+                        if (startStaffEntry) {
+                            startStaffEntry?.GraphicalTies.clear(); // don't duplicate ties when calling render() again
+                            startStaffEntry?.ties.clear();
+                        }
+
                         for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                             const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
                             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                                 const note: Note = voiceEntry.Notes[idx2];
                                 if (note.NoteTie) {
                                     const tie: Tie = note.NoteTie;
+                                    if (note === note.NoteTie.Notes.last()) {
+                                        continue; // nothing to do on last note. don't create last tie twice.
+                                    }
+                                    for (const gTie of startStaffEntry.GraphicalTies) {
+                                        if (gTie.Tie === tie) {
+                                            continue; // don't handle the same tie on the same startStaffentry twice
+                                        }
+                                    }
                                     this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
                                 }
                             }
