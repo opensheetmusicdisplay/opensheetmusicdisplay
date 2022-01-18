@@ -2108,6 +2108,7 @@ export abstract class MusicSheetCalculator {
     }
 
     protected createGraphicalTies(): void {
+        const startStaffEntriesHandled: GraphicalStaffEntry[] = [];
         for (let measureIndex: number = 0; measureIndex < this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures.length; measureIndex++) {
             const sourceMeasure: SourceMeasure = this.graphicalMusicSheet.ParentMusicSheet.SourceMeasures[measureIndex];
             for (let staffIndex: number = 0; staffIndex < sourceMeasure.CompleteNumberOfStaves; staffIndex++) {
@@ -2117,13 +2118,22 @@ export abstract class MusicSheetCalculator {
                         const startStaffEntry: GraphicalStaffEntry = this.graphicalMusicSheet.findGraphicalStaffEntryFromMeasureList(
                             staffIndex, measureIndex, sourceStaffEntry
                         );
+                        startStaffEntry.GraphicalTies.clear(); // don't duplicate ties when calling render() again
+                        startStaffEntry.ties.clear();
+
                         for (let idx: number = 0, len: number = sourceStaffEntry.VoiceEntries.length; idx < len; ++idx) {
                             const voiceEntry: VoiceEntry = sourceStaffEntry.VoiceEntries[idx];
                             for (let idx2: number = 0, len2: number = voiceEntry.Notes.length; idx2 < len2; ++idx2) {
                                 const note: Note = voiceEntry.Notes[idx2];
                                 if (note.NoteTie) {
                                     const tie: Tie = note.NoteTie;
-                                    this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
+                                    if (note === note.NoteTie.Notes.last()) {
+                                        continue; // nothing to do on last note. don't create last tie twice.
+                                    }
+                                    if (!startStaffEntriesHandled.includes(startStaffEntry)) {
+                                        this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);
+                                        startStaffEntriesHandled.push(startStaffEntry);
+                                    }
                                 }
                             }
                         }
