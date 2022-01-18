@@ -620,9 +620,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_note: vfStartNote
         });
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-        if (measure1.ExtraGraphicalMeasurePreviousMeasure) { // can be undefined (Haydn Concertante)
-          (measure1.ExtraGraphicalMeasurePreviousMeasure as VexFlowMeasure).addStaveTie(vfTie1, tie);
-        }
+        measure1.addStaveTie(vfTie1, tie);
       }
 
       if (vfEndNote) {
