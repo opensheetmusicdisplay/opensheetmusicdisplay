@@ -1008,7 +1008,7 @@ export class VoiceGenerator {
         tieDirection = PlacementEnum.Below;
       }
     }
-    // tie direction also be given like this:
+    // tie direction can also be given like this:
     const orientationAttr: IXmlAttribute = tieNode.attribute("orientation");
     if (orientationAttr) {
       if (orientationAttr.value === "over") {
