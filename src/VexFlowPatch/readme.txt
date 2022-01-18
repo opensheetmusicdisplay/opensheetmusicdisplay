@@ -15,7 +15,7 @@ add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option
 able to add svg node id+class to beam
 
 keysignature.js (custom addition):
-open group to get SVG class for key signature
+open group to get SVG group+class for key signature
 
 stave.js (custom addition):
 prevent a bug where a modifier width is NaN, leading to a VexFlow error
