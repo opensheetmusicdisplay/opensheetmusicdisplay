@@ -620,7 +620,9 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_note: vfStartNote
         });
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-        measure1.vfTies.push(vfTie1);
+        if (measure1.ExtraGraphicalMeasurePreviousMeasure) { // can be undefined (Haydn Concertante)
+          (measure1.ExtraGraphicalMeasurePreviousMeasure as VexFlowMeasure).addStaveTie(vfTie1, tie);
+        }
       }
 
       if (vfEndNote) {
@@ -629,7 +631,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           last_note: vfEndNote
         });
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-        measure2.vfTies.push(vfTie2);
+        measure2.addStaveTie(vfTie2, tie);
       }
     } else {
       // normal case
@@ -681,7 +683,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         }
 
         const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-        measure.vfTies.push(vfTie);
+        measure.addStaveTie(vfTie, tie);
       }
     }
   }
