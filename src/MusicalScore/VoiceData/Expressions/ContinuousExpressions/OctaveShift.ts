@@ -1,13 +1,17 @@
 import {MultiExpression} from "../MultiExpression";
 import { Pitch } from "../../../../Common/DataObjects/Pitch";
+import { PlacementEnum } from "..";
 
 export class OctaveShift {
-    constructor(type: string, octave: number) {
+    constructor(type: string, octave: number, placement: PlacementEnum = PlacementEnum.NotYetDefined) {
+        this.Placement = placement;
         this.setOctaveShiftValue(type, octave);
     }
 
     private octaveValue: OctaveEnum;
     private staffNumber: number;
+    public Placement: PlacementEnum;
+    public numberXml: number = 1;
     private startMultiExpression: MultiExpression;
     private endMultiExpression: MultiExpression;
 

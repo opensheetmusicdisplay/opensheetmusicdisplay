@@ -41,6 +41,14 @@ export class AbstractExpression {
     }
 }
 
+export enum ExpressionType {
+    ContinuousDynamic,
+    InstantaneousDynamic,
+    Mood,
+    Unknown,
+    OctaveShift
+}
+
 export enum PlacementEnum {
     Above = 0,
     Below = 1,

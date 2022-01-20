@@ -5,20 +5,24 @@ import {ContinuousDynamicExpression} from "./ContinuousExpressions/ContinuousDyn
 import {OctaveShift} from "./ContinuousExpressions/OctaveShift";
 import {MoodExpression} from "./MoodExpression";
 import {UnknownExpression} from "./UnknownExpression";
-import {AbstractExpression} from "./AbstractExpression";
+import {AbstractExpression, ExpressionType} from "./AbstractExpression";
 import {PlacementEnum} from "./AbstractExpression";
 import { FontStyles } from "../../../Common/Enums/FontStyles";
 
 export class MultiExpression {
 
-    constructor(sourceMeasure: SourceMeasure, timestamp: Fraction) {
+    constructor(sourceMeasure: SourceMeasure, timestamp: Fraction, type: ExpressionType) {
         this.sourceMeasure = sourceMeasure;
         this.timestamp = timestamp;
+        this.types.push(type);
     }
 
     private sourceMeasure: SourceMeasure;
     private staffNumber: number;
     private timestamp: Fraction;
+    /** The 'number="x"' given in XML, e.g. of a wedge, used to identify similar expressions. */
+    public numberXml: number;
+    public types: ExpressionType[] = [];
     private instantaneousDynamic: InstantaneousDynamicExpression;
     private endingContinuousDynamic: ContinuousDynamicExpression;
     private startingContinuousDynamic: ContinuousDynamicExpression;
