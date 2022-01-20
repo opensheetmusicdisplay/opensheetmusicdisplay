@@ -16,6 +16,7 @@ export class Instrument extends InstrumentalGroup {
     }
 
     /** Transposition halftones for this instrument only.
+     *  This is additive to osmd.Sheet.Transpose (MusicSheet).
      * You need to call osmd.updateGraphic() before the next render() (assuming this is set after load()).
      */
     public Transpose: number = 0;
