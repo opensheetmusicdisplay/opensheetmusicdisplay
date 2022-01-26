@@ -628,11 +628,11 @@ export class ExpressionReader {
                                 currentMeasure,
                                 -1,
                                 stringTrimmed);
-            this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
             const openWordContinuousDynamic: MultiExpression = this.getMultiExpression;
             if (openWordContinuousDynamic) {
                 this.closeOpenContinuousDynamic(openWordContinuousDynamic.StartingContinuousDynamic, currentMeasure, inSourceMeasureCurrentFraction);
             }
+            this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
             if (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.StaffNumber === continuousDynamicExpression.StaffNumber) {
                 this.activeInstantaneousDynamic = undefined;
             }
