@@ -620,14 +620,14 @@ export class ExpressionReader {
                         //     return true;
                         // }
                         // if (ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
-                            const continuousDynamicExpression: ContinuousDynamicExpression =
-                            new ContinuousDynamicExpression(
-                                undefined,
-                                this.placement,
-                                this.staffNumber,
-                                currentMeasure,
-                                -1,
-                                stringTrimmed);
+            const continuousDynamicExpression: ContinuousDynamicExpression =
+                new ContinuousDynamicExpression(
+                    undefined,
+                    this.placement,
+                    this.staffNumber,
+                    currentMeasure,
+                    -1,
+                    stringTrimmed);
             const openWordContinuousDynamic: MultiExpression = this.getMultiExpression;
             if (openWordContinuousDynamic) {
                 this.closeOpenContinuousDynamic(openWordContinuousDynamic.StartingContinuousDynamic, currentMeasure, inSourceMeasureCurrentFraction);
