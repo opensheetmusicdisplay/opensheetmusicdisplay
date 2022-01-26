@@ -4,10 +4,12 @@ import {Fraction} from "../../../../Common/DataObjects/Fraction";
 import {SourceMeasure} from "../../SourceMeasure";
 
 export class ContinuousDynamicExpression extends AbstractExpression {
-    constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number, measure: SourceMeasure,
+    constructor(dynamicType: ContDynamicEnum, placement: PlacementEnum, staffNumber: number,
+                measure: SourceMeasure, numberXml: number,
                 label: string = "") {
         super(placement);
         super.parentMeasure = measure;
+        this.NumberXml = numberXml;
         this.dynamicType = dynamicType;
         this.label = label;
         this.staffNumber = staffNumber;
@@ -22,6 +24,7 @@ export class ContinuousDynamicExpression extends AbstractExpression {
     private static listContinuousDynamicDecreasing: string[] = ["decrescendo", "decresc", "decr.", "diminuendo", "dim.", "dim"];
     // private static listContinuousDynamicGeneral: string[] = ["subito","al niente","piu","meno"];
     private dynamicType: ContDynamicEnum;
+    public NumberXml: number;
     private startMultiExpression: MultiExpression;
     private endMultiExpression: MultiExpression;
     private startVolume: number;

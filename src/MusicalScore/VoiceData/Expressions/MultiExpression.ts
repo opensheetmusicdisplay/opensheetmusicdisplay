@@ -19,6 +19,8 @@ export class MultiExpression {
     private sourceMeasure: SourceMeasure;
     private staffNumber: number;
     private timestamp: Fraction;
+    /** The 'number="x"' given in XML, e.g. of a wedge, used to identify similar expressions. */
+    public numberXml: number;
     private instantaneousDynamic: InstantaneousDynamicExpression;
     private endingContinuousDynamic: ContinuousDynamicExpression;
     private startingContinuousDynamic: ContinuousDynamicExpression;
