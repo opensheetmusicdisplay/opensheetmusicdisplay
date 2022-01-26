@@ -628,18 +628,17 @@ export class ExpressionReader {
                                 currentMeasure,
                                 -1,
                                 stringTrimmed);
-            let newExpression: MultiExpression = this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
+            this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
             const openWordContinuousDynamic: MultiExpression = this.getMultiExpression;
             if (openWordContinuousDynamic) {
                 this.closeOpenContinuousDynamic(openWordContinuousDynamic.StartingContinuousDynamic, currentMeasure, inSourceMeasureCurrentFraction);
-                newExpression = this.createNewMultiExpressionIfNeeded(currentMeasure, -1);
             }
             if (this.activeInstantaneousDynamic !== undefined && this.activeInstantaneousDynamic.StaffNumber === continuousDynamicExpression.StaffNumber) {
                 this.activeInstantaneousDynamic = undefined;
             }
             this.openContinuousDynamicExpressions.push(continuousDynamicExpression);
-            continuousDynamicExpression.StartMultiExpression = openWordContinuousDynamic;
-            newExpression.addExpression(continuousDynamicExpression, prefix);
+            continuousDynamicExpression.StartMultiExpression = this.getMultiExpression;
+            this.getMultiExpression.addExpression(continuousDynamicExpression, prefix);
             return true;
         }
         if (MoodExpression.isInputStringMood(stringTrimmed)) {
