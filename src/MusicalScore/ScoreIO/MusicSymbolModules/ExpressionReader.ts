@@ -297,7 +297,7 @@ export class ExpressionReader {
                                 type = "up";
                             }
                         }
-                        if (type !== "stop") { // type !== "up" || type === "down" // if exported reasonably we would check like this
+                        if (type === "up" || type === "down") { // unfortunately not always given in MusicXML (e.g. Musescore 3.6.2) even though required
                             const octaveShift: OctaveShift = new OctaveShift(type, octave);
                             octaveShift.StaffNumber = octaveStaffNumber;
                             this.getMultiExpression = this.createNewMultiExpressionIfNeeded(
@@ -314,6 +314,9 @@ export class ExpressionReader {
                                 this.openOctaveShift.ParentEndMultiExpression = this.getMultiExpression;
                                 this.openOctaveShift = undefined;
                             }
+                        } // TODO handle type === "continue"?
+                        else if (!type) {
+                            log.debug("octave-shift missing type in xml");
                         }
                     }
                 } catch (ex) {

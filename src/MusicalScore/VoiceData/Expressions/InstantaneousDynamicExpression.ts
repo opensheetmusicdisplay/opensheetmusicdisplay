@@ -6,7 +6,7 @@ import {InvalidEnumArgumentException} from "../../Exceptions";
 import log from "loglevel";
 import { SourceMeasure } from "../SourceMeasure";
 import { Dictionary } from "typescript-collections";
-import { Fraction } from "../../..";
+import { Fraction } from "../../../Common/DataObjects/Fraction";
 
 export class InstantaneousDynamicExpression extends AbstractExpression {
     public static staticConstructor(): void {
