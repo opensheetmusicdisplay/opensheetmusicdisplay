@@ -609,20 +609,20 @@ export class ExpressionReader {
             // || InstantaneousDynamicExpression.isInputStringInstantaneousDynamic(stringTrimmed)
             //   looks like <words> never has instantaneous dynamics like p or sf, those are in <dynamics>.
             // if (InstantaneousDynamicExpression.isInputStringInstantaneousDynamic(stringTrimmed)) {
-                //     if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
-                    //         this.closeOpenContinuousDynamic();
-                    //     }
-                    //     const instantaneousDynamicExpression: InstantaneousDynamicExpression =
-                    //         new InstantaneousDynamicExpression(
-                        //             stringTrimmed,
-                        //             this.soundDynamic,
-                        //             this.placement,
-                        //             this.staffNumber,
-                        //             currentMeasure);
-                        //     this.getMultiExpression.addExpression(instantaneousDynamicExpression, prefix);
-                        //     return true;
-                        // }
-                        // if (ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
+            //     if (this.openContinuousDynamicExpression !== undefined && !this.openContinuousDynamicExpression.EndMultiExpression) {
+            //         this.closeOpenContinuousDynamic();
+            //     }
+            //     const instantaneousDynamicExpression: InstantaneousDynamicExpression =
+            //         new InstantaneousDynamicExpression(
+            //             stringTrimmed,
+            //             this.soundDynamic,
+            //             this.placement,
+            //             this.staffNumber,
+            //             currentMeasure);
+            //     this.getMultiExpression.addExpression(instantaneousDynamicExpression, prefix);
+            //     return true;
+            // }
+            // if (ContinuousDynamicExpression.isInputStringContinuousDynamic(stringTrimmed)) {
             const continuousDynamicExpression: ContinuousDynamicExpression =
                 new ContinuousDynamicExpression(
                     undefined,
