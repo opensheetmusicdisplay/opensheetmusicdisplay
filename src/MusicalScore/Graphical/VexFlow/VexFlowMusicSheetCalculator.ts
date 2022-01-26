@@ -698,23 +698,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffLine: StaffLine = measures[staffIndex].ParentStaffLine;
     const startMeasure: GraphicalMeasure = measures[staffIndex];
 
+    // start position in staffline:
+    const dynamicStartPosition: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+      absoluteTimestamp,
+      staffIndex,
+      staffLine,
+      staffLine?.isPartOfMultiStaffInstrument());
+    if (dynamicStartPosition.x <= 0) {
+      dynamicStartPosition.x = startMeasure.beginInstructionsWidth + this.rules.RhythmRightMargin;
+    }
+
     if (multiExpression.InstantaneousDynamic) {
       const graphicalInstantaneousDynamic: VexFlowInstantaneousDynamicExpression = new VexFlowInstantaneousDynamicExpression(
         multiExpression.InstantaneousDynamic,
         staffLine,
         startMeasure);
-      // let instantaneousInMeasureTimestamp: Fraction = absoluteTimestamp;
-      // if (multiExpression.InstantaneousDynamic.InMeasureTimestamp) {
-      //   instantaneousInMeasureTimestamp = Fraction.plus(absoluteTimestamp, multiExpression.InstantaneousDynamic.InMeasureTimestamp);
-      // }
-      const dynamicStartPosition: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-        absoluteTimestamp, //instantaneousInMeasureTimestamp
-        staffIndex,
-        staffLine,
-        staffLine?.isPartOfMultiStaffInstrument());
-      if (dynamicStartPosition.x <= 0) {
-        dynamicStartPosition.x = startMeasure.beginInstructionsWidth + this.rules.RhythmRightMargin;
-      }
+      // compare with multiExpression.InstantaneousDynamic.InMeasureTimestamp or add a relative timestamp? if we ever need a separate timestamp
       this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, dynamicStartPosition, absoluteTimestamp);
       this.dynamicExpressionMap.set(absoluteTimestamp.RealValue, graphicalInstantaneousDynamic.PositionAndShape);
     }
@@ -725,15 +724,6 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         staffLine,
         startMeasure.parentSourceMeasure);
       graphicalContinuousDynamic.StartMeasure = startMeasure;
-
-      const dynamicStartPosition: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
-        absoluteTimestamp,
-        staffIndex,
-        staffLine,
-        staffLine?.isPartOfMultiStaffInstrument());
-      if (dynamicStartPosition.x <= 0) {
-        dynamicStartPosition.x = startMeasure.beginInstructionsWidth + this.rules.RhythmRightMargin;
-      }
 
       if (!graphicalContinuousDynamic.IsVerbal && continuousDynamic.EndMultiExpression) {
         try {
