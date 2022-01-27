@@ -226,6 +226,9 @@ export class EngravingRules {
     public MinSkyBottomDistBetweenStaves: number;
     public MinimumCrossedBeamDifferenceMargin: number;
 
+    /** Maximum width of sheet / HTMLElement containing the score. Canvas is limited to 32767 in current browsers, though SVG isn't.
+     *  Setting this to > 32767 will break the canvas backend (no problem if you only use SVG).
+     */
     public SheetMaximumWidth: number;
 
     public VoiceSpacingMultiplierVexflow: number;
@@ -569,7 +572,7 @@ export class EngravingRules {
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;
 
-        // Maximum width of sheet. Canvas is limited to 32767 in most browsers, though SVG isn't.
+        // Canvas is limited to 32767 in most browsers, though SVG isn't.
         this.SheetMaximumWidth = 32767;
 
         // xSpacing Variables
