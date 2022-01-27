@@ -203,7 +203,7 @@ export class OpenSheetMusicDisplay {
         // Set page width
         let width: number = this.container.offsetWidth;
         if (this.rules.RenderSingleHorizontalStaffline) {
-            width = 32767; // set safe maximum (browser limit), will be reduced later
+            width = this.rules.SheetMaximumWidth; // set safe maximum (browser limit), will be reduced later
             // reduced later in MusicSheetCalculator.calculatePageLabels (sets sheet.pageWidth to page.PositionAndShape.Size.width before labels)
             // rough calculation:
             // width = 600 * this.sheet.SourceMeasures.length;

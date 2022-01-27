@@ -226,6 +226,8 @@ export class EngravingRules {
     public MinSkyBottomDistBetweenStaves: number;
     public MinimumCrossedBeamDifferenceMargin: number;
 
+    public SheetMaximumWidth: number;
+
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
     public PickupMeasureWidthMultiplier: number;
@@ -566,6 +568,9 @@ export class EngravingRules {
 
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;
+
+        // Maximum width of sheet. Canvas is limited to 32767 in most browsers, though SVG isn't.
+        this.SheetMaximumWidth = 32767;
 
         // xSpacing Variables
         this.VoiceSpacingMultiplierVexflow = 0.85;
