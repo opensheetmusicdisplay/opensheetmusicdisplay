@@ -6,6 +6,11 @@
 * **Release:** Fix types pointing at wrong (sub-)folder. Could solve type/import problems. ([2a18295](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/2a182956950f49dd973a814bcf69bd70c826365b))
 
 
+### Features
+
+* **Options:** Able to set osmd.EngravingRules.SheetMaximumWidth > 32767 for SVG / renderSingleHorizontalStaffline ([6ef37db](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/6ef37db5a9a4bc149204b36fd3ee4978e9083c45))
+
+
 
 ## [1.4.3](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.4.2...1.4.3) (2022-01-18)
 
