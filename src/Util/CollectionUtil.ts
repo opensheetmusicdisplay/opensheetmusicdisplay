@@ -89,7 +89,7 @@ export class CollectionUtil {
                                   startIndex: number = 0,
                                   endIndex: number = array.length - 1): number {
         let mid: number = 1;
-        while (startIndex < endIndex) {
+        while (startIndex <= endIndex) {
             mid = Math.floor((startIndex + endIndex) / 2);
             const c: number = cmp(array[mid], element);
             if (c === 0) {

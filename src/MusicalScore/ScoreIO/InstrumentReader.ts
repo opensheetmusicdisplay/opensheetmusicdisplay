@@ -602,7 +602,7 @@ export class InstrumentReader {
         for (let i: number = 0; i < this.expressionReaders.length; i++) {
          const reader: ExpressionReader = this.expressionReaders[i];
          if (reader) {
-           reader.checkForOpenExpressions(this.currentMeasure, currentFraction);
+           reader.closeOpenExpressions(this.currentMeasure, currentFraction);
           }
         }
       }

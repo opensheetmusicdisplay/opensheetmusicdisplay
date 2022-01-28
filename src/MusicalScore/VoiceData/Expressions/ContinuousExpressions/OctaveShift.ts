@@ -8,6 +8,7 @@ export class OctaveShift {
 
     private octaveValue: OctaveEnum;
     private staffNumber: number;
+    public numberXml: number = 1;
     private startMultiExpression: MultiExpression;
     private endMultiExpression: MultiExpression;
 

@@ -698,14 +698,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffLine: StaffLine = measures[staffIndex].ParentStaffLine;
     const startMeasure: GraphicalMeasure = measures[staffIndex];
 
-    const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+    // start position in staffline:
+    const dynamicStartPosition: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
       absoluteTimestamp,
       staffIndex,
       staffLine,
       staffLine?.isPartOfMultiStaffInstrument());
-
-    const dynamicStartPosition: PointF2D = startPosInStaffline;
-    if (startPosInStaffline.x <= 0) {
+    if (dynamicStartPosition.x <= 0) {
       dynamicStartPosition.x = startMeasure.beginInstructionsWidth + this.rules.RhythmRightMargin;
     }
 
@@ -714,6 +713,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         multiExpression.InstantaneousDynamic,
         staffLine,
         startMeasure);
+      // compare with multiExpression.InstantaneousDynamic.InMeasureTimestamp or add a relative timestamp? if we ever need a separate timestamp
       this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, dynamicStartPosition, absoluteTimestamp);
       this.dynamicExpressionMap.set(absoluteTimestamp.RealValue, graphicalInstantaneousDynamic.PositionAndShape);
     }
@@ -737,7 +737,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       } else if (graphicalContinuousDynamic.IsVerbal) {
         this.calculateGraphicalVerbalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
       } else {
-        log.warn("This continuous dynamic is not covered");
+        log.warn("This continuous dynamic is not covered. measure" + multiExpression.SourceMeasureParent.MeasureNumber);
       }
     }
   }
