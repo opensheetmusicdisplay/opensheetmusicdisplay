@@ -166,6 +166,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param clef
      */
     public addClefAtBegin(clef: ClefInstruction): void {
+        if (!this.rules.RenderClefsAtBeginningOfStaffline) {
+            return;
+        }
         this.octaveOffset = clef.OctaveOffset;
         if (clef.ClefType === ClefEnum.TAB) {
             this.stave.addClef("tab", undefined, undefined, undefined);
