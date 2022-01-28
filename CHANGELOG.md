@@ -1,3 +1,17 @@
+## [1.4.5](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.4.4...1.4.5) (2022-01-28)
+
+
+### Bug Fixes
+
+* **Wedges:** Simultaneous wedges possible, start/stop corrected ([#1131](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1131)), fix octaveshift not rendered ([44a0dce](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/44a0dce896a3288beb64a50fc3e1136fc35b5d28)), closes [#1134](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1134)
+
+
+### Features
+
+* **Options:** add osmd.EngravingRules.RenderClefsAtBeginningOfStaffline ([#1135](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues/1135)) ([03cb762](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/commit/03cb76222ae0591d994fdffc62a918313733479d))
+
+
+
 ## [1.4.4](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/compare/1.4.3...1.4.4) (2022-01-27)
 
 
