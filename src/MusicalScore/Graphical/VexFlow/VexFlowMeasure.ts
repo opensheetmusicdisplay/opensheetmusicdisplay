@@ -31,9 +31,9 @@ import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
-import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
+//import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
-import { NoteType } from "../../VoiceData/NoteType";
+//import { NoteType } from "../../VoiceData/NoteType";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { GraphicalTie } from "../GraphicalTie";
 
@@ -793,10 +793,10 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const psBeam: Beam = beam[0];
                     const voiceEntries: VexFlowVoiceEntry[] = beam[1];
 
-                    let autoStemBeam: boolean = true;
+                    //let autoStemBeam: boolean = true;
                     for (const gve of voiceEntries) {
                         if (gve.parentVoiceEntry?.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
-                            autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
+                            //autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
                             // if (psBeam.Notes[0].NoteTuplet) {
                             //     autoStemBeam = true;
                             //     // this fix seemed temporarily necessary for tuplets with beams, see test_drum_tublet_beams
@@ -949,7 +949,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         graceNotes.push(vfStaveNote);
                     }
                     const graceNoteGroup: VF.GraceNoteGroup = new VF.GraceNoteGroup(graceNotes, graceSlur);
-                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(0, graceNoteGroup);
+                    ((gve as VexFlowVoiceEntry).vfStaveNote as StaveNote).addModifier(graceNoteGroup);
                     graceGVoiceEntriesBefore = [];
                 }
             }
@@ -1023,7 +1023,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // The cast is necesary because...vexflow -> see types
                     if (vexFlowVoiceEntry.vfStaveNote.getCategory && vexFlowVoiceEntry.vfStaveNote.getCategory() === "StaveNote") {
                         // GhostNotes and other StemmableNotes don't have this function
-                        (vexFlowVoiceEntry.vfStaveNote as VF.StaveNote).addModifier(0, clefModifier);
+                        (vexFlowVoiceEntry.vfStaveNote as VF.StaveNote).addModifier(clefModifier);
                     }
                 }
 
@@ -1220,7 +1220,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     stringNumber.radius = 0; // hack to remove the circle around the number
                     stringNumber.setPosition(modifierPosition);
                     stringNumber.setOffsetY(offsetYSign * ordering * stringNumber.getWidth() * 2 / 3);
-                    vexFlowVoiceEntry.vfStaveNote.addModifier(fingeringIndex, stringNumber);
+                    vexFlowVoiceEntry.vfStaveNote.addModifier(stringNumber, fingeringIndex);
                     continue;
                 }
             }
@@ -1228,7 +1228,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
               // TODO this doesn't work yet for tabnotes. don't add fingering for tabs for now.
               // vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
 
-            vexFlowVoiceEntry.vfStaveNote.addModifier(fingeringIndex, fretFinger);
+            vexFlowVoiceEntry.vfStaveNote.addModifier(fretFinger, fingeringIndex);
         }
     }
 
@@ -1282,7 +1282,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 }
                 vfStringNumber.setOffsetY(offsetY);
 
-                vexFlowVoiceEntry.vfStaveNote.addModifier(stringIndex, vfStringNumber); // see addModifier() above
+                vexFlowVoiceEntry.vfStaveNote.addModifier(vfStringNumber, stringIndex); // see addModifier() above
             }
         });
     }
@@ -1326,7 +1326,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         this.endInstructionsWidth = (vfEndInstructionsWidth ?? 0) / unitInPixels;
     }
 
-    public addStaveTie(stavetie: Vex.Flow.StaveTie, graphicalTie: GraphicalTie): void {
+    public addStaveTie(stavetie: VF.StaveTie, graphicalTie: GraphicalTie): void {
         this.vfTies.push(stavetie);
         graphicalTie.vfTie = stavetie;
     }
