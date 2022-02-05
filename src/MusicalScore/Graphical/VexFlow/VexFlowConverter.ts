@@ -535,15 +535,15 @@ export class VexFlowConverter {
             (notes[i] as VexFlowGraphicalNote).setIndex(vfnote, i);
             if (accidentals[i]) {
                 if (accidentals[i] === "###") { // triple sharp
-                    vfnote.addModifier(i, new VF.Accidental("##"));
-                    vfnote.addModifier(i, new VF.Accidental("#"));
+                    vfnote.addModifier(new VF.Accidental("##"), i);
+                    vfnote.addModifier(new VF.Accidental("#"), i);
                     continue;
                 } else if (accidentals[i] === "bbs") { // triple flat
-                    vfnote.addModifier(i, new VF.Accidental("bb"));
-                    vfnote.addModifier(i, new VF.Accidental("b"));
+                    vfnote.addModifier(new VF.Accidental("bb"), i);
+                    vfnote.addModifier(new VF.Accidental("b"), i);
                     continue;
                 }
-                vfnote.addModifier(i, new VF.Accidental(accidentals[i])); // normal accidental
+                vfnote.addModifier(new VF.Accidental(accidentals[i]), i); // normal accidental
             }
 
             // add Tremolo strokes (only single note tremolos for now, Vexflow doesn't have beams for two-note tremolos yet)
@@ -552,7 +552,7 @@ export class VexFlowConverter {
                 const tremolo: VF.Tremolo = new VF.Tremolo(tremoloStrokes);
                 (tremolo as any).extra_stroke_scale = rules.TremoloStrokeScale;
                 (tremolo as any).y_spacing_scale = rules.TremoloYSpacingScale;
-                vfnote.addModifier(i, tremolo);
+                vfnote.addModifier(tremolo, i);
             }
         }
 
@@ -662,7 +662,7 @@ export class VexFlowConverter {
             }
             if (vfArt) {
                 vfArt.setPosition(vfArtPosition);
-                (vfnote as StaveNote).addModifier(0, vfArt);
+                (vfnote as StaveNote).addModifier(vfArt);
             }
         }
     }
@@ -723,7 +723,7 @@ export class VexFlowConverter {
                 vfOrna.setUpperAccidental(Pitch.accidentalVexflow(oContainer.AccidentalAbove));
             }
             vfOrna.setPosition(vfPosition); // Vexflow draws it above right now in any case, never below
-            (vfnote as StaveNote).addModifier(0, vfOrna);
+            (vfnote as StaveNote).addModifier(vfOrna);
         }
     }
 
@@ -808,13 +808,13 @@ export class VexFlowConverter {
 
         tabPhrases.forEach(function(phrase: { type: number, text: string, width: number }): void {
             if (phrase.type === VF.Bend.UP) {
-                vfnote.addModifier(0, new VF.Bend(phrase.text, false));
+                vfnote.addModifier(new VF.Bend(phrase.text, false));
             } else {
-                vfnote.addModifier(0, new VF.Bend(phrase.text, true));
+                vfnote.addModifier(new VF.Bend(phrase.text, true));
             }
         });
         if (tabVibrato) {
-            vfnote.addModifier(0, new VF.Vibrato());
+            vfnote.addModifier(new VF.Vibrato());
         }
 
         return vfnote;
