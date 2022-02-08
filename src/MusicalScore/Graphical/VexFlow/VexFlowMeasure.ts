@@ -793,13 +793,13 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const psBeam: Beam = beam[0];
                     const voiceEntries: VexFlowVoiceEntry[] = beam[1];
 
-                    //let autoStemBeam: boolean = true;
+                    let autoStemBeam: boolean = true;
                     for (const gve of voiceEntries) {
                         if (gve.parentVoiceEntry.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
-                            //autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
+                            autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
                             // if (psBeam.Notes[0].NoteTuplet) {
                             //     autoStemBeam = true;
-                            //     // this fix seemed temporarily necessary for tuplets with beams, see test_drum_tublet_beams
+                            //     // this fix seemed temporarily necessary for tuplets with beams, see test_drum_tuplet_beams
                             //     break;
                             // }
                         }
@@ -820,7 +820,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     }
                     if (notes.length > 1) {
                         const vfBeam: VF.Beam[] = VF.Beam.generateBeams(notes, {
-                            maintain_stem_directions: false,
+                            maintain_stem_directions: !autoStemBeam,
                             flat_beams: this.rules.FlatBeams? true : false,
                             flat_beam_offset: this.rules.FlatBeamOffset,
                             groups: [new VF.Fraction(8, 4)],
