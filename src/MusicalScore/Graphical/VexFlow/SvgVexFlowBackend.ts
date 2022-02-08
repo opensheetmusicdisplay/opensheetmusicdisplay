@@ -20,7 +20,7 @@ export class SvgVexFlowBackend extends VexFlowBackend {
         this.rules = rules;
     }
 
-    public getVexflowBackendType(): number {
+    public getVexflowBackendType(): VF.RendererBackends {
         return VF.Renderer.Backends.SVG;
     }
 

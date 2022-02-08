@@ -105,7 +105,7 @@ public abstract getContext(): VF.RenderContext;
 
   public abstract renderCurve(points: PointF2D[]): Node;
 
-  public abstract getVexflowBackendType(): number;
+  public abstract getVexflowBackendType(): VF.RendererBackends;
 
   /** The general type of backend: Canvas or SVG.
    * This is not used for now (only VexflowBackendType used), but it may be useful when we don't want to use a Vexflow class.

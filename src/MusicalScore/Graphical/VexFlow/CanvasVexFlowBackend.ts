@@ -18,7 +18,7 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
         this.rules = rules;
     }
 
-    public getVexflowBackendType(): number {
+    public getVexflowBackendType(): VF.RendererBackends {
         return VF.Renderer.Backends.CANVAS;
     }
 

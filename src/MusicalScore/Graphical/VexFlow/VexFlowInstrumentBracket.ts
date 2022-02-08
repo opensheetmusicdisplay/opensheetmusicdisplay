@@ -10,7 +10,7 @@ import { unitInPixels } from "./VexFlowMusicSheetDrawer";
  */
 export class VexFlowInstrumentBracket extends GraphicalObject {
 
-    protected vexflowConnector: VF.StaveConnector;
+    public vexflowConnector: VF.StaveConnector;
     public Visible: boolean = true;
 
     constructor(firstVexFlowStaffLine: VexFlowStaffLine, lastVexFlowStaffLine: VexFlowStaffLine, depth: number = 0) {
