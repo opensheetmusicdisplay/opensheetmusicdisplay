@@ -112,7 +112,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             space_above_staff_ln: 0,
             space_below_staff_ln: 0
         });
-        this.stave.setMeasure(this.MeasureNumber); // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
+        //this.stave.setMeasure(this.MeasureNumber); // for debug info. vexflow automatically uses stave.measure for rendering measure numbers
         // also see VexFlowMusicSheetDrawer.drawSheet() for some other vexflow default value settings (like default font scale)
 
         if (this.ParentStaff) {
