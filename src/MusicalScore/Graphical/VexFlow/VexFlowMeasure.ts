@@ -597,7 +597,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     // if (note.isRest()) // TODO somehow there are never rest notes in ve.Notes
                     // TODO also, grace notes are not included here, need to be fixed as well. (and a few triple beamed notes in Bach Air)
                     let relPosY: number = 0;
-                    if (gNote.parentVoiceEntry?.parentVoiceEntry?.StemDirection === StemDirectionType.Up) {
+                    if (gNote.parentVoiceEntry.parentVoiceEntry.StemDirection === StemDirectionType.Up) {
                         relPosY += 3.5; // about 3.5 lines too high. this seems to be related to the default stem height, not actual stem height.
                         // alternate calculation using actual stem height: somehow wildly varying.
                         // if (ve.Notes.length > 1) {
@@ -641,7 +641,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         const voiceEntries: GraphicalVoiceEntry[] = [];
         for (const gse of this.staffEntries) {
            for (const gve of gse.graphicalVoiceEntries) {
-                if (gve.parentVoiceEntry?.ParentVoice === voice) {
+                if (gve.parentVoiceEntry.ParentVoice === voice) {
                     voiceEntries.push(gve);
                 }
             }
@@ -795,7 +795,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
 
                     //let autoStemBeam: boolean = true;
                     for (const gve of voiceEntries) {
-                        if (gve.parentVoiceEntry?.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
+                        if (gve.parentVoiceEntry.ParentVoice === psBeam.Notes[0].ParentVoiceEntry.ParentVoice) {
                             //autoStemBeam = gve.parentVoiceEntry.WantedStemDirection === StemDirectionType.Undefined;
                             // if (psBeam.Notes[0].NoteTuplet) {
                             //     autoStemBeam = true;
