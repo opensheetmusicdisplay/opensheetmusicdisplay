@@ -169,9 +169,6 @@ export class CanvasVexFlowBackend extends VexFlowBackend {
     private ctx: VF.CanvasContext;
 
     public get CanvasRenderingCtx(): CanvasRenderingContext2D {
-        // This clusterfuck is only there to counter act my favorite vexflow line:
-        // ctx.vexFlowCanvasContext = ctx;
-        // No idea why they are saving the context but we wrap the types here
         return this.ctx.context2D as CanvasRenderingContext2D;
     }
 }

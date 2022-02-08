@@ -33,7 +33,6 @@ import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 //import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
-//import { NoteType } from "../../VoiceData/NoteType";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { GraphicalTie } from "../GraphicalTie";
 
