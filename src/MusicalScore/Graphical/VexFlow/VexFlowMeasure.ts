@@ -778,7 +778,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * Complete the creation of VexFlow Beams in this measure
      */
     public finalizeBeams(): void {
-        // The following line resets the created Vex.Flow Beams and
+        // The following line resets the created VF Beams and
         // created them brand new. Is this needed? And more importantly,
         // should the old beams be removed manually by the notes?
         this.autoTupletVfBeams = [];
@@ -857,7 +857,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * Complete the creation of VexFlow Tuplets in this measure
      */
     public finalizeTuplets(): void {
-        // The following line resets the created Vex.Flow Tuplets and
+        // The following line resets the created VF Tuplets and
         // created them brand new. Is this needed? And more importantly,
         // should the old tuplets be removed manually from the notes?
         this.vftuplets = {};
