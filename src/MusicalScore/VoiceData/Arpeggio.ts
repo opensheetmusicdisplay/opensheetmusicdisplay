@@ -18,7 +18,7 @@ export class Arpeggio {
     }
 }
 
-/** Corresponds to Vex.Flow.Stroke.Type for now. But we don't want VexFlow as a dependency here. */
+/** Corresponds to VF.Stroke.Type for now. But we don't want VexFlow as a dependency here. */
 export enum ArpeggioType {
     BRUSH_DOWN = 1,
     BRUSH_UP,
