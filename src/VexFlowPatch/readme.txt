@@ -14,32 +14,32 @@ beam.js (custom addition):
 add flat_beams, flat_beam_offset, flat_beam_offset_per_beam render_option
 able to add svg node id+class to beam
 
-clef.js (custom addition):
+clef.js (merged vexflow 4):
 open group to get SVG group+class for clef
 
-keysignature.js (custom addition):
+keysignature.js (merged vexflow 4):
 open group to get SVG group+class for key signature
 
-stave.js (custom addition):
-prevent a bug where a modifier width is NaN, leading to a VexFlow error
+stave.js (merged/fixed vexflow 4):
+prevent a bug where a modifier width is NaN, leading to a VexFlow error (fixed vexflow 4)
 stave.setSection(section, y, xOffset = 0, fontSize = 12):
-add xOffset, fontSize arguments (see stavesection.js)
+add xOffset, fontSize arguments (see stavesection.js) (merged vexflow 4.x)
 
 stavenote.js (custom addition):
 Fix stem/flag formatting. Instead of shifting notes by default, update the stem/flag rendering to render different voices aligned.
   Only offset if a note is the same voice, same note.
-able to add svg node id+class to stem
+able to add svg node id+class to stem (merged vexflow 4.x)
 
 staverepetition.js (custom addition):
 add TO_CODA enum to type() and draw()
 fix x-positioning for TO_CODA and DS_AL_CODA in drawSymbolText()
 fix y-shift
 
-stavesection.js (custom addition):
+stavesection.js (fixed vexflow 4.x):
 stavesection.draw():
 adjust rectangle positioning, make height depend on text height
 
-stavetie.js (custom addition):
+stavetie.js (merged vexflow 4.x):
 context opens group for stavetie, can get stavetie SVG element via getAttribute("el")
 
 stavevolta.js (merged Vexflow 3.x):
