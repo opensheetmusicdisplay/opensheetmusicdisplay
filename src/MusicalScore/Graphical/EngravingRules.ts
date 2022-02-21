@@ -56,6 +56,7 @@ export class EngravingRules {
     public AutoBeamNotes: boolean;
     /** Options for autoBeaming like whether to beam over rests. See AutoBeamOptions interface. */
     public AutoBeamOptions: AutoBeamOptions;
+    public AutoBeamTabs: boolean;
     public BeamWidth: number;
     public BeamSpaceWidth: number;
     public BeamForwardLength: number;
@@ -385,6 +386,7 @@ export class EngravingRules {
             beam_rests: false,
             maintain_stem_directions: false
         };
+        this.AutoBeamTabs = false;
 
         // Beam Sizing Variables
         this.BeamWidth = EngravingRules.unit / 2.0;
