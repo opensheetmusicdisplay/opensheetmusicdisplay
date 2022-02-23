@@ -269,7 +269,8 @@ export class VexFlowMeasure extends GraphicalMeasure {
             VF.StaveModifier.Position.BEGIN
         );
         if (!this.ShowTimeSignature) {
-            (timeSig as any).fillStyle = "#00000000"; // transparent. requires VexflowPatch
+            // extends Element is missing from class StaveModifier in DefinitelyTyped definitions, so setStyle isn't found
+            (timeSig as any).setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
         }
         this.updateInstructionWidth();
     }
