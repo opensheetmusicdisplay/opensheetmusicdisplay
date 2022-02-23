@@ -268,6 +268,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
             timeSig,
             VF.StaveModifier.Position.BEGIN
         );
+        if (!this.ShowTimeSignature) {
+            timeSig.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
+        }
         this.updateInstructionWidth();
     }
 

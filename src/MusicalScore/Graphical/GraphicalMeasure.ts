@@ -72,6 +72,7 @@ export abstract class GraphicalMeasure extends GraphicalObject {
     /** Used to show key, rhythm changes at the end of the system, has MeasureNumber < 0, because never set. */
     public IsExtraGraphicalMeasure: boolean;
     public ExtraGraphicalMeasurePreviousMeasure: GraphicalMeasure;
+    public ShowTimeSignature: boolean = true;
 
     public get ParentStaff(): Staff {
         return this.parentStaff;
