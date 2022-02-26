@@ -31,8 +31,9 @@ import {OrnamentContainer} from "../../VoiceData/OrnamentContainer";
 import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstruction";
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
-//import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
+import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
 import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
+import { NoteType } from "../../VoiceData/NoteType";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { GraphicalTie } from "../GraphicalTie";
 
@@ -285,6 +286,35 @@ export class VexFlowMeasure extends GraphicalMeasure {
             return; // don't overwrite existing clef with invisible clef
         }
         this.stave.setEndClef(vfclef.type, vfclef.size, vfclef.annotation);
+        for (const modifier of this.stave.getModifiers()) {
+            if (!visible) {
+                // make clef invisible in vexflow. (only rendered to correct layout and staffentry boundingbox)
+                if (modifier.getCategory() === "Clef" && modifier.getPosition() === VF.StaveModifier.Position.END) {
+                    if ((modifier as any).type === vfclef.type) { // any = VF.Clef
+                        const transparentStyle: string = "#12345600";
+                        const originalStyle: any = (modifier as any).getStyle();
+                        if (originalStyle) {
+                            (modifier as any).originalStrokeStyle = originalStyle.strokeStyle;
+                            (modifier as any).originalFillStyle = originalStyle.fillStyle;
+                        }
+                        (modifier as any).setStyle({strokeStyle: transparentStyle, fillStyle: transparentStyle});
+                    }
+                }
+            } else {
+                // reset invisible style
+                const originalStrokeStyle: any = (modifier as any).originalStrokeStyle;
+                const originalFillStyle: any = (modifier as any).originalFillStyle;
+                if ((modifier as any).getStyle()) {
+                    if (originalStrokeStyle && originalFillStyle) {
+                        ((modifier as any).getStyle() as any).strokeStyle = originalStrokeStyle;
+                        ((modifier as any).getStyle() as any).fillStyle = originalFillStyle;
+                    } else {
+                        ((modifier as any).getStyle() as any).strokeStyle = null;
+                        ((modifier as any).getStyle() as any).fillStyle = null;
+                    }
+                }
+            }
+        }
         this.parentSourceMeasure.hasEndClef = true;
         return this.updateInstructionWidth();
     }
@@ -783,6 +813,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // created them brand new. Is this needed? And more importantly,
         // should the old beams be removed manually by the notes?
         this.autoTupletVfBeams = [];
+        const beamedNotes: StaveNote[] = []; // already beamed notes, will be ignored by this.autoBeamNotes()
         for (const voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
                 let vfbeams: VF.Beam[] = this.vfbeams[voiceID];
@@ -790,7 +821,21 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     vfbeams = this.vfbeams[voiceID] = [];
                 }
                 for (const beam of this.beams[voiceID]) {
-                    const notes: VF.StaveNote[] = [];
+                    let beamHasQuarterNoteOrLonger: boolean = false;
+                    for (const note of beam[0].Notes) {
+                        if (note.Length.RealValue >= new Fraction(1, 4).RealValue
+                            // check whether the note has a TypeLength that's also not suitable for a beam (bigger than an eigth)
+                            && (!note.TypeLength || note.TypeLength.RealValue > 0.125)) {
+                            beamHasQuarterNoteOrLonger = true;
+                            break;
+                        }
+                    }
+                    if (beamHasQuarterNoteOrLonger) {
+                        log.debug("Beam between note >= quarter, likely tremolo, currently unsupported. continuing.");
+                        continue;
+                    }
+
+                const notes: VF.StaveNote[] = [];
                     const psBeam: Beam = beam[0];
                     const voiceEntries: VexFlowVoiceEntry[] = beam[1];
 
@@ -811,8 +856,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     const stemColors: string[] = [];
                     for (const entry of voiceEntries) {
                         const note: VF.StaveNote = entry.vfStaveNote as StaveNote;
-                        notes.push(note);
-                        if (entry.parentVoiceEntry?.IsGrace) {
+                        if (note) {
+                            notes.push(note);
+                            beamedNotes.push(note);
+                          }
+                          if (entry.parentVoiceEntry?.IsGrace) {
                             isGraceBeam = true;
                         }
                         if (entry.parentVoiceEntry?.StemColor && this.rules.ColoringEnabled) {
@@ -820,18 +868,11 @@ export class VexFlowMeasure extends GraphicalMeasure {
                         }
                     }
                     if (notes.length > 1) {
-                        const vfBeam: VF.Beam[] = VF.Beam.generateBeams(notes, {
-                            maintain_stem_directions: !autoStemBeam,
-                            flat_beams: this.rules.FlatBeams? true : false,
-                            flat_beam_offset: this.rules.FlatBeamOffset,
-                            groups: [new VF.Fraction(8, 4)],
-                        });
+                        const vfBeam: VF.Beam = new VF.Beam(notes, autoStemBeam);
                         if (isGraceBeam) {
-                            for (const b of vfBeam) {
-                                // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
-                                b.render_options.beam_width = 3;
-                                b.render_options.partial_beam_length = 4;
-                            }
+                            // smaller beam, as in Vexflow.GraceNoteGroup.beamNotes()
+                            vfBeam.render_options.beam_width = 3;
+                            vfBeam.render_options.partial_beam_length = 4;
                         }
                         if (stemColors.length >= 2 && this.rules.ColorBeams) {
                             beamColor = stemColors[0];
@@ -841,15 +882,173 @@ export class VexFlowMeasure extends GraphicalMeasure {
                                     break;
                                 }
                             }
-                            for (const b of vfBeam) {
-                                b.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
-                            }
+                            vfBeam.setStyle({ fillStyle: beamColor, strokeStyle: beamColor });
                         }
-                        this.autoTupletVfBeams.push(...vfBeam);
+                        if (this.rules.FlatBeams) {
+                            vfBeam.render_options.flat_beams = true;
+                            vfBeam.render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                            //vfBeam.render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                        }
+                        vfbeams.push(vfBeam);
                     } else {
                         log.debug("Warning! Beam with no notes!");
                     }
                 }
+            }
+        }
+        if (this.rules.AutoBeamNotes) {
+            this.autoBeamNotes(beamedNotes); // try to autobeam notes except those that are already beamed (beamedNotes).
+        }
+    }
+
+    /** Automatically creates beams for notes except beamedNotes, using Vexflow's Beam.generateBeams().
+     *  Takes options from this.rules.AutoBeamOptions.
+     * @param beamedNotes notes that will not be autobeamed (usually because they are already beamed)
+     */
+    private autoBeamNotes(beamedNotes: StemmableNote[]): void {
+        let notesToAutoBeam: StemmableNote[] = [];
+        let consecutiveBeamableNotes: StemmableNote[] = [];
+        let currentTuplet: Tuplet;
+        let tupletNotesToAutoBeam: StaveNote[] = [];
+        this.autoTupletVfBeams = [];
+        const separateAutoBeams: StemmableNote[][] = []; // a set of separate beams, each having a set of notes (StemmableNote[]).
+        this.autoVfBeams = []; // final VF.Beams will be pushed/collected into this
+        let timeSignature: Fraction = this.parentSourceMeasure.ActiveTimeSignature;
+        if (!timeSignature) { // this doesn't happen in OSMD, but maybe in a SourceGenerator
+            timeSignature = this.parentSourceMeasure.Duration; // suboptimal, can be 1/1 in a 4/4 time signature
+        }
+        /*if (this.parentSourceMeasure.FirstInstructionsStaffEntries[0]) {
+            for (const instruction of this.parentSourceMeasure.FirstInstructionsStaffEntries[0].Instructions) {
+                if (instruction instanceof RhythmInstruction) { // there is not always a RhythmInstruction, but this could be useful some time.
+                    timeSignature = (instruction as RhythmInstruction).Rhythm;
+                }
+            }
+        }*/
+
+        for (const staffEntry of this.staffEntries) {
+            for (const gve of staffEntry.graphicalVoiceEntries) {
+                const vfStaveNote: StaveNote = <StaveNote> (gve as VexFlowVoiceEntry).vfStaveNote;
+                const gNote: GraphicalNote = gve.notes[0]; // TODO check for all notes within the graphical voice entry
+                const isOnBeat: boolean = staffEntry.relInMeasureTimestamp.isOnBeat(timeSignature);
+                const haveTwoOrMoreNotesToBeamAlready: boolean = consecutiveBeamableNotes.length >= 2;
+                //const noteIsQuarterOrLonger: boolean = gNote.sourceNote.Length.CompareTo(new Fraction(1, 4)) >= 0; // trusting Fraction class, no float check
+                const noteIsQuarterOrLonger: boolean = gNote.sourceNote.Length.RealValue - new Fraction(1, 4).RealValue > (-Fraction.FloatInaccuracyTolerance);
+                const unbeamableNote: boolean =
+                    gve.parentVoiceEntry.IsGrace || // don't beam grace notes
+                    noteIsQuarterOrLonger || // don't beam quarter or longer notes
+                    beamedNotes.contains(vfStaveNote);
+                if (unbeamableNote || isOnBeat) { // end beam
+                    if (haveTwoOrMoreNotesToBeamAlready) {
+                        // if we already have at least 2 notes to beam, beam them. don't beam notes surrounded by quarter notes etc.
+                        for (const note of consecutiveBeamableNotes) {
+                            notesToAutoBeam.push(note); // "flush" already beamed notes
+                        }
+                        separateAutoBeams.push(notesToAutoBeam.slice()); // copy array, otherwise this beam gets the next notes of next beam later
+                        notesToAutoBeam = []; // reset notesToAutoBeam, otherwise the next beam includes the previous beam's notes too
+                    }
+                    consecutiveBeamableNotes = []; // reset notes to beam
+
+                    if (unbeamableNote) {
+                        continue;
+                    }
+                    // else, note will be pushed to consecutiveBeamableNotes after tuplet check, also for note on new beat
+                }
+
+                // create beams for tuplets separately
+                const noteTuplet: Tuplet = gve.notes[0].sourceNote.NoteTuplet;
+                if (noteTuplet) {
+                    // check if there are quarter notes or longer in the tuplet, then don't beam.
+                    // (TODO: check for consecutiveBeamableNotes inside tuplets like for non-tuplet notes above
+                    //   e.g quarter eigth eighth -> beam the two eigth notes)
+                    let tupletContainsUnbeamableNote: boolean = false;
+                    for (const notes of noteTuplet.Notes) {
+                        for (const note of notes) {
+                            //const stavenote: StemmableNote = (gve as VexFlowVoiceEntry).vfStaveNote;
+                            //console.log("note " + note.ToString() + ", stavenote type: " + stavenote.getNoteType());
+                            if (note.NoteTypeXml >= NoteType.QUARTER || // quarter note or longer: don't beam
+                            // TODO: don't take Note (head) type from XML, but from current model,
+                            //   so that rendering can react dynamically to changes compared to the XML.
+                            //   however, taking the note length as fraction is tricky because of tuplets.
+                            //   a quarter in a triplet has length < quarter, but quarter note head, which Vexflow can't beam.
+                                note.ParentVoiceEntry.IsGrace ||
+                                note.isRest() && !this.rules.AutoBeamOptions.beam_rests) {
+                                tupletContainsUnbeamableNote = true;
+                                break;
+                            }
+                        }
+                        if (tupletContainsUnbeamableNote) {
+                            break;
+                        }
+                    }
+
+                    if (!currentTuplet) {
+                        currentTuplet = noteTuplet;
+                    } else {
+                        if (currentTuplet !== noteTuplet) { // new tuplet, finish old one
+                            if (tupletNotesToAutoBeam.length > 1) {
+                                const vfBeam: VF.Beam = new VF.Beam(tupletNotesToAutoBeam, true);
+                                if (this.rules.FlatBeams) {
+                                    (<any>vfBeam).render_options.flat_beams = true;
+                                    (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                                    (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                                }
+                                this.autoTupletVfBeams.push(vfBeam);
+                            }
+                            tupletNotesToAutoBeam = [];
+                            currentTuplet = noteTuplet;
+                        }
+                    }
+                    if (!tupletContainsUnbeamableNote) {
+                        tupletNotesToAutoBeam.push(vfStaveNote);
+                    }
+                    continue;
+                } else {
+                    currentTuplet = undefined;
+                }
+
+                consecutiveBeamableNotes.push(vfStaveNote); // also happens on new beat
+            }
+        }
+        if (tupletNotesToAutoBeam.length >= 2) {
+            const vfBeam: VF.Beam = new VF.Beam(tupletNotesToAutoBeam, true);
+            if (this.rules.FlatBeams) {
+                (<any>vfBeam).render_options.flat_beams = true;
+                (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+            }
+            this.autoTupletVfBeams.push(vfBeam);
+        }
+        if (consecutiveBeamableNotes.length >= 2) {
+            for (const note of consecutiveBeamableNotes) {
+                notesToAutoBeam.push(note);
+            }
+            separateAutoBeams.push(notesToAutoBeam);
+        }
+
+        // create options for generateBeams
+        const autoBeamOptions: AutoBeamOptions = this.rules.AutoBeamOptions;
+        const generateBeamOptions: any = {
+            beam_middle_only: autoBeamOptions.beam_middle_rests_only,
+            beam_rests: autoBeamOptions.beam_rests,
+            maintain_stem_directions: autoBeamOptions.maintain_stem_directions,
+        };
+        if (autoBeamOptions.groups && autoBeamOptions.groups.length) {
+            const groups: VF.Fraction[] = [];
+            for (const fraction of autoBeamOptions.groups) {
+                groups.push(new VF.Fraction(fraction[0], fraction[1]));
+            }
+            generateBeamOptions.groups = groups;
+        }
+
+        for (const notesForSeparateAutoBeam of separateAutoBeams) {
+            const newBeams: VF.Beam[] = VF.Beam.generateBeams(notesForSeparateAutoBeam, generateBeamOptions);
+            for (const vfBeam of newBeams) {
+                if (this.rules.FlatBeams) {
+                    (<any>vfBeam).render_options.flat_beams = true;
+                    (<any>vfBeam).render_options.flat_beam_offset = this.rules.FlatBeamOffset;
+                    (<any>vfBeam).render_options.flat_beam_offset_per_beam = this.rules.FlatBeamOffsetPerBeam;
+                }
+                this.autoVfBeams.push(vfBeam);
             }
         }
     }
