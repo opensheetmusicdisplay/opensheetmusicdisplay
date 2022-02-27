@@ -174,6 +174,7 @@ export class VexFlowMusicSheetDrawer extends MusicSheetDrawer {
             measure.PositionAndShape.AbsolutePosition.y * unitInPixels
         );
         try {
+            measure.finalizeBeams();
             measure.draw(this.backend.getContext());
             // Vexflow errors can happen here. If we don't catch errors, rendering will stop after this measure.
         } catch (ex) {

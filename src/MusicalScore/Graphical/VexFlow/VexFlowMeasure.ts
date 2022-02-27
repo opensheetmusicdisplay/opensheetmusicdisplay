@@ -812,7 +812,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
         // The following line resets the created VF Beams and
         // created them brand new. Is this needed? And more importantly,
         // should the old beams be removed manually by the notes?
-        this.autoTupletVfBeams = [];
+        this.vfbeams = {};
         const beamedNotes: StaveNote[] = []; // already beamed notes, will be ignored by this.autoBeamNotes()
         for (const voiceID in this.beams) {
             if (this.beams.hasOwnProperty(voiceID)) {
