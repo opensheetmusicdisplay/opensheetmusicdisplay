@@ -154,16 +154,16 @@ export class ChordSymbolContainer {
         let text: string = "";
         switch (alteration) {
             case AccidentalEnum.DOUBLEFLAT:
-                text += "bb";
+                text += "♭♭";
                 break;
             case AccidentalEnum.FLAT:
-                text += "b";
+                text += "♭";
                 break;
             case AccidentalEnum.SHARP:
-                text += "#";
+                text += "♯";
                 break;
             case AccidentalEnum.DOUBLESHARP:
-                text += "x";
+                text += "𝄪";
                 break;
             default:
         }
