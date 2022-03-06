@@ -719,7 +719,7 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.minorseventh, "m7");
         chordtexts.setValue(ChordSymbolEnum.diminishedseventh, "dim7");
         chordtexts.setValue(ChordSymbolEnum.augmentedseventh, "aug7");
-        chordtexts.setValue(ChordSymbolEnum.halfdiminished, "m7b5");
+        chordtexts.setValue(ChordSymbolEnum.halfdiminished, "m7♭5");
         chordtexts.setValue(ChordSymbolEnum.majorminor, "m(maj7)");
         chordtexts.setValue(ChordSymbolEnum.majorsixth, "maj6");
         chordtexts.setValue(ChordSymbolEnum.minorsixth, "m6");
