@@ -775,7 +775,7 @@ export class EngravingRules {
         this.addChordName("13sus4", "suspendedfourth", ["13"], [], []);
         this.addChordName("7sus2", "dominant", ["2"], [], ["3"]);
         this.addChordName("7sus2", "suspendedsecond", ["7"], [], []);
-        this.addChordName("m7b5", "minorseventh", [], ["♭5"], []);
+        this.addChordName("m7♭5", "minorseventh", [], ["♭5"], []);
         this.addChordName("9sus2", "dominantninth", ["2"], [], ["3"]);
         this.addChordName("9sus2", "suspendedsecond", ["9"], [], []);
         this.addChordName("11sus2", "dominant11th", ["2"], [], ["3"]);
