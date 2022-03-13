@@ -763,8 +763,8 @@ export class EngravingRules {
 
     public resetChordNames(): void {
         // addChordName(alternateName, chordKindText, adds, alters, subtracts)
-        this.addChordName("alt", "major", ["#5", "b9", "#9"], ["b5"], []);
-        this.addChordName("7alt", "dominant", ["#5", "b9", "#9"], ["b5"], []);
+        this.addChordName("alt", "major", ["♯5", "♭9", "♯9"], ["♭5"], []);
+        this.addChordName("7alt", "dominant", ["♯5", "♭9", "♯9"], ["♭5"], []);
         this.addChordName("7sus4", "dominant", ["4"], [], ["3"]);
         this.addChordName("7sus4", "suspendedfourth", ["7"], [], []);
         this.addChordName("9sus4", "dominantninth", ["4"], [], ["3"]);
@@ -775,7 +775,7 @@ export class EngravingRules {
         this.addChordName("13sus4", "suspendedfourth", ["13"], [], []);
         this.addChordName("7sus2", "dominant", ["2"], [], ["3"]);
         this.addChordName("7sus2", "suspendedsecond", ["7"], [], []);
-        this.addChordName("m7b5", "minorseventh", [], ["b5"], []);
+        this.addChordName("m7b5", "minorseventh", [], ["♭5"], []);
         this.addChordName("9sus2", "dominantninth", ["2"], [], ["3"]);
         this.addChordName("9sus2", "suspendedsecond", ["9"], [], []);
         this.addChordName("11sus2", "dominant11th", ["2"], [], ["3"]);
