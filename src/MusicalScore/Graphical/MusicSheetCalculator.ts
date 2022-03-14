@@ -2186,7 +2186,7 @@ export abstract class MusicSheetCalculator {
             return;
         }
         const ties: Tie[] = staffEntry.ties;
-        if (ties.length > 1) {
+        if (ties.length > 1 || ties[0]?.TieDirection === PlacementEnum.NotYetDefined) {
             let highestNote: Note = undefined;
             for (const gseTie of ties) {
                 const tieNote: Note = gseTie.Notes[0];
