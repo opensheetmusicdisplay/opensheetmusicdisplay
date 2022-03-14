@@ -58,7 +58,7 @@ export class ChordSymbolContainer {
         let text: string = Pitch.getNoteEnumString(transposedRootPitch.FundamentalNote);
         // main alteration
         if (transposedRootPitch.Accidental !== AccidentalEnum.NONE) {
-            text += this.getTextForAccidental(transposedRootPitch.Accidental);
+            text += chordSymbol.getTextForAccidental(transposedRootPitch.Accidental);
         }
 
         // degrees
@@ -72,7 +72,7 @@ export class ChordSymbolContainer {
             if (chordDegree) {
                 let t: string = "";
                 if (chordDegree.alteration !== AccidentalEnum.NONE) {
-                    t += this.getTextForAccidental(chordDegree.alteration);
+                    t += chordSymbol.getTextForAccidental(chordDegree.alteration);
                 }
                 t += chordDegree.value;
                 switch (chordDegree.text) {
@@ -145,29 +145,14 @@ export class ChordSymbolContainer {
             }
             text += "/";
             text += Pitch.getNoteEnumString(transposedBassPitch.FundamentalNote);
-            text += this.getTextForAccidental(transposedBassPitch.Accidental);
+            text += chordSymbol.getTextForAccidental(transposedBassPitch.Accidental);
         }
         return text;
     }
 
-    private static getTextForAccidental(alteration: AccidentalEnum): string {
-        let text: string = "";
-        switch (alteration) {
-            case AccidentalEnum.DOUBLEFLAT:
-                text += "bb";
-                break;
-            case AccidentalEnum.FLAT:
-                text += "b";
-                break;
-            case AccidentalEnum.SHARP:
-                text += "#";
-                break;
-            case AccidentalEnum.DOUBLESHARP:
-                text += "x";
-                break;
-            default:
-        }
-        return text;
+    private getTextForAccidental(alteration: AccidentalEnum): string {
+        const text: string = this.rules.ChordAccidentalTexts.getValue(alteration);
+        return text !== undefined ? text : "";
     }
 
     private getTextFromChordKindEnum(kind: ChordSymbolEnum): string {

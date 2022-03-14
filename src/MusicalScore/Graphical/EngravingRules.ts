@@ -7,7 +7,7 @@ import { AutoBeamOptions, AlignRestOption, FillEmptyMeasuresWithWholeRests } fro
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
-import { NoteEnum } from "../../Common/DataObjects/Pitch";
+import { NoteEnum, AccidentalEnum } from "../../Common/DataObjects/Pitch";
 import { ChordSymbolEnum, CustomChord, DegreesInfo } from "../../MusicalScore/VoiceData/ChordSymbolContainer";
 import { GraphicalNote } from "./GraphicalNote";
 import { Note } from "../VoiceData/Note";
@@ -120,6 +120,7 @@ export class EngravingRules {
     public ChordSymbolYAlignment: boolean;
     public ChordSymbolYAlignmentScope: string;
     public ChordSymbolLabelTexts: Dictionary<ChordSymbolEnum, string>;
+    public ChordAccidentalTexts: Dictionary<AccidentalEnum, string>;
     public CustomChords: CustomChord[];
     public RepetitionSymbolsYOffset: number;
     public RehearsalMarkXOffset: number;
@@ -466,6 +467,8 @@ export class EngravingRules {
         this.ChordSymbolYPadding = 0.0;
         this.ChordSymbolYAlignment = true;
         this.ChordSymbolYAlignmentScope = "staffline"; // "measure" or "staffline"
+        this.ChordAccidentalTexts = new Dictionary<AccidentalEnum, string>();
+        this.resetChordAccidentalTexts(this.ChordAccidentalTexts, false);
         this.ChordSymbolLabelTexts = new Dictionary<ChordSymbolEnum, string>();
         this.resetChordSymbolLabelTexts(this.ChordSymbolLabelTexts);
         this.CustomChords = [];
@@ -707,6 +710,13 @@ export class EngravingRules {
         this.NoteToGraphicalNoteMapObjectCount = 0;
     }
 
+    public resetChordAccidentalTexts(chordAccidentalTexts: Dictionary<AccidentalEnum, string>, useChordAccidentalsUnicode: boolean): void {
+        chordAccidentalTexts.setValue(AccidentalEnum.SHARP, useChordAccidentalsUnicode ? "♯" : "#");
+        chordAccidentalTexts.setValue(AccidentalEnum.FLAT, useChordAccidentalsUnicode ? "♭" : "b");
+        chordAccidentalTexts.setValue(AccidentalEnum.DOUBLEFLAT, useChordAccidentalsUnicode ? "𝄫" : "bb");
+        chordAccidentalTexts.setValue(AccidentalEnum.DOUBLESHARP, useChordAccidentalsUnicode ? "𝄪" : "x");
+    }
+
     public setChordSymbolLabelText(key: ChordSymbolEnum, value: string): void {
         this.ChordSymbolLabelTexts.setValue(key, value);
     }
@@ -719,7 +729,7 @@ export class EngravingRules {
         chordtexts.setValue(ChordSymbolEnum.minorseventh, "m7");
         chordtexts.setValue(ChordSymbolEnum.diminishedseventh, "dim7");
         chordtexts.setValue(ChordSymbolEnum.augmentedseventh, "aug7");
-        chordtexts.setValue(ChordSymbolEnum.halfdiminished, "m7b5");
+        chordtexts.setValue(ChordSymbolEnum.halfdiminished, `m7${this.ChordAccidentalTexts.getValue(AccidentalEnum.FLAT)}5`);
         chordtexts.setValue(ChordSymbolEnum.majorminor, "m(maj7)");
         chordtexts.setValue(ChordSymbolEnum.majorsixth, "maj6");
         chordtexts.setValue(ChordSymbolEnum.minorsixth, "m6");
@@ -762,9 +772,11 @@ export class EngravingRules {
     }
 
     public resetChordNames(): void {
+        const sharp: string = this.ChordAccidentalTexts.getValue(AccidentalEnum.SHARP);
+        const flat: string = this.ChordAccidentalTexts.getValue(AccidentalEnum.FLAT);
         // addChordName(alternateName, chordKindText, adds, alters, subtracts)
-        this.addChordName("alt", "major", ["#5", "b9", "#9"], ["b5"], []);
-        this.addChordName("7alt", "dominant", ["#5", "b9", "#9"], ["b5"], []);
+        this.addChordName("alt", "major", [`${sharp}5`, `${flat}9`, `${sharp}9`], [`${flat}5`], []);
+        this.addChordName("7alt", "dominant", [`${sharp}5`, `${flat}9`, `${sharp}9`], [`${flat}5`], []);
         this.addChordName("7sus4", "dominant", ["4"], [], ["3"]);
         this.addChordName("7sus4", "suspendedfourth", ["7"], [], []);
         this.addChordName("9sus4", "dominantninth", ["4"], [], ["3"]);
@@ -775,7 +787,7 @@ export class EngravingRules {
         this.addChordName("13sus4", "suspendedfourth", ["13"], [], []);
         this.addChordName("7sus2", "dominant", ["2"], [], ["3"]);
         this.addChordName("7sus2", "suspendedsecond", ["7"], [], []);
-        this.addChordName("m7b5", "minorseventh", [], ["b5"], []);
+        this.addChordName(`m7${flat}5`, "minorseventh", [], [`${flat}5`], []);
         this.addChordName("9sus2", "dominantninth", ["2"], [], ["3"]);
         this.addChordName("9sus2", "suspendedsecond", ["9"], [], []);
         this.addChordName("11sus2", "dominant11th", ["2"], [], ["3"]);
