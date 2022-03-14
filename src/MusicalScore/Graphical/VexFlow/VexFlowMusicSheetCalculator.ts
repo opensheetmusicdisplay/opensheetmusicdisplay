@@ -621,6 +621,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           first_note: vfStartNote
         });
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        this.setVfTieDirection(tie, vfTie1);
         measure1.addStaveTie(vfTie1, tie);
       }
 
@@ -630,6 +631,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           last_note: vfEndNote
         });
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
+        this.setVfTieDirection(tie, vfTie2);
         measure2.addStaveTie(vfTie2, tie);
       }
     } else {
@@ -673,6 +675,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             last_indices: [endNoteIndexInTie],
             last_note: vfEndNote
           });
+          this.setVfTieDirection(tie, vfTie);
           const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
           if (tieDirection === PlacementEnum.Below) {
             vfTie.setDirection(1); // + is down in vexflow
@@ -684,6 +687,15 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
         measure.addStaveTie(vfTie, tie);
       }
+    }
+  }
+
+  private setVfTieDirection(tie: GraphicalTie, vfTie: VF.StaveTie): void {
+    const tieDirection: PlacementEnum = tie.Tie.getTieDirection(tie.StartNote.sourceNote);
+    if (tieDirection === PlacementEnum.Below) {
+      (vfTie as any).setDirection(1); // + is down in vexflow // any is required because setDirection is missing from StaveTie definitions
+    } else if (tieDirection === PlacementEnum.Above) {
+      (vfTie as any).setDirection(-1);
     }
   }
 

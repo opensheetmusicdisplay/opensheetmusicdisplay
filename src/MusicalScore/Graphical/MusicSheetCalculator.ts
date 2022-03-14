@@ -2196,6 +2196,7 @@ export abstract class MusicSheetCalculator {
             }
             for (const gseTie of ties) {
                 if (gseTie.TieDirection === PlacementEnum.NotYetDefined) { // only set/change if not already set by xml
+                    // if (gseTie.Notes[0].Pitch.getHalfTone() === highestNote.Pitch.getHalfTone()) { // maybe?
                     if (gseTie.Notes[0] === highestNote) {
                         gseTie.TieDirection = PlacementEnum.Above;
                     } else {
