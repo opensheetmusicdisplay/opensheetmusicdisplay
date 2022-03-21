@@ -535,7 +535,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
 
 
   protected updateStaffLineBorders(staffLine: StaffLine): void {
-    staffLine.SkyBottomLineCalculator.updateStaffLineBorders();
+    staffLine.SkyBottomLine.updateStaffLineBorders();
   }
 
   protected graphicalMeasureCreatedCalculations(measure: GraphicalMeasure): void {
@@ -1012,20 +1012,20 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const fontSize: number = (textBracket as any).font.size / 10;
 
     if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
-      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
+      const headroom: number = Math.ceil(parentStaffline.SkyBottomLine.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
       (textBracket.start.getStave().options as any).top_text_position = Math.abs(headroom);
-      parentStaffline.SkyBottomLineCalculator.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
+      parentStaffline.SkyBottomLine.updateSkyLineInRange(startX, stopX, headroom - fontSize * 2);
     } else {
-      const footroom: number = parentStaffline.SkyBottomLineCalculator.getBottomLineMaxInRange(startX, stopX);
+      const footroom: number = parentStaffline.SkyBottomLine.getBottomLineMaxInRange(startX, stopX);
       if (footroom === Infinity) { // will cause Vexflow error
         return;
       }
       (textBracket.start.getStave().options as any).bottom_text_position = footroom;
       //Vexflow positions top vs. bottom text in a slightly inconsistent way it seems
-      parentStaffline.SkyBottomLineCalculator.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
+      parentStaffline.SkyBottomLine.updateBottomLineInRange(startX, stopX, footroom + fontSize * 1.5);
     }
   }
 

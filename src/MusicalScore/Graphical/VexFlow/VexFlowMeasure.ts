@@ -32,7 +32,7 @@ import {TechnicalInstruction} from "../../VoiceData/Instructions/TechnicalInstru
 import {PlacementEnum} from "../../VoiceData/Expressions/AbstractExpression";
 import {VexFlowGraphicalNote} from "./VexFlowGraphicalNote";
 import {AutoBeamOptions} from "../../../OpenSheetMusicDisplay/OSMDOptions";
-import {SkyBottomLineCalculator} from "../SkyBottomLineCalculator";
+import {SkyBottomLine} from "../SkyBottomLine";
 import { NoteType } from "../../VoiceData/NoteType";
 import { Arpeggio } from "../../VoiceData/Arpeggio";
 import { GraphicalTie } from "../GraphicalTie";
@@ -479,15 +479,15 @@ export class VexFlowMeasure extends GraphicalMeasure {
                     break;
             }
 
-            const skyBottomLineCalculator: SkyBottomLineCalculator = this.ParentStaffLine.SkyBottomLineCalculator;
-            //Because of loss of accuracy when sampling (see SkyBottomLineCalculator.updateInRange), measures tend to overlap
+            const skyBottomLine: SkyBottomLine = this.ParentStaffLine.SkyBottomLine;
+            //Because of loss of accuracy when sampling (see SkyBottomLine.updateInRange), measures tend to overlap
             //This causes getSkyLineMinInRange to return an incorrect min value (one from the previous measure, which has been modified)
             //We need to offset the end of what we are measuring by a bit to prevent this, otherwise volta pairs step up
             const start: number = this.PositionAndShape.AbsolutePosition.x + this.PositionAndShape.BorderMarginLeft + 0.4;
             const end: number = Math.max(this.PositionAndShape.AbsolutePosition.x + this.PositionAndShape.BorderMarginRight, start + 0.4);
             //2 unit gap, since volta is positioned from y center it seems.
             //This prevents cases where the volta is rendered over another element
-            const skylineMinForMeasure: number = skyBottomLineCalculator.getSkyLineMinInRange( start, end ) - 2;
+            const skylineMinForMeasure: number = skyBottomLine.getSkyLineMinInRange( start, end ) - 2;
             //-6 OSMD units is the 0 value that the volta is placed on. .1 extra so the skyline goes above the volta
             //instead of on the line itself
             let newSkylineValueForMeasure: number = -6.1 + this.rules.VoltaOffset;
@@ -524,12 +524,12 @@ export class VexFlowMeasure extends GraphicalMeasure {
                 for (let i: number = 0; i < prevStaveModifiers.length; i++) {
                     const nextStaveModifier: Vex.Flow.StaveModifier = prevStaveModifiers[i];
                     if (nextStaveModifier.hasOwnProperty("volta")) {
-                        const prevskyBottomLineCalculator: SkyBottomLineCalculator = prevMeasure.ParentStaffLine.SkyBottomLineCalculator;
+                        const prevskyBottomLine: SkyBottomLine = prevMeasure.ParentStaffLine.SkyBottomLine;
                         const prevStart: number = prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginLeft + 0.4;
                         const prevEnd: number = Math.max(
                             prevMeasure.PositionAndShape.AbsolutePosition.x + prevMeasure.PositionAndShape.BorderMarginRight,
                             prevStart + 0.4);
-                        const prevMeasureSkyline: number = prevskyBottomLineCalculator.getSkyLineMinInRange(prevStart, prevEnd);
+                        const prevMeasureSkyline: number = prevskyBottomLine.getSkyLineMinInRange(prevStart, prevEnd);
                         //if prev skyline is higher, use it
                         if (prevMeasureSkyline <= newSkylineValueForMeasure) {
                             const skylineDifference: number = prevMeasureSkyline - newSkylineValueForMeasure;
@@ -537,7 +537,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
                             newSkylineValueForMeasure = prevMeasureSkyline;
                         } else { //otherwise, we are higher. Need to adjust prev
                             (nextStaveModifier as any).y_shift = vexFlowVoltaHeight * unitInPixels;
-                            prevMeasure.ParentStaffLine.SkyBottomLineCalculator.updateSkyLineInRange(prevStart, prevEnd, newSkylineValueForMeasure);
+                            prevMeasure.ParentStaffLine.SkyBottomLine.updateSkyLineInRange(prevStart, prevEnd, newSkylineValueForMeasure);
                         }
                     }
                 }
@@ -546,7 +546,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             //convert to VF units (pixels)
             vexFlowVoltaHeight *= 10;
             this.stave.setVoltaType(voltaType, repetitionInstruction.endingIndices[0], vexFlowVoltaHeight);
-            skyBottomLineCalculator.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
+            skyBottomLine.updateSkyLineInRange(start, end, newSkylineValueForMeasure);
         }
     }
 

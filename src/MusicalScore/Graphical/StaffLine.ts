@@ -9,7 +9,7 @@ import {MusicSystem} from "./MusicSystem";
 import {StaffLineActivitySymbol} from "./StaffLineActivitySymbol";
 import {PointF2D} from "../../Common/DataObjects/PointF2D";
 import {GraphicalLabel} from "./GraphicalLabel";
-import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { SkyBottomLine } from "./SkyBottomLine";
 import { GraphicalOctaveShift } from "./GraphicalOctaveShift";
 import { GraphicalSlur } from "./GraphicalSlur";
 import { AbstractGraphicalExpression } from "./AbstractGraphicalExpression";
@@ -24,7 +24,7 @@ export abstract class StaffLine extends GraphicalObject {
     protected parentMusicSystem: MusicSystem;
     protected parentStaff: Staff;
     protected octaveShifts: GraphicalOctaveShift[] = [];
-    protected skyBottomLine: SkyBottomLineCalculator;
+    protected skyBottomLine: SkyBottomLine;
     protected lyricLines: GraphicalLine[] = [];
     protected lyricsDashes: GraphicalLabel[] = [];
     protected abstractExpressions: AbstractGraphicalExpression[] = [];
@@ -41,7 +41,7 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentMusicSystem = parentSystem;
         this.parentStaff = parentStaff;
         this.boundingBox = new BoundingBox(this, parentSystem.PositionAndShape);
-        this.skyBottomLine = new SkyBottomLineCalculator(this);
+        this.skyBottomLine = new SkyBottomLine(this);
         this.staffHeight = this.parentMusicSystem.rules.StaffHeight;
         this.topLineOffset = 0;
         this.bottomLineOffset = 4;
@@ -149,7 +149,7 @@ export abstract class StaffLine extends GraphicalObject {
         this.parentStaff = value;
     }
 
-    public get SkyBottomLineCalculator(): SkyBottomLineCalculator {
+    public get SkyBottomLine(): SkyBottomLine {
         return this.skyBottomLine;
     }
 

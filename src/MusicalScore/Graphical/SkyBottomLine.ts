@@ -11,7 +11,7 @@ import { BoundingBox } from "./BoundingBox";
  * It also has functions to update areas of the two lines if new elements are
  * added to the staffline (e.g. measure number, annotations, ...)
  */
-export class SkyBottomLineCalculator {
+export class SkyBottomLine {
     /** Parent Staffline where the skyline and bottom line is attached */
     private mStaffLineParent: StaffLine;
     /** Internal array for the skyline */
@@ -50,7 +50,7 @@ export class SkyBottomLineCalculator {
             const vsStaff: any = measure.getVFStave();
             let width: number = vsStaff.getWidth();
             if (!(width > 0) && !measure.IsExtraGraphicalMeasure) {
-                log.warn("SkyBottomLineCalculator: width not > 0 in measure " + measure.MeasureNumber);
+                log.warn("SkyBottomLine: width not > 0 in measure " + measure.MeasureNumber);
                 width = 50;
             }
             // Headless because we are outside the DOM
@@ -74,7 +74,7 @@ export class SkyBottomLineCalculator {
                 measure.draw(ctx);
                 // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
             } catch (ex) {
-                log.warn("SkyBottomLineCalculator.calculateLines.draw", ex);
+                log.warn("SkyBottomLine.calculateLines.draw", ex);
             }
 
             // imageData.data is a Uint8ClampedArray representing a one-dimensional array containing the data in the RGBA order

@@ -10,7 +10,7 @@ import {StaffLine} from "../StaffLine";
 import {EngravingRules} from "../EngravingRules";
 import { VexFlowInstrumentBracket } from "./VexFlowInstrumentBracket";
 import { VexFlowInstrumentBrace } from "./VexFlowInstrumentBrace";
-import { SkyBottomLineCalculator } from "../SkyBottomLineCalculator";
+import { SkyBottomLine } from "../SkyBottomLine";
 
 export class VexFlowMusicSystem extends MusicSystem {
     constructor(id: number, rules: EngravingRules) {
@@ -27,14 +27,14 @@ export class VexFlowMusicSystem extends MusicSystem {
         this.boundingBox.BorderMarginLeft = -width;
         this.boundingBox.XBordersHaveBeenSet = true;
 
-        const topSkyBottomLineCalculator: SkyBottomLineCalculator = this.staffLines[0].SkyBottomLineCalculator;
-        const top: number = topSkyBottomLineCalculator.getSkyLineMin();
+        const topSkyBottomLine: SkyBottomLine = this.staffLines[0].SkyBottomLine;
+        const top: number = topSkyBottomLine.getSkyLineMin();
         this.boundingBox.BorderTop = top;
         this.boundingBox.BorderMarginTop = top;
 
         const lastStaffLine: StaffLine = this.staffLines[this.staffLines.length - 1];
-        const bottomSkyBottomLineCalculator: SkyBottomLineCalculator = lastStaffLine.SkyBottomLineCalculator;
-        const bottom: number = bottomSkyBottomLineCalculator.getBottomLineMax()
+        const bottomSkyBottomLine: SkyBottomLine = lastStaffLine.SkyBottomLine;
+        const bottom: number = bottomSkyBottomLine.getBottomLineMax()
                     + lastStaffLine.PositionAndShape.RelativePosition.y;
         this.boundingBox.BorderBottom = bottom;
         this.boundingBox.BorderMarginBottom = bottom;

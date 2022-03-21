@@ -6,7 +6,7 @@ import { Slur } from "../VoiceData/Expressions/ContinuousExpressions/Slur";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
 import { EngravingRules } from "./EngravingRules";
 import { StaffLine } from "./StaffLine";
-import { SkyBottomLineCalculator } from "./SkyBottomLineCalculator";
+import { SkyBottomLine } from "./SkyBottomLine";
 import { Matrix2D } from "../../Common/DataObjects/Matrix2D";
 import { LinkedVoice } from "../VoiceData/LinkedVoice";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
@@ -83,13 +83,13 @@ export class GraphicalSlur extends GraphicalCurve {
         }
 
         const staffLine: StaffLine = startStaffEntry.parentMeasure.ParentStaffLine;
-        const skyBottomLineCalculator: SkyBottomLineCalculator = staffLine.SkyBottomLineCalculator;
+        const skyBottomLine: SkyBottomLine = staffLine.SkyBottomLine;
 
-        this.calculatePlacement(skyBottomLineCalculator, staffLine);
+        this.calculatePlacement(skyBottomLine, staffLine);
 
         // the Start- and End Reference Points for the Sky-BottomLine
         const startEndPoints: {startX: number, startY: number, endX: number, endY: number} =
-            this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, rules, skyBottomLineCalculator);
+            this.calculateStartAndEnd(slurStartNote, slurEndNote, staffLine, rules, skyBottomLine);
 
         const startX: number = startEndPoints.startX;
         const endX: number = startEndPoints.endX;
@@ -134,7 +134,7 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             // SkyLinePointsList between firstStaffEntry startUpperRightPoint and lastStaffentry endUpperLeftPoint
-            points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLineCalculator);
+            points = this.calculateTopPoints(startUpperRight, endUpperLeft, staffLine, skyBottomLine);
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endUpperLeft.x - startUpperRight.x) / 2 + startUpperRight.x,
@@ -251,17 +251,17 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate slur Curvepoints and update Skyline
             const length: number = staffLine.SkyLine.length;
-            const startIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierStartPt.x, length);
-            const endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierEndPt.x, length);
+            const startIndex: number = skyBottomLine.getLeftIndexForPointX(this.bezierStartPt.x, length);
+            const endIndex: number = skyBottomLine.getLeftIndexForPointX(this.bezierEndPt.x, length);
             const distance: number = this.bezierEndPt.x - this.bezierStartPt.x;
-            const samplingUnit: number = skyBottomLineCalculator.SamplingUnit;
+            const samplingUnit: number = skyBottomLine.SamplingUnit;
             for (let i: number = startIndex; i < endIndex; i++) {
                 // get the right distance ratio and index on the curve
                 const diff: number = i / samplingUnit - this.bezierStartPt.x;
                 const curvePoint: PointF2D = this.calculateCurvePointAtIndex(Math.abs(diff) / distance);
 
                 // update left- and rightIndex for better accuracy
-                let index: number = skyBottomLineCalculator.getLeftIndexForPointX(curvePoint.x, length);
+                let index: number = skyBottomLine.getLeftIndexForPointX(curvePoint.x, length);
                 // update SkyLine with final slur curve:
                 if (index >= startIndex) {
                     staffLine.SkyLine[index] = Math.min(staffLine.SkyLine[index], curvePoint.y);
@@ -307,7 +307,7 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             // BottomLinePointsList between firstStaffEntry startLowerRightPoint and lastStaffentry endLowerLeftPoint
-            points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLineCalculator);
+            points = this.calculateBottomPoints(startLowerRight, endLowerLeft, staffLine, skyBottomLine);
 
             if (points.length === 0) {
                 const pointF: PointF2D = new PointF2D((endLowerLeft.x - startLowerRight.x) / 2 + startLowerRight.x,
@@ -417,17 +417,17 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // calculate CurvePoints
             const length: number = staffLine.BottomLine.length;
-            const startIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierStartPt.x, length);
-            const endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(this.bezierEndPt.x, length);
+            const startIndex: number = skyBottomLine.getLeftIndexForPointX(this.bezierStartPt.x, length);
+            const endIndex: number = skyBottomLine.getLeftIndexForPointX(this.bezierEndPt.x, length);
             const distance: number = this.bezierEndPt.x - this.bezierStartPt.x;
-            const samplingUnit: number = skyBottomLineCalculator.SamplingUnit;
+            const samplingUnit: number = skyBottomLine.SamplingUnit;
             for (let i: number = startIndex; i < endIndex; i++) {
                 // get the right distance ratio and index on the curve
                 const diff: number = i / samplingUnit - this.bezierStartPt.x;
                 const curvePoint: PointF2D = this.calculateCurvePointAtIndex(Math.abs(diff) / distance);
 
                 // update start- and endIndex for better accuracy
-                let index: number = skyBottomLineCalculator.getLeftIndexForPointX(curvePoint.x, length);
+                let index: number = skyBottomLine.getLeftIndexForPointX(curvePoint.x, length);
                 // update BottomLine with final slur curve:
                 if (index >= startIndex) {
                     staffLine.BottomLine[index] = Math.max(staffLine.BottomLine[index], curvePoint.y);
@@ -451,13 +451,13 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param endX
      * @param endY
      * @param rules
-     * @param skyBottomLineCalculator
+     * @param skyBottomLine
      */
     private calculateStartAndEnd(   slurStartNote: GraphicalNote,
                                     slurEndNote: GraphicalNote,
                                     staffLine: StaffLine,
                                     rules: EngravingRules,
-                                    skyBottomLineCalculator: SkyBottomLineCalculator): {startX: number, startY: number, endX: number, endY: number} {
+                                    skyBottomLine: SkyBottomLine): {startX: number, startY: number, endX: number, endY: number} {
         let startX: number = 0;
         let startY: number = 0;
         let endX: number = 0;
@@ -494,12 +494,12 @@ export class GraphicalSlur extends GraphicalCurve {
             }
             // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
             //     startX += first.NoteStem.PositionAndShape.RelativePosition.x;
-            //     startY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, startX);
+            //     startY = skyBottomLine.getSkyLineMinAtPoint(staffLine, startX);
             // } else {
             //     const last: GraphicalNote = <GraphicalNote>slurStartNote[slurEndNote.parentVoiceEntry.notes.length - 1];
             //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
             //         startX += last.NoteStem.PositionAndShape.RelativePosition.x;
-            //         startY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, startX);
+            //         startY = skyBottomLine.getBottomLineMaxAtPoint(staffLine, startX);
             //     } else {
             //     }
             // }
@@ -534,12 +534,12 @@ export class GraphicalSlur extends GraphicalCurve {
             // const first: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[0];
             // if (first.NoteStem && first.NoteStem.Direction === StemEnum.StemUp && this.placement === PlacementEnum.Above) {
             //     endX += first.NoteStem.PositionAndShape.RelativePosition.x;
-            //     endY = skyBottomLineCalculator.getSkyLineMinAtPoint(staffLine, endX);
+            //     endY = skyBottomLine.getSkyLineMinAtPoint(staffLine, endX);
             // } else {
             //     const last: GraphicalNote = <GraphicalNote>slurEndNote.parentVoiceEntry.notes[slurEndNote.parentVoiceEntry.notes.length - 1];
             //     if (last.NoteStem && last.NoteStem.Direction === StemEnum.StemDown && this.placement === PlacementEnum.Below) {
             //         endX += last.NoteStem.PositionAndShape.RelativePosition.x;
-            //         endY = skyBottomLineCalculator.getBottomLineMaxAtPoint(staffLine, endX);
+            //         endY = skyBottomLine.getBottomLineMaxAtPoint(staffLine, endX);
             //     } else {
             //         if (this.placement === PlacementEnum.Above) {
             //             const highestNote: GraphicalNote = last;
@@ -606,10 +606,10 @@ export class GraphicalSlur extends GraphicalCurve {
 
     /**
      * This method calculates the placement of the Curve.
-     * @param skyBottomLineCalculator
+     * @param skyBottomLine
      * @param staffLine
      */
-    private calculatePlacement(skyBottomLineCalculator: SkyBottomLineCalculator, staffLine: StaffLine): void {
+    private calculatePlacement(skyBottomLine: SkyBottomLine, staffLine: StaffLine): void {
         // old version: when lyrics are given place above:
         // if ( !this.slur.StartNote.ParentVoiceEntry.LyricsEntries.isEmpty || (this.slur.EndNote
         //                                     && !this.slur.EndNote.ParentVoiceEntry.LyricsEntries.isEmpty) ) {
@@ -668,8 +668,8 @@ export class GraphicalSlur extends GraphicalCurve {
             }
 
             // get SkyBottomLine borders
-            const minAbove: number = skyBottomLineCalculator.getSkyLineMinInRange(sX, eX) * -1;
-            const maxBelow: number = skyBottomLineCalculator.getBottomLineMaxInRange(sX, eX) - staffLine.StaffHeight;
+            const minAbove: number = skyBottomLine.getSkyLineMinInRange(sX, eX) * -1;
+            const maxBelow: number = skyBottomLine.getBottomLineMaxInRange(sX, eX) - staffLine.StaffHeight;
 
             if (maxBelow > minAbove) {
                 this.placement = PlacementEnum.Above;
@@ -682,12 +682,12 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param start
      * @param end
      * @param staffLine
-     * @param skyBottomLineCalculator
+     * @param skyBottomLine
      */
-    private calculateTopPoints(start: PointF2D, end: PointF2D, staffLine: StaffLine, skyBottomLineCalculator: SkyBottomLineCalculator): PointF2D[] {
+    private calculateTopPoints(start: PointF2D, end: PointF2D, staffLine: StaffLine, skyBottomLine: SkyBottomLine): PointF2D[] {
         const points: PointF2D[] = [];
-        let startIndex: number = skyBottomLineCalculator.getRightIndexForPointX(start.x, staffLine.SkyLine.length);
-        let endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(end.x, staffLine.SkyLine.length);
+        let startIndex: number = skyBottomLine.getRightIndexForPointX(start.x, staffLine.SkyLine.length);
+        let endIndex: number = skyBottomLine.getLeftIndexForPointX(end.x, staffLine.SkyLine.length);
 
         if (startIndex < 0) {
             startIndex = 0;
@@ -700,7 +700,7 @@ export class GraphicalSlur extends GraphicalCurve {
             const skylineValue: number = staffLine.SkyLine[i];
             // ignore default value (= 0) which is upper border of staffline
             if (skylineValue !== 0) {
-                const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLineCalculator.SamplingUnit, skylineValue);
+                const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLine.SamplingUnit, skylineValue);
                 points.push(point);
             }
         }
@@ -713,14 +713,14 @@ export class GraphicalSlur extends GraphicalCurve {
      * @param start
      * @param end
      * @param staffLine
-     * @param skyBottomLineCalculator
+     * @param skyBottomLine
      */
-    private calculateBottomPoints(start: PointF2D, end: PointF2D, staffLine: StaffLine, skyBottomLineCalculator: SkyBottomLineCalculator): PointF2D[] {
+    private calculateBottomPoints(start: PointF2D, end: PointF2D, staffLine: StaffLine, skyBottomLine: SkyBottomLine): PointF2D[] {
         const points: PointF2D[] = [];
 
         // get BottomLine indices
-        let startIndex: number = skyBottomLineCalculator.getRightIndexForPointX(start.x, staffLine.BottomLine.length);
-        let endIndex: number = skyBottomLineCalculator.getLeftIndexForPointX(end.x, staffLine.BottomLine.length);
+        let startIndex: number = skyBottomLine.getRightIndexForPointX(start.x, staffLine.BottomLine.length);
+        let endIndex: number = skyBottomLine.getLeftIndexForPointX(end.x, staffLine.BottomLine.length);
         if (startIndex < 0) {
             startIndex = 0;
         }
@@ -733,7 +733,7 @@ export class GraphicalSlur extends GraphicalCurve {
 
             // ignore default value (= 4) which is lower border of staffline
             if (bottomLineValue !== 0) {
-                const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLineCalculator.SamplingUnit, bottomLineValue);
+                const point: PointF2D = new PointF2D((0.5 + i) / skyBottomLine.SamplingUnit, bottomLineValue);
                 points.push(point);
             }
         }
