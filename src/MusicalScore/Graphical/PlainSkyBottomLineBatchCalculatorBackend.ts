@@ -35,8 +35,6 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
         samplingUnit: number,
         tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
     ): SkyBottomLineCalculationResult[] {
-        const debugTmpCanvas: boolean = false;
-
         // vexFlowContext is CanvasRenderingContext2D in runtime
         const canvasWidth: number = canvas.width;
         const context: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
@@ -82,26 +80,8 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
                     }
                 }
             }
-
-            if (debugTmpCanvas) {
-                const oldFillStyle: string | CanvasGradient | CanvasPattern = context.fillStyle;
-                context.fillStyle = "#FF0000";
-                skyLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
-                context.fillStyle = "#0000FF";
-                bottomLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
-                context.fillStyle = oldFillStyle;
-            }
-
             result.push(new SkyBottomLineCalculationResult(skyLine, bottomLine));
         }
-
-        if (debugTmpCanvas) {
-            const url: string = canvas.toDataURL("image/png");
-            const img: HTMLImageElement = document.createElement("img");
-            img.src = url;
-            document.body.appendChild(img);
-        }
-
         return result;
     }
 }

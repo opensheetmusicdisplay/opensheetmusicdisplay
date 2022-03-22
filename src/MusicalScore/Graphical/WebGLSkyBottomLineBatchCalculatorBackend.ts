@@ -109,9 +109,6 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
     }
 
     protected getPreferredRenderingConfiguration(maxWidth: number, elementHeight: number): ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration {
-
-        (<any>window).console.log("a: ", maxWidth, elementHeight);
-
         return {
             elementWidth: Math.ceil(maxWidth),
             numColumns: 5,
@@ -120,9 +117,6 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
     }
 
     protected onInitialize(tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration): void {
-
-        (<any>window).console.log("b: ", tableConfiguration);
-
         const { elementWidth, numColumns, numRows } = tableConfiguration;
         const canvas: HTMLCanvasElement = document.createElement("canvas");
         canvas.width = elementWidth * numColumns;
@@ -151,16 +145,12 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
 
     protected calculateFromCanvas(
         canvas: HTMLCanvasElement,
-        vexFlowContext: Vex.Flow.CanvasContext,
+        _: Vex.Flow.CanvasContext,
         measures: VexFlowMeasure[],
         samplingUnit: number,
         tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
     ): SkyBottomLineCalculationResult[] {
-        const debugTmpCanvas: boolean = false;
-
         const gl: WebGLRenderingContext = this.gl;
-
-        const context: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
         const rgbaLength: number = 4;
         const { elementWidth, elementHeight, numColumns } = tableConfiguration;
 
@@ -171,8 +161,6 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
 
         const pixels: Uint8Array = new Uint8Array(gl.canvas.width * gl.canvas.height * rgbaLength);
         gl.readPixels(0, 0, gl.canvas.width, gl.canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-        (<any>window).console.log(pixels, gl, canvas, context);
 
         const result: SkyBottomLineCalculationResult[] = [];
         for (let i: number = 0; i < measures.length; ++i) {
@@ -192,29 +180,8 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
                 skyLine[x] = Math.floor(pixels[x * rgbaLength + xOffset + yOffset] / 255 * elementHeight);
                 bottomLine[x] = Math.floor(pixels[x * rgbaLength + xOffset + yOffset + 1] / 255 * elementHeight);
             }
-
-            if (debugTmpCanvas) {
-                const xStart: number = u * elementWidth;
-                const yStart: number = v * elementHeight;
-
-                const oldFillStyle: string | CanvasGradient | CanvasPattern = context.fillStyle;
-                context.fillStyle = "#FF0000";
-                skyLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
-                context.fillStyle = "#0000FF";
-                bottomLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
-                context.fillStyle = oldFillStyle;
-            }
-
             result.push(new SkyBottomLineCalculationResult(skyLine, bottomLine));
         }
-
-        if (debugTmpCanvas) {
-            const url: string = canvas.toDataURL("image/png");
-            const img: HTMLImageElement = document.createElement("img");
-            img.src = url;
-            document.body.appendChild(img);
-        }
-
         return result;
     }
 }

@@ -122,12 +122,18 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
      * This method calculates the skylines and the bottom lines for the measures passed to the constructor.
      */
     public calculateLines(): SkyBottomLineCalculationResult[] {
+        const debugTmpCanvas: boolean = true;
+
         const { numColumns, numRows, elementWidth } = this.tableConfiguration;
         const elementHeight: number = this.elementHeight;
         const numElementsPerTable: number = numColumns * numRows;
 
         const context: Vex.Flow.CanvasContext = this.canvas.getContext();
         const canvasElement: HTMLCanvasElement = this.canvas.getCanvas() as HTMLCanvasElement;
+
+        if (debugTmpCanvas) {
+            document.querySelectorAll("img.osmd-sky-bottom-line-tmp-canvas").forEach(element => element.parentElement.removeChild(element));
+        }
 
         const results: SkyBottomLineCalculationResult[] = [];
         for (let i: number = 0; i < this.measures.length; i += numElementsPerTable) {
@@ -172,7 +178,39 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 }
             }
 
-            results.push(...this.calculateFromCanvas(canvasElement, context, measures, this.samplingUnit, this.tableConfiguration));
+            const result: SkyBottomLineCalculationResult[] = this.calculateFromCanvas(
+                canvasElement,
+                context,
+                measures,
+                this.samplingUnit,
+                this.tableConfiguration
+            );
+            results.push(...result);
+
+            if (debugTmpCanvas) {
+                const canvasContext: CanvasRenderingContext2D = context as unknown as CanvasRenderingContext2D;
+                const oldFillStyle: string | CanvasGradient | CanvasPattern = canvasContext.fillStyle;
+                for (let j: number = 0; j < result.length; ++j) {
+                    const { skyLine, bottomLine } = result[j];
+
+                    const u: number = j % numColumns;
+                    const v: number = Math.floor(j / numColumns);
+
+                    const xStart: number = u * elementWidth;
+                    const yStart: number = v * elementHeight;
+
+                    canvasContext.fillStyle = "#FF0000";
+                    skyLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
+                    canvasContext.fillStyle = "#0000FF";
+                    bottomLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
+                }
+                canvasContext.fillStyle = oldFillStyle;
+                const url: string = canvasElement.toDataURL("image/png");
+                const img: HTMLImageElement = document.createElement("img");
+                img.classList.add("osmd-sky-bottom-line-tmp-canvas");
+                img.src = url;
+                document.body.appendChild(img);
+            }
         }
 
         return results;
