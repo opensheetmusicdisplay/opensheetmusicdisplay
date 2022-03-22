@@ -106,6 +106,12 @@ function updateMacroConstantsInShaderSource(source: string, constants: { [macroN
     return result;
 }
 
+function getMaximumTextureSize(): number {
+    const canvas: HTMLCanvasElement = document.createElement("canvas");
+    const gl: WebGLRenderingContext = canvas.getContext("webgl");
+    return gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
+}
+
 /**
  * This class calculates the skylines and the bottom lines by using WebGL acceleration.
  */
@@ -118,11 +124,12 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
     }
 
     protected getPreferredRenderingConfiguration(maxWidth: number, elementHeight: number): ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration {
-        return {
-            elementWidth: Math.ceil(maxWidth),
-            numColumns: 6,
-            numRows: 6,
-        };
+        const maxTextureSize: number = Math.min(4096, getMaximumTextureSize());
+        const elementWidth: number = Math.ceil(maxWidth);
+        const numColumns: number = Math.min(5, Math.floor(maxTextureSize / elementWidth));
+        const numRows: number = Math.min(5, Math.floor(maxTextureSize / elementHeight));
+
+        return { elementWidth, numColumns, numRows };
     }
 
     protected onInitialize(tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration): void {
