@@ -84,10 +84,12 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
             }
 
             if (debugTmpCanvas) {
+                const oldFillStyle: string | CanvasGradient | CanvasPattern = context.fillStyle;
                 context.fillStyle = "#FF0000";
                 skyLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
                 context.fillStyle = "#0000FF";
                 bottomLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
+                context.fillStyle = oldFillStyle;
             }
 
             result.push(new SkyBottomLineCalculationResult(skyLine, bottomLine));
