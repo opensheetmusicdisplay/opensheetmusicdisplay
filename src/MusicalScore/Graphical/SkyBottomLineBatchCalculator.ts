@@ -5,6 +5,7 @@ import { SkyBottomLineBatchCalculatorBackend } from "./SkyBottomLineBatchCalcula
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
 import { StaffLine } from "./StaffLine";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
+import { WebGLSkyBottomLineBatchCalculatorBackend } from "./WebGLSkyBottomLineBatchCalculatorBackend";
 
 interface IBatchEntry {
     skyBottomLine: SkyBottomLine;
@@ -45,7 +46,11 @@ export class SkyBottomLineBatchCalculator {
         for (const [rules, batchEntryArray] of batchEntryArrayList.entries()) {
             const measures: VexFlowMeasure[] = batchEntryArray.map(entry => entry.measures).flat();
             const backend: SkyBottomLineBatchCalculatorBackend = ((): SkyBottomLineBatchCalculatorBackend => {
-                return new PlainSkyBottomLineBatchCalculatorBackend(rules, measures);
+                try {
+                    return new WebGLSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
+                } catch {
+                    return new PlainSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
+                }
             })();
             backend.initialize();
 
