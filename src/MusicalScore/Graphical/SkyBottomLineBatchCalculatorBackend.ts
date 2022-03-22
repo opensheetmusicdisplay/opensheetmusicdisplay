@@ -29,6 +29,8 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
     private readonly measures: VexFlowMeasure[];
     /** The width of the widest measure */
     private readonly maxWidth: number;
+    /** The samplingUnit from the EngravingRules */
+    private readonly samplingUnit: number;
     /**
      * The default height used by CanvasVexFlowBackend. Update this value when the
      * default height value of CanvasVexFlowBackend.initializeHeadless is updated.
@@ -52,6 +54,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
             }
             return width;
         }));
+        this.samplingUnit = rules.SamplingUnit;
     }
 
     /**
@@ -96,14 +99,14 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
         canvas: HTMLCanvasElement,
         context: Vex.Flow.CanvasContext,
         measures: VexFlowMeasure[],
-        tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
+        samplingUnit: number,
+        tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration & { elementHeight: number }
     ): SkyBottomLineCalculationResult[];
 
     /**
      * This method calculates the skylines and the bottom lines for the measures passed to the constructor.
      */
-    public calculateLines(): SkyBottomLineCalculationResult[]
-    {
+    public calculateLines(): SkyBottomLineCalculationResult[] {
         const { numColumns, numRows, elementWidth } = this.tableConfiguration;
         const elementHeight: number = this.elementHeight;
         const numElementsPerTable: number = numColumns * numRows;
@@ -154,7 +157,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 }
             }
 
-            results.push(...this.calculateFromCanvas(canvasElement, context, measures, this.tableConfiguration));
+            results.push(...this.calculateFromCanvas(canvasElement, context, measures, this.samplingUnit, { ...this.tableConfiguration, elementHeight }));
         }
 
         return results;
