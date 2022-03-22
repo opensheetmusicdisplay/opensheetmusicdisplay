@@ -19,8 +19,8 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
     protected getPreferredRenderingConfiguration(maxWidth: number, elementHeight: number): ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration {
         return {
             elementWidth: Math.ceil(maxWidth),
-            numColumns: 5,
-            numRows: 5,
+            numColumns: 6,
+            numRows: 6,
         };
     }
 
@@ -33,7 +33,7 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
         vexFlowContext: Vex.Flow.CanvasContext,
         measures: VexFlowMeasure[],
         samplingUnit: number,
-        tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration & { elementHeight: number }
+        tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
     ): SkyBottomLineCalculationResult[] {
         const debugTmpCanvas: boolean = false;
 
