@@ -89,13 +89,13 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
      * This method calculates the skylines and the bottom lines for the measures rendered in the given canvas.
      * @param canvas the canvas where the measures are rendered
      * @param context the drawing context of canvas
-     * @param numElementsRendered the number of rendered measures
+     * @param measures the rendered measures
      * @param tableConfiguration the table configuration returned by getPreferredRenderingConfiguration
      */
     protected abstract calculateFromCanvas(
         canvas: HTMLCanvasElement,
         context: Vex.Flow.CanvasContext,
-        numElementsRendered: number,
+        measures: VexFlowMeasure[],
         tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
     ): SkyBottomLineCalculationResult[];
 
@@ -116,7 +116,6 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
             context.clear();
 
             const measures: VexFlowMeasure[] = this.measures.slice(i, i + numElementsPerTable);
-            const numElementsToRender: number = measures.length;
 
             for (let j: number = 0; j < measures.length; ++j) {
                 const measure: VexFlowMeasure = measures[j];
@@ -155,7 +154,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 }
             }
 
-            results.push(...this.calculateFromCanvas(canvasElement, context, numElementsToRender, this.tableConfiguration));
+            results.push(...this.calculateFromCanvas(canvasElement, context, measures, this.tableConfiguration));
         }
 
         return results;
