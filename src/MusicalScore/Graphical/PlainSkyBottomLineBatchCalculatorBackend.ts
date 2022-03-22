@@ -1,7 +1,11 @@
 import { EngravingRules } from "./EngravingRules";
 import { VexFlowMeasure } from "./VexFlow/VexFlowMeasure";
-import { ISkyBottomLineBatchCalculatorBackendTableConfiguration, SkyBottomLineBatchCalculatorBackend } from "./SkyBottomLineBatchCalculatorBackend";
 import { SkyBottomLineCalculationResult } from "./SkyBottomLineCalculationResult";
+import {
+    ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration,
+    ISkyBottomLineBatchCalculatorBackendTableConfiguration,
+    SkyBottomLineBatchCalculatorBackend
+} from "./SkyBottomLineBatchCalculatorBackend";
 
 /**
  * This class calculates the skylines and the bottom lines by iterating over pixels retrieved via
@@ -12,7 +16,7 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
         super(rules, measures);
     }
 
-    protected getPreferredRenderingConfiguration(maxWidth: number, elementHeight: number): ISkyBottomLineBatchCalculatorBackendTableConfiguration {
+    protected getPreferredRenderingConfiguration(maxWidth: number, elementHeight: number): ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration {
         return {
             elementWidth: Math.ceil(maxWidth),
             numColumns: 5,
