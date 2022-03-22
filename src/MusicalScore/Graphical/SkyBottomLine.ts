@@ -90,11 +90,12 @@ export class SkyBottomLine {
         if (this.mSkyLine.length !== arrayLength) { // bottomline will always be same length as well
             log.debug(`SkyLine calculation was not correct (${this.mSkyLine.length} instead of ${arrayLength})`);
         }
+
         // Remap the values from 0 to +/- height in units
         const lowestSkyLine: number = Math.max(...this.mSkyLine);
         this.mSkyLine = this.mSkyLine.map(v => (v - lowestSkyLine) / unitInPixels + this.StaffLineParent.TopLineOffset);
 
-        const highestBottomLine: number = Math.max(...this.mBottomLine);
+        const highestBottomLine: number = Math.min(...this.mBottomLine);
         this.mBottomLine = this.mBottomLine.map(v => (v - highestBottomLine) / unitInPixels + this.StaffLineParent.BottomLineOffset);
     }
 
