@@ -10,13 +10,23 @@ import log from "loglevel";
  * implementing SkyBottomLineBatchCalculatorBackend. The height of a cell is
  * set to a fixed value by SkyBottomLineBatchCalculatorBackend.
  */
- export interface ISkyBottomLineBatchCalculatorBackendTableConfiguration {
+ export interface ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration {
     /** The width of each cell */
     elementWidth: number;
     /** The number of cell in a row */
     numColumns: number;
     /** The number of cell in a column */
     numRows: number;
+}
+
+/**
+ * This interface contains the complete configuration for the table rendered by
+ * SkyBottomLineBatchCalculatorBackend,
+ */
+export interface ISkyBottomLineBatchCalculatorBackendTableConfiguration
+    extends ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration {
+    /** The height of each cell determined by SkyBottomLineBatchCalculatorBackend */
+    elementHeight: number;
 }
 
 /**
@@ -65,7 +75,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
     protected abstract getPreferredRenderingConfiguration(
         maxWidth: number,
         elementHeight: number
-    ): ISkyBottomLineBatchCalculatorBackendTableConfiguration;
+    ): ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration;
 
     /**
      * This method allocates resources required by the implementation class.
@@ -76,8 +86,11 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
     /**
      * This method allocates required resources for the calculation.
      */
-    public initialize(): void {
-        this.tableConfiguration = this.getPreferredRenderingConfiguration(this.maxWidth, this.elementHeight);
+    public initialize(): SkyBottomLineBatchCalculatorBackend {
+        this.tableConfiguration = {
+            ...this.getPreferredRenderingConfiguration(this.maxWidth, this.elementHeight),
+            elementHeight: this.elementHeight
+        };
         if (this.tableConfiguration.elementWidth < this.maxWidth) {
             log.warn("SkyBottomLineBatchCalculatorBackend: elementWidth in tableConfiguration is less than the width of widest measure");
         }
@@ -86,6 +99,8 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
         const height: number = this.elementHeight * this.tableConfiguration.numRows;
         this.canvas.initializeHeadless(width, height);
         this.onInitialize(this.tableConfiguration);
+
+        return this;
     }
 
     /**
@@ -100,7 +115,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
         context: Vex.Flow.CanvasContext,
         measures: VexFlowMeasure[],
         samplingUnit: number,
-        tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration & { elementHeight: number }
+        tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration
     ): SkyBottomLineCalculationResult[];
 
     /**
@@ -157,7 +172,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 }
             }
 
-            results.push(...this.calculateFromCanvas(canvasElement, context, measures, this.samplingUnit, { ...this.tableConfiguration, elementHeight }));
+            results.push(...this.calculateFromCanvas(canvasElement, context, measures, this.samplingUnit, this.tableConfiguration));
         }
 
         return results;
