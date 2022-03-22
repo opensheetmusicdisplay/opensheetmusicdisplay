@@ -70,7 +70,6 @@ import { FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSM
 import { IStafflineNoteCalculator } from "../Interfaces/IStafflineNoteCalculator";
 import { GraphicalUnknownExpression } from "./GraphicalUnknownExpression";
 import { GraphicalChordSymbolContainer } from ".";
-import { SkyBottomLineBatchCalculator } from "./SkyBottomLineBatchCalculator";
 
 /**
  * Class used to do all the calculations in a MusicSheet, which in the end populates a GraphicalMusicSheet.
@@ -2528,10 +2527,8 @@ export abstract class MusicSheetCalculator {
         }
     }
 
-    private calculateSkyBottomLines(): void {
-        const staffLines: StaffLine[] = this.musicSystems.map(musicSystem => musicSystem.StaffLines).flat();
-        const calculator: SkyBottomLineBatchCalculator = new SkyBottomLineBatchCalculator(staffLines);
-        calculator.calculateLines();
+    protected calculateSkyBottomLines(): void {
+        // override
     }
 
     /**
