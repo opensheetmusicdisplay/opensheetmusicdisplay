@@ -97,6 +97,15 @@ function createTexture(gl: WebGLRenderingContext, program: WebGLShader, textureI
     return texture;
 }
 
+function updateMacroConstantsInShaderSource(source: string, constants: { [macroName: string]: number }): string {
+    let result: string = source;
+    for (const [macroName, macroValue] of Object.entries(constants)) {
+        const regex: RegExp = new RegExp(`#define ${macroName} .*`);
+        result = result.replace(regex, `#define ${macroName} ${macroValue}`);
+    }
+    return result;
+}
+
 /**
  * This class calculates the skylines and the bottom lines by using WebGL acceleration.
  */
@@ -111,13 +120,13 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
     protected getPreferredRenderingConfiguration(maxWidth: number, elementHeight: number): ISkyBottomLineBatchCalculatorBackendPartialTableConfiguration {
         return {
             elementWidth: Math.ceil(maxWidth),
-            numColumns: 5,
-            numRows: 5,
+            numColumns: 6,
+            numRows: 6,
         };
     }
 
     protected onInitialize(tableConfiguration: ISkyBottomLineBatchCalculatorBackendTableConfiguration): void {
-        const { elementWidth, numColumns, numRows } = tableConfiguration;
+        const { elementWidth, elementHeight, numColumns, numRows } = tableConfiguration;
         const canvas: HTMLCanvasElement = document.createElement("canvas");
         canvas.width = elementWidth * numColumns;
         canvas.height = numRows;
@@ -130,7 +139,13 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
         this.gl = gl;
 
         const vertexShader: WebGLShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-        const fragmentShader: WebGLShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+        const fragmentShader: WebGLShader = createShader(
+            gl, gl.FRAGMENT_SHADER,
+            updateMacroConstantsInShaderSource(fragmentShaderSource, {
+                NUM_ROWS: numRows,
+                ELEMENT_HEIGHT: elementHeight,
+            })
+        );
         const program: WebGLProgram = createProgram(gl, vertexShader, fragmentShader);
         createVertexBuffer(gl, program, "a_position", [
             [-1, -1],
