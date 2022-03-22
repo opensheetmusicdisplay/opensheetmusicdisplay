@@ -2,6 +2,7 @@ import { MusicSheetCalculator } from "../MusicSheetCalculator";
 import { VexFlowGraphicalSymbolFactory } from "./VexFlowGraphicalSymbolFactory";
 import { GraphicalMeasure } from "../GraphicalMeasure";
 import { StaffLine } from "../StaffLine";
+import { SkyBottomLineBatchCalculator } from "../SkyBottomLineBatchCalculator";
 import { VoiceEntry } from "../../VoiceData/VoiceEntry";
 import { GraphicalNote } from "../GraphicalNote";
 import { GraphicalStaffEntry } from "../GraphicalStaffEntry";
@@ -1051,6 +1052,12 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (uppermostMeasure) {
       uppermostMeasure.addWordRepetition(repetitionInstruction);
     }
+  }
+
+  protected calculateSkyBottomLines(): void {
+      const staffLines: StaffLine[] = this.musicSystems.map(musicSystem => musicSystem.StaffLines).flat();
+      const calculator: SkyBottomLineBatchCalculator = new SkyBottomLineBatchCalculator(staffLines);
+      calculator.calculateLines();
   }
 
   /**
