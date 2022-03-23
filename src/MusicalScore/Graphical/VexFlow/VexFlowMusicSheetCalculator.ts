@@ -1013,10 +1013,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const textBracket: VF.TextBracket = vfOctaveShift.getTextBracket();
     const fontSize: number = (textBracket as any).font.size / 10;
 
-    if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
-      const headroom: number = Math.ceil(parentStaffline.SkyBottomLine.getSkyLineMinInRange(startX, stopX));
     if ((<any>textBracket).position === VF.TextBracket.Positions.TOP) {
-      const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
+      const headroom: number = Math.ceil(parentStaffline.SkyBottomLine.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
         return;
       }
