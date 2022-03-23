@@ -1,5 +1,6 @@
 import {Voice} from "./Voice";
 import {Instrument} from "../Instrument";
+import { Tie } from "./Tie";
 
 export class Staff {
 
@@ -21,6 +22,7 @@ export class Staff {
     private id: number;
     private stafflineCount: number = 5;
     public hasLyrics: boolean = false;
+    public openTieDict: { [_: number]: Tie } = {};
 
     public get ParentInstrument(): Instrument {
         return this.parentInstrument;

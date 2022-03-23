@@ -806,7 +806,9 @@ export class Beam extends Element {
   drawStems() {
     this.notes.forEach(note => {
       if (note.getStem()) {
+        this.context.openGroup('stem', note.getAttribute('id') + '-stem');
         note.getStem().setContext(this.context).draw();
+        this.context.closeGroup();
       }
     }, this);
   }
@@ -844,18 +846,16 @@ export class Beam extends Element {
         const lastBeamX = beam_line.end;
         const lastBeamY = this.getSlopeY(lastBeamX, firstStemX, beamY, this.slope);
 
+        const noteSVGId = startNoteId;
+        this.context.openGroup('beam', `${noteSVGId}-beam${beamNumber}`);
         this.context.beginPath();
         this.context.moveTo(startBeamX, startBeamY);
         this.context.lineTo(startBeamX, startBeamY + beamThickness);
         this.context.lineTo(lastBeamX + 1, lastBeamY + beamThickness);
         this.context.lineTo(lastBeamX + 1, lastBeamY);
         this.context.closePath();
-        if (this.context.svg) {
-          const noteSVGId = Vex.Prefix(startNoteId);
-          this.context.fill({class: Vex.Prefix("beam"), id: `${noteSVGId}-beam${beamNumber}`});
-        } else {
-          this.context.fill();
-        }
+        this.context.fill();
+        this.context.closeGroup();
       }
 
       beamY += beamThickness * 1.5;
