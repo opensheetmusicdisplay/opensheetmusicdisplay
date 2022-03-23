@@ -2131,9 +2131,11 @@ export abstract class MusicSheetCalculator {
                                     if (note === note.NoteTie.Notes.last()) {
                                         continue; // nothing to do on last note. don't create last tie twice.
                                     }
-                                    for (const gTie of startStaffEntry.GraphicalTies) {
-                                        if (gTie.Tie === tie) {
-                                            continue; // don't handle the same tie on the same startStaffEntry twice
+                                    if (startStaffEntry) {
+                                        for (const gTie of startStaffEntry.GraphicalTies) {
+                                            if (gTie.Tie === tie) {
+                                                continue; // don't handle the same tie on the same startStaffEntry twice
+                                            }
                                         }
                                     }
                                     this.handleTie(tie, startStaffEntry, staffIndex, measureIndex);

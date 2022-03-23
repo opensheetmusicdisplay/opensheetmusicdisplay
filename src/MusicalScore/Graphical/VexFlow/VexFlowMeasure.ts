@@ -270,6 +270,7 @@ export class VexFlowMeasure extends GraphicalMeasure {
             VF.StaveModifier.Position.BEGIN
         );
         if (!this.ShowTimeSignature) {
+            // extends Element is missing from class StaveModifier in DefinitelyTyped definitions, so setStyle isn't found
             timeSig.setStyle({ fillStyle: "#00000000"}); // transparent. requires VexflowPatch
         }
         this.updateInstructionWidth();
@@ -906,6 +907,9 @@ export class VexFlowMeasure extends GraphicalMeasure {
      * @param beamedNotes notes that will not be autobeamed (usually because they are already beamed)
      */
     private autoBeamNotes(beamedNotes: StemmableNote[]): void {
+        if (!this.rules.AutoBeamTabs && this.isTabMeasure) { // could also use an option tabBeams to disable beams there completely
+            return;
+        }
         let notesToAutoBeam: StemmableNote[] = [];
         let consecutiveBeamableNotes: StemmableNote[] = [];
         let currentTuplet: Tuplet;
