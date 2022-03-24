@@ -202,6 +202,15 @@ export class WebGLSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
                 skyLine[x] = Math.floor(pixels[x * rgbaLength + xOffset + yOffset] / 255 * elementHeight);
                 bottomLine[x] = Math.floor(pixels[x * rgbaLength + xOffset + yOffset + 1] / 255 * elementHeight);
             }
+
+            const lowestSkyLine: number = Math.max(...skyLine);
+            const highestBottomLine: number = Math.min(...bottomLine);
+
+            for (let x: number = 0; x < measureWidth; ++x) {
+                skyLine[x] = skyLine[x] === 0 ? lowestSkyLine : skyLine[x];
+                bottomLine[x] = bottomLine[x] === elementHeight ? highestBottomLine : bottomLine[x];
+            }
+
             result.push(new SkyBottomLineCalculationResult(skyLine, bottomLine));
         }
         return result;

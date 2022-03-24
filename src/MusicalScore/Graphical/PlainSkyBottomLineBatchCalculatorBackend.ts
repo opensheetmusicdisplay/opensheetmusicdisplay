@@ -60,6 +60,7 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
 
             for (let x: number = xStart; x < xEnd; ++x) {
                 // SkyLine
+                skyLine[x - xStart] = 0;
                 for (let y: number = yStart; y < yEnd; ++y) {
                     const yOffset: number = y * canvasWidth * rgbaLength;
                     const bufIndex: number = yOffset + x * rgbaLength;
@@ -70,6 +71,7 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
                     }
                 }
                 // BottomLine
+                bottomLine[x - xStart] = elementHeight;
                 for (let y: number = yEnd - 1; y >= yStart; y--) {
                     const yOffset: number = y * canvasWidth * rgbaLength;
                     const bufIndex: number = yOffset + x * rgbaLength;
@@ -80,6 +82,15 @@ export class PlainSkyBottomLineBatchCalculatorBackend extends SkyBottomLineBatch
                     }
                 }
             }
+
+            const lowestSkyLine: number = Math.max(...skyLine);
+            const highestBottomLine: number = Math.min(...bottomLine);
+
+            for (let x: number = 0; x < measureWidth; ++x) {
+                skyLine[x] = skyLine[x] === 0 ? lowestSkyLine : skyLine[x];
+                bottomLine[x] = bottomLine[x] === elementHeight ? highestBottomLine : bottomLine[x];
+            }
+
             result.push(new SkyBottomLineCalculationResult(skyLine, bottomLine));
         }
         return result;
