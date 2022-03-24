@@ -27,8 +27,8 @@ void main() {
     }
 
     float bottomLine = 1.0;
-    for (int i = ELEMENT_HEIGHT - 2; i >= 0; --i) {
-        float ratioY = float(i + 1) / float(ELEMENT_HEIGHT);
+    for (int i = ELEMENT_HEIGHT - 1; i >= 0; --i) {
+        float ratioY = float(i) / float(ELEMENT_HEIGHT);
         float relY = (ratioY - 0.5 + halfPixel) / float(NUM_ROWS);
         float x = absX;
         float y = absY + relY;
