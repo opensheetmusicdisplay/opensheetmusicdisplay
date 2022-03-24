@@ -122,22 +122,23 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
      * This method calculates the skylines and the bottom lines for the measures passed to the constructor.
      */
     public calculateLines(): SkyBottomLineCalculationResult[] {
-        const debugTmpCanvas: boolean = false;
+        const debugTmpCanvas: boolean = true;
 
         const { numColumns, numRows, elementWidth } = this.tableConfiguration;
         const elementHeight: number = this.elementHeight;
         const numElementsPerTable: number = numColumns * numRows;
 
-        const context: Vex.Flow.CanvasContext = this.canvas.getContext();
+        const vexFlowContext: Vex.Flow.CanvasContext = this.canvas.getContext();
+        const context: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
         const canvasElement: HTMLCanvasElement = this.canvas.getCanvas() as HTMLCanvasElement;
 
         if (debugTmpCanvas) {
-            document.querySelectorAll("img.osmd-sky-bottom-line-tmp-canvas").forEach(element => element.parentElement.removeChild(element));
+            document.querySelectorAll(".osmd-sky-bottom-line-tmp-canvas").forEach(element => element.parentElement.removeChild(element));
         }
 
         const results: SkyBottomLineCalculationResult[] = [];
         for (let i: number = 0; i < this.measures.length; i += numElementsPerTable) {
-            context.clear();
+            vexFlowContext.clear();
 
             const measures: VexFlowMeasure[] = this.measures.slice(i, i + numElementsPerTable);
 
@@ -158,10 +159,14 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 // must calculate first AbsolutePositions
                 measure.PositionAndShape.calculateAbsolutePositionsRecursive(0, 0);
 
-                vsStaff.setX(u * elementWidth);
+                const x: number = 0;
+                vsStaff.setX(x);
+
                 // The magic number 100 is an offset from the top image border so that
                 // elements above the staffline can be drawn correctly.
-                vsStaff.setY(v * elementHeight + ((<any>vsStaff).y as number) + 100);
+                const y: number = (<any>vsStaff).y as number + 100;
+                vsStaff.setY(y);
+
                 const oldMeasureWidth: number = vsStaff.getWidth();
                 // We need to tell the VexFlow stave about the canvas width. This looks
                 // redundant because it should know the canvas but somehow it doesn't.
@@ -171,7 +176,9 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 vsStaff.setWidth(oldMeasureWidth);
 
                 try {
-                    measure.draw(context);
+                    context.translate(u * elementWidth, v * elementHeight);
+                    measure.draw(vexFlowContext);
+                    context.translate(-u * elementWidth, -v * elementHeight);
                     // Vexflow errors can happen here, then our complete rendering loop would halt without catching errors.
                 } catch (ex) {
                     log.warn("SkyBottomLineBatchCalculatorBackend.calculateLines.draw", ex);
@@ -180,7 +187,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
 
             const result: SkyBottomLineCalculationResult[] = this.calculateFromCanvas(
                 canvasElement,
-                context,
+                vexFlowContext,
                 measures,
                 this.samplingUnit,
                 this.tableConfiguration
@@ -188,7 +195,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
             results.push(...result);
 
             if (debugTmpCanvas) {
-                const canvasContext: CanvasRenderingContext2D = context as unknown as CanvasRenderingContext2D;
+                const canvasContext: CanvasRenderingContext2D = vexFlowContext as unknown as CanvasRenderingContext2D;
                 const oldFillStyle: string | CanvasGradient | CanvasPattern = canvasContext.fillStyle;
                 for (let j: number = 0; j < result.length; ++j) {
                     const { skyLine, bottomLine } = result[j];
@@ -200,9 +207,9 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                     const yStart: number = v * elementHeight;
 
                     canvasContext.fillStyle = "#FF0000";
-                    skyLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
+                    skyLine.forEach((y, x) => vexFlowContext.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
                     canvasContext.fillStyle = "#0000FF";
-                    bottomLine.forEach((y, x) => context.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
+                    bottomLine.forEach((y, x) => vexFlowContext.fillRect(x - 1 + xStart, y - 1 + yStart, 2, 2));
                 }
                 canvasContext.fillStyle = oldFillStyle;
                 const url: string = canvasElement.toDataURL("image/png");
@@ -210,6 +217,10 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
                 img.classList.add("osmd-sky-bottom-line-tmp-canvas");
                 img.src = url;
                 document.body.appendChild(img);
+
+                const hr: HTMLHRElement = document.createElement("hr");
+                hr.classList.add("osmd-sky-bottom-line-tmp-canvas");
+                document.body.appendChild(hr);
             }
         }
 
