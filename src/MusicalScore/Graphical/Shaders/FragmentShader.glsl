@@ -12,7 +12,7 @@ void main() {
     float absX = absolutePosition.x;
     float absY = absolutePosition.y;
 
-    float skyLine = 0.0;
+    int skyLine = 0;
     for (int i = 0; i < ELEMENT_HEIGHT; ++i) {
         float ratioY = float(i) / float(ELEMENT_HEIGHT);
         float relY = (ratioY - 0.5 + halfPixel) / float(NUM_ROWS);
@@ -21,12 +21,12 @@ void main() {
 
         float currentAlpha = texture2D(u_image, vec2(x, y)).a;
         if (currentAlpha > 0.0) {
-            skyLine = ratioY;
+            skyLine = i;
             break;
         }
     }
 
-    float bottomLine = 1.0;
+    int bottomLine = ELEMENT_HEIGHT;
     for (int i = ELEMENT_HEIGHT - 1; i >= 0; --i) {
         float ratioY = float(i) / float(ELEMENT_HEIGHT);
         float relY = (ratioY - 0.5 + halfPixel) / float(NUM_ROWS);
@@ -35,10 +35,20 @@ void main() {
 
         float currentAlpha = texture2D(u_image, vec2(x, y)).a;
         if (currentAlpha > 0.0) {
-            bottomLine = ratioY;
+            bottomLine = i;
             break;
         }
     }
 
-    gl_FragColor = vec4(skyLine, bottomLine, 1, 1);
+    int r = skyLine;
+    if (r > 256) {
+        r -= 256;
+    }
+    int g = bottomLine;
+    if (g > 256) {
+        g -= 256;
+    }
+    int b = (skyLine / 256 * 16) + (bottomLine / 256);
+
+    gl_FragColor = vec4(float(r) / 255.0, float(g) / 255.0, float(b) / 255.0, 1.0);
 }
