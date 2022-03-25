@@ -91,6 +91,11 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
             ...this.getPreferredRenderingConfiguration(this.maxWidth, this.elementHeight),
             elementHeight: this.elementHeight
         };
+        if (this.tableConfiguration.numRows < 1 || this.tableConfiguration.numColumns < 1) {
+            log.warn("SkyBottomLineBatchCalculatorBackend: numRows or numColumns in tableConfiguration is 0");
+            throw new Error("numRows or numColumns in tableConfiguration is 0");
+        }
+
         if (this.tableConfiguration.elementWidth < this.maxWidth) {
             log.warn("SkyBottomLineBatchCalculatorBackend: elementWidth in tableConfiguration is less than the width of widest measure");
         }
