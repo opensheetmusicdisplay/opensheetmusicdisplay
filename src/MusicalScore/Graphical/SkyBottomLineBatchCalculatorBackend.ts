@@ -122,7 +122,7 @@ export abstract class SkyBottomLineBatchCalculatorBackend {
      * This method calculates the skylines and the bottom lines for the measures passed to the constructor.
      */
     public calculateLines(): SkyBottomLineCalculationResult[] {
-        const debugTmpCanvas: boolean = true;
+        const debugTmpCanvas: boolean = false;
 
         const { numColumns, numRows, elementWidth } = this.tableConfiguration;
         const elementHeight: number = this.elementHeight;
