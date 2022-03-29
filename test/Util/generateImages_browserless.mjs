@@ -33,7 +33,7 @@ function sleep (ms) {
 // global variables
 //   (without these being global, we'd have to pass many of these values to the generateSampleImage function)
 // eslint-disable-next-line prefer-const
-let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString] = process.argv.slice(2, 11);
+let [osmdBuildDir, sampleDir, imageDir, imageFormat, pageWidth, pageHeight, filterRegex, mode, debugSleepTimeString, skyBottomLinePreference] = process.argv.slice(2, 12);
 if (!osmdBuildDir || !sampleDir || !imageDir || (imageFormat !== "png" && imageFormat !== "svg")) {
     console.log("usage: " +
         // eslint-disable-next-line max-len
@@ -268,6 +268,27 @@ async function init () {
 // let maxRss = 0, maxRssFilename = '' // to log memory usage (debug)
 async function generateSampleImage (sampleFilename, directory, osmdInstance, osmdTestingMode,
     options = {}, DEBUG = false) {
+
+    function makeSkyBottomLineOptions() {
+        const preference = skyBottomLinePreference ?? "";
+        if (preference === "--batch") {
+            return {
+                preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
+                skyBottomLineBatchCriteria: 0, // use batch algorithm only
+            };
+        } else if (preference === "--webgl") {
+            return {
+                preferredSkyBottomLineBatchCalculatorBackend: 1, // webgl
+                skyBottomLineBatchCriteria: 0, // use batch algorithm only
+            };
+        } else {
+            return {
+                preferredSkyBottomLineBatchCalculatorBackend: 0, // plain
+                skyBottomLineBatchCriteria: Infinity, // use non-batch algorithm only
+            };
+        }
+    }
+
     const samplePath = directory + "/" + sampleFilename;
     let loadParameter = FS.readFileSync(samplePath);
 
@@ -307,7 +328,8 @@ async function generateSampleImage (sampleFilename, directory, osmdInstance, osm
             newSystemFromXML: isFunctionTestSystemAndPageBreaks,
             newPageFromXML: isFunctionTestSystemAndPageBreaks,
             pageBackgroundColor: "#FFFFFF", // reset by drawingparameters default
-            pageFormat: pageFormat // reset by drawingparameters default
+            pageFormat: pageFormat, // reset by drawingparameters default,
+            ...makeSkyBottomLineOptions()
         });
         includeSkyBottomLine = options.skyBottomLine ? options.skyBottomLine : false; // apparently es6 doesn't have ?? operator
         osmdInstance.drawSkyLine = includeSkyBottomLine; // if includeSkyBottomLine, draw skyline and bottomline, else not
