@@ -1,3 +1,4 @@
+import { SkyBottomLineBatchCalculatorBackendType } from "../../OpenSheetMusicDisplay";
 import { EngravingRules } from "./EngravingRules";
 import { PlainSkyBottomLineBatchCalculatorBackend } from "./PlainSkyBottomLineBatchCalculatorBackend";
 import { SkyBottomLine } from "./SkyBottomLine";
@@ -23,7 +24,7 @@ interface IBatch {
 export class SkyBottomLineBatchCalculator {
     private batches: Map<EngravingRules, IBatch>;
 
-    constructor(staffLines: StaffLine[]) {
+    constructor(staffLines: StaffLine[], preferredBackend: SkyBottomLineBatchCalculatorBackendType) {
         const batchEntryArrayList: Map<EngravingRules, IBatchEntry[]> = new Map<EngravingRules, IBatchEntry[]>();
         for (const staffLine of staffLines) {
             const rules: EngravingRules = staffLine.ParentMusicSystem.rules;
@@ -46,10 +47,14 @@ export class SkyBottomLineBatchCalculator {
         for (const [rules, batchEntryArray] of batchEntryArrayList.entries()) {
             const measures: VexFlowMeasure[] = batchEntryArray.map(entry => entry.measures).flat();
             const backend: SkyBottomLineBatchCalculatorBackend = ((): SkyBottomLineBatchCalculatorBackend => {
-                try {
-                    return new WebGLSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
-                } catch {
+                if (preferredBackend === SkyBottomLineBatchCalculatorBackendType.Plain) {
                     return new PlainSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
+                } else {
+                    try {
+                        return new WebGLSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
+                    } catch {
+                        return new PlainSkyBottomLineBatchCalculatorBackend(rules, measures).initialize();
+                    }
                 }
             })();
             backend.initialize();

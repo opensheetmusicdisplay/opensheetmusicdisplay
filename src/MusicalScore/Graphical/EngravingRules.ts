@@ -3,7 +3,12 @@ import { PagePlacementEnum } from "./GraphicalMusicPage";
 import log from "loglevel";
 import { TextAlignmentEnum } from "../../Common/Enums/TextAlignment";
 import { PlacementEnum } from "../VoiceData/Expressions/AbstractExpression";
-import { AutoBeamOptions, AlignRestOption, FillEmptyMeasuresWithWholeRests } from "../../OpenSheetMusicDisplay/OSMDOptions";
+import {
+    AutoBeamOptions,
+    AlignRestOption,
+    FillEmptyMeasuresWithWholeRests,
+    SkyBottomLineBatchCalculatorBackendType
+} from "../../OpenSheetMusicDisplay/OSMDOptions";
 import { ColoringModes as ColoringMode } from "./DrawingParameters";
 import { Dictionary } from "typescript-collections";
 import { FontStyles } from "../../Common/Enums";
@@ -336,6 +341,10 @@ export class EngravingRules {
 
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
+    /** skyline and bottom-line calculation preferences */
+    public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
+    public SkyBottomLineBatchCriteria: number;
+
     constructor() {
         this.loadDefaultValues();
     }
@@ -663,6 +672,14 @@ export class EngravingRules {
 
         this.NoteToGraphicalNoteMap = new Dictionary<number, GraphicalNote>();
         this.NoteToGraphicalNoteMapObjectCount = 0;
+
+        if ((globalThis.navigator?.vendor ?? "").match(/apple/i)) {
+            // On Safari, the plain version is faster
+            this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.Plain;
+        } else {
+            this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
+        }
+        this.SkyBottomLineBatchCriteria = 25;
 
         // this.populateDictionaries(); // these values aren't used currently
         try {
