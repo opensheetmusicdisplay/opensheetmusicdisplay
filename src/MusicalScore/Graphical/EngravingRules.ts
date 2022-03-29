@@ -679,7 +679,7 @@ export class EngravingRules {
         } else {
             this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
         }
-        this.SkyBottomLineBatchCriteria = 25;
+        this.SkyBottomLineBatchCriteria = 5;
 
         // this.populateDictionaries(); // these values aren't used currently
         try {
