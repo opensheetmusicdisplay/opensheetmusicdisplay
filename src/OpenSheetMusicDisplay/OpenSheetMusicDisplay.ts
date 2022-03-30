@@ -596,8 +596,8 @@ export class OpenSheetMusicDisplay {
         if (options.preferredSkyBottomLineBatchCalculatorBackend !== undefined) {
             this.rules.PreferredSkyBottomLineBatchCalculatorBackend = options.preferredSkyBottomLineBatchCalculatorBackend;
         }
-        if (options.skyBottomLineBatchCriteria !== undefined) {
-            this.rules.SkyBottomLineBatchCriteria = options.skyBottomLineBatchCriteria;
+        if (options.skyBottomLineBatchMinMeasures !== undefined) {
+            this.rules.SkyBottomLineBatchMinMeasures = options.skyBottomLineBatchMinMeasures;
         }
     }
 

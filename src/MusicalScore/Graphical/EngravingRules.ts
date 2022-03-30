@@ -341,9 +341,11 @@ export class EngravingRules {
 
     public static FixStafflineBoundingBox: boolean; // TODO temporary workaround
 
-    /** skyline and bottom-line calculation preferences */
+    /** The skyline and bottom-line batch calculation algorithm to use. */
     public PreferredSkyBottomLineBatchCalculatorBackend: SkyBottomLineBatchCalculatorBackendType;
-    public SkyBottomLineBatchCriteria: number;
+
+    /** The minimum number of measures in the entire sheet music where the skyline and bottom-line batch calculation is enabled. */
+    public SkyBottomLineBatchMinMeasures: number;
 
     constructor() {
         this.loadDefaultValues();
@@ -679,7 +681,7 @@ export class EngravingRules {
         } else {
             this.PreferredSkyBottomLineBatchCalculatorBackend = SkyBottomLineBatchCalculatorBackendType.WebGL;
         }
-        this.SkyBottomLineBatchCriteria = 5;
+        this.SkyBottomLineBatchMinMeasures = 5;
 
         // this.populateDictionaries(); // these values aren't used currently
         try {

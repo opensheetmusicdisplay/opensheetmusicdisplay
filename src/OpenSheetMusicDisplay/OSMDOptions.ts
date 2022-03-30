@@ -260,9 +260,9 @@ export interface IOSMDOptions {
      */
     preferredSkyBottomLineBatchCalculatorBackend?: SkyBottomLineBatchCalculatorBackendType;
     /**
-     * Defines the threshold of the number of measures to use the skyline and bottom-line batch calculation algorithms.
+     * Defines the minimum number of measures in the entire sheet music where the skyline and bottom-line batch calculation is enabled.
      */
-    skyBottomLineBatchCriteria?: number;
+    skyBottomLineBatchMinMeasures?: number;
 }
 
 export enum AlignRestOption {
